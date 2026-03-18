@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { X, GripVertical, ChevronRight, ExternalLink } from "lucide-react";
+import { X, GripVertical, ChevronRight, ExternalLink, Headphones } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import type { Database } from "@/integrations/supabase/types";
 
