@@ -10,6 +10,7 @@ import SetlistDisplay, { type SetlistSlotData } from "@/components/SetlistDispla
 import CollaboratorAvatars from "@/components/CollaboratorAvatars";
 import ChatSidebar from "@/components/ChatSidebar";
 import ShareDialog from "@/components/ShareDialog";
+import AIDeadHeadDialog from "@/components/AIDeadHeadDialog";
 import { useSongs } from "@/hooks/useSongs";
 import { useAuth } from "@/hooks/useAuth";
 import { useSetlist } from "@/hooks/useSetlist";
@@ -27,6 +28,7 @@ const Builder = () => {
   const [activeSet, setActiveSet] = useState(1);
   const [chatOpen, setChatOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
+  const [aiOpen, setAiOpen] = useState(false);
   const [initialized, setInitialized] = useState(false);
 
   const { songs, eras, loading: songsLoading, getNotableVersions } = useSongs(selectedEra);
@@ -114,6 +116,33 @@ const Builder = () => {
     []
   );
 
+  const handleApplyAISuggestion = useCallback(
+    async (suggestion: { explanation: string; sets: { setNumber: number; songs: { songId: string; title: string; segueToNext: boolean; notes: string; position: number }[] }[] }) => {
+      // Clear existing slots
+      for (const slot of slots) {
+        await removeSlot(slot.id);
+      }
+      // Find songs from the songs array by matching IDs
+      for (const set of suggestion.sets) {
+        for (const suggestedSong of set.songs) {
+          const song = songs.find((s) => s.id === suggestedSong.songId);
+          if (!song) continue;
+          const newSlot: SetlistSlotData = {
+            id: crypto.randomUUID(),
+            song,
+            version: null,
+            setNumber: set.setNumber,
+            position: suggestedSong.position,
+            segueToNext: suggestedSong.segueToNext,
+            notes: suggestedSong.notes || "",
+          };
+          await addSlot(newSlot);
+        }
+      }
+    },
+    [slots, songs, removeSlot, addSlot]
+  );
+
   if (authLoading) {
     return (
       <div className="grain-overlay min-h-screen bg-background flex items-center justify-center">
@@ -189,7 +218,7 @@ const Builder = () => {
             variant="outline"
             size="sm"
             className="border-border text-foreground font-body gap-1.5"
-            disabled
+            onClick={() => setAiOpen(true)}
           >
             <Sparkles className="w-3.5 h-3.5" /> AI
           </Button>
@@ -257,6 +286,19 @@ const Builder = () => {
         open={shareOpen}
         onOpenChange={setShareOpen}
         shareLink={getShareLink()}
+      />
+
+      {/* AI Dead Head Dialog */}
+      <AIDeadHeadDialog
+        open={aiOpen}
+        onOpenChange={setAiOpen}
+        eraId={selectedEra}
+        currentSlots={slots.map((s) => ({
+          songTitle: s.song.title,
+          setNumber: s.setNumber,
+          segue: s.segueToNext,
+        }))}
+        onApplySuggestion={handleApplyAISuggestion}
       />
     </div>
   );
