@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { Sparkles, Share2, Users, LogOut, MessageCircle } from "lucide-react";
+import { Sparkles, Share2, Users, LogOut, MessageCircle, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -43,6 +43,7 @@ const Builder = () => {
     removeSlot,
     updateSlot,
     updateTitle,
+    togglePublic,
     getShareLink,
   } = useSetlist(user, paramId);
 
@@ -223,6 +224,15 @@ const Builder = () => {
             onClick={() => setAiOpen(true)}
           >
             <Sparkles className="w-3.5 h-3.5" /> AI
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className={`border-border font-body gap-1.5 ${setlist?.is_public ? "text-accent border-accent/40" : "text-foreground"}`}
+            onClick={togglePublic}
+            title={setlist?.is_public ? "Public — visible on Browse" : "Private — only you and collaborators"}
+          >
+            <Globe className="w-3.5 h-3.5" /> {setlist?.is_public ? "Public" : "Private"}
           </Button>
           <Button
             variant="outline"
