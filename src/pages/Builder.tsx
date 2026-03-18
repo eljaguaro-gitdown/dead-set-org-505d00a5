@@ -259,6 +259,17 @@ const Builder = () => {
               eraId={selectedEra}
               onSelectSong={handleSelectSong}
               getNotableVersions={getNotableVersions}
+              onPlayArchive={(url, songTitle, showDate, venue) => {
+                setPlayingSlot({
+                  id: "preview",
+                  song: { title: songTitle } as any,
+                  version: { archive_org_url: url, show_date: showDate, venue } as any,
+                  setNumber: 1,
+                  position: 0,
+                  segueToNext: false,
+                  notes: "",
+                });
+              }}
             />
           )}
         </div>
