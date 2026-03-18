@@ -26,7 +26,7 @@ interface SongVaultProps {
   onPlayArchive?: (url: string, songTitle: string, showDate: string, venue?: string | null) => void;
 }
 
-const SongVault = ({ songs, eraId, onSelectSong, getNotableVersions }: SongVaultProps) => {
+const SongVault = ({ songs, eraId, onSelectSong, getNotableVersions, onPlayArchive }: SongVaultProps) => {
   const [search, setSearch] = useState("");
   const [tagFilter, setTagFilter] = useState<string | null>(null);
   const [positionFilter, setPositionFilter] = useState<string | null>(null);
