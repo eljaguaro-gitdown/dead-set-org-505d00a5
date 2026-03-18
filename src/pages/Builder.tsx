@@ -31,6 +31,7 @@ const Builder = () => {
   const [shareOpen, setShareOpen] = useState(false);
   const [aiOpen, setAiOpen] = useState(false);
   const [initialized, setInitialized] = useState(false);
+  const [playingSlot, setPlayingSlot] = useState<import("@/components/SetlistDisplay").SetlistSlotData | null>(null);
 
   const { songs, eras, loading: songsLoading, getNotableVersions } = useSongs(selectedEra);
   const {
