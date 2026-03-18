@@ -11,6 +11,7 @@ import CollaboratorAvatars from "@/components/CollaboratorAvatars";
 import ChatSidebar from "@/components/ChatSidebar";
 import ShareDialog from "@/components/ShareDialog";
 import AIDeadHeadDialog from "@/components/AIDeadHeadDialog";
+import AudioPlayer from "@/components/AudioPlayer";
 import { useSongs } from "@/hooks/useSongs";
 import { useAuth } from "@/hooks/useAuth";
 import { useSetlist } from "@/hooks/useSetlist";
@@ -30,6 +31,7 @@ const Builder = () => {
   const [shareOpen, setShareOpen] = useState(false);
   const [aiOpen, setAiOpen] = useState(false);
   const [initialized, setInitialized] = useState(false);
+  const [playingSlot, setPlayingSlot] = useState<import("@/components/SetlistDisplay").SetlistSlotData | null>(null);
 
   const { songs, eras, loading: songsLoading, getNotableVersions } = useSongs(selectedEra);
   const {
@@ -257,6 +259,17 @@ const Builder = () => {
               eraId={selectedEra}
               onSelectSong={handleSelectSong}
               getNotableVersions={getNotableVersions}
+              onPlayArchive={(url, songTitle, showDate, venue) => {
+                setPlayingSlot({
+                  id: "preview",
+                  song: { title: songTitle } as any,
+                  version: { archive_org_url: url, show_date: showDate, venue } as any,
+                  setNumber: 1,
+                  position: 0,
+                  segueToNext: false,
+                  notes: "",
+                });
+              }}
             />
           )}
         </div>
@@ -269,6 +282,7 @@ const Builder = () => {
             onToggleSegue={handleToggleSegue}
             onUpdateNotes={handleUpdateNotes}
             onReorder={handleReorder}
+            onPlayVersion={(slot) => setPlayingSlot(slot)}
           />
         </div>
       </div>
@@ -300,6 +314,17 @@ const Builder = () => {
         }))}
         onApplySuggestion={handleApplyAISuggestion}
       />
+
+      {/* Audio Player */}
+      {playingSlot?.version?.archive_org_url && (
+        <AudioPlayer
+          archiveUrl={playingSlot.version.archive_org_url}
+          songTitle={playingSlot.song.title}
+          showDate={playingSlot.version.show_date}
+          venue={playingSlot.version.venue}
+          onClose={() => setPlayingSlot(null)}
+        />
+      )}
     </div>
   );
 };

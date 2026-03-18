@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { X, GripVertical, ChevronRight, ExternalLink } from "lucide-react";
+import { X, GripVertical, ChevronRight, ExternalLink, Headphones } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -22,6 +22,7 @@ interface SetlistDisplayProps {
   onToggleSegue: (id: string) => void;
   onUpdateNotes: (id: string, notes: string) => void;
   onReorder: (setNumber: number, fromIndex: number, toIndex: number) => void;
+  onPlayVersion?: (slot: SetlistSlotData) => void;
 }
 
 const SetSection = ({
@@ -31,6 +32,7 @@ const SetSection = ({
   onRemoveSlot,
   onToggleSegue,
   onUpdateNotes,
+  onPlayVersion,
 }: {
   title: string;
   setNumber: number;
@@ -38,6 +40,7 @@ const SetSection = ({
   onRemoveSlot: (id: string) => void;
   onToggleSegue: (id: string) => void;
   onUpdateNotes: (id: string, notes: string) => void;
+  onPlayVersion?: (slot: SetlistSlotData) => void;
 }) => {
   const setSlots = slots.filter((s) => s.setNumber === setNumber);
 
@@ -81,13 +84,22 @@ const SetSection = ({
                       {slot.version.show_date} — {slot.version.venue}
                     </span>
                     {slot.version.archive_org_url && (
-                      <a
-                        href={slot.version.archive_org_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        <ExternalLink className="w-3 h-3 text-secondary" />
-                      </a>
+                      <>
+                        <button
+                          onClick={() => onPlayVersion?.(slot)}
+                          className="ml-1"
+                          title="Preview audio"
+                        >
+                          <Headphones className="w-3 h-3 text-accent hover:text-primary transition-colors" />
+                        </button>
+                        <a
+                          href={slot.version.archive_org_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <ExternalLink className="w-3 h-3 text-secondary" />
+                        </a>
+                      </>
                     )}
                   </div>
                 )}
@@ -123,6 +135,7 @@ const SetlistDisplay = ({
   onRemoveSlot,
   onToggleSegue,
   onUpdateNotes,
+  onPlayVersion,
 }: SetlistDisplayProps) => {
   return (
     <div className="flex flex-col h-full">
@@ -137,6 +150,7 @@ const SetlistDisplay = ({
           onRemoveSlot={onRemoveSlot}
           onToggleSegue={onToggleSegue}
           onUpdateNotes={onUpdateNotes}
+          onPlayVersion={onPlayVersion}
         />
         <SetSection
           title="Set II"
@@ -145,6 +159,7 @@ const SetlistDisplay = ({
           onRemoveSlot={onRemoveSlot}
           onToggleSegue={onToggleSegue}
           onUpdateNotes={onUpdateNotes}
+          onPlayVersion={onPlayVersion}
         />
         <SetSection
           title="Encore"
@@ -153,6 +168,7 @@ const SetlistDisplay = ({
           onRemoveSlot={onRemoveSlot}
           onToggleSegue={onToggleSegue}
           onUpdateNotes={onUpdateNotes}
+          onPlayVersion={onPlayVersion}
         />
       </div>
     </div>

@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Zap, ChevronDown, ChevronUp, ExternalLink } from "lucide-react";
+import { Search, Zap, ChevronDown, ChevronUp, ExternalLink, Headphones } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import type { Database } from "@/integrations/supabase/types";
@@ -23,9 +23,10 @@ interface SongVaultProps {
   eraId?: string | null;
   onSelectSong: (song: Song, version?: NotableVersion) => void;
   getNotableVersions: (songId: string, eraId?: string | null) => Promise<NotableVersion[] | null>;
+  onPlayArchive?: (url: string, songTitle: string, showDate: string, venue?: string | null) => void;
 }
 
-const SongVault = ({ songs, eraId, onSelectSong, getNotableVersions }: SongVaultProps) => {
+const SongVault = ({ songs, eraId, onSelectSong, getNotableVersions, onPlayArchive }: SongVaultProps) => {
   const [search, setSearch] = useState("");
   const [tagFilter, setTagFilter] = useState<string | null>(null);
   const [positionFilter, setPositionFilter] = useState<string | null>(null);
@@ -158,15 +159,27 @@ const SongVault = ({ songs, eraId, onSelectSong, getNotableVersions }: SongVault
                               <Zap key={i} className="w-3 h-3 text-accent fill-accent" />
                             ))}
                             {v.archive_org_url && (
-                              <a
-                                href={v.archive_org_url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                onClick={(e) => e.stopPropagation()}
-                                className="ml-1"
-                              >
-                                <ExternalLink className="w-3 h-3 text-secondary" />
-                              </a>
+                              <>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    onPlayArchive?.(v.archive_org_url!, song.title, v.show_date, v.venue);
+                                  }}
+                                  className="ml-1"
+                                  title="Preview audio"
+                                >
+                                  <Headphones className="w-3 h-3 text-accent hover:text-primary transition-colors" />
+                                </button>
+                                <a
+                                  href={v.archive_org_url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="ml-1"
+                                >
+                                  <ExternalLink className="w-3 h-3 text-secondary" />
+                                </a>
+                              </>
                             )}
                           </div>
                         </div>
