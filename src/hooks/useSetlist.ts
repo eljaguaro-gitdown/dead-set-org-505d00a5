@@ -332,6 +332,7 @@ export const useSetlist = (user: User | null, setlistId?: string | null) => {
     removeSlot,
     updateSlot,
     updateTitle,
+    togglePublic,
     getShareLink,
     setSlots,
   };
