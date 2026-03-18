@@ -10,6 +10,7 @@ import SetlistDisplay, { type SetlistSlotData } from "@/components/SetlistDispla
 import CollaboratorAvatars from "@/components/CollaboratorAvatars";
 import ChatSidebar from "@/components/ChatSidebar";
 import ShareDialog from "@/components/ShareDialog";
+import AIDeadHeadDialog from "@/components/AIDeadHeadDialog";
 import { useSongs } from "@/hooks/useSongs";
 import { useAuth } from "@/hooks/useAuth";
 import { useSetlist } from "@/hooks/useSetlist";
