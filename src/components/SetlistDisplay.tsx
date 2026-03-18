@@ -84,13 +84,22 @@ const SetSection = ({
                       {slot.version.show_date} — {slot.version.venue}
                     </span>
                     {slot.version.archive_org_url && (
-                      <a
-                        href={slot.version.archive_org_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        <ExternalLink className="w-3 h-3 text-secondary" />
-                      </a>
+                      <>
+                        <button
+                          onClick={() => onPlayVersion?.(slot)}
+                          className="ml-1"
+                          title="Preview audio"
+                        >
+                          <Headphones className="w-3 h-3 text-accent hover:text-primary transition-colors" />
+                        </button>
+                        <a
+                          href={slot.version.archive_org_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <ExternalLink className="w-3 h-3 text-secondary" />
+                        </a>
+                      </>
                     )}
                   </div>
                 )}
