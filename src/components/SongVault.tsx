@@ -23,6 +23,7 @@ interface SongVaultProps {
   eraId?: string | null;
   onSelectSong: (song: Song, version?: NotableVersion) => void;
   getNotableVersions: (songId: string, eraId?: string | null) => Promise<NotableVersion[] | null>;
+  onPlayArchive?: (url: string, songTitle: string, showDate: string, venue?: string | null) => void;
 }
 
 const SongVault = ({ songs, eraId, onSelectSong, getNotableVersions }: SongVaultProps) => {
