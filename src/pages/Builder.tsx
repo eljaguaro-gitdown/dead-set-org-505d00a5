@@ -43,6 +43,7 @@ const Builder = () => {
     removeSlot,
     updateSlot,
     updateTitle,
+    togglePublic,
     getShareLink,
   } = useSetlist(user, paramId);
 
