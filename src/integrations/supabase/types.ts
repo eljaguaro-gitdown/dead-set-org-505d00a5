@@ -14,7 +14,278 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      collaborators: {
+        Row: {
+          id: string
+          joined_at: string
+          role: Database["public"]["Enums"]["collaborator_role"]
+          setlist_id: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          joined_at?: string
+          role?: Database["public"]["Enums"]["collaborator_role"]
+          setlist_id: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          joined_at?: string
+          role?: Database["public"]["Enums"]["collaborator_role"]
+          setlist_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "collaborators_setlist_id_fkey"
+            columns: ["setlist_id"]
+            isOneToOne: false
+            referencedRelation: "setlists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      eras: {
+        Row: {
+          description: string | null
+          id: string
+          name: string
+          year_end: number
+          year_start: number
+        }
+        Insert: {
+          description?: string | null
+          id?: string
+          name: string
+          year_end: number
+          year_start: number
+        }
+        Update: {
+          description?: string | null
+          id?: string
+          name?: string
+          year_end?: number
+          year_start?: number
+        }
+        Relationships: []
+      }
+      notable_versions: {
+        Row: {
+          archive_org_url: string | null
+          city: string | null
+          description: string | null
+          era_id: string | null
+          id: string
+          rating: number | null
+          show_date: string
+          song_id: string
+          venue: string | null
+        }
+        Insert: {
+          archive_org_url?: string | null
+          city?: string | null
+          description?: string | null
+          era_id?: string | null
+          id?: string
+          rating?: number | null
+          show_date: string
+          song_id: string
+          venue?: string | null
+        }
+        Update: {
+          archive_org_url?: string | null
+          city?: string | null
+          description?: string | null
+          era_id?: string | null
+          id?: string
+          rating?: number | null
+          show_date?: string
+          song_id?: string
+          venue?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notable_versions_era_id_fkey"
+            columns: ["era_id"]
+            isOneToOne: false
+            referencedRelation: "eras"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notable_versions_song_id_fkey"
+            columns: ["song_id"]
+            isOneToOne: false
+            referencedRelation: "songs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          display_name: string | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      setlist_slots: {
+        Row: {
+          added_by_user_id: string | null
+          id: string
+          notable_version_id: string | null
+          notes: string | null
+          position: number
+          segue_to_next: boolean | null
+          set_number: number
+          setlist_id: string
+          song_id: string
+        }
+        Insert: {
+          added_by_user_id?: string | null
+          id?: string
+          notable_version_id?: string | null
+          notes?: string | null
+          position: number
+          segue_to_next?: boolean | null
+          set_number: number
+          setlist_id: string
+          song_id: string
+        }
+        Update: {
+          added_by_user_id?: string | null
+          id?: string
+          notable_version_id?: string | null
+          notes?: string | null
+          position?: number
+          segue_to_next?: boolean | null
+          set_number?: number
+          setlist_id?: string
+          song_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "setlist_slots_notable_version_id_fkey"
+            columns: ["notable_version_id"]
+            isOneToOne: false
+            referencedRelation: "notable_versions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "setlist_slots_setlist_id_fkey"
+            columns: ["setlist_id"]
+            isOneToOne: false
+            referencedRelation: "setlists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "setlist_slots_song_id_fkey"
+            columns: ["song_id"]
+            isOneToOne: false
+            referencedRelation: "songs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      setlists: {
+        Row: {
+          created_at: string
+          creator_id: string
+          era_id: string | null
+          id: string
+          is_collaborative: boolean | null
+          is_public: boolean | null
+          share_token: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          creator_id: string
+          era_id?: string | null
+          id?: string
+          is_collaborative?: boolean | null
+          is_public?: boolean | null
+          share_token?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          creator_id?: string
+          era_id?: string | null
+          id?: string
+          is_collaborative?: boolean | null
+          is_public?: boolean | null
+          share_token?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "setlists_era_id_fkey"
+            columns: ["era_id"]
+            isOneToOne: false
+            referencedRelation: "eras"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      songs: {
+        Row: {
+          first_played: string | null
+          id: string
+          is_jam_vehicle: boolean | null
+          last_played: string | null
+          tags: string[] | null
+          times_played: number | null
+          title: string
+          typical_set_position:
+            | Database["public"]["Enums"]["set_position"]
+            | null
+        }
+        Insert: {
+          first_played?: string | null
+          id?: string
+          is_jam_vehicle?: boolean | null
+          last_played?: string | null
+          tags?: string[] | null
+          times_played?: number | null
+          title: string
+          typical_set_position?:
+            | Database["public"]["Enums"]["set_position"]
+            | null
+        }
+        Update: {
+          first_played?: string | null
+          id?: string
+          is_jam_vehicle?: boolean | null
+          last_played?: string | null
+          tags?: string[] | null
+          times_played?: number | null
+          title?: string
+          typical_set_position?:
+            | Database["public"]["Enums"]["set_position"]
+            | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +294,8 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      collaborator_role: "owner" | "editor" | "viewer"
+      set_position: "opener" | "early" | "mid" | "late" | "closer" | "encore"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +422,9 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      collaborator_role: ["owner", "editor", "viewer"],
+      set_position: ["opener", "early", "mid", "late", "closer", "encore"],
+    },
   },
 } as const
