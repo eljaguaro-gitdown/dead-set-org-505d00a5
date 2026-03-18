@@ -228,6 +228,15 @@ const Builder = () => {
           <Button
             variant="outline"
             size="sm"
+            className={`border-border font-body gap-1.5 ${setlist?.is_public ? "text-accent border-accent/40" : "text-foreground"}`}
+            onClick={togglePublic}
+            title={setlist?.is_public ? "Public — visible on Browse" : "Private — only you and collaborators"}
+          >
+            <Globe className="w-3.5 h-3.5" /> {setlist?.is_public ? "Public" : "Private"}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
             className="border-border text-foreground font-body gap-1.5"
             onClick={() => setShareOpen(true)}
           >
