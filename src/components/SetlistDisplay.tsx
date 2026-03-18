@@ -22,6 +22,7 @@ interface SetlistDisplayProps {
   onToggleSegue: (id: string) => void;
   onUpdateNotes: (id: string, notes: string) => void;
   onReorder: (setNumber: number, fromIndex: number, toIndex: number) => void;
+  onPlayVersion?: (slot: SetlistSlotData) => void;
 }
 
 const SetSection = ({
