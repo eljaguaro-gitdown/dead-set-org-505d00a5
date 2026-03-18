@@ -303,6 +303,17 @@ const Builder = () => {
         }))}
         onApplySuggestion={handleApplyAISuggestion}
       />
+
+      {/* Audio Player */}
+      {playingSlot?.version?.archive_org_url && (
+        <AudioPlayer
+          archiveUrl={playingSlot.version.archive_org_url}
+          songTitle={playingSlot.song.title}
+          showDate={playingSlot.version.show_date}
+          venue={playingSlot.version.venue}
+          onClose={() => setPlayingSlot(null)}
+        />
+      )}
     </div>
   );
 };
