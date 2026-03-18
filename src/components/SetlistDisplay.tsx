@@ -32,6 +32,7 @@ const SetSection = ({
   onRemoveSlot,
   onToggleSegue,
   onUpdateNotes,
+  onPlayVersion,
 }: {
   title: string;
   setNumber: number;
@@ -39,6 +40,7 @@ const SetSection = ({
   onRemoveSlot: (id: string) => void;
   onToggleSegue: (id: string) => void;
   onUpdateNotes: (id: string, notes: string) => void;
+  onPlayVersion?: (slot: SetlistSlotData) => void;
 }) => {
   const setSlots = slots.filter((s) => s.setNumber === setNumber);
 
