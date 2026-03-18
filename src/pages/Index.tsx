@@ -31,18 +31,18 @@ const Index = () => {
           <div className="flex flex-col sm:flex-row gap-4 mt-4">
             <Button
               size="lg"
-              onClick={() => navigate("/builder")}
+              onClick={() => navigate("/auth")}
               className="font-body text-base px-8 py-6 bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_20px_hsl(var(--dead-red)/0.3)]"
             >
-              Start Building
+              Sign Up — It's Free
             </Button>
             <Button
               variant="outline"
               size="lg"
-              onClick={() => navigate("/browse")}
+              onClick={() => navigate("/auth")}
               className="font-body text-base px-8 py-6 border-border text-foreground hover:bg-muted"
             >
-              Browse Setlists
+              Log In
             </Button>
           </div>
         </motion.div>
