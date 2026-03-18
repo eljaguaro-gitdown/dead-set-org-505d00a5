@@ -271,6 +271,7 @@ const Builder = () => {
             onToggleSegue={handleToggleSegue}
             onUpdateNotes={handleUpdateNotes}
             onReorder={handleReorder}
+            onPlayVersion={(slot) => setPlayingSlot(slot)}
           />
         </div>
       </div>
