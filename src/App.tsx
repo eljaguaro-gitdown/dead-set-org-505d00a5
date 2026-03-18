@@ -25,6 +25,8 @@ const App = () => (
           <Route path="/builder" element={<Builder />} />
           <Route path="/builder/:id" element={<Builder />} />
           <Route path="/join/:token" element={<JoinSetlist />} />
+          <Route path="/browse" element={<Browse />} />
+          <Route path="/setlist/:id" element={<SetlistPoster />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
