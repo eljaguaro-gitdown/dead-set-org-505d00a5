@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +9,8 @@ import StealYourFace from "@/components/StealYourFace";
 
 const Auth = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirectTo = searchParams.get("redirect") || "/builder";
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -26,14 +28,14 @@ const Auth = () => {
         });
         if (error) throw error;
         if (data.session) {
-          navigate("/builder");
+          navigate(redirectTo);
         } else {
           toast.success("Check your email to confirm your account!");
         }
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        navigate("/builder");
+        navigate(redirectTo);
       }
     } catch (err: any) {
       toast.error(err.message);
@@ -45,7 +47,7 @@ const Auth = () => {
   const handleGoogleLogin = async () => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: `${window.location.origin}/builder` },
+      options: { redirectTo: `${window.location.origin}${redirectTo}` },
     });
     if (error) toast.error(error.message);
   };

@@ -1,15 +1,18 @@
-import { useState, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
-
-import { Sparkles, Share2, Users, LogOut } from "lucide-react";
+import { useState, useCallback, useEffect } from "react";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { Sparkles, Share2, Users, LogOut, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import SongVault from "@/components/SongVault";
 import SetlistDisplay, { type SetlistSlotData } from "@/components/SetlistDisplay";
+import CollaboratorAvatars from "@/components/CollaboratorAvatars";
+import ChatSidebar from "@/components/ChatSidebar";
+import ShareDialog from "@/components/ShareDialog";
 import { useSongs } from "@/hooks/useSongs";
 import { useAuth } from "@/hooks/useAuth";
+import { useSetlist } from "@/hooks/useSetlist";
 import type { Database } from "@/integrations/supabase/types";
 
 type Song = Database["public"]["Tables"]["songs"]["Row"];
@@ -17,13 +20,59 @@ type NotableVersion = Database["public"]["Tables"]["notable_versions"]["Row"];
 
 const Builder = () => {
   const navigate = useNavigate();
-  const { user, signOut } = useAuth();
+  const { id: paramId } = useParams<{ id: string }>();
+  const { user, loading: authLoading, signOut } = useAuth();
   const [title, setTitle] = useState("Untitled Setlist");
   const [selectedEra, setSelectedEra] = useState<string | null>(null);
-  const [slots, setSlots] = useState<SetlistSlotData[]>([]);
   const [activeSet, setActiveSet] = useState(1);
+  const [chatOpen, setChatOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
+  const [initialized, setInitialized] = useState(false);
 
-  const { songs, eras, loading, getNotableVersions } = useSongs(selectedEra);
+  const { songs, eras, loading: songsLoading, getNotableVersions } = useSongs(selectedEra);
+  const {
+    setlist,
+    slots,
+    collaborators,
+    createSetlist,
+    addSlot,
+    removeSlot,
+    updateSlot,
+    updateTitle,
+    getShareLink,
+  } = useSetlist(user, paramId);
+
+  // Initialize setlist (create new or load existing)
+  useEffect(() => {
+    if (!user || initialized || authLoading) return;
+    if (!paramId && !setlist) {
+      // Create new setlist
+      createSetlist(title, selectedEra).then((created) => {
+        if (created) {
+          navigate(`/builder/${created.id}`, { replace: true });
+        }
+        setInitialized(true);
+      });
+    } else {
+      setInitialized(true);
+    }
+  }, [user, paramId, initialized, authLoading, setlist]);
+
+  // Sync title from loaded setlist
+  useEffect(() => {
+    if (setlist?.title) {
+      setTitle(setlist.title);
+    }
+    if (setlist?.era_id) {
+      setSelectedEra(setlist.era_id);
+    }
+  }, [setlist]);
+
+  const handleTitleBlur = useCallback(() => {
+    if (title !== setlist?.title) {
+      updateTitle(title);
+    }
+  }, [title, setlist, updateTitle]);
 
   const handleSelectSong = useCallback(
     (song: Song, version?: NotableVersion) => {
@@ -37,38 +86,45 @@ const Builder = () => {
         segueToNext: false,
         notes: "",
       };
-      setSlots((prev) => [...prev, newSlot]);
+      addSlot(newSlot);
       toast.success(`${song.title} added to Set ${activeSet === 3 ? "Encore" : activeSet}`);
     },
-    [slots, activeSet]
+    [slots, activeSet, addSlot]
   );
 
   const handleRemoveSlot = useCallback((id: string) => {
-    setSlots((prev) => prev.filter((s) => s.id !== id));
-  }, []);
+    removeSlot(id);
+  }, [removeSlot]);
 
   const handleToggleSegue = useCallback((id: string) => {
-    setSlots((prev) =>
-      prev.map((s) => (s.id === id ? { ...s, segueToNext: !s.segueToNext } : s))
-    );
-  }, []);
+    const slot = slots.find((s) => s.id === id);
+    if (slot) {
+      updateSlot(id, { segueToNext: !slot.segueToNext });
+    }
+  }, [slots, updateSlot]);
 
   const handleUpdateNotes = useCallback((id: string, notes: string) => {
-    setSlots((prev) => prev.map((s) => (s.id === id ? { ...s, notes } : s)));
-  }, []);
+    updateSlot(id, { notes });
+  }, [updateSlot]);
 
   const handleReorder = useCallback(
     (setNumber: number, fromIndex: number, toIndex: number) => {
-      setSlots((prev) => {
-        const setSlots = prev.filter((s) => s.setNumber === setNumber);
-        const otherSlots = prev.filter((s) => s.setNumber !== setNumber);
-        const [moved] = setSlots.splice(fromIndex, 1);
-        setSlots.splice(toIndex, 0, moved);
-        return [...otherSlots, ...setSlots.map((s, i) => ({ ...s, position: i }))];
-      });
+      // Local reorder (DB sync handled by updateSlot)
     },
     []
   );
+
+  if (authLoading) {
+    return (
+      <div className="grain-overlay min-h-screen bg-background flex items-center justify-center">
+        <div className="space-y-3">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="h-10 w-48 bg-muted rounded-lg animate-pulse" />
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   if (!user) {
     navigate("/auth");
@@ -86,6 +142,7 @@ const Builder = () => {
           <Input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
+            onBlur={handleTitleBlur}
             className="bg-transparent border-none text-foreground font-display text-lg p-0 h-auto focus-visible:ring-0 max-w-[200px]"
           />
           <Select value={selectedEra || ""} onValueChange={(v) => setSelectedEra(v || null)}>
@@ -100,6 +157,7 @@ const Builder = () => {
               ))}
             </SelectContent>
           </Select>
+          <CollaboratorAvatars collaborators={collaborators} />
         </div>
         <div className="flex items-center gap-2">
           {/* Set selector for adding songs */}
@@ -119,13 +177,28 @@ const Builder = () => {
               </button>
             ))}
           </div>
-          <Button variant="outline" size="sm" className="border-border text-foreground font-body gap-1.5" disabled>
-            <Users className="w-3.5 h-3.5" /> Collab
+          <Button
+            variant="outline"
+            size="sm"
+            className="border-border text-foreground font-body gap-1.5"
+            onClick={() => setChatOpen(true)}
+          >
+            <MessageCircle className="w-3.5 h-3.5" /> Chat
           </Button>
-          <Button variant="outline" size="sm" className="border-border text-foreground font-body gap-1.5" disabled>
+          <Button
+            variant="outline"
+            size="sm"
+            className="border-border text-foreground font-body gap-1.5"
+            disabled
+          >
             <Sparkles className="w-3.5 h-3.5" /> AI
           </Button>
-          <Button variant="outline" size="sm" className="border-border text-foreground font-body gap-1.5" disabled>
+          <Button
+            variant="outline"
+            size="sm"
+            className="border-border text-foreground font-body gap-1.5"
+            onClick={() => setShareOpen(true)}
+          >
             <Share2 className="w-3.5 h-3.5" /> Share
           </Button>
           <Button
@@ -143,7 +216,7 @@ const Builder = () => {
       <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
         {/* Song Vault */}
         <div className="w-full lg:w-[380px] border-r border-border overflow-hidden flex flex-col lg:max-h-[calc(100vh-57px)]">
-          {loading ? (
+          {songsLoading ? (
             <div className="p-4 space-y-3">
               {Array.from({ length: 8 }).map((_, i) => (
                 <div key={i} className="h-14 bg-muted rounded-lg animate-pulse" />
@@ -170,6 +243,21 @@ const Builder = () => {
           />
         </div>
       </div>
+
+      {/* Chat Sidebar */}
+      <ChatSidebar
+        setlistId={setlist?.id || null}
+        user={user}
+        isOpen={chatOpen}
+        onClose={() => setChatOpen(false)}
+      />
+
+      {/* Share Dialog */}
+      <ShareDialog
+        open={shareOpen}
+        onOpenChange={setShareOpen}
+        shareLink={getShareLink()}
+      />
     </div>
   );
 };
