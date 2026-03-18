@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Zap, ChevronDown, ChevronUp, ExternalLink } from "lucide-react";
+import { Search, Zap, ChevronDown, ChevronUp, ExternalLink, Headphones } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import type { Database } from "@/integrations/supabase/types";
