@@ -159,15 +159,27 @@ const SongVault = ({ songs, eraId, onSelectSong, getNotableVersions, onPlayArchi
                               <Zap key={i} className="w-3 h-3 text-accent fill-accent" />
                             ))}
                             {v.archive_org_url && (
-                              <a
-                                href={v.archive_org_url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                onClick={(e) => e.stopPropagation()}
-                                className="ml-1"
-                              >
-                                <ExternalLink className="w-3 h-3 text-secondary" />
-                              </a>
+                              <>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    onPlayArchive?.(v.archive_org_url!, song.title, v.show_date, v.venue);
+                                  }}
+                                  className="ml-1"
+                                  title="Preview audio"
+                                >
+                                  <Headphones className="w-3 h-3 text-accent hover:text-primary transition-colors" />
+                                </button>
+                                <a
+                                  href={v.archive_org_url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="ml-1"
+                                >
+                                  <ExternalLink className="w-3 h-3 text-secondary" />
+                                </a>
+                              </>
                             )}
                           </div>
                         </div>
