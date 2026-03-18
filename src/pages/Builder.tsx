@@ -28,6 +28,7 @@ const Builder = () => {
   const [activeSet, setActiveSet] = useState(1);
   const [chatOpen, setChatOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
+  const [aiOpen, setAiOpen] = useState(false);
   const [initialized, setInitialized] = useState(false);
 
   const { songs, eras, loading: songsLoading, getNotableVersions } = useSongs(selectedEra);
