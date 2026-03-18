@@ -218,7 +218,7 @@ const Builder = () => {
             variant="outline"
             size="sm"
             className="border-border text-foreground font-body gap-1.5"
-            disabled
+            onClick={() => setAiOpen(true)}
           >
             <Sparkles className="w-3.5 h-3.5" /> AI
           </Button>
