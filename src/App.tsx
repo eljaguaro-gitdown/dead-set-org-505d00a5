@@ -7,6 +7,8 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Builder from "./pages/Builder";
 import JoinSetlist from "./pages/JoinSetlist";
+import Browse from "./pages/Browse";
+import SetlistPoster from "./pages/SetlistPoster";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
