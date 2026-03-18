@@ -135,6 +135,7 @@ const SetlistDisplay = ({
   onRemoveSlot,
   onToggleSegue,
   onUpdateNotes,
+  onPlayVersion,
 }: SetlistDisplayProps) => {
   return (
     <div className="flex flex-col h-full">
@@ -149,6 +150,7 @@ const SetlistDisplay = ({
           onRemoveSlot={onRemoveSlot}
           onToggleSegue={onToggleSegue}
           onUpdateNotes={onUpdateNotes}
+          onPlayVersion={onPlayVersion}
         />
         <SetSection
           title="Set II"
@@ -157,6 +159,7 @@ const SetlistDisplay = ({
           onRemoveSlot={onRemoveSlot}
           onToggleSegue={onToggleSegue}
           onUpdateNotes={onUpdateNotes}
+          onPlayVersion={onPlayVersion}
         />
         <SetSection
           title="Encore"
@@ -165,6 +168,7 @@ const SetlistDisplay = ({
           onRemoveSlot={onRemoveSlot}
           onToggleSegue={onToggleSegue}
           onUpdateNotes={onUpdateNotes}
+          onPlayVersion={onPlayVersion}
         />
       </div>
     </div>
