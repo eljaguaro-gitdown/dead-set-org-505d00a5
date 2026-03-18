@@ -188,6 +188,14 @@ export const useSetlist = (user: User | null, setlistId?: string | null) => {
     setSetlist((prev) => prev ? { ...prev, title: newTitle } : prev);
   }, [setlist]);
 
+  const togglePublic = useCallback(async () => {
+    if (!setlist) return;
+    const newVal = !setlist.is_public;
+    await supabase.from("setlists").update({ is_public: newVal }).eq("id", setlist.id);
+    setSetlist((prev) => prev ? { ...prev, is_public: newVal } : prev);
+    toast.success(newVal ? "Setlist is now public" : "Setlist is now private");
+  }, [setlist]);
+
   // Generate share link
   const getShareLink = useCallback(() => {
     if (!setlist?.share_token) return "";
