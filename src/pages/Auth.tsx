@@ -28,7 +28,7 @@ const Auth = () => {
         });
         if (error) throw error;
         if (data.session) {
-          navigate("/builder");
+          navigate(redirectTo);
         } else {
           toast.success("Check your email to confirm your account!");
         }
