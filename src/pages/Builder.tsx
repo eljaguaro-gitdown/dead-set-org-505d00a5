@@ -287,6 +287,19 @@ const Builder = () => {
         onOpenChange={setShareOpen}
         shareLink={getShareLink()}
       />
+
+      {/* AI Dead Head Dialog */}
+      <AIDeadHeadDialog
+        open={aiOpen}
+        onOpenChange={setAiOpen}
+        eraId={selectedEra}
+        currentSlots={slots.map((s) => ({
+          songTitle: s.song.title,
+          setNumber: s.setNumber,
+          segue: s.segueToNext,
+        }))}
+        onApplySuggestion={handleApplyAISuggestion}
+      />
     </div>
   );
 };
