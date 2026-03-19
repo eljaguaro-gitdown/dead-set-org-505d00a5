@@ -19,7 +19,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { motion } from "framer-motion";
 import { X, GripVertical, ChevronRight, ExternalLink, Headphones } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
-import { findArchiveRecording } from "@/lib/archiveOrg";
+import { findArchiveRecording, type ArchiveResult } from "@/lib/archiveOrg";
 import type { Database } from "@/integrations/supabase/types";
 
 type Song = Database["public"]["Tables"]["songs"]["Row"];
