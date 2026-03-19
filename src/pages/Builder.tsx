@@ -239,7 +239,7 @@ const Builder = () => {
             <div key={i} className="h-10 w-48 bg-muted rounded-lg animate-pulse" />
           ))}
         </div>
-      </div>
+      </div></PageLayout>
     );
   }
 
