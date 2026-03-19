@@ -39,6 +39,7 @@ const AIDeadHeadDialog = ({
   eraId,
   currentSlots,
   onApplySuggestion,
+  onCreateNewSetlist,
 }: AIDeadHeadDialogProps) => {
   const [mode, setMode] = useState<"build" | "improve" | null>(null);
   const [preferences, setPreferences] = useState("");
