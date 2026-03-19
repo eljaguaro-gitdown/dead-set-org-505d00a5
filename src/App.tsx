@@ -7,6 +7,7 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Builder from "./pages/Builder";
 import MySetlists from "./pages/MySetlists";
+import Profile from "./pages/Profile";
 import JoinSetlist from "./pages/JoinSetlist";
 import Browse from "./pages/Browse";
 import SetlistPoster from "./pages/SetlistPoster";
