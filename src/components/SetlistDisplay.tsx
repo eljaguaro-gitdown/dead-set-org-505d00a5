@@ -43,6 +43,7 @@ interface SetlistDisplayProps {
   onUpdateNotes: (id: string, notes: string) => void;
   onReorder: (newSlots: SetlistSlotData[]) => void;
   onPlayVersion?: (slot: SetlistSlotData) => void;
+  onPlaySetlist?: () => void;
 }
 
 /* ── Sortable slot item ── */
