@@ -100,6 +100,8 @@ const AIDeadHeadDialog = ({
     setMode(null);
     setSuggestion(null);
     setPreferences("");
+    setNamingNew(false);
+    setNewSetlistName("");
   };
 
   const handleClose = (open: boolean) => {
