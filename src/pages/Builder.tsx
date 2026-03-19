@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { findArchiveRecording } from "@/lib/archiveOrg";
 import { Sparkles, Share2, Users, LogOut, MessageCircle, Globe, CheckCircle, List } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import PageLayout from "@/components/PageLayout";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
@@ -232,13 +233,13 @@ const Builder = () => {
   }, [setlist]);
   if (authLoading) {
     return (
-      <div className="grain-overlay min-h-screen bg-background flex items-center justify-center">
+      <PageLayout minimal><div className="flex-1 flex items-center justify-center">
         <div className="space-y-3">
           {Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="h-10 w-48 bg-muted rounded-lg animate-pulse" />
           ))}
         </div>
-      </div>
+      </div></PageLayout>
     );
   }
 
@@ -248,7 +249,7 @@ const Builder = () => {
   }
 
   return (
-    <div className="grain-overlay min-h-screen bg-background flex flex-col">
+    <PageLayout minimal>
       {/* Top Bar */}
       <header className="border-b border-border">
         {/* Row 1: Logo, title, saved indicator */}
@@ -520,7 +521,7 @@ const Builder = () => {
           />
         );
       })()}
-    </div>
+    </PageLayout>
   );
 };
 

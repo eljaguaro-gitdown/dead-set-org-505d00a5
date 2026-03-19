@@ -5,11 +5,8 @@ import DancingBear from "@/components/DancingBear";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useEffect } from "react";
-
-const navLinks = [
-  { label: "ARCHIVE", path: "/browse" },
-  { label: "COMMUNITY", path: "/browse" },
-];
+import PageLayout from "@/components/PageLayout";
+import SiteHeader from "@/components/SiteHeader";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -22,32 +19,24 @@ const Index = () => {
   }, [user, loading, navigate]);
 
   return (
-    <div className="grain-overlay min-h-screen bg-background flex flex-col">
-      {/* Top nav — dead.net style */}
-      <nav className="border-b border-border/50 px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <StealYourFace size={32} />
-        </div>
-        <div className="flex items-center gap-6">
-          {navLinks.map((link) => (
-            <button
-              key={link.label}
-              onClick={() => navigate(link.path)}
-              className="font-display text-sm tracking-[0.15em] text-muted-foreground hover:text-primary transition-colors uppercase"
-            >
-              {link.label}
-            </button>
-          ))}
-          <button
-            onClick={() => navigate("/auth")}
-            className="font-display text-sm tracking-[0.15em] text-muted-foreground hover:text-primary transition-colors uppercase"
-          >
-            Sign In
-          </button>
-        </div>
-      </nav>
+    <PageLayout>
+      {/* Top nav */}
+      <SiteHeader large>
+        <button
+          onClick={() => navigate("/browse")}
+          className="font-display text-sm tracking-[0.15em] text-muted-foreground hover:text-primary transition-colors uppercase"
+        >
+          Archive
+        </button>
+        <button
+          onClick={() => navigate("/auth")}
+          className="font-display text-sm tracking-[0.15em] text-muted-foreground hover:text-primary transition-colors uppercase"
+        >
+          Sign In
+        </button>
+      </SiteHeader>
 
-      {/* Hero — immersive, confident */}
+      {/* Hero */}
       <main className="flex-1 flex flex-col items-center justify-center px-4 relative overflow-hidden">
         {/* Warm ambient glow */}
         <div className="absolute inset-0 pointer-events-none">
@@ -78,7 +67,7 @@ const Index = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5, duration: 0.8 }}
-            className="border border-primary/30 bg-primary/5 rounded-sm px-8 py-4 max-w-lg"
+            className="border border-primary/30 bg-primary/5 backdrop-blur-sm rounded-sm px-8 py-4 max-w-lg"
           >
             <p className="font-hand text-xl sm:text-2xl text-dead-cream/70 italic leading-relaxed">
               "The music never stopped — now curate your own."
@@ -104,7 +93,7 @@ const Index = () => {
           </div>
         </motion.div>
 
-        {/* Eras — like dead.net's category nav */}
+        {/* Eras */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -138,7 +127,7 @@ const Index = () => {
         </motion.div>
       </main>
 
-      {/* Footer — warm, understated */}
+      {/* Footer */}
       <footer className="py-6 text-center border-t border-border/50">
         <div className="flex items-center justify-center gap-2 text-muted-foreground text-sm font-body">
           <span>Built by Deadheads, for Deadheads</span>
@@ -148,7 +137,7 @@ const Index = () => {
           <DancingBear color="blue" />
         </div>
       </footer>
-    </div>
+    </PageLayout>
   );
 };
 

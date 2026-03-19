@@ -9,7 +9,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import StealYourFace from "@/components/StealYourFace";
+import PageLayout from "@/components/PageLayout";
+import SiteHeader from "@/components/SiteHeader";
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -60,41 +61,30 @@ const Profile = () => {
     const filePath = `${user.id}/avatar.${fileExt}`;
 
     setUploading(true);
-    // Remove old avatar if exists
     await supabase.storage.from("avatars").remove([filePath]);
-
     const { error: uploadError } = await supabase.storage
       .from("avatars")
       .upload(filePath, file, { upsert: true });
-
     if (uploadError) {
       toast.error("Failed to upload avatar");
       setUploading(false);
       return;
     }
-
-    const { data: urlData } = supabase.storage
-      .from("avatars")
-      .getPublicUrl(filePath);
-
+    const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(filePath);
     const newUrl = `${urlData.publicUrl}?t=${Date.now()}`;
     setAvatarUrl(newUrl);
-
-    // Save to profile immediately
-    await supabase
-      .from("profiles")
-      .update({ avatar_url: newUrl })
-      .eq("user_id", user.id);
-
+    await supabase.from("profiles").update({ avatar_url: newUrl }).eq("user_id", user.id);
     setUploading(false);
     toast.success("Avatar updated");
   };
 
   if (authLoading || loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="w-6 h-6 text-muted-foreground animate-spin" />
-      </div>
+      <PageLayout>
+        <div className="flex-1 flex items-center justify-center">
+          <Loader2 className="w-6 h-6 text-muted-foreground animate-spin" />
+        </div>
+      </PageLayout>
     );
   }
 
@@ -111,15 +101,8 @@ const Profile = () => {
     .slice(0, 2);
 
   return (
-    <div className="grain-overlay min-h-screen bg-background flex flex-col">
-      {/* Header */}
-      <header className="border-b border-border px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <button onClick={() => navigate("/")} className="flex items-center gap-2">
-            <StealYourFace size={28} />
-            <span className="font-display text-lg text-foreground">Dead Set</span>
-          </button>
-        </div>
+    <PageLayout>
+      <SiteHeader large>
         <Button
           variant="outline"
           size="sm"
@@ -128,9 +111,8 @@ const Profile = () => {
         >
           <ArrowLeft className="w-3.5 h-3.5" /> Back
         </Button>
-      </header>
+      </SiteHeader>
 
-      {/* Content */}
       <main className="flex-1 max-w-md mx-auto w-full px-4 py-8">
         <motion.div
           initial={{ opacity: 0, y: 12 }}
@@ -159,17 +141,9 @@ const Profile = () => {
                   <Camera className="w-6 h-6 text-foreground" />
                 )}
               </button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={handleAvatarUpload}
-              />
+              <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
             </div>
-            <p className="text-xs text-muted-foreground font-body">
-              Click to upload a new photo
-            </p>
+            <p className="text-xs text-muted-foreground font-body">Click to upload a new photo</p>
           </div>
 
           {/* Fields */}
@@ -180,36 +154,22 @@ const Profile = () => {
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
                 placeholder="Your display name"
-                className="bg-card border-border text-foreground font-body"
+                className="bg-card/80 backdrop-blur-sm border-border text-foreground font-body"
               />
             </div>
-
             <div className="space-y-2">
               <Label className="font-body text-sm text-muted-foreground">Email</Label>
-              <Input
-                value={user.email || ""}
-                disabled
-                className="bg-muted border-border text-muted-foreground font-body"
-              />
+              <Input value={user.email || ""} disabled className="bg-muted border-border text-muted-foreground font-body" />
             </div>
           </div>
 
-          {/* Save */}
-          <Button
-            onClick={handleSave}
-            disabled={saving}
-            className="w-full font-body gap-1.5"
-          >
-            {saving ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <Check className="w-4 h-4" />
-            )}
+          <Button onClick={handleSave} disabled={saving} className="w-full font-body gap-1.5">
+            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
             Save Changes
           </Button>
         </motion.div>
       </main>
-    </div>
+    </PageLayout>
   );
 };
 
