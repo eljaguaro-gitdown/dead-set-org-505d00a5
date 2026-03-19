@@ -4,7 +4,7 @@ import cassetteBg from "@/assets/cassette-collection.jpg";
 interface PageLayoutProps {
   children: React.ReactNode;
   className?: string;
-  /** Skip the layered background (e.g. for Builder which needs full control) */
+  /** Lighter background layers for Builder which needs more readability */
   minimal?: boolean;
 }
 
@@ -12,11 +12,22 @@ const PageLayout = ({ children, className = "", minimal = false }: PageLayoutPro
   if (minimal) {
     return (
       <div className={`grain-overlay min-h-screen bg-background flex flex-col relative ${className}`}>
-        {/* Tie-dye bleed through even in minimal */}
+        {/* Subtle tie-dye wash */}
         <div
           className="fixed inset-0 pointer-events-none z-0"
           style={{
             backgroundImage: `url(${tieDyeBg})`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            opacity: 0.15,
+            filter: "saturate(0.5) blur(3px)",
+          }}
+        />
+        {/* Faint cassette texture */}
+        <div
+          className="fixed inset-0 pointer-events-none z-[1]"
+          style={{
+            backgroundImage: `url(${cassetteBg})`,
             backgroundSize: "cover",
             backgroundPosition: "center",
             opacity: 0.06,
@@ -28,36 +39,36 @@ const PageLayout = ({ children, className = "", minimal = false }: PageLayoutPro
   }
 
   return (
-    <div className={`grain-overlay min-h-screen bg-background flex flex-col relative overflow-hidden ${className}`}>
-      {/* Layer 1: Tie-dye at 50% opacity — warm, pushed back */}
+    <div className={`grain-overlay min-h-screen flex flex-col relative overflow-hidden ${className}`}>
+      {/* Layer 1: Cassette tape collection — the soul, visible and warm */}
       <div
         className="fixed inset-0 pointer-events-none z-0"
-        style={{
-          backgroundImage: `url(${tieDyeBg})`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          opacity: 0.12,
-          filter: "saturate(0.6) blur(2px)",
-        }}
-      />
-
-      {/* Layer 2: Cassette collection on top — the soul of the culture */}
-      <div
-        className="fixed inset-0 pointer-events-none z-[1]"
         style={{
           backgroundImage: `url(${cassetteBg})`,
           backgroundSize: "cover",
           backgroundPosition: "center",
-          opacity: 0.08,
-          mixBlendMode: "luminosity",
+          opacity: 0.35,
         }}
       />
 
-      {/* Layer 3: Dark overlay to keep content readable */}
+      {/* Layer 2: Tie-dye wash at 50% — colorful but pushed back */}
       <div
-        className="fixed inset-0 pointer-events-none z-[2]"
+        className="fixed inset-0 pointer-events-none z-[1]"
         style={{
-          background: "radial-gradient(ellipse at center, hsl(var(--background) / 0.85), hsl(var(--background) / 0.95))",
+          backgroundImage: `url(${tieDyeBg})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          opacity: 0.18,
+          filter: "saturate(0.5) blur(2px)",
+          mixBlendMode: "overlay",
+        }}
+      />
+
+      {/* Layer 3: Warm semi-transparent overlay for readability */}
+      <div
+        className="fixed inset-0 pointer-events-none z-[2] bg-background"
+        style={{
+          opacity: 0.7,
         }}
       />
 
