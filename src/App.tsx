@@ -23,6 +23,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
+          <Route path="/my-setlists" element={<MySetlists />} />
           <Route path="/builder" element={<Builder />} />
           <Route path="/builder/:id" element={<Builder />} />
           <Route path="/join/:token" element={<JoinSetlist />} />
