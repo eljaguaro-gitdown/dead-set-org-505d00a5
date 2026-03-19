@@ -303,13 +303,14 @@ const Builder = () => {
             <MessageCircle className="w-3.5 h-3.5" />
           </Button>
           <Button
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7 shrink-0 text-foreground"
+            variant="default"
+            size="sm"
+            className="shrink-0 h-7 px-2.5 gap-1.5 bg-gradient-to-r from-primary to-accent text-primary-foreground font-display text-xs shadow-md hover:shadow-lg hover:scale-105 transition-all duration-200 animate-pulse hover:animate-none"
             onClick={() => setAiOpen(true)}
-            title="AI Suggestions"
+            title="AI Dead Head — Generate a setlist"
           >
             <Sparkles className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">AI Dead Head</span>
           </Button>
           <Button
             variant="ghost"
