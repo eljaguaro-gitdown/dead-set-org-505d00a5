@@ -116,10 +116,22 @@ const Builder = () => {
   }, [updateSlot]);
 
   const handleReorder = useCallback(
-    (setNumber: number, fromIndex: number, toIndex: number) => {
-      // Local reorder (DB sync handled by updateSlot)
+    (newSlots: SetlistSlotData[]) => {
+      // Update local state
+      const { setSlots } = useSetlistRef.current;
+      setSlots(newSlots);
+      // Persist position/set changes
+      if (setlist) {
+        const changed = newSlots.filter((ns) => {
+          const old = slots.find((s) => s.id === ns.id);
+          return old && (old.position !== ns.position || old.setNumber !== ns.setNumber);
+        });
+        changed.forEach((slot) => {
+          updateSlot(slot.id, { position: slot.position, setNumber: slot.setNumber });
+        });
+      }
     },
-    []
+    [setlist, slots, updateSlot]
   );
 
   const handleApplyAISuggestion = useCallback(
