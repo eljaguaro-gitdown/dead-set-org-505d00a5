@@ -389,7 +389,18 @@ const Builder = () => {
             onToggleSegue={handleToggleSegue}
             onUpdateNotes={handleUpdateNotes}
             onReorder={handleReorder}
-            onPlayVersion={(slot) => setPlayingSlot(slot)}
+            onPlayVersion={(slot) => {
+              setPlaylistMode(false);
+              setPlayingSlot(slot);
+            }}
+            onPlaySetlist={() => {
+              if (slots.length === 0) return;
+              // Sort slots by set then position
+              const sorted = [...slots].sort((a, b) => a.setNumber - b.setNumber || a.position - b.position);
+              setPlaylistMode(true);
+              setPlaylistIndex(0);
+              setPlayingSlot(sorted[0]);
+            }}
           />
         </div>
       </div>
