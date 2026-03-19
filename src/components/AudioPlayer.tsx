@@ -13,6 +13,8 @@ interface AudioPlayerProps {
   songTitle: string;
   showDate: string;
   venue?: string | null;
+  autoPlay?: boolean;
+  singleTrackMode?: boolean;
   onClose: () => void;
   onEnded?: () => void;
   playlistInfo?: { current: number; total: number } | null;
