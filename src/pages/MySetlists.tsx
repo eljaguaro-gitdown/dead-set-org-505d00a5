@@ -251,6 +251,33 @@ const MySetlists = () => {
                       background: "radial-gradient(circle at 30% 50%, rgba(120,90,40,0.5), transparent 40%), radial-gradient(circle at 80% 30%, rgba(100,80,30,0.3), transparent 30%)",
                     }} />
                     
+                    {/* Hand-drawn doodles — randomly placed on some spines */}
+                    {(() => {
+                      // Deterministic "random" based on index
+                      const doodleSets = [
+                        [{ emoji: "🌹", pos: "right-[12%] top-[8%]", size: "text-sm", rot: -12 }],
+                        [{ emoji: "⚡", pos: "right-[8%] top-[5%]", size: "text-base", rot: 8 }],
+                        [],
+                        [{ emoji: "💀", pos: "right-[15%] top-[10%]", size: "text-sm", rot: -5 }, { emoji: "🌹", pos: "right-[6%] bottom-[8%]", size: "text-xs", rot: 15 }],
+                        [],
+                        [{ emoji: "🐻", pos: "right-[10%] top-[6%]", size: "text-sm", rot: 10 }],
+                        [{ emoji: "⚡", pos: "right-[18%] top-[8%]", size: "text-xs", rot: -8 }, { emoji: "💀", pos: "right-[7%] top-[5%]", size: "text-sm", rot: 5 }],
+                        [],
+                        [{ emoji: "🌹", pos: "right-[9%] top-[6%]", size: "text-sm", rot: -15 }],
+                        [{ emoji: "🐻", pos: "right-[14%] top-[8%]", size: "text-xs", rot: 12 }, { emoji: "⚡", pos: "right-[5%] top-[5%]", size: "text-sm", rot: -6 }],
+                      ];
+                      const doodles = doodleSets[i % doodleSets.length];
+                      return doodles.map((d, di) => (
+                        <span
+                          key={di}
+                          className={`absolute ${d.pos} ${d.size} pointer-events-none select-none opacity-60`}
+                          style={{ transform: `rotate(${d.rot}deg)`, filter: "saturate(0.6)" }}
+                        >
+                          {d.emoji}
+                        </span>
+                      ));
+                    })()}
+                    
                     {/* Content */}
                     <div className="flex items-center px-5 h-full relative z-10">
                       <div className="flex items-center gap-4 min-w-0 flex-1">
