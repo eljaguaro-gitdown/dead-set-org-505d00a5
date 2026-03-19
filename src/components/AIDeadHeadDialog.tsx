@@ -292,14 +292,55 @@ const AIDeadHeadDialog = ({
                     <Zap className="w-3.5 h-3.5" /> Apply to Current
                   </Button>
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleCreateNew}
-                  className="border-primary/30 text-primary font-body gap-1.5 w-full hover:bg-primary/10"
-                >
-                  <Wand2 className="w-3.5 h-3.5" /> Create as New Setlist
-                </Button>
+                {!namingNew ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      const firstSongs = suggestion?.sets.flatMap(s => s.songs).slice(0, 2).map(s => s.title) || [];
+                      setNewSetlistName(firstSongs.length > 0 ? `${firstSongs.join(" > ")}` : "AI Generated Setlist");
+                      setNamingNew(true);
+                    }}
+                    className="border-primary/30 text-primary font-body gap-1.5 w-full hover:bg-primary/10"
+                  >
+                    <Wand2 className="w-3.5 h-3.5" /> Create as New Setlist
+                  </Button>
+                ) : (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    className="space-y-2"
+                  >
+                    <label className="text-xs text-muted-foreground font-body block">
+                      Name your setlist
+                    </label>
+                    <Input
+                      ref={nameInputRef}
+                      value={newSetlistName}
+                      onChange={(e) => setNewSetlistName(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && handleCreateNew()}
+                      placeholder="e.g. Cornell '77 Dream Set"
+                      className="bg-background border-border text-foreground font-body text-sm h-8"
+                    />
+                    <div className="flex gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setNamingNew(false)}
+                        className="text-muted-foreground font-body"
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={handleCreateNew}
+                        className="bg-primary text-primary-foreground font-body gap-1.5 flex-1"
+                      >
+                        <Wand2 className="w-3.5 h-3.5" /> Create Setlist
+                      </Button>
+                    </div>
+                  </motion.div>
+                )}
               </div>
             </motion.div>
           )}
