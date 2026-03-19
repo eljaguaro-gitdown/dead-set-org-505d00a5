@@ -324,8 +324,18 @@ const SetlistDisplay = ({
 
   return (
     <div className="flex flex-col h-full">
-      <div className="p-4 border-b border-border">
+      <div className="p-4 border-b border-border flex items-center justify-between">
         <h2 className="font-display text-lg text-foreground">The Set</h2>
+        {slots.length > 0 && onPlaySetlist && (
+          <Button
+            onClick={onPlaySetlist}
+            size="sm"
+            className="gap-1.5 bg-primary text-primary-foreground font-display text-xs h-8 px-3 shadow-md hover:shadow-lg hover:scale-105 transition-all duration-200"
+          >
+            <Play className="w-3.5 h-3.5 fill-current" />
+            Play Setlist
+          </Button>
+        )}
       </div>
       <DndContext
         sensors={sensors}
