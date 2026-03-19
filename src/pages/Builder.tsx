@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import { Sparkles, Share2, Users, LogOut, MessageCircle, Globe, CheckCircle, List } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -139,7 +140,31 @@ const Builder = () => {
       for (const slot of slots) {
         await removeSlot(slot.id);
       }
-      // Find songs from the songs array by matching IDs
+      // Add AI-suggested songs
+      await addAISongsToCurrentSetlist(suggestion);
+    },
+    [slots, songs, removeSlot, addSlot]
+  );
+
+  const handleCreateNewFromAI = useCallback(
+    async (suggestion: { explanation: string; sets: { setNumber: number; songs: { songId: string; title: string; segueToNext: boolean; notes: string; position: number }[] }[] }) => {
+      // Create a new setlist with a generated title
+      const firstSongs = suggestion.sets.flatMap(s => s.songs).slice(0, 2).map(s => s.title);
+      const newTitle = firstSongs.length > 0 ? `AI Set: ${firstSongs.join(" > ")}` : "AI Generated Setlist";
+      const created = await createSetlist(newTitle, selectedEra);
+      if (!created) return;
+      // Navigate to the new setlist
+      navigate(`/builder/${created.id}`, { replace: false });
+      // Wait a tick for the setlist state to update, then add songs
+      setTimeout(async () => {
+        await addAISongsToSetlist(suggestion, created.id);
+      }, 300);
+    },
+    [songs, createSetlist, selectedEra, navigate]
+  );
+
+  const addAISongsToCurrentSetlist = useCallback(
+    async (suggestion: { sets: { setNumber: number; songs: { songId: string; title: string; segueToNext: boolean; notes: string; position: number }[] }[] }) => {
       for (const set of suggestion.sets) {
         for (const suggestedSong of set.songs) {
           const song = songs.find((s) => s.id === suggestedSong.songId);
@@ -157,7 +182,29 @@ const Builder = () => {
         }
       }
     },
-    [slots, songs, removeSlot, addSlot]
+    [songs, addSlot]
+  );
+
+  const addAISongsToSetlist = useCallback(
+    async (suggestion: { sets: { setNumber: number; songs: { songId: string; title: string; segueToNext: boolean; notes: string; position: number }[] }[] }, targetSetlistId: string) => {
+      for (const set of suggestion.sets) {
+        for (const suggestedSong of set.songs) {
+          const song = songs.find((s) => s.id === suggestedSong.songId);
+          if (!song || !user) continue;
+          await supabase.from("setlist_slots").insert({
+            id: crypto.randomUUID(),
+            setlist_id: targetSetlistId,
+            set_number: set.setNumber,
+            position: suggestedSong.position,
+            song_id: song.id,
+            added_by_user_id: user.id,
+            notes: suggestedSong.notes || "",
+            segue_to_next: suggestedSong.segueToNext,
+          });
+        }
+      }
+    },
+    [songs, user]
   );
 
   if (authLoading) {
@@ -373,6 +420,7 @@ const Builder = () => {
           segue: s.segueToNext,
         }))}
         onApplySuggestion={handleApplyAISuggestion}
+        onCreateNewSetlist={handleCreateNewFromAI}
       />
 
       {/* Audio Player */}
