@@ -180,14 +180,15 @@ const Builder = () => {
   return (
     <div className="grain-overlay min-h-screen bg-background flex flex-col">
       {/* Top Bar */}
-      <header className="border-b border-border px-4 py-3 flex items-center justify-between gap-3 flex-wrap">
-        <div className="flex items-center gap-3 min-w-0">
+      <header className="border-b border-border">
+        {/* Row 1: Logo, title, saved indicator */}
+        <div className="px-3 py-2 flex items-center gap-2">
           <button onClick={() => navigate("/")} className="font-display text-lg text-primary shrink-0">
             DS
           </button>
           <button
             onClick={() => navigate("/my-setlists")}
-            className="flex items-center gap-1 text-xs font-body text-muted-foreground hover:text-foreground transition-colors shrink-0"
+            className="text-xs font-body text-muted-foreground hover:text-foreground transition-colors shrink-0 hidden sm:flex items-center gap-1"
             title="My Setlists"
           >
             <List className="w-3.5 h-3.5" /> My Setlists
@@ -196,31 +197,21 @@ const Builder = () => {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             onBlur={handleTitleBlur}
-            className="bg-transparent border-none text-foreground font-display text-lg p-0 h-auto focus-visible:ring-0 max-w-[200px]"
+            className="bg-transparent border-none text-foreground font-display text-base sm:text-lg p-0 h-auto focus-visible:ring-0 min-w-0 flex-1"
           />
-          <Select value={selectedEra || ""} onValueChange={(v) => setSelectedEra(v || null)}>
-            <SelectTrigger className="w-[160px] bg-card border-border text-foreground font-body text-xs h-8">
-              <SelectValue placeholder="All eras" />
-            </SelectTrigger>
-            <SelectContent className="bg-card border-border">
-              {eras.map((era) => (
-                <SelectItem key={era.id} value={era.id} className="font-body text-xs">
-                  {era.name} ({era.year_start}–{era.year_end})
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <CollaboratorAvatars collaborators={collaborators} />
           {setlist && (
             <span className="flex items-center gap-1 text-xs text-accent font-body shrink-0" title="All changes are saved automatically">
-              <CheckCircle className="w-3 h-3" /> Saved
+              <CheckCircle className="w-3 h-3" /> <span className="hidden sm:inline">Saved</span>
             </span>
           )}
+          <CollaboratorAvatars collaborators={collaborators} />
         </div>
-        <div className="flex items-center gap-2">
-          {/* Set selector for adding songs */}
-          <div className="flex items-center gap-1 mr-2">
-            <span className="text-xs text-muted-foreground font-body">Add to:</span>
+
+        {/* Row 2: Toolbar — horizontally scrollable on mobile */}
+        <div className="px-3 py-1.5 border-t border-border/50 flex items-center gap-1.5 overflow-x-auto scrollbar-hide">
+          {/* Set selector */}
+          <div className="flex items-center gap-1 shrink-0">
+            <span className="text-xs text-muted-foreground font-body hidden sm:inline">Add to:</span>
             {[1, 2, 3].map((n) => (
               <button
                 key={n}
@@ -235,44 +226,77 @@ const Builder = () => {
               </button>
             ))}
           </div>
+
+          <div className="w-px h-5 bg-border shrink-0" />
+
+          {/* Era filter — compact on mobile */}
+          <Select value={selectedEra || ""} onValueChange={(v) => setSelectedEra(v || null)}>
+            <SelectTrigger className="w-auto min-w-[90px] max-w-[140px] bg-card border-border text-foreground font-body text-xs h-7 shrink-0">
+              <SelectValue placeholder="All eras" />
+            </SelectTrigger>
+            <SelectContent className="bg-card border-border">
+              {eras.map((era) => (
+                <SelectItem key={era.id} value={era.id} className="font-body text-xs">
+                  {era.name} ({era.year_start}–{era.year_end})
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <div className="w-px h-5 bg-border shrink-0" />
+
+          {/* Action buttons — icon-only on mobile */}
           <Button
-            variant="outline"
-            size="sm"
-            className="border-border text-foreground font-body gap-1.5"
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7 shrink-0 text-foreground"
             onClick={() => setChatOpen(true)}
+            title="Chat"
           >
-            <MessageCircle className="w-3.5 h-3.5" /> Chat
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="border-border text-foreground font-body gap-1.5"
-            onClick={() => setAiOpen(true)}
-          >
-            <Sparkles className="w-3.5 h-3.5" /> AI
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className={`border-border font-body gap-1.5 ${setlist?.is_public ? "text-accent border-accent/40" : "text-foreground"}`}
-            onClick={togglePublic}
-            title={setlist?.is_public ? "Public — visible on Browse" : "Private — only you and collaborators"}
-          >
-            <Globe className="w-3.5 h-3.5" /> {setlist?.is_public ? "Public" : "Private"}
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="border-border text-foreground font-body gap-1.5"
-            onClick={() => setShareOpen(true)}
-          >
-            <Share2 className="w-3.5 h-3.5" /> Share
+            <MessageCircle className="w-3.5 h-3.5" />
           </Button>
           <Button
             variant="ghost"
-            size="sm"
+            size="icon"
+            className="h-7 w-7 shrink-0 text-foreground"
+            onClick={() => setAiOpen(true)}
+            title="AI Suggestions"
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className={`h-7 w-7 shrink-0 ${setlist?.is_public ? "text-accent" : "text-foreground"}`}
+            onClick={togglePublic}
+            title={setlist?.is_public ? "Public — visible on Browse" : "Private — only you and collaborators"}
+          >
+            <Globe className="w-3.5 h-3.5" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7 shrink-0 text-foreground"
+            onClick={() => setShareOpen(true)}
+            title="Share"
+          >
+            <Share2 className="w-3.5 h-3.5" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7 shrink-0 text-muted-foreground hover:text-foreground"
+            onClick={() => navigate("/my-setlists")}
+            title="My Setlists"
+          >
+            <List className="w-3.5 h-3.5 sm:hidden" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7 shrink-0 text-muted-foreground hover:text-foreground"
             onClick={signOut}
-            className="text-muted-foreground hover:text-foreground"
+            title="Sign Out"
           >
             <LogOut className="w-3.5 h-3.5" />
           </Button>
