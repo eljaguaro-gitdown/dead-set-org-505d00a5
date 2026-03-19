@@ -63,8 +63,7 @@
 
     --font-display: 'Pirata One', 'Permanent Marker', cursive;
     --font-hand: 'Caveat', cursive;
-    --font-marker: 'Permanent Marker', cursive;
-    --font-body: 'Instrument Sans', sans-serif;
+    --font-body: 'Patrick Hand', 'Caveat', cursive;
 
     --grain-opacity: 0.04;
   }
