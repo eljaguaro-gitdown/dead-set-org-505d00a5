@@ -117,6 +117,7 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, onClose, onEnded,
       setCurrentTrack((p) => p + 1);
     } else {
       setPlaying(false);
+      onEnded?.();
     }
   };
 
