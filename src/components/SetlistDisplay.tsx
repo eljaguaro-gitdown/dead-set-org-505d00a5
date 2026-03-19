@@ -213,6 +213,7 @@ const SetSection = ({
   title,
   setNumber,
   slots,
+  activeSlotId,
   onRemoveSlot,
   onToggleSegue,
   onUpdateNotes,
@@ -221,6 +222,7 @@ const SetSection = ({
   title: string;
   setNumber: number;
   slots: SetlistSlotData[];
+  activeSlotId?: string | null;
   onRemoveSlot: (id: string) => void;
   onToggleSegue: (id: string) => void;
   onUpdateNotes: (id: string, notes: string) => void;
