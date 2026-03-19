@@ -200,6 +200,11 @@ const Builder = () => {
             </SelectContent>
           </Select>
           <CollaboratorAvatars collaborators={collaborators} />
+          {setlist && (
+            <span className="flex items-center gap-1 text-xs text-accent font-body shrink-0" title="All changes are saved automatically">
+              <CheckCircle className="w-3 h-3" /> Saved
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-2">
           {/* Set selector for adding songs */}
