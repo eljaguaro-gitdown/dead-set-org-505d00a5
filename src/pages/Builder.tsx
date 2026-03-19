@@ -253,22 +253,22 @@ const Builder = () => {
       {/* Top Bar */}
       <header className="border-b border-border">
         {/* Row 1: Logo, title, saved indicator */}
-        <div className="px-4 py-3 flex items-center gap-3">
-          <button onClick={() => navigate("/")} className="font-display text-2xl text-primary shrink-0">
+        <div className="px-6 py-5 flex items-center gap-5">
+          <button onClick={() => navigate("/")} className="font-display text-6xl text-primary shrink-0">
             DS
           </button>
           <button
             onClick={() => navigate("/my-setlists")}
-            className="text-sm font-body text-muted-foreground hover:text-foreground transition-colors shrink-0 hidden sm:flex items-center gap-1.5"
+            className="text-2xl font-body text-muted-foreground hover:text-foreground transition-colors shrink-0 hidden sm:flex items-center gap-2"
             title="My Setlists"
           >
-            <List className="w-5 h-5" /> My Setlists
+            <List className="w-8 h-8" /> My Setlists
           </button>
           <Input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             onBlur={handleTitleBlur}
-            className="bg-transparent border-none text-foreground font-display text-xl sm:text-2xl p-0 h-auto focus-visible:ring-0 min-w-0 flex-1"
+            className="bg-transparent border-none text-foreground font-display text-4xl sm:text-5xl p-0 h-auto focus-visible:ring-0 min-w-0 flex-1"
           />
           {setlist && (
             <span className="flex items-center gap-1.5 text-sm text-accent font-body shrink-0" title="All changes are saved automatically">
