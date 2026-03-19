@@ -75,9 +75,19 @@ const AIDeadHeadDialog = ({
   const handleApply = () => {
     if (!suggestion) return;
     onApplySuggestion(suggestion);
-    onOpenChange(false);
+    handleReset();
     toast.success("AI setlist applied!");
-    // Reset state
+  };
+
+  const handleCreateNew = () => {
+    if (!suggestion) return;
+    onCreateNewSetlist(suggestion);
+    handleReset();
+    toast.success("Creating new setlist from AI suggestion...");
+  };
+
+  const handleReset = () => {
+    onOpenChange(false);
     setMode(null);
     setSuggestion(null);
     setPreferences("");
