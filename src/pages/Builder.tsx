@@ -117,10 +117,8 @@ const Builder = () => {
 
   const handleReorder = useCallback(
     (newSlots: SetlistSlotData[]) => {
-      // Update local state
-      const { setSlots } = useSetlistRef.current;
       setSlots(newSlots);
-      // Persist position/set changes
+      // Persist position/set changes to DB
       if (setlist) {
         const changed = newSlots.filter((ns) => {
           const old = slots.find((s) => s.id === ns.id);
@@ -131,7 +129,7 @@ const Builder = () => {
         });
       }
     },
-    [setlist, slots, updateSlot]
+    [setlist, slots, updateSlot, setSlots]
   );
 
   const handleApplyAISuggestion = useCallback(
