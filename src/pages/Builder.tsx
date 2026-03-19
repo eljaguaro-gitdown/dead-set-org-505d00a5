@@ -521,7 +521,7 @@ const Builder = () => {
           />
         );
       })()}
-    </div>
+    </PageLayout>
   );
 };
 

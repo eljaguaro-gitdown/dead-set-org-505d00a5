@@ -5,7 +5,8 @@ import { Plus, Globe, Lock, Music, Trash2, Calendar, Search, User } from "lucide
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import StealYourFace from "@/components/StealYourFace";
+import PageLayout from "@/components/PageLayout";
+import SiteHeader from "@/components/SiteHeader";
 import DancingBear from "@/components/DancingBear";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -61,13 +62,15 @@ const MySetlists = () => {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-pulse space-y-3">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="h-16 w-64 bg-muted rounded-lg" />
-          ))}
+      <PageLayout>
+        <div className="flex-1 flex items-center justify-center">
+          <div className="animate-pulse space-y-3">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="h-16 w-64 bg-muted rounded-lg" />
+            ))}
+          </div>
         </div>
-      </div>
+      </PageLayout>
     );
   }
 
@@ -79,47 +82,38 @@ const MySetlists = () => {
   const hasSetlists = !loading && setlists.length > 0;
 
   return (
-    <div className="grain-overlay min-h-screen bg-background flex flex-col">
-      {/* Header */}
-      <header className="border-b border-border px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <button onClick={() => navigate("/")} className="flex items-center gap-2">
-            <StealYourFace size={28} />
-            <span className="font-display text-lg text-foreground">Dead Set</span>
-          </button>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="border-border text-foreground font-body gap-1.5"
-            onClick={() => navigate("/browse")}
-          >
-            <Search className="w-3.5 h-3.5" /> Browse
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-muted-foreground hover:text-foreground"
-            onClick={() => navigate("/profile")}
-            title="Profile"
-          >
-            <User className="w-4 h-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={signOut}
-            className="text-muted-foreground hover:text-foreground font-body"
-          >
-            Sign Out
-          </Button>
-        </div>
-      </header>
+    <PageLayout>
+      <SiteHeader large>
+        <Button
+          variant="outline"
+          size="sm"
+          className="border-border text-foreground font-body gap-1.5"
+          onClick={() => navigate("/browse")}
+        >
+          <Search className="w-3.5 h-3.5" /> Browse
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="text-muted-foreground hover:text-foreground"
+          onClick={() => navigate("/profile")}
+          title="Profile"
+        >
+          <User className="w-4 h-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={signOut}
+          className="text-muted-foreground hover:text-foreground font-body"
+        >
+          Sign Out
+        </Button>
+      </SiteHeader>
 
       {/* Content */}
       <main className="flex-1 max-w-2xl mx-auto w-full px-4 py-6">
-        {/* Hero CTA — always visible */}
+        {/* Hero CTA */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -143,7 +137,6 @@ const MySetlists = () => {
                 </p>
               </div>
             </div>
-            {/* Subtle glow */}
             <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none bg-[radial-gradient(circle_at_center,hsl(var(--primary)/0.08),transparent_70%)]" />
           </button>
         </motion.div>
@@ -189,7 +182,7 @@ const MySetlists = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.04 }}
                 onClick={() => navigate(`/builder/${s.id}`)}
-                className="w-full text-left bg-card border border-border rounded-lg p-4 hover:border-primary/40 transition-colors group"
+                className="w-full text-left bg-card/80 backdrop-blur-sm border border-border rounded-lg p-4 hover:border-primary/40 transition-colors group"
               >
                 <div className="flex items-center justify-between">
                   <div className="min-w-0 flex-1">
@@ -225,7 +218,7 @@ const MySetlists = () => {
           </div>
         )}
       </main>
-    </div>
+    </PageLayout>
   );
 };
 
