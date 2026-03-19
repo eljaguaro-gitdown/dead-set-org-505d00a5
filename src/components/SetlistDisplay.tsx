@@ -265,6 +265,7 @@ const SetlistDisplay = ({
   onUpdateNotes,
   onReorder,
   onPlayVersion,
+  onPlaySetlist,
 }: SetlistDisplayProps) => {
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
