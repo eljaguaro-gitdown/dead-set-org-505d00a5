@@ -239,6 +239,7 @@ export type Database = {
         Row: {
           created_at: string
           creator_id: string
+          description: string | null
           era_id: string | null
           id: string
           is_collaborative: boolean | null
@@ -250,6 +251,7 @@ export type Database = {
         Insert: {
           created_at?: string
           creator_id: string
+          description?: string | null
           era_id?: string | null
           id?: string
           is_collaborative?: boolean | null
@@ -261,6 +263,7 @@ export type Database = {
         Update: {
           created_at?: string
           creator_id?: string
+          description?: string | null
           era_id?: string | null
           id?: string
           is_collaborative?: boolean | null

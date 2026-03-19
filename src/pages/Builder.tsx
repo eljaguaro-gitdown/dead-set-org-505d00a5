@@ -36,6 +36,8 @@ const Builder = () => {
   const [playingSlot, setPlayingSlot] = useState<import("@/components/SetlistDisplay").SetlistSlotData | null>(null);
   const [playlistMode, setPlaylistMode] = useState(false);
   const [playlistIndex, setPlaylistIndex] = useState(0);
+  const [description, setDescription] = useState<string | null>(null);
+  const [generatingDescription, setGeneratingDescription] = useState(false);
 
   const { songs, eras, loading: songsLoading, getNotableVersions } = useSongs(selectedEra);
   const {
@@ -78,6 +80,9 @@ const Builder = () => {
     }
     if (setlist?.era_id) {
       setSelectedEra(setlist.era_id);
+    }
+    if ((setlist as any)?.description) {
+      setDescription((setlist as any).description);
     }
   }, [setlist]);
 
@@ -207,6 +212,24 @@ const Builder = () => {
     [songs, user]
   );
 
+  const handleGenerateDescription = useCallback(async () => {
+    if (!setlist) return;
+    setGeneratingDescription(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-setlist-description", {
+        body: { setlistId: setlist.id },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      setDescription(data.description);
+      toast.success("Liner notes generated!");
+    } catch (e: any) {
+      console.error("Description generation error:", e);
+      toast.error(e.message || "Failed to generate description");
+    } finally {
+      setGeneratingDescription(false);
+    }
+  }, [setlist]);
   if (authLoading) {
     return (
       <div className="grain-overlay min-h-screen bg-background flex items-center justify-center">
@@ -387,6 +410,9 @@ const Builder = () => {
            <SetlistDisplay
             slots={slots}
             activeSlotId={playlistMode && playingSlot ? playingSlot.id : null}
+            description={description}
+            generatingDescription={generatingDescription}
+            onGenerateDescription={handleGenerateDescription}
             onRemoveSlot={handleRemoveSlot}
             onToggleSegue={handleToggleSegue}
             onUpdateNotes={handleUpdateNotes}
