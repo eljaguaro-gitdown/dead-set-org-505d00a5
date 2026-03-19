@@ -1,11 +1,14 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import { Plus, List, Search } from "lucide-react";
 import StealYourFace from "@/components/StealYourFace";
 import DancingBear from "@/components/DancingBear";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
 
 const Index = () => {
   const navigate = useNavigate();
+  const { user, loading } = useAuth();
 
   return (
     <div className="grain-overlay min-h-screen bg-background flex flex-col">
@@ -28,23 +31,53 @@ const Index = () => {
             </p>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-4 mt-4">
-            <Button
-              size="lg"
-              onClick={() => navigate("/auth")}
-              className="font-body text-base px-8 py-6 bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_20px_hsl(var(--dead-red)/0.3)]"
-            >
-              Sign Up — It's Free
-            </Button>
-            <Button
-              variant="outline"
-              size="lg"
-              onClick={() => navigate("/auth")}
-              className="font-body text-base px-8 py-6 border-border text-foreground hover:bg-muted"
-            >
-              Log In
-            </Button>
-          </div>
+          {!loading && user ? (
+            /* Logged-in CTA */
+            <div className="flex flex-col sm:flex-row gap-4 mt-4">
+              <Button
+                size="lg"
+                onClick={() => navigate("/my-setlists")}
+                className="font-body text-base px-8 py-6 bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_20px_hsl(var(--dead-red)/0.3)] gap-2"
+              >
+                <List className="w-5 h-5" /> My Setlists
+              </Button>
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={() => navigate("/builder")}
+                className="font-body text-base px-8 py-6 border-border text-foreground hover:bg-muted gap-2"
+              >
+                <Plus className="w-5 h-5" /> New Setlist
+              </Button>
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={() => navigate("/browse")}
+                className="font-body text-base px-8 py-6 border-border text-foreground hover:bg-muted gap-2"
+              >
+                <Search className="w-5 h-5" /> Browse
+              </Button>
+            </div>
+          ) : (
+            /* Logged-out CTA */
+            <div className="flex flex-col sm:flex-row gap-4 mt-4">
+              <Button
+                size="lg"
+                onClick={() => navigate("/auth")}
+                className="font-body text-base px-8 py-6 bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_20px_hsl(var(--dead-red)/0.3)]"
+              >
+                Sign Up — It's Free
+              </Button>
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={() => navigate("/auth")}
+                className="font-body text-base px-8 py-6 border-border text-foreground hover:bg-muted"
+              >
+                Log In
+              </Button>
+            </div>
+          )}
         </motion.div>
 
         {/* Floating era tags */}
