@@ -233,7 +233,7 @@ const Builder = () => {
   }, [setlist]);
   if (authLoading) {
     return (
-      <div className="grain-overlay min-h-screen bg-background flex items-center justify-center">
+      <PageLayout minimal><div className="flex-1 flex items-center justify-center">
         <div className="space-y-3">
           {Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="h-10 w-48 bg-muted rounded-lg animate-pulse" />
