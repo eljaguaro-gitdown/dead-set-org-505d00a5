@@ -335,7 +335,7 @@ const Builder = () => {
         </div>
 
         {/* Setlist */}
-        <div className="flex-1 overflow-hidden flex flex-col lg:max-h-[calc(100vh-57px)]">
+        <div className="flex-1 overflow-hidden flex flex-col min-h-[40vh] lg:max-h-[calc(100vh-85px)]">
           <SetlistDisplay
             slots={slots}
             onRemoveSlot={handleRemoveSlot}
