@@ -22,11 +22,11 @@ interface AudioPlayerProps {
   onPrev?: () => void;
 }
 
-const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, onClose, onEnded, playlistInfo, onNext, onPrev }: AudioPlayerProps) => {
+const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false, singleTrackMode = false, onClose, onEnded, playlistInfo, onNext, onPrev }: AudioPlayerProps) => {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [tracks, setTracks] = useState<Track[]>([]);
   const [currentTrack, setCurrentTrack] = useState(0);
-  const [playing, setPlaying] = useState(false);
+  const [playing, setPlaying] = useState(autoPlay);
   const [muted, setMuted] = useState(false);
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
