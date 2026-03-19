@@ -394,13 +394,30 @@ const Builder = () => {
               setPlaylistMode(false);
               setPlayingSlot(slot);
             }}
-            onPlaySetlist={() => {
+            onPlaySetlist={async () => {
               if (slots.length === 0) return;
-              // Sort slots by set then position
               const sorted = [...slots].sort((a, b) => a.setNumber - b.setNumber || a.position - b.position);
+              // Resolve archive URL for first slot if missing
+              let firstSlot = sorted[0];
+              if (!firstSlot.version?.archive_org_url) {
+                const result = await findArchiveRecording(firstSlot.song.title);
+                if (result) {
+                  firstSlot = {
+                    ...firstSlot,
+                    version: {
+                      id: "", song_id: firstSlot.song.id, show_date: result.date || "",
+                      archive_org_url: result.url, venue: result.venue,
+                      city: null, era_id: null, rating: null, description: null,
+                    },
+                  };
+                } else {
+                  toast.error("Couldn't find audio for the first song");
+                  return;
+                }
+              }
               setPlaylistMode(true);
               setPlaylistIndex(0);
-              setPlayingSlot(sorted[0]);
+              setPlayingSlot(firstSlot);
             }}
           />
         </div>
