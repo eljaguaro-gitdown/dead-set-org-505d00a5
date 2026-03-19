@@ -124,25 +124,53 @@ const SortableSlotItem = ({
                 <span className="text-xs text-muted-foreground font-body">
                   {slot.version.show_date} — {slot.version.venue}
                 </span>
-                {slot.version.archive_org_url && (
-                  <>
-                    <button
-                      onClick={() => onPlayVersion?.(slot)}
-                      className="ml-1"
-                      title="Preview audio"
-                    >
-                      <Headphones className="w-3 h-3 text-accent hover:text-primary transition-colors" />
-                    </button>
-                    <a
-                      href={slot.version.archive_org_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <ExternalLink className="w-3 h-3 text-secondary" />
-                    </a>
-                  </>
-                )}
               </div>
+            )}
+            {/* Archive.org link — shown for all slots */}
+            {archiveUrl && (
+              <div className="flex items-center gap-1.5 mt-1">
+                <button
+                  onClick={() => {
+                    // Create a synthetic slot with archive URL for the player
+                    const playSlot = {
+                      ...slot,
+                      version: slot.version || {
+                        id: "",
+                        song_id: slot.song.id,
+                        show_date: "",
+                        archive_org_url: archiveUrl,
+                        venue: null,
+                        city: null,
+                        era_id: null,
+                        rating: null,
+                        description: null,
+                      },
+                    };
+                    if (!playSlot.version!.archive_org_url) {
+                      playSlot.version = { ...playSlot.version!, archive_org_url: archiveUrl };
+                    }
+                    onPlayVersion?.(playSlot);
+                  }}
+                  title="Preview on Archive.org"
+                >
+                  <Headphones className="w-3 h-3 text-accent hover:text-primary transition-colors" />
+                </button>
+                <a
+                  href={archiveUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1 text-[10px] text-secondary hover:text-primary transition-colors font-body"
+                  title="Open on Archive.org"
+                >
+                  <ExternalLink className="w-3 h-3" />
+                  <span className="hidden sm:inline">Archive.org</span>
+                </a>
+              </div>
+            )}
+            {archiveLoading && !archiveUrl && (
+              <span className="text-[10px] text-muted-foreground/50 font-body mt-1 block">
+                Finding on Archive.org…
+              </span>
             )}
             <Textarea
               placeholder="Notes..."
