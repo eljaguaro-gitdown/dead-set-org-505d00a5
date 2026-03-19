@@ -174,47 +174,74 @@ const MySetlists = () => {
             </p>
           </motion.div>
         ) : (
-          <div className="space-y-2">
-            {setlists.map((s, i) => (
-              <motion.button
-                key={s.id}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.04 }}
-                onClick={() => navigate(`/builder/${s.id}`)}
-                className="w-full text-left bg-card/80 backdrop-blur-sm border border-border rounded-lg p-4 hover:border-primary/40 transition-colors group"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-display text-base text-foreground truncate">
+          <div className="space-y-0 border border-border/50 rounded-md overflow-hidden shadow-lg">
+            {setlists.map((s, i) => {
+              // Cycle through tape brand colors like real collections
+              const spineColors = [
+                "bg-[hsl(35,40%,88%)]", // cream/white label
+                "bg-[hsl(35,30%,82%)]", // aged white
+                "bg-[hsl(40,45%,85%)]", // warm ivory
+                "bg-[hsl(210,15%,85%)]", // cool grey-blue
+                "bg-[hsl(45,50%,87%)]", // yellowish
+                "bg-[hsl(30,20%,80%)]", // neutral tan
+              ];
+              const brandColors = [
+                "bg-dead-blue", // TDK blue
+                "bg-dead-red",  // Maxell red
+                "bg-primary",   // gold accent
+                "bg-dead-green",
+                "bg-dead-purple",
+                "bg-dead-orange",
+              ];
+              const spineColor = spineColors[i % spineColors.length];
+              const brandColor = brandColors[i % brandColors.length];
+
+              return (
+                <motion.button
+                  key={s.id}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: i * 0.03 }}
+                  onClick={() => navigate(`/builder/${s.id}`)}
+                  className={`w-full text-left flex items-stretch group border-b border-border/30 last:border-b-0 hover:brightness-95 transition-all ${spineColor}`}
+                >
+                  {/* Brand color strip (like TDK/Maxell side label) */}
+                  <div className={`w-3 shrink-0 ${brandColor}`} />
+                  
+                  {/* Spine content — mimics handwritten cassette label */}
+                  <div className="flex-1 flex items-center justify-between px-4 py-2.5 min-h-[3rem]">
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <span className="font-body text-base text-[hsl(25,30%,20%)] truncate font-medium tracking-wide">
                         {s.title}
-                      </h3>
-                      {s.is_public ? (
-                        <Globe className="w-3.5 h-3.5 text-accent shrink-0" />
-                      ) : (
-                        <Lock className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                      )}
+                      </span>
+                      <span className="font-body text-xs text-[hsl(25,20%,40%)] shrink-0">
+                        {s.slot_count > 0 ? `${s.slot_count} songs` : ""}
+                      </span>
                     </div>
-                    <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground font-body">
-                      <span className="flex items-center gap-1">
-                        <Music className="w-3 h-3" /> {s.slot_count} song{s.slot_count !== 1 ? "s" : ""}
+                    <div className="flex items-center gap-3 shrink-0">
+                      <span className="font-body text-xs text-[hsl(25,20%,45%)]">
+                        {new Date(s.updated_at).toLocaleDateString()}
                       </span>
-                      <span className="flex items-center gap-1">
-                        <Calendar className="w-3 h-3" /> {new Date(s.updated_at).toLocaleDateString()}
-                      </span>
+                      {s.is_public ? (
+                        <Globe className="w-3.5 h-3.5 text-[hsl(25,20%,40%)]" />
+                      ) : (
+                        <Lock className="w-3.5 h-3.5 text-[hsl(25,15%,55%)]" />
+                      )}
+                      <button
+                        onClick={(e) => handleDelete(s.id, e)}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity p-1 text-[hsl(25,20%,45%)] hover:text-destructive"
+                        title="Delete setlist"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </div>
                   </div>
-                  <button
-                    onClick={(e) => handleDelete(s.id, e)}
-                    className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 text-muted-foreground hover:text-destructive"
-                    title="Delete setlist"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              </motion.button>
-            ))}
+
+                  {/* Right brand strip */}
+                  <div className={`w-2 shrink-0 ${brandColor} opacity-60`} />
+                </motion.button>
+              );
+            })}
           </div>
         )}
       </main>
