@@ -11,6 +11,7 @@ import Profile from "./pages/Profile";
 import JoinSetlist from "./pages/JoinSetlist";
 import Browse from "./pages/Browse";
 import SetlistPoster from "./pages/SetlistPoster";
+import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -31,6 +32,7 @@ const App = () => (
           <Route path="/join/:token" element={<JoinSetlist />} />
           <Route path="/browse" element={<Browse />} />
           <Route path="/setlist/:id" element={<SetlistPoster />} />
+          <Route path="/admin" element={<Admin />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

@@ -1,0 +1,270 @@
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { Shield, Users, ArrowLeft, Loader2, Calendar, Mail, User } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+
+interface AdminUser {
+  id: string;
+  email: string;
+  displayName: string | null;
+  avatarUrl: string | null;
+  createdAt: string;
+  lastSignInAt: string | null;
+  emailConfirmedAt: string | null;
+  setlistCount: number;
+}
+
+const Admin = () => {
+  const navigate = useNavigate();
+  const { user, loading: authLoading } = useAuth();
+  const [users, setUsers] = useState<AdminUser[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  // Check admin role
+  useEffect(() => {
+    if (!user) return;
+    const checkAdmin = async () => {
+      const { data } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id)
+        .eq("role", "admin")
+        .maybeSingle();
+      setIsAdmin(!!data);
+      if (!data) {
+        setLoading(false);
+      }
+    };
+    checkAdmin();
+  }, [user]);
+
+  // Fetch users from edge function
+  useEffect(() => {
+    if (!isAdmin) return;
+    const fetchUsers = async () => {
+      setLoading(true);
+      const { data, error } = await supabase.functions.invoke("admin-users");
+      if (error) {
+        toast.error("Failed to load users");
+        console.error(error);
+      } else {
+        setUsers(data.users || []);
+      }
+      setLoading(false);
+    };
+    fetchUsers();
+  }, [isAdmin]);
+
+  const formatDate = (dateStr: string | null) => {
+    if (!dateStr) return "Never";
+    return new Date(dateStr).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  const timeAgo = (dateStr: string | null) => {
+    if (!dateStr) return "Never";
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const minutes = Math.floor(diff / 60000);
+    if (minutes < 60) return `${minutes}m ago`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours}h ago`;
+    const days = Math.floor(hours / 24);
+    if (days < 30) return `${days}d ago`;
+    return formatDate(dateStr);
+  };
+
+  if (authLoading) {
+    return (
+      <div className="grain-overlay min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-6 h-6 text-primary animate-spin" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    navigate("/auth");
+    return null;
+  }
+
+  if (!loading && !isAdmin) {
+    return (
+      <div className="grain-overlay min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <Shield className="w-12 h-12 text-muted-foreground mx-auto" />
+          <h1 className="font-display text-xl text-foreground">Access Denied</h1>
+          <p className="font-body text-sm text-muted-foreground">
+            You don't have admin access.
+          </p>
+          <Button variant="outline" onClick={() => navigate("/")} className="font-body">
+            <ArrowLeft className="w-4 h-4 mr-2" /> Back to Home
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="grain-overlay min-h-screen bg-background">
+      {/* Header */}
+      <header className="border-b border-border px-4 py-3 flex items-center gap-3">
+        <button onClick={() => navigate("/")} className="font-display text-lg text-primary">
+          DS
+        </button>
+        <div className="w-px h-5 bg-border" />
+        <div className="flex items-center gap-2">
+          <Shield className="w-4 h-4 text-primary" />
+          <h1 className="font-display text-base text-foreground">Admin Dashboard</h1>
+        </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => navigate("/")}
+          className="ml-auto font-body text-muted-foreground"
+        >
+          <ArrowLeft className="w-3.5 h-3.5 mr-1" /> Back
+        </Button>
+      </header>
+
+      <div className="max-w-4xl mx-auto p-4 space-y-6">
+        {/* Stats */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="bg-card border border-border rounded-lg p-4">
+            <p className="text-xs text-muted-foreground font-body uppercase tracking-wider">Total Users</p>
+            <p className="font-display text-2xl text-foreground mt-1">
+              {loading ? "—" : users.length}
+            </p>
+          </div>
+          <div className="bg-card border border-border rounded-lg p-4">
+            <p className="text-xs text-muted-foreground font-body uppercase tracking-wider">Active (24h)</p>
+            <p className="font-display text-2xl text-foreground mt-1">
+              {loading
+                ? "—"
+                : users.filter(
+                    (u) =>
+                      u.lastSignInAt &&
+                      Date.now() - new Date(u.lastSignInAt).getTime() < 86400000
+                  ).length}
+            </p>
+          </div>
+          <div className="bg-card border border-border rounded-lg p-4">
+            <p className="text-xs text-muted-foreground font-body uppercase tracking-wider">Active (7d)</p>
+            <p className="font-display text-2xl text-foreground mt-1">
+              {loading
+                ? "—"
+                : users.filter(
+                    (u) =>
+                      u.lastSignInAt &&
+                      Date.now() - new Date(u.lastSignInAt).getTime() < 604800000
+                  ).length}
+            </p>
+          </div>
+          <div className="bg-card border border-border rounded-lg p-4">
+            <p className="text-xs text-muted-foreground font-body uppercase tracking-wider">Total Setlists</p>
+            <p className="font-display text-2xl text-foreground mt-1">
+              {loading ? "—" : users.reduce((sum, u) => sum + u.setlistCount, 0)}
+            </p>
+          </div>
+        </div>
+
+        {/* User List */}
+        <div className="bg-card border border-border rounded-lg overflow-hidden">
+          <div className="px-4 py-3 border-b border-border flex items-center gap-2">
+            <Users className="w-4 h-4 text-muted-foreground" />
+            <h2 className="font-display text-sm text-foreground">User Accounts</h2>
+            <span className="text-xs text-muted-foreground font-body ml-auto">
+              {!loading && `${users.length} users`}
+            </span>
+          </div>
+
+          {loading ? (
+            <div className="p-8 flex items-center justify-center">
+              <Loader2 className="w-6 h-6 text-primary animate-spin" />
+            </div>
+          ) : (
+            <div className="divide-y divide-border">
+              {users
+                .sort(
+                  (a, b) =>
+                    new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+                )
+                .map((u) => (
+                  <div
+                    key={u.id}
+                    className="px-4 py-3 flex items-center gap-3 hover:bg-muted/30 transition-colors"
+                  >
+                    {/* Avatar */}
+                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0 overflow-hidden">
+                      {u.avatarUrl ? (
+                        <img src={u.avatarUrl} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        <User className="w-4 h-4 text-primary" />
+                      )}
+                    </div>
+
+                    {/* Info */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="font-body text-sm text-foreground font-medium truncate">
+                          {u.displayName || u.email?.split("@")[0]}
+                        </span>
+                        {!u.emailConfirmedAt && (
+                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-yellow-500/10 text-yellow-600 font-body">
+                            Unverified
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-3 mt-0.5">
+                        <span className="flex items-center gap-1 text-xs text-muted-foreground font-body truncate">
+                          <Mail className="w-3 h-3 shrink-0" />
+                          {u.email}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Stats */}
+                    <div className="hidden sm:flex flex-col items-end gap-0.5 shrink-0">
+                      <span className="text-xs text-muted-foreground font-body flex items-center gap-1">
+                        <Calendar className="w-3 h-3" />
+                        Joined {formatDate(u.createdAt)}
+                      </span>
+                      <span
+                        className={`text-xs font-body ${
+                          u.lastSignInAt &&
+                          Date.now() - new Date(u.lastSignInAt).getTime() < 86400000
+                            ? "text-accent"
+                            : "text-muted-foreground"
+                        }`}
+                      >
+                        Last seen {timeAgo(u.lastSignInAt)}
+                      </span>
+                    </div>
+
+                    {/* Mobile: compact stats */}
+                    <div className="flex sm:hidden flex-col items-end gap-0.5 shrink-0">
+                      <span className="text-[10px] text-muted-foreground font-body">
+                        {timeAgo(u.lastSignInAt)}
+                      </span>
+                      <span className="text-[10px] text-muted-foreground font-body">
+                        {u.setlistCount} sets
+                      </span>
+                    </div>
+                  </div>
+                ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Admin;
