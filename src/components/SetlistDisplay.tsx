@@ -38,6 +38,7 @@ export interface SetlistSlotData {
 
 interface SetlistDisplayProps {
   slots: SetlistSlotData[];
+  activeSlotId?: string | null;
   onRemoveSlot: (id: string) => void;
   onToggleSegue: (id: string) => void;
   onUpdateNotes: (id: string, notes: string) => void;
@@ -50,6 +51,7 @@ interface SetlistDisplayProps {
 const SortableSlotItem = ({
   slot,
   isLast,
+  isPlaying,
   onRemoveSlot,
   onToggleSegue,
   onUpdateNotes,
@@ -57,6 +59,7 @@ const SortableSlotItem = ({
 }: {
   slot: SetlistSlotData;
   isLast: boolean;
+  isPlaying: boolean;
   onRemoveSlot: (id: string) => void;
   onToggleSegue: (id: string) => void;
   onUpdateNotes: (id: string, notes: string) => void;
@@ -103,7 +106,7 @@ const SortableSlotItem = ({
 
   return (
     <div ref={setNodeRef} style={style}>
-      <div className="song-glow rounded-lg bg-card border border-border p-3 group">
+      <div className={`rounded-lg bg-card border p-3 group transition-all duration-300 ${isPlaying ? 'border-primary ring-2 ring-primary/30 shadow-[0_0_20px_-4px_hsl(var(--primary)/0.4)]' : 'border-border song-glow'}`}>
         <div className="flex items-start gap-2">
           <button
             {...attributes}
@@ -210,6 +213,7 @@ const SetSection = ({
   title,
   setNumber,
   slots,
+  activeSlotId,
   onRemoveSlot,
   onToggleSegue,
   onUpdateNotes,
@@ -218,6 +222,7 @@ const SetSection = ({
   title: string;
   setNumber: number;
   slots: SetlistSlotData[];
+  activeSlotId?: string | null;
   onRemoveSlot: (id: string) => void;
   onToggleSegue: (id: string) => void;
   onUpdateNotes: (id: string, notes: string) => void;
@@ -246,6 +251,7 @@ const SetSection = ({
             key={slot.id}
             slot={slot}
             isLast={index === setSlots.length - 1}
+            isPlaying={activeSlotId === slot.id}
             onRemoveSlot={onRemoveSlot}
             onToggleSegue={onToggleSegue}
             onUpdateNotes={onUpdateNotes}
@@ -260,6 +266,7 @@ const SetSection = ({
 /* ── Main component ── */
 const SetlistDisplay = ({
   slots,
+  activeSlotId,
   onRemoveSlot,
   onToggleSegue,
   onUpdateNotes,
@@ -347,6 +354,7 @@ const SetlistDisplay = ({
             title="Set I"
             setNumber={1}
             slots={slots}
+            activeSlotId={activeSlotId}
             onRemoveSlot={onRemoveSlot}
             onToggleSegue={onToggleSegue}
             onUpdateNotes={onUpdateNotes}
@@ -356,6 +364,7 @@ const SetlistDisplay = ({
             title="Set II"
             setNumber={2}
             slots={slots}
+            activeSlotId={activeSlotId}
             onRemoveSlot={onRemoveSlot}
             onToggleSegue={onToggleSegue}
             onUpdateNotes={onUpdateNotes}
@@ -365,6 +374,7 @@ const SetlistDisplay = ({
             title="Encore"
             setNumber={3}
             slots={slots}
+            activeSlotId={activeSlotId}
             onRemoveSlot={onRemoveSlot}
             onToggleSegue={onToggleSegue}
             onUpdateNotes={onUpdateNotes}
