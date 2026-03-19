@@ -71,6 +71,9 @@ export default {
           "surface-hover": "hsl(var(--dead-surface-hover))",
           orange: "hsl(var(--dead-orange))",
           cream: "hsl(var(--dead-cream))",
+          pink: "hsl(var(--dead-pink))",
+          green: "hsl(var(--dead-green))",
+          purple: "hsl(var(--dead-purple))",
         },
       },
       borderRadius: {
