@@ -306,7 +306,7 @@ const Builder = () => {
       {/* Main Content */}
       <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
         {/* Song Vault */}
-        <div className="w-full lg:w-[380px] border-r border-border overflow-hidden flex flex-col lg:max-h-[calc(100vh-57px)]">
+        <div className="w-full lg:w-[380px] border-b lg:border-b-0 border-r-0 lg:border-r border-border overflow-hidden flex flex-col max-h-[45vh] lg:max-h-[calc(100vh-85px)]">
           {songsLoading ? (
             <div className="p-4 space-y-3">
               {Array.from({ length: 8 }).map((_, i) => (
