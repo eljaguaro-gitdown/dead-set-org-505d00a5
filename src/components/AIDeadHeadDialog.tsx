@@ -46,6 +46,13 @@ const AIDeadHeadDialog = ({
   const [preferences, setPreferences] = useState("");
   const [loading, setLoading] = useState(false);
   const [suggestion, setSuggestion] = useState<AISuggestion | null>(null);
+  const [namingNew, setNamingNew] = useState(false);
+  const [newSetlistName, setNewSetlistName] = useState("");
+  const nameInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (namingNew) nameInputRef.current?.focus();
+  }, [namingNew]);
 
   const handleGenerate = async () => {
     setLoading(true);
