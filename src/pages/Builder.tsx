@@ -455,11 +455,25 @@ const Builder = () => {
       {/* Audio Player */}
       {playingSlot?.version?.archive_org_url && (() => {
         const sortedSlots = [...slots].sort((a, b) => a.setNumber - b.setNumber || a.position - b.position);
-        const advancePlaylist = (dir: number) => {
+        const advancePlaylist = async (dir: number) => {
           const newIdx = playlistIndex + dir;
           if (newIdx >= 0 && newIdx < sortedSlots.length) {
+            let nextSlot = sortedSlots[newIdx];
+            if (!nextSlot.version?.archive_org_url) {
+              const result = await findArchiveRecording(nextSlot.song.title);
+              if (result) {
+                nextSlot = {
+                  ...nextSlot,
+                  version: {
+                    id: "", song_id: nextSlot.song.id, show_date: result.date || "",
+                    archive_org_url: result.url, venue: result.venue,
+                    city: null, era_id: null, rating: null, description: null,
+                  },
+                };
+              }
+            }
             setPlaylistIndex(newIdx);
-            setPlayingSlot(sortedSlots[newIdx]);
+            setPlayingSlot(nextSlot);
           }
         };
         return (
