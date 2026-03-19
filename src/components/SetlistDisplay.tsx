@@ -69,6 +69,27 @@ const SortableSlotItem = ({
     isDragging,
   } = useSortable({ id: slot.id });
 
+  // Auto-fetch Archive.org link if slot doesn't have one via version
+  const existingArchiveUrl = slot.version?.archive_org_url || null;
+  const [archiveUrl, setArchiveUrl] = useState<string | null>(existingArchiveUrl);
+  const [archiveLoading, setArchiveLoading] = useState(false);
+
+  useEffect(() => {
+    if (existingArchiveUrl) {
+      setArchiveUrl(existingArchiveUrl);
+      return;
+    }
+    let cancelled = false;
+    setArchiveLoading(true);
+    findArchiveRecording(slot.song.title).then((url) => {
+      if (!cancelled) {
+        setArchiveUrl(url);
+        setArchiveLoading(false);
+      }
+    });
+    return () => { cancelled = true; };
+  }, [slot.song.title, existingArchiveUrl]);
+
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
