@@ -147,15 +147,12 @@ const Builder = () => {
   );
 
   const handleCreateNewFromAI = useCallback(
-    async (suggestion: { explanation: string; sets: { setNumber: number; songs: { songId: string; title: string; segueToNext: boolean; notes: string; position: number }[] }[] }) => {
-      // Create a new setlist with a generated title
+    async (suggestion: { explanation: string; sets: { setNumber: number; songs: { songId: string; title: string; segueToNext: boolean; notes: string; position: number }[] }[] }, customTitle?: string) => {
       const firstSongs = suggestion.sets.flatMap(s => s.songs).slice(0, 2).map(s => s.title);
-      const newTitle = firstSongs.length > 0 ? `AI Set: ${firstSongs.join(" > ")}` : "AI Generated Setlist";
+      const newTitle = customTitle || (firstSongs.length > 0 ? `AI Set: ${firstSongs.join(" > ")}` : "AI Generated Setlist");
       const created = await createSetlist(newTitle, selectedEra);
       if (!created) return;
-      // Navigate to the new setlist
       navigate(`/builder/${created.id}`, { replace: false });
-      // Wait a tick for the setlist state to update, then add songs
       setTimeout(async () => {
         await addAISongsToSetlist(suggestion, created.id);
       }, 300);

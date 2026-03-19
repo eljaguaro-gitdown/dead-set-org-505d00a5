@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Sparkles, Zap, Wand2, Loader2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
@@ -30,7 +31,7 @@ interface AIDeadHeadDialogProps {
   eraId: string | null;
   currentSlots: { songTitle: string; setNumber: number; segue: boolean }[];
   onApplySuggestion: (suggestion: AISuggestion) => void;
-  onCreateNewSetlist: (suggestion: AISuggestion) => void;
+  onCreateNewSetlist: (suggestion: AISuggestion, customTitle?: string) => void;
 }
 
 const AIDeadHeadDialog = ({
@@ -45,6 +46,13 @@ const AIDeadHeadDialog = ({
   const [preferences, setPreferences] = useState("");
   const [loading, setLoading] = useState(false);
   const [suggestion, setSuggestion] = useState<AISuggestion | null>(null);
+  const [namingNew, setNamingNew] = useState(false);
+  const [newSetlistName, setNewSetlistName] = useState("");
+  const nameInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (namingNew) nameInputRef.current?.focus();
+  }, [namingNew]);
 
   const handleGenerate = async () => {
     setLoading(true);
@@ -81,7 +89,8 @@ const AIDeadHeadDialog = ({
 
   const handleCreateNew = () => {
     if (!suggestion) return;
-    onCreateNewSetlist(suggestion);
+    const title = newSetlistName.trim() || undefined;
+    onCreateNewSetlist(suggestion, title);
     handleReset();
     toast.success("Creating new setlist from AI suggestion...");
   };
@@ -91,6 +100,8 @@ const AIDeadHeadDialog = ({
     setMode(null);
     setSuggestion(null);
     setPreferences("");
+    setNamingNew(false);
+    setNewSetlistName("");
   };
 
   const handleClose = (open: boolean) => {
@@ -99,6 +110,8 @@ const AIDeadHeadDialog = ({
       setSuggestion(null);
       setPreferences("");
       setLoading(false);
+      setNamingNew(false);
+      setNewSetlistName("");
     }
     onOpenChange(open);
   };
@@ -279,14 +292,55 @@ const AIDeadHeadDialog = ({
                     <Zap className="w-3.5 h-3.5" /> Apply to Current
                   </Button>
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleCreateNew}
-                  className="border-primary/30 text-primary font-body gap-1.5 w-full hover:bg-primary/10"
-                >
-                  <Wand2 className="w-3.5 h-3.5" /> Create as New Setlist
-                </Button>
+                {!namingNew ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      const firstSongs = suggestion?.sets.flatMap(s => s.songs).slice(0, 2).map(s => s.title) || [];
+                      setNewSetlistName(firstSongs.length > 0 ? `${firstSongs.join(" > ")}` : "AI Generated Setlist");
+                      setNamingNew(true);
+                    }}
+                    className="border-primary/30 text-primary font-body gap-1.5 w-full hover:bg-primary/10"
+                  >
+                    <Wand2 className="w-3.5 h-3.5" /> Create as New Setlist
+                  </Button>
+                ) : (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    className="space-y-2"
+                  >
+                    <label className="text-xs text-muted-foreground font-body block">
+                      Name your setlist
+                    </label>
+                    <Input
+                      ref={nameInputRef}
+                      value={newSetlistName}
+                      onChange={(e) => setNewSetlistName(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && handleCreateNew()}
+                      placeholder="e.g. Cornell '77 Dream Set"
+                      className="bg-background border-border text-foreground font-body text-sm h-8"
+                    />
+                    <div className="flex gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setNamingNew(false)}
+                        className="text-muted-foreground font-body"
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={handleCreateNew}
+                        className="bg-primary text-primary-foreground font-body gap-1.5 flex-1"
+                      >
+                        <Wand2 className="w-3.5 h-3.5" /> Create Setlist
+                      </Button>
+                    </div>
+                  </motion.div>
+                )}
               </div>
             </motion.div>
           )}
