@@ -14,7 +14,8 @@ export default {
     },
     extend: {
       fontFamily: {
-        display: ["'Permanent Marker'", "cursive"],
+        display: ["'Pirata One'", "'Permanent Marker'", "cursive"],
+        marker: ["'Permanent Marker'", "cursive"],
         hand: ["'Caveat'", "cursive"],
         body: ["'Instrument Sans'", "sans-serif"],
       },
