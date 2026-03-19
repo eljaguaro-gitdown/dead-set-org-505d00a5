@@ -81,6 +81,9 @@ const Builder = () => {
     if (setlist?.era_id) {
       setSelectedEra(setlist.era_id);
     }
+    if ((setlist as any)?.description) {
+      setDescription((setlist as any).description);
+    }
   }, [setlist]);
 
   const handleTitleBlur = useCallback(() => {
