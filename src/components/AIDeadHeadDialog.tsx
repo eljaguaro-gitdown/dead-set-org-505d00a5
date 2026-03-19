@@ -31,7 +31,7 @@ interface AIDeadHeadDialogProps {
   eraId: string | null;
   currentSlots: { songTitle: string; setNumber: number; segue: boolean }[];
   onApplySuggestion: (suggestion: AISuggestion) => void;
-  onCreateNewSetlist: (suggestion: AISuggestion) => void;
+  onCreateNewSetlist: (suggestion: AISuggestion, customTitle?: string) => void;
 }
 
 const AIDeadHeadDialog = ({
