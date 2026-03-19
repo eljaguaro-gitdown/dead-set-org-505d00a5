@@ -410,6 +410,9 @@ const Builder = () => {
            <SetlistDisplay
             slots={slots}
             activeSlotId={playlistMode && playingSlot ? playingSlot.id : null}
+            description={description}
+            generatingDescription={generatingDescription}
+            onGenerateDescription={handleGenerateDescription}
             onRemoveSlot={handleRemoveSlot}
             onToggleSegue={handleToggleSegue}
             onUpdateNotes={handleUpdateNotes}
