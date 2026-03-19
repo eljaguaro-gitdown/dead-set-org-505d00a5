@@ -420,6 +420,7 @@ const Builder = () => {
           segue: s.segueToNext,
         }))}
         onApplySuggestion={handleApplyAISuggestion}
+        onCreateNewSetlist={handleCreateNewFromAI}
       />
 
       {/* Audio Player */}
