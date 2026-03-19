@@ -48,15 +48,18 @@ const Builder = () => {
   } = useSetlist(user, paramId);
 
   // Initialize setlist (create new or load existing)
+  const creatingRef = useRef(false);
   useEffect(() => {
     if (!user || initialized || authLoading) return;
     if (!paramId && !setlist) {
-      // Create new setlist
+      if (creatingRef.current) return;
+      creatingRef.current = true;
       createSetlist(title, selectedEra).then((created) => {
         if (created) {
           navigate(`/builder/${created.id}`, { replace: true });
         }
         setInitialized(true);
+        creatingRef.current = false;
       });
     } else {
       setInitialized(true);
