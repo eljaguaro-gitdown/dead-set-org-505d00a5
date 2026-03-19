@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { findArchiveRecording } from "@/lib/archiveOrg";
-import { Sparkles, Share2, Users, LogOut, MessageCircle, Globe, CheckCircle, List } from "lucide-react";
+import { Sparkles, Share2, Users, LogOut, MessageCircle, Globe, CheckCircle, List, Music, LayoutList } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import PageLayout from "@/components/PageLayout";
 import { Input } from "@/components/ui/input";
@@ -18,6 +18,7 @@ import AudioPlayer from "@/components/AudioPlayer";
 import { useSongs } from "@/hooks/useSongs";
 import { useAuth } from "@/hooks/useAuth";
 import { useSetlist } from "@/hooks/useSetlist";
+import { useIsMobile } from "@/hooks/use-mobile";
 import type { Database } from "@/integrations/supabase/types";
 
 type Song = Database["public"]["Tables"]["songs"]["Row"];
@@ -27,6 +28,7 @@ const Builder = () => {
   const navigate = useNavigate();
   const { id: paramId } = useParams<{ id: string }>();
   const { user, loading: authLoading, signOut } = useAuth();
+  const isMobile = useIsMobile();
   const [title, setTitle] = useState("Untitled Setlist");
   const [selectedEra, setSelectedEra] = useState<string | null>(null);
   const [activeSet, setActiveSet] = useState(1);
@@ -34,11 +36,13 @@ const Builder = () => {
   const [shareOpen, setShareOpen] = useState(false);
   const [aiOpen, setAiOpen] = useState(false);
   const [initialized, setInitialized] = useState(false);
-  const [playingSlot, setPlayingSlot] = useState<import("@/components/SetlistDisplay").SetlistSlotData | null>(null);
+  const [playingSlot, setPlayingSlot] = useState<SetlistSlotData | null>(null);
   const [playlistMode, setPlaylistMode] = useState(false);
   const [playlistIndex, setPlaylistIndex] = useState(0);
   const [description, setDescription] = useState<string | null>(null);
   const [generatingDescription, setGeneratingDescription] = useState(false);
+  // Mobile tab: "songs" or "setlist"
+  const [mobileTab, setMobileTab] = useState<"songs" | "setlist">("songs");
 
   const { songs, eras, loading: songsLoading, getNotableVersions } = useSongs(selectedEra);
   const {
@@ -107,8 +111,12 @@ const Builder = () => {
       };
       addSlot(newSlot);
       toast.success(`${song.title} added to Set ${activeSet === 3 ? "Encore" : activeSet}`);
+      // On mobile, switch to setlist view after adding a song
+      if (isMobile) {
+        setMobileTab("setlist");
+      }
     },
-    [slots, activeSet, addSlot]
+    [slots, activeSet, addSlot, isMobile]
   );
 
   const handleRemoveSlot = useCallback((id: string) => {
@@ -129,7 +137,6 @@ const Builder = () => {
   const handleReorder = useCallback(
     (newSlots: SetlistSlotData[]) => {
       setSlots(newSlots);
-      // Persist position/set changes to DB
       if (setlist) {
         const changed = newSlots.filter((ns) => {
           const old = slots.find((s) => s.id === ns.id);
@@ -145,11 +152,9 @@ const Builder = () => {
 
   const handleApplyAISuggestion = useCallback(
     async (suggestion: { explanation: string; sets: { setNumber: number; songs: { songId: string; title: string; segueToNext: boolean; notes: string; position: number }[] }[] }) => {
-      // Clear existing slots
       for (const slot of slots) {
         await removeSlot(slot.id);
       }
-      // Add AI-suggested songs
       await addAISongsToCurrentSetlist(suggestion);
     },
     [slots, songs, removeSlot, addSlot]
@@ -231,6 +236,7 @@ const Builder = () => {
       setGeneratingDescription(false);
     }
   }, [setlist]);
+
   if (authLoading) {
     return (
       <PageLayout minimal><div className="flex-1 flex items-center justify-center">
@@ -253,8 +259,8 @@ const Builder = () => {
       {/* Top Bar */}
       <header className="border-b border-border">
         {/* Row 1: Logo, title, saved indicator */}
-        <div className="px-6 py-5 flex items-center gap-5">
-          <button onClick={() => navigate("/")} className="font-display text-6xl text-primary shrink-0">
+        <div className="px-3 sm:px-6 py-3 sm:py-5 flex items-center gap-2 sm:gap-5">
+          <button onClick={() => navigate("/")} className="font-display text-3xl sm:text-6xl text-primary shrink-0">
             DS
           </button>
           <button
@@ -268,26 +274,28 @@ const Builder = () => {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             onBlur={handleTitleBlur}
-            className="bg-transparent border-none text-foreground font-display text-4xl sm:text-5xl p-0 h-auto focus-visible:ring-0 min-w-0 flex-1"
+            className="bg-transparent border-none text-foreground font-display text-xl sm:text-4xl md:text-5xl p-0 h-auto focus-visible:ring-0 min-w-0 flex-1"
           />
           {setlist && (
-            <span className="flex items-center gap-1.5 text-sm text-accent font-body shrink-0" title="All changes are saved automatically">
-              <CheckCircle className="w-4 h-4" /> <span className="hidden sm:inline">Saved</span>
+            <span className="flex items-center gap-1 text-xs sm:text-sm text-accent font-body shrink-0" title="All changes are saved automatically">
+              <CheckCircle className="w-3 sm:w-4 h-3 sm:h-4" /> <span className="hidden sm:inline">Saved</span>
             </span>
           )}
-          <CollaboratorAvatars collaborators={collaborators} />
+          <div className="hidden sm:block">
+            <CollaboratorAvatars collaborators={collaborators} />
+          </div>
         </div>
 
         {/* Row 2: Toolbar */}
-        <div className="px-4 py-2 border-t border-border/50 flex items-center gap-2 overflow-x-auto scrollbar-hide">
+        <div className="px-2 sm:px-4 py-2 border-t border-border/50 flex items-center gap-1.5 sm:gap-2 overflow-x-auto scrollbar-hide">
           {/* Set selector */}
-          <div className="flex items-center gap-1.5 shrink-0">
+          <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
             <span className="text-sm text-muted-foreground font-body hidden sm:inline">Add to:</span>
             {[1, 2, 3].map((n) => (
               <button
                 key={n}
                 onClick={() => setActiveSet(n)}
-                className={`px-3 py-1.5 text-sm font-body rounded transition-colors ${
+                className={`px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm font-body rounded transition-colors ${
                   activeSet === n
                     ? "bg-primary text-primary-foreground"
                     : "bg-muted text-muted-foreground hover:text-foreground"
@@ -298,11 +306,11 @@ const Builder = () => {
             ))}
           </div>
 
-          <div className="w-px h-6 bg-border shrink-0" />
+          <div className="w-px h-5 sm:h-6 bg-border shrink-0" />
 
           {/* Era filter */}
           <Select value={selectedEra || ""} onValueChange={(v) => setSelectedEra(v || null)}>
-            <SelectTrigger className="w-auto min-w-[100px] max-w-[160px] bg-card border-border text-foreground font-body text-sm h-9 shrink-0">
+            <SelectTrigger className="w-auto min-w-[80px] sm:min-w-[100px] max-w-[140px] sm:max-w-[160px] bg-card border-border text-foreground font-body text-xs sm:text-sm h-8 sm:h-9 shrink-0">
               <SelectValue placeholder="All eras" />
             </SelectTrigger>
             <SelectContent className="bg-card border-border">
@@ -314,71 +322,106 @@ const Builder = () => {
             </SelectContent>
           </Select>
 
-          <div className="w-px h-6 bg-border shrink-0" />
+          <div className="w-px h-5 sm:h-6 bg-border shrink-0" />
 
           {/* Action buttons */}
           <Button
             variant="ghost"
             size="icon"
-            className="h-9 w-9 shrink-0 text-foreground"
+            className="h-8 w-8 sm:h-9 sm:w-9 shrink-0 text-foreground"
             onClick={() => setChatOpen(true)}
             title="Chat"
           >
-            <MessageCircle className="w-5 h-5" />
+            <MessageCircle className="w-4 sm:w-5 h-4 sm:h-5" />
           </Button>
           <Button
             variant="default"
             size="sm"
-            className="shrink-0 h-9 px-3 gap-2 bg-gradient-to-r from-primary to-accent text-primary-foreground font-display text-sm shadow-md hover:shadow-lg hover:scale-105 transition-all duration-200 animate-pulse hover:animate-none"
+            className="shrink-0 h-8 sm:h-9 px-2 sm:px-3 gap-1.5 sm:gap-2 bg-gradient-to-r from-primary to-accent text-primary-foreground font-display text-xs sm:text-sm shadow-md hover:shadow-lg hover:scale-105 transition-all duration-200 animate-pulse hover:animate-none"
             onClick={() => setAiOpen(true)}
             title="AI Dead Head — Generate a setlist"
           >
-            <Sparkles className="w-5 h-5" />
+            <Sparkles className="w-4 sm:w-5 h-4 sm:h-5" />
             <span className="hidden sm:inline">AI Dead Head</span>
           </Button>
           <Button
             variant="ghost"
             size="icon"
-            className={`h-9 w-9 shrink-0 ${setlist?.is_public ? "text-accent" : "text-foreground"}`}
+            className={`h-8 w-8 sm:h-9 sm:w-9 shrink-0 ${setlist?.is_public ? "text-accent" : "text-foreground"}`}
             onClick={togglePublic}
             title={setlist?.is_public ? "Public — visible on Browse" : "Private — only you and collaborators"}
           >
-            <Globe className="w-5 h-5" />
+            <Globe className="w-4 sm:w-5 h-4 sm:h-5" />
           </Button>
           <Button
             variant="ghost"
             size="icon"
-            className="h-9 w-9 shrink-0 text-foreground"
+            className="h-8 w-8 sm:h-9 sm:w-9 shrink-0 text-foreground"
             onClick={() => setShareOpen(true)}
             title="Share"
           >
-            <Share2 className="w-5 h-5" />
+            <Share2 className="w-4 sm:w-5 h-4 sm:h-5" />
           </Button>
           <Button
             variant="ghost"
             size="icon"
-            className="h-9 w-9 shrink-0 text-muted-foreground hover:text-foreground"
+            className="h-8 w-8 sm:h-9 sm:w-9 shrink-0 text-muted-foreground hover:text-foreground sm:hidden"
             onClick={() => navigate("/my-setlists")}
             title="My Setlists"
           >
-            <List className="w-5 h-5 sm:hidden" />
+            <List className="w-4 h-4" />
           </Button>
           <Button
             variant="ghost"
             size="icon"
-            className="h-9 w-9 shrink-0 text-muted-foreground hover:text-foreground"
+            className="h-8 w-8 sm:h-9 sm:w-9 shrink-0 text-muted-foreground hover:text-foreground"
             onClick={signOut}
             title="Sign Out"
           >
-            <LogOut className="w-5 h-5" />
+            <LogOut className="w-4 sm:w-5 h-4 sm:h-5" />
           </Button>
         </div>
       </header>
 
+      {/* Mobile Tab Switcher */}
+      {isMobile && (
+        <div className="flex border-b border-border bg-card/50">
+          <button
+            onClick={() => setMobileTab("songs")}
+            className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-body transition-colors ${
+              mobileTab === "songs"
+                ? "text-primary border-b-2 border-primary bg-primary/5"
+                : "text-muted-foreground"
+            }`}
+          >
+            <Music className="w-4 h-4" />
+            Song Vault
+          </button>
+          <button
+            onClick={() => setMobileTab("setlist")}
+            className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-body transition-colors relative ${
+              mobileTab === "setlist"
+                ? "text-primary border-b-2 border-primary bg-primary/5"
+                : "text-muted-foreground"
+            }`}
+          >
+            <LayoutList className="w-4 h-4" />
+            The Set
+            {slots.length > 0 && (
+              <span className="bg-primary text-primary-foreground text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                {slots.length}
+              </span>
+            )}
+          </button>
+        </div>
+      )}
+
       {/* Main Content */}
       <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
-        {/* Song Vault */}
-        <div className="w-full lg:w-[380px] border-b lg:border-b-0 border-r-0 lg:border-r border-border overflow-hidden flex flex-col max-h-[45vh] lg:max-h-[calc(100vh-85px)]">
+        {/* Song Vault — hidden on mobile when setlist tab is active */}
+        <div className={`w-full lg:w-[380px] border-b lg:border-b-0 border-r-0 lg:border-r border-border overflow-hidden flex flex-col ${
+          isMobile ? (mobileTab === "songs" ? "flex-1" : "hidden") : "max-h-[calc(100vh-85px)]"
+        }`}>
           {songsLoading ? (
             <div className="p-4 space-y-3">
               {Array.from({ length: 8 }).map((_, i) => (
@@ -406,8 +449,10 @@ const Builder = () => {
           )}
         </div>
 
-        {/* Setlist */}
-        <div className="flex-1 overflow-hidden flex flex-col min-h-[40vh] lg:max-h-[calc(100vh-85px)]">
+        {/* Setlist — hidden on mobile when songs tab is active */}
+        <div className={`flex-1 overflow-hidden flex flex-col ${
+          isMobile ? (mobileTab === "setlist" ? "flex-1" : "hidden") : "lg:max-h-[calc(100vh-85px)]"
+        }`}>
            <SetlistDisplay
             slots={slots}
             activeSlotId={playlistMode && playingSlot ? playingSlot.id : null}
@@ -425,7 +470,6 @@ const Builder = () => {
             onPlaySetlist={async () => {
               if (slots.length === 0) return;
               const sorted = [...slots].sort((a, b) => a.setNumber - b.setNumber || a.position - b.position);
-              // Find the first slot with an available archive recording
               let startIndex = -1;
               let startSlot: SetlistSlotData | null = null;
               for (let i = 0; i < sorted.length; i++) {
@@ -494,7 +538,6 @@ const Builder = () => {
       {playingSlot?.version?.archive_org_url && (() => {
         const sortedSlots = [...slots].sort((a, b) => a.setNumber - b.setNumber || a.position - b.position);
         const advancePlaylist = async (dir: number) => {
-          // Search in the given direction for the next slot with a recording
           for (let i = playlistIndex + dir; i >= 0 && i < sortedSlots.length; i += dir) {
             let nextSlot = sortedSlots[i];
             if (!nextSlot.version?.archive_org_url) {
@@ -509,7 +552,6 @@ const Builder = () => {
                   },
                 };
               } else {
-                // Skip this song, no recording available
                 continue;
               }
             }
@@ -517,7 +559,6 @@ const Builder = () => {
             setPlayingSlot(nextSlot);
             return;
           }
-          // No more playable songs
           setPlaylistMode(false);
           setPlayingSlot(null);
           toast.info("End of setlist");

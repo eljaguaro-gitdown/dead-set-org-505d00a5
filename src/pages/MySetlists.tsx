@@ -203,8 +203,10 @@ const MySetlists = () => {
                 { bg: "linear-gradient(90deg, #787068 0%, #c8c0b8 4%, #c8c0b8 96%, #787068 100%)", labelBg: "#80c8b8", labelBorder: "#58a090", text: "#082820", sub: "#285848" },
               ];
               const tape = tapeStyles[i % tapeStyles.length];
-              const heights = [52, 48, 55, 46, 50, 53, 47, 51, 49, 54];
-              const h = heights[i % heights.length];
+              const desktopHeights = [52, 48, 55, 46, 50, 53, 47, 51, 49, 54];
+              const mobileHeights = [44, 40, 46, 42, 44, 45, 41, 43, 42, 45];
+              const isSmall = typeof window !== 'undefined' && window.innerWidth < 640;
+              const h = (isSmall ? mobileHeights : desktopHeights)[i % desktopHeights.length];
 
               return (
                 <motion.button
@@ -252,13 +254,13 @@ const MySetlists = () => {
                     }} />
                     
                     {/* Content */}
-                    <div className="flex items-center px-5 h-full relative z-10">
-                      <div className="flex items-center gap-3 min-w-0 flex-1">
-                        <span className="font-body text-lg truncate" style={{ color: tape.text, letterSpacing: "0.03em" }}>
+                    <div className="flex items-center px-3 sm:px-5 h-full relative z-10">
+                      <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                        <span className="font-body text-sm sm:text-lg truncate" style={{ color: tape.text, letterSpacing: "0.03em" }}>
                           {s.title}
                         </span>
                         {s.slot_count > 0 && (
-                          <span className="font-body text-sm shrink-0" style={{ color: tape.sub }}>
+                          <span className="font-body text-xs sm:text-sm shrink-0" style={{ color: tape.sub }}>
                             {s.slot_count} songs
                           </span>
                         )}
@@ -290,8 +292,8 @@ const MySetlists = () => {
                           );
                         })()}
                       </div>
-                      <div className="flex items-center gap-3 shrink-0">
-                        <span className="font-body text-sm" style={{ color: tape.sub }}>
+                      <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+                        <span className="font-body text-[10px] sm:text-sm hidden sm:inline" style={{ color: tape.sub }}>
                           {new Date(s.updated_at).toLocaleDateString()}
                         </span>
                         {s.is_public ? (
