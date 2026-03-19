@@ -14,7 +14,8 @@ export default {
     },
     extend: {
       fontFamily: {
-        display: ["'Dela Gothic One'", "cursive"],
+        display: ["'Permanent Marker'", "cursive"],
+        hand: ["'Caveat'", "cursive"],
         body: ["'Instrument Sans'", "sans-serif"],
       },
       colors: {
@@ -68,6 +69,8 @@ export default {
           dark: "hsl(var(--dead-dark))",
           surface: "hsl(var(--dead-surface))",
           "surface-hover": "hsl(var(--dead-surface-hover))",
+          orange: "hsl(var(--dead-orange))",
+          cream: "hsl(var(--dead-cream))",
         },
       },
       borderRadius: {
