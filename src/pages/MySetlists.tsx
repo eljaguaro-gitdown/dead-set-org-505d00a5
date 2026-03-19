@@ -290,8 +290,8 @@ const MySetlists = () => {
                           );
                         })()}
                       </div>
-                      <div className="flex items-center gap-3 shrink-0">
-                        <span className="font-body text-sm" style={{ color: tape.sub }}>
+                      <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+                        <span className="font-body text-[10px] sm:text-sm hidden sm:inline" style={{ color: tape.sub }}>
                           {new Date(s.updated_at).toLocaleDateString()}
                         </span>
                         {s.is_public ? (
