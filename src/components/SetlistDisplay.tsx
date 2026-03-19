@@ -266,6 +266,7 @@ const SetSection = ({
 /* ── Main component ── */
 const SetlistDisplay = ({
   slots,
+  activeSlotId,
   onRemoveSlot,
   onToggleSegue,
   onUpdateNotes,
