@@ -51,6 +51,7 @@ interface SetlistDisplayProps {
 const SortableSlotItem = ({
   slot,
   isLast,
+  isPlaying,
   onRemoveSlot,
   onToggleSegue,
   onUpdateNotes,
@@ -58,6 +59,7 @@ const SortableSlotItem = ({
 }: {
   slot: SetlistSlotData;
   isLast: boolean;
+  isPlaying: boolean;
   onRemoveSlot: (id: string) => void;
   onToggleSegue: (id: string) => void;
   onUpdateNotes: (id: string, notes: string) => void;
