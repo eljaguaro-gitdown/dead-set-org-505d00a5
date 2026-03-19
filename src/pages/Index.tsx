@@ -50,8 +50,8 @@ const Index = () => {
           transition={{ duration: 1, ease: "easeOut" }}
           className="flex flex-col items-center gap-5 sm:gap-8 relative z-10 text-center"
         >
-          <StealYourFace size={100} className="sm:hidden" />
-          <StealYourFace size={150} className="hidden sm:block" />
+          <div className="sm:hidden"><StealYourFace size={100} /></div>
+          <div className="hidden sm:block"><StealYourFace size={150} /></div>
 
           <div className="space-y-3 sm:space-y-4">
             <h1 className="font-display text-4xl sm:text-6xl md:text-8xl lg:text-9xl tracking-tight text-foreground leading-none">
