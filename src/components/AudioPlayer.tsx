@@ -13,6 +13,8 @@ interface AudioPlayerProps {
   songTitle: string;
   showDate: string;
   venue?: string | null;
+  autoPlay?: boolean;
+  singleTrackMode?: boolean;
   onClose: () => void;
   onEnded?: () => void;
   playlistInfo?: { current: number; total: number } | null;
@@ -20,11 +22,11 @@ interface AudioPlayerProps {
   onPrev?: () => void;
 }
 
-const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, onClose, onEnded, playlistInfo, onNext, onPrev }: AudioPlayerProps) => {
+const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false, singleTrackMode = false, onClose, onEnded, playlistInfo, onNext, onPrev }: AudioPlayerProps) => {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [tracks, setTracks] = useState<Track[]>([]);
   const [currentTrack, setCurrentTrack] = useState(0);
-  const [playing, setPlaying] = useState(false);
+  const [playing, setPlaying] = useState(autoPlay);
   const [muted, setMuted] = useState(false);
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -86,7 +88,10 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, onClose, onEnded,
   useEffect(() => {
     if (tracks.length > 0 && audioRef.current) {
       audioRef.current.load();
-      if (playing) audioRef.current.play().catch(() => {});
+      if (playing || autoPlay) {
+        setPlaying(true);
+        audioRef.current.play().catch(() => {});
+      }
     }
   }, [currentTrack, tracks]);
 
@@ -113,6 +118,12 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, onClose, onEnded,
   };
 
   const handleEnded = () => {
+    if (singleTrackMode) {
+      // In single track mode (playlist), signal parent to advance
+      setPlaying(false);
+      onEnded?.();
+      return;
+    }
     if (currentTrack < tracks.length - 1) {
       setCurrentTrack((p) => p + 1);
     } else {
