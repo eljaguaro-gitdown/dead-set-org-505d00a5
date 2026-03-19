@@ -20,7 +20,7 @@ interface AudioPlayerProps {
   onPrev?: () => void;
 }
 
-const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, onClose }: AudioPlayerProps) => {
+const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, onClose, onEnded, playlistInfo, onNext, onPrev }: AudioPlayerProps) => {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [tracks, setTracks] = useState<Track[]>([]);
   const [currentTrack, setCurrentTrack] = useState(0);
