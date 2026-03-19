@@ -36,6 +36,8 @@ const Builder = () => {
   const [playingSlot, setPlayingSlot] = useState<import("@/components/SetlistDisplay").SetlistSlotData | null>(null);
   const [playlistMode, setPlaylistMode] = useState(false);
   const [playlistIndex, setPlaylistIndex] = useState(0);
+  const [description, setDescription] = useState<string | null>(null);
+  const [generatingDescription, setGeneratingDescription] = useState(false);
 
   const { songs, eras, loading: songsLoading, getNotableVersions } = useSongs(selectedEra);
   const {
