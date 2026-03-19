@@ -261,21 +261,31 @@ const AIDeadHeadDialog = ({
                 </div>
               ))}
 
-              <div className="flex gap-2 pt-2">
+              <div className="flex flex-col gap-2 pt-2">
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleGenerate}
+                    className="border-border text-muted-foreground font-body gap-1.5"
+                  >
+                    <Sparkles className="w-3.5 h-3.5" /> Regenerate
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={handleApply}
+                    className="bg-primary text-primary-foreground font-body gap-1.5 flex-1"
+                  >
+                    <Zap className="w-3.5 h-3.5" /> Apply to Current
+                  </Button>
+                </div>
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={handleGenerate}
-                  className="border-border text-muted-foreground font-body gap-1.5"
+                  onClick={handleCreateNew}
+                  className="border-primary/30 text-primary font-body gap-1.5 w-full hover:bg-primary/10"
                 >
-                  <Sparkles className="w-3.5 h-3.5" /> Regenerate
-                </Button>
-                <Button
-                  size="sm"
-                  onClick={handleApply}
-                  className="bg-primary text-primary-foreground font-body gap-1.5 flex-1"
-                >
-                  <Zap className="w-3.5 h-3.5" /> Apply Setlist
+                  <Wand2 className="w-3.5 h-3.5" /> Create as New Setlist
                 </Button>
               </div>
             </motion.div>
