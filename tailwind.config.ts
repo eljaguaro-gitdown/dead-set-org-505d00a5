@@ -16,8 +16,7 @@ export default {
       fontFamily: {
         display: ["'Pirata One'", "'Permanent Marker'", "cursive"],
         marker: ["'Permanent Marker'", "cursive"],
-        hand: ["'Caveat'", "cursive"],
-        body: ["'Instrument Sans'", "sans-serif"],
+        body: ["'Patrick Hand'", "'Caveat'", "cursive"],
       },
       colors: {
         border: "hsl(var(--border))",

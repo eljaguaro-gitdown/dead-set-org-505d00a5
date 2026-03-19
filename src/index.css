@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Caveat:wght@400;500;600;700&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Pirata+One&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Caveat:wght@400;500;600;700&family=Patrick+Hand&family=Pirata+One&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -63,8 +63,7 @@
 
     --font-display: 'Pirata One', 'Permanent Marker', cursive;
     --font-hand: 'Caveat', cursive;
-    --font-marker: 'Permanent Marker', cursive;
-    --font-body: 'Instrument Sans', sans-serif;
+    --font-body: 'Patrick Hand', 'Caveat', cursive;
 
     --grain-opacity: 0.04;
   }
