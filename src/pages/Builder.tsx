@@ -212,7 +212,26 @@ const Builder = () => {
     [songs, user]
   );
 
-  if (authLoading) {
+  const handleGenerateDescription = useCallback(async () => {
+    if (!setlist) return;
+    setGeneratingDescription(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-setlist-description", {
+        body: { setlistId: setlist.id },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      setDescription(data.description);
+      toast.success("Liner notes generated!");
+    } catch (e: any) {
+      console.error("Description generation error:", e);
+      toast.error(e.message || "Failed to generate description");
+    } finally {
+      setGeneratingDescription(false);
+    }
+  }, [setlist]);
+
+
     return (
       <div className="grain-overlay min-h-screen bg-background flex items-center justify-center">
         <div className="space-y-3">
