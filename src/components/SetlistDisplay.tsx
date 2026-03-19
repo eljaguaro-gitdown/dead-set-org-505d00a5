@@ -38,6 +38,7 @@ export interface SetlistSlotData {
 
 interface SetlistDisplayProps {
   slots: SetlistSlotData[];
+  activeSlotId?: string | null;
   onRemoveSlot: (id: string) => void;
   onToggleSegue: (id: string) => void;
   onUpdateNotes: (id: string, notes: string) => void;

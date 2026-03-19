@@ -384,8 +384,9 @@ const Builder = () => {
 
         {/* Setlist */}
         <div className="flex-1 overflow-hidden flex flex-col min-h-[40vh] lg:max-h-[calc(100vh-85px)]">
-          <SetlistDisplay
+           <SetlistDisplay
             slots={slots}
+            activeSlotId={playlistMode && playingSlot ? playingSlot.id : null}
             onRemoveSlot={handleRemoveSlot}
             onToggleSegue={handleToggleSegue}
             onUpdateNotes={handleUpdateNotes}
