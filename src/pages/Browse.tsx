@@ -92,41 +92,43 @@ const Browse = () => {
       </SiteHeader>
 
       {/* Filters */}
-      <div className="border-b border-border/50 px-4 py-3">
-        <div className="max-w-6xl mx-auto flex items-center gap-3 flex-wrap">
-          <div className="relative flex-1 min-w-[200px]">
+      <div className="border-b border-border/50 px-3 sm:px-4 py-3">
+        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
+          <div className="relative flex-1 min-w-0">
             <Input
               placeholder="Search setlists..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="bg-card/80 backdrop-blur-sm border-border text-foreground font-body"
+              className="bg-card/80 backdrop-blur-sm border-border text-foreground font-body text-sm"
             />
           </div>
-          <Select value={eraFilter} onValueChange={setEraFilter}>
-            <SelectTrigger className="w-[180px] bg-card/80 backdrop-blur-sm border-border text-foreground font-body text-xs h-9">
-              <Filter className="w-3 h-3 mr-1.5 text-muted-foreground" />
-              <SelectValue placeholder="All eras" />
-            </SelectTrigger>
-            <SelectContent className="bg-card border-border">
-              <SelectItem value="all" className="font-body text-xs">All eras</SelectItem>
-              {eras.map((era) => (
-                <SelectItem key={era.id} value={era.id} className="font-body text-xs">
-                  {era.name} ({era.year_start}–{era.year_end})
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={sortBy} onValueChange={(v) => setSortBy(v as any)}>
-            <SelectTrigger className="w-[140px] bg-card/80 backdrop-blur-sm border-border text-foreground font-body text-xs h-9">
-              <SortAsc className="w-3 h-3 mr-1.5 text-muted-foreground" />
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent className="bg-card border-border">
-              <SelectItem value="newest" className="font-body text-xs">Newest</SelectItem>
-              <SelectItem value="oldest" className="font-body text-xs">Oldest</SelectItem>
-              <SelectItem value="title" className="font-body text-xs">A–Z</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="flex items-center gap-2">
+            <Select value={eraFilter} onValueChange={setEraFilter}>
+              <SelectTrigger className="flex-1 sm:w-[180px] bg-card/80 backdrop-blur-sm border-border text-foreground font-body text-xs h-9">
+                <Filter className="w-3 h-3 mr-1.5 text-muted-foreground" />
+                <SelectValue placeholder="All eras" />
+              </SelectTrigger>
+              <SelectContent className="bg-card border-border">
+                <SelectItem value="all" className="font-body text-xs">All eras</SelectItem>
+                {eras.map((era) => (
+                  <SelectItem key={era.id} value={era.id} className="font-body text-xs">
+                    {era.name} ({era.year_start}–{era.year_end})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={sortBy} onValueChange={(v) => setSortBy(v as any)}>
+              <SelectTrigger className="flex-1 sm:w-[140px] bg-card/80 backdrop-blur-sm border-border text-foreground font-body text-xs h-9">
+                <SortAsc className="w-3 h-3 mr-1.5 text-muted-foreground" />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-card border-border">
+                <SelectItem value="newest" className="font-body text-xs">Newest</SelectItem>
+                <SelectItem value="oldest" className="font-body text-xs">Oldest</SelectItem>
+                <SelectItem value="title" className="font-body text-xs">A–Z</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
 
