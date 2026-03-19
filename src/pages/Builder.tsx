@@ -510,6 +510,8 @@ const Builder = () => {
             songTitle={playingSlot.song.title}
             showDate={playingSlot.version.show_date}
             venue={playingSlot.version.venue}
+            autoPlay={true}
+            singleTrackMode={playlistMode}
             onClose={() => {
               setPlayingSlot(null);
               setPlaylistMode(false);
