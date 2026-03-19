@@ -45,6 +45,7 @@ const Builder = () => {
     updateTitle,
     togglePublic,
     getShareLink,
+    setSlots,
   } = useSetlist(user, paramId);
 
   // Initialize setlist (create new or load existing)
