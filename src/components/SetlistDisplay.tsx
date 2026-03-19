@@ -270,12 +270,15 @@ const SetSection = ({
 const SetlistDisplay = ({
   slots,
   activeSlotId,
+  description,
+  generatingDescription,
   onRemoveSlot,
   onToggleSegue,
   onUpdateNotes,
   onReorder,
   onPlayVersion,
   onPlaySetlist,
+  onGenerateDescription,
 }: SetlistDisplayProps) => {
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
