@@ -39,12 +39,15 @@ export interface SetlistSlotData {
 interface SetlistDisplayProps {
   slots: SetlistSlotData[];
   activeSlotId?: string | null;
+  description?: string | null;
+  generatingDescription?: boolean;
   onRemoveSlot: (id: string) => void;
   onToggleSegue: (id: string) => void;
   onUpdateNotes: (id: string, notes: string) => void;
   onReorder: (newSlots: SetlistSlotData[]) => void;
   onPlayVersion?: (slot: SetlistSlotData) => void;
   onPlaySetlist?: () => void;
+  onGenerateDescription?: () => void;
 }
 
 /* ── Sortable slot item ── */
