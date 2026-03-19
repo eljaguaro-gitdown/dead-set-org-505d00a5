@@ -118,6 +118,12 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
   };
 
   const handleEnded = () => {
+    if (singleTrackMode) {
+      // In single track mode (playlist), signal parent to advance
+      setPlaying(false);
+      onEnded?.();
+      return;
+    }
     if (currentTrack < tracks.length - 1) {
       setCurrentTrack((p) => p + 1);
     } else {
