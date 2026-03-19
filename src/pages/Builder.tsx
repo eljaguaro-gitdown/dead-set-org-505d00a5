@@ -230,8 +230,7 @@ const Builder = () => {
       setGeneratingDescription(false);
     }
   }, [setlist]);
-
-
+  if (authLoading) {
     return (
       <div className="grain-overlay min-h-screen bg-background flex items-center justify-center">
         <div className="space-y-3">
