@@ -253,41 +253,41 @@ const Builder = () => {
       {/* Top Bar */}
       <header className="border-b border-border">
         {/* Row 1: Logo, title, saved indicator */}
-        <div className="px-3 py-2 flex items-center gap-2">
-          <button onClick={() => navigate("/")} className="font-display text-lg text-primary shrink-0">
+        <div className="px-4 py-3 flex items-center gap-3">
+          <button onClick={() => navigate("/")} className="font-display text-2xl text-primary shrink-0">
             DS
           </button>
           <button
             onClick={() => navigate("/my-setlists")}
-            className="text-xs font-body text-muted-foreground hover:text-foreground transition-colors shrink-0 hidden sm:flex items-center gap-1"
+            className="text-sm font-body text-muted-foreground hover:text-foreground transition-colors shrink-0 hidden sm:flex items-center gap-1.5"
             title="My Setlists"
           >
-            <List className="w-3.5 h-3.5" /> My Setlists
+            <List className="w-5 h-5" /> My Setlists
           </button>
           <Input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             onBlur={handleTitleBlur}
-            className="bg-transparent border-none text-foreground font-display text-base sm:text-lg p-0 h-auto focus-visible:ring-0 min-w-0 flex-1"
+            className="bg-transparent border-none text-foreground font-display text-xl sm:text-2xl p-0 h-auto focus-visible:ring-0 min-w-0 flex-1"
           />
           {setlist && (
-            <span className="flex items-center gap-1 text-xs text-accent font-body shrink-0" title="All changes are saved automatically">
-              <CheckCircle className="w-3 h-3" /> <span className="hidden sm:inline">Saved</span>
+            <span className="flex items-center gap-1.5 text-sm text-accent font-body shrink-0" title="All changes are saved automatically">
+              <CheckCircle className="w-4 h-4" /> <span className="hidden sm:inline">Saved</span>
             </span>
           )}
           <CollaboratorAvatars collaborators={collaborators} />
         </div>
 
-        {/* Row 2: Toolbar — horizontally scrollable on mobile */}
-        <div className="px-3 py-1.5 border-t border-border/50 flex items-center gap-1.5 overflow-x-auto scrollbar-hide">
+        {/* Row 2: Toolbar */}
+        <div className="px-4 py-2 border-t border-border/50 flex items-center gap-2 overflow-x-auto scrollbar-hide">
           {/* Set selector */}
-          <div className="flex items-center gap-1 shrink-0">
-            <span className="text-xs text-muted-foreground font-body hidden sm:inline">Add to:</span>
+          <div className="flex items-center gap-1.5 shrink-0">
+            <span className="text-sm text-muted-foreground font-body hidden sm:inline">Add to:</span>
             {[1, 2, 3].map((n) => (
               <button
                 key={n}
                 onClick={() => setActiveSet(n)}
-                className={`px-2 py-1 text-xs font-body rounded transition-colors ${
+                className={`px-3 py-1.5 text-sm font-body rounded transition-colors ${
                   activeSet === n
                     ? "bg-primary text-primary-foreground"
                     : "bg-muted text-muted-foreground hover:text-foreground"
@@ -298,79 +298,79 @@ const Builder = () => {
             ))}
           </div>
 
-          <div className="w-px h-5 bg-border shrink-0" />
+          <div className="w-px h-6 bg-border shrink-0" />
 
-          {/* Era filter — compact on mobile */}
+          {/* Era filter */}
           <Select value={selectedEra || ""} onValueChange={(v) => setSelectedEra(v || null)}>
-            <SelectTrigger className="w-auto min-w-[90px] max-w-[140px] bg-card border-border text-foreground font-body text-xs h-7 shrink-0">
+            <SelectTrigger className="w-auto min-w-[100px] max-w-[160px] bg-card border-border text-foreground font-body text-sm h-9 shrink-0">
               <SelectValue placeholder="All eras" />
             </SelectTrigger>
             <SelectContent className="bg-card border-border">
               {eras.map((era) => (
-                <SelectItem key={era.id} value={era.id} className="font-body text-xs">
+                <SelectItem key={era.id} value={era.id} className="font-body text-sm">
                   {era.name} ({era.year_start}–{era.year_end})
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
 
-          <div className="w-px h-5 bg-border shrink-0" />
+          <div className="w-px h-6 bg-border shrink-0" />
 
-          {/* Action buttons — icon-only on mobile */}
+          {/* Action buttons */}
           <Button
             variant="ghost"
             size="icon"
-            className="h-7 w-7 shrink-0 text-foreground"
+            className="h-9 w-9 shrink-0 text-foreground"
             onClick={() => setChatOpen(true)}
             title="Chat"
           >
-            <MessageCircle className="w-3.5 h-3.5" />
+            <MessageCircle className="w-5 h-5" />
           </Button>
           <Button
             variant="default"
             size="sm"
-            className="shrink-0 h-7 px-2.5 gap-1.5 bg-gradient-to-r from-primary to-accent text-primary-foreground font-display text-xs shadow-md hover:shadow-lg hover:scale-105 transition-all duration-200 animate-pulse hover:animate-none"
+            className="shrink-0 h-9 px-3 gap-2 bg-gradient-to-r from-primary to-accent text-primary-foreground font-display text-sm shadow-md hover:shadow-lg hover:scale-105 transition-all duration-200 animate-pulse hover:animate-none"
             onClick={() => setAiOpen(true)}
             title="AI Dead Head — Generate a setlist"
           >
-            <Sparkles className="w-3.5 h-3.5" />
+            <Sparkles className="w-5 h-5" />
             <span className="hidden sm:inline">AI Dead Head</span>
           </Button>
           <Button
             variant="ghost"
             size="icon"
-            className={`h-7 w-7 shrink-0 ${setlist?.is_public ? "text-accent" : "text-foreground"}`}
+            className={`h-9 w-9 shrink-0 ${setlist?.is_public ? "text-accent" : "text-foreground"}`}
             onClick={togglePublic}
             title={setlist?.is_public ? "Public — visible on Browse" : "Private — only you and collaborators"}
           >
-            <Globe className="w-3.5 h-3.5" />
+            <Globe className="w-5 h-5" />
           </Button>
           <Button
             variant="ghost"
             size="icon"
-            className="h-7 w-7 shrink-0 text-foreground"
+            className="h-9 w-9 shrink-0 text-foreground"
             onClick={() => setShareOpen(true)}
             title="Share"
           >
-            <Share2 className="w-3.5 h-3.5" />
+            <Share2 className="w-5 h-5" />
           </Button>
           <Button
             variant="ghost"
             size="icon"
-            className="h-7 w-7 shrink-0 text-muted-foreground hover:text-foreground"
+            className="h-9 w-9 shrink-0 text-muted-foreground hover:text-foreground"
             onClick={() => navigate("/my-setlists")}
             title="My Setlists"
           >
-            <List className="w-3.5 h-3.5 sm:hidden" />
+            <List className="w-5 h-5 sm:hidden" />
           </Button>
           <Button
             variant="ghost"
             size="icon"
-            className="h-7 w-7 shrink-0 text-muted-foreground hover:text-foreground"
+            className="h-9 w-9 shrink-0 text-muted-foreground hover:text-foreground"
             onClick={signOut}
             title="Sign Out"
           >
-            <LogOut className="w-3.5 h-3.5" />
+            <LogOut className="w-5 h-5" />
           </Button>
         </div>
       </header>
