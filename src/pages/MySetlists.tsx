@@ -174,90 +174,125 @@ const MySetlists = () => {
             </p>
           </motion.div>
         ) : (
-          <div className="space-y-0 rounded-md overflow-hidden shadow-2xl border-2 border-[hsl(25,15%,30%)]">
+          <div
+            className="rounded overflow-hidden relative"
+            style={{
+              boxShadow: "inset 0 3px 12px rgba(0,0,0,0.5), inset 0 -3px 12px rgba(0,0,0,0.4), 0 12px 40px rgba(0,0,0,0.6)",
+              background: "linear-gradient(180deg, hsl(25,12%,10%) 0%, hsl(25,10%,16%) 2%, hsl(25,10%,16%) 98%, hsl(25,12%,8%) 100%)",
+              // Film grain + warm color cast like a 70s/80s photo
+              filter: "saturate(0.85) contrast(1.05)",
+            }}
+          >
+            {/* Warm photo vignette overlay */}
+            <div className="absolute inset-0 z-30 pointer-events-none rounded" style={{
+              background: "radial-gradient(ellipse at center, transparent 50%, rgba(15,8,2,0.5) 100%)",
+            }} />
+            
             {setlists.map((s, i) => {
-              // Colorful chaotic tape spines like a real collection wall
+              // Real cassette spine colors — faded pastels, some bright, some aged
               const tapeStyles = [
-                { bg: "hsl(340,60%,75%)", text: "hsl(340,70%,20%)", accent: "hsl(340,50%,55%)" },   // hot pink
-                { bg: "hsl(140,40%,70%)", text: "hsl(140,60%,15%)", accent: "hsl(140,40%,40%)" },   // green
-                { bg: "hsl(48,70%,80%)",  text: "hsl(35,60%,18%)",  accent: "hsl(35,70%,45%)" },    // yellow
-                { bg: "hsl(30,30%,88%)",  text: "hsl(25,40%,15%)",  accent: "hsl(25,30%,45%)" },    // cream/white
-                { bg: "hsl(200,50%,75%)", text: "hsl(210,60%,18%)", accent: "hsl(210,50%,40%)" },   // sky blue
-                { bg: "hsl(15,60%,72%)",  text: "hsl(10,50%,18%)",  accent: "hsl(10,50%,40%)" },    // salmon/orange
-                { bg: "hsl(280,35%,78%)", text: "hsl(280,50%,20%)", accent: "hsl(280,40%,45%)" },   // lavender
-                { bg: "hsl(60,50%,82%)",  text: "hsl(50,50%,18%)",  accent: "hsl(50,50%,40%)" },    // pale yellow
-                { bg: "hsl(170,35%,72%)", text: "hsl(170,50%,15%)", accent: "hsl(170,40%,35%)" },   // teal
-                { bg: "hsl(0,55%,75%)",   text: "hsl(0,50%,20%)",   accent: "hsl(0,45%,45%)" },     // red/coral
+                { bg: "linear-gradient(90deg, #8a7d6e 0%, #d4c8b8 4%, #d4c8b8 96%, #8a7d6e 100%)", labelBg: "#e8a0b0", labelBorder: "#c07888", text: "#2a1510", sub: "#5a4030" },
+                { bg: "linear-gradient(90deg, #7a7268 0%, #c8d4b8 4%, #c8d4b8 96%, #7a7268 100%)", labelBg: "#88c898", labelBorder: "#58a068", text: "#0a2810", sub: "#2a5030" },
+                { bg: "linear-gradient(90deg, #8a8070 0%, #e8dcc0 4%, #e8dcc0 96%, #8a8070 100%)", labelBg: "#e8d070", labelBorder: "#c0a840", text: "#2a2008", sub: "#585020" },
+                { bg: "linear-gradient(90deg, #7a7570 0%, #d0ccc8 4%, #d0ccc8 96%, #7a7570 100%)", labelBg: "#90b8d8", labelBorder: "#6898b8", text: "#0a1828", sub: "#284868" },
+                { bg: "linear-gradient(90deg, #887868 0%, #e0c8a8 4%, #e0c8a8 96%, #887868 100%)", labelBg: "#e8b878", labelBorder: "#c89048", text: "#2a1800", sub: "#584818" },
+                { bg: "linear-gradient(90deg, #8a7a78 0%, #e0c8c8 4%, #e0c8c8 96%, #8a7a78 100%)", labelBg: "#e88898", labelBorder: "#c06070", text: "#2a0810", sub: "#5a2838" },
+                { bg: "linear-gradient(90deg, #787870 0%, #c8c8c0 4%, #c8c8c0 96%, #787870 100%)", labelBg: "#c0a8d8", labelBorder: "#9878b0", text: "#180828", sub: "#483868" },
+                { bg: "linear-gradient(90deg, #888068 0%, #e0d8b8 4%, #e0d8b8 96%, #888068 100%)", labelBg: "#b8d888", labelBorder: "#90b058", text: "#182808", sub: "#385818" },
+                { bg: "linear-gradient(90deg, #807870 0%, #d0c8c0 4%, #d0c8c0 96%, #807870 100%)", labelBg: "#d8c098", labelBorder: "#b89868", text: "#281808", sub: "#584020" },
+                { bg: "linear-gradient(90deg, #787068 0%, #c8c0b8 4%, #c8c0b8 96%, #787068 100%)", labelBg: "#80c8b8", labelBorder: "#58a090", text: "#082820", sub: "#285848" },
               ];
-              const style = tapeStyles[i % tapeStyles.length];
-              // Slight random rotation for organic feel
-              const rotations = [-0.3, 0.15, -0.1, 0.25, -0.2, 0.1, -0.15, 0.3, -0.05, 0.2];
-              const rot = rotations[i % rotations.length];
+              const tape = tapeStyles[i % tapeStyles.length];
+              const heights = [52, 48, 55, 46, 50, 53, 47, 51, 49, 54];
+              const h = heights[i % heights.length];
 
               return (
                 <motion.button
                   key={s.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.04 }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: i * 0.03 }}
                   onClick={() => navigate(`/builder/${s.id}`)}
-                  style={{
-                    backgroundColor: style.bg,
-                    transform: `rotate(${rot}deg)`,
-                  }}
-                  className="w-full text-left flex items-stretch group hover:brightness-90 hover:scale-[1.01] transition-all duration-150 relative border-b border-[hsl(25,15%,30%/0.3)]"
+                  className="w-full text-left flex items-stretch group hover:brightness-[1.12] transition-all duration-100 relative z-10"
+                  style={{ height: `${h}px` }}
                 >
-                  {/* Clear plastic edge effect */}
-                  <div className="w-1.5 shrink-0 bg-[hsl(25,10%,40%/0.3)]" />
+                  {/* Shadow line between tapes — the dark gap */}
+                  <div className="absolute inset-x-0 top-0 h-[3px] z-20" style={{
+                    background: "linear-gradient(90deg, rgba(0,0,0,0.7), rgba(0,0,0,0.4) 8%, rgba(0,0,0,0.25) 50%, rgba(0,0,0,0.4) 92%, rgba(0,0,0,0.7))",
+                  }} />
                   
-                  {/* Colored label area */}
-                  <div className="flex-1 flex items-center px-4 py-2 min-h-[2.8rem] relative overflow-hidden">
-                    {/* Faint lined paper effect */}
-                    <div className="absolute inset-0 opacity-[0.07]" style={{
-                      backgroundImage: "repeating-linear-gradient(transparent, transparent 11px, hsl(25,30%,30%) 11px, hsl(25,30%,30%) 12px)",
+                  {/* Left plastic case edge — translucent dark */}
+                  <div className="w-[14px] shrink-0 relative overflow-hidden" style={{
+                    background: "linear-gradient(90deg, #1a1512, #2a2520 30%, #353028 60%, #2a2520 80%, #1a1512)",
+                  }}>
+                    {/* Plastic sheen */}
+                    <div className="absolute inset-0" style={{
+                      background: "linear-gradient(180deg, rgba(255,255,255,0.06) 0%, transparent 20%, transparent 80%, rgba(0,0,0,0.1) 100%)",
+                    }} />
+                  </div>
+                  
+                  {/* Main paper/card label */}
+                  <div className="flex-1 relative overflow-hidden" style={{ background: tape.bg }}>
+                    {/* Paper grain texture */}
+                    <div className="absolute inset-0 opacity-[0.15]" style={{
+                      backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E")`,
                     }} />
                     
-                    <div className="flex items-center gap-3 min-w-0 flex-1 relative z-10">
-                      <span
-                        className="font-body text-lg truncate tracking-wide"
-                        style={{ color: style.text }}
-                      >
-                        {s.title}
-                      </span>
-                      {s.slot_count > 0 && (
-                        <span
-                          className="font-body text-sm shrink-0 opacity-70"
-                          style={{ color: style.accent }}
-                        >
-                          {s.slot_count} songs
+                    {/* Colored label band — the characteristic stripe */}
+                    <div className="absolute top-[15%] bottom-[15%] left-[2%] right-[2%]" style={{
+                      backgroundColor: tape.labelBg,
+                      border: `1px solid ${tape.labelBorder}`,
+                      borderRadius: "1px",
+                      opacity: 0.55,
+                    }} />
+                    
+                    {/* Aging/yellowing spots */}
+                    <div className="absolute inset-0 opacity-[0.06]" style={{
+                      background: "radial-gradient(circle at 30% 50%, rgba(120,90,40,0.5), transparent 40%), radial-gradient(circle at 80% 30%, rgba(100,80,30,0.3), transparent 30%)",
+                    }} />
+                    
+                    {/* Content */}
+                    <div className="flex items-center px-5 h-full relative z-10">
+                      <div className="flex items-center gap-4 min-w-0 flex-1">
+                        <span className="font-body text-lg truncate" style={{ color: tape.text, letterSpacing: "0.03em" }}>
+                          {s.title}
                         </span>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-3 shrink-0 relative z-10">
-                      <span
-                        className="font-body text-sm opacity-60"
-                        style={{ color: style.text }}
-                      >
-                        {new Date(s.updated_at).toLocaleDateString()}
-                      </span>
-                      {s.is_public ? (
-                        <Globe className="w-4 h-4 opacity-50" style={{ color: style.text }} />
-                      ) : (
-                        <Lock className="w-4 h-4 opacity-40" style={{ color: style.text }} />
-                      )}
-                      <button
-                        onClick={(e) => handleDelete(s.id, e)}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:text-destructive"
-                        style={{ color: style.accent }}
-                        title="Delete setlist"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                        {s.slot_count > 0 && (
+                          <span className="font-body text-sm shrink-0" style={{ color: tape.sub }}>
+                            {s.slot_count} songs
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-3 shrink-0">
+                        <span className="font-body text-sm" style={{ color: tape.sub }}>
+                          {new Date(s.updated_at).toLocaleDateString()}
+                        </span>
+                        {s.is_public ? (
+                          <Globe className="w-4 h-4" style={{ color: tape.sub }} />
+                        ) : (
+                          <Lock className="w-4 h-4 opacity-50" style={{ color: tape.sub }} />
+                        )}
+                        <button
+                          onClick={(e) => handleDelete(s.id, e)}
+                          className="opacity-0 group-hover:opacity-100 transition-opacity p-1"
+                          style={{ color: tape.sub }}
+                          title="Delete setlist"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
                   </div>
 
-                  {/* Right plastic edge */}
-                  <div className="w-1 shrink-0 bg-[hsl(25,10%,40%/0.2)]" />
+                  {/* Right plastic case edge */}
+                  <div className="w-[10px] shrink-0" style={{
+                    background: "linear-gradient(90deg, #2a2520, #353028 40%, #2a2520 70%, #1a1512)",
+                  }} />
+                  
+                  {/* Bottom gap shadow */}
+                  <div className="absolute inset-x-0 bottom-0 h-[2px] z-20" style={{
+                    background: "linear-gradient(90deg, rgba(0,0,0,0.6), rgba(0,0,0,0.2) 15%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0.2) 85%, rgba(0,0,0,0.6))",
+                  }} />
                 </motion.button>
               );
             })}
