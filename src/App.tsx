@@ -7,6 +7,7 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Builder from "./pages/Builder";
 import MySetlists from "./pages/MySetlists";
+import Profile from "./pages/Profile";
 import JoinSetlist from "./pages/JoinSetlist";
 import Browse from "./pages/Browse";
 import SetlistPoster from "./pages/SetlistPoster";
@@ -24,6 +25,7 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/my-setlists" element={<MySetlists />} />
+          <Route path="/profile" element={<Profile />} />
           <Route path="/builder" element={<Builder />} />
           <Route path="/builder/:id" element={<Builder />} />
           <Route path="/join/:token" element={<JoinSetlist />} />

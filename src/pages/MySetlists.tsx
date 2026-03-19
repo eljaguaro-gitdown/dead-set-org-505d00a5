@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Plus, Globe, Lock, Music, Trash2, Calendar, Search } from "lucide-react";
+import { Plus, Globe, Lock, Music, Trash2, Calendar, Search, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -96,6 +96,15 @@ const MySetlists = () => {
             onClick={() => navigate("/browse")}
           >
             <Search className="w-3.5 h-3.5" /> Browse
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-muted-foreground hover:text-foreground"
+            onClick={() => navigate("/profile")}
+            title="Profile"
+          >
+            <User className="w-4 h-4" />
           </Button>
           <Button
             variant="ghost"
