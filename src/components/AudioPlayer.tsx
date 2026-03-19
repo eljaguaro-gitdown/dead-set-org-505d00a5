@@ -88,7 +88,10 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
   useEffect(() => {
     if (tracks.length > 0 && audioRef.current) {
       audioRef.current.load();
-      if (playing) audioRef.current.play().catch(() => {});
+      if (playing || autoPlay) {
+        setPlaying(true);
+        audioRef.current.play().catch(() => {});
+      }
     }
   }, [currentTrack, tracks]);
 
