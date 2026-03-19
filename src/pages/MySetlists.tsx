@@ -99,6 +99,15 @@ const MySetlists = () => {
           </Button>
           <Button
             variant="ghost"
+            size="icon"
+            className="text-muted-foreground hover:text-foreground"
+            onClick={() => navigate("/profile")}
+            title="Profile"
+          >
+            <User className="w-4 h-4" />
+          </Button>
+          <Button
+            variant="ghost"
             size="sm"
             onClick={signOut}
             className="text-muted-foreground hover:text-foreground font-body"
