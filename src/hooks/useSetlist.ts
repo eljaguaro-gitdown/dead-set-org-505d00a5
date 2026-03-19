@@ -36,10 +36,13 @@ export const useSetlist = (user: User | null, setlistId?: string | null) => {
         title,
         era_id: eraId || null,
         share_token: shareToken,
+        is_public: false,
+        is_collaborative: false,
       })
       .select()
       .single();
     if (error) {
+      console.error("Failed to create setlist:", error);
       toast.error("Failed to create setlist");
       return null;
     }
