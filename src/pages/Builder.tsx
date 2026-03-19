@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { findArchiveRecording } from "@/lib/archiveOrg";
 import { Sparkles, Share2, Users, LogOut, MessageCircle, Globe, CheckCircle, List } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,6 +34,8 @@ const Builder = () => {
   const [aiOpen, setAiOpen] = useState(false);
   const [initialized, setInitialized] = useState(false);
   const [playingSlot, setPlayingSlot] = useState<import("@/components/SetlistDisplay").SetlistSlotData | null>(null);
+  const [playlistMode, setPlaylistMode] = useState(false);
+  const [playlistIndex, setPlaylistIndex] = useState(0);
 
   const { songs, eras, loading: songsLoading, getNotableVersions } = useSongs(selectedEra);
   const {
@@ -387,7 +390,35 @@ const Builder = () => {
             onToggleSegue={handleToggleSegue}
             onUpdateNotes={handleUpdateNotes}
             onReorder={handleReorder}
-            onPlayVersion={(slot) => setPlayingSlot(slot)}
+            onPlayVersion={(slot) => {
+              setPlaylistMode(false);
+              setPlayingSlot(slot);
+            }}
+            onPlaySetlist={async () => {
+              if (slots.length === 0) return;
+              const sorted = [...slots].sort((a, b) => a.setNumber - b.setNumber || a.position - b.position);
+              // Resolve archive URL for first slot if missing
+              let firstSlot = sorted[0];
+              if (!firstSlot.version?.archive_org_url) {
+                const result = await findArchiveRecording(firstSlot.song.title);
+                if (result) {
+                  firstSlot = {
+                    ...firstSlot,
+                    version: {
+                      id: "", song_id: firstSlot.song.id, show_date: result.date || "",
+                      archive_org_url: result.url, venue: result.venue,
+                      city: null, era_id: null, rating: null, description: null,
+                    },
+                  };
+                } else {
+                  toast.error("Couldn't find audio for the first song");
+                  return;
+                }
+              }
+              setPlaylistMode(true);
+              setPlaylistIndex(0);
+              setPlayingSlot(firstSlot);
+            }}
           />
         </div>
       </div>
@@ -422,15 +453,46 @@ const Builder = () => {
       />
 
       {/* Audio Player */}
-      {playingSlot?.version?.archive_org_url && (
-        <AudioPlayer
-          archiveUrl={playingSlot.version.archive_org_url}
-          songTitle={playingSlot.song.title}
-          showDate={playingSlot.version.show_date}
-          venue={playingSlot.version.venue}
-          onClose={() => setPlayingSlot(null)}
-        />
-      )}
+      {playingSlot?.version?.archive_org_url && (() => {
+        const sortedSlots = [...slots].sort((a, b) => a.setNumber - b.setNumber || a.position - b.position);
+        const advancePlaylist = async (dir: number) => {
+          const newIdx = playlistIndex + dir;
+          if (newIdx >= 0 && newIdx < sortedSlots.length) {
+            let nextSlot = sortedSlots[newIdx];
+            if (!nextSlot.version?.archive_org_url) {
+              const result = await findArchiveRecording(nextSlot.song.title);
+              if (result) {
+                nextSlot = {
+                  ...nextSlot,
+                  version: {
+                    id: "", song_id: nextSlot.song.id, show_date: result.date || "",
+                    archive_org_url: result.url, venue: result.venue,
+                    city: null, era_id: null, rating: null, description: null,
+                  },
+                };
+              }
+            }
+            setPlaylistIndex(newIdx);
+            setPlayingSlot(nextSlot);
+          }
+        };
+        return (
+          <AudioPlayer
+            archiveUrl={playingSlot.version.archive_org_url}
+            songTitle={playingSlot.song.title}
+            showDate={playingSlot.version.show_date}
+            venue={playingSlot.version.venue}
+            onClose={() => {
+              setPlayingSlot(null);
+              setPlaylistMode(false);
+            }}
+            onEnded={playlistMode ? () => advancePlaylist(1) : undefined}
+            playlistInfo={playlistMode ? { current: playlistIndex + 1, total: sortedSlots.length } : null}
+            onNext={playlistMode ? () => advancePlaylist(1) : undefined}
+            onPrev={playlistMode ? () => advancePlaylist(-1) : undefined}
+          />
+        );
+      })()}
     </div>
   );
 };

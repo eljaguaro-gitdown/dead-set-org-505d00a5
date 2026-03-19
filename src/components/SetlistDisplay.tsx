@@ -17,7 +17,8 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { motion } from "framer-motion";
-import { X, GripVertical, ChevronRight, ExternalLink, Headphones } from "lucide-react";
+import { X, GripVertical, ChevronRight, ExternalLink, Headphones, Play } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { findArchiveRecording, type ArchiveResult } from "@/lib/archiveOrg";
 import type { Database } from "@/integrations/supabase/types";
@@ -42,6 +43,7 @@ interface SetlistDisplayProps {
   onUpdateNotes: (id: string, notes: string) => void;
   onReorder: (newSlots: SetlistSlotData[]) => void;
   onPlayVersion?: (slot: SetlistSlotData) => void;
+  onPlaySetlist?: () => void;
 }
 
 /* ── Sortable slot item ── */
@@ -263,6 +265,7 @@ const SetlistDisplay = ({
   onUpdateNotes,
   onReorder,
   onPlayVersion,
+  onPlaySetlist,
 }: SetlistDisplayProps) => {
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -321,8 +324,18 @@ const SetlistDisplay = ({
 
   return (
     <div className="flex flex-col h-full">
-      <div className="p-4 border-b border-border">
+      <div className="p-4 border-b border-border flex items-center justify-between">
         <h2 className="font-display text-lg text-foreground">The Set</h2>
+        {slots.length > 0 && onPlaySetlist && (
+          <Button
+            onClick={onPlaySetlist}
+            size="sm"
+            className="gap-1.5 bg-primary text-primary-foreground font-display text-xs h-8 px-3 shadow-md hover:shadow-lg hover:scale-105 transition-all duration-200"
+          >
+            <Play className="w-3.5 h-3.5 fill-current" />
+            Play Setlist
+          </Button>
+        )}
       </div>
       <DndContext
         sensors={sensors}
