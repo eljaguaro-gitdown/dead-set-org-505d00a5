@@ -19,7 +19,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { motion } from "framer-motion";
 import { X, GripVertical, ChevronRight, ExternalLink, Headphones } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
-import { findArchiveRecording } from "@/lib/archiveOrg";
+import { findArchiveRecording, type ArchiveResult } from "@/lib/archiveOrg";
 import type { Database } from "@/integrations/supabase/types";
 
 type Song = Database["public"]["Tables"]["songs"]["Row"];
@@ -71,19 +71,21 @@ const SortableSlotItem = ({
 
   // Auto-fetch Archive.org link if slot doesn't have one via version
   const existingArchiveUrl = slot.version?.archive_org_url || null;
-  const [archiveUrl, setArchiveUrl] = useState<string | null>(existingArchiveUrl);
+  const [archiveResult, setArchiveResult] = useState<ArchiveResult | null>(
+    existingArchiveUrl ? { url: existingArchiveUrl, date: slot.version?.show_date || null, venue: slot.version?.venue || null } : null
+  );
   const [archiveLoading, setArchiveLoading] = useState(false);
 
   useEffect(() => {
     if (existingArchiveUrl) {
-      setArchiveUrl(existingArchiveUrl);
+      setArchiveResult({ url: existingArchiveUrl, date: slot.version?.show_date || null, venue: slot.version?.venue || null });
       return;
     }
     let cancelled = false;
     setArchiveLoading(true);
-    findArchiveRecording(slot.song.title).then((url) => {
+    findArchiveRecording(slot.song.title).then((result) => {
       if (!cancelled) {
-        setArchiveUrl(url);
+        setArchiveResult(result);
         setArchiveLoading(false);
       }
     });
@@ -127,19 +129,18 @@ const SortableSlotItem = ({
               </div>
             )}
             {/* Archive.org link — shown for all slots */}
-            {archiveUrl && (
-              <div className="flex items-center gap-1.5 mt-1">
+            {archiveResult && (
+              <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                 <button
                   onClick={() => {
-                    // Create a synthetic slot with archive URL for the player
                     const playSlot = {
                       ...slot,
                       version: slot.version || {
                         id: "",
                         song_id: slot.song.id,
-                        show_date: "",
-                        archive_org_url: archiveUrl,
-                        venue: null,
+                        show_date: archiveResult.date || "",
+                        archive_org_url: archiveResult.url,
+                        venue: archiveResult.venue,
                         city: null,
                         era_id: null,
                         rating: null,
@@ -147,7 +148,7 @@ const SortableSlotItem = ({
                       },
                     };
                     if (!playSlot.version!.archive_org_url) {
-                      playSlot.version = { ...playSlot.version!, archive_org_url: archiveUrl };
+                      playSlot.version = { ...playSlot.version!, archive_org_url: archiveResult.url };
                     }
                     onPlayVersion?.(playSlot);
                   }}
@@ -156,7 +157,7 @@ const SortableSlotItem = ({
                   <Headphones className="w-3 h-3 text-accent hover:text-primary transition-colors" />
                 </button>
                 <a
-                  href={archiveUrl}
+                  href={archiveResult.url}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-1 text-[10px] text-secondary hover:text-primary transition-colors font-body"
@@ -165,9 +166,14 @@ const SortableSlotItem = ({
                   <ExternalLink className="w-3 h-3" />
                   <span className="hidden sm:inline">Archive.org</span>
                 </a>
+                {(archiveResult.date || archiveResult.venue) && (
+                  <span className="text-[10px] text-muted-foreground font-body">
+                    {[archiveResult.date, archiveResult.venue].filter(Boolean).join(" · ")}
+                  </span>
+                )}
               </div>
             )}
-            {archiveLoading && !archiveUrl && (
+            {archiveLoading && !archiveResult && (
               <span className="text-[10px] text-muted-foreground/50 font-body mt-1 block">
                 Finding on Archive.org…
               </span>
