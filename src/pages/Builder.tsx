@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { Sparkles, Share2, Users, LogOut, MessageCircle, Globe } from "lucide-react";
+import { Sparkles, Share2, Users, LogOut, MessageCircle, Globe, CheckCircle, List } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -174,6 +174,13 @@ const Builder = () => {
           <button onClick={() => navigate("/")} className="font-display text-lg text-primary shrink-0">
             DS
           </button>
+          <button
+            onClick={() => navigate("/my-setlists")}
+            className="flex items-center gap-1 text-xs font-body text-muted-foreground hover:text-foreground transition-colors shrink-0"
+            title="My Setlists"
+          >
+            <List className="w-3.5 h-3.5" /> My Setlists
+          </button>
           <Input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
@@ -193,6 +200,11 @@ const Builder = () => {
             </SelectContent>
           </Select>
           <CollaboratorAvatars collaborators={collaborators} />
+          {setlist && (
+            <span className="flex items-center gap-1 text-xs text-accent font-body shrink-0" title="All changes are saved automatically">
+              <CheckCircle className="w-3 h-3" /> Saved
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-2">
           {/* Set selector for adding songs */}
