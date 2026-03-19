@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { Sparkles, Share2, Users, LogOut, MessageCircle, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
