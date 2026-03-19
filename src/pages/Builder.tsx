@@ -494,9 +494,9 @@ const Builder = () => {
       {playingSlot?.version?.archive_org_url && (() => {
         const sortedSlots = [...slots].sort((a, b) => a.setNumber - b.setNumber || a.position - b.position);
         const advancePlaylist = async (dir: number) => {
-          const newIdx = playlistIndex + dir;
-          if (newIdx >= 0 && newIdx < sortedSlots.length) {
-            let nextSlot = sortedSlots[newIdx];
+          // Search in the given direction for the next slot with a recording
+          for (let i = playlistIndex + dir; i >= 0 && i < sortedSlots.length; i += dir) {
+            let nextSlot = sortedSlots[i];
             if (!nextSlot.version?.archive_org_url) {
               const result = await findArchiveRecording(nextSlot.song.title);
               if (result) {
@@ -508,11 +508,19 @@ const Builder = () => {
                     city: null, era_id: null, rating: null, description: null,
                   },
                 };
+              } else {
+                // Skip this song, no recording available
+                continue;
               }
             }
-            setPlaylistIndex(newIdx);
+            setPlaylistIndex(i);
             setPlayingSlot(nextSlot);
+            return;
           }
+          // No more playable songs
+          setPlaylistMode(false);
+          setPlayingSlot(null);
+          toast.info("End of setlist");
         };
         return (
           <AudioPlayer
