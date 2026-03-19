@@ -174,62 +174,81 @@ const MySetlists = () => {
             </p>
           </motion.div>
         ) : (
-          <div className="space-y-0 border border-border/50 rounded-md overflow-hidden shadow-lg">
+          <div className="space-y-0 rounded-md overflow-hidden shadow-2xl border-2 border-[hsl(25,15%,30%)]">
             {setlists.map((s, i) => {
-              // Cycle through tape brand colors like real collections
-              const spineColors = [
-                "bg-[hsl(35,40%,88%)]", // cream/white label
-                "bg-[hsl(35,30%,82%)]", // aged white
-                "bg-[hsl(40,45%,85%)]", // warm ivory
-                "bg-[hsl(210,15%,85%)]", // cool grey-blue
-                "bg-[hsl(45,50%,87%)]", // yellowish
-                "bg-[hsl(30,20%,80%)]", // neutral tan
+              // Colorful chaotic tape spines like a real collection wall
+              const tapeStyles = [
+                { bg: "hsl(340,60%,75%)", text: "hsl(340,70%,20%)", accent: "hsl(340,50%,55%)" },   // hot pink
+                { bg: "hsl(140,40%,70%)", text: "hsl(140,60%,15%)", accent: "hsl(140,40%,40%)" },   // green
+                { bg: "hsl(48,70%,80%)",  text: "hsl(35,60%,18%)",  accent: "hsl(35,70%,45%)" },    // yellow
+                { bg: "hsl(30,30%,88%)",  text: "hsl(25,40%,15%)",  accent: "hsl(25,30%,45%)" },    // cream/white
+                { bg: "hsl(200,50%,75%)", text: "hsl(210,60%,18%)", accent: "hsl(210,50%,40%)" },   // sky blue
+                { bg: "hsl(15,60%,72%)",  text: "hsl(10,50%,18%)",  accent: "hsl(10,50%,40%)" },    // salmon/orange
+                { bg: "hsl(280,35%,78%)", text: "hsl(280,50%,20%)", accent: "hsl(280,40%,45%)" },   // lavender
+                { bg: "hsl(60,50%,82%)",  text: "hsl(50,50%,18%)",  accent: "hsl(50,50%,40%)" },    // pale yellow
+                { bg: "hsl(170,35%,72%)", text: "hsl(170,50%,15%)", accent: "hsl(170,40%,35%)" },   // teal
+                { bg: "hsl(0,55%,75%)",   text: "hsl(0,50%,20%)",   accent: "hsl(0,45%,45%)" },     // red/coral
               ];
-              const brandColors = [
-                "bg-dead-blue", // TDK blue
-                "bg-dead-red",  // Maxell red
-                "bg-primary",   // gold accent
-                "bg-dead-green",
-                "bg-dead-purple",
-                "bg-dead-orange",
-              ];
-              const spineColor = spineColors[i % spineColors.length];
-              const brandColor = brandColors[i % brandColors.length];
+              const style = tapeStyles[i % tapeStyles.length];
+              // Slight random rotation for organic feel
+              const rotations = [-0.3, 0.15, -0.1, 0.25, -0.2, 0.1, -0.15, 0.3, -0.05, 0.2];
+              const rot = rotations[i % rotations.length];
 
               return (
                 <motion.button
                   key={s.id}
-                  initial={{ opacity: 0, x: -10 }}
+                  initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.03 }}
+                  transition={{ delay: i * 0.04 }}
                   onClick={() => navigate(`/builder/${s.id}`)}
-                  className={`w-full text-left flex items-stretch group border-b border-border/30 last:border-b-0 hover:brightness-95 transition-all ${spineColor}`}
+                  style={{
+                    backgroundColor: style.bg,
+                    transform: `rotate(${rot}deg)`,
+                  }}
+                  className="w-full text-left flex items-stretch group hover:brightness-90 hover:scale-[1.01] transition-all duration-150 relative border-b border-[hsl(25,15%,30%/0.3)]"
                 >
-                  {/* Brand color strip (like TDK/Maxell side label) */}
-                  <div className={`w-3 shrink-0 ${brandColor}`} />
+                  {/* Clear plastic edge effect */}
+                  <div className="w-1.5 shrink-0 bg-[hsl(25,10%,40%/0.3)]" />
                   
-                  {/* Spine content — mimics handwritten cassette label */}
-                  <div className="flex-1 flex items-center justify-between px-4 py-2.5 min-h-[3rem]">
-                    <div className="flex items-center gap-3 min-w-0 flex-1">
-                      <span className="font-body text-base text-[hsl(25,30%,20%)] truncate font-medium tracking-wide">
+                  {/* Colored label area */}
+                  <div className="flex-1 flex items-center px-4 py-2 min-h-[2.8rem] relative overflow-hidden">
+                    {/* Faint lined paper effect */}
+                    <div className="absolute inset-0 opacity-[0.07]" style={{
+                      backgroundImage: "repeating-linear-gradient(transparent, transparent 11px, hsl(25,30%,30%) 11px, hsl(25,30%,30%) 12px)",
+                    }} />
+                    
+                    <div className="flex items-center gap-3 min-w-0 flex-1 relative z-10">
+                      <span
+                        className="font-body text-lg truncate tracking-wide"
+                        style={{ color: style.text }}
+                      >
                         {s.title}
                       </span>
-                      <span className="font-body text-xs text-[hsl(25,20%,40%)] shrink-0">
-                        {s.slot_count > 0 ? `${s.slot_count} songs` : ""}
-                      </span>
+                      {s.slot_count > 0 && (
+                        <span
+                          className="font-body text-sm shrink-0 opacity-70"
+                          style={{ color: style.accent }}
+                        >
+                          {s.slot_count} songs
+                        </span>
+                      )}
                     </div>
-                    <div className="flex items-center gap-3 shrink-0">
-                      <span className="font-body text-xs text-[hsl(25,20%,45%)]">
+                    <div className="flex items-center gap-3 shrink-0 relative z-10">
+                      <span
+                        className="font-body text-sm opacity-60"
+                        style={{ color: style.text }}
+                      >
                         {new Date(s.updated_at).toLocaleDateString()}
                       </span>
                       {s.is_public ? (
-                        <Globe className="w-3.5 h-3.5 text-[hsl(25,20%,40%)]" />
+                        <Globe className="w-4 h-4 opacity-50" style={{ color: style.text }} />
                       ) : (
-                        <Lock className="w-3.5 h-3.5 text-[hsl(25,15%,55%)]" />
+                        <Lock className="w-4 h-4 opacity-40" style={{ color: style.text }} />
                       )}
                       <button
                         onClick={(e) => handleDelete(s.id, e)}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity p-1 text-[hsl(25,20%,45%)] hover:text-destructive"
+                        className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:text-destructive"
+                        style={{ color: style.accent }}
                         title="Delete setlist"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -237,8 +256,8 @@ const MySetlists = () => {
                     </div>
                   </div>
 
-                  {/* Right brand strip */}
-                  <div className={`w-2 shrink-0 ${brandColor} opacity-60`} />
+                  {/* Right plastic edge */}
+                  <div className="w-1 shrink-0 bg-[hsl(25,10%,40%/0.2)]" />
                 </motion.button>
               );
             })}
