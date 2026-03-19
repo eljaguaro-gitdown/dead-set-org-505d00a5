@@ -251,6 +251,7 @@ const SetSection = ({
             key={slot.id}
             slot={slot}
             isLast={index === setSlots.length - 1}
+            isPlaying={activeSlotId === slot.id}
             onRemoveSlot={onRemoveSlot}
             onToggleSegue={onToggleSegue}
             onUpdateNotes={onUpdateNotes}
