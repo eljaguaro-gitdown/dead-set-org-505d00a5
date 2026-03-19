@@ -249,7 +249,7 @@ const Builder = () => {
   }
 
   return (
-    <div className="grain-overlay min-h-screen bg-background flex flex-col">
+    <PageLayout minimal>
       {/* Top Bar */}
       <header className="border-b border-border">
         {/* Row 1: Logo, title, saved indicator */}
