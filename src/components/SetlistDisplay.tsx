@@ -337,18 +337,54 @@ const SetlistDisplay = ({
 
   return (
     <div className="flex flex-col h-full">
-      <div className="p-4 border-b border-border flex items-center justify-between">
-        <h2 className="font-display text-lg text-foreground">The Set</h2>
-        {slots.length > 0 && onPlaySetlist && (
-          <Button
-            onClick={onPlaySetlist}
-            size="sm"
-            className="gap-1.5 bg-primary text-primary-foreground font-display text-xs h-8 px-3 shadow-md hover:shadow-lg hover:scale-105 transition-all duration-200"
-          >
-            <Play className="w-3.5 h-3.5 fill-current" />
-            Play Setlist
-          </Button>
-        )}
+      <div className="p-4 border-b border-border space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="font-display text-lg text-foreground">The Set</h2>
+          <div className="flex items-center gap-2">
+            {slots.length > 0 && onGenerateDescription && (
+              <Button
+                onClick={onGenerateDescription}
+                variant="outline"
+                size="sm"
+                disabled={generatingDescription}
+                className="gap-1.5 border-primary/30 text-primary font-body text-xs h-8 px-3 hover:bg-primary/10 transition-all"
+              >
+                {generatingDescription ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : description ? (
+                  <RefreshCw className="w-3.5 h-3.5" />
+                ) : (
+                  <Sparkles className="w-3.5 h-3.5" />
+                )}
+                {generatingDescription ? "Writing..." : description ? "Rewrite" : "Generate Liner Notes"}
+              </Button>
+            )}
+            {slots.length > 0 && onPlaySetlist && (
+              <Button
+                onClick={onPlaySetlist}
+                size="sm"
+                className="gap-1.5 bg-primary text-primary-foreground font-display text-xs h-8 px-3 shadow-md hover:shadow-lg hover:scale-105 transition-all duration-200"
+              >
+                <Play className="w-3.5 h-3.5 fill-current" />
+                Play Setlist
+              </Button>
+            )}
+          </div>
+        </div>
+        <AnimatePresence>
+          {description && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="overflow-hidden"
+            >
+              <p className="text-sm font-body text-muted-foreground italic leading-relaxed px-1 py-2 border-l-2 border-primary/40 pl-3">
+                {description}
+              </p>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
       <DndContext
         sensors={sensors}
