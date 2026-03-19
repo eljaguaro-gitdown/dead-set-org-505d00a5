@@ -435,15 +435,32 @@ const Builder = () => {
       />
 
       {/* Audio Player */}
-      {playingSlot?.version?.archive_org_url && (
-        <AudioPlayer
-          archiveUrl={playingSlot.version.archive_org_url}
-          songTitle={playingSlot.song.title}
-          showDate={playingSlot.version.show_date}
-          venue={playingSlot.version.venue}
-          onClose={() => setPlayingSlot(null)}
-        />
-      )}
+      {playingSlot?.version?.archive_org_url && (() => {
+        const sortedSlots = [...slots].sort((a, b) => a.setNumber - b.setNumber || a.position - b.position);
+        const advancePlaylist = (dir: number) => {
+          const newIdx = playlistIndex + dir;
+          if (newIdx >= 0 && newIdx < sortedSlots.length) {
+            setPlaylistIndex(newIdx);
+            setPlayingSlot(sortedSlots[newIdx]);
+          }
+        };
+        return (
+          <AudioPlayer
+            archiveUrl={playingSlot.version.archive_org_url}
+            songTitle={playingSlot.song.title}
+            showDate={playingSlot.version.show_date}
+            venue={playingSlot.version.venue}
+            onClose={() => {
+              setPlayingSlot(null);
+              setPlaylistMode(false);
+            }}
+            onEnded={playlistMode ? () => advancePlaylist(1) : undefined}
+            playlistInfo={playlistMode ? { current: playlistIndex + 1, total: sortedSlots.length } : null}
+            onNext={playlistMode ? () => advancePlaylist(1) : undefined}
+            onPrev={playlistMode ? () => advancePlaylist(-1) : undefined}
+          />
+        );
+      })()}
     </div>
   );
 };
