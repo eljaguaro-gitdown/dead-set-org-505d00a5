@@ -89,7 +89,8 @@ const AIDeadHeadDialog = ({
 
   const handleCreateNew = () => {
     if (!suggestion) return;
-    onCreateNewSetlist(suggestion);
+    const title = newSetlistName.trim() || undefined;
+    onCreateNewSetlist(suggestion, title);
     handleReset();
     toast.success("Creating new setlist from AI suggestion...");
   };
