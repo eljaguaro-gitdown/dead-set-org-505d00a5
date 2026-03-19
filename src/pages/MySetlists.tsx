@@ -250,33 +250,56 @@ const MySetlists = () => {
                     <div className="absolute inset-0 opacity-[0.06]" style={{
                       background: "radial-gradient(circle at 30% 50%, rgba(120,90,40,0.5), transparent 40%), radial-gradient(circle at 80% 30%, rgba(100,80,30,0.3), transparent 30%)",
                     }} />
-                    
-                    {/* Hand-drawn doodles — randomly placed on some spines */}
-                    {(() => {
-                      // Deterministic "random" based on index
-                      const doodleSets = [
-                        [{ emoji: "🌹", pos: "right-[12%] top-[8%]", size: "text-sm", rot: -12 }],
-                        [{ emoji: "⚡", pos: "right-[8%] top-[5%]", size: "text-base", rot: 8 }],
-                        [],
-                        [{ emoji: "💀", pos: "right-[15%] top-[10%]", size: "text-sm", rot: -5 }, { emoji: "🌹", pos: "right-[6%] bottom-[8%]", size: "text-xs", rot: 15 }],
-                        [],
-                        [{ emoji: "🐻", pos: "right-[10%] top-[6%]", size: "text-sm", rot: 10 }],
-                        [{ emoji: "⚡", pos: "right-[18%] top-[8%]", size: "text-xs", rot: -8 }, { emoji: "💀", pos: "right-[7%] top-[5%]", size: "text-sm", rot: 5 }],
-                        [],
-                        [{ emoji: "🌹", pos: "right-[9%] top-[6%]", size: "text-sm", rot: -15 }],
-                        [{ emoji: "🐻", pos: "right-[14%] top-[8%]", size: "text-xs", rot: 12 }, { emoji: "⚡", pos: "right-[5%] top-[5%]", size: "text-sm", rot: -6 }],
-                      ];
-                      const doodles = doodleSets[i % doodleSets.length];
-                      return doodles.map((d, di) => (
-                        <span
-                          key={di}
-                          className={`absolute ${d.pos} ${d.size} pointer-events-none select-none opacity-60`}
-                          style={{ transform: `rotate(${d.rot}deg)`, filter: "saturate(0.6)" }}
-                        >
-                          {d.emoji}
-                        </span>
-                      ));
-                    })()}
+                     
+                     {/* Hand-drawn doodles — big, playful, asymmetric, floating */}
+                     {(() => {
+                       const doodleSets: Array<Array<{ emoji: string; style: React.CSSProperties }>> = [
+                         [
+                           { emoji: "🌹", style: { position: "absolute", right: "8%", top: "-30%", fontSize: "1.6rem", transform: "rotate(-18deg) scale(1.1)", opacity: 0.75, filter: "drop-shadow(1px 1px 0px rgba(0,0,0,0.3))" } },
+                           { emoji: "✌️", style: { position: "absolute", right: "25%", bottom: "-20%", fontSize: "1rem", transform: "rotate(22deg)", opacity: 0.5 } },
+                         ],
+                         [
+                           { emoji: "⚡", style: { position: "absolute", right: "5%", top: "-40%", fontSize: "2rem", transform: "rotate(12deg) scaleX(-1)", opacity: 0.8, filter: "drop-shadow(0 2px 2px rgba(0,0,0,0.4))" } },
+                         ],
+                         [
+                           { emoji: "💀", style: { position: "absolute", left: "60%", top: "-35%", fontSize: "1.8rem", transform: "rotate(-8deg)", opacity: 0.7, filter: "drop-shadow(1px 1px 1px rgba(0,0,0,0.3))" } },
+                           { emoji: "🌹", style: { position: "absolute", right: "3%", bottom: "-25%", fontSize: "1.2rem", transform: "rotate(30deg)", opacity: 0.55 } },
+                           { emoji: "⚡", style: { position: "absolute", left: "45%", bottom: "-15%", fontSize: "0.9rem", transform: "rotate(-25deg)", opacity: 0.4 } },
+                         ],
+                         [],
+                         [
+                           { emoji: "🐻", style: { position: "absolute", right: "6%", top: "-45%", fontSize: "2.2rem", transform: "rotate(6deg)", opacity: 0.85, filter: "drop-shadow(2px 1px 1px rgba(0,0,0,0.35))" } },
+                         ],
+                         [
+                           { emoji: "☮️", style: { position: "absolute", right: "12%", top: "-28%", fontSize: "1.4rem", transform: "rotate(-20deg)", opacity: 0.65 } },
+                           { emoji: "🌻", style: { position: "absolute", right: "30%", bottom: "-30%", fontSize: "1.6rem", transform: "rotate(15deg)", opacity: 0.6, filter: "drop-shadow(1px 1px 0px rgba(0,0,0,0.25))" } },
+                         ],
+                         [
+                           { emoji: "⚡", style: { position: "absolute", left: "55%", top: "-50%", fontSize: "2.4rem", transform: "rotate(-5deg) scaleY(1.2)", opacity: 0.75, filter: "drop-shadow(0 3px 3px rgba(0,0,0,0.4))" } },
+                           { emoji: "💀", style: { position: "absolute", right: "4%", top: "-20%", fontSize: "1rem", transform: "rotate(35deg)", opacity: 0.5 } },
+                         ],
+                         [],
+                         [
+                           { emoji: "🌹", style: { position: "absolute", right: "7%", top: "-38%", fontSize: "1.9rem", transform: "rotate(-28deg)", opacity: 0.7, filter: "drop-shadow(1px 2px 1px rgba(0,0,0,0.3))" } },
+                           { emoji: "🐻", style: { position: "absolute", left: "50%", bottom: "-35%", fontSize: "1.5rem", transform: "rotate(10deg) scaleX(-1)", opacity: 0.55 } },
+                         ],
+                         [
+                           { emoji: "🎸", style: { position: "absolute", right: "10%", top: "-42%", fontSize: "2rem", transform: "rotate(18deg)", opacity: 0.8, filter: "drop-shadow(2px 2px 2px rgba(0,0,0,0.35))" } },
+                           { emoji: "☮️", style: { position: "absolute", right: "28%", bottom: "-18%", fontSize: "1.1rem", transform: "rotate(-15deg)", opacity: 0.45 } },
+                           { emoji: "⚡", style: { position: "absolute", left: "48%", top: "-25%", fontSize: "1.3rem", transform: "rotate(40deg)", opacity: 0.5 } },
+                         ],
+                       ];
+                       const doodles = doodleSets[i % doodleSets.length];
+                       return doodles.map((d, di) => (
+                         <span
+                           key={di}
+                           className="pointer-events-none select-none"
+                           style={d.style}
+                         >
+                           {d.emoji}
+                         </span>
+                       ));
+                     })()}
                     
                     {/* Content */}
                     <div className="flex items-center px-5 h-full relative z-10">
