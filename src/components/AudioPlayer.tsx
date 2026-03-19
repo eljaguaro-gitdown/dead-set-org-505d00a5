@@ -14,6 +14,10 @@ interface AudioPlayerProps {
   showDate: string;
   venue?: string | null;
   onClose: () => void;
+  onEnded?: () => void;
+  playlistInfo?: { current: number; total: number } | null;
+  onNext?: () => void;
+  onPrev?: () => void;
 }
 
 const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, onClose }: AudioPlayerProps) => {
