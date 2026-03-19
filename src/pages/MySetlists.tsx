@@ -250,60 +250,10 @@ const MySetlists = () => {
                     <div className="absolute inset-0 opacity-[0.06]" style={{
                       background: "radial-gradient(circle at 30% 50%, rgba(120,90,40,0.5), transparent 40%), radial-gradient(circle at 80% 30%, rgba(100,80,30,0.3), transparent 30%)",
                     }} />
-                     
-                     {/* Hand-drawn doodles — big, playful, asymmetric, floating */}
-                     {(() => {
-                       const doodleSets: Array<Array<{ emoji: string; style: React.CSSProperties }>> = [
-                         [
-                           { emoji: "🌹", style: { position: "absolute", right: "8%", top: "-30%", fontSize: "1.6rem", transform: "rotate(-18deg) scale(1.1)", opacity: 0.75, filter: "drop-shadow(1px 1px 0px rgba(0,0,0,0.3))" } },
-                           { emoji: "✌️", style: { position: "absolute", right: "25%", bottom: "-20%", fontSize: "1rem", transform: "rotate(22deg)", opacity: 0.5 } },
-                         ],
-                         [
-                           { emoji: "⚡", style: { position: "absolute", right: "5%", top: "-40%", fontSize: "2rem", transform: "rotate(12deg) scaleX(-1)", opacity: 0.8, filter: "drop-shadow(0 2px 2px rgba(0,0,0,0.4))" } },
-                         ],
-                         [
-                           { emoji: "💀", style: { position: "absolute", left: "60%", top: "-35%", fontSize: "1.8rem", transform: "rotate(-8deg)", opacity: 0.7, filter: "drop-shadow(1px 1px 1px rgba(0,0,0,0.3))" } },
-                           { emoji: "🌹", style: { position: "absolute", right: "3%", bottom: "-25%", fontSize: "1.2rem", transform: "rotate(30deg)", opacity: 0.55 } },
-                           { emoji: "⚡", style: { position: "absolute", left: "45%", bottom: "-15%", fontSize: "0.9rem", transform: "rotate(-25deg)", opacity: 0.4 } },
-                         ],
-                         [],
-                         [
-                           { emoji: "🐻", style: { position: "absolute", right: "6%", top: "-45%", fontSize: "2.2rem", transform: "rotate(6deg)", opacity: 0.85, filter: "drop-shadow(2px 1px 1px rgba(0,0,0,0.35))" } },
-                         ],
-                         [
-                           { emoji: "☮️", style: { position: "absolute", right: "12%", top: "-28%", fontSize: "1.4rem", transform: "rotate(-20deg)", opacity: 0.65 } },
-                           { emoji: "🌻", style: { position: "absolute", right: "30%", bottom: "-30%", fontSize: "1.6rem", transform: "rotate(15deg)", opacity: 0.6, filter: "drop-shadow(1px 1px 0px rgba(0,0,0,0.25))" } },
-                         ],
-                         [
-                           { emoji: "⚡", style: { position: "absolute", left: "55%", top: "-50%", fontSize: "2.4rem", transform: "rotate(-5deg) scaleY(1.2)", opacity: 0.75, filter: "drop-shadow(0 3px 3px rgba(0,0,0,0.4))" } },
-                           { emoji: "💀", style: { position: "absolute", right: "4%", top: "-20%", fontSize: "1rem", transform: "rotate(35deg)", opacity: 0.5 } },
-                         ],
-                         [],
-                         [
-                           { emoji: "🌹", style: { position: "absolute", right: "7%", top: "-38%", fontSize: "1.9rem", transform: "rotate(-28deg)", opacity: 0.7, filter: "drop-shadow(1px 2px 1px rgba(0,0,0,0.3))" } },
-                           { emoji: "🐻", style: { position: "absolute", left: "50%", bottom: "-35%", fontSize: "1.5rem", transform: "rotate(10deg) scaleX(-1)", opacity: 0.55 } },
-                         ],
-                         [
-                           { emoji: "🎸", style: { position: "absolute", right: "10%", top: "-42%", fontSize: "2rem", transform: "rotate(18deg)", opacity: 0.8, filter: "drop-shadow(2px 2px 2px rgba(0,0,0,0.35))" } },
-                           { emoji: "☮️", style: { position: "absolute", right: "28%", bottom: "-18%", fontSize: "1.1rem", transform: "rotate(-15deg)", opacity: 0.45 } },
-                           { emoji: "⚡", style: { position: "absolute", left: "48%", top: "-25%", fontSize: "1.3rem", transform: "rotate(40deg)", opacity: 0.5 } },
-                         ],
-                       ];
-                       const doodles = doodleSets[i % doodleSets.length];
-                       return doodles.map((d, di) => (
-                         <span
-                           key={di}
-                           className="pointer-events-none select-none"
-                           style={d.style}
-                         >
-                           {d.emoji}
-                         </span>
-                       ));
-                     })()}
                     
                     {/* Content */}
                     <div className="flex items-center px-5 h-full relative z-10">
-                      <div className="flex items-center gap-4 min-w-0 flex-1">
+                      <div className="flex items-center gap-3 min-w-0 flex-1">
                         <span className="font-body text-lg truncate" style={{ color: tape.text, letterSpacing: "0.03em" }}>
                           {s.title}
                         </span>
@@ -312,6 +262,33 @@ const MySetlists = () => {
                             {s.slot_count} songs
                           </span>
                         )}
+                        {/* Hand-drawn SVG marker doodles inline between title & date */}
+                        {(() => {
+                          const ink = tape.text;
+                          const doodleOptions: Array<Array<{ svg: React.ReactNode; rot: number; w: number; h: number }>> = [
+                            [{ svg: (<svg viewBox="0 0 24 24" fill="none" stroke={ink} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{width:"100%",height:"100%"}}><path d="M12 21s-1-3-1-6 2-5 2-5c-2 0-3.5 1-4 3-1-2 0-4 1-5-2.5 1-3.5 3.5-3 6-1.5-1.5-1-4 0-5.5-2 2-2.5 5-1 7.5"/><path d="M12 21s1-3 1-6-2-5-2-5c2 0 3.5 1 4 3 1-2 0-4-1-5 2.5 1 3.5 3.5 3 6 1.5-1.5 1-4 0-5.5 2 2 2.5 5 1 7.5"/><circle cx="12" cy="8" r="2.5" strokeWidth="1.5" opacity=".6"/></svg>), rot: -12, w: 18, h: 18 }],
+                            [{ svg: (<svg viewBox="0 0 24 24" fill="none" stroke={ink} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{width:"100%",height:"100%"}}><path d="M13 2L4.5 13.5h6L9 22l9.5-12h-6L13 2z"/></svg>), rot: 8, w: 16, h: 16 }],
+                            [{ svg: (<svg viewBox="0 0 24 24" fill="none" stroke={ink} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" style={{width:"100%",height:"100%"}}><path d="M12 4C8 4 5 7 5 11c0 2.5 1.2 4 3 5v2.5c0 .5.5 1 1 1h6c.5 0 1-.5 1-1V16c1.8-1 3-2.5 3-5 0-4-3-7-7-7z"/><circle cx="9.5" cy="10.5" r="1.5" strokeWidth="1.4"/><circle cx="14.5" cy="10.5" r="1.5" strokeWidth="1.4"/><path d="M10 15.5v2M12 15.5v2M14 15.5v2" strokeWidth="1.2" opacity=".6"/></svg>), rot: -5, w: 17, h: 17 }],
+                            [],
+                            [{ svg: (<svg viewBox="0 0 24 24" fill="none" stroke={ink} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" style={{width:"100%",height:"100%"}}><circle cx="7" cy="6" r="2.5" opacity=".7"/><circle cx="17" cy="6" r="2.5" opacity=".7"/><ellipse cx="12" cy="13" rx="7" ry="8" opacity=".75"/><circle cx="9.5" cy="11" r="1" strokeWidth="1.8"/><circle cx="14.5" cy="11" r="1" strokeWidth="1.8"/><ellipse cx="12" cy="14" rx="2.5" ry="1.8" strokeWidth="1.4" opacity=".6"/></svg>), rot: 6, w: 20, h: 20 }],
+                            [{ svg: (<svg viewBox="0 0 24 24" fill="none" stroke={ink} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{width:"100%",height:"100%"}}><circle cx="12" cy="12" r="9" opacity=".7"/><path d="M12 3v18M12 12l-6.4 6.4M12 12l6.4 6.4"/></svg>), rot: -10, w: 16, h: 16 }],
+                            [{ svg: (<svg viewBox="0 0 24 24" fill="none" stroke={ink} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{width:"100%",height:"100%"}}><path d="M13 2L4.5 13.5h6L9 22l9.5-12h-6L13 2z"/></svg>), rot: 15, w: 14, h: 14 }, { svg: (<svg viewBox="0 0 24 24" fill="none" stroke={ink} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{width:"100%",height:"100%"}}><path d="M12 21s-1-3-1-6 2-5 2-5c-2 0-3.5 1-4 3-1-2 0-4 1-5-2.5 1-3.5 3.5-3 6"/><path d="M12 21s1-3 1-6-2-5-2-5c2 0 3.5 1 4 3 1-2 0-4-1-5 2.5 1 3.5 3.5 3 6"/><circle cx="12" cy="8" r="2" strokeWidth="1.5" opacity=".5"/></svg>), rot: -20, w: 15, h: 15 }],
+                            [],
+                            [{ svg: (<svg viewBox="0 0 24 24" fill="none" stroke={ink} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" style={{width:"100%",height:"100%"}}><path d="M20 4l-3.5 3.5M16.5 7.5l-2 2" strokeWidth="2"/><ellipse cx="10" cy="16" rx="5" ry="4" opacity=".7" transform="rotate(-15 10 16)"/><circle cx="10" cy="16" r="1.2" strokeWidth="1.4" opacity=".5"/><path d="M14 12.5l2.5-5" strokeWidth="1.8"/></svg>), rot: 10, w: 19, h: 19 }],
+                            [{ svg: (<svg viewBox="0 0 24 24" fill="none" stroke={ink} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{width:"100%",height:"100%"}}><path d="M12 14c-5 0-8-3-8-6.5C4 4.5 7.5 2 12 2s8 2.5 8 5.5c0 3.5-3 6.5-8 6.5z"/><path d="M10 14v6c0 1 .8 2 2 2s2-1 2-2v-6"/><circle cx="9" cy="7" r="1.5" strokeWidth="1.2" opacity=".4"/><circle cx="14" cy="5.5" r="1" strokeWidth="1.2" opacity=".4"/></svg>), rot: -8, w: 17, h: 17 }],
+                          ];
+                          const doodles = doodleOptions[i % doodleOptions.length];
+                          if (doodles.length === 0) return null;
+                          return (
+                            <span className="inline-flex items-center gap-1 shrink-0 mx-1">
+                              {doodles.map((d, di) => (
+                                <span key={di} className="inline-block pointer-events-none select-none opacity-50" style={{ width: d.w, height: d.h, transform: `rotate(${d.rot}deg)`, filter: "saturate(0.4)" }}>
+                                  {d.svg}
+                                </span>
+                              ))}
+                            </span>
+                          );
+                        })()}
                       </div>
                       <div className="flex items-center gap-3 shrink-0">
                         <span className="font-body text-sm" style={{ color: tape.sub }}>
