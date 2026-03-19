@@ -203,8 +203,10 @@ const MySetlists = () => {
                 { bg: "linear-gradient(90deg, #787068 0%, #c8c0b8 4%, #c8c0b8 96%, #787068 100%)", labelBg: "#80c8b8", labelBorder: "#58a090", text: "#082820", sub: "#285848" },
               ];
               const tape = tapeStyles[i % tapeStyles.length];
-              const heights = [52, 48, 55, 46, 50, 53, 47, 51, 49, 54];
-              const h = heights[i % heights.length];
+              const desktopHeights = [52, 48, 55, 46, 50, 53, 47, 51, 49, 54];
+              const mobileHeights = [44, 40, 46, 42, 44, 45, 41, 43, 42, 45];
+              const isSmall = typeof window !== 'undefined' && window.innerWidth < 640;
+              const h = (isSmall ? mobileHeights : desktopHeights)[i % desktopHeights.length];
 
               return (
                 <motion.button
