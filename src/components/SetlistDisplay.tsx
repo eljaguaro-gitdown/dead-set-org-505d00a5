@@ -71,19 +71,21 @@ const SortableSlotItem = ({
 
   // Auto-fetch Archive.org link if slot doesn't have one via version
   const existingArchiveUrl = slot.version?.archive_org_url || null;
-  const [archiveUrl, setArchiveUrl] = useState<string | null>(existingArchiveUrl);
+  const [archiveResult, setArchiveResult] = useState<ArchiveResult | null>(
+    existingArchiveUrl ? { url: existingArchiveUrl, date: slot.version?.show_date || null, venue: slot.version?.venue || null } : null
+  );
   const [archiveLoading, setArchiveLoading] = useState(false);
 
   useEffect(() => {
     if (existingArchiveUrl) {
-      setArchiveUrl(existingArchiveUrl);
+      setArchiveResult({ url: existingArchiveUrl, date: slot.version?.show_date || null, venue: slot.version?.venue || null });
       return;
     }
     let cancelled = false;
     setArchiveLoading(true);
-    findArchiveRecording(slot.song.title).then((url) => {
+    findArchiveRecording(slot.song.title).then((result) => {
       if (!cancelled) {
-        setArchiveUrl(url);
+        setArchiveResult(result);
         setArchiveLoading(false);
       }
     });
