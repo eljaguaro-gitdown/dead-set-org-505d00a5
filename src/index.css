@@ -74,9 +74,14 @@
     @apply border-border;
   }
 
+  html {
+    font-size: 24px;
+  }
+
   body {
     @apply bg-background text-foreground;
     font-family: var(--font-body);
+    line-height: 1.4;
   }
 
   h1, h2, h3 {
