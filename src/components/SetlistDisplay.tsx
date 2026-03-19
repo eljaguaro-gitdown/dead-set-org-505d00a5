@@ -16,8 +16,8 @@ import {
   arrayMove,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { motion } from "framer-motion";
-import { X, GripVertical, ChevronRight, ExternalLink, Headphones, Play } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { X, GripVertical, ChevronRight, ExternalLink, Headphones, Play, Sparkles, Loader2, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { findArchiveRecording, type ArchiveResult } from "@/lib/archiveOrg";
