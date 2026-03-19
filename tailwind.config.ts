@@ -14,7 +14,8 @@ export default {
     },
     extend: {
       fontFamily: {
-        display: ["'Dela Gothic One'", "cursive"],
+        display: ["'Permanent Marker'", "cursive"],
+        hand: ["'Caveat'", "cursive"],
         body: ["'Instrument Sans'", "sans-serif"],
       },
       colors: {
