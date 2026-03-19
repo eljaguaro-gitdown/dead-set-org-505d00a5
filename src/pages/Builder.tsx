@@ -174,6 +174,13 @@ const Builder = () => {
           <button onClick={() => navigate("/")} className="font-display text-lg text-primary shrink-0">
             DS
           </button>
+          <button
+            onClick={() => navigate("/my-setlists")}
+            className="flex items-center gap-1 text-xs font-body text-muted-foreground hover:text-foreground transition-colors shrink-0"
+            title="My Setlists"
+          >
+            <List className="w-3.5 h-3.5" /> My Setlists
+          </button>
           <Input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
