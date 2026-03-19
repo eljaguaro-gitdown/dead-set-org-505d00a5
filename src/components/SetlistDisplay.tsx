@@ -129,19 +129,18 @@ const SortableSlotItem = ({
               </div>
             )}
             {/* Archive.org link — shown for all slots */}
-            {archiveUrl && (
-              <div className="flex items-center gap-1.5 mt-1">
+            {archiveResult && (
+              <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                 <button
                   onClick={() => {
-                    // Create a synthetic slot with archive URL for the player
                     const playSlot = {
                       ...slot,
                       version: slot.version || {
                         id: "",
                         song_id: slot.song.id,
-                        show_date: "",
-                        archive_org_url: archiveUrl,
-                        venue: null,
+                        show_date: archiveResult.date || "",
+                        archive_org_url: archiveResult.url,
+                        venue: archiveResult.venue,
                         city: null,
                         era_id: null,
                         rating: null,
@@ -149,7 +148,7 @@ const SortableSlotItem = ({
                       },
                     };
                     if (!playSlot.version!.archive_org_url) {
-                      playSlot.version = { ...playSlot.version!, archive_org_url: archiveUrl };
+                      playSlot.version = { ...playSlot.version!, archive_org_url: archiveResult.url };
                     }
                     onPlayVersion?.(playSlot);
                   }}
@@ -158,7 +157,7 @@ const SortableSlotItem = ({
                   <Headphones className="w-3 h-3 text-accent hover:text-primary transition-colors" />
                 </button>
                 <a
-                  href={archiveUrl}
+                  href={archiveResult.url}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-1 text-[10px] text-secondary hover:text-primary transition-colors font-body"
@@ -167,9 +166,14 @@ const SortableSlotItem = ({
                   <ExternalLink className="w-3 h-3" />
                   <span className="hidden sm:inline">Archive.org</span>
                 </a>
+                {(archiveResult.date || archiveResult.venue) && (
+                  <span className="text-[10px] text-muted-foreground font-body">
+                    {[archiveResult.date, archiveResult.venue].filter(Boolean).join(" · ")}
+                  </span>
+                )}
               </div>
             )}
-            {archiveLoading && !archiveUrl && (
+            {archiveLoading && !archiveResult && (
               <span className="text-[10px] text-muted-foreground/50 font-body mt-1 block">
                 Finding on Archive.org…
               </span>
