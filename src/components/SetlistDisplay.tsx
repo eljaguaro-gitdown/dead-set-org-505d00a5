@@ -1,3 +1,21 @@
+import { useCallback } from "react";
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  KeyboardSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+  sortableKeyboardCoordinates,
+  arrayMove,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { motion } from "framer-motion";
 import { X, GripVertical, ChevronRight, ExternalLink, Headphones } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
@@ -21,10 +39,115 @@ interface SetlistDisplayProps {
   onRemoveSlot: (id: string) => void;
   onToggleSegue: (id: string) => void;
   onUpdateNotes: (id: string, notes: string) => void;
-  onReorder: (setNumber: number, fromIndex: number, toIndex: number) => void;
+  onReorder: (newSlots: SetlistSlotData[]) => void;
   onPlayVersion?: (slot: SetlistSlotData) => void;
 }
 
+/* ── Sortable slot item ── */
+const SortableSlotItem = ({
+  slot,
+  isLast,
+  onRemoveSlot,
+  onToggleSegue,
+  onUpdateNotes,
+  onPlayVersion,
+}: {
+  slot: SetlistSlotData;
+  isLast: boolean;
+  onRemoveSlot: (id: string) => void;
+  onToggleSegue: (id: string) => void;
+  onUpdateNotes: (id: string, notes: string) => void;
+  onPlayVersion?: (slot: SetlistSlotData) => void;
+}) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: slot.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 50 : undefined,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style}>
+      <div className="song-glow rounded-lg bg-card border border-border p-3 group">
+        <div className="flex items-start gap-2">
+          <button
+            {...attributes}
+            {...listeners}
+            className="mt-1 cursor-grab active:cursor-grabbing touch-none shrink-0"
+            aria-label="Drag to reorder"
+          >
+            <GripVertical className="w-4 h-4 text-muted-foreground" />
+          </button>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center justify-between">
+              <span className="font-body text-sm text-foreground font-medium">{slot.song.title}</span>
+              <button
+                onClick={() => onRemoveSlot(slot.id)}
+                className="opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                <X className="w-4 h-4 text-muted-foreground hover:text-primary" />
+              </button>
+            </div>
+            {slot.version && (
+              <div className="flex items-center gap-1.5 mt-1">
+                <span className="text-xs text-muted-foreground font-body">
+                  {slot.version.show_date} — {slot.version.venue}
+                </span>
+                {slot.version.archive_org_url && (
+                  <>
+                    <button
+                      onClick={() => onPlayVersion?.(slot)}
+                      className="ml-1"
+                      title="Preview audio"
+                    >
+                      <Headphones className="w-3 h-3 text-accent hover:text-primary transition-colors" />
+                    </button>
+                    <a
+                      href={slot.version.archive_org_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <ExternalLink className="w-3 h-3 text-secondary" />
+                    </a>
+                  </>
+                )}
+              </div>
+            )}
+            <Textarea
+              placeholder="Notes..."
+              value={slot.notes}
+              onChange={(e) => onUpdateNotes(slot.id, e.target.value)}
+              className="mt-2 min-h-[28px] h-7 text-xs bg-transparent border-border resize-none font-body text-muted-foreground focus:text-foreground"
+            />
+          </div>
+        </div>
+      </div>
+      {!isLast && (
+        <button
+          onClick={() => onToggleSegue(slot.id)}
+          className="flex items-center justify-center w-full py-1"
+        >
+          {slot.segueToNext ? (
+            <ChevronRight className="w-4 h-4 text-primary" />
+          ) : (
+            <div className="w-4 h-px bg-border" />
+          )}
+        </button>
+      )}
+    </div>
+  );
+};
+
+/* ── Set section (droppable) ── */
 const SetSection = ({
   title,
   setNumber,
@@ -43,6 +166,7 @@ const SetSection = ({
   onPlayVersion?: (slot: SetlistSlotData) => void;
 }) => {
   const setSlots = slots.filter((s) => s.setNumber === setNumber);
+  const ids = setSlots.map((s) => s.id);
 
   return (
     <div className="space-y-1">
@@ -58,119 +182,127 @@ const SetSection = ({
           </p>
         </div>
       )}
-      {setSlots.map((slot, index) => (
-        <div key={slot.id}>
-          <motion.div
-            layout
-            className="song-glow rounded-lg bg-card border border-border p-3 group"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-          >
-            <div className="flex items-start gap-2">
-              <GripVertical className="w-4 h-4 text-muted-foreground mt-1 cursor-grab shrink-0" />
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between">
-                  <span className="font-body text-sm text-foreground font-medium">{slot.song.title}</span>
-                  <button
-                    onClick={() => onRemoveSlot(slot.id)}
-                    className="opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
-                    <X className="w-4 h-4 text-muted-foreground hover:text-primary" />
-                  </button>
-                </div>
-                {slot.version && (
-                  <div className="flex items-center gap-1.5 mt-1">
-                    <span className="text-xs text-muted-foreground font-body">
-                      {slot.version.show_date} — {slot.version.venue}
-                    </span>
-                    {slot.version.archive_org_url && (
-                      <>
-                        <button
-                          onClick={() => onPlayVersion?.(slot)}
-                          className="ml-1"
-                          title="Preview audio"
-                        >
-                          <Headphones className="w-3 h-3 text-accent hover:text-primary transition-colors" />
-                        </button>
-                        <a
-                          href={slot.version.archive_org_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          <ExternalLink className="w-3 h-3 text-secondary" />
-                        </a>
-                      </>
-                    )}
-                  </div>
-                )}
-                <Textarea
-                  placeholder="Notes..."
-                  value={slot.notes}
-                  onChange={(e) => onUpdateNotes(slot.id, e.target.value)}
-                  className="mt-2 min-h-[28px] h-7 text-xs bg-transparent border-border resize-none font-body text-muted-foreground focus:text-foreground"
-                />
-              </div>
-            </div>
-          </motion.div>
-          {index < setSlots.length - 1 && (
-            <button
-              onClick={() => onToggleSegue(slot.id)}
-              className="flex items-center justify-center w-full py-1"
-            >
-              {slot.segueToNext ? (
-                <ChevronRight className="w-4 h-4 text-primary" />
-              ) : (
-                <div className="w-4 h-px bg-border" />
-              )}
-            </button>
-          )}
-        </div>
-      ))}
+      <SortableContext items={ids} strategy={verticalListSortingStrategy}>
+        {setSlots.map((slot, index) => (
+          <SortableSlotItem
+            key={slot.id}
+            slot={slot}
+            isLast={index === setSlots.length - 1}
+            onRemoveSlot={onRemoveSlot}
+            onToggleSegue={onToggleSegue}
+            onUpdateNotes={onUpdateNotes}
+            onPlayVersion={onPlayVersion}
+          />
+        ))}
+      </SortableContext>
     </div>
   );
 };
 
+/* ── Main component ── */
 const SetlistDisplay = ({
   slots,
   onRemoveSlot,
   onToggleSegue,
   onUpdateNotes,
+  onReorder,
   onPlayVersion,
 }: SetlistDisplayProps) => {
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+
+  const handleDragEnd = useCallback(
+    (event: DragEndEvent) => {
+      const { active, over } = event;
+      if (!over || active.id === over.id) return;
+
+      const activeSlot = slots.find((s) => s.id === active.id);
+      const overSlot = slots.find((s) => s.id === over.id);
+      if (!activeSlot || !overSlot) return;
+
+      // If moving between sets, change the set number
+      const targetSetNumber = overSlot.setNumber;
+
+      // Get slots for the source and target sets
+      if (activeSlot.setNumber === targetSetNumber) {
+        // Same set: simple reorder
+        const setSlots = slots.filter((s) => s.setNumber === targetSetNumber);
+        const oldIndex = setSlots.findIndex((s) => s.id === active.id);
+        const newIndex = setSlots.findIndex((s) => s.id === over.id);
+        const reordered = arrayMove(setSlots, oldIndex, newIndex);
+
+        const newSlots = slots.map((s) => {
+          if (s.setNumber !== targetSetNumber) return s;
+          const idx = reordered.findIndex((r) => r.id === s.id);
+          return { ...s, position: idx };
+        });
+        onReorder(newSlots);
+      } else {
+        // Cross-set move
+        const newSlots = slots.map((s) => {
+          if (s.id === active.id) {
+            return { ...s, setNumber: targetSetNumber };
+          }
+          return s;
+        });
+
+        // Recalculate positions for affected sets
+        const recalculated = newSlots.map((s) => {
+          const setSlots = newSlots
+            .filter((ss) => ss.setNumber === s.setNumber)
+            .sort((a, b) => a.position - b.position);
+          const idx = setSlots.findIndex((ss) => ss.id === s.id);
+          return { ...s, position: idx };
+        });
+
+        onReorder(recalculated);
+      }
+    },
+    [slots, onReorder]
+  );
+
   return (
     <div className="flex flex-col h-full">
       <div className="p-4 border-b border-border">
         <h2 className="font-display text-lg text-foreground">The Set</h2>
       </div>
-      <div className="flex-1 overflow-y-auto p-4 space-y-6">
-        <SetSection
-          title="Set I"
-          setNumber={1}
-          slots={slots}
-          onRemoveSlot={onRemoveSlot}
-          onToggleSegue={onToggleSegue}
-          onUpdateNotes={onUpdateNotes}
-          onPlayVersion={onPlayVersion}
-        />
-        <SetSection
-          title="Set II"
-          setNumber={2}
-          slots={slots}
-          onRemoveSlot={onRemoveSlot}
-          onToggleSegue={onToggleSegue}
-          onUpdateNotes={onUpdateNotes}
-          onPlayVersion={onPlayVersion}
-        />
-        <SetSection
-          title="Encore"
-          setNumber={3}
-          slots={slots}
-          onRemoveSlot={onRemoveSlot}
-          onToggleSegue={onToggleSegue}
-          onUpdateNotes={onUpdateNotes}
-          onPlayVersion={onPlayVersion}
-        />
-      </div>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={handleDragEnd}
+      >
+        <div className="flex-1 overflow-y-auto p-4 space-y-6">
+          <SetSection
+            title="Set I"
+            setNumber={1}
+            slots={slots}
+            onRemoveSlot={onRemoveSlot}
+            onToggleSegue={onToggleSegue}
+            onUpdateNotes={onUpdateNotes}
+            onPlayVersion={onPlayVersion}
+          />
+          <SetSection
+            title="Set II"
+            setNumber={2}
+            slots={slots}
+            onRemoveSlot={onRemoveSlot}
+            onToggleSegue={onToggleSegue}
+            onUpdateNotes={onUpdateNotes}
+            onPlayVersion={onPlayVersion}
+          />
+          <SetSection
+            title="Encore"
+            setNumber={3}
+            slots={slots}
+            onRemoveSlot={onRemoveSlot}
+            onToggleSegue={onToggleSegue}
+            onUpdateNotes={onUpdateNotes}
+            onPlayVersion={onPlayVersion}
+          />
+        </div>
+      </DndContext>
     </div>
   );
 };
