@@ -110,6 +110,8 @@ const AIDeadHeadDialog = ({
       setSuggestion(null);
       setPreferences("");
       setLoading(false);
+      setNamingNew(false);
+      setNewSetlistName("");
     }
     onOpenChange(open);
   };
