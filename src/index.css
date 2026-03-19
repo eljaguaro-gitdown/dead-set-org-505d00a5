@@ -6,62 +6,66 @@
 
 @layer base {
   :root {
-    --background: 25 18% 7%;
-    --foreground: 38 35% 88%;
+    /* Warm parchment / aged paper base */
+    --background: 35 30% 92%;
+    --foreground: 25 40% 14%;
 
-    --card: 25 15% 11%;
-    --card-foreground: 38 35% 88%;
+    --card: 33 35% 87%;
+    --card-foreground: 25 40% 14%;
 
-    --popover: 25 15% 11%;
-    --popover-foreground: 38 35% 88%;
+    --popover: 33 35% 87%;
+    --popover-foreground: 25 40% 14%;
 
-    --primary: 4 68% 50%;
+    --primary: 4 68% 46%;
     --primary-foreground: 38 40% 95%;
 
-    --secondary: 210 35% 48%;
+    --secondary: 220 42% 42%;
     --secondary-foreground: 38 40% 95%;
 
-    --muted: 25 12% 16%;
-    --muted-foreground: 30 15% 50%;
+    --muted: 33 20% 82%;
+    --muted-foreground: 25 18% 42%;
 
-    --accent: 35 55% 52%;
-    --accent-foreground: 25 18% 7%;
+    --accent: 35 65% 48%;
+    --accent-foreground: 25 40% 10%;
 
-    --destructive: 0 84.2% 60.2%;
+    --destructive: 0 72% 50%;
     --destructive-foreground: 38 40% 95%;
 
-    --border: 25 10% 18%;
-    --input: 25 10% 18%;
-    --ring: 4 68% 50%;
+    --border: 30 18% 76%;
+    --input: 30 18% 76%;
+    --ring: 4 68% 46%;
 
     --radius: 0.5rem;
 
-    --sidebar-background: 25 18% 8%;
-    --sidebar-foreground: 38 35% 88%;
-    --sidebar-primary: 4 68% 50%;
+    --sidebar-background: 33 28% 88%;
+    --sidebar-foreground: 25 40% 14%;
+    --sidebar-primary: 4 68% 46%;
     --sidebar-primary-foreground: 38 40% 95%;
-    --sidebar-accent: 25 12% 14%;
-    --sidebar-accent-foreground: 38 35% 88%;
-    --sidebar-border: 25 10% 18%;
-    --sidebar-ring: 4 68% 50%;
+    --sidebar-accent: 33 22% 82%;
+    --sidebar-accent-foreground: 25 40% 14%;
+    --sidebar-border: 30 18% 76%;
+    --sidebar-ring: 4 68% 46%;
 
-    /* Custom tokens */
-    --dead-red: 4 68% 50%;
-    --dead-blue: 210 35% 48%;
-    --dead-gold: 35 55% 52%;
-    --dead-dark: 25 18% 7%;
-    --dead-surface: 25 15% 11%;
-    --dead-surface-hover: 25 12% 16%;
-    --dead-orange: 24 80% 55%;
-    --dead-cream: 38 40% 90%;
-    --glow-red: 4 68% 50% / 0.4;
-    --glow-blue: 210 35% 48% / 0.3;
+    /* Custom tokens — Deadhead palette */
+    --dead-red: 4 68% 46%;
+    --dead-blue: 220 42% 42%;
+    --dead-gold: 35 65% 48%;
+    --dead-dark: 25 40% 14%;
+    --dead-surface: 33 35% 87%;
+    --dead-surface-hover: 33 22% 82%;
+    --dead-orange: 24 80% 52%;
+    --dead-cream: 35 40% 94%;
+    --dead-pink: 340 45% 72%;
+    --dead-green: 140 30% 45%;
+    --dead-purple: 270 35% 52%;
+    --glow-red: 4 68% 46% / 0.25;
+    --glow-blue: 220 42% 42% / 0.2;
 
     --font-display: 'Permanent Marker', cursive;
     --font-hand: 'Caveat', cursive;
     --font-body: 'Instrument Sans', sans-serif;
 
-    --grain-opacity: 0.04;
+    --grain-opacity: 0.06;
   }
 }
 
