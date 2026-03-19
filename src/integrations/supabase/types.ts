@@ -323,7 +323,19 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_setlist_collaborator: {
+        Args: { _setlist_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_setlist_owner: {
+        Args: { _setlist_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_setlist_public: { Args: { _setlist_id: string }; Returns: boolean }
+      setlist_has_share_token: {
+        Args: { _setlist_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       collaborator_role: "owner" | "editor" | "viewer"
