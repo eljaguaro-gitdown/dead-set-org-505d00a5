@@ -106,7 +106,7 @@ const SortableSlotItem = ({
 
   return (
     <div ref={setNodeRef} style={style}>
-      <div className="song-glow rounded-lg bg-card border border-border p-3 group">
+      <div className={`rounded-lg bg-card border p-3 group transition-all duration-300 ${isPlaying ? 'border-primary ring-2 ring-primary/30 shadow-[0_0_20px_-4px_hsl(var(--primary)/0.4)]' : 'border-border song-glow'}`}>
         <div className="flex items-start gap-2">
           <button
             {...attributes}
