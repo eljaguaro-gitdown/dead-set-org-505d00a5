@@ -6,53 +6,53 @@
 
 @layer base {
   :root {
-    /* Dead.net-inspired: dark, warm, vintage */
-    --background: 30 20% 8%;
-    --foreground: 38 30% 85%;
+    /* Warm cassette-culture brown — NOT black */
+    --background: 28 30% 18%;
+    --foreground: 38 30% 88%;
 
-    --card: 30 18% 12%;
-    --card-foreground: 38 30% 85%;
+    --card: 28 25% 22%;
+    --card-foreground: 38 30% 88%;
 
-    --popover: 30 18% 12%;
-    --popover-foreground: 38 30% 85%;
+    --popover: 28 25% 22%;
+    --popover-foreground: 38 30% 88%;
 
     --primary: 38 70% 50%;
-    --primary-foreground: 30 20% 8%;
+    --primary-foreground: 25 30% 10%;
 
     --secondary: 4 60% 50%;
     --secondary-foreground: 38 30% 92%;
 
-    --muted: 30 15% 16%;
-    --muted-foreground: 35 15% 50%;
+    --muted: 28 20% 26%;
+    --muted-foreground: 35 20% 55%;
 
     --accent: 35 65% 48%;
-    --accent-foreground: 30 20% 8%;
+    --accent-foreground: 25 30% 10%;
 
     --destructive: 0 72% 50%;
     --destructive-foreground: 38 30% 92%;
 
-    --border: 30 12% 20%;
-    --input: 30 12% 20%;
+    --border: 28 18% 30%;
+    --input: 28 18% 30%;
     --ring: 38 70% 50%;
 
     --radius: 0.375rem;
 
-    --sidebar-background: 30 20% 10%;
-    --sidebar-foreground: 38 30% 85%;
+    --sidebar-background: 28 28% 20%;
+    --sidebar-foreground: 38 30% 88%;
     --sidebar-primary: 38 70% 50%;
-    --sidebar-primary-foreground: 30 20% 8%;
-    --sidebar-accent: 30 15% 16%;
-    --sidebar-accent-foreground: 38 30% 85%;
-    --sidebar-border: 30 12% 20%;
+    --sidebar-primary-foreground: 25 30% 10%;
+    --sidebar-accent: 28 20% 26%;
+    --sidebar-accent-foreground: 38 30% 88%;
+    --sidebar-border: 28 18% 30%;
     --sidebar-ring: 38 70% 50%;
 
     /* Deadhead palette */
     --dead-red: 4 60% 50%;
     --dead-blue: 210 35% 45%;
     --dead-gold: 38 70% 50%;
-    --dead-dark: 30 20% 8%;
-    --dead-surface: 30 18% 12%;
-    --dead-surface-hover: 30 15% 18%;
+    --dead-dark: 28 30% 14%;
+    --dead-surface: 28 25% 22%;
+    --dead-surface-hover: 28 20% 28%;
     --dead-orange: 24 75% 52%;
     --dead-cream: 38 35% 82%;
     --dead-pink: 340 40% 65%;
