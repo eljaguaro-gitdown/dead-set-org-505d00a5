@@ -219,6 +219,10 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
             {formatTime(progress)} / {formatTime(duration)}
           </span>
 
+          <a href="https://archive.org" target="_blank" rel="noopener noreferrer" className="text-[9px] text-muted-foreground/50 hover:text-muted-foreground font-body shrink-0 hidden sm:inline transition-colors">
+            via archive.org
+          </a>
+
           <button onClick={() => setMuted(!muted)} className="text-muted-foreground hover:text-foreground shrink-0">
             {muted ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
           </button>
