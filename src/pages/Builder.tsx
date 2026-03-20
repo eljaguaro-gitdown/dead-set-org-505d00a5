@@ -36,9 +36,7 @@ const Builder = () => {
   const [shareOpen, setShareOpen] = useState(false);
   const [aiOpen, setAiOpen] = useState(false);
   const [initialized, setInitialized] = useState(false);
-  const [playingSlot, setPlayingSlot] = useState<SetlistSlotData | null>(null);
-  const [playlistMode, setPlaylistMode] = useState(false);
-  const [playlistIndex, setPlaylistIndex] = useState(0);
+  const { playSingle, playSetlist: globalPlaySetlist, playingSlot } = useAudioPlayer();
   const [description, setDescription] = useState<string | null>(null);
   const [generatingDescription, setGeneratingDescription] = useState(false);
   // Mobile tab: "songs" or "setlist"
