@@ -32,6 +32,7 @@ const Builder = () => {
   const [selectedEra, setSelectedEra] = useState<string | null>(null);
   const [activeSet, setActiveSet] = useState(1);
   const [chatOpen, setChatOpen] = useState(false);
+  const [chatUnread, setChatUnread] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [aiOpen, setAiOpen] = useState(false);
   const [initialized, setInitialized] = useState(false);
@@ -325,11 +326,14 @@ const Builder = () => {
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 sm:h-9 sm:w-9 shrink-0 text-foreground"
+            className="h-8 w-8 sm:h-9 sm:w-9 shrink-0 text-foreground relative"
             onClick={() => setChatOpen(true)}
             title="Chat"
           >
             <MessageCircle className="w-4 sm:w-5 h-4 sm:h-5" />
+            {chatUnread && (
+              <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-primary rounded-full animate-pulse border-2 border-card" />
+            )}
           </Button>
           <Button
             variant="default"
@@ -476,6 +480,7 @@ const Builder = () => {
         user={user}
         isOpen={chatOpen}
         onClose={() => setChatOpen(false)}
+        onUnreadChange={setChatUnread}
       />
 
       {/* Share Dialog */}
