@@ -1,7 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { findArchiveRecording } from "@/lib/archiveOrg";
 import { Sparkles, Share2, Users, LogOut, MessageCircle, Globe, CheckCircle, List, Music, LayoutList } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import PageLayout from "@/components/PageLayout";
@@ -14,11 +13,11 @@ import CollaboratorAvatars from "@/components/CollaboratorAvatars";
 import ChatSidebar from "@/components/ChatSidebar";
 import ShareDialog from "@/components/ShareDialog";
 import AIDeadHeadDialog from "@/components/AIDeadHeadDialog";
-import AudioPlayer from "@/components/AudioPlayer";
 import { useSongs } from "@/hooks/useSongs";
 import { useAuth } from "@/hooks/useAuth";
 import { useSetlist } from "@/hooks/useSetlist";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 import type { Database } from "@/integrations/supabase/types";
 
 type Song = Database["public"]["Tables"]["songs"]["Row"];
@@ -36,9 +35,7 @@ const Builder = () => {
   const [shareOpen, setShareOpen] = useState(false);
   const [aiOpen, setAiOpen] = useState(false);
   const [initialized, setInitialized] = useState(false);
-  const [playingSlot, setPlayingSlot] = useState<SetlistSlotData | null>(null);
-  const [playlistMode, setPlaylistMode] = useState(false);
-  const [playlistIndex, setPlaylistIndex] = useState(0);
+  const { playSingle, playSetlist: globalPlaySetlist, playingSlot } = useAudioPlayer();
   const [description, setDescription] = useState<string | null>(null);
   const [generatingDescription, setGeneratingDescription] = useState(false);
   // Mobile tab: "songs" or "setlist"
@@ -435,14 +432,13 @@ const Builder = () => {
               onSelectSong={handleSelectSong}
               getNotableVersions={getNotableVersions}
               onPlayArchive={(url, songTitle, showDate, venue) => {
-                setPlayingSlot({
+                playSingle({
                   id: "preview",
-                  song: { title: songTitle } as any,
+                  song: { title: songTitle, id: "" } as any,
                   version: { archive_org_url: url, show_date: showDate, venue } as any,
                   setNumber: 1,
                   position: 0,
                   segueToNext: false,
-                  notes: "",
                 });
               }}
             />
@@ -455,7 +451,7 @@ const Builder = () => {
         }`}>
            <SetlistDisplay
             slots={slots}
-            activeSlotId={playlistMode && playingSlot ? playingSlot.id : null}
+            activeSlotId={playingSlot ? playingSlot.id : null}
             description={description}
             generatingDescription={generatingDescription}
             onGenerateDescription={handleGenerateDescription}
@@ -464,46 +460,11 @@ const Builder = () => {
             onUpdateNotes={handleUpdateNotes}
             onReorder={handleReorder}
             onPlayVersion={(slot) => {
-              setPlaylistMode(false);
-              setPlayingSlot(slot);
+              playSingle(slot);
             }}
             onPlaySetlist={async () => {
               if (slots.length === 0) return;
-              const sorted = [...slots].sort((a, b) => a.setNumber - b.setNumber || a.position - b.position);
-              let startIndex = -1;
-              let startSlot: SetlistSlotData | null = null;
-              for (let i = 0; i < sorted.length; i++) {
-                const slot = sorted[i];
-                if (slot.version?.archive_org_url) {
-                  startIndex = i;
-                  startSlot = slot;
-                  break;
-                }
-                const result = await findArchiveRecording(slot.song.title);
-                if (result) {
-                  startIndex = i;
-                  startSlot = {
-                    ...slot,
-                    version: {
-                      id: "", song_id: slot.song.id, show_date: result.date || "",
-                      archive_org_url: result.url, venue: result.venue,
-                      city: null, era_id: null, rating: null, description: null,
-                    },
-                  };
-                  break;
-                }
-              }
-              if (!startSlot || startIndex < 0) {
-                toast.error("Couldn't find audio for any songs in the setlist");
-                return;
-              }
-              // Increment play count via RPC (uses SECURITY DEFINER, bypasses RLS)
-              if (setlist?.id) {
-                supabase.rpc("increment_play_count", { _setlist_id: setlist.id });
-              }
-              setPlaylistMode(true);
-              setPlaylistIndex(startIndex);
-              setPlayingSlot(startSlot);
+              await globalPlaySetlist(slots, setlist?.id);
             }}
           />
         </div>
@@ -538,54 +499,6 @@ const Builder = () => {
         onCreateNewSetlist={handleCreateNewFromAI}
       />
 
-      {/* Audio Player */}
-      {playingSlot?.version?.archive_org_url && (() => {
-        const sortedSlots = [...slots].sort((a, b) => a.setNumber - b.setNumber || a.position - b.position);
-        const advancePlaylist = async (dir: number) => {
-          for (let i = playlistIndex + dir; i >= 0 && i < sortedSlots.length; i += dir) {
-            let nextSlot = sortedSlots[i];
-            if (!nextSlot.version?.archive_org_url) {
-              const result = await findArchiveRecording(nextSlot.song.title);
-              if (result) {
-                nextSlot = {
-                  ...nextSlot,
-                  version: {
-                    id: "", song_id: nextSlot.song.id, show_date: result.date || "",
-                    archive_org_url: result.url, venue: result.venue,
-                    city: null, era_id: null, rating: null, description: null,
-                  },
-                };
-              } else {
-                continue;
-              }
-            }
-            setPlaylistIndex(i);
-            setPlayingSlot(nextSlot);
-            return;
-          }
-          setPlaylistMode(false);
-          setPlayingSlot(null);
-          toast.info("End of setlist");
-        };
-        return (
-          <AudioPlayer
-            archiveUrl={playingSlot.version.archive_org_url}
-            songTitle={playingSlot.song.title}
-            showDate={playingSlot.version.show_date}
-            venue={playingSlot.version.venue}
-            autoPlay={true}
-            singleTrackMode={playlistMode}
-            onClose={() => {
-              setPlayingSlot(null);
-              setPlaylistMode(false);
-            }}
-            onEnded={playlistMode ? () => advancePlaylist(1) : undefined}
-            playlistInfo={playlistMode ? { current: playlistIndex + 1, total: sortedSlots.length } : null}
-            onNext={playlistMode ? () => advancePlaylist(1) : undefined}
-            onPrev={playlistMode ? () => advancePlaylist(-1) : undefined}
-          />
-        );
-      })()}
     </PageLayout>
   );
 };

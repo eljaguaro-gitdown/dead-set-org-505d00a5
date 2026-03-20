@@ -3,6 +3,8 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { AudioPlayerProvider } from "@/contexts/AudioPlayerContext";
+import GlobalAudioPlayer from "@/components/GlobalAudioPlayer";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Builder from "./pages/Builder";
@@ -22,20 +24,23 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/auth" element={<Auth />} />
-          <Route path="/my-setlists" element={<MySetlists />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/builder" element={<Builder />} />
-          <Route path="/builder/:id" element={<Builder />} />
-          <Route path="/join/:token" element={<JoinSetlist />} />
-          <Route path="/browse" element={<Browse />} />
-          <Route path="/setlist/:id" element={<SetlistPoster />} />
-          <Route path="/admin" element={<Admin />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <AudioPlayerProvider>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/my-setlists" element={<MySetlists />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/builder" element={<Builder />} />
+            <Route path="/builder/:id" element={<Builder />} />
+            <Route path="/join/:token" element={<JoinSetlist />} />
+            <Route path="/browse" element={<Browse />} />
+            <Route path="/setlist/:id" element={<SetlistPoster />} />
+            <Route path="/admin" element={<Admin />} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+          <GlobalAudioPlayer />
+        </AudioPlayerProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
