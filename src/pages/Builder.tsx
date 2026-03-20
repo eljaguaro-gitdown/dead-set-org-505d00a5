@@ -445,7 +445,6 @@ const Builder = () => {
             />
           )}
         </div>
-        </div>
 
         {/* Setlist — hidden on mobile when songs tab is active */}
         <div className={`flex-1 overflow-hidden flex flex-col ${
