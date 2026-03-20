@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, ExternalLink, ChevronRight, Share2 } from "lucide-react";
+import { ArrowLeft, ExternalLink, ChevronRight, Share2, ThumbsUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import StealYourFace from "@/components/StealYourFace";
+import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 
 type Setlist = Database["public"]["Tables"]["setlists"]["Row"];
@@ -20,12 +22,16 @@ interface EnrichedSlot extends SetlistSlot {
 const SetlistPoster = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [setlist, setSetlist] = useState<Setlist | null>(null);
   const [slots, setSlots] = useState<EnrichedSlot[]>([]);
   const [creatorName, setCreatorName] = useState("Unknown Head");
   const [eraName, setEraName] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
+  const [hasUpvoted, setHasUpvoted] = useState(false);
+  const [upvoteCount, setUpvoteCount] = useState(0);
+  const [upvoting, setUpvoting] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -43,6 +49,7 @@ const SetlistPoster = () => {
         return;
       }
       setSetlist(setlistData);
+      setUpvoteCount((setlistData as any).upvote_count || 0);
 
       // Fetch profile, era, and slots in parallel
       const [profileRes, eraRes, slotsRes] = await Promise.all([
@@ -57,7 +64,6 @@ const SetlistPoster = () => {
       setEraName(eraRes.data?.name || null);
 
       if (slotsRes.data) {
-        // Enrich slots with song and version data
         const enriched = await Promise.all(
           slotsRes.data.map(async (slot) => {
             const [songRes, versionRes] = await Promise.all([
@@ -81,6 +87,47 @@ const SetlistPoster = () => {
 
     fetchSetlist();
   }, [id]);
+
+  // Check if user already upvoted
+  useEffect(() => {
+    if (!id || !user) return;
+    supabase
+      .from("setlist_upvotes")
+      .select("id")
+      .eq("setlist_id", id)
+      .eq("user_id", user.id)
+      .maybeSingle()
+      .then(({ data }) => setHasUpvoted(!!data));
+  }, [id, user]);
+
+  const handleUpvote = async () => {
+    if (!user) {
+      toast.error("Sign in to upvote setlists");
+      navigate("/auth");
+      return;
+    }
+    if (!id || hasUpvoted || upvoting) return;
+    setUpvoting(true);
+
+    const { error } = await supabase
+      .from("setlist_upvotes")
+      .insert({ setlist_id: id, user_id: user.id });
+
+    if (error) {
+      if (error.code === "23505") {
+        // Already upvoted (unique constraint)
+        setHasUpvoted(true);
+      } else {
+        toast.error("Couldn't upvote — try again");
+      }
+    } else {
+      setHasUpvoted(true);
+      setUpvoteCount((c) => c + 1);
+      // Update the denormalized count
+      supabase.rpc("increment_upvote_count", { _setlist_id: id });
+    }
+    setUpvoting(false);
+  };
 
   const handleShare = async () => {
     const url = window.location.href;
@@ -125,15 +172,32 @@ const SetlistPoster = () => {
         <button onClick={() => navigate("/browse")} className="flex items-center gap-2 text-muted-foreground hover:text-foreground font-body text-sm transition-colors">
           <ArrowLeft className="w-4 h-4" /> Back
         </button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleShare}
-          className="font-body border-border text-foreground gap-1.5"
-        >
-          <Share2 className="w-3.5 h-3.5" />
-          {copied ? "Copied!" : "Share"}
-        </Button>
+        <div className="flex items-center gap-2">
+          {/* Upvote button */}
+          <Button
+            variant={hasUpvoted ? "default" : "outline"}
+            size="sm"
+            onClick={handleUpvote}
+            disabled={hasUpvoted || upvoting}
+            className={`font-body gap-1.5 transition-all ${
+              hasUpvoted
+                ? "bg-primary text-primary-foreground"
+                : "border-border text-foreground hover:border-primary/50 hover:text-primary"
+            }`}
+          >
+            <ThumbsUp className={`w-3.5 h-3.5 ${hasUpvoted ? "fill-current" : ""}`} />
+            <span className="tabular-nums">{upvoteCount}</span>
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleShare}
+            className="font-body border-border text-foreground gap-1.5"
+          >
+            <Share2 className="w-3.5 h-3.5" />
+            {copied ? "Copied!" : "Share"}
+          </Button>
+        </div>
       </header>
 
       {/* Concert Poster */}
@@ -163,11 +227,19 @@ const SetlistPoster = () => {
             <p className="font-body text-sm text-muted-foreground mt-2">
               Curated by <span className="text-foreground">{creatorName}</span>
             </p>
-            {eraName && (
-              <span className="inline-block mt-3 px-3 py-1 text-xs font-body text-accent border border-accent/30 rounded-full">
-                {eraName}
-              </span>
-            )}
+            <div className="flex items-center justify-center gap-3 mt-3">
+              {eraName && (
+                <span className="inline-block px-3 py-1 text-xs font-body text-accent border border-accent/30 rounded-full">
+                  {eraName}
+                </span>
+              )}
+              {upvoteCount > 0 && (
+                <span className="inline-flex items-center gap-1 px-3 py-1 text-xs font-body text-primary border border-primary/30 rounded-full">
+                  <ThumbsUp className="w-3 h-3" />
+                  {upvoteCount} upvote{upvoteCount !== 1 ? "s" : ""}
+                </span>
+              )}
+            </div>
           </div>
 
           {/* Decorative divider */}
