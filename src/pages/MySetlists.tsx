@@ -302,6 +302,8 @@ const MySetlists = () => {
                             const decade = Math.floor(s.eraData.year_start / 10) * 10;
                             const decadeLabel = decade === 1960 ? "'60s" : decade === 1970 ? "'70s" : decade === 1980 ? "'80s" : decade === 1990 ? "'90s" : `${decade}s`;
                             parts.push(decadeLabel + " era");
+                          } else if (s.inferredDecade) {
+                            parts.push(s.inferredDecade + " vibes");
                           }
                           if (s.slot_count > 0) {
                             const totalMin = s.slot_count * 7;
