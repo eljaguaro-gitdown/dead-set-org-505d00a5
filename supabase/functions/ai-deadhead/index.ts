@@ -7,6 +7,49 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+// Creative constraint pools to inject variety into every generation
+const THEME_SEEDS = [
+  "Feature at least 2 deep cuts that casual fans might not know",
+  "Build around a legendary segue pairing as the centerpiece",
+  "Include a thematic thread — songs that share lyrical motifs or musical keys",
+  "Front-load Set I with high-energy rockers, then let Set II breathe with spacey jams",
+  "Channel a late-night vibe — darker, more psychedelic choices",
+  "Create contrast: pair the most delicate ballad with the heaviest jam vehicle",
+  "Include at least one song the Dead rarely played — a true rarity",
+  "Build Set II around an extended jam suite (3+ songs connected by segues)",
+  "Go for a sunshine daydream feel — upbeat, joyful, danceable throughout",
+  "Feature songs with storytelling lyrics prominently",
+  "Create a 'second set sandwich' — bookend the jams with tight, punchy songs",
+  "Include a surprising opener that breaks convention",
+  "Build tension through Set I that explodes in a Set II peak",
+  "Weave in songs that complement each other melodically across sets",
+  "Go heavy on the blues — Pigpen-era spirit even if using later catalog",
+  "Feature an unconventional encore choice that leaves the crowd buzzing",
+  "Mix tempos dramatically — follow every slow song with something uptempo",
+  "Create a 'journey' setlist that tells an emotional arc from start to finish",
+  "Lean into the weird — Drums/Space adjacent songs, experimental choices",
+  "Channel a Sunday afternoon festival set — crowd-pleasers with depth",
+];
+
+const OPENER_CONSTRAINTS = [
+  "Start with something unexpected — avoid the obvious openers",
+  "Open with a mid-tempo groove that builds, not a blast of energy",
+  "Choose an opener that sets a specific mood for the whole show",
+  "Start with a song that was rarely used as an opener historically",
+];
+
+const CLOSER_CONSTRAINTS = [
+  "End Set I with a song that leaves the crowd wanting more, not satisfied",
+  "Close Set II with something emotionally devastating, not just loud",
+  "Pick an encore that recontextualizes the whole show",
+  "End with quiet power rather than volume",
+];
+
+function pickRandom<T>(arr: T[], count: number): T[] {
+  const shuffled = [...arr].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, count);
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -18,7 +61,7 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { mode, eraId, currentSlots, preferences } = await req.json();
+    const { mode, eraId, currentSlots, preferences, recentSongs } = await req.json();
 
     // Fetch songs catalog for context
     let songsQuery = supabase.from("songs").select("id, title, tags, is_jam_vehicle, typical_set_position, times_played");
@@ -52,30 +95,57 @@ serve(async (req) => {
         ).join("\n")}`
       : "";
 
+    // Inject randomized creative constraints for variety
+    const themeSeeds = pickRandom(THEME_SEEDS, 2);
+    const openerSeed = pickRandom(OPENER_CONSTRAINTS, 1)[0];
+    const closerSeed = pickRandom(CLOSER_CONSTRAINTS, 1)[0];
+
+    const creativityBlock = `
+CREATIVE DIRECTION FOR THIS SETLIST (follow these specific guidelines):
+• ${themeSeeds[0]}
+• ${themeSeeds[1]}
+• Opener guidance: ${openerSeed}
+• Closer guidance: ${closerSeed}
+These are creative constraints to make THIS setlist unique. Embrace them fully.`;
+
+    // Avoid recently generated songs if provided
+    const avoidBlock = recentSongs && recentSongs.length > 0
+      ? `\nIMPORTANT: The user has recently seen setlists featuring these songs. STRONGLY AVOID reusing them unless essential to flow:
+${recentSongs.map((s: string) => `- "${s}"`).join("\n")}`
+      : "";
+
     let systemPrompt: string;
 
     if (mode === "build") {
-      systemPrompt = `You are an expert Grateful Dead setlist curator — a true Dead Head with encyclopedic knowledge of their catalog.
+      systemPrompt = `You are an expert Grateful Dead setlist curator — a true Dead Head with encyclopedic knowledge of their catalog. You pride yourself on NEVER building the same setlist twice. Each setlist should feel like a unique show.
+
 Build a complete setlist following authentic Dead show structure:
-- Set I: 6-8 songs, start with an upbeat opener, mix rockers and ballads, build energy
+- Set I: 6-8 songs, start with an opener, mix rockers and ballads, build energy
 - Set II: 5-7 songs, feature 2-3 jam vehicles, include a "space" segment, peak with a powerhouse closer
 - Encore: 1-2 songs, typically a heartfelt or crowd-pleasing choice
 
-${eraInfo ? `Focus on the ${eraInfo.name} era (${eraInfo.year_start}-${eraInfo.year_end}). ${eraInfo.description || ""}` : "Draw from the full catalog."}
+${creativityBlock}
+
+${eraInfo ? `Focus on the ${eraInfo.name} era (${eraInfo.year_start}-${eraInfo.year_end}). ${eraInfo.description || ""}` : "Draw from the full catalog across all eras."}
 ${preferences ? `User preferences: ${preferences}` : ""}
+${avoidBlock}
 
 Song catalog:\n${songCatalog}${versionInfo}
 
-CRITICAL: You MUST respond using the suggest_setlist tool. Only use songs from the catalog above. Use exact song titles.`;
+CRITICAL: You MUST respond using the suggest_setlist tool. Only use songs from the catalog above. Use exact song titles. Make this setlist DISTINCT — do not default to the most obvious/popular choices for every slot.`;
     } else {
-      systemPrompt = `You are an expert Grateful Dead setlist curator. Analyze and improve this setlist while keeping its spirit.
+      systemPrompt = `You are an expert Grateful Dead setlist curator. Analyze and improve this setlist while keeping its spirit. Be BOLD with your suggestions — don't just make safe swaps.
+
 Consider: flow, energy arc, segue opportunities, set position conventions, era authenticity, and pacing.
+
+${creativityBlock}
+
 ${eraInfo ? `Era: ${eraInfo.name} (${eraInfo.year_start}-${eraInfo.year_end}). ${eraInfo.description || ""}` : ""}
 ${preferences ? `User preferences: ${preferences}` : ""}
 
 Song catalog:\n${songCatalog}${versionInfo}${currentSetInfo}
 
-CRITICAL: You MUST respond using the suggest_setlist tool. Only use songs from the catalog above. Use exact song titles. Include a brief explanation for changes.`;
+CRITICAL: You MUST respond using the suggest_setlist tool. Only use songs from the catalog above. Use exact song titles. Include a brief explanation for changes. Don't just rearrange — suggest meaningful swaps that elevate the setlist.`;
     }
 
     const tools = [
@@ -89,7 +159,7 @@ CRITICAL: You MUST respond using the suggest_setlist tool. Only use songs from t
             properties: {
               explanation: {
                 type: "string",
-                description: "Brief explanation of the setlist choices and flow"
+                description: "Brief explanation of the setlist choices, flow, and what makes this particular setlist special and unique"
               },
               sets: {
                 type: "array",
@@ -131,11 +201,12 @@ CRITICAL: You MUST respond using the suggest_setlist tool. Only use songs from t
       },
       body: JSON.stringify({
         model: "google/gemini-3-flash-preview",
+        temperature: 1.2,
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: mode === "build"
-            ? `Build me an authentic Grateful Dead setlist${eraInfo ? ` from the ${eraInfo.name} era` : ""}.${preferences ? ` ${preferences}` : ""}`
-            : `Improve my current setlist. Suggest better flow, swaps, and segue opportunities.${preferences ? ` ${preferences}` : ""}`
+            ? `Build me a UNIQUE and authentic Grateful Dead setlist${eraInfo ? ` from the ${eraInfo.name} era` : ""}. Surprise me — I want something I haven't seen before.${preferences ? ` ${preferences}` : ""}`
+            : `Improve my current setlist. Be bold — suggest meaningful changes, not just safe rearrangements.${preferences ? ` ${preferences}` : ""}`
           },
         ],
         tools,

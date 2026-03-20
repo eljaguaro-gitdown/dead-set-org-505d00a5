@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { Sparkles, Zap, Wand2, Loader2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -49,6 +49,8 @@ const AIDeadHeadDialog = ({
   const [namingNew, setNamingNew] = useState(false);
   const [newSetlistName, setNewSetlistName] = useState("");
   const nameInputRef = useRef<HTMLInputElement>(null);
+  // Track recently generated song titles to avoid repetition across regenerations
+  const recentSongsRef = useRef<string[]>([]);
 
   useEffect(() => {
     if (namingNew) nameInputRef.current?.focus();
@@ -65,11 +67,16 @@ const AIDeadHeadDialog = ({
           eraId,
           currentSlots: mode === "improve" ? currentSlots : undefined,
           preferences: preferences.trim() || undefined,
+          recentSongs: recentSongsRef.current.length > 0 ? recentSongsRef.current : undefined,
         },
       });
 
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
+
+      // Track songs from this generation to avoid repetition on regenerate
+      const generatedSongs = (data.sets || []).flatMap((s: any) => s.songs.map((song: any) => song.title));
+      recentSongsRef.current = [...new Set([...recentSongsRef.current, ...generatedSongs])].slice(-30);
 
       setSuggestion(data);
     } catch (e: any) {
