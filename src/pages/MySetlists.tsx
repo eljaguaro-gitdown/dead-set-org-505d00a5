@@ -272,8 +272,8 @@ const MySetlists = () => {
                         )}
                         {(() => {
                           const parts: string[] = [];
-                          if (s.era) {
-                            const decade = Math.floor(s.era.year_start / 10) * 10;
+                          if (s.eraData) {
+                            const decade = Math.floor(s.eraData.year_start / 10) * 10;
                             const decadeLabel = decade === 1960 ? "'60s" : decade === 1970 ? "'70s" : decade === 1980 ? "'80s" : decade === 1990 ? "'90s" : `${decade}s`;
                             parts.push(decadeLabel + " era");
                           }
