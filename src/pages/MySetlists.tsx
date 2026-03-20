@@ -16,6 +16,7 @@ type EraRow = Database["public"]["Tables"]["eras"]["Row"];
 interface SetlistWithMeta extends SetlistRow {
   slot_count: number;
   eraData?: EraRow | null;
+  inferredDecade?: string | null;
 }
 
 const MySetlists = () => {
