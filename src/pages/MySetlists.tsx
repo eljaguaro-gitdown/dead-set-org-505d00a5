@@ -16,6 +16,7 @@ type EraRow = Database["public"]["Tables"]["eras"]["Row"];
 interface SetlistWithMeta extends SetlistRow {
   slot_count: number;
   eraData?: EraRow | null;
+  inferredDecade?: string | null;
 }
 
 const MySetlists = () => {
@@ -35,19 +36,44 @@ const MySetlists = () => {
         .order("updated_at", { ascending: false });
 
       if (data && data.length > 0) {
-        const counts = await Promise.all(
-          data.map((s) =>
-            supabase
-              .from("setlist_slots")
-              .select("id", { count: "exact", head: true })
-              .eq("setlist_id", s.id)
-          )
-        );
+        // Fetch slot counts and song dates in parallel per setlist
+        const [counts, songDates] = await Promise.all([
+          Promise.all(
+            data.map((s) =>
+              supabase
+                .from("setlist_slots")
+                .select("id", { count: "exact", head: true })
+                .eq("setlist_id", s.id)
+            )
+          ),
+          Promise.all(
+            data.map((s) =>
+              supabase
+                .from("setlist_slots")
+                .select("songs(first_played)")
+                .eq("setlist_id", s.id)
+            )
+          ),
+        ]);
+
+        const getInferredDecade = (slots: any[]): string | null => {
+          const years = (slots || [])
+            .map((sl: any) => sl.songs?.first_played)
+            .filter(Boolean)
+            .map((d: string) => new Date(d).getFullYear());
+          if (years.length === 0) return null;
+          years.sort((a: number, b: number) => a - b);
+          const median = years[Math.floor(years.length / 2)];
+          const decade = Math.floor(median / 10) * 10;
+          return decade === 1960 ? "'60s" : decade === 1970 ? "'70s" : decade === 1980 ? "'80s" : decade === 1990 ? "'90s" : `${decade}s`;
+        };
+
         setSetlists(
           data.map((s, i) => ({
             ...s,
             slot_count: counts[i].count || 0,
             eraData: (s as any).eras || null,
+            inferredDecade: (s as any).eras ? null : getInferredDecade(songDates[i].data || []),
           }))
         );
       } else {
@@ -276,6 +302,8 @@ const MySetlists = () => {
                             const decade = Math.floor(s.eraData.year_start / 10) * 10;
                             const decadeLabel = decade === 1960 ? "'60s" : decade === 1970 ? "'70s" : decade === 1980 ? "'80s" : decade === 1990 ? "'90s" : `${decade}s`;
                             parts.push(decadeLabel + " era");
+                          } else if (s.inferredDecade) {
+                            parts.push(s.inferredDecade + " vibes");
                           }
                           if (s.slot_count > 0) {
                             const totalMin = s.slot_count * 7;
