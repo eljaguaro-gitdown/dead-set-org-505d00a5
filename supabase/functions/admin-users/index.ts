@@ -70,7 +70,7 @@ Deno.serve(async (req) => {
     const url = new URL(req.url);
     const action = url.searchParams.get("action");
 
-    // Delete users
+    // Delete users (with cascade cleanup)
     if (action === "delete") {
       const { userIds } = await req.json();
       if (!Array.isArray(userIds)) {
@@ -79,10 +79,38 @@ Deno.serve(async (req) => {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
+
       const results = [];
       for (const uid of userIds) {
-        const { error } = await adminClient.auth.admin.deleteUser(uid);
-        results.push({ id: uid, error: error?.message || null });
+        try {
+          // Get setlists owned by this user
+          const { data: ownedSetlists } = await adminClient
+            .from("setlists")
+            .select("id")
+            .eq("creator_id", uid);
+          const setlistIds = (ownedSetlists || []).map((s: any) => s.id);
+
+          if (setlistIds.length > 0) {
+            // Delete slots, messages, collaborators for owned setlists
+            await adminClient.from("setlist_slots").delete().in("setlist_id", setlistIds);
+            await adminClient.from("chat_messages").delete().in("setlist_id", setlistIds);
+            await adminClient.from("collaborators").delete().in("setlist_id", setlistIds);
+            // Delete the setlists themselves
+            await adminClient.from("setlists").delete().eq("creator_id", uid);
+          }
+
+          // Remove user as collaborator on other setlists
+          await adminClient.from("collaborators").delete().eq("user_id", uid);
+          // Delete profile
+          await adminClient.from("profiles").delete().eq("user_id", uid);
+          // Delete any roles
+          await adminClient.from("user_roles").delete().eq("user_id", uid);
+          // Delete auth user
+          const { error } = await adminClient.auth.admin.deleteUser(uid);
+          results.push({ id: uid, error: error?.message || null });
+        } catch (e: any) {
+          results.push({ id: uid, error: e.message });
+        }
       }
       return new Response(JSON.stringify({ results }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
