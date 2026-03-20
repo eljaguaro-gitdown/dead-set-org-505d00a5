@@ -27,8 +27,9 @@ Deno.serve(async (req) => {
 
     // Allow service role key as bearer token (for internal calls)
     const token = authHeader.replace("Bearer ", "");
-    // Compare with service role key from edge function env
-    const isServiceRole = token === serviceRoleKey || token === supabaseAnonKey;
+    // The service role key in the edge function env; also check x-admin-key header
+    const adminKey = req.headers.get("x-admin-key");
+    const isServiceRole = token === serviceRoleKey || adminKey === serviceRoleKey;
 
     if (!isServiceRole) {
       // Create client with user's token to check role
