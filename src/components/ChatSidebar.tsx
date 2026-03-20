@@ -18,11 +18,11 @@ const ChatSidebar = ({ setlistId, user, isOpen, onClose, onUnreadChange }: ChatS
   const { messages, sendMessage } = useChat(setlistId, user);
   const [input, setInput] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const prevMessageCount = useRef(0);
+  const prevMessageCount = useRef<number | null>(null);
 
   // Track unread messages when sidebar is closed
   useEffect(() => {
-    if (messages.length > prevMessageCount.current && !isOpen) {
+    if (prevMessageCount.current !== null && messages.length > prevMessageCount.current && !isOpen) {
       onUnreadChange?.(true);
     }
     prevMessageCount.current = messages.length;
