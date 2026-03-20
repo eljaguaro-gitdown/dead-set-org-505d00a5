@@ -2,8 +2,19 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { Shield, Users, ArrowLeft, Loader2, Calendar, Mail, User } from "lucide-react";
+import { Shield, Users, ArrowLeft, Loader2, Calendar, Mail, User, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 
 interface AdminUser {
@@ -58,6 +69,39 @@ const Admin = () => {
     };
     fetchUsers();
   }, [isAdmin]);
+
+  const [deleting, setDeleting] = useState<string | null>(null);
+
+  const handleDeleteUser = async (userId: string) => {
+    setDeleting(userId);
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-users?action=delete`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          },
+          body: JSON.stringify({ userIds: [userId] }),
+        }
+      );
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Failed to delete user");
+      
+      const deleteResult = result.results?.[0];
+      if (deleteResult?.error) throw new Error(deleteResult.error);
+      
+      setUsers((prev) => prev.filter((u) => u.id !== userId));
+      toast.success("User deleted successfully");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to delete user");
+      console.error(err);
+    } finally {
+      setDeleting(null);
+    }
+  };
 
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return "Never";
@@ -257,6 +301,44 @@ const Admin = () => {
                         {u.setlistCount} sets
                       </span>
                     </div>
+
+                    {/* Delete button */}
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <button
+                          className="p-1.5 text-muted-foreground hover:text-destructive transition-colors shrink-0"
+                          title="Delete user"
+                          disabled={deleting === u.id || u.id === user?.id}
+                        >
+                          {deleting === u.id ? (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          ) : (
+                            <Trash2 className="w-3.5 h-3.5" />
+                          )}
+                        </button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent className="bg-card border-border">
+                        <AlertDialogHeader>
+                          <AlertDialogTitle className="font-display text-foreground">
+                            Delete {u.displayName || u.email}?
+                          </AlertDialogTitle>
+                          <AlertDialogDescription className="font-body text-muted-foreground">
+                            This will permanently delete this user and all their data including{" "}
+                            {u.setlistCount > 0 ? `${u.setlistCount} setlist${u.setlistCount > 1 ? "s" : ""}, ` : ""}
+                            profile, and collaborations. This cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel className="font-body">Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => handleDeleteUser(u.id)}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90 font-body"
+                          >
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </div>
                 ))}
             </div>
