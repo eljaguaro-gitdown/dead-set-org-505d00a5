@@ -296,6 +296,11 @@ const MySetlists = () => {
                             {s.slot_count} songs
                           </span>
                         )}
+                        {(s as any).play_count > 0 && (
+                          <span className="font-body text-xs sm:text-sm shrink-0" style={{ color: tape.sub }}>
+                            ▶ {(s as any).play_count}×
+                          </span>
+                        )}
                         {(() => {
                           const parts: string[] = [];
                           if (s.eraData) {
