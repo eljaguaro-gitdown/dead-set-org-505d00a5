@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Plus, Globe, Lock, Music, Trash2, Calendar, Search, User } from "lucide-react";
+import { Plus, Globe, Lock, Music, Trash2, Calendar, Search, User, ArrowDownUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -24,6 +24,7 @@ const MySetlists = () => {
   const { user, loading: authLoading, signOut } = useAuth();
   const [setlists, setSetlists] = useState<SetlistWithMeta[]>([]);
   const [loading, setLoading] = useState(true);
+  const [sortBy, setSortBy] = useState<"recent" | "most_played" | "name">("recent");
 
   useEffect(() => {
     if (!user) return;
@@ -111,6 +112,12 @@ const MySetlists = () => {
     return null;
   }
 
+  const sortedSetlists = [...setlists].sort((a, b) => {
+    if (sortBy === "most_played") return (b.play_count || 0) - (a.play_count || 0);
+    if (sortBy === "name") return a.title.localeCompare(b.title);
+    return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
+  });
+
   const hasSetlists = !loading && setlists.length > 0;
 
   return (
@@ -177,9 +184,30 @@ const MySetlists = () => {
         <div className="flex items-center justify-between mb-4">
           <h2 className="font-display text-lg text-foreground">My Setlists</h2>
           {hasSetlists && (
-            <span className="text-xs text-muted-foreground font-body">
-              {setlists.length} setlist{setlists.length !== 1 ? "s" : ""}
-            </span>
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 bg-muted/50 rounded-lg p-0.5">
+                {([
+                  { value: "recent" as const, label: "Recent" },
+                  { value: "most_played" as const, label: "Most Played" },
+                  { value: "name" as const, label: "A–Z" },
+                ] as const).map((opt) => (
+                  <button
+                    key={opt.value}
+                    onClick={() => setSortBy(opt.value)}
+                    className={`font-body text-xs px-2.5 py-1 rounded-md transition-colors ${
+                      sortBy === opt.value
+                        ? "bg-background text-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+              <span className="text-xs text-muted-foreground font-body">
+                {setlists.length} setlist{setlists.length !== 1 ? "s" : ""}
+              </span>
+            </div>
           )}
         </div>
 
@@ -220,7 +248,7 @@ const MySetlists = () => {
               background: "radial-gradient(ellipse at center, transparent 50%, rgba(15,8,2,0.5) 100%)",
             }} />
             
-            {setlists.map((s, i) => {
+            {sortedSetlists.map((s, i) => {
               // Real cassette spine colors — faded pastels, some bright, some aged
               const tapeStyles = [
                 { bg: "linear-gradient(90deg, #8a7d6e 0%, #d4c8b8 4%, #d4c8b8 96%, #8a7d6e 100%)", labelBg: "#e8a0b0", labelBorder: "#c07888", text: "#2a1510", sub: "#5a4030" },
