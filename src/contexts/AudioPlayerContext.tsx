@@ -9,7 +9,7 @@ type Song = Database["public"]["Tables"]["songs"]["Row"];
 export interface PlayableSlot {
   id: string;
   song: Pick<Song, "id" | "title">;
-  version: NotableVersion | null;
+  version?: NotableVersion | null;
   setNumber: number;
   position: number;
   segueToNext: boolean;
