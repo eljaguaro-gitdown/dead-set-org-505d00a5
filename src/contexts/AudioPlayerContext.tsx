@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, type ReactNode } from "react";
+import { createContext, useContext, useState, useCallback, useRef, useEffect, type ReactNode } from "react";
 import { findArchiveRecording } from "@/lib/archiveOrg";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
@@ -44,6 +44,10 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     playlistIndex: 0,
     playlistSlots: [],
   });
+
+  // Use ref to avoid stale closures in async callbacks
+  const stateRef = useRef(state);
+  useEffect(() => { stateRef.current = state; }, [state]);
 
   const stopPlayback = useCallback(() => {
     setState({ playingSlot: null, playlistMode: false, playlistIndex: 0, playlistSlots: [] });
@@ -102,14 +106,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const advancePlaylist = useCallback(async (dir: number) => {
-    setState((prev) => {
-      // We need to do async work, so we'll handle it outside
-      return prev;
-    });
-
-    // Use a ref-like approach via setState callback
-    const currentState = state;
-    const { playlistIndex, playlistSlots } = currentState;
+    const { playlistIndex, playlistSlots } = stateRef.current;
 
     for (let i = playlistIndex + dir; i >= 0 && i < playlistSlots.length; i += dir) {
       let nextSlot = playlistSlots[i];
@@ -138,7 +135,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
 
     stopPlayback();
     toast.info("End of setlist");
-  }, [state, stopPlayback]);
+  }, [stopPlayback]);
 
   return (
     <AudioPlayerContext.Provider value={{ ...state, playSingle, playSetlist, stopPlayback, advancePlaylist }}>
