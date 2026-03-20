@@ -13,6 +13,8 @@ export interface PlayableSlot {
   setNumber: number;
   position: number;
   segueToNext: boolean;
+  /** Direct track URL resolved from Archive.org for this specific song */
+  directTrackUrl?: string | null;
 }
 
 interface AudioPlayerState {
@@ -45,7 +47,6 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     playlistSlots: [],
   });
 
-  // Use ref to avoid stale closures in async callbacks
   const stateRef = useRef(state);
   useEffect(() => { stateRef.current = state; }, [state]);
 
@@ -57,6 +58,33 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     setState({ playingSlot: slot, playlistMode: false, playlistIndex: 0, playlistSlots: [] });
   }, []);
 
+  /** Resolve a slot: ensure it has an archive URL and directTrackUrl */
+  const resolveSlot = async (slot: PlayableSlot): Promise<PlayableSlot | null> => {
+    if (slot.version?.archive_org_url && slot.directTrackUrl) return slot;
+    if (slot.version?.archive_org_url && !slot.directTrackUrl) {
+      // Has show URL but no direct track — try to find direct track
+      const result = await findArchiveRecording(slot.song.title);
+      if (result?.directTrackUrl) {
+        return { ...slot, directTrackUrl: result.directTrackUrl };
+      }
+      return slot; // Still usable, just less precise
+    }
+    // No archive URL at all — search
+    const result = await findArchiveRecording(slot.song.title);
+    if (result) {
+      return {
+        ...slot,
+        version: {
+          id: "", song_id: slot.song.id, show_date: result.date || "",
+          archive_org_url: result.url, venue: result.venue,
+          city: null, era_id: null, rating: null, description: null,
+        },
+        directTrackUrl: result.directTrackUrl || null,
+      };
+    }
+    return null;
+  };
+
   const playSetlist = useCallback(async (slots: PlayableSlot[], setlistId?: string) => {
     if (slots.length === 0) return;
     const sorted = [...slots].sort((a, b) => a.setNumber - b.setNumber || a.position - b.position);
@@ -65,23 +93,11 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     let startSlot: PlayableSlot | null = null;
 
     for (let i = 0; i < sorted.length; i++) {
-      const slot = sorted[i];
-      if (slot.version?.archive_org_url) {
+      const resolved = await resolveSlot(sorted[i]);
+      if (resolved?.version?.archive_org_url) {
         startIndex = i;
-        startSlot = slot;
-        break;
-      }
-      const result = await findArchiveRecording(slot.song.title);
-      if (result) {
-        startIndex = i;
-        startSlot = {
-          ...slot,
-          version: {
-            id: "", song_id: slot.song.id, show_date: result.date || "",
-            archive_org_url: result.url, venue: result.venue,
-            city: null, era_id: null, rating: null, description: null,
-          },
-        };
+        startSlot = resolved;
+        sorted[i] = resolved; // Update in place for playlist
         break;
       }
     }
@@ -91,7 +107,6 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
 
-    // Increment play count
     if (setlistId) {
       const { supabase } = await import("@/integrations/supabase/client");
       supabase.rpc("increment_play_count", { _setlist_id: setlistId });
@@ -109,28 +124,15 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     const { playlistIndex, playlistSlots } = stateRef.current;
 
     for (let i = playlistIndex + dir; i >= 0 && i < playlistSlots.length; i += dir) {
-      let nextSlot = playlistSlots[i];
-      if (!nextSlot.version?.archive_org_url) {
-        const result = await findArchiveRecording(nextSlot.song.title);
-        if (result) {
-          nextSlot = {
-            ...nextSlot,
-            version: {
-              id: "", song_id: nextSlot.song.id, show_date: result.date || "",
-              archive_org_url: result.url, venue: result.venue,
-              city: null, era_id: null, rating: null, description: null,
-            },
-          };
-        } else {
-          continue;
-        }
+      const resolved = await resolveSlot(playlistSlots[i]);
+      if (resolved?.version?.archive_org_url) {
+        setState((prev) => ({
+          ...prev,
+          playlistIndex: i,
+          playingSlot: resolved,
+        }));
+        return;
       }
-      setState((prev) => ({
-        ...prev,
-        playlistIndex: i,
-        playingSlot: nextSlot,
-      }));
-      return;
     }
 
     stopPlayback();
