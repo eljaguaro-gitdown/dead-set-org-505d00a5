@@ -111,6 +111,7 @@ const SiteHeader = ({ children, large = false }: SiteHeaderProps) => {
               <SheetContent side="right" className="w-[260px] bg-background border-border p-0">
                 <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
                 <div className="flex flex-col gap-1 p-4 pt-12">
+                  {nowPlaying}
                   {adminLink}
                   {children}
                 </div>
