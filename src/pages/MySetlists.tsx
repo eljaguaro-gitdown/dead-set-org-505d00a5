@@ -248,7 +248,7 @@ const MySetlists = () => {
               background: "radial-gradient(ellipse at center, transparent 50%, rgba(15,8,2,0.5) 100%)",
             }} />
             
-            {setlists.map((s, i) => {
+            {sortedSetlists.map((s, i) => {
               // Real cassette spine colors — faded pastels, some bright, some aged
               const tapeStyles = [
                 { bg: "linear-gradient(90deg, #8a7d6e 0%, #d4c8b8 4%, #d4c8b8 96%, #8a7d6e 100%)", labelBg: "#e8a0b0", labelBorder: "#c07888", text: "#2a1510", sub: "#5a4030" },
