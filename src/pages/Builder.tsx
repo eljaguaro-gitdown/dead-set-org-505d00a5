@@ -466,46 +466,11 @@ const Builder = () => {
             onUpdateNotes={handleUpdateNotes}
             onReorder={handleReorder}
             onPlayVersion={(slot) => {
-              setPlaylistMode(false);
-              setPlayingSlot(slot);
+              playSingle(slot);
             }}
             onPlaySetlist={async () => {
               if (slots.length === 0) return;
-              const sorted = [...slots].sort((a, b) => a.setNumber - b.setNumber || a.position - b.position);
-              let startIndex = -1;
-              let startSlot: SetlistSlotData | null = null;
-              for (let i = 0; i < sorted.length; i++) {
-                const slot = sorted[i];
-                if (slot.version?.archive_org_url) {
-                  startIndex = i;
-                  startSlot = slot;
-                  break;
-                }
-                const result = await findArchiveRecording(slot.song.title);
-                if (result) {
-                  startIndex = i;
-                  startSlot = {
-                    ...slot,
-                    version: {
-                      id: "", song_id: slot.song.id, show_date: result.date || "",
-                      archive_org_url: result.url, venue: result.venue,
-                      city: null, era_id: null, rating: null, description: null,
-                    },
-                  };
-                  break;
-                }
-              }
-              if (!startSlot || startIndex < 0) {
-                toast.error("Couldn't find audio for any songs in the setlist");
-                return;
-              }
-              // Increment play count via RPC (uses SECURITY DEFINER, bypasses RLS)
-              if (setlist?.id) {
-                supabase.rpc("increment_play_count", { _setlist_id: setlist.id });
-              }
-              setPlaylistMode(true);
-              setPlaylistIndex(startIndex);
-              setPlayingSlot(startSlot);
+              await globalPlaySetlist(slots, setlist?.id);
             }}
           />
         </div>
