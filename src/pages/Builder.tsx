@@ -480,6 +480,7 @@ const Builder = () => {
         user={user}
         isOpen={chatOpen}
         onClose={() => setChatOpen(false)}
+        onUnreadChange={setChatUnread}
       />
 
       {/* Share Dialog */}
