@@ -67,11 +67,16 @@ const AIDeadHeadDialog = ({
           eraId,
           currentSlots: mode === "improve" ? currentSlots : undefined,
           preferences: preferences.trim() || undefined,
+          recentSongs: recentSongsRef.current.length > 0 ? recentSongsRef.current : undefined,
         },
       });
 
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
+
+      // Track songs from this generation to avoid repetition on regenerate
+      const generatedSongs = (data.sets || []).flatMap((s: any) => s.songs.map((song: any) => song.title));
+      recentSongsRef.current = [...new Set([...recentSongsRef.current, ...generatedSongs])].slice(-30);
 
       setSuggestion(data);
     } catch (e: any) {
