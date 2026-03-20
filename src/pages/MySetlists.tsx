@@ -184,9 +184,30 @@ const MySetlists = () => {
         <div className="flex items-center justify-between mb-4">
           <h2 className="font-display text-lg text-foreground">My Setlists</h2>
           {hasSetlists && (
-            <span className="text-xs text-muted-foreground font-body">
-              {setlists.length} setlist{setlists.length !== 1 ? "s" : ""}
-            </span>
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 bg-muted/50 rounded-lg p-0.5">
+                {([
+                  { value: "recent" as const, label: "Recent" },
+                  { value: "most_played" as const, label: "Most Played" },
+                  { value: "name" as const, label: "A–Z" },
+                ] as const).map((opt) => (
+                  <button
+                    key={opt.value}
+                    onClick={() => setSortBy(opt.value)}
+                    className={`font-body text-xs px-2.5 py-1 rounded-md transition-colors ${
+                      sortBy === opt.value
+                        ? "bg-background text-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+              <span className="text-xs text-muted-foreground font-body">
+                {setlists.length} setlist{setlists.length !== 1 ? "s" : ""}
+              </span>
+            </div>
           )}
         </div>
 
