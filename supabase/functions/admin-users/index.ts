@@ -91,19 +91,20 @@ Deno.serve(async (req) => {
           const setlistIds = (ownedSetlists || []).map((s: any) => s.id);
 
           if (setlistIds.length > 0) {
-            // Delete slots, messages, collaborators for owned setlists
+            // Delete all child records for owned setlists
             await adminClient.from("setlist_slots").delete().in("setlist_id", setlistIds);
             await adminClient.from("chat_messages").delete().in("setlist_id", setlistIds);
             await adminClient.from("collaborators").delete().in("setlist_id", setlistIds);
-            // Delete the setlists themselves
-            await adminClient.from("setlists").delete().eq("creator_id", uid);
+            await adminClient.from("setlists").delete().in("id", setlistIds);
           }
 
-          // Remove user as collaborator on other setlists
+          // Clean up user references in other setlists
+          await adminClient.from("chat_messages").delete().eq("user_id", uid);
           await adminClient.from("collaborators").delete().eq("user_id", uid);
-          // Delete profile
+          // Nullify added_by_user_id references in slots
+          await adminClient.from("setlist_slots").update({ added_by_user_id: null }).eq("added_by_user_id", uid);
+          // Delete profile and roles
           await adminClient.from("profiles").delete().eq("user_id", uid);
-          // Delete any roles
           await adminClient.from("user_roles").delete().eq("user_id", uid);
           // Delete auth user
           const { error } = await adminClient.auth.admin.deleteUser(uid);
