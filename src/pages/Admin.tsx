@@ -301,6 +301,44 @@ const Admin = () => {
                         {u.setlistCount} sets
                       </span>
                     </div>
+
+                    {/* Delete button */}
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <button
+                          className="p-1.5 text-muted-foreground hover:text-destructive transition-colors shrink-0"
+                          title="Delete user"
+                          disabled={deleting === u.id || u.id === user?.id}
+                        >
+                          {deleting === u.id ? (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          ) : (
+                            <Trash2 className="w-3.5 h-3.5" />
+                          )}
+                        </button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent className="bg-card border-border">
+                        <AlertDialogHeader>
+                          <AlertDialogTitle className="font-display text-foreground">
+                            Delete {u.displayName || u.email}?
+                          </AlertDialogTitle>
+                          <AlertDialogDescription className="font-body text-muted-foreground">
+                            This will permanently delete this user and all their data including{" "}
+                            {u.setlistCount > 0 ? `${u.setlistCount} setlist${u.setlistCount > 1 ? "s" : ""}, ` : ""}
+                            profile, and collaborations. This cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel className="font-body">Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => handleDeleteUser(u.id)}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90 font-body"
+                          >
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </div>
                 ))}
             </div>
