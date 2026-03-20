@@ -129,7 +129,7 @@ const Index = () => {
       </main>
 
       {/* Footer */}
-      <footer className="py-4 sm:py-6 text-center border-t border-border/50">
+      <footer className="py-4 sm:py-6 text-center border-t border-border/50 space-y-2">
         <div className="flex items-center justify-center gap-2 text-muted-foreground text-xs sm:text-sm font-body">
           <span>Built by Deadheads, for Deadheads</span>
           <span className="mx-1">·</span>
@@ -137,6 +137,18 @@ const Index = () => {
           <DancingBear color="gold" />
           <DancingBear color="blue" />
         </div>
+        <p className="font-hand text-xs text-muted-foreground/70 max-w-md mx-auto px-4">
+          🎵 Powered by live recordings from the{" "}
+          <a
+            href="https://archive.org"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline underline-offset-2 text-primary/70 hover:text-primary transition-colors"
+          >
+            Internet Archive
+          </a>
+          {" "}— preserving our musical heritage for all. Deeply grateful for their mission.
+        </p>
       </footer>
     </PageLayout>
   );
