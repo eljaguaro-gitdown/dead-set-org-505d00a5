@@ -12,6 +12,10 @@ Deno.serve(async (req) => {
   }
 
   try {
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
     // Verify caller is admin
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
@@ -21,46 +25,71 @@ Deno.serve(async (req) => {
       });
     }
 
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
-    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    // Allow service role key as bearer token (for internal calls)
+    const token = authHeader.replace("Bearer ", "");
+    const isServiceRole = token === serviceRoleKey;
 
-    // Create client with user's token to check role
-    const userClient = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: authHeader } },
-    });
-
-    const {
-      data: { user },
-      error: userError,
-    } = await userClient.auth.getUser();
-    if (userError || !user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+    if (!isServiceRole) {
+      // Create client with user's token to check role
+      const userClient = createClient(supabaseUrl, supabaseAnonKey, {
+        global: { headers: { Authorization: authHeader } },
       });
+
+      const {
+        data: { user },
+        error: userError,
+      } = await userClient.auth.getUser();
+      if (userError || !user) {
+        return new Response(JSON.stringify({ error: "Unauthorized" }), {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Check admin role
+      const { data: roleData } = await userClient
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id)
+        .eq("role", "admin")
+        .maybeSingle();
+
+      if (!roleData) {
+        return new Response(JSON.stringify({ error: "Forbidden: admin only" }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
     }
 
-    // Check admin role
-    const { data: roleData } = await userClient
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", user.id)
-      .eq("role", "admin")
-      .maybeSingle();
-
-    if (!roleData) {
-      return new Response(JSON.stringify({ error: "Forbidden: admin only" }), {
-        status: 403,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    // Use service role to list auth users
+    // Use service role to manage auth users
     const adminClient = createClient(supabaseUrl, serviceRoleKey, {
       auth: { autoRefreshToken: false, persistSession: false },
     });
 
+    const url = new URL(req.url);
+    const action = url.searchParams.get("action");
+
+    // Delete users
+    if (action === "delete") {
+      const { userIds } = await req.json();
+      if (!Array.isArray(userIds)) {
+        return new Response(JSON.stringify({ error: "userIds must be an array" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const results = [];
+      for (const uid of userIds) {
+        const { error } = await adminClient.auth.admin.deleteUser(uid);
+        results.push({ id: uid, error: error?.message || null });
+      }
+      return new Response(JSON.stringify({ results }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Default: list users
     const {
       data: { users },
       error: listError,
@@ -68,7 +97,6 @@ Deno.serve(async (req) => {
 
     if (listError) throw listError;
 
-    // Get profiles for display names
     const { data: profiles } = await adminClient
       .from("profiles")
       .select("user_id, display_name, avatar_url");
@@ -77,7 +105,6 @@ Deno.serve(async (req) => {
       (profiles || []).map((p: any) => [p.user_id, p])
     );
 
-    // Get setlist counts per user
     const { data: setlistCounts } = await adminClient
       .from("setlists")
       .select("creator_id");
