@@ -149,6 +149,12 @@ const Index = () => {
           </a>
           {" "}— preserving our musical heritage for all. Deeply grateful for their mission.
         </p>
+        <button
+          onClick={() => navigate("/privacy")}
+          className="font-hand text-xs text-muted-foreground/50 hover:text-muted-foreground transition-colors underline underline-offset-2"
+        >
+          Privacy Policy
+        </button>
       </footer>
     </PageLayout>
   );
