@@ -49,6 +49,8 @@ const AIDeadHeadDialog = ({
   const [namingNew, setNamingNew] = useState(false);
   const [newSetlistName, setNewSetlistName] = useState("");
   const nameInputRef = useRef<HTMLInputElement>(null);
+  // Track recently generated song titles to avoid repetition across regenerations
+  const recentSongsRef = useRef<string[]>([]);
 
   useEffect(() => {
     if (namingNew) nameInputRef.current?.focus();
