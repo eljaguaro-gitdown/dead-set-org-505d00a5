@@ -14,10 +14,26 @@ interface ChatSidebarProps {
   onUnreadChange?: (hasUnread: boolean) => void;
 }
 
-const ChatSidebar = ({ setlistId, user, isOpen, onClose }: ChatSidebarProps) => {
+const ChatSidebar = ({ setlistId, user, isOpen, onClose, onUnreadChange }: ChatSidebarProps) => {
   const { messages, sendMessage } = useChat(setlistId, user);
   const [input, setInput] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const prevMessageCount = useRef(0);
+
+  // Track unread messages when sidebar is closed
+  useEffect(() => {
+    if (messages.length > prevMessageCount.current && !isOpen) {
+      onUnreadChange?.(true);
+    }
+    prevMessageCount.current = messages.length;
+  }, [messages.length, isOpen, onUnreadChange]);
+
+  // Clear unread when opened
+  useEffect(() => {
+    if (isOpen) {
+      onUnreadChange?.(false);
+    }
+  }, [isOpen, onUnreadChange]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
