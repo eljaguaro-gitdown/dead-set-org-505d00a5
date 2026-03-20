@@ -32,6 +32,7 @@ const Builder = () => {
   const [selectedEra, setSelectedEra] = useState<string | null>(null);
   const [activeSet, setActiveSet] = useState(1);
   const [chatOpen, setChatOpen] = useState(false);
+  const [chatUnread, setChatUnread] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [aiOpen, setAiOpen] = useState(false);
   const [initialized, setInitialized] = useState(false);
