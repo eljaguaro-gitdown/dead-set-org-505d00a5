@@ -497,21 +497,9 @@ const Builder = () => {
                 toast.error("Couldn't find audio for any songs in the setlist");
                 return;
               }
-              // Increment play count
+              // Increment play count via RPC (uses SECURITY DEFINER, bypasses RLS)
               if (setlist?.id) {
-                supabase
-                  .from("setlists")
-                  .select("play_count")
-                  .eq("id", setlist.id)
-                  .single()
-                  .then(({ data }) => {
-                    const current = (data as any)?.play_count || 0;
-                    supabase
-                      .from("setlists")
-                      .update({ play_count: current + 1 } as any)
-                      .eq("id", setlist.id)
-                      .then(() => {});
-                  });
+                supabase.rpc("increment_play_count", { _setlist_id: setlist.id });
               }
               setPlaylistMode(true);
               setPlaylistIndex(startIndex);
