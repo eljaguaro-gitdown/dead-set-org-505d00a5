@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Menu, Shield } from "lucide-react";
+import { Menu, Shield, Music, Pause } from "lucide-react";
+import { motion } from "framer-motion";
 import StealYourFace from "@/components/StealYourFace";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/hooks/useAuth";
+import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Sheet,
