@@ -92,7 +92,7 @@ const SiteHeader = ({ children, large = false }: SiteHeaderProps) => {
           Dead Set
         </span>
       </button>
-      {(children || adminLink) && (
+      {(children || adminLink || nowPlaying) && (
         <>
           {/* Desktop nav */}
           <div className="hidden sm:flex items-center gap-3 sm:gap-5">
