@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import stealYourFace from "@/assets/steal-your-face.jpeg";
+import stealYourFace from "@/assets/steal-your-face.png";
 
 const StealYourFace = ({ size = 120 }: { size?: number }) => {
   return (
