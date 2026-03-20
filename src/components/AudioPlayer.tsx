@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Play, Pause, Volume2, VolumeX, X, Loader2 } from "lucide-react";
-import { Slider } from "@/components/ui/slider";
+import { matchScore } from "@/lib/archiveOrg";
 
 interface Track {
   title: string;
@@ -15,6 +15,7 @@ interface AudioPlayerProps {
   venue?: string | null;
   autoPlay?: boolean;
   singleTrackMode?: boolean;
+  directTrackUrl?: string | null;
   onClose: () => void;
   onEnded?: () => void;
   playlistInfo?: { current: number; total: number } | null;
@@ -22,7 +23,7 @@ interface AudioPlayerProps {
   onPrev?: () => void;
 }
 
-const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false, singleTrackMode = false, onClose, onEnded, playlistInfo, onNext, onPrev }: AudioPlayerProps) => {
+const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false, singleTrackMode = false, directTrackUrl, onClose, onEnded, playlistInfo, onNext, onPrev }: AudioPlayerProps) => {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [tracks, setTracks] = useState<Track[]>([]);
   const [currentTrack, setCurrentTrack] = useState(0);
@@ -33,7 +34,6 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Extract identifier from archive.org URL
   const getIdentifier = useCallback((url: string) => {
     const match = url.match(/archive\.org\/details\/([^/?#]+)/);
     return match?.[1] || null;
@@ -43,6 +43,15 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
     const fetchTracks = async () => {
       setLoading(true);
       setError(null);
+
+      // If we have a direct track URL, just use it
+      if (directTrackUrl) {
+        setTracks([{ title: songTitle, src: directTrackUrl }]);
+        setCurrentTrack(0);
+        setLoading(false);
+        return;
+      }
+
       const identifier = getIdentifier(archiveUrl);
       if (!identifier) {
         setError("Invalid archive.org URL");
@@ -70,11 +79,17 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
           setError("No audio files found");
         } else {
           setTracks(audioFiles);
-          // Try to find a track matching the song title
-          const matchIdx = audioFiles.findIndex((t: Track) =>
-            t.title.toLowerCase().includes(songTitle.toLowerCase())
-          );
-          setCurrentTrack(matchIdx >= 0 ? matchIdx : 0);
+          // Use fuzzy matching to find the right track
+          let bestIdx = 0;
+          let bestScore = 0;
+          audioFiles.forEach((t: Track, i: number) => {
+            const score = matchScore(t.title, songTitle);
+            if (score > bestScore) {
+              bestScore = score;
+              bestIdx = i;
+            }
+          });
+          setCurrentTrack(bestIdx);
         }
       } catch {
         setError("Couldn't load audio from archive.org");
@@ -83,7 +98,7 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
     };
 
     fetchTracks();
-  }, [archiveUrl, songTitle, getIdentifier]);
+  }, [archiveUrl, songTitle, getIdentifier, directTrackUrl]);
 
   useEffect(() => {
     if (tracks.length > 0 && audioRef.current) {
@@ -119,7 +134,6 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
 
   const handleEnded = () => {
     if (singleTrackMode) {
-      // In single track mode (playlist), signal parent to advance
       setPlaying(false);
       onEnded?.();
       return;
@@ -158,7 +172,7 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
           muted={muted}
         />
 
-        {/* Progress bar (thin, at top of player) */}
+        {/* Progress bar */}
         <div className="w-full h-1 bg-muted cursor-pointer" onClick={(e) => {
           if (!duration) return;
           const rect = e.currentTarget.getBoundingClientRect();
@@ -172,7 +186,6 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
         </div>
 
         <div className="px-4 py-2.5 flex items-center gap-3">
-          {/* Play/Pause */}
           <button
             onClick={togglePlay}
             disabled={loading || !!error}
@@ -187,14 +200,13 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
             )}
           </button>
 
-          {/* Track info */}
           <div className="flex-1 min-w-0">
             {error ? (
               <p className="text-xs text-destructive font-body truncate">{error}</p>
             ) : (
               <>
                 <p className="text-xs text-foreground font-body truncate font-medium">
-                  {track?.title || songTitle}
+                  {songTitle}
                 </p>
                 <p className="text-[10px] text-muted-foreground font-body truncate">
                   {showDate} {venue ? `— ${venue}` : ""}
@@ -203,18 +215,16 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
             )}
           </div>
 
-          {/* Time */}
           <span className="text-[10px] text-muted-foreground font-body tabular-nums shrink-0">
             {formatTime(progress)} / {formatTime(duration)}
           </span>
 
-          {/* Volume */}
           <button onClick={() => setMuted(!muted)} className="text-muted-foreground hover:text-foreground shrink-0">
             {muted ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
           </button>
 
-          {/* Track selector (compact) */}
-          {tracks.length > 1 && (
+          {/* Only show track selector when NOT in single-track/direct mode */}
+          {tracks.length > 1 && !singleTrackMode && !directTrackUrl && (
             <select
               value={currentTrack}
               onChange={(e) => {
@@ -231,7 +241,6 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
             </select>
           )}
 
-          {/* Playlist nav */}
           {playlistInfo && (
             <div className="flex items-center gap-1 shrink-0">
               <button
@@ -256,7 +265,6 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
             </div>
           )}
 
-          {/* Close */}
           <button onClick={onClose} className="text-muted-foreground hover:text-foreground shrink-0">
             <X className="w-4 h-4" />
           </button>
