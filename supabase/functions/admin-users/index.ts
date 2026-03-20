@@ -28,6 +28,7 @@ Deno.serve(async (req) => {
     // Allow service role key as bearer token (for internal calls)
     const token = authHeader.replace("Bearer ", "");
     const isServiceRole = token === serviceRoleKey;
+    console.log("isServiceRole:", isServiceRole, "token length:", token.length, "key length:", serviceRoleKey?.length);
 
     if (!isServiceRole) {
       // Create client with user's token to check role
