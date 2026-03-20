@@ -96,6 +96,7 @@ const SiteHeader = ({ children, large = false }: SiteHeaderProps) => {
         <>
           {/* Desktop nav */}
           <div className="hidden sm:flex items-center gap-3 sm:gap-5">
+            {nowPlaying}
             {adminLink}
             {children}
           </div>
