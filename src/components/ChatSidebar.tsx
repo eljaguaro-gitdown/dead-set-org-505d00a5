@@ -11,6 +11,7 @@ interface ChatSidebarProps {
   user: User | null;
   isOpen: boolean;
   onClose: () => void;
+  onUnreadChange?: (hasUnread: boolean) => void;
 }
 
 const ChatSidebar = ({ setlistId, user, isOpen, onClose }: ChatSidebarProps) => {
