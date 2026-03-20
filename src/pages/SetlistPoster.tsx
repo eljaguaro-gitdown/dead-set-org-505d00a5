@@ -124,7 +124,7 @@ const SetlistPoster = () => {
       setHasUpvoted(true);
       setUpvoteCount((c) => c + 1);
       // Update the denormalized count
-      supabase.rpc("increment_upvote_count", { _setlist_id: id });
+      await supabase.rpc("increment_upvote_count", { _setlist_id: id });
     }
     setUpvoting(false);
   };
