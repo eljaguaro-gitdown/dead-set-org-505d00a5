@@ -47,7 +47,7 @@ const MySetlists = () => {
           data.map((s, i) => ({
             ...s,
             slot_count: counts[i].count || 0,
-            era: (s as any).eras || null,
+            eraData: (s as any).eras || null,
           }))
         );
       } else {
