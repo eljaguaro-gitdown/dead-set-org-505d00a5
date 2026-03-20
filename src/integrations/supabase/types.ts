@@ -235,6 +235,35 @@ export type Database = {
           },
         ]
       }
+      setlist_upvotes: {
+        Row: {
+          created_at: string
+          id: string
+          setlist_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          setlist_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          setlist_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "setlist_upvotes_setlist_id_fkey"
+            columns: ["setlist_id"]
+            isOneToOne: false
+            referencedRelation: "setlists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       setlists: {
         Row: {
           created_at: string
@@ -248,6 +277,7 @@ export type Database = {
           share_token: string | null
           title: string
           updated_at: string
+          upvote_count: number
         }
         Insert: {
           created_at?: string
@@ -261,6 +291,7 @@ export type Database = {
           share_token?: string | null
           title?: string
           updated_at?: string
+          upvote_count?: number
         }
         Update: {
           created_at?: string
@@ -274,6 +305,7 @@ export type Database = {
           share_token?: string | null
           title?: string
           updated_at?: string
+          upvote_count?: number
         }
         Relationships: [
           {
@@ -355,6 +387,10 @@ export type Database = {
         Returns: boolean
       }
       increment_play_count: {
+        Args: { _setlist_id: string }
+        Returns: undefined
+      }
+      increment_upvote_count: {
         Args: { _setlist_id: string }
         Returns: undefined
       }

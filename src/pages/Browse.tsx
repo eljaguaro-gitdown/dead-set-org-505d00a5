@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Clock, Filter, SortAsc, Search } from "lucide-react";
+import { Clock, Filter, SortAsc, Search, ThumbsUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -26,7 +26,7 @@ const Browse = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [eraFilter, setEraFilter] = useState<string>("all");
-  const [sortBy, setSortBy] = useState<"newest" | "oldest" | "title">("newest");
+  const [sortBy, setSortBy] = useState<"newest" | "oldest" | "title" | "most_upvoted">("newest");
 
   useEffect(() => {
     const fetchEras = async () => {
@@ -71,6 +71,7 @@ const Browse = () => {
       s.creator_name.toLowerCase().includes(search.toLowerCase())
     );
     result.sort((a, b) => {
+      if (sortBy === "most_upvoted") return ((b as any).upvote_count || 0) - ((a as any).upvote_count || 0);
       if (sortBy === "newest") return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
       if (sortBy === "oldest") return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
       return a.title.localeCompare(b.title);
@@ -118,12 +119,13 @@ const Browse = () => {
               </SelectContent>
             </Select>
             <Select value={sortBy} onValueChange={(v) => setSortBy(v as any)}>
-              <SelectTrigger className="flex-1 sm:w-[140px] bg-card/80 backdrop-blur-sm border-border text-foreground font-body text-xs h-9">
+              <SelectTrigger className="flex-1 sm:w-[160px] bg-card/80 backdrop-blur-sm border-border text-foreground font-body text-xs h-9">
                 <SortAsc className="w-3 h-3 mr-1.5 text-muted-foreground" />
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="bg-card border-border">
                 <SelectItem value="newest" className="font-body text-xs">Newest</SelectItem>
+                <SelectItem value="most_upvoted" className="font-body text-xs">Most Upvoted</SelectItem>
                 <SelectItem value="oldest" className="font-body text-xs">Oldest</SelectItem>
                 <SelectItem value="title" className="font-body text-xs">A–Z</SelectItem>
               </SelectContent>
@@ -169,13 +171,19 @@ const Browse = () => {
                       {setlist.title}
                     </h3>
                     <p className="font-body text-xs text-muted-foreground mt-1">by {setlist.creator_name}</p>
-                    <div className="flex items-center gap-3 mt-3">
+                    <div className="flex items-center gap-3 mt-3 flex-wrap">
                       {setlist.era_name && (
                         <span className="px-2 py-0.5 text-[10px] font-body text-accent border border-accent/30 rounded-full">
                           {setlist.era_name}
                         </span>
                       )}
                       <span className="text-[10px] font-body text-muted-foreground">{setlist.slot_count} songs</span>
+                      {((setlist as any).upvote_count || 0) > 0 && (
+                        <span className="text-[10px] font-body text-primary flex items-center gap-0.5">
+                          <ThumbsUp className="w-2.5 h-2.5" />
+                          {(setlist as any).upvote_count}
+                        </span>
+                      )}
                       <span className="text-[10px] font-body text-muted-foreground flex items-center gap-1">
                         <Clock className="w-2.5 h-2.5" />
                         {new Date(setlist.created_at).toLocaleDateString()}
