@@ -296,9 +296,9 @@ const MySetlists = () => {
                             {s.slot_count} songs
                           </span>
                         )}
-                        {(s as any).play_count > 0 && (
+                        {s.play_count > 0 && (
                           <span className="font-body text-xs sm:text-sm shrink-0" style={{ color: tape.sub }}>
-                            ▶ {(s as any).play_count}×
+                            ▶ {s.play_count}×
                           </span>
                         )}
                         {(() => {
