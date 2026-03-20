@@ -112,6 +112,12 @@ const MySetlists = () => {
     return null;
   }
 
+  const sortedSetlists = [...setlists].sort((a, b) => {
+    if (sortBy === "most_played") return (b.play_count || 0) - (a.play_count || 0);
+    if (sortBy === "name") return a.title.localeCompare(b.title);
+    return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
+  });
+
   const hasSetlists = !loading && setlists.length > 0;
 
   return (
