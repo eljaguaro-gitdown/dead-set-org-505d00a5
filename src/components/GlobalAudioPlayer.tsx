@@ -14,6 +14,7 @@ const GlobalAudioPlayer = () => {
       venue={playingSlot.version.venue}
       autoPlay={true}
       singleTrackMode={playlistMode}
+      directTrackUrl={playingSlot.directTrackUrl}
       onClose={stopPlayback}
       onEnded={playlistMode ? () => advancePlaylist(1) : undefined}
       playlistInfo={playlistMode ? { current: playlistIndex + 1, total: playlistSlots.length } : null}
