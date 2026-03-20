@@ -244,6 +244,7 @@ export type Database = {
           id: string
           is_collaborative: boolean | null
           is_public: boolean | null
+          play_count: number
           share_token: string | null
           title: string
           updated_at: string
@@ -256,6 +257,7 @@ export type Database = {
           id?: string
           is_collaborative?: boolean | null
           is_public?: boolean | null
+          play_count?: number
           share_token?: string | null
           title?: string
           updated_at?: string
@@ -268,6 +270,7 @@ export type Database = {
           id?: string
           is_collaborative?: boolean | null
           is_public?: boolean | null
+          play_count?: number
           share_token?: string | null
           title?: string
           updated_at?: string
@@ -350,6 +353,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      increment_play_count: {
+        Args: { _setlist_id: string }
+        Returns: undefined
       }
       is_setlist_collaborator: {
         Args: { _setlist_id: string; _user_id: string }
