@@ -70,7 +70,44 @@ const Admin = () => {
     fetchUsers();
   }, [isAdmin]);
 
-  const formatDate = (dateStr: string | null) => {
+  const [deleting, setDeleting] = useState<string | null>(null);
+
+  const handleDeleteUser = async (userId: string) => {
+    setDeleting(userId);
+    try {
+      const { data, error } = await supabase.functions.invoke("admin-users", {
+        body: { userIds: [userId] },
+        headers: { "Content-Type": "application/json" },
+      });
+      // Pass action as query param via the URL workaround
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-users?action=delete`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          },
+          body: JSON.stringify({ userIds: [userId] }),
+        }
+      );
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Failed to delete user");
+      
+      const deleteResult = result.results?.[0];
+      if (deleteResult?.error) throw new Error(deleteResult.error);
+      
+      setUsers((prev) => prev.filter((u) => u.id !== userId));
+      toast.success("User deleted successfully");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to delete user");
+      console.error(err);
+    } finally {
+      setDeleting(null);
+    }
+  };
+
     if (!dateStr) return "Never";
     return new Date(dateStr).toLocaleDateString("en-US", {
       month: "short",
