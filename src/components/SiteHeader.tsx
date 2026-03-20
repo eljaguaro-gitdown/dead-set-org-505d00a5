@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Menu, Shield } from "lucide-react";
+import { Menu, Shield, Music, Pause } from "lucide-react";
+import { motion } from "framer-motion";
 import StealYourFace from "@/components/StealYourFace";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/hooks/useAuth";
+import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Sheet,
@@ -22,6 +24,7 @@ const SiteHeader = ({ children, large = false }: SiteHeaderProps) => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const { user } = useAuth();
+  const { playingSlot, playlistMode, playlistIndex, playlistSlots } = useAudioPlayer();
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
@@ -46,6 +49,34 @@ const SiteHeader = ({ children, large = false }: SiteHeaderProps) => {
     </button>
   ) : null;
 
+  const nowPlaying = playingSlot ? (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-primary/10 border border-primary/20 max-w-[180px] sm:max-w-[220px]"
+    >
+      {/* Animated equalizer bars */}
+      <div className="flex items-end gap-[2px] h-3 shrink-0">
+        {[0, 1, 2].map((i) => (
+          <motion.div
+            key={i}
+            className="w-[2px] bg-primary rounded-full"
+            animate={{ height: ["4px", "12px", "6px", "10px", "4px"] }}
+            transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.15, ease: "easeInOut" }}
+          />
+        ))}
+      </div>
+      <span className="text-[10px] sm:text-xs font-body text-foreground truncate">
+        {playingSlot.song.title}
+      </span>
+      {playlistMode && (
+        <span className="text-[9px] font-body text-muted-foreground tabular-nums shrink-0">
+          {playlistIndex + 1}/{playlistSlots.length}
+        </span>
+      )}
+    </motion.div>
+  ) : null;
+
   return (
     <header className="border-b border-border/50 px-4 sm:px-8 py-3 sm:py-4 flex items-center justify-between">
       <button
@@ -61,10 +92,11 @@ const SiteHeader = ({ children, large = false }: SiteHeaderProps) => {
           Dead Set
         </span>
       </button>
-      {(children || adminLink) && (
+      {(children || adminLink || nowPlaying) && (
         <>
           {/* Desktop nav */}
           <div className="hidden sm:flex items-center gap-3 sm:gap-5">
+            {nowPlaying}
             {adminLink}
             {children}
           </div>
@@ -79,6 +111,7 @@ const SiteHeader = ({ children, large = false }: SiteHeaderProps) => {
               <SheetContent side="right" className="w-[260px] bg-background border-border p-0">
                 <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
                 <div className="flex flex-col gap-1 p-4 pt-12">
+                  {nowPlaying}
                   {adminLink}
                   {children}
                 </div>
