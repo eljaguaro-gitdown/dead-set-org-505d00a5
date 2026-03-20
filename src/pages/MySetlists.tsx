@@ -24,6 +24,7 @@ const MySetlists = () => {
   const { user, loading: authLoading, signOut } = useAuth();
   const [setlists, setSetlists] = useState<SetlistWithMeta[]>([]);
   const [loading, setLoading] = useState(true);
+  const [sortBy, setSortBy] = useState<"recent" | "most_played" | "name">("recent");
 
   useEffect(() => {
     if (!user) return;
