@@ -442,13 +442,9 @@ const Builder = () => {
                   segueToNext: false,
                 });
               }}
-                  position: 0,
-                  segueToNext: false,
-                  notes: "",
-                });
-              }}
             />
           )}
+        </div>
         </div>
 
         {/* Setlist — hidden on mobile when songs tab is active */}
