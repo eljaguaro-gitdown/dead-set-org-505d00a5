@@ -265,8 +265,8 @@ const MySetlists = () => {
                           </span>
                         )}
                         {s.description && (
-                          <span className="font-body text-[10px] sm:text-xs truncate max-w-[120px] sm:max-w-[200px] italic opacity-70" style={{ color: tape.sub }}>
-                            {s.description}
+                          <span className="font-body text-[9px] sm:text-[11px] shrink-0 italic opacity-50 hidden sm:inline" style={{ color: tape.sub }}>
+                            — {s.description.split(/\s+/).slice(0, 6).join(" ")}…
                           </span>
                         )}
                         {/* Hand-drawn SVG marker doodles inline between title & date */}
