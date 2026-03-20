@@ -30,7 +30,7 @@ const MySetlists = () => {
       setLoading(true);
       const { data } = await supabase
         .from("setlists")
-        .select("*")
+        .select("*, eras(*)")
         .eq("creator_id", user.id)
         .order("updated_at", { ascending: false });
 
@@ -44,7 +44,11 @@ const MySetlists = () => {
           )
         );
         setSetlists(
-          data.map((s, i) => ({ ...s, slot_count: counts[i].count || 0 }))
+          data.map((s, i) => ({
+            ...s,
+            slot_count: counts[i].count || 0,
+            era: (s as any).eras || null,
+          }))
         );
       } else {
         setSetlists([]);
