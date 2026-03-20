@@ -369,7 +369,7 @@ const MySetlists = () => {
                           const doodles = doodleOptions[i % doodleOptions.length];
                           if (doodles.length === 0) return null;
                           return (
-                            <span className="inline-flex items-center gap-1 shrink-0 mx-1">
+                            <span className="hidden sm:inline-flex items-center gap-1 shrink-0 mx-1">
                               {doodles.map((d, di) => (
                                 <span key={di} className="inline-block pointer-events-none select-none opacity-50" style={{ width: d.w, height: d.h, transform: `rotate(${d.rot}deg)`, filter: "saturate(0.4)" }}>
                                   {d.svg}
