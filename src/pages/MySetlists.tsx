@@ -320,12 +320,12 @@ const MySetlists = () => {
                           {s.title}
                         </span>
                         {s.slot_count > 0 && (
-                          <span className="font-body text-xs sm:text-sm shrink-0" style={{ color: tape.sub }}>
+                          <span className="font-body text-xs sm:text-sm shrink-0 hidden sm:inline" style={{ color: tape.sub }}>
                             {s.slot_count} songs
                           </span>
                         )}
                         {s.play_count > 0 && (
-                          <span className="font-body text-xs sm:text-sm shrink-0" style={{ color: tape.sub }}>
+                          <span className="font-body text-xs sm:text-sm shrink-0 hidden sm:inline" style={{ color: tape.sub }}>
                             ▶ {s.play_count}×
                           </span>
                         )}
@@ -369,7 +369,7 @@ const MySetlists = () => {
                           const doodles = doodleOptions[i % doodleOptions.length];
                           if (doodles.length === 0) return null;
                           return (
-                            <span className="inline-flex items-center gap-1 shrink-0 mx-1">
+                            <span className="hidden sm:inline-flex items-center gap-1 shrink-0 mx-1">
                               {doodles.map((d, di) => (
                                 <span key={di} className="inline-block pointer-events-none select-none opacity-50" style={{ width: d.w, height: d.h, transform: `rotate(${d.rot}deg)`, filter: "saturate(0.4)" }}>
                                   {d.svg}
@@ -379,7 +379,7 @@ const MySetlists = () => {
                           );
                         })()}
                       </div>
-                      <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+                      <div className="hidden sm:flex items-center gap-2 sm:gap-3 shrink-0">
                         <span className="font-body text-[10px] sm:text-sm hidden sm:inline" style={{ color: tape.sub }}>
                           {new Date(s.updated_at).toLocaleDateString()}
                         </span>
