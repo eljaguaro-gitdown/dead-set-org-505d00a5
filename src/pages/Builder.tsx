@@ -1,7 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { findArchiveRecording } from "@/lib/archiveOrg";
 import { Sparkles, Share2, Users, LogOut, MessageCircle, Globe, CheckCircle, List, Music, LayoutList } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import PageLayout from "@/components/PageLayout";
