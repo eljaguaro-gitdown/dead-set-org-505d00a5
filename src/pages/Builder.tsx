@@ -497,6 +497,10 @@ const Builder = () => {
                 toast.error("Couldn't find audio for any songs in the setlist");
                 return;
               }
+              // Increment play count
+              if (setlist?.id) {
+                supabase.rpc("increment_play_count" as any, { _setlist_id: setlist.id });
+              }
               setPlaylistMode(true);
               setPlaylistIndex(startIndex);
               setPlayingSlot(startSlot);
