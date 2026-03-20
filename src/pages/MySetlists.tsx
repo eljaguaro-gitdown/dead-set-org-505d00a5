@@ -270,11 +270,26 @@ const MySetlists = () => {
                             {s.slot_count} songs
                           </span>
                         )}
-                        {s.description && (
-                          <span className="font-body text-xs sm:text-sm truncate max-w-[140px] sm:max-w-[260px] italic font-semibold" style={{ color: tape.text, opacity: 0.75 }}>
-                            — {s.description.length > 50 ? s.description.slice(0, 50).trim() + "…" : s.description}
-                          </span>
-                        )}
+                        {(() => {
+                          const parts: string[] = [];
+                          if (s.era) {
+                            const decade = Math.floor(s.era.year_start / 10) * 10;
+                            const decadeLabel = decade === 1960 ? "'60s" : decade === 1970 ? "'70s" : decade === 1980 ? "'80s" : decade === 1990 ? "'90s" : `${decade}s`;
+                            parts.push(decadeLabel + " era");
+                          }
+                          if (s.slot_count > 0) {
+                            const totalMin = s.slot_count * 7;
+                            const hrs = Math.floor(totalMin / 60);
+                            const mins = totalMin % 60;
+                            parts.push(hrs > 0 ? `~${hrs}h ${mins}m` : `~${mins}m`);
+                          }
+                          if (parts.length === 0) return null;
+                          return (
+                            <span className="font-body text-xs sm:text-sm italic font-semibold shrink-0" style={{ color: tape.text, opacity: 0.7 }}>
+                              — {parts.join(" · ")}
+                            </span>
+                          );
+                        })()}
                         {/* Hand-drawn SVG marker doodles inline between title & date */}
                         {(() => {
                           const ink = tape.text;
