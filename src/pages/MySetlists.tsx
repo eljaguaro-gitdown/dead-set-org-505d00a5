@@ -264,6 +264,11 @@ const MySetlists = () => {
                             {s.slot_count} songs
                           </span>
                         )}
+                        {s.description && (
+                          <span className="font-body text-[10px] sm:text-xs truncate max-w-[120px] sm:max-w-[200px] italic opacity-70" style={{ color: tape.sub }}>
+                            {s.description}
+                          </span>
+                        )}
                         {/* Hand-drawn SVG marker doodles inline between title & date */}
                         {(() => {
                           const ink = tape.text;
