@@ -75,11 +75,6 @@ const Admin = () => {
   const handleDeleteUser = async (userId: string) => {
     setDeleting(userId);
     try {
-      const { data, error } = await supabase.functions.invoke("admin-users", {
-        body: { userIds: [userId] },
-        headers: { "Content-Type": "application/json" },
-      });
-      // Pass action as query param via the URL workaround
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-users?action=delete`,
         {
@@ -108,6 +103,7 @@ const Admin = () => {
     }
   };
 
+  const formatDate = (dateStr: string | null) => {
     if (!dateStr) return "Never";
     return new Date(dateStr).toLocaleDateString("en-US", {
       month: "short",
