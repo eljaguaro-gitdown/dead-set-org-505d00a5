@@ -14,6 +14,7 @@ import JoinSetlist from "./pages/JoinSetlist";
 import Browse from "./pages/Browse";
 import SetlistPoster from "./pages/SetlistPoster";
 import Admin from "./pages/Admin";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
