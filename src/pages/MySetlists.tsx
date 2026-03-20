@@ -11,9 +11,11 @@ import DancingBear from "@/components/DancingBear";
 import type { Database } from "@/integrations/supabase/types";
 
 type SetlistRow = Database["public"]["Tables"]["setlists"]["Row"];
+type EraRow = Database["public"]["Tables"]["eras"]["Row"];
 
 interface SetlistWithMeta extends SetlistRow {
   slot_count: number;
+  era?: EraRow | null;
 }
 
 const MySetlists = () => {
