@@ -499,7 +499,19 @@ const Builder = () => {
               }
               // Increment play count
               if (setlist?.id) {
-                supabase.rpc("increment_play_count" as any, { _setlist_id: setlist.id });
+                supabase
+                  .from("setlists")
+                  .select("play_count")
+                  .eq("id", setlist.id)
+                  .single()
+                  .then(({ data }) => {
+                    const current = (data as any)?.play_count || 0;
+                    supabase
+                      .from("setlists")
+                      .update({ play_count: current + 1 } as any)
+                      .eq("id", setlist.id)
+                      .then(() => {});
+                  });
               }
               setPlaylistMode(true);
               setPlaylistIndex(startIndex);
