@@ -56,11 +56,34 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Use service role to list auth users
+    // Use service role to manage auth users
     const adminClient = createClient(supabaseUrl, serviceRoleKey, {
       auth: { autoRefreshToken: false, persistSession: false },
     });
 
+    const url = new URL(req.url);
+    const action = url.searchParams.get("action");
+
+    // Delete users
+    if (action === "delete") {
+      const { userIds } = await req.json();
+      if (!Array.isArray(userIds)) {
+        return new Response(JSON.stringify({ error: "userIds must be an array" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const results = [];
+      for (const uid of userIds) {
+        const { error } = await adminClient.auth.admin.deleteUser(uid);
+        results.push({ id: uid, error: error?.message || null });
+      }
+      return new Response(JSON.stringify({ results }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Default: list users
     const {
       data: { users },
       error: listError,
@@ -68,7 +91,6 @@ Deno.serve(async (req) => {
 
     if (listError) throw listError;
 
-    // Get profiles for display names
     const { data: profiles } = await adminClient
       .from("profiles")
       .select("user_id, display_name, avatar_url");
@@ -77,7 +99,6 @@ Deno.serve(async (req) => {
       (profiles || []).map((p: any) => [p.user_id, p])
     );
 
-    // Get setlist counts per user
     const { data: setlistCounts } = await adminClient
       .from("setlists")
       .select("creator_id");
