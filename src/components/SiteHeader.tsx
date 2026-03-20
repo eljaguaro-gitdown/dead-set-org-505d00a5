@@ -49,6 +49,34 @@ const SiteHeader = ({ children, large = false }: SiteHeaderProps) => {
     </button>
   ) : null;
 
+  const nowPlaying = playingSlot ? (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-primary/10 border border-primary/20 max-w-[180px] sm:max-w-[220px]"
+    >
+      {/* Animated equalizer bars */}
+      <div className="flex items-end gap-[2px] h-3 shrink-0">
+        {[0, 1, 2].map((i) => (
+          <motion.div
+            key={i}
+            className="w-[2px] bg-primary rounded-full"
+            animate={{ height: ["4px", "12px", "6px", "10px", "4px"] }}
+            transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.15, ease: "easeInOut" }}
+          />
+        ))}
+      </div>
+      <span className="text-[10px] sm:text-xs font-body text-foreground truncate">
+        {playingSlot.song.title}
+      </span>
+      {playlistMode && (
+        <span className="text-[9px] font-body text-muted-foreground tabular-nums shrink-0">
+          {playlistIndex + 1}/{playlistSlots.length}
+        </span>
+      )}
+    </motion.div>
+  ) : null;
+
   return (
     <header className="border-b border-border/50 px-4 sm:px-8 py-3 sm:py-4 flex items-center justify-between">
       <button
