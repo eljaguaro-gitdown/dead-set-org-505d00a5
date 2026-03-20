@@ -433,11 +433,15 @@ const Builder = () => {
               onSelectSong={handleSelectSong}
               getNotableVersions={getNotableVersions}
               onPlayArchive={(url, songTitle, showDate, venue) => {
-                setPlayingSlot({
+                playSingle({
                   id: "preview",
-                  song: { title: songTitle } as any,
+                  song: { title: songTitle, id: "" } as any,
                   version: { archive_org_url: url, show_date: showDate, venue } as any,
                   setNumber: 1,
+                  position: 0,
+                  segueToNext: false,
+                });
+              }}
                   position: 0,
                   segueToNext: false,
                   notes: "",
