@@ -505,54 +505,6 @@ const Builder = () => {
         onCreateNewSetlist={handleCreateNewFromAI}
       />
 
-      {/* Audio Player */}
-      {playingSlot?.version?.archive_org_url && (() => {
-        const sortedSlots = [...slots].sort((a, b) => a.setNumber - b.setNumber || a.position - b.position);
-        const advancePlaylist = async (dir: number) => {
-          for (let i = playlistIndex + dir; i >= 0 && i < sortedSlots.length; i += dir) {
-            let nextSlot = sortedSlots[i];
-            if (!nextSlot.version?.archive_org_url) {
-              const result = await findArchiveRecording(nextSlot.song.title);
-              if (result) {
-                nextSlot = {
-                  ...nextSlot,
-                  version: {
-                    id: "", song_id: nextSlot.song.id, show_date: result.date || "",
-                    archive_org_url: result.url, venue: result.venue,
-                    city: null, era_id: null, rating: null, description: null,
-                  },
-                };
-              } else {
-                continue;
-              }
-            }
-            setPlaylistIndex(i);
-            setPlayingSlot(nextSlot);
-            return;
-          }
-          setPlaylistMode(false);
-          setPlayingSlot(null);
-          toast.info("End of setlist");
-        };
-        return (
-          <AudioPlayer
-            archiveUrl={playingSlot.version.archive_org_url}
-            songTitle={playingSlot.song.title}
-            showDate={playingSlot.version.show_date}
-            venue={playingSlot.version.venue}
-            autoPlay={true}
-            singleTrackMode={playlistMode}
-            onClose={() => {
-              setPlayingSlot(null);
-              setPlaylistMode(false);
-            }}
-            onEnded={playlistMode ? () => advancePlaylist(1) : undefined}
-            playlistInfo={playlistMode ? { current: playlistIndex + 1, total: sortedSlots.length } : null}
-            onNext={playlistMode ? () => advancePlaylist(1) : undefined}
-            onPrev={playlistMode ? () => advancePlaylist(-1) : undefined}
-          />
-        );
-      })()}
     </PageLayout>
   );
 };
