@@ -24,6 +24,7 @@ const SiteHeader = ({ children, large = false }: SiteHeaderProps) => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const { user } = useAuth();
+  const { playingSlot, playlistMode, playlistIndex, playlistSlots } = useAudioPlayer();
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
