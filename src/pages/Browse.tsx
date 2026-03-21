@@ -137,7 +137,14 @@ const Browse = () => {
       {/* Grid */}
       <div className="flex-1 px-4 py-6">
         <div className="max-w-6xl mx-auto">
-          <h1 className="font-display text-2xl text-foreground mb-6">Browse Setlists</h1>
+          <div className="mb-8">
+            <h1 className="font-display text-2xl text-foreground mb-3">Browse Setlists</h1>
+            <p className="font-body text-sm text-muted-foreground max-w-2xl leading-relaxed">
+              Explore dream Grateful Dead setlists curated by fellow Deadheads. From the Primal Dead era through the Final Run, 
+              discover unique combinations of jams, deep cuts, and crowd favorites spanning 1965–1995. 
+              Find inspiration for your own setlist or upvote your favorites.
+            </p>
+          </div>
           {loading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {Array.from({ length: 6 }).map((_, i) => (
