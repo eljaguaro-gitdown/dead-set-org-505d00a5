@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import PageLayout from "@/components/PageLayout";
 import SiteHeader from "@/components/SiteHeader";
+import AdSenseLoader from "@/components/AdSenseLoader";
 import type { Database } from "@/integrations/supabase/types";
 
 type Setlist = Database["public"]["Tables"]["setlists"]["Row"];
