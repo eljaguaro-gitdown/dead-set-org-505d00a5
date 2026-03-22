@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useEffect } from "react";
 import PageLayout from "@/components/PageLayout";
 import SiteHeader from "@/components/SiteHeader";
+import AdSenseLoader from "@/components/AdSenseLoader";
 import { Music, Users, Zap, Archive, ListMusic, Share2 } from "lucide-react";
 
 const Index = () => {
