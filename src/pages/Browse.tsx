@@ -82,6 +82,7 @@ const Browse = () => {
 
   return (
     <PageLayout>
+      <AdSenseLoader />
       <SiteHeader large>
         <Button
           variant="outline"

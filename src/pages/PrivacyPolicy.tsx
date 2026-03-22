@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import PageLayout from "@/components/PageLayout";
 import SiteHeader from "@/components/SiteHeader";
+import AdSenseLoader from "@/components/AdSenseLoader";
 
 const PrivacyPolicy = () => {
   const navigate = useNavigate();

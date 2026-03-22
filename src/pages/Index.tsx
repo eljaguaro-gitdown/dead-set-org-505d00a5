@@ -22,6 +22,7 @@ const Index = () => {
 
   return (
     <PageLayout>
+      <AdSenseLoader />
       {/* Top nav */}
       <SiteHeader large>
         <button
