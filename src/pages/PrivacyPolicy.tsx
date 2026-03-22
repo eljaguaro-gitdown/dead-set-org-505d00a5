@@ -8,6 +8,7 @@ const PrivacyPolicy = () => {
 
   return (
     <PageLayout minimal>
+      <AdSenseLoader />
       <SiteHeader>
         <button
           onClick={() => navigate(-1)}
