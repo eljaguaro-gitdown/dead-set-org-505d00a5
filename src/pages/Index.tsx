@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useEffect } from "react";
 import PageLayout from "@/components/PageLayout";
 import SiteHeader from "@/components/SiteHeader";
+import { Music, Users, Zap, Archive, ListMusic, Share2 } from "lucide-react";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -37,7 +38,7 @@ const Index = () => {
       </SiteHeader>
 
       {/* Hero */}
-      <main className="flex-1 flex flex-col items-center justify-center px-4 relative overflow-hidden">
+      <main className="flex-1 flex flex-col items-center px-4 relative overflow-hidden">
         {/* Warm ambient glow */}
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] sm:w-[600px] h-[400px] sm:h-[600px] rounded-full bg-[radial-gradient(circle,hsl(var(--dead-gold)/0.08),transparent_70%)]" />
@@ -48,7 +49,7 @@ const Index = () => {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1, ease: "easeOut" }}
-          className="flex flex-col items-center gap-5 sm:gap-8 relative z-10 text-center"
+          className="flex flex-col items-center gap-5 sm:gap-8 relative z-10 text-center mt-12 sm:mt-20"
         >
           <div className="sm:hidden"><StealYourFace size={100} /></div>
           <div className="hidden sm:block"><StealYourFace size={150} /></div>
@@ -59,7 +60,7 @@ const Index = () => {
             </h1>
             <div className="w-16 sm:w-24 h-px bg-primary mx-auto" />
             <p className="font-marker text-base sm:text-lg md:text-xl text-muted-foreground max-w-md mx-auto tracking-wide uppercase">
-              Build Your Dream Setlists
+              Build Your Dream Grateful Dead Setlists
             </p>
           </div>
 
@@ -86,19 +87,88 @@ const Index = () => {
             <Button
               variant="outline"
               size="lg"
-              onClick={() => navigate("/auth")}
+              onClick={() => navigate("/browse")}
               className="font-body text-sm sm:text-base px-8 sm:px-10 py-5 sm:py-6 border-border text-foreground hover:bg-muted hover:border-primary/40 tracking-wide w-full sm:w-auto"
             >
-              I Have an Account
+              Browse Setlists
             </Button>
           </div>
         </motion.div>
+
+        {/* Features Section */}
+        <motion.section
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6, duration: 0.8 }}
+          className="relative z-10 w-full max-w-5xl mt-16 sm:mt-24 px-2"
+        >
+          <div className="flex items-center gap-4 mb-8">
+            <div className="h-px flex-1 bg-border" />
+            <span className="font-display text-xs tracking-[0.2em] text-muted-foreground uppercase">What You Can Do</span>
+            <div className="h-px flex-1 bg-border" />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+            {[
+              { icon: ListMusic, title: "Craft Dream Setlists", desc: "Drag and drop from the complete Grateful Dead songbook. Organize by set — first set, second set, encore — just like a real show. Add segue markers (→) between songs to map out those legendary transitions." },
+              { icon: Zap, title: "AI Dead Head Generator", desc: "Let our AI create unique setlists inspired by different eras and vibes. Whether you want a psychedelic '68 Primal Dead show or a spacey '74 Wall of Sound night, the AI crafts historically-informed dream shows you've never seen." },
+              { icon: Archive, title: "Listen to Notable Versions", desc: "Every song links to real live recordings from the Internet Archive. Hear the legendary 5/8/77 Scarlet→Fire, the 2/13/70 Dark Star, or discover hidden gems from shows you've never explored." },
+              { icon: Users, title: "Collaborate in Real-Time", desc: "Invite fellow Deadheads to build setlists together. Share a link, add collaborators, and debate whether Estimated Prophet or Eyes of the World should close the second set — with live chat built right in." },
+              { icon: Share2, title: "Share & Discover", desc: "Publish your setlists for the community to explore. Browse what other Deadheads have curated, upvote your favorites, and find inspiration from creative combinations you'd never have thought of." },
+              { icon: Music, title: "Explore Every Era", desc: "From the raw acid-drenched jams of the Primal Dead (1965-69) through the jazz-infused Europe '72 tour, the massive Wall of Sound era, the melodic Terrapin years, and the Brent Mydland era — every chapter of the Dead's 30-year journey is represented." },
+            ].map(({ icon: Icon, title, desc }) => (
+              <div key={title} className="border border-border/60 bg-card/50 backdrop-blur-sm rounded-lg p-5 sm:p-6 hover:border-primary/30 transition-colors">
+                <Icon className="w-6 h-6 text-primary mb-3" />
+                <h3 className="font-display text-sm text-foreground mb-2">{title}</h3>
+                <p className="font-body text-xs text-muted-foreground leading-relaxed">{desc}</p>
+              </div>
+            ))}
+          </div>
+        </motion.section>
+
+        {/* About Section */}
+        <motion.section
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.8, duration: 0.8 }}
+          className="relative z-10 w-full max-w-3xl mt-16 sm:mt-20 px-2"
+        >
+          <div className="flex items-center gap-4 mb-6">
+            <div className="h-px flex-1 bg-border" />
+            <span className="font-display text-xs tracking-[0.2em] text-muted-foreground uppercase">About Dead Set</span>
+            <div className="h-px flex-1 bg-border" />
+          </div>
+          <div className="space-y-4 font-body text-sm text-muted-foreground leading-relaxed">
+            <p>
+              Dead Set is a community-driven platform for Grateful Dead fans to build, share, and explore dream setlists. 
+              The Grateful Dead performed over 2,300 concerts between 1965 and 1995, with a repertoire of hundreds of songs 
+              that were constantly reimagined and extended through improvisation. No two shows were ever the same.
+            </p>
+            <p>
+              Every Deadhead has imagined their perfect show — the ideal opener, the mind-bending second set sandwich, 
+              the surprise encore deep cut. Dead Set makes it possible to bring those dream shows to life. Our complete 
+              songbook includes every song the Dead performed, with historical data on when each song was first and last 
+              played, how many times it appeared in concert, and which set position it typically occupied.
+            </p>
+            <p>
+              What makes Dead Set unique is the connection to real performances. Through the Internet Archive's incredible 
+              collection of live Grateful Dead recordings — made possible by the band's legendary taper-friendly policy — 
+              you can listen to notable versions of every song. Hear the raw energy of a 1969 Fillmore West Dark Star, 
+              the crystalline beauty of a 1977 Cornell Barton Hall Scarlet Begonias, or the funky groove of a 1989 
+              Brent-era Estimated Prophet.
+            </p>
+            <p>
+              Whether you're a seasoned tape trader who's been on the bus since the Acid Tests, or a new fan just 
+              discovering the magic of live Dead music, Dead Set gives you the tools to curate, share, and celebrate 
+              the greatest American band of all time.
+            </p>
+          </div>
+        </motion.section>
 
         {/* Eras */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.8, duration: 0.8 }}
+          transition={{ delay: 1, duration: 0.8 }}
           className="mt-12 sm:mt-20 mb-6 sm:mb-8 relative z-10 w-full max-w-2xl"
         >
           <div className="flex items-center gap-4 mb-4">
