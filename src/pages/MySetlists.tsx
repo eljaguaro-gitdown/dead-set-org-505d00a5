@@ -26,6 +26,20 @@ const MySetlists = () => {
   const [setlists, setSetlists] = useState<SetlistWithMeta[]>([]);
   const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState<"recent" | "most_played" | "name">("recent");
+  const [displayName, setDisplayName] = useState<string | null>(null);
+
+  // Fetch display name
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("profiles")
+      .select("display_name")
+      .eq("user_id", user.id)
+      .single()
+      .then(({ data }) => {
+        setDisplayName(data?.display_name || null);
+      });
+  }, [user]);
 
   useEffect(() => {
     if (!user) return;
