@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import dancingBear from "@/assets/dancing-bear.png";
+import dancingBear from "@/assets/dancing-bear.gif";
 
 const DancingBearButton = () => {
   const navigate = useNavigate();
