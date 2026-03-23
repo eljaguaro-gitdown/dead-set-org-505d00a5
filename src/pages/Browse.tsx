@@ -48,6 +48,7 @@ const PAGE_SIZE = 18;
 
 const Browse = () => {
   const navigate = useNavigate();
+  const { isFavorite, toggleFavorite, isAuthenticated } = useFavorites();
   const [setlists, setSetlists] = useState<SetlistWithMeta[]>([]);
   const [trending, setTrending] = useState<SetlistWithMeta[]>([]);
   const [featured, setFeatured] = useState<SetlistWithMeta[]>([]);
@@ -55,9 +56,20 @@ const Browse = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [eraFilter, setEraFilter] = useState<string>("all");
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [sortBy, setSortBy] = useState<"newest" | "oldest" | "most_upvoted" | "most_played">("newest");
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [totalCount, setTotalCount] = useState(0);
+
+  const handleToggleFavorite = useCallback(async (setlistId: string) => {
+    if (!isAuthenticated) {
+      toast("Sign in to save favorites", { description: "Create an account to bookmark setlists" });
+      return;
+    }
+    const wasFav = isFavorite(setlistId);
+    await toggleFavorite(setlistId);
+    toast(wasFav ? "Removed from favorites" : "Added to favorites ❤️", { duration: 1500 });
+  }, [isAuthenticated, isFavorite, toggleFavorite]);
 
   useEffect(() => {
     supabase.from("eras").select("*").order("year_start").then(({ data }) => {
