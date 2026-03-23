@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Sparkles, Share2, Users, LogOut, MessageCircle, Globe, CheckCircle, List, Music, LayoutList } from "lucide-react";
+import { Sparkles, Share2, Users, LogOut, MessageCircle, Globe, CheckCircle, List, Music, LayoutList, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import PageLayout from "@/components/PageLayout";
 import { Input } from "@/components/ui/input";
@@ -13,6 +13,7 @@ import CollaboratorAvatars from "@/components/CollaboratorAvatars";
 import ChatSidebar from "@/components/ChatSidebar";
 import ShareDialog from "@/components/ShareDialog";
 import AIDeadHeadDialog from "@/components/AIDeadHeadDialog";
+import AuthModal from "@/components/AuthModal";
 import { useSongs } from "@/hooks/useSongs";
 import { useAuth } from "@/hooks/useAuth";
 import { useSetlist } from "@/hooks/useSetlist";
@@ -39,8 +40,14 @@ const Builder = () => {
   const { playSingle, playSetlist: globalPlaySetlist, playingSlot } = useAudioPlayer();
   const [description, setDescription] = useState<string | null>(null);
   const [generatingDescription, setGeneratingDescription] = useState(false);
-  // Mobile tab: "songs" or "setlist"
   const [mobileTab, setMobileTab] = useState<"songs" | "setlist">("songs");
+
+  // Auth modal state
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const pendingActionRef = useRef<"save" | "share" | "collaborate" | null>(null);
+
+  // Guest mode: track local-only slots when no user/setlist
+  const isGuestMode = !user && !paramId;
 
   const { songs, eras, loading: songsLoading, getNotableVersions } = useSongs(selectedEra);
   const {
@@ -57,7 +64,11 @@ const Builder = () => {
     setSlots,
   } = useSetlist(user, paramId);
 
-  // Initialize setlist (create new or load existing)
+  // Guest-only local slots (used when no user and no paramId)
+  const [guestSlots, setGuestSlots] = useState<SetlistSlotData[]>([]);
+  const activeSlots = isGuestMode ? guestSlots : slots;
+
+  // Initialize setlist for authenticated users (create new or load existing)
   const creatingRef = useRef(false);
   useEffect(() => {
     if (!user || initialized || authLoading) return;
@@ -90,14 +101,15 @@ const Builder = () => {
   }, [setlist]);
 
   const handleTitleBlur = useCallback(() => {
-    if (title !== setlist?.title) {
+    if (!isGuestMode && title !== setlist?.title) {
       updateTitle(title);
     }
-  }, [title, setlist, updateTitle]);
+  }, [title, setlist, updateTitle, isGuestMode]);
 
   const handleSelectSong = useCallback(
     (song: Song, version?: NotableVersion) => {
-      const setSlotCount = slots.filter((s) => s.setNumber === activeSet).length;
+      const currentSlots = isGuestMode ? guestSlots : slots;
+      const setSlotCount = currentSlots.filter((s) => s.setNumber === activeSet).length;
       const newSlot: SetlistSlotData = {
         id: crypto.randomUUID(),
         song,
@@ -107,59 +119,213 @@ const Builder = () => {
         segueToNext: false,
         notes: "",
       };
-      addSlot(newSlot);
+      if (isGuestMode) {
+        setGuestSlots((prev) => [...prev, newSlot]);
+      } else {
+        addSlot(newSlot);
+      }
       toast.success(`${song.title} added to Set ${activeSet === 3 ? "Encore" : activeSet}`);
-      // On mobile, switch to setlist view after adding a song
       if (isMobile) {
         setMobileTab("setlist");
       }
     },
-    [slots, activeSet, addSlot, isMobile]
+    [slots, guestSlots, activeSet, addSlot, isMobile, isGuestMode]
   );
 
   const handleRemoveSlot = useCallback((id: string) => {
-    removeSlot(id);
-  }, [removeSlot]);
+    if (isGuestMode) {
+      setGuestSlots((prev) => prev.filter((s) => s.id !== id));
+    } else {
+      removeSlot(id);
+    }
+  }, [removeSlot, isGuestMode]);
 
   const handleToggleSegue = useCallback((id: string) => {
-    const slot = slots.find((s) => s.id === id);
+    const currentSlots = isGuestMode ? guestSlots : slots;
+    const slot = currentSlots.find((s) => s.id === id);
     if (slot) {
-      updateSlot(id, { segueToNext: !slot.segueToNext });
+      if (isGuestMode) {
+        setGuestSlots((prev) =>
+          prev.map((s) => (s.id === id ? { ...s, segueToNext: !s.segueToNext } : s))
+        );
+      } else {
+        updateSlot(id, { segueToNext: !slot.segueToNext });
+      }
     }
-  }, [slots, updateSlot]);
+  }, [slots, guestSlots, updateSlot, isGuestMode]);
 
   const handleUpdateNotes = useCallback((id: string, notes: string) => {
-    updateSlot(id, { notes });
-  }, [updateSlot]);
+    if (isGuestMode) {
+      setGuestSlots((prev) =>
+        prev.map((s) => (s.id === id ? { ...s, notes } : s))
+      );
+    } else {
+      updateSlot(id, { notes });
+    }
+  }, [updateSlot, isGuestMode]);
 
   const handleReorder = useCallback(
     (newSlots: SetlistSlotData[]) => {
-      setSlots(newSlots);
-      if (setlist) {
-        const changed = newSlots.filter((ns) => {
-          const old = slots.find((s) => s.id === ns.id);
-          return old && (old.position !== ns.position || old.setNumber !== ns.setNumber);
-        });
-        changed.forEach((slot) => {
-          updateSlot(slot.id, { position: slot.position, setNumber: slot.setNumber });
-        });
+      if (isGuestMode) {
+        setGuestSlots(newSlots);
+      } else {
+        setSlots(newSlots);
+        if (setlist) {
+          const changed = newSlots.filter((ns) => {
+            const old = slots.find((s) => s.id === ns.id);
+            return old && (old.position !== ns.position || old.setNumber !== ns.setNumber);
+          });
+          changed.forEach((slot) => {
+            updateSlot(slot.id, { position: slot.position, setNumber: slot.setNumber });
+          });
+        }
       }
     },
-    [setlist, slots, updateSlot, setSlots]
+    [isGuestMode, setlist, slots, updateSlot, setSlots]
   );
+
+  // Gate actions behind auth for guests
+  const requireAuth = useCallback((action: "save" | "share" | "collaborate") => {
+    if (!user) {
+      pendingActionRef.current = action;
+      setAuthModalOpen(true);
+      return true; // blocked
+    }
+    return false; // allowed
+  }, [user]);
+
+  // After auth completes, save guest setlist to Supabase
+  const handleAuthenticated = useCallback(async () => {
+    // The user state will update via onAuthStateChange in useAuth.
+    // We need to wait for the user to be set, then persist guest data.
+    // We'll handle this via the effect below.
+  }, []);
+
+  // When user becomes available and we have guest slots, persist them
+  const guestSlotsRef = useRef<SetlistSlotData[]>([]);
+  guestSlotsRef.current = guestSlots;
+  const guestTitleRef = useRef(title);
+  guestTitleRef.current = title;
+  const guestEraRef = useRef(selectedEra);
+  guestEraRef.current = selectedEra;
+
+  const hasSavedGuestRef = useRef(false);
+  useEffect(() => {
+    if (!user || hasSavedGuestRef.current) return;
+    if (guestSlotsRef.current.length === 0) return;
+    // We have a newly authenticated user with guest slots — save them
+    hasSavedGuestRef.current = true;
+    const saveGuestSetlist = async () => {
+      const shareToken = crypto.randomUUID().slice(0, 8);
+      const { data: newSetlist, error } = await supabase
+        .from("setlists")
+        .insert({
+          creator_id: user.id,
+          title: guestTitleRef.current,
+          era_id: guestEraRef.current || null,
+          share_token: shareToken,
+          is_public: false,
+          is_collaborative: false,
+        })
+        .select()
+        .single();
+
+      if (error || !newSetlist) {
+        toast.error("Failed to save your setlist");
+        hasSavedGuestRef.current = false;
+        return;
+      }
+
+      // Persist all guest slots
+      const slotsToInsert = guestSlotsRef.current.map((slot) => ({
+        id: slot.id,
+        setlist_id: newSetlist.id,
+        set_number: slot.setNumber,
+        position: slot.position,
+        song_id: slot.song.id,
+        notable_version_id: slot.version?.id || null,
+        added_by_user_id: user.id,
+        notes: slot.notes,
+        segue_to_next: slot.segueToNext,
+      }));
+
+      if (slotsToInsert.length > 0) {
+        await supabase.from("setlist_slots").insert(slotsToInsert);
+      }
+
+      // Clear guest state
+      setGuestSlots([]);
+      toast.success("Setlist saved!");
+      navigate(`/builder/${newSetlist.id}`, { replace: true });
+
+      // Execute pending action
+      if (pendingActionRef.current === "share") {
+        // Share dialog will open via the setlist being loaded
+      }
+      pendingActionRef.current = null;
+    };
+    saveGuestSetlist();
+  }, [user, navigate]);
 
   const handleApplyAISuggestion = useCallback(
     async (suggestion: { explanation: string; sets: { setNumber: number; songs: { songId: string; title: string; segueToNext: boolean; notes: string; position: number }[] }[] }) => {
-      for (const slot of slots) {
-        await removeSlot(slot.id);
+      if (isGuestMode) {
+        // Clear guest slots and add AI songs locally
+        const newSlots: SetlistSlotData[] = [];
+        for (const set of suggestion.sets) {
+          for (const suggestedSong of set.songs) {
+            const song = songs.find((s) => s.id === suggestedSong.songId);
+            if (!song) continue;
+            newSlots.push({
+              id: crypto.randomUUID(),
+              song,
+              version: null,
+              setNumber: set.setNumber,
+              position: suggestedSong.position,
+              segueToNext: suggestedSong.segueToNext,
+              notes: suggestedSong.notes || "",
+            });
+          }
+        }
+        setGuestSlots(newSlots);
+      } else {
+        for (const slot of slots) {
+          await removeSlot(slot.id);
+        }
+        await addAISongsToCurrentSetlist(suggestion);
       }
-      await addAISongsToCurrentSetlist(suggestion);
     },
-    [slots, songs, removeSlot, addSlot]
+    [isGuestMode, slots, songs, removeSlot]
   );
 
   const handleCreateNewFromAI = useCallback(
     async (suggestion: { explanation: string; sets: { setNumber: number; songs: { songId: string; title: string; segueToNext: boolean; notes: string; position: number }[] }[] }, customTitle?: string) => {
+      if (isGuestMode) {
+        // In guest mode, just replace current slots and update title
+        const firstSongs = suggestion.sets.flatMap(s => s.songs).slice(0, 2).map(s => s.title);
+        const newTitle = customTitle || (firstSongs.length > 0 ? `AI Set: ${firstSongs.join(" > ")}` : "AI Generated Setlist");
+        setTitle(newTitle);
+
+        const newSlots: SetlistSlotData[] = [];
+        for (const set of suggestion.sets) {
+          for (const suggestedSong of set.songs) {
+            const song = songs.find((s) => s.id === suggestedSong.songId);
+            if (!song) continue;
+            newSlots.push({
+              id: crypto.randomUUID(),
+              song,
+              version: null,
+              setNumber: set.setNumber,
+              position: suggestedSong.position,
+              segueToNext: suggestedSong.segueToNext,
+              notes: suggestedSong.notes || "",
+            });
+          }
+        }
+        setGuestSlots(newSlots);
+        return;
+      }
+
       const firstSongs = suggestion.sets.flatMap(s => s.songs).slice(0, 2).map(s => s.title);
       const newTitle = customTitle || (firstSongs.length > 0 ? `AI Set: ${firstSongs.join(" > ")}` : "AI Generated Setlist");
       const created = await createSetlist(newTitle, selectedEra);
@@ -169,7 +335,7 @@ const Builder = () => {
         await addAISongsToSetlist(suggestion, created.id);
       }, 300);
     },
-    [songs, createSetlist, selectedEra, navigate]
+    [isGuestMode, songs, createSetlist, selectedEra, navigate]
   );
 
   const addAISongsToCurrentSetlist = useCallback(
@@ -235,7 +401,29 @@ const Builder = () => {
     }
   }, [setlist]);
 
-  if (authLoading) {
+  // Gated actions
+  const handleSave = useCallback(() => {
+    if (requireAuth("save")) return;
+    // Already authenticated — setlist auto-saves
+    toast.success("Setlist is saved!");
+  }, [requireAuth]);
+
+  const handleShare = useCallback(() => {
+    if (requireAuth("share")) return;
+    setShareOpen(true);
+  }, [requireAuth]);
+
+  const handleCollaborate = useCallback(() => {
+    if (requireAuth("collaborate")) return;
+    setChatOpen(true);
+  }, [requireAuth]);
+
+  const handleTogglePublic = useCallback(() => {
+    if (requireAuth("save")) return;
+    togglePublic();
+  }, [requireAuth, togglePublic]);
+
+  if (authLoading && paramId) {
     return (
       <PageLayout minimal><div className="flex-1 flex items-center justify-center">
         <div className="space-y-3">
@@ -247,11 +435,6 @@ const Builder = () => {
     );
   }
 
-  if (!user) {
-    navigate("/auth");
-    return null;
-  }
-
   return (
     <PageLayout minimal>
       {/* Top Bar */}
@@ -261,13 +444,15 @@ const Builder = () => {
           <button onClick={() => navigate("/")} className="font-display text-3xl sm:text-6xl text-primary shrink-0">
             DS
           </button>
-          <button
-            onClick={() => navigate("/my-setlists")}
-            className="text-2xl font-body text-muted-foreground hover:text-foreground transition-colors shrink-0 hidden sm:flex items-center gap-2"
-            title="My Setlists"
-          >
-            <List className="w-8 h-8" /> My Setlists
-          </button>
+          {user && (
+            <button
+              onClick={() => navigate("/my-setlists")}
+              className="text-2xl font-body text-muted-foreground hover:text-foreground transition-colors shrink-0 hidden sm:flex items-center gap-2"
+              title="My Setlists"
+            >
+              <List className="w-8 h-8" /> My Setlists
+            </button>
+          )}
           <Input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
@@ -279,9 +464,22 @@ const Builder = () => {
               <CheckCircle className="w-3 sm:w-4 h-3 sm:h-4" /> <span className="hidden sm:inline">Saved</span>
             </span>
           )}
-          <div className="hidden sm:block">
-            <CollaboratorAvatars collaborators={collaborators} />
-          </div>
+          {isGuestMode && guestSlots.length > 0 && (
+            <Button
+              variant="default"
+              size="sm"
+              className="shrink-0 h-8 sm:h-9 px-3 gap-1.5 bg-primary text-primary-foreground font-body text-xs sm:text-sm"
+              onClick={handleSave}
+            >
+              <Save className="w-4 h-4" />
+              <span className="hidden sm:inline">Save</span>
+            </Button>
+          )}
+          {!isGuestMode && (
+            <div className="hidden sm:block">
+              <CollaboratorAvatars collaborators={collaborators} />
+            </div>
+          )}
         </div>
 
         {/* Row 2: Toolbar */}
@@ -323,18 +521,20 @@ const Builder = () => {
           <div className="w-px h-5 sm:h-6 bg-border shrink-0" />
 
           {/* Action buttons */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 sm:h-9 sm:w-9 shrink-0 text-foreground relative"
-            onClick={() => setChatOpen(true)}
-            title="Chat"
-          >
-            <MessageCircle className="w-4 sm:w-5 h-4 sm:h-5" />
-            {chatUnread && (
-              <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-primary rounded-full animate-pulse border-2 border-card" />
-            )}
-          </Button>
+          {user && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 sm:h-9 sm:w-9 shrink-0 text-foreground relative"
+              onClick={handleCollaborate}
+              title="Chat"
+            >
+              <MessageCircle className="w-4 sm:w-5 h-4 sm:h-5" />
+              {chatUnread && (
+                <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-primary rounded-full animate-pulse border-2 border-card" />
+              )}
+            </Button>
+          )}
           <Button
             variant="default"
             size="sm"
@@ -349,7 +549,7 @@ const Builder = () => {
             variant="ghost"
             size="icon"
             className={`h-8 w-8 sm:h-9 sm:w-9 shrink-0 ${setlist?.is_public ? "text-accent" : "text-foreground"}`}
-            onClick={togglePublic}
+            onClick={handleTogglePublic}
             title={setlist?.is_public ? "Public — visible on Browse" : "Private — only you and collaborators"}
           >
             <Globe className="w-4 sm:w-5 h-4 sm:h-5" />
@@ -358,29 +558,33 @@ const Builder = () => {
             variant="ghost"
             size="icon"
             className="h-8 w-8 sm:h-9 sm:w-9 shrink-0 text-foreground"
-            onClick={() => setShareOpen(true)}
+            onClick={handleShare}
             title="Share"
           >
             <Share2 className="w-4 sm:w-5 h-4 sm:h-5" />
           </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 sm:h-9 sm:w-9 shrink-0 text-muted-foreground hover:text-foreground sm:hidden"
-            onClick={() => navigate("/my-setlists")}
-            title="My Setlists"
-          >
-            <List className="w-4 h-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 sm:h-9 sm:w-9 shrink-0 text-muted-foreground hover:text-foreground"
-            onClick={signOut}
-            title="Sign Out"
-          >
-            <LogOut className="w-4 sm:w-5 h-4 sm:h-5" />
-          </Button>
+          {user && (
+            <>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 sm:h-9 sm:w-9 shrink-0 text-muted-foreground hover:text-foreground sm:hidden"
+                onClick={() => navigate("/my-setlists")}
+                title="My Setlists"
+              >
+                <List className="w-4 h-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 sm:h-9 sm:w-9 shrink-0 text-muted-foreground hover:text-foreground"
+                onClick={signOut}
+                title="Sign Out"
+              >
+                <LogOut className="w-4 sm:w-5 h-4 sm:h-5" />
+              </Button>
+            </>
+          )}
         </div>
       </header>
 
@@ -408,9 +612,9 @@ const Builder = () => {
           >
             <LayoutList className="w-4 h-4" />
             The Set
-            {slots.length > 0 && (
+            {activeSlots.length > 0 && (
               <span className="bg-primary text-primary-foreground text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center">
-                {slots.length}
+                {activeSlots.length}
               </span>
             )}
           </button>
@@ -454,7 +658,7 @@ const Builder = () => {
           isMobile ? (mobileTab === "setlist" ? "flex-1" : "hidden") : "lg:max-h-[calc(100vh-85px)]"
         }`}>
            <SetlistDisplay
-            slots={slots}
+            slots={activeSlots}
             activeSlotId={playingSlot ? playingSlot.id : null}
             description={description}
             generatingDescription={generatingDescription}
@@ -467,21 +671,23 @@ const Builder = () => {
               playSingle(slot);
             }}
             onPlaySetlist={async () => {
-              if (slots.length === 0) return;
-              await globalPlaySetlist(slots, setlist?.id);
+              if (activeSlots.length === 0) return;
+              await globalPlaySetlist(activeSlots, setlist?.id);
             }}
           />
         </div>
       </div>
 
-      {/* Chat Sidebar */}
-      <ChatSidebar
-        setlistId={setlist?.id || null}
-        user={user}
-        isOpen={chatOpen}
-        onClose={() => setChatOpen(false)}
-        onUnreadChange={setChatUnread}
-      />
+      {/* Chat Sidebar — only for authenticated users */}
+      {user && (
+        <ChatSidebar
+          setlistId={setlist?.id || null}
+          user={user}
+          isOpen={chatOpen}
+          onClose={() => setChatOpen(false)}
+          onUnreadChange={setChatUnread}
+        />
+      )}
 
       {/* Share Dialog */}
       <ShareDialog
@@ -495,13 +701,20 @@ const Builder = () => {
         open={aiOpen}
         onOpenChange={setAiOpen}
         eraId={selectedEra}
-        currentSlots={slots.map((s) => ({
+        currentSlots={activeSlots.map((s) => ({
           songTitle: s.song.title,
           setNumber: s.setNumber,
           segue: s.segueToNext,
         }))}
         onApplySuggestion={handleApplyAISuggestion}
         onCreateNewSetlist={handleCreateNewFromAI}
+      />
+
+      {/* Inline Auth Modal for guests */}
+      <AuthModal
+        open={authModalOpen}
+        onOpenChange={setAuthModalOpen}
+        onAuthenticated={handleAuthenticated}
       />
 
     </PageLayout>
