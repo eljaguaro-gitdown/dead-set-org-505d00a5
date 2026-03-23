@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import PageLayout from "@/components/PageLayout";
 import SiteHeader from "@/components/SiteHeader";
+import CommunityHighlights from "@/components/CommunityHighlights";
 
 import type { Database } from "@/integrations/supabase/types";
 
