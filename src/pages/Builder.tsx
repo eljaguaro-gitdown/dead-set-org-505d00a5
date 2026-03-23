@@ -47,6 +47,10 @@ const Builder = () => {
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const pendingActionRef = useRef<"save" | "share" | "collaborate" | null>(null);
 
+  // AI welcome overlay: show for fresh builder (no paramId, no slots loaded)
+  const [welcomeDismissed, setWelcomeDismissed] = useState(false);
+  const showWelcome = !paramId && !welcomeDismissed;
+
   // Guest mode: track local-only slots when no user/setlist
   const isGuestMode = !user && !paramId;
 
