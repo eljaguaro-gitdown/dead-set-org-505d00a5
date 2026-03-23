@@ -159,6 +159,7 @@ const SetlistPoster = () => {
   };
 
   const shareUrl = `${window.location.origin}/setlist/${id}`;
+  const ogShareUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/og-image?id=${id}`;
   const shareTitle = `${setlist?.title || "Dream Setlist"} — Dead Set`;
   const shareDescription = setlist && slots.length > 0
     ? `Check out this${eraName ? ` ${eraName}` : ""} dream Dead show by ${creatorName}. ${slots.length} songs!`
