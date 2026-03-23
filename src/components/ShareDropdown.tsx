@@ -10,7 +10,7 @@ interface ShareDropdownProps {
   description?: string;
 }
 
-const ShareDropdown = ({ url, title, description }: ShareDropdownProps) => {
+const ShareDropdown = ({ url, ogUrl, title, description }: ShareDropdownProps) => {
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
