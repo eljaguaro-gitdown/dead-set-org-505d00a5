@@ -219,7 +219,26 @@ const Browse = () => {
         </section>
       )}
 
-      {/* Search + Era Chips + Sort */}
+      {/* Trending Section */}
+      {trending.length > 0 && (
+        <section className="border-b border-border/30 py-6 sm:py-8">
+          <div className="px-4 sm:px-6 max-w-6xl mx-auto">
+            <div className="flex items-center gap-3 mb-4">
+              <TrendingUp className="w-4 h-4 text-accent" />
+              <h2 className="font-display text-sm tracking-[0.2em] text-muted-foreground uppercase">Trending This Week</h2>
+            </div>
+            <div className="overflow-x-auto scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
+              <div className="flex gap-3 min-w-max sm:min-w-0 sm:grid sm:grid-cols-3 lg:grid-cols-6">
+                {trending.map((s) => (
+                  <TrendingCard key={s.id} setlist={s} onClick={() => navigate(`/setlist/${s.id}`)} />
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
+
       <div className="border-b border-border/30 px-4 sm:px-6 py-4">
         <div className="max-w-6xl mx-auto space-y-3">
           <div className="flex items-center gap-2">
