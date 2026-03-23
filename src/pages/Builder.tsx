@@ -131,9 +131,10 @@ const Builder = () => {
       } else {
         addSlot(newSlot);
       }
-      toast.success(`${song.title} added to Set ${activeSet === 3 ? "Encore" : activeSet}`);
-      if (isMobile) {
-        setMobileTab("setlist");
+      toast.success(`Added ${song.title} to ${activeSet === 3 ? "Encore" : `Set ${activeSet}`}`, { duration: 2000 });
+      if (isMobile && mobileTab === "songs") {
+        setMiniBarPulse(true);
+        setTimeout(() => setMiniBarPulse(false), 400);
       }
     },
     [slots, guestSlots, activeSet, addSlot, isMobile, isGuestMode]
