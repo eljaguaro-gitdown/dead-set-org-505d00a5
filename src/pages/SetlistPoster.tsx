@@ -236,7 +236,7 @@ const SetlistPoster = () => {
           >
             <Play className="w-3 h-3 fill-current" /> Play All
           </button>
-          <ShareDropdown url={shareUrl} title={shareTitle} description={shareDescription} />
+          <ShareDropdown url={shareUrl} ogUrl={ogShareUrl} title={shareTitle} description={shareDescription} />
         </div>
       </header>
 
