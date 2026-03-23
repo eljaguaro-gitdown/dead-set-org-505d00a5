@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { getPostAuthRedirect } from "@/lib/postAuthRedirect";
 import StealYourFace from "@/components/StealYourFace";
 import DancingBear from "@/components/DancingBear";
+import AmbientPlayer from "@/components/AmbientPlayer";
 import PageLayout from "@/components/PageLayout";
 import SiteHeader from "@/components/SiteHeader";
 import AdSenseLoader from "@/components/AdSenseLoader";
@@ -138,6 +139,9 @@ const Index = () => {
           <h1 className="font-display text-3xl sm:text-5xl md:text-6xl tracking-tight text-foreground leading-none">
             Build your dream Dead show.
           </h1>
+
+          {/* Ambient audio teaser */}
+          <AmbientPlayer />
 
           {/* CTA */}
           <Button
