@@ -30,7 +30,9 @@ const Index = () => {
 
   useEffect(() => {
     if (!loading && user) {
-      navigate("/my-setlists", { replace: true });
+      getPostAuthRedirect(user.id).then((path) => {
+        navigate(path, { replace: true });
+      });
     }
   }, [user, loading, navigate]);
 

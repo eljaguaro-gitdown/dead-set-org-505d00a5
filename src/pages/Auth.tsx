@@ -43,15 +43,17 @@ const Auth = () => {
           options: { emailRedirectTo: window.location.origin },
         });
         if (error) throw error;
-        if (data.session) {
-          navigate(redirectTo);
+        if (data.session && data.session.user) {
+          await smartRedirect(data.session.user.id);
         } else {
           toast.success("Check your email to confirm your account!");
         }
       } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const { error, data } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        navigate(redirectTo);
+        if (data.session?.user) {
+          await smartRedirect(data.session.user.id);
+        }
       }
     } catch (err: any) {
       toast.error(err.message);
