@@ -187,12 +187,18 @@ const Browse = () => {
   };
 
   const filtered = useMemo(() => {
-    if (!search) return setlists;
-    const q = search.toLowerCase();
-    return setlists.filter(
-      (s) => s.title.toLowerCase().includes(q) || s.creator_name.toLowerCase().includes(q)
-    );
-  }, [setlists, search]);
+    let result = setlists;
+    if (showFavoritesOnly) {
+      result = result.filter((s) => isFavorite(s.id));
+    }
+    if (search) {
+      const q = search.toLowerCase();
+      result = result.filter(
+        (s) => s.title.toLowerCase().includes(q) || s.creator_name.toLowerCase().includes(q)
+      );
+    }
+    return result;
+  }, [setlists, search, showFavoritesOnly, isFavorite]);
 
   const visible = filtered.slice(0, visibleCount);
   const hasMore = visibleCount < filtered.length;
