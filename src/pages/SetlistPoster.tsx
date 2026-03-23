@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 import StealYourFace from "@/components/StealYourFace";
 import DancingBear from "@/components/DancingBear";
+import ShareDropdown from "@/components/ShareDropdown";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 
