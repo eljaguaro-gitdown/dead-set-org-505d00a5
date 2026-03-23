@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import PageLayout from "@/components/PageLayout";
 import SiteHeader from "@/components/SiteHeader";
+import CommunityHighlights from "@/components/CommunityHighlights";
 
 import type { Database } from "@/integrations/supabase/types";
 
@@ -25,6 +26,20 @@ const MySetlists = () => {
   const [setlists, setSetlists] = useState<SetlistWithMeta[]>([]);
   const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState<"recent" | "most_played" | "name">("recent");
+  const [displayName, setDisplayName] = useState<string | null>(null);
+
+  // Fetch display name
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("profiles")
+      .select("display_name")
+      .eq("user_id", user.id)
+      .single()
+      .then(({ data }) => {
+        setDisplayName(data?.display_name || null);
+      });
+  }, [user]);
 
   useEffect(() => {
     if (!user) return;
@@ -152,33 +167,57 @@ const MySetlists = () => {
 
       {/* Content */}
       <main className="flex-1 max-w-2xl mx-auto w-full px-4 py-6">
-        {/* Hero CTA */}
+        {/* Welcome Banner */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
+          className="mb-6"
+        >
+          <h1 className="font-display text-2xl sm:text-3xl text-foreground leading-tight">
+            Welcome back{displayName ? `, ${displayName}` : ""} ✦
+          </h1>
+          <p className="font-body text-sm text-muted-foreground mt-1">
+            Here's what's happening in the Dead Set community.
+          </p>
+        </motion.div>
+
+        {/* Community Highlights — trending & new setlists */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.15, duration: 0.5 }}
+          className="mb-8"
+        >
+          <CommunityHighlights />
+        </motion.div>
+
+        {/* Cosmic Charlie CTA */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.25, duration: 0.5 }}
           className="mb-8"
         >
           <button
             onClick={() => navigate("/builder")}
-            className="w-full group relative overflow-hidden rounded-xl border-2 border-dashed border-primary/30 hover:border-primary/60 bg-primary/5 hover:bg-primary/10 transition-all p-6 sm:p-8 text-center"
+            className="w-full group relative overflow-hidden rounded-xl border border-primary/30 hover:border-primary/60 bg-primary/5 hover:bg-primary/10 transition-all p-5 sm:p-6 text-left flex items-center gap-4"
           >
-            <div className="flex flex-col items-center gap-3">
-              <div className="w-14 h-14 rounded-full bg-primary/10 group-hover:bg-primary/20 flex items-center justify-center transition-colors">
-                <Plus className="w-7 h-7 text-primary" />
-              </div>
-              <div>
-                <h2 className="font-display text-xl sm:text-2xl text-foreground">
-                  Create a New Setlist
-                </h2>
-                <p className="font-body text-sm text-muted-foreground mt-1">
-                  Pick your songs, arrange sets, and share the music
-                </p>
-              </div>
+            <div className="w-12 h-12 rounded-full bg-primary/10 group-hover:bg-primary/20 flex items-center justify-center transition-colors shrink-0">
+              <Star className="w-6 h-6 text-primary" />
+            </div>
+            <div className="min-w-0">
+              <h2 className="font-display text-lg sm:text-xl text-foreground">
+                Need a Miracle?
+              </h2>
+              <p className="font-body text-xs text-muted-foreground mt-0.5">
+                Let Cosmic Charlie build your next dream setlist
+              </p>
             </div>
             <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none bg-[radial-gradient(circle_at_center,hsl(var(--primary)/0.08),transparent_70%)]" />
           </button>
         </motion.div>
+
 
         {/* Setlists list */}
         <div className="flex items-center justify-between mb-4">
