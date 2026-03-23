@@ -428,28 +428,14 @@ const Builder = () => {
     togglePublic();
   }, [requireAuth, togglePublic]);
 
-  if (authLoading && paramId) {
-    return (
-      <PageLayout minimal><div className="flex-1 flex items-center justify-center">
-        <div className="space-y-3">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-10 w-48 bg-muted rounded-lg animate-pulse" />
-          ))}
-        </div>
-      </div></PageLayout>
-    );
-  }
-
   // Handle AI welcome overlay generation
   const handleWelcomeGenerated = useCallback(
     (suggestion: { explanation: string; sets: { setNumber: number; songs: { songId: string; title: string; segueToNext: boolean; notes: string; position: number }[] }[] }, eraId: string | null) => {
       if (eraId) setSelectedEra(eraId);
-      // Build title from first songs
       const firstSongs = suggestion.sets.flatMap(s => s.songs).slice(0, 2).map(s => s.title);
       const newTitle = firstSongs.length > 0 ? `${firstSongs.join(" > ")}` : "AI Generated Setlist";
       setTitle(newTitle);
 
-      // Populate slots
       const newSlots: SetlistSlotData[] = [];
       for (const set of suggestion.sets) {
         for (const suggestedSong of set.songs) {
@@ -470,17 +456,13 @@ const Builder = () => {
       if (isGuestMode) {
         setGuestSlots(newSlots);
       } else {
-        // For authenticated users without a setlist yet, create one
         newSlots.forEach((slot) => addSlot(slot));
       }
 
       setWelcomeDismissed(true);
       setMobileTab("setlist");
 
-      // Auto-cue first song (find one with an archive URL)
-      const firstPlayable = newSlots.find(
-        (s) => s.version?.archive_org_url
-      );
+      const firstPlayable = newSlots.find((s) => s.version?.archive_org_url);
       if (firstPlayable) {
         playSingle(firstPlayable);
       }
@@ -489,6 +471,18 @@ const Builder = () => {
     },
     [songs, isGuestMode, addSlot, playSingle]
   );
+
+  if (authLoading && paramId) {
+    return (
+      <PageLayout minimal><div className="flex-1 flex items-center justify-center">
+        <div className="space-y-3">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="h-10 w-48 bg-muted rounded-lg animate-pulse" />
+          ))}
+        </div>
+      </div></PageLayout>
+    );
+  }
 
   return (
     <PageLayout minimal>
