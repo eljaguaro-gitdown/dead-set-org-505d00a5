@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import dancingBear from "@/assets/dancing-bear.png";
 
 const DancingBearButton = () => {
   const navigate = useNavigate();
@@ -12,9 +13,11 @@ const DancingBearButton = () => {
       whileTap={{ scale: 0.95 }}
       title="Cosmic Charlie AI Setlist Generator"
     >
-      {/* Dancing bear */}
-      <motion.span
-        className="text-xl leading-none select-none"
+      {/* Dancing bear image */}
+      <motion.img
+        src={dancingBear}
+        alt="Dancing Bear"
+        className="w-7 h-7 object-contain select-none"
         animate={{
           y: [0, -3, 0, -2, 0],
           rotate: [0, -8, 0, 8, 0],
@@ -24,12 +27,9 @@ const DancingBearButton = () => {
           repeat: Infinity,
           ease: "easeInOut",
         }}
-        aria-hidden="true"
-      >
-        🐻
-      </motion.span>
+      />
 
-      {/* Blinking eyes effect via opacity pulse on label */}
+      {/* Blinking label */}
       <motion.span
         className="font-display text-xs tracking-[0.12em] text-primary uppercase whitespace-nowrap"
         animate={{ opacity: [1, 1, 0.4, 1, 1] }}
@@ -46,15 +46,8 @@ const DancingBearButton = () => {
       {/* Sparkle dot */}
       <motion.span
         className="w-1.5 h-1.5 rounded-full bg-primary"
-        animate={{
-          scale: [1, 1.6, 1],
-          opacity: [0.6, 1, 0.6],
-        }}
-        transition={{
-          duration: 2,
-          repeat: Infinity,
-          ease: "easeInOut",
-        }}
+        animate={{ scale: [1, 1.6, 1], opacity: [0.6, 1, 0.6] }}
+        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
       />
     </motion.button>
   );
