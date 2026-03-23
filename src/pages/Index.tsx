@@ -140,7 +140,7 @@ const Index = () => {
 
           {/* Secondary — Cosmic Charlie intro */}
           <p className="font-body text-sm sm:text-base text-muted-foreground leading-relaxed max-w-md">
-            Cosmic Charlie knows every setlist the Dead ever played. Tell him what you want to hear.
+            Cosmic Charlie knows every setlist the Dead ever played. Tell Charlie your mood, vibe, dream and curate your miracle.
           </p>
 
           {/* Ambient audio teaser */}
