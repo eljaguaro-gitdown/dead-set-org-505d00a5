@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Zap, Search, SortAsc, Play, Music, TrendingUp } from "lucide-react";
+import { Zap, Search, SortAsc, Play, Music, TrendingUp, Heart } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,6 +10,9 @@ import SiteHeader from "@/components/SiteHeader";
 import AdSenseLoader from "@/components/AdSenseLoader";
 import StealYourFace from "@/components/StealYourFace";
 import EraTooltip from "@/components/EraTooltip";
+import FavoriteButton from "@/components/FavoriteButton";
+import { useFavorites } from "@/hooks/useFavorites";
+import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 
 type Setlist = Database["public"]["Tables"]["setlists"]["Row"];
