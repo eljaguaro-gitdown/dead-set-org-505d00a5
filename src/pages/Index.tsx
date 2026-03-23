@@ -147,15 +147,28 @@ const Index = () => {
           {/* Ambient audio teaser */}
           <AmbientPlayer />
 
-          {/* Primary CTA */}
-          <Button
-            size="lg"
+          {/* Primary CTA — Cosmic Charlie gateway */}
+          <motion.button
             onClick={() => navigate("/builder")}
-            className="font-display text-base sm:text-lg px-10 sm:px-14 py-6 sm:py-7 bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_40px_hsl(var(--glow-gold))] tracking-widest uppercase gap-2.5"
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
+            className="group relative flex items-center gap-4 px-10 sm:px-14 py-5 sm:py-6 bg-primary text-primary-foreground rounded-md shadow-[0_0_40px_hsl(var(--glow-gold))] hover:shadow-[0_0_60px_hsl(var(--glow-gold))] transition-shadow duration-300"
           >
-            <Star className="w-5 h-5" />
-            Need a Miracle?
-          </Button>
+            <img
+              src={dancingBear}
+              alt="Dancing Bear"
+              className="w-10 h-10 sm:w-12 sm:h-12 object-contain"
+            />
+            <div className="flex flex-col items-start">
+              <span className="font-display text-base sm:text-lg tracking-widest uppercase leading-tight">
+                Need a Miracle?
+              </span>
+              <span className="font-body text-[10px] sm:text-xs text-primary-foreground/70 tracking-wide">
+                Let Cosmic Charlie build your dream set
+              </span>
+            </div>
+            <Star className="w-5 h-5 opacity-60 group-hover:opacity-100 transition-opacity" />
+          </motion.button>
 
           {/* Secondary CTA */}
           <Button
