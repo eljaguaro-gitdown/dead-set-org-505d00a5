@@ -103,6 +103,39 @@ const SetlistPoster = () => {
     fetchSetlist();
   }, [id]);
 
+  // Dynamic OG meta tags
+  useEffect(() => {
+    if (!setlist || slots.length === 0) return;
+    const songNames = slots.slice(0, 3).map((s) => s.song.title).join(", ");
+    const desc = `A${eraName ? ` ${eraName}` : ""} dream setlist by ${creatorName}. ${slots.length} songs including ${songNames}...`;
+    const ogTitle = `${setlist.title} — Dead Set`;
+    const canonicalUrl = `${window.location.origin}/setlist/${id}`;
+    const ogImageUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/og-image?id=${id}`;
+
+    document.title = ogTitle;
+
+    const setMeta = (property: string, content: string) => {
+      let el = document.querySelector(`meta[property="${property}"]`) || document.querySelector(`meta[name="${property}"]`);
+      if (!el) {
+        el = document.createElement("meta");
+        if (property.startsWith("og:")) el.setAttribute("property", property);
+        else el.setAttribute("name", property);
+        document.head.appendChild(el);
+      }
+      el.setAttribute("content", content);
+    };
+
+    setMeta("og:title", ogTitle);
+    setMeta("og:description", desc);
+    setMeta("og:image", ogImageUrl);
+    setMeta("og:url", canonicalUrl);
+    setMeta("og:type", "website");
+    setMeta("twitter:card", "summary_large_image");
+    setMeta("twitter:title", ogTitle);
+    setMeta("twitter:description", desc);
+    setMeta("twitter:image", ogImageUrl);
+  }, [setlist, slots, eraName, creatorName, id]);
+
   useEffect(() => {
     if (!id || !user) return;
     supabase.from("setlist_upvotes").select("id").eq("setlist_id", id).eq("user_id", user.id).maybeSingle()
