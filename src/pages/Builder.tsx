@@ -474,7 +474,7 @@ const Builder = () => {
         playSingle(firstPlayable);
       }
 
-      toast.success("Your dream show is ready! 🎶");
+      toast.success("Charlie's got you — your dream show is ready! 🎶");
     },
     [songs, isGuestMode, addSlot, playSingle]
   );
