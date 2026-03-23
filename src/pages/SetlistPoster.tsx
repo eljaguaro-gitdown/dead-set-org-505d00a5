@@ -235,12 +235,7 @@ const SetlistPoster = () => {
           >
             <Play className="w-3 h-3 fill-current" /> Play All
           </button>
-          <button
-            onClick={handleShare}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-body bg-card/80 border border-border text-foreground hover:border-primary/40 transition-colors"
-          >
-            <Share2 className="w-3 h-3" /> Share
-          </button>
+          <ShareDropdown url={shareUrl} title={shareTitle} description={shareDescription} />
         </div>
       </header>
 
