@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import PageLayout from "@/components/PageLayout";
 import SiteHeader from "@/components/SiteHeader";
-import DancingBear from "@/components/DancingBear";
+
 import type { Database } from "@/integrations/supabase/types";
 
 type SetlistRow = Database["public"]["Tables"]["setlists"]["Row"];
