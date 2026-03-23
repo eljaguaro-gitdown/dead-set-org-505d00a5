@@ -15,6 +15,7 @@ import ShareDialog from "@/components/ShareDialog";
 import AIDeadHeadDialog from "@/components/AIDeadHeadDialog";
 import AIWelcomeOverlay from "@/components/AIWelcomeOverlay";
 import AuthModal from "@/components/AuthModal";
+import MiniSetlistBar from "@/components/MiniSetlistBar";
 import { useSongs } from "@/hooks/useSongs";
 import { useAuth } from "@/hooks/useAuth";
 import { useSetlist } from "@/hooks/useSetlist";
@@ -42,6 +43,7 @@ const Builder = () => {
   const [description, setDescription] = useState<string | null>(null);
   const [generatingDescription, setGeneratingDescription] = useState(false);
   const [mobileTab, setMobileTab] = useState<"songs" | "setlist">("songs");
+  const [miniBarPulse, setMiniBarPulse] = useState(false);
 
   // Auth modal state
   const [authModalOpen, setAuthModalOpen] = useState(false);
@@ -129,9 +131,10 @@ const Builder = () => {
       } else {
         addSlot(newSlot);
       }
-      toast.success(`${song.title} added to Set ${activeSet === 3 ? "Encore" : activeSet}`);
-      if (isMobile) {
-        setMobileTab("setlist");
+      toast.success(`Added ${song.title} to ${activeSet === 3 ? "Encore" : `Set ${activeSet}`}`, { duration: 2000 });
+      if (isMobile && mobileTab === "songs") {
+        setMiniBarPulse(true);
+        setTimeout(() => setMiniBarPulse(false), 400);
       }
     },
     [slots, guestSlots, activeSet, addSlot, isMobile, isGuestMode]
@@ -683,7 +686,7 @@ const Builder = () => {
       <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
         {/* Song Vault — hidden on mobile when setlist tab is active */}
         <div className={`w-full lg:w-[380px] border-b lg:border-b-0 border-r-0 lg:border-r border-border overflow-hidden flex flex-col ${
-          isMobile ? (mobileTab === "songs" ? "flex-1" : "hidden") : "max-h-[calc(100vh-85px)]"
+          isMobile ? (mobileTab === "songs" ? "flex-1 pb-12" : "hidden") : "max-h-[calc(100vh-85px)]"
         }`}>
           {songsLoading ? (
             <div className="p-4 space-y-3">
@@ -774,6 +777,16 @@ const Builder = () => {
         onOpenChange={setAuthModalOpen}
         onAuthenticated={handleAuthenticated}
       />
+
+      {/* Mobile mini-setlist bar — shown when browsing Song Vault */}
+      {isMobile && mobileTab === "songs" && activeSlots.length > 0 && (
+        <MiniSetlistBar
+          title={title}
+          songCount={activeSlots.length}
+          onExpand={() => setMobileTab("setlist")}
+          pulse={miniBarPulse}
+        />
+      )}
 
       </>}
     </PageLayout>
