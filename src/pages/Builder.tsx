@@ -13,6 +13,7 @@ import CollaboratorAvatars from "@/components/CollaboratorAvatars";
 import ChatSidebar from "@/components/ChatSidebar";
 import ShareDialog from "@/components/ShareDialog";
 import AIDeadHeadDialog from "@/components/AIDeadHeadDialog";
+import AIWelcomeOverlay from "@/components/AIWelcomeOverlay";
 import AuthModal from "@/components/AuthModal";
 import { useSongs } from "@/hooks/useSongs";
 import { useAuth } from "@/hooks/useAuth";
@@ -45,6 +46,10 @@ const Builder = () => {
   // Auth modal state
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const pendingActionRef = useRef<"save" | "share" | "collaborate" | null>(null);
+
+  // AI welcome overlay: show for fresh builder (no paramId, no slots loaded)
+  const [welcomeDismissed, setWelcomeDismissed] = useState(false);
+  const showWelcome = !paramId && !welcomeDismissed;
 
   // Guest mode: track local-only slots when no user/setlist
   const isGuestMode = !user && !paramId;
@@ -423,6 +428,50 @@ const Builder = () => {
     togglePublic();
   }, [requireAuth, togglePublic]);
 
+  // Handle AI welcome overlay generation
+  const handleWelcomeGenerated = useCallback(
+    (suggestion: { explanation: string; sets: { setNumber: number; songs: { songId: string; title: string; segueToNext: boolean; notes: string; position: number }[] }[] }, eraId: string | null) => {
+      if (eraId) setSelectedEra(eraId);
+      const firstSongs = suggestion.sets.flatMap(s => s.songs).slice(0, 2).map(s => s.title);
+      const newTitle = firstSongs.length > 0 ? `${firstSongs.join(" > ")}` : "AI Generated Setlist";
+      setTitle(newTitle);
+
+      const newSlots: SetlistSlotData[] = [];
+      for (const set of suggestion.sets) {
+        for (const suggestedSong of set.songs) {
+          const song = songs.find((s) => s.id === suggestedSong.songId);
+          if (!song) continue;
+          newSlots.push({
+            id: crypto.randomUUID(),
+            song,
+            version: null,
+            setNumber: set.setNumber,
+            position: suggestedSong.position,
+            segueToNext: suggestedSong.segueToNext,
+            notes: suggestedSong.notes || "",
+          });
+        }
+      }
+
+      if (isGuestMode) {
+        setGuestSlots(newSlots);
+      } else {
+        newSlots.forEach((slot) => addSlot(slot));
+      }
+
+      setWelcomeDismissed(true);
+      setMobileTab("setlist");
+
+      const firstPlayable = newSlots.find((s) => s.version?.archive_org_url);
+      if (firstPlayable) {
+        playSingle(firstPlayable);
+      }
+
+      toast.success("Your dream show is ready! 🎶");
+    },
+    [songs, isGuestMode, addSlot, playSingle]
+  );
+
   if (authLoading && paramId) {
     return (
       <PageLayout minimal><div className="flex-1 flex items-center justify-center">
@@ -437,7 +486,16 @@ const Builder = () => {
 
   return (
     <PageLayout minimal>
-      {/* Top Bar */}
+      {/* AI Welcome Overlay for fresh builder */}
+      {showWelcome && (
+        <AIWelcomeOverlay
+          eras={eras}
+          onGenerated={handleWelcomeGenerated}
+          onSkip={() => setWelcomeDismissed(true)}
+        />
+      )}
+
+      {!showWelcome && <>
       <header className="border-b border-border">
         {/* Row 1: Logo, title, saved indicator */}
         <div className="px-3 sm:px-6 py-3 sm:py-5 flex items-center gap-2 sm:gap-5">
@@ -717,6 +775,7 @@ const Builder = () => {
         onAuthenticated={handleAuthenticated}
       />
 
+      </>}
     </PageLayout>
   );
 };
