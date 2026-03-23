@@ -263,6 +263,20 @@ const Browse = () => {
       <div className="border-b border-border/30 px-4 sm:px-6 py-4">
         <div className="max-w-6xl mx-auto space-y-3">
           <div className="flex items-center gap-2">
+            {isAuthenticated && (
+              <button
+                onClick={() => setShowFavoritesOnly((p) => !p)}
+                className={`h-9 px-3 rounded-md border transition-colors flex items-center gap-1.5 shrink-0 ${
+                  showFavoritesOnly
+                    ? "bg-primary/15 border-primary/40 text-primary"
+                    : "bg-card/60 border-border text-muted-foreground hover:text-foreground hover:border-foreground/20"
+                }`}
+                title="Show favorites only"
+              >
+                <Heart className={`w-3.5 h-3.5 ${showFavoritesOnly ? "fill-primary" : ""}`} />
+                <span className="font-body text-xs hidden sm:inline">Favorites</span>
+              </button>
+            )}
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
