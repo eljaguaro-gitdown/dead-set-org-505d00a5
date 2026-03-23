@@ -8,11 +8,25 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import PageLayout from "@/components/PageLayout";
 import StealYourFace from "@/components/StealYourFace";
+import { getPostAuthRedirect } from "@/lib/postAuthRedirect";
 
 const Auth = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const redirectTo = searchParams.get("redirect") || "/builder";
+  const explicitRedirect = searchParams.get("redirect");
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const smartRedirect = async (userId: string) => {
+    if (explicitRedirect) {
+      navigate(explicitRedirect);
+    } else {
+      const path = await getPostAuthRedirect(userId);
+      navigate(path);
+    }
+  };
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
