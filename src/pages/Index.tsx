@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { getPostAuthRedirect } from "@/lib/postAuthRedirect";
 import StealYourFace from "@/components/StealYourFace";
 import DancingBear from "@/components/DancingBear";
+import AmbientPlayer from "@/components/AmbientPlayer";
 import PageLayout from "@/components/PageLayout";
 import SiteHeader from "@/components/SiteHeader";
 import AdSenseLoader from "@/components/AdSenseLoader";
