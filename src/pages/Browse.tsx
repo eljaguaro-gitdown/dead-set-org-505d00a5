@@ -448,7 +448,7 @@ const FeaturedCard = ({ setlist, onClick }: { setlist: SetlistWithMeta; onClick:
 };
 
 /** Standard setlist card */
-const SetlistCard = ({ setlist, index, onClick }: { setlist: SetlistWithMeta; index: number; onClick: () => void }) => {
+const SetlistCard = ({ setlist, index, onClick, isFav, onToggleFav }: { setlist: SetlistWithMeta; index: number; onClick: () => void; isFav: boolean; onToggleFav: (id: string) => void }) => {
   const eraColor = getEraColor(setlist.era_name);
   return (
     <motion.button
@@ -462,12 +462,15 @@ const SetlistCard = ({ setlist, index, onClick }: { setlist: SetlistWithMeta; in
       <div className="p-4">
         {/* Creator row */}
         <div className="flex items-center gap-2 mb-2">
-          {setlist.creator_avatar ? (
-            <img src={setlist.creator_avatar} alt="" className="w-4 h-4 rounded-full object-cover" />
-          ) : (
-            <div className="w-4 h-4 rounded-full bg-muted" />
-          )}
-          <span className="text-[10px] font-body text-muted-foreground truncate">{setlist.creator_name}</span>
+          <div className="flex items-center gap-2 min-w-0 flex-1">
+            {setlist.creator_avatar ? (
+              <img src={setlist.creator_avatar} alt="" className="w-4 h-4 rounded-full object-cover" />
+            ) : (
+              <div className="w-4 h-4 rounded-full bg-muted" />
+            )}
+            <span className="text-[10px] font-body text-muted-foreground truncate">{setlist.creator_name}</span>
+          </div>
+          <FavoriteButton isFavorite={isFav} onToggle={() => onToggleFav(setlist.id)} />
         </div>
 
         {/* Title */}
