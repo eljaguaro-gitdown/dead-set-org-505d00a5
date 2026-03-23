@@ -169,14 +169,14 @@ const Index = () => {
         </motion.div>
       </main>
 
-      {/* Community carousel — below the fold */}
+      {/* Trending all-time carousel */}
       {featured.length > 0 && (
         <section className="py-10 sm:py-16 border-t border-border/30">
-          <div className="px-4 sm:px-8 mb-5">
+          <div className="px-4 sm:px-8 mb-6">
             <div className="flex items-center gap-4">
               <div className="h-px flex-1 bg-border" />
-              <span className="font-display text-xs tracking-[0.2em] text-muted-foreground uppercase">
-                From the community
+              <span className="font-display text-sm tracking-[0.2em] text-primary uppercase">
+                🔥 Trending All Time
               </span>
               <div className="h-px flex-1 bg-border" />
             </div>
@@ -184,15 +184,25 @@ const Index = () => {
 
           <div className="overflow-x-auto scrollbar-hide px-4 sm:px-8">
             <div className="flex gap-4 min-w-max pb-2">
-              {featured.map((setlist) => (
-                <button
+              {featured.map((setlist, i) => (
+                <motion.button
                   key={setlist.id}
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.08, duration: 0.4 }}
                   onClick={() => navigate(`/setlist/${setlist.id}`)}
-                  className="w-[220px] sm:w-[260px] shrink-0 border border-border/60 bg-card/50 backdrop-blur-sm rounded-lg p-5 text-left hover:border-primary/40 transition-all group"
+                  className="w-[220px] sm:w-[260px] shrink-0 border border-border/60 bg-card/50 backdrop-blur-sm rounded-lg p-5 text-left hover:border-primary/40 hover:shadow-[0_0_20px_hsl(var(--glow-gold)/0.15)] transition-all group"
                 >
-                  <h3 className="font-display text-sm text-foreground truncate group-hover:text-primary transition-colors">
-                    {setlist.title}
-                  </h3>
+                  <div className="flex items-start justify-between gap-2">
+                    <h3 className="font-display text-sm text-foreground truncate group-hover:text-primary transition-colors">
+                      {setlist.title}
+                    </h3>
+                    {setlist.upvote_count > 0 && (
+                      <span className="shrink-0 text-xs font-display text-primary">
+                        ⚡ {setlist.upvote_count}
+                      </span>
+                    )}
+                  </div>
                   <p className="font-body text-xs text-muted-foreground mt-1 truncate">
                     by {setlist.creator_name}
                   </p>
@@ -205,15 +215,21 @@ const Index = () => {
                     <span className="text-[10px] font-body text-muted-foreground/60">
                       {setlist.song_count} songs
                     </span>
-                    {setlist.upvote_count > 0 && (
-                      <span className="text-[10px] font-body text-muted-foreground/60 ml-auto">
-                        ⚡ {setlist.upvote_count}
-                      </span>
-                    )}
                   </div>
-                </button>
+                </motion.button>
               ))}
             </div>
+          </div>
+
+          <div className="flex justify-center mt-6">
+            <Button
+              variant="ghost"
+              onClick={() => navigate("/browse")}
+              className="font-display text-xs tracking-[0.15em] text-muted-foreground hover:text-primary uppercase gap-1.5"
+            >
+              See all community setlists
+              <ChevronRight className="w-3.5 h-3.5" />
+            </Button>
           </div>
         </section>
       )}
