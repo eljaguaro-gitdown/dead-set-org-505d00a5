@@ -788,6 +788,15 @@ const Builder = () => {
         />
       )}
 
+      {/* Save celebration */}
+      {showCelebration && savedSetlistId && (
+        <SaveCelebration
+          setlistId={savedSetlistId}
+          setlistTitle={title}
+          onDismiss={() => setShowCelebration(false)}
+        />
+      )}
+
       </>}
     </PageLayout>
   );
