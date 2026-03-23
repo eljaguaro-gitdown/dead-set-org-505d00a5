@@ -140,6 +140,9 @@ const Index = () => {
             Build your dream Dead show.
           </h1>
 
+          {/* Ambient audio teaser */}
+          <AmbientPlayer />
+
           {/* CTA */}
           <Button
             size="lg"
