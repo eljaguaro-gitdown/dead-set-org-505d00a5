@@ -266,13 +266,10 @@ const Builder = () => {
 
       // Clear guest state
       setGuestSlots([]);
-      toast.success("Setlist saved!");
+      setSavedSetlistId(newSetlist.id);
+      setShowCelebration(true);
       navigate(`/builder/${newSetlist.id}`, { replace: true });
 
-      // Execute pending action
-      if (pendingActionRef.current === "share") {
-        // Share dialog will open via the setlist being loaded
-      }
       pendingActionRef.current = null;
     };
     saveGuestSetlist();
