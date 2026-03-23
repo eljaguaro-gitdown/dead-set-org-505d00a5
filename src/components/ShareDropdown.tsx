@@ -4,6 +4,8 @@ import { toast } from "sonner";
 
 interface ShareDropdownProps {
   url: string;
+  /** URL with OG meta tags for social crawlers (edge function). Falls back to url. */
+  ogUrl?: string;
   title: string;
   description?: string;
 }
