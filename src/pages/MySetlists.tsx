@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Plus, Globe, Lock, Music, Trash2, Calendar, Search, User, ArrowDownUp } from "lucide-react";
+import { Plus, Globe, Lock, Music, Trash2, Calendar, Search, User, ArrowDownUp, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import PageLayout from "@/components/PageLayout";
 import SiteHeader from "@/components/SiteHeader";
-import DancingBear from "@/components/DancingBear";
+
 import type { Database } from "@/integrations/supabase/types";
 
 type SetlistRow = Database["public"]["Tables"]["setlists"]["Row"];
@@ -224,21 +224,17 @@ const MySetlists = () => {
             transition={{ delay: 0.2 }}
             className="text-center py-16 space-y-5"
           >
-            <div className="flex justify-center gap-1 mb-2">
-              <DancingBear color="primary" />
-              <DancingBear color="gold" />
-              <DancingBear color="blue" />
-            </div>
             <div className="space-y-1">
               <h3 className="font-display text-xl text-foreground">No setlists yet</h3>
-              <p className="font-body text-sm text-muted-foreground">Let's fix that.</p>
+              <p className="font-body text-sm text-muted-foreground">Cosmic Charlie is waiting.</p>
             </div>
             <Button
               size="lg"
               onClick={() => navigate("/builder")}
-              className="font-display text-sm px-8 py-5 bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_30px_hsl(var(--glow-gold))] tracking-widest uppercase"
+              className="font-display text-sm px-8 py-5 bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_30px_hsl(var(--glow-gold))] tracking-widest uppercase gap-2"
             >
-              Build Your First Show
+              <Star className="w-5 h-5" />
+              Need a Miracle?
             </Button>
             <div>
               <button
