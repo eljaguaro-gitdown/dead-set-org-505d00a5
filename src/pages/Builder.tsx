@@ -495,7 +495,7 @@ const Builder = () => {
         />
       )}
 
-      {/* Top Bar */}
+      {!showWelcome && <>
       <header className="border-b border-border">
         {/* Row 1: Logo, title, saved indicator */}
         <div className="px-3 sm:px-6 py-3 sm:py-5 flex items-center gap-2 sm:gap-5">
