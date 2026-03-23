@@ -340,12 +340,14 @@ const FeaturedCard = ({ setlist, onClick }: { setlist: SetlistWithMeta; onClick:
         </h3>
         <div className="flex items-center gap-2 mt-3 flex-wrap">
           {setlist.era_name && (
-            <span
-              className="px-2 py-0.5 text-[10px] font-body rounded-full border"
-              style={{ borderColor: `hsl(${eraColor} / 0.4)`, color: `hsl(${eraColor})` }}
-            >
-              {setlist.era_name}
-            </span>
+            <EraTooltip eraName={setlist.era_name}>
+              <span
+                className="px-2 py-0.5 text-[10px] font-body rounded-full border cursor-help"
+                style={{ borderColor: `hsl(${eraColor} / 0.4)`, color: `hsl(${eraColor})` }}
+              >
+                {setlist.era_name}
+              </span>
+            </EraTooltip>
           )}
           <span className="text-[10px] font-body text-muted-foreground">{setlist.slot_count} songs</span>
           {setlist.upvote_count > 0 && (
