@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Zap, Search, SortAsc, Play, Music, TrendingUp } from "lucide-react";
+import { Zap, Search, SortAsc, Play, Music, TrendingUp, Heart } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,6 +10,9 @@ import SiteHeader from "@/components/SiteHeader";
 import AdSenseLoader from "@/components/AdSenseLoader";
 import StealYourFace from "@/components/StealYourFace";
 import EraTooltip from "@/components/EraTooltip";
+import FavoriteButton from "@/components/FavoriteButton";
+import { useFavorites } from "@/hooks/useFavorites";
+import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 
 type Setlist = Database["public"]["Tables"]["setlists"]["Row"];
@@ -45,6 +48,7 @@ const PAGE_SIZE = 18;
 
 const Browse = () => {
   const navigate = useNavigate();
+  const { isFavorite, toggleFavorite, isAuthenticated } = useFavorites();
   const [setlists, setSetlists] = useState<SetlistWithMeta[]>([]);
   const [trending, setTrending] = useState<SetlistWithMeta[]>([]);
   const [featured, setFeatured] = useState<SetlistWithMeta[]>([]);
@@ -52,9 +56,20 @@ const Browse = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [eraFilter, setEraFilter] = useState<string>("all");
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [sortBy, setSortBy] = useState<"newest" | "oldest" | "most_upvoted" | "most_played">("newest");
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [totalCount, setTotalCount] = useState(0);
+
+  const handleToggleFavorite = useCallback(async (setlistId: string) => {
+    if (!isAuthenticated) {
+      toast("Sign in to save favorites", { description: "Create an account to bookmark setlists" });
+      return;
+    }
+    const wasFav = isFavorite(setlistId);
+    await toggleFavorite(setlistId);
+    toast(wasFav ? "Removed from favorites" : "Added to favorites ❤️", { duration: 1500 });
+  }, [isAuthenticated, isFavorite, toggleFavorite]);
 
   useEffect(() => {
     supabase.from("eras").select("*").order("year_start").then(({ data }) => {
@@ -172,12 +187,18 @@ const Browse = () => {
   };
 
   const filtered = useMemo(() => {
-    if (!search) return setlists;
-    const q = search.toLowerCase();
-    return setlists.filter(
-      (s) => s.title.toLowerCase().includes(q) || s.creator_name.toLowerCase().includes(q)
-    );
-  }, [setlists, search]);
+    let result = setlists;
+    if (showFavoritesOnly) {
+      result = result.filter((s) => isFavorite(s.id));
+    }
+    if (search) {
+      const q = search.toLowerCase();
+      result = result.filter(
+        (s) => s.title.toLowerCase().includes(q) || s.creator_name.toLowerCase().includes(q)
+      );
+    }
+    return result;
+  }, [setlists, search, showFavoritesOnly, isFavorite]);
 
   const visible = filtered.slice(0, visibleCount);
   const hasMore = visibleCount < filtered.length;
@@ -242,6 +263,20 @@ const Browse = () => {
       <div className="border-b border-border/30 px-4 sm:px-6 py-4">
         <div className="max-w-6xl mx-auto space-y-3">
           <div className="flex items-center gap-2">
+            {isAuthenticated && (
+              <button
+                onClick={() => setShowFavoritesOnly((p) => !p)}
+                className={`h-9 px-3 rounded-md border transition-colors flex items-center gap-1.5 shrink-0 ${
+                  showFavoritesOnly
+                    ? "bg-primary/15 border-primary/40 text-primary"
+                    : "bg-card/60 border-border text-muted-foreground hover:text-foreground hover:border-foreground/20"
+                }`}
+                title="Show favorites only"
+              >
+                <Heart className={`w-3.5 h-3.5 ${showFavoritesOnly ? "fill-primary" : ""}`} />
+                <span className="font-body text-xs hidden sm:inline">Favorites</span>
+              </button>
+            )}
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
@@ -332,6 +367,8 @@ const Browse = () => {
                     setlist={setlist}
                     index={i}
                     onClick={() => navigate(`/setlist/${setlist.id}`)}
+                    isFav={isFavorite(setlist.id)}
+                    onToggleFav={handleToggleFavorite}
                   />
                 ))}
               </div>
@@ -413,7 +450,7 @@ const FeaturedCard = ({ setlist, onClick }: { setlist: SetlistWithMeta; onClick:
 };
 
 /** Standard setlist card */
-const SetlistCard = ({ setlist, index, onClick }: { setlist: SetlistWithMeta; index: number; onClick: () => void }) => {
+const SetlistCard = ({ setlist, index, onClick, isFav, onToggleFav }: { setlist: SetlistWithMeta; index: number; onClick: () => void; isFav: boolean; onToggleFav: (id: string) => void }) => {
   const eraColor = getEraColor(setlist.era_name);
   return (
     <motion.button
@@ -427,12 +464,15 @@ const SetlistCard = ({ setlist, index, onClick }: { setlist: SetlistWithMeta; in
       <div className="p-4">
         {/* Creator row */}
         <div className="flex items-center gap-2 mb-2">
-          {setlist.creator_avatar ? (
-            <img src={setlist.creator_avatar} alt="" className="w-4 h-4 rounded-full object-cover" />
-          ) : (
-            <div className="w-4 h-4 rounded-full bg-muted" />
-          )}
-          <span className="text-[10px] font-body text-muted-foreground truncate">{setlist.creator_name}</span>
+          <div className="flex items-center gap-2 min-w-0 flex-1">
+            {setlist.creator_avatar ? (
+              <img src={setlist.creator_avatar} alt="" className="w-4 h-4 rounded-full object-cover" />
+            ) : (
+              <div className="w-4 h-4 rounded-full bg-muted" />
+            )}
+            <span className="text-[10px] font-body text-muted-foreground truncate">{setlist.creator_name}</span>
+          </div>
+          <FavoriteButton isFavorite={isFav} onToggle={() => onToggleFav(setlist.id)} />
         </div>
 
         {/* Title */}
