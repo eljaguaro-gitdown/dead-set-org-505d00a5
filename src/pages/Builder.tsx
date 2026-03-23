@@ -686,7 +686,7 @@ const Builder = () => {
       <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
         {/* Song Vault — hidden on mobile when setlist tab is active */}
         <div className={`w-full lg:w-[380px] border-b lg:border-b-0 border-r-0 lg:border-r border-border overflow-hidden flex flex-col ${
-          isMobile ? (mobileTab === "songs" ? "flex-1" : "hidden") : "max-h-[calc(100vh-85px)]"
+          isMobile ? (mobileTab === "songs" ? "flex-1 pb-12" : "hidden") : "max-h-[calc(100vh-85px)]"
         }`}>
           {songsLoading ? (
             <div className="p-4 space-y-3">
