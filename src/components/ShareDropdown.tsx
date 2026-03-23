@@ -4,11 +4,13 @@ import { toast } from "sonner";
 
 interface ShareDropdownProps {
   url: string;
+  /** URL with OG meta tags for social crawlers (edge function). Falls back to url. */
+  ogUrl?: string;
   title: string;
   description?: string;
 }
 
-const ShareDropdown = ({ url, title, description }: ShareDropdownProps) => {
+const ShareDropdown = ({ url, ogUrl, title, description }: ShareDropdownProps) => {
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -42,14 +44,16 @@ const ShareDropdown = ({ url, title, description }: ShareDropdownProps) => {
     setTimeout(() => { setCopied(false); setOpen(false); }, 1500);
   };
 
+  const socialUrl = ogUrl || url;
+
   const shareTwitter = () => {
-    const tweetUrl = `https://x.com/intent/tweet?text=${encodeURIComponent(title)}&url=${encodeURIComponent(url)}`;
+    const tweetUrl = `https://x.com/intent/tweet?text=${encodeURIComponent(title)}&url=${encodeURIComponent(socialUrl)}`;
     window.open(tweetUrl, "_blank", "noopener,noreferrer,width=550,height=420");
     setOpen(false);
   };
 
   const shareFacebook = () => {
-    const fbUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
+    const fbUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(socialUrl)}`;
     window.open(fbUrl, "_blank", "noopener,noreferrer,width=550,height=420");
     setOpen(false);
   };

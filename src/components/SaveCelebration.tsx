@@ -11,6 +11,7 @@ interface SaveCelebrationProps {
 
 const SaveCelebration = ({ setlistId, setlistTitle, onDismiss }: SaveCelebrationProps) => {
   const posterUrl = `${window.location.origin}/setlist/${setlistId}`;
+  const ogUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/og-image?id=${setlistId}`;
 
   return (
     <motion.div
@@ -42,6 +43,7 @@ const SaveCelebration = ({ setlistId, setlistTitle, onDismiss }: SaveCelebration
         <div className="flex justify-center mb-4">
           <ShareDropdown
             url={posterUrl}
+            ogUrl={ogUrl}
             title={`${setlistTitle} — Dead Set`}
             description={`Check out my dream Dead show: ${setlistTitle}`}
           />
