@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Sparkles, Share2, Users, LogOut, MessageCircle, Globe, CheckCircle, List, Music, LayoutList, Save } from "lucide-react";
+import { Star, Share2, Users, LogOut, MessageCircle, Globe, CheckCircle, List, Music, LayoutList, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import PageLayout from "@/components/PageLayout";
 import { Input } from "@/components/ui/input";
@@ -474,7 +474,7 @@ const Builder = () => {
         playSingle(firstPlayable);
       }
 
-      toast.success("Your dream show is ready! 🎶");
+      toast.success("Charlie's got you — your dream show is ready! 🎶");
     },
     [songs, isGuestMode, addSlot, playSingle]
   );
@@ -605,10 +605,10 @@ const Builder = () => {
             size="sm"
             className="shrink-0 h-8 sm:h-9 px-2 sm:px-3 gap-1.5 sm:gap-2 bg-gradient-to-r from-primary to-accent text-primary-foreground font-display text-xs sm:text-sm shadow-md hover:shadow-lg hover:scale-105 transition-all duration-200 animate-pulse hover:animate-none"
             onClick={() => setAiOpen(true)}
-            title="AI Dead Head — Generate a setlist"
+            title="Cosmic Charlie — Your AI Deadhead"
           >
-            <Sparkles className="w-4 sm:w-5 h-4 sm:h-5" />
-            <span className="hidden sm:inline">AI Dead Head</span>
+            <Star className="w-4 sm:w-5 h-4 sm:h-5" />
+            <span className="hidden sm:inline">Cosmic Charlie</span>
           </Button>
           <Button
             variant="ghost"
@@ -761,7 +761,7 @@ const Builder = () => {
         shareLink={getShareLink()}
       />
 
-      {/* AI Dead Head Dialog */}
+      {/* Cosmic Charlie Dialog */}
       <AIDeadHeadDialog
         open={aiOpen}
         onOpenChange={setAiOpen}

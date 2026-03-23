@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Sparkles, Zap, Wand2, Loader2 } from "lucide-react";
+import { Star, Wand2, Loader2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -49,7 +49,6 @@ const AIDeadHeadDialog = ({
   const [namingNew, setNamingNew] = useState(false);
   const [newSetlistName, setNewSetlistName] = useState("");
   const nameInputRef = useRef<HTMLInputElement>(null);
-  // Track recently generated song titles to avoid repetition across regenerations
   const recentSongsRef = useRef<string[]>([]);
 
   useEffect(() => {
@@ -74,14 +73,13 @@ const AIDeadHeadDialog = ({
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
 
-      // Track songs from this generation to avoid repetition on regenerate
       const generatedSongs = (data.sets || []).flatMap((s: any) => s.songs.map((song: any) => song.title));
       recentSongsRef.current = [...new Set([...recentSongsRef.current, ...generatedSongs])].slice(-30);
 
       setSuggestion(data);
     } catch (e: any) {
       console.error("AI error:", e);
-      toast.error(e.message || "AI generation failed");
+      toast.error(e.message || "Cosmic Charlie hit a wrong note. Try again.");
     } finally {
       setLoading(false);
     }
@@ -91,7 +89,7 @@ const AIDeadHeadDialog = ({
     if (!suggestion) return;
     onApplySuggestion(suggestion);
     handleReset();
-    toast.success("AI setlist applied!");
+    toast.success("Charlie's setlist is locked in! 🎶");
   };
 
   const handleCreateNew = () => {
@@ -99,7 +97,7 @@ const AIDeadHeadDialog = ({
     const title = newSetlistName.trim() || undefined;
     onCreateNewSetlist(suggestion, title);
     handleReset();
-    toast.success("Creating new setlist from AI suggestion...");
+    toast.success("Charlie's cooking up a new setlist...");
   };
 
   const handleReset = () => {
@@ -128,9 +126,10 @@ const AIDeadHeadDialog = ({
       <DialogContent className="bg-card border-border max-w-lg max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-display text-xl text-foreground flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-primary" />
-            AI Dead Head
+            <Star className="w-5 h-5 text-primary fill-primary/30" />
+            Cosmic Charlie
           </DialogTitle>
+          <p className="text-xs text-muted-foreground font-body">Your AI Deadhead</p>
         </DialogHeader>
 
         <AnimatePresence mode="wait">
@@ -143,7 +142,7 @@ const AIDeadHeadDialog = ({
               className="space-y-3"
             >
               <p className="text-sm text-muted-foreground font-body">
-                Let the AI Dead Head help curate your setlist with encyclopedic knowledge of the catalog.
+                Charlie's been to every show and remembers every setlist. What do you need?
               </p>
               <button
                 onClick={() => setMode("build")}
@@ -151,12 +150,12 @@ const AIDeadHeadDialog = ({
               >
                 <div className="flex items-center gap-3">
                   <div className="p-2 rounded-md bg-primary/10 text-primary group-hover:bg-primary/20 transition-colors">
-                    <Wand2 className="w-5 h-5" />
+                    <Star className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="font-display text-sm text-foreground">Build Me a Set</h3>
+                    <h3 className="font-display text-sm text-foreground">Need a Miracle?</h3>
                     <p className="text-xs text-muted-foreground font-body mt-0.5">
-                      Generate a full setlist from scratch with authentic flow
+                      Let Charlie build you a full dream setlist from scratch
                     </p>
                   </div>
                 </div>
@@ -168,12 +167,12 @@ const AIDeadHeadDialog = ({
               >
                 <div className="flex items-center gap-3">
                   <div className="p-2 rounded-md bg-primary/10 text-primary group-hover:bg-primary/20 transition-colors">
-                    <Zap className="w-5 h-5" />
+                    <Wand2 className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="font-display text-sm text-foreground">Improve My Set</h3>
+                    <h3 className="font-display text-sm text-foreground">Ask Charlie to Improve This</h3>
                     <p className="text-xs text-muted-foreground font-body mt-0.5">
-                      Optimize flow, suggest swaps &amp; segue opportunities
+                      Charlie'll optimize flow, suggest swaps &amp; find segue opportunities
                     </p>
                   </div>
                 </div>
@@ -191,7 +190,7 @@ const AIDeadHeadDialog = ({
             >
               <div>
                 <label className="text-xs text-muted-foreground font-body block mb-1.5">
-                  Any preferences? (optional)
+                  {mode === "build" ? "Tell Charlie what you're feeling" : "What should Charlie fix?"}
                 </label>
                 <Textarea
                   value={preferences}
@@ -199,7 +198,7 @@ const AIDeadHeadDialog = ({
                   placeholder={
                     mode === "build"
                       ? "e.g. Heavy on the jams, include Scarlet > Fire, open with Bertha..."
-                      : "e.g. Need more energy in Set II, add a space segment..."
+                      : "e.g. Set 2 needs more energy, add a space segment before drums..."
                   }
                   className="bg-background border-border text-foreground font-body text-sm resize-none h-20"
                 />
@@ -218,8 +217,8 @@ const AIDeadHeadDialog = ({
                   onClick={handleGenerate}
                   className="bg-primary text-primary-foreground font-body gap-1.5 flex-1"
                 >
-                  <Sparkles className="w-3.5 h-3.5" />
-                  {mode === "build" ? "Build My Set" : "Improve My Set"}
+                  <Star className="w-3.5 h-3.5" />
+                  {mode === "build" ? "Let Charlie Cook" : "Charlie, Fix This"}
                 </Button>
               </div>
             </motion.div>
@@ -233,9 +232,14 @@ const AIDeadHeadDialog = ({
               exit={{ opacity: 0 }}
               className="flex flex-col items-center py-8 gap-3"
             >
-              <Loader2 className="w-8 h-8 text-primary animate-spin" />
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+              >
+                <Star className="w-8 h-8 text-primary fill-primary/20" />
+              </motion.div>
               <p className="text-sm text-muted-foreground font-body">
-                The Dead Head is studying the catalog...
+                Cosmic Charlie is digging through the tapes...
               </p>
             </motion.div>
           )}
@@ -249,6 +253,7 @@ const AIDeadHeadDialog = ({
               className="space-y-4"
             >
               <div className="p-3 rounded-lg bg-primary/5 border border-primary/20">
+                <p className="text-xs text-primary font-body mb-1">Charlie says:</p>
                 <p className="text-sm text-foreground font-body leading-relaxed">
                   {suggestion.explanation}
                 </p>
@@ -289,14 +294,14 @@ const AIDeadHeadDialog = ({
                     onClick={handleGenerate}
                     className="border-border text-muted-foreground font-body gap-1.5"
                   >
-                    <Sparkles className="w-3.5 h-3.5" /> Regenerate
+                    <Star className="w-3.5 h-3.5" /> Ask Again
                   </Button>
                   <Button
                     size="sm"
                     onClick={handleApply}
                     className="bg-primary text-primary-foreground font-body gap-1.5 flex-1"
                   >
-                    <Zap className="w-3.5 h-3.5" /> Apply to Current
+                    Charlie's got it — Apply
                   </Button>
                 </div>
                 {!namingNew ? (
@@ -305,7 +310,7 @@ const AIDeadHeadDialog = ({
                     size="sm"
                     onClick={() => {
                       const firstSongs = suggestion?.sets.flatMap(s => s.songs).slice(0, 2).map(s => s.title) || [];
-                      setNewSetlistName(firstSongs.length > 0 ? `${firstSongs.join(" > ")}` : "AI Generated Setlist");
+                      setNewSetlistName(firstSongs.length > 0 ? `${firstSongs.join(" > ")}` : "Cosmic Charlie's Pick");
                       setNamingNew(true);
                     }}
                     className="border-primary/30 text-primary font-body gap-1.5 w-full hover:bg-primary/10"

@@ -356,7 +356,7 @@ const SetlistDisplay = ({
                 ) : (
                   <Sparkles className="w-3.5 h-3.5" />
                 )}
-                {generatingDescription ? "Writing..." : description ? "Rewrite" : "Generate Liner Notes"}
+                {generatingDescription ? "Charlie's writing..." : description ? "Rewrite" : "Ask Charlie for Liner Notes"}
               </Button>
             )}
             {slots.length > 0 && onPlaySetlist && (

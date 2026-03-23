@@ -1,11 +1,10 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, Loader2 } from "lucide-react";
+import { Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import StealYourFace from "@/components/StealYourFace";
 import EraTooltip from "@/components/EraTooltip";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -34,11 +33,29 @@ interface AIWelcomeOverlayProps {
   onSkip: () => void;
 }
 
+const VIBE_PLACEHOLDERS = [
+  "Heavy on the jams, let it breathe...",
+  "Cornell '77 energy, peak '77 Dead...",
+  "Weird and spacey, second set chaos...",
+  "Country Dead, front porch vibes...",
+  "Bring the heat, '89 Shakedown energy...",
+  "Europe '72, jazzy and tight...",
+];
+
 const AIWelcomeOverlay = ({ eras, onGenerated, onSkip }: AIWelcomeOverlayProps) => {
   const [selectedEra, setSelectedEra] = useState<string | null>(null);
   const [vibeText, setVibeText] = useState("");
   const [loading, setLoading] = useState(false);
+  const [placeholderIndex, setPlaceholderIndex] = useState(0);
   const recentSongsRef = useRef<string[]>([]);
+
+  // Rotate placeholder text every 3 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setPlaceholderIndex((prev) => (prev + 1) % VIBE_PLACEHOLDERS.length);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleGenerate = async () => {
     setLoading(true);
@@ -65,7 +82,7 @@ const AIWelcomeOverlay = ({ eras, onGenerated, onSkip }: AIWelcomeOverlayProps) 
       onGenerated(data, selectedEra);
     } catch (e: any) {
       console.error("AI error:", e);
-      toast.error(e.message || "AI generation failed");
+      toast.error(e.message || "Cosmic Charlie hit a wrong note. Try again.");
       setLoading(false);
     }
   };
@@ -92,18 +109,19 @@ const AIWelcomeOverlay = ({ eras, onGenerated, onSkip }: AIWelcomeOverlayProps) 
               exit={{ opacity: 0, scale: 0.95 }}
               className="flex flex-col items-center gap-5 py-12"
             >
-              <div className="relative">
-                <StealYourFace size={100} />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-28 h-28 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
-                </div>
-              </div>
+              {/* Animated star */}
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+              >
+                <Star className="w-16 h-16 text-primary fill-primary/20" />
+              </motion.div>
               <div className="space-y-2 text-center">
                 <p className="font-display text-lg text-foreground">
-                  Building your show...
+                  Cosmic Charlie is digging through the tapes...
                 </p>
                 <p className="font-body text-sm text-muted-foreground">
-                  The Dead Head is studying the catalog
+                  Every show, every setlist, every jam — Charlie remembers
                 </p>
               </div>
               {/* Equalizer bars */}
@@ -133,17 +151,22 @@ const AIWelcomeOverlay = ({ eras, onGenerated, onSkip }: AIWelcomeOverlayProps) 
               exit={{ opacity: 0, y: -20 }}
               className="w-full flex flex-col items-center gap-6"
             >
-              <StealYourFace size={72} />
+              {/* Charlie's icon — glowing star */}
+              <motion.div
+                animate={{ scale: [1, 1.08, 1] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                className="relative"
+              >
+                <Star className="w-16 h-16 text-primary fill-primary/30" />
+                <div className="absolute inset-0 blur-xl bg-primary/20 rounded-full" />
+              </motion.div>
 
-              <div className="text-center space-y-2">
-                <h1 className="font-display text-2xl sm:text-3xl text-foreground leading-tight">
-                  What kind of Dead show
-                  <br />
-                  are you dreaming of?
+              <div className="text-center space-y-3">
+                <h1 className="font-display text-3xl sm:text-4xl text-primary leading-tight">
+                  Need a Miracle?
                 </h1>
-                <p className="font-body text-sm text-muted-foreground">
-                  Pick an era, describe the vibe, and we'll build your dream
-                  setlist.
+                <p className="font-body text-sm text-muted-foreground max-w-sm mx-auto leading-relaxed">
+                  Cosmic Charlie knows every show the Dead ever played. Tell him what you're into and he'll build your dream setlist.
                 </p>
               </div>
 
@@ -177,7 +200,7 @@ const AIWelcomeOverlay = ({ eras, onGenerated, onSkip }: AIWelcomeOverlayProps) 
                 </div>
               </div>
 
-              {/* Vibe text */}
+              {/* Vibe text with rotating placeholder */}
               <div className="w-full space-y-2">
                 <label className="font-body text-xs text-muted-foreground uppercase tracking-wider">
                   Vibe (optional)
@@ -185,7 +208,7 @@ const AIWelcomeOverlay = ({ eras, onGenerated, onSkip }: AIWelcomeOverlayProps) 
                 <Textarea
                   value={vibeText}
                   onChange={(e) => setVibeText(e.target.value)}
-                  placeholder="Heavy on jams, Cornell '77 energy, late-night Space vibes..."
+                  placeholder={VIBE_PLACEHOLDERS[placeholderIndex]}
                   className="bg-card border-border text-foreground font-body text-sm resize-none h-20"
                 />
               </div>
@@ -196,8 +219,8 @@ const AIWelcomeOverlay = ({ eras, onGenerated, onSkip }: AIWelcomeOverlayProps) 
                 onClick={handleGenerate}
                 className="w-full font-display text-base px-8 py-6 bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_30px_hsl(var(--glow-gold))] tracking-widest uppercase gap-2"
               >
-                <Sparkles className="w-5 h-5" />
-                Build My Show
+                <Star className="w-5 h-5" />
+                Let Charlie Cook
               </Button>
 
               {/* Skip link */}
@@ -205,7 +228,7 @@ const AIWelcomeOverlay = ({ eras, onGenerated, onSkip }: AIWelcomeOverlayProps) 
                 onClick={onSkip}
                 className="font-body text-xs text-muted-foreground/60 hover:text-muted-foreground transition-colors underline underline-offset-2"
               >
-                or start from scratch
+                or build from scratch →
               </button>
             </motion.div>
           )}
