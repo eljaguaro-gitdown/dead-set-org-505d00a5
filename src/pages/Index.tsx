@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { getPostAuthRedirect } from "@/lib/postAuthRedirect";
 import StealYourFace from "@/components/StealYourFace";
 import DancingBear from "@/components/DancingBear";
 import PageLayout from "@/components/PageLayout";
@@ -29,7 +30,9 @@ const Index = () => {
 
   useEffect(() => {
     if (!loading && user) {
-      navigate("/my-setlists", { replace: true });
+      getPostAuthRedirect(user.id).then((path) => {
+        navigate(path, { replace: true });
+      });
     }
   }, [user, loading, navigate]);
 

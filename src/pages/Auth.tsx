@@ -8,15 +8,25 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import PageLayout from "@/components/PageLayout";
 import StealYourFace from "@/components/StealYourFace";
+import { getPostAuthRedirect } from "@/lib/postAuthRedirect";
 
 const Auth = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const redirectTo = searchParams.get("redirect") || "/builder";
+  const explicitRedirect = searchParams.get("redirect");
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const smartRedirect = async (userId: string) => {
+    if (explicitRedirect) {
+      navigate(explicitRedirect);
+    } else {
+      const path = await getPostAuthRedirect(userId);
+      navigate(path);
+    }
+  };
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,15 +39,17 @@ const Auth = () => {
           options: { emailRedirectTo: window.location.origin },
         });
         if (error) throw error;
-        if (data.session) {
-          navigate(redirectTo);
+        if (data.session && data.session.user) {
+          await smartRedirect(data.session.user.id);
         } else {
           toast.success("Check your email to confirm your account!");
         }
       } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const { error, data } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        navigate(redirectTo);
+        if (data.session?.user) {
+          await smartRedirect(data.session.user.id);
+        }
       }
     } catch (err: any) {
       toast.error(err.message);
