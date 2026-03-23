@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import StealYourFace from "@/components/StealYourFace";
+import EraTooltip from "@/components/EraTooltip";
 import type { Database } from "@/integrations/supabase/types";
 
 type Era = Database["public"]["Tables"]["eras"]["Row"];
