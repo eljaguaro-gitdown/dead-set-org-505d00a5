@@ -619,6 +619,17 @@ const Builder = () => {
           >
             <Globe className="w-4 sm:w-5 h-4 sm:h-5" />
           </Button>
+          {paramId && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 sm:h-9 sm:w-9 shrink-0 text-primary hover:text-primary/80"
+              onClick={() => navigate(`/setlist/${paramId}`)}
+              title="View Poster"
+            >
+              <FileImage className="w-4 sm:w-5 h-4 sm:h-5" />
+            </Button>
+          )}
           <Button
             variant="ghost"
             size="icon"

@@ -440,6 +440,14 @@ const MySetlists = () => {
                           <Lock className="w-4 h-4 opacity-50" style={{ color: tape.sub }} />
                         )}
                         <button
+                          onClick={(e) => { e.stopPropagation(); navigate(`/setlist/${s.id}`); }}
+                          className="opacity-0 group-hover:opacity-100 transition-opacity p-1"
+                          style={{ color: tape.sub }}
+                          title="View Poster"
+                        >
+                          <FileImage className="w-4 h-4" />
+                        </button>
+                        <button
                           onClick={(e) => handleDelete(s.id, e)}
                           className="opacity-0 group-hover:opacity-100 transition-opacity p-1"
                           style={{ color: tape.sub }}
