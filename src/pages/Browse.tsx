@@ -62,7 +62,7 @@ const Browse = () => {
     });
   }, []);
 
-  // Fetch featured (top 3 by upvotes) — once
+  // Fetch featured (top 3 by upvotes) and trending (most played in last 7 days) — once
   useEffect(() => {
     const fetchFeatured = async () => {
       const { data } = await supabase
@@ -75,7 +75,24 @@ const Browse = () => {
       const enriched = await enrichSetlists(data);
       setFeatured(enriched);
     };
+
+    const fetchTrending = async () => {
+      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+      const { data } = await supabase
+        .from("setlists")
+        .select("*")
+        .eq("is_public", true)
+        .gt("play_count", 0)
+        .gte("updated_at", sevenDaysAgo)
+        .order("play_count", { ascending: false })
+        .limit(6);
+      if (!data || data.length === 0) return;
+      const enriched = await enrichSetlists(data);
+      setTrending(enriched);
+    };
+
     fetchFeatured();
+    fetchTrending();
   }, []);
 
   // Main fetch
