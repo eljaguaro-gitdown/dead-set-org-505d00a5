@@ -440,6 +440,56 @@ const Builder = () => {
     );
   }
 
+  // Handle AI welcome overlay generation
+  const handleWelcomeGenerated = useCallback(
+    (suggestion: { explanation: string; sets: { setNumber: number; songs: { songId: string; title: string; segueToNext: boolean; notes: string; position: number }[] }[] }, eraId: string | null) => {
+      if (eraId) setSelectedEra(eraId);
+      // Build title from first songs
+      const firstSongs = suggestion.sets.flatMap(s => s.songs).slice(0, 2).map(s => s.title);
+      const newTitle = firstSongs.length > 0 ? `${firstSongs.join(" > ")}` : "AI Generated Setlist";
+      setTitle(newTitle);
+
+      // Populate slots
+      const newSlots: SetlistSlotData[] = [];
+      for (const set of suggestion.sets) {
+        for (const suggestedSong of set.songs) {
+          const song = songs.find((s) => s.id === suggestedSong.songId);
+          if (!song) continue;
+          newSlots.push({
+            id: crypto.randomUUID(),
+            song,
+            version: null,
+            setNumber: set.setNumber,
+            position: suggestedSong.position,
+            segueToNext: suggestedSong.segueToNext,
+            notes: suggestedSong.notes || "",
+          });
+        }
+      }
+
+      if (isGuestMode) {
+        setGuestSlots(newSlots);
+      } else {
+        // For authenticated users without a setlist yet, create one
+        newSlots.forEach((slot) => addSlot(slot));
+      }
+
+      setWelcomeDismissed(true);
+      setMobileTab("setlist");
+
+      // Auto-cue first song (find one with an archive URL)
+      const firstPlayable = newSlots.find(
+        (s) => s.version?.archive_org_url
+      );
+      if (firstPlayable) {
+        playSingle(firstPlayable);
+      }
+
+      toast.success("Your dream show is ready! 🎶");
+    },
+    [songs, isGuestMode, addSlot, playSingle]
+  );
+
   return (
     <PageLayout minimal>
       {/* Top Bar */}
