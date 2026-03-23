@@ -43,6 +43,7 @@ const SaveCelebration = ({ setlistId, setlistTitle, onDismiss }: SaveCelebration
         <div className="flex justify-center mb-4">
           <ShareDropdown
             url={posterUrl}
+            ogUrl={ogUrl}
             title={`${setlistTitle} — Dead Set`}
             description={`Check out my dream Dead show: ${setlistTitle}`}
           />
