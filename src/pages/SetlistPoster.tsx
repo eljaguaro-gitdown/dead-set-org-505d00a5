@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 import StealYourFace from "@/components/StealYourFace";
 import DancingBear from "@/components/DancingBear";
+import ShareDropdown from "@/components/ShareDropdown";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -102,6 +103,39 @@ const SetlistPoster = () => {
     fetchSetlist();
   }, [id]);
 
+  // Dynamic OG meta tags
+  useEffect(() => {
+    if (!setlist || slots.length === 0) return;
+    const songNames = slots.slice(0, 3).map((s) => s.song.title).join(", ");
+    const desc = `A${eraName ? ` ${eraName}` : ""} dream setlist by ${creatorName}. ${slots.length} songs including ${songNames}...`;
+    const ogTitle = `${setlist.title} — Dead Set`;
+    const canonicalUrl = `${window.location.origin}/setlist/${id}`;
+    const ogImageUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/og-image?id=${id}`;
+
+    document.title = ogTitle;
+
+    const setMeta = (property: string, content: string) => {
+      let el = document.querySelector(`meta[property="${property}"]`) || document.querySelector(`meta[name="${property}"]`);
+      if (!el) {
+        el = document.createElement("meta");
+        if (property.startsWith("og:")) el.setAttribute("property", property);
+        else el.setAttribute("name", property);
+        document.head.appendChild(el);
+      }
+      el.setAttribute("content", content);
+    };
+
+    setMeta("og:title", ogTitle);
+    setMeta("og:description", desc);
+    setMeta("og:image", ogImageUrl);
+    setMeta("og:url", canonicalUrl);
+    setMeta("og:type", "website");
+    setMeta("twitter:card", "summary_large_image");
+    setMeta("twitter:title", ogTitle);
+    setMeta("twitter:description", desc);
+    setMeta("twitter:image", ogImageUrl);
+  }, [setlist, slots, eraName, creatorName, id]);
+
   useEffect(() => {
     if (!id || !user) return;
     supabase.from("setlist_upvotes").select("id").eq("setlist_id", id).eq("user_id", user.id).maybeSingle()
@@ -124,14 +158,11 @@ const SetlistPoster = () => {
     setUpvoting(false);
   };
 
-  const handleShare = async () => {
-    const url = window.location.href;
-    if (navigator.share) {
-      try { await navigator.share({ title: setlist?.title || "Dead Set", url }); return; } catch {}
-    }
-    await navigator.clipboard.writeText(url);
-    toast.success("Link copied!");
-  };
+  const shareUrl = `${window.location.origin}/setlist/${id}`;
+  const shareTitle = `${setlist?.title || "Dream Setlist"} — Dead Set`;
+  const shareDescription = setlist && slots.length > 0
+    ? `Check out this${eraName ? ` ${eraName}` : ""} dream Dead show by ${creatorName}. ${slots.length} songs!`
+    : undefined;
 
   const handlePlaySong = (slot: EnrichedSlot) => {
     if (!slot.version?.archive_org_url) return;
@@ -204,12 +235,7 @@ const SetlistPoster = () => {
           >
             <Play className="w-3 h-3 fill-current" /> Play All
           </button>
-          <button
-            onClick={handleShare}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-body bg-card/80 border border-border text-foreground hover:border-primary/40 transition-colors"
-          >
-            <Share2 className="w-3 h-3" /> Share
-          </button>
+          <ShareDropdown url={shareUrl} title={shareTitle} description={shareDescription} />
         </div>
       </header>
 

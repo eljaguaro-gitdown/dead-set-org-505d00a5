@@ -16,6 +16,7 @@ import AIDeadHeadDialog from "@/components/AIDeadHeadDialog";
 import AIWelcomeOverlay from "@/components/AIWelcomeOverlay";
 import AuthModal from "@/components/AuthModal";
 import MiniSetlistBar from "@/components/MiniSetlistBar";
+import SaveCelebration from "@/components/SaveCelebration";
 import { useSongs } from "@/hooks/useSongs";
 import { useAuth } from "@/hooks/useAuth";
 import { useSetlist } from "@/hooks/useSetlist";
@@ -44,6 +45,8 @@ const Builder = () => {
   const [generatingDescription, setGeneratingDescription] = useState(false);
   const [mobileTab, setMobileTab] = useState<"songs" | "setlist">("songs");
   const [miniBarPulse, setMiniBarPulse] = useState(false);
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [savedSetlistId, setSavedSetlistId] = useState<string | null>(null);
 
   // Auth modal state
   const [authModalOpen, setAuthModalOpen] = useState(false);
@@ -263,13 +266,10 @@ const Builder = () => {
 
       // Clear guest state
       setGuestSlots([]);
-      toast.success("Setlist saved!");
+      setSavedSetlistId(newSetlist.id);
+      setShowCelebration(true);
       navigate(`/builder/${newSetlist.id}`, { replace: true });
 
-      // Execute pending action
-      if (pendingActionRef.current === "share") {
-        // Share dialog will open via the setlist being loaded
-      }
       pendingActionRef.current = null;
     };
     saveGuestSetlist();
@@ -412,9 +412,13 @@ const Builder = () => {
   // Gated actions
   const handleSave = useCallback(() => {
     if (requireAuth("save")) return;
-    // Already authenticated — setlist auto-saves
-    toast.success("Setlist is saved!");
-  }, [requireAuth]);
+    if (setlist) {
+      setSavedSetlistId(setlist.id);
+      setShowCelebration(true);
+    } else {
+      toast.success("Setlist is saved!");
+    }
+  }, [requireAuth, setlist]);
 
   const handleShare = useCallback(() => {
     if (requireAuth("share")) return;
@@ -785,6 +789,15 @@ const Builder = () => {
           songCount={activeSlots.length}
           onExpand={() => setMobileTab("setlist")}
           pulse={miniBarPulse}
+        />
+      )}
+
+      {/* Save celebration */}
+      {showCelebration && savedSetlistId && (
+        <SaveCelebration
+          setlistId={savedSetlistId}
+          setlistTitle={title}
+          onDismiss={() => setShowCelebration(false)}
         />
       )}
 
