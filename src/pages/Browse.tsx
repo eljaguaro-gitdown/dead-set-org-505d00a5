@@ -367,6 +367,8 @@ const Browse = () => {
                     setlist={setlist}
                     index={i}
                     onClick={() => navigate(`/setlist/${setlist.id}`)}
+                    isFav={isFavorite(setlist.id)}
+                    onToggleFav={handleToggleFavorite}
                   />
                 ))}
               </div>
