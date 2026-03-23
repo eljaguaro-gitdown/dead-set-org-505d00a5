@@ -241,227 +241,279 @@ const SetlistPoster = () => {
         </div>
       </header>
 
-      {/* Poster Canvas */}
-      <div className="max-w-[680px] mx-auto px-4 sm:px-8 pt-20 pb-16">
+      {/* J-Card Canvas */}
+      <div className="max-w-[640px] mx-auto px-3 sm:px-6 pt-20 pb-16">
         <motion.article
-          initial={{ opacity: 0, y: 40 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0, y: 40, rotate: -0.5 }}
+          animate={{ opacity: 1, y: 0, rotate: 0 }}
           transition={{ duration: 0.7, ease: "easeOut" }}
           className="relative"
         >
-          {/* ===== HEADER ZONE ===== */}
-          <div className="relative text-center pt-8 sm:pt-12 pb-8">
-            {/* Radial glow behind skull */}
-            <div
-              className="absolute top-0 left-1/2 -translate-x-1/2 w-[400px] h-[400px] rounded-full pointer-events-none"
-              style={{ background: `radial-gradient(circle, hsl(${eraTheme.glow}) 0%, transparent 70%)` }}
-            />
+          {/* === CASSETTE J-CARD === */}
+          <div className="jcard-paper jcard-lines relative border-2 border-[hsl(28_20%_55%/0.5)] shadow-[4px_6px_20px_rgba(0,0,0,0.4)] hand-drawn-border overflow-hidden">
+            {/* Red margin line */}
+            <div className="jcard-margin relative">
 
-            <motion.div
-              initial={{ scale: 0.6, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: 0.15, duration: 0.6, ease: "easeOut" }}
-              className="relative z-10 flex justify-center mb-6"
-            >
-              <StealYourFace size={100} />
-            </motion.div>
+              {/* ===== TOP FLAP — Band + Title ===== */}
+              <div className="relative px-12 sm:px-14 pt-8 pb-6">
+                {/* Hand-drawn SYF in corner */}
+                <motion.div
+                  className="absolute top-3 right-3 sm:top-4 sm:right-4 opacity-70"
+                  initial={{ scale: 0, rotate: -20 }}
+                  animate={{ scale: 1, rotate: 0 }}
+                  transition={{ delay: 0.3, type: "spring", stiffness: 200 }}
+                >
+                  <StealYourFace size={50} />
+                </motion.div>
 
-            {/* Band name */}
-            <motion.p
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className="font-display text-xs sm:text-sm tracking-[0.35em] text-muted-foreground uppercase relative z-10"
-            >
-              GRATEFUL DEAD
-            </motion.p>
+                {/* "GRATEFUL DEAD" — hand-lettered style */}
+                <motion.h2
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.2 }}
+                  className="font-display text-lg sm:text-xl tracking-[0.15em] uppercase"
+                  style={{ color: "hsl(28 30% 25%)" }}
+                >
+                  Grateful Dead
+                </motion.h2>
 
-            {/* Setlist title */}
-            <motion.h1
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4, duration: 0.5 }}
-              className="font-marker text-2xl sm:text-4xl text-foreground leading-tight mt-4 relative z-10 px-4"
-            >
-              {setlist.title}
-            </motion.h1>
+                {/* Setlist title — big, handwritten */}
+                <motion.h1
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.35 }}
+                  className="font-hand text-2xl sm:text-3xl leading-tight mt-1"
+                  style={{ color: "hsl(220 60% 30%)" }}
+                >
+                  {setlist.title}
+                </motion.h1>
 
-            {/* Era badge & meta */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.55 }}
-              className="flex items-center justify-center gap-3 mt-4 relative z-10"
-            >
-              {eraName && (
-                <EraTooltip eraName={eraName}>
-                  <span
-                    className="px-3 py-1 text-[10px] font-body tracking-widest uppercase rounded-full border cursor-help"
+                {/* Meta line — mimics scribbled info */}
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.45 }}
+                  className="font-hand text-sm mt-2"
+                  style={{ color: "hsl(28 20% 40%)" }}
+                >
+                  curated by <span className="underline decoration-wavy decoration-1 underline-offset-2">{creatorName}</span>
+                  {eraName && (
+                    <>
+                      {" · "}
+                      <span
+                        className="px-1.5 py-0.5 text-xs rounded-sm border font-marker"
+                        style={{
+                          borderColor: `hsl(${eraTheme.accent} / 0.5)`,
+                          color: `hsl(${eraTheme.accent})`,
+                          backgroundColor: `hsl(${eraTheme.accent} / 0.08)`,
+                        }}
+                      >
+                        {eraName}
+                      </span>
+                    </>
+                  )}
+                </motion.p>
+
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.5 }}
+                  className="font-hand text-xs mt-1"
+                  style={{ color: "hsl(28 15% 50%)" }}
+                >
+                  {createdDate}
+                </motion.p>
+              </div>
+
+              {/* ===== Divider — torn tape effect ===== */}
+              <div className="mx-6 sm:mx-10 h-[2px] relative">
+                <div
+                  className="absolute inset-0"
+                  style={{
+                    background: `repeating-linear-gradient(90deg, hsl(${eraTheme.accent} / 0.4) 0px, hsl(${eraTheme.accent} / 0.4) 8px, transparent 8px, transparent 12px)`,
+                  }}
+                />
+              </div>
+
+              {/* ===== SETLIST BODY — handwritten song list ===== */}
+              <div className="px-12 sm:px-14 py-5 space-y-6">
+                {setGroups.map(({ label, number }) => {
+                  const setSlots = slots.filter((s) => s.set_number === number);
+                  if (setSlots.length === 0) return null;
+
+                  return (
+                    <motion.section
+                      key={number}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.5 + number * 0.12 }}
+                    >
+                      {/* Set label — underlined, like a section header on a card */}
+                      <h3
+                        className="font-marker text-xs tracking-[0.25em] uppercase mb-2 pb-1 border-b inline-block"
+                        style={{
+                          color: `hsl(${eraTheme.accent})`,
+                          borderColor: `hsl(${eraTheme.accent} / 0.3)`,
+                        }}
+                      >
+                        {label}
+                      </h3>
+
+                      {/* Songs — each on its own "ruled line" */}
+                      <div className="space-y-0">
+                        {setSlots.map((slot, idx) => {
+                          const hasAudio = !!slot.version?.archive_org_url;
+                          const isHovered = hoveredSlot === slot.id;
+
+                          return (
+                            <motion.div
+                              key={slot.id}
+                              className={`group flex items-center gap-2 py-[5px] transition-colors ${
+                                hasAudio ? "cursor-pointer hover:bg-[hsl(38_50%_80%/0.3)]" : ""
+                              }`}
+                              style={{ minHeight: "28px" }}
+                              onClick={() => hasAudio && handlePlaySong(slot)}
+                              onMouseEnter={() => setHoveredSlot(slot.id)}
+                              onMouseLeave={() => setHoveredSlot(null)}
+                              initial={{ opacity: 0, x: -6 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ delay: 0.55 + number * 0.08 + idx * 0.03 }}
+                            >
+                              {/* Track number */}
+                              <span className="w-4 text-right shrink-0">
+                                {hasAudio && isHovered ? (
+                                  <Headphones className="w-3 h-3 inline" style={{ color: `hsl(${eraTheme.accent})` }} />
+                                ) : (
+                                  <span
+                                    className="text-[11px] tabular-nums font-hand"
+                                    style={{ color: "hsl(28 15% 50%)" }}
+                                  >
+                                    {idx + 1}.
+                                  </span>
+                                )}
+                              </span>
+
+                              {/* Song title — handwritten */}
+                              <div className="flex items-baseline gap-1 flex-1 min-w-0">
+                                <span
+                                  className="font-hand text-[15px] sm:text-base leading-snug"
+                                  style={{ color: "hsl(220 50% 20%)" }}
+                                >
+                                  {slot.song.title}
+                                </span>
+                                {slot.segue_to_next && (
+                                  <span
+                                    className="text-sm font-bold shrink-0"
+                                    style={{ color: `hsl(${eraTheme.accent})` }}
+                                  >
+                                    →
+                                  </span>
+                                )}
+                              </div>
+
+                              {/* Version info on hover */}
+                              <AnimatePresence>
+                                {isHovered && slot.version && (
+                                  <motion.span
+                                    initial={{ opacity: 0, x: 5 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    exit={{ opacity: 0, x: 5 }}
+                                    className="text-[10px] font-hand whitespace-nowrap hidden sm:inline"
+                                    style={{ color: "hsl(28 15% 50%)" }}
+                                  >
+                                    {slot.version.venue}, {slot.version.show_date}
+                                  </motion.span>
+                                )}
+                              </AnimatePresence>
+                            </motion.div>
+                          );
+                        })}
+                      </div>
+                    </motion.section>
+                  );
+                })}
+              </div>
+
+              {/* ===== DESCRIPTION / Liner Notes ===== */}
+              {setlist.description && (
+                <div className="mx-6 sm:mx-10 mb-4">
+                  <div
+                    className="px-6 py-4 border border-dashed rounded-sm"
                     style={{
-                      borderColor: `hsl(${eraTheme.accent} / 0.4)`,
-                      color: `hsl(${eraTheme.accent})`,
+                      borderColor: "hsl(28 20% 55% / 0.3)",
+                      backgroundColor: "hsl(42 35% 85% / 0.5)",
                     }}
                   >
-                    {eraName}
-                  </span>
-                </EraTooltip>
-              )}
-            </motion.div>
-
-            <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.65 }}
-              className="font-body text-xs text-muted-foreground/60 mt-3 tracking-wider relative z-10"
-              style={{ fontFamily: "monospace" }}
-            >
-              curated by {creatorName} · {createdDate}
-            </motion.p>
-          </div>
-
-          {/* ===== DECORATIVE RULE ===== */}
-          <div className="flex items-center gap-4 px-4 my-2">
-            <div className="flex-1 h-px" style={{ background: `linear-gradient(to right, transparent, hsl(${eraTheme.accent} / 0.3), transparent)` }} />
-            <span className="text-xs" style={{ color: `hsl(${eraTheme.accent} / 0.5)` }}>✦ ✦ ✦</span>
-            <div className="flex-1 h-px" style={{ background: `linear-gradient(to right, transparent, hsl(${eraTheme.accent} / 0.3), transparent)` }} />
-          </div>
-
-          {/* ===== SETLIST BODY ===== */}
-          <div className="px-2 sm:px-4 py-6 space-y-8">
-            {setGroups.map(({ label, number }) => {
-              const setSlots = slots.filter((s) => s.set_number === number);
-              if (setSlots.length === 0) return null;
-
-              return (
-                <motion.section
-                  key={number}
-                  initial={{ opacity: 0, y: 15 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.5 + number * 0.15 }}
-                >
-                  {/* Set label */}
-                  <div className="flex items-center gap-3 mb-4 px-2">
-                    <div className="h-px flex-1" style={{ background: `hsl(${eraTheme.accent} / 0.2)` }} />
-                    <h2
-                      className="text-[11px] font-body tracking-[0.3em] uppercase"
-                      style={{ color: `hsl(${eraTheme.accent} / 0.7)` }}
+                    <p
+                      className="font-hand text-sm leading-relaxed italic"
+                      style={{ color: "hsl(28 20% 35%)" }}
                     >
-                      {label}
-                    </h2>
-                    <div className="h-px flex-1" style={{ background: `hsl(${eraTheme.accent} / 0.2)` }} />
+                      {setlist.description}
+                    </p>
                   </div>
+                </div>
+              )}
 
-                  {/* Songs */}
-                  <div className="space-y-0">
-                    {setSlots.map((slot, idx) => {
-                      const hasAudio = !!slot.version?.archive_org_url;
-                      const isHovered = hoveredSlot === slot.id;
+              {/* ===== BOTTOM FLAP ===== */}
+              <div className="px-12 sm:px-14 pb-6 pt-2">
+                {/* Dashed cut line */}
+                <div
+                  className="h-px mb-5"
+                  style={{
+                    backgroundImage: "repeating-linear-gradient(90deg, hsl(28 20% 55% / 0.3) 0px, hsl(28 20% 55% / 0.3) 4px, transparent 4px, transparent 8px)",
+                  }}
+                />
 
-                      return (
-                        <motion.div
-                          key={slot.id}
-                          className={`group flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors cursor-default ${
-                            hasAudio ? "cursor-pointer hover:bg-card/60" : ""
-                          }`}
-                          onClick={() => hasAudio && handlePlaySong(slot)}
-                          onMouseEnter={() => setHoveredSlot(slot.id)}
-                          onMouseLeave={() => setHoveredSlot(null)}
-                          initial={{ opacity: 0, x: -8 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: 0.6 + number * 0.1 + idx * 0.04 }}
-                        >
-                          {/* Track number or play icon */}
-                          <span className="w-5 text-right shrink-0">
-                            {hasAudio && isHovered ? (
-                              <Headphones className="w-3.5 h-3.5 inline" style={{ color: `hsl(${eraTheme.accent})` }} />
-                            ) : (
-                              <span className="text-[11px] text-muted-foreground/40 tabular-nums font-body">
-                                {idx + 1}
-                              </span>
-                            )}
-                          </span>
+                <div className="flex flex-col items-center gap-4">
+                  {/* Upvote button */}
+                  <motion.button
+                    onClick={handleUpvote}
+                    disabled={hasUpvoted || upvoting}
+                    className={`flex items-center gap-2 px-5 py-2.5 rounded-full font-hand text-sm transition-all ${
+                      hasUpvoted
+                        ? "text-[hsl(4_60%_45%)]"
+                        : "text-[hsl(28_20%_35%)] hover:text-[hsl(4_60%_45%)]"
+                    }`}
+                    style={{
+                      border: `1.5px solid ${hasUpvoted ? "hsl(4 60% 50% / 0.4)" : "hsl(28 20% 55% / 0.3)"}`,
+                      backgroundColor: hasUpvoted ? "hsl(4 60% 50% / 0.08)" : "transparent",
+                    }}
+                    whileTap={!hasUpvoted ? { scale: 0.95 } : {}}
+                  >
+                    <Zap className={`w-4 h-4 ${hasUpvoted ? "fill-current" : ""}`} />
+                    <span className="font-bold tabular-nums">{upvoteCount}</span>
+                    <span className="text-xs opacity-60">{hasUpvoted ? "⚡ Upvoted" : "Upvote this tape"}</span>
+                  </motion.button>
 
-                          {/* Song title + segue */}
-                          <div className="flex items-baseline gap-1.5 flex-1 min-w-0">
-                            <span className="font-body text-[15px] sm:text-base text-foreground leading-snug">
-                              {slot.song.title}
-                            </span>
-                            {slot.segue_to_next && (
-                              <motion.span
-                                className="text-sm font-bold shrink-0"
-                                style={{ color: `hsl(${eraTheme.accent})` }}
-                                whileHover={{ x: 3 }}
-                                transition={{ type: "spring", stiffness: 300 }}
-                              >
-                                →
-                              </motion.span>
-                            )}
-                          </div>
+                  {/* Play count */}
+                  {setlist.play_count > 0 && (
+                    <p className="text-[10px] font-hand tracking-wider" style={{ color: "hsl(28 15% 50%)" }}>
+                      ▶ {setlist.play_count} play{setlist.play_count !== 1 ? "s" : ""}
+                    </p>
+                  )}
 
-                          {/* Version info on hover */}
-                          <AnimatePresence>
-                            {isHovered && slot.version && (
-                              <motion.span
-                                initial={{ opacity: 0, x: 5 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                exit={{ opacity: 0, x: 5 }}
-                                className="text-[10px] text-muted-foreground/50 font-body whitespace-nowrap hidden sm:inline"
-                              >
-                                {slot.version.venue}, {slot.version.show_date}
-                              </motion.span>
-                            )}
-                          </AnimatePresence>
-                        </motion.div>
-                      );
-                    })}
+                  {/* Footer branding */}
+                  <div className="flex items-center gap-2 mt-3 pt-3 border-t border-dashed" style={{ borderColor: "hsl(28 20% 55% / 0.2)" }}>
+                    <DancingBear color="gold" />
+                    <button
+                      onClick={() => navigate("/")}
+                      className="text-[10px] font-hand tracking-widest uppercase transition-colors hover:underline"
+                      style={{ color: "hsl(28 15% 50%)" }}
+                    >
+                      Built with Dead Set
+                    </button>
+                    <DancingBear color="primary" />
                   </div>
-                </motion.section>
-              );
-            })}
-          </div>
-
-          {/* ===== FOOTER ZONE ===== */}
-          <div className="flex items-center gap-4 px-4 mt-2 mb-6">
-            <div className="flex-1 h-px" style={{ background: `linear-gradient(to right, transparent, hsl(${eraTheme.accent} / 0.3), transparent)` }} />
-            <span className="text-xs" style={{ color: `hsl(${eraTheme.accent} / 0.5)` }}>✦</span>
-            <div className="flex-1 h-px" style={{ background: `linear-gradient(to right, transparent, hsl(${eraTheme.accent} / 0.3), transparent)` }} />
-          </div>
-
-          <div className="flex flex-col items-center gap-5 pb-8">
-            {/* Upvote button */}
-            <motion.button
-              onClick={handleUpvote}
-              disabled={hasUpvoted || upvoting}
-              className={`flex items-center gap-2 px-6 py-3 rounded-full font-body text-sm transition-all ${
-                hasUpvoted
-                  ? "bg-primary/20 text-primary border border-primary/30"
-                  : "bg-card border border-border hover:border-primary/50 text-foreground hover:text-primary"
-              }`}
-              whileTap={!hasUpvoted ? { scale: 0.95 } : {}}
-            >
-              <Zap className={`w-4 h-4 ${hasUpvoted ? "fill-primary text-primary" : ""}`} />
-              <span className="tabular-nums font-bold">{upvoteCount}</span>
-              <span className="text-muted-foreground text-xs">{hasUpvoted ? "Upvoted" : "Upvote"}</span>
-            </motion.button>
-
-            {/* Play count */}
-            {setlist.play_count > 0 && (
-              <p className="text-[10px] text-muted-foreground/40 font-body tracking-wider">
-                ▶ {setlist.play_count} play{setlist.play_count !== 1 ? "s" : ""}
-              </p>
-            )}
-
-            {/* Built with Dead Set */}
-            <div className="flex items-center gap-2 mt-4">
-              <DancingBear color="gold" />
-              <button
-                onClick={() => navigate("/")}
-                className="text-[10px] text-muted-foreground/40 hover:text-muted-foreground font-body tracking-widest uppercase transition-colors"
-              >
-                Built with Dead Set
-              </button>
-              <DancingBear color="primary" />
+                </div>
+              </div>
             </div>
+          </div>
+
+          {/* === Cassette spine strip below the card === */}
+          <div className="cassette-spine mx-4 sm:mx-8 h-8 flex items-center justify-center border-x border-b border-border/40 rounded-b-sm">
+            <span className="font-marker text-[9px] tracking-[0.3em] uppercase text-muted-foreground/50">
+              {setlist.title} · {eraName || "Dead Set"} · {slots.length} songs
+            </span>
           </div>
         </motion.article>
       </div>
