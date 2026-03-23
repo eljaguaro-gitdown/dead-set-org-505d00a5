@@ -761,7 +761,7 @@ const Builder = () => {
         shareLink={getShareLink()}
       />
 
-      {/* AI Dead Head Dialog */}
+      {/* Cosmic Charlie Dialog */}
       <AIDeadHeadDialog
         open={aiOpen}
         onOpenChange={setAiOpen}
