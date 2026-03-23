@@ -778,6 +778,16 @@ const Builder = () => {
         onAuthenticated={handleAuthenticated}
       />
 
+      {/* Mobile mini-setlist bar — shown when browsing Song Vault */}
+      {isMobile && mobileTab === "songs" && activeSlots.length > 0 && (
+        <MiniSetlistBar
+          title={title}
+          songCount={activeSlots.length}
+          onExpand={() => setMobileTab("setlist")}
+          pulse={miniBarPulse}
+        />
+      )}
+
       </>}
     </PageLayout>
   );
