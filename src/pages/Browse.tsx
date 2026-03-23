@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Zap, Search, SortAsc, Play, Music } from "lucide-react";
+import { Zap, Search, SortAsc, Play, Music, TrendingUp } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
@@ -46,6 +46,7 @@ const PAGE_SIZE = 18;
 const Browse = () => {
   const navigate = useNavigate();
   const [setlists, setSetlists] = useState<SetlistWithMeta[]>([]);
+  const [trending, setTrending] = useState<SetlistWithMeta[]>([]);
   const [featured, setFeatured] = useState<SetlistWithMeta[]>([]);
   const [eras, setEras] = useState<Era[]>([]);
   const [loading, setLoading] = useState(true);
@@ -61,7 +62,7 @@ const Browse = () => {
     });
   }, []);
 
-  // Fetch featured (top 3 by upvotes) — once
+  // Fetch featured (top 3 by upvotes) and trending (most played in last 7 days) — once
   useEffect(() => {
     const fetchFeatured = async () => {
       const { data } = await supabase
@@ -74,7 +75,24 @@ const Browse = () => {
       const enriched = await enrichSetlists(data);
       setFeatured(enriched);
     };
+
+    const fetchTrending = async () => {
+      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+      const { data } = await supabase
+        .from("setlists")
+        .select("*")
+        .eq("is_public", true)
+        .gt("play_count", 0)
+        .gte("updated_at", sevenDaysAgo)
+        .order("play_count", { ascending: false })
+        .limit(6);
+      if (!data || data.length === 0) return;
+      const enriched = await enrichSetlists(data);
+      setTrending(enriched);
+    };
+
     fetchFeatured();
+    fetchTrending();
   }, []);
 
   // Main fetch
@@ -201,7 +219,26 @@ const Browse = () => {
         </section>
       )}
 
-      {/* Search + Era Chips + Sort */}
+      {/* Trending Section */}
+      {trending.length > 0 && (
+        <section className="border-b border-border/30 py-6 sm:py-8">
+          <div className="px-4 sm:px-6 max-w-6xl mx-auto">
+            <div className="flex items-center gap-3 mb-4">
+              <TrendingUp className="w-4 h-4 text-accent" />
+              <h2 className="font-display text-sm tracking-[0.2em] text-muted-foreground uppercase">Trending This Week</h2>
+            </div>
+            <div className="overflow-x-auto scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
+              <div className="flex gap-3 min-w-max sm:min-w-0 sm:grid sm:grid-cols-3 lg:grid-cols-6">
+                {trending.map((s) => (
+                  <TrendingCard key={s.id} setlist={s} onClick={() => navigate(`/setlist/${s.id}`)} />
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
+
       <div className="border-b border-border/30 px-4 sm:px-6 py-4">
         <div className="max-w-6xl mx-auto space-y-3">
           <div className="flex items-center gap-2">
@@ -445,6 +482,32 @@ const SetlistCard = ({ setlist, index, onClick }: { setlist: SetlistWithMeta; in
             )}
           </div>
         )}
+      </div>
+    </motion.button>
+  );
+};
+
+/** Trending card — compact, play-count focused */
+const TrendingCard = ({ setlist, onClick }: { setlist: SetlistWithMeta; onClick: () => void }) => {
+  const eraColor = getEraColor(setlist.era_name);
+  return (
+    <motion.button
+      onClick={onClick}
+      className="w-[160px] sm:w-auto shrink-0 text-left rounded-lg border border-border bg-card/60 overflow-hidden group hover:border-accent/30 hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
+      whileHover={{ scale: 1.02 }}
+    >
+      <div className="h-0.5" style={{ background: `hsl(${eraColor} / 0.5)` }} />
+      <div className="p-3">
+        <h3 className="font-display text-xs text-foreground group-hover:text-primary transition-colors leading-tight line-clamp-2">
+          {setlist.title}
+        </h3>
+        <p className="text-[9px] font-body text-muted-foreground mt-1 truncate">{setlist.creator_name}</p>
+        <div className="flex items-center gap-2 mt-2">
+          <span className="text-[10px] font-body text-accent flex items-center gap-0.5">
+            <Play className="w-2.5 h-2.5 fill-accent" /> {setlist.play_count}
+          </span>
+          <span className="text-[9px] font-body text-muted-foreground">{setlist.slot_count} songs</span>
+        </div>
       </div>
     </motion.button>
   );
