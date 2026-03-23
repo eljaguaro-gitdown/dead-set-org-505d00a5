@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Plus, Globe, Lock, Music, Trash2, Calendar, Search, User, ArrowDownUp, Star } from "lucide-react";
+import { Plus, Globe, Lock, Music, Trash2, Calendar, Search, User, ArrowDownUp, Star, FileImage } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -439,6 +439,14 @@ const MySetlists = () => {
                         ) : (
                           <Lock className="w-4 h-4 opacity-50" style={{ color: tape.sub }} />
                         )}
+                        <button
+                          onClick={(e) => { e.stopPropagation(); navigate(`/setlist/${s.id}`); }}
+                          className="opacity-0 group-hover:opacity-100 transition-opacity p-1"
+                          style={{ color: tape.sub }}
+                          title="View Poster"
+                        >
+                          <FileImage className="w-4 h-4" />
+                        </button>
                         <button
                           onClick={(e) => handleDelete(s.id, e)}
                           className="opacity-0 group-hover:opacity-100 transition-opacity p-1"

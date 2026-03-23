@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Star, Share2, Users, LogOut, MessageCircle, Globe, CheckCircle, List, Music, LayoutList, Save } from "lucide-react";
+import { Star, Share2, Users, LogOut, MessageCircle, Globe, CheckCircle, List, Music, LayoutList, Save, FileImage } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import PageLayout from "@/components/PageLayout";
 import { Input } from "@/components/ui/input";
@@ -619,6 +619,17 @@ const Builder = () => {
           >
             <Globe className="w-4 sm:w-5 h-4 sm:h-5" />
           </Button>
+          {paramId && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 sm:h-9 sm:w-9 shrink-0 text-primary hover:text-primary/80"
+              onClick={() => navigate(`/setlist/${paramId}`)}
+              title="View Poster"
+            >
+              <FileImage className="w-4 sm:w-5 h-4 sm:h-5" />
+            </Button>
+          )}
           <Button
             variant="ghost"
             size="icon"
