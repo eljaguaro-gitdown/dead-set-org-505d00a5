@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import PageLayout from "@/components/PageLayout";
 import SiteHeader from "@/components/SiteHeader";
 import AdSenseLoader from "@/components/AdSenseLoader";
+import DancingBearButton from "@/components/DancingBearButton";
 import StealYourFace from "@/components/StealYourFace";
 import EraTooltip from "@/components/EraTooltip";
 import FavoriteButton from "@/components/FavoriteButton";
@@ -207,12 +208,7 @@ const Browse = () => {
     <PageLayout>
       <AdSenseLoader />
       <SiteHeader large>
-        <button
-          onClick={() => navigate("/builder")}
-          className="font-display text-sm tracking-[0.15em] text-muted-foreground hover:text-primary transition-colors uppercase"
-        >
-          Build
-        </button>
+        <DancingBearButton />
         <button
           onClick={() => navigate("/auth")}
           className="font-display text-sm tracking-[0.15em] text-muted-foreground hover:text-primary transition-colors uppercase"
