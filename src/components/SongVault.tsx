@@ -104,9 +104,16 @@ const SongVault = ({ songs, eraId, onSelectSong, getNotableVersions, onPlayArchi
         {filteredSongs.map((song) => (
           <div key={song.id}>
             <motion.div
-              className="p-3 rounded-lg bg-card border border-border hover:border-primary/30 cursor-pointer transition-colors group"
-              onClick={() => handleExpand(song.id)}
+              className="p-3 rounded-lg bg-card border border-border hover:border-primary/30 cursor-pointer transition-colors group active:scale-[0.97] md:active:scale-100"
+              onClick={() => {
+                if (window.innerWidth < 768 && expandedSong !== song.id) {
+                  onSelectSong(song);
+                } else {
+                  handleExpand(song.id);
+                }
+              }}
               whileHover={{ scale: 1.01 }}
+              whileTap={{ scale: 0.97 }}
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 min-w-0">
@@ -115,11 +122,17 @@ const SongVault = ({ songs, eraId, onSelectSong, getNotableVersions, onPlayArchi
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   <span className="text-xs text-muted-foreground font-body">{song.times_played}x</span>
-                  {expandedSong === song.id ? (
-                    <ChevronUp className="w-4 h-4 text-muted-foreground" />
-                  ) : (
-                    <ChevronDown className="w-4 h-4 text-muted-foreground" />
-                  )}
+                  <button
+                    className="hidden md:block"
+                    onClick={(e) => { e.stopPropagation(); handleExpand(song.id); }}
+                  >
+                    {expandedSong === song.id ? (
+                      <ChevronUp className="w-4 h-4 text-muted-foreground" />
+                    ) : (
+                      <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                    )}
+                  </button>
+                  <ChevronDown className="w-4 h-4 text-muted-foreground md:hidden" />
                 </div>
               </div>
               <div className="flex gap-1 mt-1.5">
