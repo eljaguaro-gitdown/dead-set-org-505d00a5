@@ -486,6 +486,15 @@ const Builder = () => {
 
   return (
     <PageLayout minimal>
+      {/* AI Welcome Overlay for fresh builder */}
+      {showWelcome && (
+        <AIWelcomeOverlay
+          eras={eras}
+          onGenerated={handleWelcomeGenerated}
+          onSkip={() => setWelcomeDismissed(true)}
+        />
+      )}
+
       {/* Top Bar */}
       <header className="border-b border-border">
         {/* Row 1: Logo, title, saved indicator */}
