@@ -46,6 +46,7 @@ const PAGE_SIZE = 18;
 const Browse = () => {
   const navigate = useNavigate();
   const [setlists, setSetlists] = useState<SetlistWithMeta[]>([]);
+  const [trending, setTrending] = useState<SetlistWithMeta[]>([]);
   const [featured, setFeatured] = useState<SetlistWithMeta[]>([]);
   const [eras, setEras] = useState<Era[]>([]);
   const [loading, setLoading] = useState(true);
