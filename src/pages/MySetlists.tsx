@@ -217,7 +217,7 @@ const MySetlists = () => {
             <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none bg-[radial-gradient(circle_at_center,hsl(var(--primary)/0.08),transparent_70%)]" />
           </button>
         </motion.div>
-        </motion.div>
+
 
         {/* Setlists list */}
         <div className="flex items-center justify-between mb-4">
