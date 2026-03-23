@@ -158,14 +158,11 @@ const SetlistPoster = () => {
     setUpvoting(false);
   };
 
-  const handleShare = async () => {
-    const url = window.location.href;
-    if (navigator.share) {
-      try { await navigator.share({ title: setlist?.title || "Dead Set", url }); return; } catch {}
-    }
-    await navigator.clipboard.writeText(url);
-    toast.success("Link copied!");
-  };
+  const shareUrl = `${window.location.origin}/setlist/${id}`;
+  const shareTitle = `${setlist?.title || "Dream Setlist"} — Dead Set`;
+  const shareDescription = setlist && slots.length > 0
+    ? `Check out this${eraName ? ` ${eraName}` : ""} dream Dead show by ${creatorName}. ${slots.length} songs!`
+    : undefined;
 
   const handlePlaySong = (slot: EnrichedSlot) => {
     if (!slot.version?.archive_org_url) return;
