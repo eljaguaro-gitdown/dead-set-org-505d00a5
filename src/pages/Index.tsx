@@ -156,14 +156,16 @@ const Index = () => {
             Need a Miracle?
           </Button>
 
-          {/* Secondary link */}
-          <button
+          {/* Secondary CTA */}
+          <Button
+            variant="outline"
+            size="lg"
             onClick={() => navigate("/browse")}
-            className="flex items-center gap-1 font-body text-xs sm:text-sm text-muted-foreground/50 hover:text-muted-foreground transition-colors"
+            className="font-display text-sm px-8 py-5 border-primary/40 text-primary hover:bg-primary/10 tracking-widest uppercase gap-2"
           >
-            or browse community setlists
-            <ChevronRight className="w-3.5 h-3.5" />
-          </button>
+            Browse Community Setlists
+            <ChevronRight className="w-4 h-4" />
+          </Button>
         </motion.div>
       </main>
 
