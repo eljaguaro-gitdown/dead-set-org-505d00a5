@@ -412,9 +412,13 @@ const Builder = () => {
   // Gated actions
   const handleSave = useCallback(() => {
     if (requireAuth("save")) return;
-    // Already authenticated — setlist auto-saves
-    toast.success("Setlist is saved!");
-  }, [requireAuth]);
+    if (setlist) {
+      setSavedSetlistId(setlist.id);
+      setShowCelebration(true);
+    } else {
+      toast.success("Setlist is saved!");
+    }
+  }, [requireAuth, setlist]);
 
   const handleShare = useCallback(() => {
     if (requireAuth("share")) return;
