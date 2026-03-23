@@ -43,6 +43,7 @@ const Builder = () => {
   const [description, setDescription] = useState<string | null>(null);
   const [generatingDescription, setGeneratingDescription] = useState(false);
   const [mobileTab, setMobileTab] = useState<"songs" | "setlist">("songs");
+  const [miniBarPulse, setMiniBarPulse] = useState(false);
 
   // Auth modal state
   const [authModalOpen, setAuthModalOpen] = useState(false);
