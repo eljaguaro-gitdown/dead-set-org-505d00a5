@@ -364,6 +364,9 @@ const SetlistPoster = () => {
                         {setSlots.map((slot, idx) => {
                           const hasAudio = !!slot.version?.archive_org_url;
                           const isHovered = hoveredSlot === slot.id;
+                          const charSum = slot.id.split("").reduce((a, c) => a + c.charCodeAt(0), 0);
+                          const rotation = ((charSum % 7) - 3) * 0.3;
+                          const xShift = ((charSum % 5) - 2) * 0.5;
 
                           return (
                             <motion.div
@@ -371,12 +374,12 @@ const SetlistPoster = () => {
                               className={`group flex items-center gap-2 py-[5px] transition-colors ${
                                 hasAudio ? "cursor-pointer hover:bg-[hsl(38_50%_80%/0.3)]" : ""
                               }`}
-                              style={{ minHeight: "28px" }}
+                              style={{ minHeight: "28px", transform: `rotate(${rotation}deg) translateX(${xShift}px)` }}
                               onClick={() => hasAudio && handlePlaySong(slot)}
                               onMouseEnter={() => setHoveredSlot(slot.id)}
                               onMouseLeave={() => setHoveredSlot(null)}
                               initial={{ opacity: 0, x: -6 }}
-                              animate={{ opacity: 1, x: 0 }}
+                              animate={{ opacity: 1, x: xShift }}
                               transition={{ delay: 0.55 + number * 0.08 + idx * 0.03 }}
                             >
                               {/* Track number */}
