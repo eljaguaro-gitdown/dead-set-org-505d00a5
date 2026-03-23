@@ -605,10 +605,10 @@ const Builder = () => {
             size="sm"
             className="shrink-0 h-8 sm:h-9 px-2 sm:px-3 gap-1.5 sm:gap-2 bg-gradient-to-r from-primary to-accent text-primary-foreground font-display text-xs sm:text-sm shadow-md hover:shadow-lg hover:scale-105 transition-all duration-200 animate-pulse hover:animate-none"
             onClick={() => setAiOpen(true)}
-            title="AI Dead Head — Generate a setlist"
+            title="Cosmic Charlie — Your AI Deadhead"
           >
-            <Sparkles className="w-4 sm:w-5 h-4 sm:h-5" />
-            <span className="hidden sm:inline">AI Dead Head</span>
+            <Star className="w-4 sm:w-5 h-4 sm:h-5" />
+            <span className="hidden sm:inline">Cosmic Charlie</span>
           </Button>
           <Button
             variant="ghost"
