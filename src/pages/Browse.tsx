@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import PageLayout from "@/components/PageLayout";
 import SiteHeader from "@/components/SiteHeader";
 import AdSenseLoader from "@/components/AdSenseLoader";
+import DancingBearButton from "@/components/DancingBearButton";
 import StealYourFace from "@/components/StealYourFace";
 import EraTooltip from "@/components/EraTooltip";
 import FavoriteButton from "@/components/FavoriteButton";
