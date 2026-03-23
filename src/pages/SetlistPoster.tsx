@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Share2, Zap, Play, Headphones } from "lucide-react";
+import EraTooltip from "@/components/EraTooltip";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
@@ -293,15 +294,17 @@ const SetlistPoster = () => {
               className="flex items-center justify-center gap-3 mt-4 relative z-10"
             >
               {eraName && (
-                <span
-                  className="px-3 py-1 text-[10px] font-body tracking-widest uppercase rounded-full border"
-                  style={{
-                    borderColor: `hsl(${eraTheme.accent} / 0.4)`,
-                    color: `hsl(${eraTheme.accent})`,
-                  }}
-                >
-                  {eraName}
-                </span>
+                <EraTooltip eraName={eraName}>
+                  <span
+                    className="px-3 py-1 text-[10px] font-body tracking-widest uppercase rounded-full border cursor-help"
+                    style={{
+                      borderColor: `hsl(${eraTheme.accent} / 0.4)`,
+                      color: `hsl(${eraTheme.accent})`,
+                    }}
+                  >
+                    {eraName}
+                  </span>
+                </EraTooltip>
               )}
             </motion.div>
 

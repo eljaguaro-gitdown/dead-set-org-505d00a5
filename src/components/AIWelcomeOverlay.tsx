@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import StealYourFace from "@/components/StealYourFace";
+import EraTooltip from "@/components/EraTooltip";
 import type { Database } from "@/integrations/supabase/types";
 
 type Era = Database["public"]["Tables"]["eras"]["Row"];
@@ -153,24 +154,25 @@ const AIWelcomeOverlay = ({ eras, onGenerated, onSkip }: AIWelcomeOverlayProps) 
                 </label>
                 <div className="flex flex-wrap gap-2 justify-center">
                   {eras.map((era) => (
-                    <button
-                      key={era.id}
-                      onClick={() =>
-                        setSelectedEra(
-                          selectedEra === era.id ? null : era.id
-                        )
-                      }
-                      className={`px-3 py-1.5 text-xs sm:text-sm font-hand rounded-sm border transition-all duration-200 ${
-                        selectedEra === era.id
-                          ? "border-primary bg-primary/15 text-primary shadow-[0_0_12px_hsl(var(--glow-gold))]"
-                          : "border-border text-muted-foreground hover:border-primary/40 hover:text-foreground"
-                      }`}
-                    >
-                      <span className="font-marker text-xs">{era.name}</span>
-                      <span className="text-[10px] text-muted-foreground/60 ml-1.5">
-                        {era.year_start}–{era.year_end}
-                      </span>
-                    </button>
+                    <EraTooltip key={era.id} eraName={era.name} yearRange={`${era.year_start}–${era.year_end}`}>
+                      <button
+                        onClick={() =>
+                          setSelectedEra(
+                            selectedEra === era.id ? null : era.id
+                          )
+                        }
+                        className={`px-3 py-1.5 text-xs sm:text-sm font-hand rounded-sm border transition-all duration-200 ${
+                          selectedEra === era.id
+                            ? "border-primary bg-primary/15 text-primary shadow-[0_0_12px_hsl(var(--glow-gold))]"
+                            : "border-border text-muted-foreground hover:border-primary/40 hover:text-foreground"
+                        }`}
+                      >
+                        <span className="font-marker text-xs">{era.name}</span>
+                        <span className="text-[10px] text-muted-foreground/60 ml-1.5">
+                          {era.year_start}–{era.year_end}
+                        </span>
+                      </button>
+                    </EraTooltip>
                   ))}
                 </div>
               </div>
