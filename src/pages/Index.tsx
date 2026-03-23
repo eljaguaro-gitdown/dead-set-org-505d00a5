@@ -5,13 +5,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { getPostAuthRedirect } from "@/lib/postAuthRedirect";
 import StealYourFace from "@/components/StealYourFace";
-import DancingBear from "@/components/DancingBear";
 import AmbientPlayer from "@/components/AmbientPlayer";
 import PageLayout from "@/components/PageLayout";
 import SiteHeader from "@/components/SiteHeader";
 import AdSenseLoader from "@/components/AdSenseLoader";
 import { Button } from "@/components/ui/button";
-import { ChevronRight } from "lucide-react";
+import { Star, ChevronRight } from "lucide-react";
 
 interface FeaturedSetlist {
   id: string;
@@ -37,7 +36,6 @@ const Index = () => {
     }
   }, [user, loading, navigate]);
 
-  // Fetch top public setlists
   useEffect(() => {
     const fetchFeatured = async () => {
       const { data: setlists } = await supabase
@@ -49,7 +47,6 @@ const Index = () => {
 
       if (!setlists || setlists.length === 0) return;
 
-      // Fetch creator names
       const creatorIds = [...new Set(setlists.map((s) => s.creator_id))];
       const { data: profiles } = await supabase
         .from("profiles")
@@ -59,7 +56,6 @@ const Index = () => {
         (profiles || []).map((p) => [p.user_id, p.display_name])
       );
 
-      // Fetch era names
       const eraIds = [
         ...new Set(setlists.map((s) => s.era_id).filter(Boolean)),
       ] as string[];
@@ -72,7 +68,6 @@ const Index = () => {
         eraMap = new Map((eras || []).map((e) => [e.id, e.name]));
       }
 
-      // Fetch song counts
       const setlistIds = setlists.map((s) => s.id);
       const { data: slotCounts } = await supabase
         .from("setlist_slots")
@@ -113,49 +108,58 @@ const Index = () => {
         </button>
       </SiteHeader>
 
-      {/* Hero — single screen */}
-      <main className="flex-1 flex flex-col items-center justify-center px-4 relative overflow-hidden">
+      {/* Hero — single screen, centered on Cosmic Charlie */}
+      <main className="flex-1 flex flex-col items-center justify-center px-4 relative overflow-hidden min-h-[calc(100vh-80px)]">
         {/* Ambient glow */}
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] sm:w-[700px] h-[500px] sm:h-[700px] rounded-full bg-[radial-gradient(circle,hsl(var(--dead-gold)/0.08),transparent_70%)]" />
           <div className="absolute top-1/3 left-1/4 w-[300px] sm:w-[450px] h-[300px] sm:h-[450px] rounded-full bg-[radial-gradient(circle,hsl(var(--dead-red)/0.04),transparent_70%)]" />
         </div>
 
+        {/* Film grain overlay */}
+        <div className="absolute inset-0 pointer-events-none opacity-[0.03] bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIj48ZmlsdGVyIGlkPSJmIj48ZmVUdXJidWxlbmNlIHR5cGU9ImZyYWN0YWxOb2lzZSIgYmFzZUZyZXF1ZW5jeT0iMC45IiBudW1PY3RhdmVzPSI0IiBzdGl0Y2hUaWxlcz0ic3RpdGNoIi8+PC9maWx0ZXI+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsdGVyPSJ1cmwoI2YpIi8+PC9zdmc+')]" />
+
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: "easeOut" }}
-          className="flex flex-col items-center gap-6 sm:gap-8 relative z-10 text-center"
+          className="flex flex-col items-center gap-5 sm:gap-7 relative z-10 text-center max-w-xl"
         >
-          {/* SYF logo — generous sizing */}
+          {/* SYF logo */}
           <div className="sm:hidden">
-            <StealYourFace size={140} />
+            <StealYourFace size={130} />
           </div>
           <div className="hidden sm:block">
-            <StealYourFace size={200} />
+            <StealYourFace size={180} />
           </div>
 
-          {/* Tagline */}
-          <h1 className="font-display text-3xl sm:text-5xl md:text-6xl tracking-tight text-foreground leading-none">
+          {/* Primary tagline */}
+          <h1 className="font-display text-3xl sm:text-5xl md:text-6xl tracking-tight text-primary leading-none">
             Build your dream Dead show.
           </h1>
+
+          {/* Secondary — Cosmic Charlie intro */}
+          <p className="font-body text-sm sm:text-base text-muted-foreground leading-relaxed max-w-md">
+            Cosmic Charlie knows every setlist the Dead ever played. Tell him what you want to hear.
+          </p>
 
           {/* Ambient audio teaser */}
           <AmbientPlayer />
 
-          {/* CTA */}
+          {/* Primary CTA */}
           <Button
             size="lg"
             onClick={() => navigate("/builder")}
-            className="font-display text-base sm:text-lg px-10 sm:px-14 py-6 sm:py-7 bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_40px_hsl(var(--glow-gold))] tracking-widest uppercase"
+            className="font-display text-base sm:text-lg px-10 sm:px-14 py-6 sm:py-7 bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_40px_hsl(var(--glow-gold))] tracking-widest uppercase gap-2.5"
           >
-            Start Building
+            <Star className="w-5 h-5" />
+            Need a Miracle?
           </Button>
 
           {/* Secondary link */}
           <button
             onClick={() => navigate("/browse")}
-            className="flex items-center gap-1 font-body text-sm text-muted-foreground/60 hover:text-muted-foreground transition-colors"
+            className="flex items-center gap-1 font-body text-xs sm:text-sm text-muted-foreground/50 hover:text-muted-foreground transition-colors"
           >
             or browse community setlists
             <ChevronRight className="w-3.5 h-3.5" />
@@ -212,32 +216,18 @@ const Index = () => {
         </section>
       )}
 
-      {/* Footer */}
-      <footer className="py-4 sm:py-6 text-center border-t border-border/50 space-y-2">
-        <div className="flex items-center justify-center gap-2 text-muted-foreground text-xs sm:text-sm font-body">
-          <span>Built by Deadheads, for Deadheads</span>
-          <span className="mx-1">·</span>
-          <DancingBear color="primary" />
-          <DancingBear color="gold" />
-          <DancingBear color="blue" />
-        </div>
-        <p className="font-hand text-xs text-muted-foreground/70 max-w-md mx-auto px-4">
-          🎵 Powered by live recordings from the{" "}
-          <a
-            href="https://archive.org"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="underline underline-offset-2 text-primary/70 hover:text-primary transition-colors"
+      {/* Minimal footer */}
+      <footer className="py-4 text-center border-t border-border/30">
+        <div className="flex items-center justify-center gap-3 text-xs font-body text-muted-foreground/50">
+          <span>© Dead Set</span>
+          <span>·</span>
+          <button
+            onClick={() => navigate("/privacy")}
+            className="hover:text-muted-foreground transition-colors underline underline-offset-2"
           >
-            Internet Archive
-          </a>
-        </p>
-        <button
-          onClick={() => navigate("/privacy")}
-          className="font-hand text-xs text-muted-foreground/50 hover:text-muted-foreground transition-colors underline underline-offset-2"
-        >
-          Privacy Policy
-        </button>
+            Privacy
+          </button>
+        </div>
       </footer>
     </PageLayout>
   );
