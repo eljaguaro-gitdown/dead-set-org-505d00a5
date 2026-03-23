@@ -775,6 +775,7 @@ const Builder = () => {
         onAuthenticated={handleAuthenticated}
       />
 
+      </>}
     </PageLayout>
   );
 };
