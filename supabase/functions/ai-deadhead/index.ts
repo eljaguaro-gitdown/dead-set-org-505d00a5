@@ -64,7 +64,7 @@ serve(async (req) => {
     const { mode, eraId, currentSlots, preferences, recentSongs } = await req.json();
 
     // Fetch songs catalog for context
-    let songsQuery = supabase.from("songs").select("id, title, tags, is_jam_vehicle, typical_set_position, times_played");
+    const songsQuery = supabase.from("songs").select("id, title, tags, is_jam_vehicle, typical_set_position, times_played");
     const { data: songs } = await songsQuery;
 
     // Fetch eras for context
@@ -100,8 +100,7 @@ serve(async (req) => {
     const openerSeed = pickRandom(OPENER_CONSTRAINTS, 1)[0];
     const closerSeed = pickRandom(CLOSER_CONSTRAINTS, 1)[0];
 
-    const creativityBlock = `
-CREATIVE DIRECTION FOR THIS SETLIST (follow these specific guidelines):
+    const creativityBlock = `CREATIVE DIRECTION FOR THIS SETLIST (follow these specific guidelines):
 • ${themeSeeds[0]}
 • ${themeSeeds[1]}
 • Opener guidance: ${openerSeed}
@@ -110,42 +109,121 @@ These are creative constraints to make THIS setlist unique. Embrace them fully.`
 
     // Avoid recently generated songs if provided
     const avoidBlock = recentSongs && recentSongs.length > 0
-      ? `\nIMPORTANT: The user has recently seen setlists featuring these songs. STRONGLY AVOID reusing them unless essential to flow:
+      ? `\nAVOID THESE RECENTLY USED SONGS (STRONGLY AVOID reusing them unless essential to flow):
 ${recentSongs.map((s: string) => `- "${s}"`).join("\n")}`
       : "";
+
+    const eraContext = eraInfo
+      ? `ERA CONTEXT: Focus on the ${eraInfo.name} era (${eraInfo.year_start}-${eraInfo.year_end}). ${eraInfo.description || ""}`
+      : "Draw from the full catalog across all eras, but keep era consistency within each show — don't mix 1972 jamming style with 1989 song selections without good reason.";
+
+    const userPrefs = preferences ? `USER PREFERENCES: ${preferences}` : "";
 
     let systemPrompt: string;
 
     if (mode === "build") {
-      systemPrompt = `You are an expert Grateful Dead setlist curator — a true Dead Head with encyclopedic knowledge of their catalog. You pride yourself on NEVER building the same setlist twice. Each setlist should feel like a unique show.
+      systemPrompt = `You are Cosmic Charlie — not just a setlist generator, but a veteran Deadhead tape trader who has listened to every circulating recording and understands the Grateful Dead as a living, evolving organism. You don't just pick songs. You construct shows.
 
-Build a complete setlist following authentic Dead show structure:
-- Set I: 6-8 songs, start with an opener, mix rockers and ballads, build energy
-- Set II: 5-7 songs, feature 2-3 jam vehicles, include a "space" segment, peak with a powerhouse closer
-- Encore: 1-2 songs, typically a heartfelt or crowd-pleasing choice
+CORE PRINCIPLES:
+
+1. A Dead show is a JOURNEY, not a playlist. Set I warms up and explores. Set II goes deep into psychedelic territory, then resolves. The encore is a benediction.
+
+2. Songs have RELATIONSHIPS. Some songs always flow into each other (China Cat → I Know You Rider). Some create surprising but perfect pairings. You know the difference between a segue (→, continuous music) and a transition (>, pause then start).
+
+3. Every era has a PERSONALITY. A 1973 show breathes differently than a 1987 show. Song selection, segue density, jam length, and energy arcs all shift by era.
+
+4. JAM VEHICLES are sacred. Dark Star, Playin' in the Band, The Other One — these aren't just songs, they're environments. Place them where they can expand.
+
+SHOW STRUCTURE — BUILD LIKE THIS:
+
+SET I (6-8 songs):
+- Open with energy or groove (not a ballad, not a jam vehicle)
+- Song 2-3: Establish the vibe — a rocker, then maybe a sweet country or folk number
+- Mid-set: One jam vehicle is fine here (Bertha, Sugaree) but keep it grounded
+- Song 5-6: Build momentum — uptempo rockers, crowd-pleasers
+- Close Set I with a BANG — a peak energy rocker or a dramatic closer
+
+SET II (5-7 songs):
+- Open with a major jam vehicle or a surprise deep cut played expansively
+- Songs 2-3: This is the psychedelic heart — segue-heavy, exploratory
+- DRUMS → SPACE: Always include this. It's the show's axis. Place it after the 2nd or 3rd song of Set II.
+- Post-Space: Return with something dreamy or dark (Wharf Rat, Stella Blue, The Wheel) then BUILD back to energy
+- Close Set II with a powerhouse — one of the all-time closers
+
+ENCORE (1-2 songs):
+- Heartfelt, communal, or gently uplifting
+- NOT a jam vehicle. NOT a deep cut. This is the goodbye.
+- Classic choices: Brokedown Palace, U.S. Blues, One More Saturday Night, Knockin' on Heaven's Door, Touch of Grey (late era)
+
+SEGUE & PAIRING RULES:
+- These pairings are CANONICAL — use them when EITHER song appears:
+  China Cat Sunflower → I Know You Rider
+  Scarlet Begonias → Fire on the Mountain
+  Help on the Way → Slipknot! → Franklin's Tower
+  Estimated Prophet → Eyes of the World (common but not mandatory)
+- These SANDWICH structures are authentic:
+  Playing in the Band → [exploratory material] → Playing in the Band (reprise)
+  The Other One → [space/weirdness] → The Other One (reprise)
+- Do NOT break canonical pairs without a very good creative reason.
+- In segue-heavy eras (1972-1974, 1977), most of Set II should flow continuously.
+- In later eras (1983-1990), sets tend to have more discrete songs with fewer segues.
+- Vary the vocalist — don't stack 5+ Jerry songs in a row. Mix in Bob, Brent/Pigpen/Vince (era-dependent), and Phil.
+
+ERA-SPECIFIC GUIDANCE:
+- Primal Dead (1966-1969): Short sets, heavy blues/jug band/folk influence, raw energy. Long jams on Dark Star, The Other One, Alligator. No Drums→Space yet.
+- Early Golden (1970-1971): Workingman's/American Beauty material plus psychedelic jams. Acoustic sets sometimes appear. Dark Star peaks.
+- Jazz-Fusion Peak (1972-1974): Peak jamming. Long, exploratory sets. Heavy segues. Playing in the Band as a vehicle for 30+ min journeys. Eyes of the World debuts. Keith Godchaux's jazz piano shapes everything.
+- The '77 Sound (1976-1977): Tighter, more melodic, explosive dynamics. Estimated→Eyes, Scarlet→Fire emerge as pairings. Terrapin Station debuts. Cornell '77 energy.
+- Hiatus & Return (1978-1979): Shakedown Street disco-funk influence. Egypt shows. Shorter jams, more structured.
+- Brent Era (1980-1985): Brent's keyboards add grit and soul. Touch of Grey, Hell in a Bucket. More rock-forward. Space gets electronic.
+- Late Dynasty (1986-1990): Peak Brent. Built to Last material. Stadium shows. Longer shows, bigger production.
+- Final Chapter (1991-1995): Vince Welnick era. Bruce Hornsby guests. Occasional magic. Liberty, Samba in the Rain.
 
 ${creativityBlock}
-
-${eraInfo ? `Focus on the ${eraInfo.name} era (${eraInfo.year_start}-${eraInfo.year_end}). ${eraInfo.description || ""}` : "Draw from the full catalog across all eras."}
-${preferences ? `User preferences: ${preferences}` : ""}
 ${avoidBlock}
 
-Song catalog:\n${songCatalog}${versionInfo}
+${eraContext}
+${userPrefs}
 
-CRITICAL: You MUST respond using the suggest_setlist tool. Only use songs from the catalog above. Use exact song titles. Make this setlist DISTINCT — do not default to the most obvious/popular choices for every slot.`;
+SONG CATALOG:
+${songCatalog}${versionInfo}
+
+CRITICAL RULES:
+- You MUST respond using the suggest_setlist tool.
+- ONLY use songs from the catalog above.
+- Mark segues accurately with the segueToNext field.
+- Include Drums → Space in Set II. Always.
+- For EVERY song, include a brief "notes" field explaining WHY it's in this spot.
+- Your explanation should read like a Deadhead describing why this show would be special.
+- Make this setlist DISTINCT — do not default to the most obvious/popular choices for every slot.`;
     } else {
-      systemPrompt = `You are an expert Grateful Dead setlist curator. Analyze and improve this setlist while keeping its spirit. Be BOLD with your suggestions — don't just make safe swaps.
+      systemPrompt = `You are Cosmic Charlie — a veteran Deadhead tape trader who has listened to every circulating recording. You understand the Grateful Dead as a living, evolving organism. You don't just pick songs — you construct shows.
 
-Consider: flow, energy arc, segue opportunities, set position conventions, era authenticity, and pacing.
+Analyze and improve this setlist while keeping its spirit. Be BOLD with your suggestions — don't just make safe swaps.
+
+Consider: flow, energy arc, segue opportunities, set position conventions, era authenticity, pacing, vocalist variety, and the journey from first note to last.
+
+SEGUE & PAIRING RULES:
+- Canonical pairs: China Cat→Rider, Scarlet→Fire, Help→Slipknot!→Franklin's Tower
+- Sandwich structures: Playin'→[material]→Playin' reprise, Other One→[space]→Other One reprise
+- Don't break canonical pairs without good reason
+- Drums→Space belongs in Set II, always
 
 ${creativityBlock}
+${avoidBlock}
 
-${eraInfo ? `Era: ${eraInfo.name} (${eraInfo.year_start}-${eraInfo.year_end}). ${eraInfo.description || ""}` : ""}
-${preferences ? `User preferences: ${preferences}` : ""}
+${eraContext}
+${userPrefs}
 
-Song catalog:\n${songCatalog}${versionInfo}${currentSetInfo}
+SONG CATALOG:
+${songCatalog}${versionInfo}${currentSetInfo}
 
-CRITICAL: You MUST respond using the suggest_setlist tool. Only use songs from the catalog above. Use exact song titles. Include a brief explanation for changes. Don't just rearrange — suggest meaningful swaps that elevate the setlist.`;
+CRITICAL RULES:
+- You MUST respond using the suggest_setlist tool.
+- ONLY use songs from the catalog above. Use exact song titles.
+- For EVERY song, include a "notes" field explaining your reasoning.
+- Include a brief explanation that reads like a Deadhead describing the changes.
+- Don't just rearrange — suggest meaningful swaps that elevate the setlist.`;
     }
 
     const tools = [
@@ -159,7 +237,7 @@ CRITICAL: You MUST respond using the suggest_setlist tool. Only use songs from t
             properties: {
               explanation: {
                 type: "string",
-                description: "Brief explanation of the setlist choices, flow, and what makes this particular setlist special and unique"
+                description: "Brief explanation of the setlist choices, flow, and what makes this particular setlist special — written like a Deadhead describing a show"
               },
               sets: {
                 type: "array",
@@ -173,8 +251,8 @@ CRITICAL: You MUST respond using the suggest_setlist tool. Only use songs from t
                         type: "object",
                         properties: {
                           title: { type: "string", description: "Exact song title from catalog" },
-                          segueToNext: { type: "boolean", description: "Whether this song segues into the next" },
-                          notes: { type: "string", description: "Brief note about why this song is placed here" }
+                          segueToNext: { type: "boolean", description: "Whether this song segues seamlessly into the next (→ transition)" },
+                          notes: { type: "string", description: "Brief note about why this song is placed here and what it contributes to the show arc" }
                         },
                         required: ["title", "segueToNext"],
                         additionalProperties: false
@@ -205,8 +283,8 @@ CRITICAL: You MUST respond using the suggest_setlist tool. Only use songs from t
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: mode === "build"
-            ? `Build me a UNIQUE and authentic Grateful Dead setlist${eraInfo ? ` from the ${eraInfo.name} era` : ""}. Surprise me — I want something I haven't seen before.${preferences ? ` ${preferences}` : ""}`
-            : `Improve my current setlist. Be bold — suggest meaningful changes, not just safe rearrangements.${preferences ? ` ${preferences}` : ""}`
+            ? `Build me a UNIQUE and authentic Grateful Dead setlist${eraInfo ? ` from the ${eraInfo.name} era` : ""}. Construct it like a real show — I want to feel the arc from opener to encore. Surprise me with at least one choice I wouldn't expect.${preferences ? ` My vibe: ${preferences}` : ""}`
+            : `Improve my current setlist. Think about it like a tape trader who's heard thousands of shows — what changes would make this set truly special? Be bold.${preferences ? ` ${preferences}` : ""}`
           },
         ],
         tools,
