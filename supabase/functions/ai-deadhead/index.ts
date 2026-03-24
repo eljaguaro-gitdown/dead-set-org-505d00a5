@@ -41,10 +41,12 @@ const OPENER_CONSTRAINTS = [
 ];
 
 const CLOSER_CONSTRAINTS = [
-  "End Set I with a song that leaves the crowd wanting more, not satisfied",
-  "Close Set II with something emotionally devastating, not just loud",
-  "Pick an encore that recontextualizes the whole show",
-  "End with quiet power rather than volume",
+  "Close Set I with Sugar Magnolia, Around and Around, or One More Saturday Night — pure energy, leave them buzzing for intermission.",
+  "Close Set I with a dramatic building song — Deal, Not Fade Away, or Let It Grow. End on a peak.",
+  "Close Set II with a transcendent jam vehicle at full power — Morning Dew, or a Star-spanning Not Fade Away.",
+  "Close Set II with something emotionally devastating — Morning Dew, Wharf Rat, or Black Muddy River. Stunned silence before the encore.",
+  "Close Set II with a rocker that leaves them screaming — Going Down the Road Feeling Bad, Not Fade Away, or Throwing Stones.",
+  "Close Set II with a RARE closer — something they almost never ended with. Make the Deadheads lose their minds.",
 ];
 
 function pickRandom<T>(arr: T[], count: number): T[] {
