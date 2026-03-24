@@ -37,6 +37,11 @@ Deno.serve(async (req) => {
       return new Response("Setlist not found", { status: 404, headers: corsHeaders });
     }
 
+    // Only serve OG data for public setlists
+    if (!setlist.is_public) {
+      return new Response("Not found", { status: 404, headers: corsHeaders });
+    }
+
     // Fetch slots with songs
     const { data: slotsRaw } = await supabase
       .from("setlist_slots")
