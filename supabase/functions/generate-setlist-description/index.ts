@@ -15,19 +15,58 @@ serve(async (req) => {
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
+    // Authenticate the caller
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const userClient = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+
+    const token = authHeader.replace("Bearer ", "");
+    const { data: claimsData, error: claimsError } = await userClient.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const userId = claimsData.claims.sub;
 
     const { setlistId } = await req.json();
     if (!setlistId) throw new Error("setlistId is required");
 
-    // Fetch setlist with era
+    // Use service role for data reads (needed for era join), but verify ownership first
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Fetch setlist and verify the user is the owner or a collaborator
     const { data: setlist } = await supabase
       .from("setlists")
       .select("*, eras(*)")
       .eq("id", setlistId)
       .single();
     if (!setlist) throw new Error("Setlist not found");
+
+    const isOwner = setlist.creator_id === userId;
+    if (!isOwner) {
+      const { data: collab } = await supabase
+        .from("collaborators")
+        .select("id")
+        .eq("setlist_id", setlistId)
+        .eq("user_id", userId)
+        .maybeSingle();
+      if (!collab) {
+        return new Response(JSON.stringify({ error: "Forbidden" }), {
+          status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
 
     // Fetch slots with songs
     const { data: slotsData } = await supabase
