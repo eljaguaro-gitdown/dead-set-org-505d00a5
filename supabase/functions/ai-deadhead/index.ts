@@ -32,10 +32,12 @@ const THEME_SEEDS = [
 ];
 
 const OPENER_CONSTRAINTS = [
-  "Start with something unexpected — avoid the obvious openers",
-  "Open with a mid-tempo groove that builds, not a blast of energy",
-  "Choose an opener that sets a specific mood for the whole show",
-  "Start with a song that was rarely used as an opener historically",
+  "Open Set I with a mid-tempo groover that says 'we're here and we're locked in' — Feel Like a Stranger, Mississippi Half-Step, or Cold Rain and Snow.",
+  "Open Set I with pure explosive energy — a barn-burner that gets the crowd moving instantly. Bertha, Promised Land, or Shakedown Street.",
+  "Open Set I with something unexpected — a deep cut or a song usually buried mid-set. Signal that tonight is not a normal night.",
+  "Open Set I with a classic crowd-pleaser — the kind of opener that makes 20,000 people roar. Jack Straw, Truckin', Hell in a Bucket.",
+  "Open Set I with a slow-building song that can stretch — let the band find each other. Sugaree, They Love Each Other, or a languid Bertha.",
+  "Open Set I with something that immediately establishes the era — a song that could ONLY open a show in this particular period.",
 ];
 
 const CLOSER_CONSTRAINTS = [
