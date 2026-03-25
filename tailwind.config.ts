@@ -14,9 +14,12 @@ export default {
     },
     extend: {
       fontFamily: {
-        display: ["'Pirata One'", "'Permanent Marker'", "cursive"],
-        marker: ["'Permanent Marker'", "cursive"],
-        body: ["'Patrick Hand'", "'Caveat'", "cursive"],
+        display: ["'Playfair Display'", "serif"],
+        hand: ["'Caveat'", "cursive"],
+        body: ["'DM Sans'", "-apple-system", "sans-serif"],
+        mono: ["'JetBrains Mono'", "monospace"],
+        // Legacy aliases
+        marker: ["'Caveat'", "cursive"],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -74,6 +77,7 @@ export default {
           pink: "hsl(var(--dead-pink))",
           green: "hsl(var(--dead-green))",
           purple: "hsl(var(--dead-purple))",
+          rose: "hsl(var(--dead-rose))",
         },
       },
       borderRadius: {
