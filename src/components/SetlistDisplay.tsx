@@ -16,8 +16,8 @@ import {
   arrayMove,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { motion, AnimatePresence } from "framer-motion";
-import { X, GripVertical, ChevronRight, ExternalLink, Headphones, Play, Sparkles, Loader2, RefreshCw } from "lucide-react";
+import { motion } from "framer-motion";
+import { X, GripVertical, ChevronRight, ChevronDown, ExternalLink, Headphones, Play, Sparkles, Loader2, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { findArchiveRecording, type ArchiveResult } from "@/lib/archiveOrg";
@@ -266,6 +266,33 @@ const SetSection = ({
   );
 };
 
+/* ── Collapsible description ── */
+const DescriptionCollapsible = ({ description }: { description: string }) => {
+  const [open, setOpen] = useState(false);
+  return (
+    <div>
+      <button
+        onClick={() => setOpen(!open)}
+        className="flex items-center gap-1.5 text-xs font-body text-primary/80 hover:text-primary transition-colors py-1"
+      >
+        <Sparkles className="w-3 h-3" />
+        <span>Charlie's Liner Notes</span>
+        <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
+      </button>
+      <motion.div
+        initial={false}
+        animate={{ height: open ? "auto" : 0, opacity: open ? 1 : 0 }}
+        transition={{ duration: 0.2 }}
+        className="overflow-hidden"
+      >
+        <p className="text-sm font-body text-muted-foreground italic leading-relaxed px-1 py-2 border-l-2 border-primary/40 pl-3">
+          {description}
+        </p>
+      </motion.div>
+    </div>
+  );
+};
+
 /* ── Main component ── */
 const SetlistDisplay = ({
   slots,
@@ -371,20 +398,9 @@ const SetlistDisplay = ({
             )}
           </div>
         </div>
-        <AnimatePresence>
-          {description && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              className="overflow-hidden"
-            >
-              <p className="text-sm font-body text-muted-foreground italic leading-relaxed px-1 py-2 border-l-2 border-primary/40 pl-3">
-                {description}
-              </p>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {description && (
+          <DescriptionCollapsible description={description} />
+        )}
       </div>
       <DndContext
         sensors={sensors}

@@ -296,11 +296,13 @@ const Builder = () => {
           }
         }
         setGuestSlots(newSlots);
+        if (suggestion.explanation) setDescription(suggestion.explanation);
       } else {
         for (const slot of slots) {
           await removeSlot(slot.id);
         }
         await addAISongsToCurrentSetlist(suggestion);
+        if (suggestion.explanation) setDescription(suggestion.explanation);
       }
     },
     [isGuestMode, slots, songs, removeSlot]
@@ -331,6 +333,7 @@ const Builder = () => {
           }
         }
         setGuestSlots(newSlots);
+        if (suggestion.explanation) setDescription(suggestion.explanation);
         return;
       }
 
@@ -441,6 +444,7 @@ const Builder = () => {
       if (eraId) setSelectedEra(eraId);
       const newTitle = suggestion.setlist_name?.trim() || "Untitled Setlist";
       setTitle(newTitle);
+      if (suggestion.explanation) setDescription(suggestion.explanation);
 
       const newSlots: SetlistSlotData[] = [];
       for (const set of suggestion.sets) {
