@@ -162,7 +162,7 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
         initial={{ y: 80, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 80, opacity: 0 }}
-        className="fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-card/95 backdrop-blur-md"
+        className="fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-card/95 backdrop-blur-lg"
       >
         <audio
           ref={audioRef}
@@ -190,7 +190,7 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
           <button
             onClick={togglePlay}
             disabled={loading || !!error}
-            className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center shrink-0 disabled:opacity-50"
+            className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center shrink-0 disabled:opacity-50 transition-all hover:brightness-110"
           >
             {loading ? (
               <Loader2 className="w-4 h-4 animate-spin" />
@@ -206,17 +206,17 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
               <p className="text-xs text-destructive font-body truncate">{error}</p>
             ) : (
               <>
-                <p className="text-xs text-foreground font-body truncate font-medium">
+                <p className="text-sm text-foreground font-body truncate font-semibold">
                   {songTitle}
                 </p>
-                <p className="text-[10px] text-muted-foreground font-body truncate">
-                  {showDate} {venue ? `— ${venue}` : ""}
+                <p className="text-[11px] text-muted-foreground font-mono truncate tracking-wider">
+                  {showDate} {venue ? `· ${venue}` : ""}
                 </p>
               </>
             )}
           </div>
 
-          <span className="text-[10px] text-muted-foreground font-body tabular-nums shrink-0">
+          <span className="text-[10px] text-muted-foreground font-mono tabular-nums shrink-0">
             {formatTime(progress)} / {formatTime(duration)}
           </span>
 

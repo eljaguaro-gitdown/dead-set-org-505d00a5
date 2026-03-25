@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Menu, Shield, Music, Pause } from "lucide-react";
+import { Menu, Shield } from "lucide-react";
 import { motion } from "framer-motion";
 import StealYourFace from "@/components/StealYourFace";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -41,7 +41,7 @@ const SiteHeader = ({ children, large = false }: SiteHeaderProps) => {
   const adminLink = isAdmin ? (
     <button
       onClick={() => navigate("/admin")}
-      className="flex items-center gap-1.5 text-xs font-body text-primary/80 hover:text-primary transition-colors"
+      className="flex items-center gap-1.5 text-xs font-mono text-primary/80 hover:text-primary transition-colors tracking-wider uppercase"
       title="Admin Dashboard"
     >
       <Shield className="w-3.5 h-3.5" />
@@ -53,7 +53,7 @@ const SiteHeader = ({ children, large = false }: SiteHeaderProps) => {
     <motion.div
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
-      className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-primary/10 border border-primary/20 max-w-[180px] sm:max-w-[220px]"
+      className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-primary/10 border border-primary/20 max-w-[180px] sm:max-w-[220px]"
     >
       {/* Animated equalizer bars */}
       <div className="flex items-end gap-[2px] h-3 shrink-0">
@@ -70,7 +70,7 @@ const SiteHeader = ({ children, large = false }: SiteHeaderProps) => {
         {playingSlot.song.title}
       </span>
       {playlistMode && (
-        <span className="text-[9px] font-body text-muted-foreground tabular-nums shrink-0">
+        <span className="text-[9px] font-mono text-muted-foreground tabular-nums shrink-0">
           {playlistIndex + 1}/{playlistSlots.length}
         </span>
       )}
@@ -78,15 +78,15 @@ const SiteHeader = ({ children, large = false }: SiteHeaderProps) => {
   ) : null;
 
   return (
-    <header className="border-b border-border/50 px-4 sm:px-8 py-3 sm:py-4 flex items-center justify-between">
+    <header className="border-b border-border/50 px-6 sm:px-12 py-4 sm:py-5 flex items-center justify-between">
       <button
         onClick={() => navigate("/")}
-        className="flex items-center gap-2 sm:gap-4 group"
+        className="flex items-center gap-3 sm:gap-4 group"
       >
-        <StealYourFace size={large ? (isMobile ? 40 : 64) : (isMobile ? 32 : 48)} />
+        <StealYourFace size={large ? (isMobile ? 36 : 48) : (isMobile ? 28 : 40)} />
         <span
-          className={`font-display text-foreground tracking-wide transition-colors group-hover:text-primary ${
-            large ? "text-xl sm:text-3xl md:text-4xl" : "text-lg sm:text-2xl md:text-3xl"
+          className={`font-display text-foreground tracking-tight transition-colors group-hover:text-primary ${
+            large ? "text-xl sm:text-2xl md:text-3xl" : "text-lg sm:text-xl md:text-2xl"
           }`}
         >
           Dead Set
@@ -95,7 +95,7 @@ const SiteHeader = ({ children, large = false }: SiteHeaderProps) => {
       {(children || adminLink || nowPlaying) && (
         <>
           {/* Desktop nav */}
-          <div className="hidden sm:flex items-center gap-3 sm:gap-5">
+          <div className="hidden sm:flex items-center gap-4 sm:gap-6">
             {nowPlaying}
             {adminLink}
             {children}

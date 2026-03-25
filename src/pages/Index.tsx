@@ -29,8 +29,6 @@ const Index = () => {
   const { user, loading } = useAuth();
   const [featured, setFeatured] = useState<FeaturedSetlist[]>([]);
 
-  // No auto-redirect — all users see the landing page
-
   useEffect(() => {
     const fetchFeatured = async () => {
       const { data: setlists } = await supabase
@@ -91,86 +89,96 @@ const Index = () => {
       <SiteHeader large>
         <button
           onClick={() => navigate("/browse")}
-          className="font-display text-sm tracking-[0.15em] text-muted-foreground hover:text-primary transition-colors uppercase"
+          className="font-mono text-[10px] tracking-[0.2em] text-muted-foreground hover:text-primary transition-colors uppercase"
         >
           Browse
         </button>
         {user ? (
           <button
             onClick={() => navigate("/my-setlists")}
-            className="font-display text-sm tracking-[0.15em] text-muted-foreground hover:text-primary transition-colors uppercase"
+            className="font-mono text-[10px] tracking-[0.2em] text-muted-foreground hover:text-primary transition-colors uppercase"
           >
             My Setlists
           </button>
         ) : (
           <button
             onClick={() => navigate("/auth")}
-            className="font-display text-sm tracking-[0.15em] text-muted-foreground hover:text-primary transition-colors uppercase"
+            className="font-mono text-[10px] tracking-[0.2em] text-muted-foreground hover:text-primary transition-colors uppercase"
           >
             Sign In
           </button>
         )}
       </SiteHeader>
 
-      {/* Hero — single screen, centered on Cosmic Charlie */}
-      <main className="flex-1 flex flex-col items-center justify-center px-5 sm:px-4 relative overflow-hidden min-h-[calc(100vh-80px)]">
-        {/* Ambient glow */}
+      {/* Hero — centered on Cosmic Charlie */}
+      <main className="flex-1 flex flex-col items-center justify-center px-5 sm:px-12 relative overflow-hidden min-h-[calc(100vh-80px)]">
+        {/* Gold radial glow */}
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] sm:w-[700px] h-[500px] sm:h-[700px] rounded-full bg-[radial-gradient(circle,hsl(var(--dead-gold)/0.08),transparent_70%)]" />
-          <div className="absolute top-1/3 left-1/4 w-[300px] sm:w-[450px] h-[300px] sm:h-[450px] rounded-full bg-[radial-gradient(circle,hsl(var(--dead-red)/0.04),transparent_70%)]" />
+          <div className="absolute top-[10%] left-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-[radial-gradient(circle,hsl(var(--dead-gold)/0.08),transparent_70%)]" />
         </div>
 
-        {/* Film grain overlay */}
-        <div className="absolute inset-0 pointer-events-none opacity-[0.03] bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIj48ZmlsdGVyIGlkPSJmIj48ZmVUdXJidWxlbmNlIHR5cGU9ImZyYWN0YWxOb2lzZSIgYmFzZUZyZXF1ZW5jeT0iMC45IiBudW1PY3RhdmVzPSI0IiBzdGl0Y2hUaWxlcz0ic3RpdGNoIi8+PC9maWx0ZXI+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsdGVyPSJ1cmwoI2YpIi8+PC9zdmc+')]" />
-
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-          className="flex flex-col items-center gap-4 sm:gap-7 relative z-10 text-center max-w-xl w-full"
+          transition={{ duration: 0.5, ease: "easeOut" }}
+          className="flex flex-col items-center gap-6 sm:gap-8 relative z-10 text-center max-w-2xl w-full"
         >
           {/* SYF logo */}
-          <div className="sm:hidden">
-            <StealYourFace size={90} />
-          </div>
-          <div className="hidden sm:block">
-            <StealYourFace size={180} />
-          </div>
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0 }}
+          >
+            <StealYourFace size={isMobileCheck() ? 80 : 140} />
+          </motion.div>
 
           {/* Primary tagline */}
-          <h1 className="font-display text-2xl sm:text-5xl md:text-6xl tracking-tight text-primary leading-none">
+          <motion.h1
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.06 }}
+            className="font-display text-3xl sm:text-5xl md:text-6xl text-primary leading-none tracking-tight"
+          >
             Build your dream Dead show.
-          </h1>
+          </motion.h1>
 
           {/* Secondary — Cosmic Charlie intro */}
-          <p className="font-body text-xs sm:text-base text-muted-foreground leading-relaxed max-w-md px-2">
-            Cosmic Charlie knows every setlist the Dead ever played. Tell Charlie your mood, vibe, dream and curate your miracle.
-          </p>
+          <motion.p
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.12 }}
+            className="font-body text-sm sm:text-base text-muted-foreground leading-relaxed max-w-md px-2"
+          >
+            Cosmic Charlie knows every setlist the Dead ever played. Tell Charlie your mood, pick an era, and curate your miracle.
+          </motion.p>
 
           {/* Ambient audio teaser */}
           <AmbientPlayer />
 
           {/* Primary CTA — Cosmic Charlie gateway */}
           <motion.button
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.18 }}
             onClick={() => navigate("/builder?wizard=true")}
-            whileHover={{ scale: 1.03 }}
+            whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.97 }}
-            className="group relative flex items-center gap-3 sm:gap-4 px-6 sm:px-14 py-4 sm:py-6 bg-primary text-primary-foreground rounded-md shadow-[0_0_40px_hsl(var(--glow-gold))] hover:shadow-[0_0_60px_hsl(var(--glow-gold))] transition-shadow duration-300 w-full sm:w-auto justify-center"
+            className="group relative flex items-center gap-3 sm:gap-4 px-8 sm:px-12 py-4 sm:py-5 bg-primary text-primary-foreground rounded-lg shadow-[0_4px_40px_hsl(var(--glow-gold))] hover:shadow-[0_4px_60px_hsl(var(--glow-gold))] hover:brightness-110 transition-all duration-200 w-full sm:w-auto justify-center"
           >
             <img
               src={dancingBear}
               alt="Dancing Bear"
-              className="w-8 h-8 sm:w-12 sm:h-12 object-contain"
+              className="w-8 h-8 sm:w-10 sm:h-10 object-contain"
             />
             <div className="flex flex-col items-start">
-              <span className="font-display text-sm sm:text-lg tracking-widest uppercase leading-tight">
+              <span className="font-body text-sm sm:text-base font-bold tracking-wide">
                 Need a Miracle?
               </span>
-              <span className="font-body text-[9px] sm:text-xs text-primary-foreground/70 tracking-wide">
+              <span className="font-body text-[10px] sm:text-xs text-primary-foreground/70">
                 Let Cosmic Charlie build your dream set
               </span>
             </div>
-            <Star className="w-4 h-4 sm:w-5 sm:h-5 opacity-60 group-hover:opacity-100 transition-opacity" />
+            <Star className="w-4 h-4 opacity-60 group-hover:opacity-100 transition-opacity" />
           </motion.button>
 
           {/* Secondary CTA */}
@@ -178,7 +186,7 @@ const Index = () => {
             variant="outline"
             size="lg"
             onClick={() => navigate("/browse")}
-            className="font-display text-xs sm:text-sm px-6 sm:px-8 py-4 sm:py-5 border-primary/40 text-primary hover:bg-primary/10 tracking-widest uppercase gap-2 w-full sm:w-auto"
+            className="gap-2 w-full sm:w-auto"
           >
             Browse Community Setlists
             <ChevronRight className="w-4 h-4" />
@@ -188,34 +196,34 @@ const Index = () => {
 
       {/* Trending all-time carousel */}
       {featured.length > 0 && (
-        <section className="py-10 sm:py-16 border-t border-border/30">
-          <div className="px-4 sm:px-8 mb-6">
+        <section className="py-12 sm:py-20 border-t border-border/30">
+          <div className="px-6 sm:px-12 mb-8">
             <div className="flex items-center gap-4">
               <div className="h-px flex-1 bg-border" />
-              <span className="font-display text-sm tracking-[0.2em] text-primary uppercase">
+              <span className="font-mono text-[10px] tracking-[0.3em] text-primary/60 uppercase">
                 🔥 Trending All Time
               </span>
               <div className="h-px flex-1 bg-border" />
             </div>
           </div>
 
-          <div className="overflow-x-auto scrollbar-hide px-4 sm:px-8">
-            <div className="flex gap-4 min-w-max pb-2">
+          <div className="overflow-x-auto scrollbar-hide px-6 sm:px-12">
+            <div className="flex gap-5 min-w-max pb-2">
               {featured.map((setlist, i) => (
                 <motion.button
                   key={setlist.id}
                   initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.08, duration: 0.4 }}
+                  transition={{ delay: i * 0.06, duration: 0.4 }}
                   onClick={() => navigate(`/setlist/${setlist.id}`)}
-                  className="w-[220px] sm:w-[260px] shrink-0 border border-border/60 bg-card/50 backdrop-blur-sm rounded-lg p-5 text-left hover:border-primary/40 hover:shadow-[0_0_20px_hsl(var(--glow-gold)/0.15)] transition-all group"
+                  className="w-[240px] sm:w-[280px] shrink-0 border border-border bg-card rounded-xl p-5 text-left hover:border-border/80 hover:-translate-y-0.5 transition-all duration-200 group"
                 >
                   <div className="flex items-start justify-between gap-2">
-                    <h3 className="font-display text-sm text-foreground truncate group-hover:text-primary transition-colors">
+                    <h3 className="font-display text-base font-bold text-foreground truncate group-hover:text-primary transition-colors">
                       {setlist.title}
                     </h3>
                     {setlist.upvote_count > 0 && (
-                      <span className="shrink-0 text-xs font-display text-primary">
+                      <span className="shrink-0 text-xs font-mono text-primary tabular-nums">
                         ⚡ {setlist.upvote_count}
                       </span>
                     )}
@@ -225,11 +233,11 @@ const Index = () => {
                   </p>
                   <div className="flex items-center gap-2 mt-3">
                     {setlist.era_name && (
-                      <span className="px-2 py-0.5 text-[10px] font-marker rounded-sm border border-primary/30 text-primary/80">
+                      <span className="px-2 py-0.5 text-[10px] font-mono rounded-md border border-primary/20 text-primary/70 tracking-wider uppercase">
                         {setlist.era_name}
                       </span>
                     )}
-                    <span className="text-[10px] font-body text-muted-foreground/60">
+                    <span className="text-[10px] font-mono text-muted-foreground/60 tracking-wider">
                       {setlist.song_count} songs
                     </span>
                   </div>
@@ -238,11 +246,11 @@ const Index = () => {
             </div>
           </div>
 
-          <div className="flex justify-center mt-6">
+          <div className="flex justify-center mt-8">
             <Button
               variant="ghost"
               onClick={() => navigate("/browse")}
-              className="font-display text-xs tracking-[0.15em] text-muted-foreground hover:text-primary uppercase gap-1.5"
+              className="font-mono text-[10px] tracking-[0.2em] text-muted-foreground hover:text-primary uppercase gap-1.5"
             >
               See all community setlists
               <ChevronRight className="w-3.5 h-3.5" />
@@ -252,13 +260,13 @@ const Index = () => {
       )}
 
       {/* Minimal footer */}
-      <footer className="py-4 text-center border-t border-border/30">
-        <div className="flex items-center justify-center gap-3 text-xs font-body text-muted-foreground/50">
+      <footer className="py-6 text-center border-t border-border/30">
+        <div className="flex items-center justify-center gap-3 text-[10px] font-mono text-muted-foreground/40 tracking-wider">
           <span>© Dead Set</span>
           <span>·</span>
           <button
             onClick={() => navigate("/privacy")}
-            className="hover:text-muted-foreground transition-colors underline underline-offset-2"
+            className="hover:text-muted-foreground transition-colors"
           >
             Privacy
           </button>
@@ -267,5 +275,10 @@ const Index = () => {
     </PageLayout>
   );
 };
+
+// Simple inline mobile check for stagger
+function isMobileCheck() {
+  return typeof window !== "undefined" && window.innerWidth < 640;
+}
 
 export default Index;
