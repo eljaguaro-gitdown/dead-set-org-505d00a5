@@ -302,6 +302,7 @@ const Builder = () => {
           await removeSlot(slot.id);
         }
         await addAISongsToCurrentSetlist(suggestion);
+        if (suggestion.explanation) setDescription(suggestion.explanation);
       }
     },
     [isGuestMode, slots, songs, removeSlot]
