@@ -79,11 +79,12 @@ const Builder = () => {
   // Guest-only local slots (used when no user and no paramId)
   const [guestSlots, setGuestSlots] = useState<SetlistSlotData[]>([]);
   const activeSlots = isGuestMode ? guestSlots : slots;
+  const hasGuestData = guestSlots.length > 0;
 
   // Initialize setlist for authenticated users (create new or load existing)
   const creatingRef = useRef(false);
   useEffect(() => {
-    if (!user || initialized || authLoading || showWelcome) return;
+    if (!user || initialized || authLoading || showWelcome || hasGuestData) return;
     if (!paramId && !setlist) {
       if (creatingRef.current) return;
       creatingRef.current = true;
@@ -97,7 +98,7 @@ const Builder = () => {
     } else {
       setInitialized(true);
     }
-  }, [user, paramId, initialized, authLoading, setlist, showWelcome]);
+  }, [user, paramId, initialized, authLoading, setlist, showWelcome, hasGuestData]);
 
   // Sync title from loaded setlist
   useEffect(() => {
@@ -223,6 +224,7 @@ const Builder = () => {
   guestEraRef.current = selectedEra;
 
   const hasSavedGuestRef = useRef(false);
+
   useEffect(() => {
     if (!user || hasSavedGuestRef.current) return;
     if (guestSlotsRef.current.length === 0) return;
