@@ -79,6 +79,7 @@ const Builder = () => {
   // Guest-only local slots (used when no user and no paramId)
   const [guestSlots, setGuestSlots] = useState<SetlistSlotData[]>([]);
   const activeSlots = isGuestMode ? guestSlots : slots;
+  const hasGuestData = guestSlots.length > 0;
 
   // Initialize setlist for authenticated users (create new or load existing)
   const creatingRef = useRef(false);
