@@ -395,7 +395,7 @@ const SetlistPoster = () => {
                                   <Headphones className="w-3 h-3 inline" style={{ color: `hsl(${eraTheme.accent})` }} />
                                 ) : (
                                   <span
-                                    className="text-[11px] tabular-nums font-hand"
+                                    className="text-[11px] tabular-nums font-mono"
                                     style={{ color: "hsl(28 15% 50%)" }}
                                   >
                                     {idx + 1}.
