@@ -279,6 +279,59 @@ const AIWelcomeOverlay = ({ eras, onGenerated, onSkip }: AIWelcomeOverlayProps) 
                       })}
                     </div>
 
+                    {/* Collapsible era picker */}
+                    <div className="w-full">
+                      <button
+                        onClick={() => setEraOpen((o) => !o)}
+                        className="flex items-center gap-2 w-full justify-center font-body text-xs text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        <span>
+                          {selectedEra
+                            ? `Era: ${eras.find((e) => e.id === selectedEra)?.name || "Selected"}`
+                            : "Pick an era (optional)"}
+                        </span>
+                        <motion.div
+                          animate={{ rotate: eraOpen ? 180 : 0 }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          <ChevronDown className="w-3.5 h-3.5" />
+                        </motion.div>
+                      </button>
+                      <AnimatePresence>
+                        {eraOpen && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="overflow-hidden"
+                          >
+                            <div className="flex flex-wrap gap-2 justify-center pt-3">
+                              {eras.map((era) => (
+                                <EraTooltip key={era.id} eraName={era.name} yearRange={`${era.year_start}–${era.year_end}`}>
+                                  <button
+                                    onClick={() =>
+                                      setSelectedEra(selectedEra === era.id ? null : era.id)
+                                    }
+                                    className={`px-3 py-1.5 text-xs rounded-sm border transition-all duration-200 ${
+                                      selectedEra === era.id
+                                        ? "border-primary bg-primary/15 text-primary shadow-[0_0_12px_hsl(var(--glow-gold))]"
+                                        : "border-border text-muted-foreground hover:border-primary/40 hover:text-foreground"
+                                    }`}
+                                  >
+                                    <span className="font-marker text-xs">{era.name}</span>
+                                    <span className="text-[10px] text-muted-foreground/60 ml-1.5">
+                                      {era.year_start}–{era.year_end}
+                                    </span>
+                                  </button>
+                                </EraTooltip>
+                              ))}
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+
                     <Button
                       size="lg"
                       onClick={goNext}
