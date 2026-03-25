@@ -22,7 +22,7 @@ const PrivacyPolicy = () => {
         <h1 className="font-display text-3xl sm:text-4xl text-foreground mb-2 leading-tight">
           Privacy Policy
         </h1>
-        <p className="font-hand text-sm text-muted-foreground mb-8">
+        <p className="font-mono text-xs text-muted-foreground mb-8 tracking-wider uppercase">
           Last updated: March 20, 2026
         </p>
 
@@ -164,7 +164,7 @@ const PrivacyPolicy = () => {
       </main>
 
       <footer className="py-4 text-center border-t border-border/50">
-        <p className="font-hand text-xs text-muted-foreground/70">
+        <p className="font-mono text-[10px] text-muted-foreground/70 tracking-wider">
           © {new Date().getFullYear()} Dead Set — Built by Deadheads, for Deadheads
         </p>
       </footer>

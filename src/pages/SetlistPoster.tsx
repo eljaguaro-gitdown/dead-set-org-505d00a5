@@ -261,7 +261,7 @@ const SetlistPoster = () => {
                   className="absolute top-3 right-3 sm:top-4 sm:right-4 opacity-70"
                   initial={{ scale: 0, rotate: -20 }}
                   animate={{ scale: 1, rotate: 0 }}
-                  transition={{ delay: 0.3, type: "spring", stiffness: 200 }}
+                  transition={{ delay: 0.3, duration: 0.5, ease: "easeOut" }}
                 >
                   <StealYourFace size={50} />
                 </motion.div>

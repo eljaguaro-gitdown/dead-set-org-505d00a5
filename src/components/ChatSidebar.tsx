@@ -57,7 +57,7 @@ const ChatSidebar = ({ setlistId, user, isOpen, onClose, onUnreadChange }: ChatS
           initial={{ x: "100%" }}
           animate={{ x: 0 }}
           exit={{ x: "100%" }}
-          transition={{ type: "spring", damping: 25, stiffness: 300 }}
+          transition={{ duration: 0.35, ease: "easeOut" }}
           className="fixed right-0 top-0 h-full w-80 bg-card border-l border-border z-50 flex flex-col shadow-2xl"
         >
           <div className="flex items-center justify-between p-4 border-b border-border">

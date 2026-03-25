@@ -24,14 +24,14 @@ const SaveCelebration = ({ setlistId, setlistTitle, onDismiss }: SaveCelebration
       <motion.div
         className="bg-card border border-border rounded-xl p-6 sm:p-8 max-w-sm w-full text-center shadow-2xl"
         onClick={(e) => e.stopPropagation()}
-        initial={{ y: 30 }}
+        initial={{ y: 16 }}
         animate={{ y: 0 }}
-        transition={{ type: "spring", damping: 25, stiffness: 300 }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
       >
         <motion.div
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
-          transition={{ delay: 0.15, type: "spring", damping: 12 }}
+          transition={{ delay: 0.15, duration: 0.4, ease: "easeOut" }}
           className="text-4xl mb-3"
         >
           🎉
