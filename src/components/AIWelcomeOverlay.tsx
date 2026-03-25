@@ -128,6 +128,7 @@ const AIWelcomeOverlay = ({ eras, onGenerated, onSkip }: AIWelcomeOverlayProps) 
       const { data, error } = await supabase.functions.invoke("ai-deadhead", {
         body: {
           mode: "build",
+          eraId: selectedEra || undefined,
           preferences: preferences !== undefined ? preferences : composePreferences(),
           recentSongs: recentSongsRef.current.length > 0 ? recentSongsRef.current : undefined,
         },
