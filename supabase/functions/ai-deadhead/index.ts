@@ -344,6 +344,7 @@ CRITICAL RULES:
     }));
 
     return new Response(JSON.stringify({
+      setlist_name: suggestion.setlist_name || "",
       explanation: suggestion.explanation,
       sets: resolvedSets,
     }), {
