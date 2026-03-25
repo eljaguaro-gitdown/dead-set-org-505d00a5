@@ -333,6 +333,7 @@ const Builder = () => {
           }
         }
         setGuestSlots(newSlots);
+        if (suggestion.explanation) setDescription(suggestion.explanation);
         return;
       }
 
