@@ -299,6 +299,7 @@ const Builder = () => {
           }
         }
         setGuestSlots(newSlots);
+        setMobileTab("setlist");
       } else {
         for (const slot of slots) {
           await removeSlot(slot.id);
