@@ -296,6 +296,7 @@ const Builder = () => {
           }
         }
         setGuestSlots(newSlots);
+        if (suggestion.explanation) setDescription(suggestion.explanation);
       } else {
         for (const slot of slots) {
           await removeSlot(slot.id);
