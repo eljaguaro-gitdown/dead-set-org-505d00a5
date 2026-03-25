@@ -437,10 +437,9 @@ const Builder = () => {
 
   // Handle AI welcome overlay generation
   const handleWelcomeGenerated = useCallback(
-    (suggestion: { explanation: string; sets: { setNumber: number; songs: { songId: string; title: string; segueToNext: boolean; notes: string; position: number }[] }[] }, eraId: string | null) => {
+    (suggestion: { setlist_name?: string; explanation: string; sets: { setNumber: number; songs: { songId: string; title: string; segueToNext: boolean; notes: string; position: number }[] }[] }, eraId: string | null) => {
       if (eraId) setSelectedEra(eraId);
-      const firstSongs = suggestion.sets.flatMap(s => s.songs).slice(0, 2).map(s => s.title);
-      const newTitle = firstSongs.length > 0 ? `${firstSongs.join(" > ")}` : "AI Generated Setlist";
+      const newTitle = suggestion.setlist_name?.trim() || "Untitled Setlist";
       setTitle(newTitle);
 
       const newSlots: SetlistSlotData[] = [];

@@ -23,6 +23,7 @@ interface AISuggestionSet {
 }
 
 interface AISuggestion {
+  setlist_name?: string;
   explanation: string;
   sets: AISuggestionSet[];
 }

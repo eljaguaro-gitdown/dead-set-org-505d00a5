@@ -199,7 +199,8 @@ CRITICAL RULES:
 - Include Drums → Space in Set II. Always.
 - For EVERY song, include a brief "notes" field explaining WHY it's in this spot.
 - Your explanation should read like a Deadhead describing why this show would be special.
-- Make this setlist DISTINCT — do not default to the most obvious/popular choices for every slot.`;
+- Make this setlist DISTINCT — do not default to the most obvious/popular choices for every slot.
+- Include a "setlist_name" — a creative 3-7 word name that captures the essence of THIS specific setlist. Think like a Deadhead labeling their favorite tape. It should reflect the mood, energy, or story of the show you just built.`;
     } else {
       systemPrompt = `You are Cosmic Charlie — a veteran Deadhead tape trader who has listened to every circulating recording. You understand the Grateful Dead as a living, evolving organism. You don't just pick songs — you construct shows.
 
@@ -227,7 +228,8 @@ CRITICAL RULES:
 - ONLY use songs from the catalog above. Use exact song titles.
 - For EVERY song, include a "notes" field explaining your reasoning.
 - Include a brief explanation that reads like a Deadhead describing the changes.
-- Don't just rearrange — suggest meaningful swaps that elevate the setlist.`;
+- Don't just rearrange — suggest meaningful swaps that elevate the setlist.
+- Include a "setlist_name" — a creative 3-7 word name that captures the essence of THIS specific setlist. Think like a Deadhead labeling their favorite tape.`;
     }
 
     const tools = [
@@ -239,6 +241,10 @@ CRITICAL RULES:
           parameters: {
             type: "object",
             properties: {
+              setlist_name: {
+                type: "string",
+                description: "A creative, evocative name for this setlist (3-7 words). Should capture the mood, theme, or story of the show — like a Deadhead might name a legendary tape. Examples: 'Dark Star Rising', 'Sunshine Daydream at the Gorge', 'Deep Blues & Moonlight', 'The Scarlet Fire Express', 'Cosmic Campfire Sessions'. Do NOT include generic words like 'setlist' or 'playlist'. Do NOT include dates. Make it feel like a real show name or a tape label."
+              },
               explanation: {
                 type: "string",
                 description: "Brief explanation of the setlist choices, flow, and what makes this particular setlist special — written like a Deadhead describing a show"
@@ -268,7 +274,7 @@ CRITICAL RULES:
                 }
               }
             },
-            required: ["explanation", "sets"],
+            required: ["setlist_name", "explanation", "sets"],
             additionalProperties: false
           }
         }
@@ -338,6 +344,7 @@ CRITICAL RULES:
     }));
 
     return new Response(JSON.stringify({
+      setlist_name: suggestion.setlist_name || "",
       explanation: suggestion.explanation,
       sets: resolvedSets,
     }), {
