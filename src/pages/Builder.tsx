@@ -347,10 +347,12 @@ const Builder = () => {
       if (suggestion.explanation) setDescription(suggestion.explanation);
       const created = await createSetlist(newTitle, selectedEra);
       if (!created) return;
+      // Persist slots directly before navigating (avoids stale closure / unmount issues)
+      await addAISongsToSetlist(suggestion, created.id);
+      if (suggestion.explanation) {
+        await supabase.from("setlists").update({ description: suggestion.explanation }).eq("id", created.id);
+      }
       navigate(`/builder/${created.id}`, { replace: false });
-      setTimeout(async () => {
-        await addAISongsToSetlist(suggestion, created.id);
-      }, 300);
     },
     [isGuestMode, songs, createSetlist, selectedEra, navigate]
   );
