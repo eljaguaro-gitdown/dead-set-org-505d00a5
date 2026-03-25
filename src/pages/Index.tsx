@@ -152,7 +152,7 @@ const Index = () => {
 
           {/* Primary CTA — Cosmic Charlie gateway */}
           <motion.button
-            onClick={() => navigate("/builder")}
+            onClick={() => navigate("/builder?wizard=true")}
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
             className="group relative flex items-center gap-3 sm:gap-4 px-6 sm:px-14 py-4 sm:py-6 bg-primary text-primary-foreground rounded-md shadow-[0_0_40px_hsl(var(--glow-gold))] hover:shadow-[0_0_60px_hsl(var(--glow-gold))] transition-shadow duration-300 w-full sm:w-auto justify-center"

@@ -52,9 +52,11 @@ const Builder = () => {
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const pendingActionRef = useRef<"save" | "share" | "collaborate" | null>(null);
 
-  // AI welcome overlay: show for fresh builder (no paramId, no slots loaded)
+  // AI welcome overlay: show when explicitly requested via ?wizard=true, or for fresh guest builder
+  const [searchParams, setSearchParams] = useSearchParams();
+  const wizardRequested = searchParams.get("wizard") === "true";
   const [welcomeDismissed, setWelcomeDismissed] = useState(false);
-  const showWelcome = !paramId && !welcomeDismissed && !authLoading && !user;
+  const showWelcome = !paramId && !welcomeDismissed && (wizardRequested || (!authLoading && !user));
 
   // Guest mode: track local-only slots when no user/setlist
   const isGuestMode = !user && !paramId;
@@ -472,6 +474,11 @@ const Builder = () => {
       }
 
       setWelcomeDismissed(true);
+      // Clear wizard param from URL
+      if (wizardRequested) {
+        searchParams.delete("wizard");
+        setSearchParams(searchParams, { replace: true });
+      }
       setMobileTab("setlist");
 
       const firstPlayable = newSlots.find((s) => s.version?.archive_org_url);
@@ -503,7 +510,13 @@ const Builder = () => {
         <AIWelcomeOverlay
           eras={eras}
           onGenerated={handleWelcomeGenerated}
-          onSkip={() => setWelcomeDismissed(true)}
+          onSkip={() => {
+            setWelcomeDismissed(true);
+            if (wizardRequested) {
+              searchParams.delete("wizard");
+              setSearchParams(searchParams, { replace: true });
+            }
+          }}
         />
       )}
 
