@@ -430,8 +430,20 @@ const MySetlists = () => {
                           );
                         })()}
                       </div>
+                      {/* Mobile: compact actions */}
+                      <div className="flex sm:hidden items-center gap-1 shrink-0">
+                        <button
+                          onClick={(e) => handleDelete(s.id, e)}
+                          className="p-1.5 rounded-md active:bg-black/10 transition-colors"
+                          style={{ color: tape.sub }}
+                          title="Delete setlist"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                      {/* Desktop: full actions */}
                       <div className="hidden sm:flex items-center gap-2 sm:gap-3 shrink-0">
-                        <span className="font-body text-[10px] sm:text-sm hidden sm:inline" style={{ color: tape.sub }}>
+                        <span className="font-body text-[10px] sm:text-sm" style={{ color: tape.sub }}>
                           {new Date(s.updated_at).toLocaleDateString()}
                         </span>
                         {s.is_public ? (
