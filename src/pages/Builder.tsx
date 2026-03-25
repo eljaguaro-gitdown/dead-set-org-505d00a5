@@ -313,10 +313,9 @@ const Builder = () => {
   const handleCreateNewFromAI = useCallback(
     async (suggestion: { setlist_name?: string; explanation: string; sets: { setNumber: number; songs: { songId: string; title: string; segueToNext: boolean; notes: string; position: number }[] }[] }, customTitle?: string) => {
       if (isGuestMode) {
-        // In guest mode, just replace current slots and update title
-        const firstSongs = suggestion.sets.flatMap(s => s.songs).slice(0, 2).map(s => s.title);
-        const newTitle = customTitle || (firstSongs.length > 0 ? `AI Set: ${firstSongs.join(" > ")}` : "AI Generated Setlist");
+        const newTitle = customTitle || suggestion.setlist_name?.trim() || "Untitled Setlist";
         setTitle(newTitle);
+        if (suggestion.explanation) setDescription(suggestion.explanation);
 
         const newSlots: SetlistSlotData[] = [];
         for (const set of suggestion.sets) {
@@ -335,12 +334,12 @@ const Builder = () => {
           }
         }
         setGuestSlots(newSlots);
-        if (suggestion.explanation) setDescription(suggestion.explanation);
+        setMobileTab("setlist");
         return;
       }
 
-      const firstSongs = suggestion.sets.flatMap(s => s.songs).slice(0, 2).map(s => s.title);
-      const newTitle = customTitle || (firstSongs.length > 0 ? `AI Set: ${firstSongs.join(" > ")}` : "AI Generated Setlist");
+      const newTitle = customTitle || suggestion.setlist_name?.trim() || "Untitled Setlist";
+      if (suggestion.explanation) setDescription(suggestion.explanation);
       const created = await createSetlist(newTitle, selectedEra);
       if (!created) return;
       navigate(`/builder/${created.id}`, { replace: false });
