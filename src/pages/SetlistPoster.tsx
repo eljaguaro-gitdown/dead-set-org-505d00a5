@@ -364,14 +364,17 @@ const SetlistPoster = () => {
                         {setSlots.map((slot, idx) => {
                           const hasAudio = !!slot.version?.archive_org_url;
                           const isHovered = hoveredSlot === slot.id;
+                          const isNowPlaying = playingSlot?.id === slot.id;
                           const charSum = slot.id.split("").reduce((a, c) => a + c.charCodeAt(0), 0);
-                          const rotation = ((charSum % 7) - 3) * 0.3;
-                          const xShift = ((charSum % 5) - 2) * 0.5;
+                          const rotation = isNowPlaying ? 0 : ((charSum % 7) - 3) * 0.3;
+                          const xShift = isNowPlaying ? 0 : ((charSum % 5) - 2) * 0.5;
 
                           return (
                             <motion.div
                               key={slot.id}
                               className={`group flex items-center gap-2 py-[5px] transition-colors ${
+                                isNowPlaying ? "now-playing-row" : ""
+                              } ${
                                 hasAudio ? "cursor-pointer hover:bg-[hsl(38_50%_80%/0.3)]" : ""
                               }`}
                               style={{ minHeight: "28px", transform: `rotate(${rotation}deg) translateX(${xShift}px)` }}
@@ -382,9 +385,13 @@ const SetlistPoster = () => {
                               animate={{ opacity: 1, x: xShift }}
                               transition={{ delay: 0.55 + number * 0.08 + idx * 0.03 }}
                             >
-                              {/* Track number */}
+                              {/* Track number or equalizer */}
                               <span className="w-4 text-right shrink-0">
-                                {hasAudio && isHovered ? (
+                                {isNowPlaying ? (
+                                  <span className="now-playing-bars" style={{ color: `hsl(${eraTheme.accent})` }}>
+                                    <span /><span /><span />
+                                  </span>
+                                ) : hasAudio && isHovered ? (
                                   <Headphones className="w-3 h-3 inline" style={{ color: `hsl(${eraTheme.accent})` }} />
                                 ) : (
                                   <span
