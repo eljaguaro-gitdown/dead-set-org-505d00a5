@@ -103,7 +103,7 @@ const Browse = () => {
         .order("play_count", { ascending: false })
         .limit(6);
       if (!data || data.length === 0) return;
-      const enriched = await enrichSetlists(data);
+      const enriched = await enrichSetlists(data as unknown as Setlist[]);
       setTrending(enriched);
     };
 
