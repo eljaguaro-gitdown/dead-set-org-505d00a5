@@ -1,10 +1,11 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Star } from "lucide-react";
+import { Star, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import EraTooltip from "@/components/EraTooltip";
 import type { Database } from "@/integrations/supabase/types";
 
 type Era = Database["public"]["Tables"]["eras"]["Row"];
@@ -72,6 +73,8 @@ const AIWelcomeOverlay = ({ eras, onGenerated, onSkip }: AIWelcomeOverlayProps) 
   const [mustInclude, setMustInclude] = useState("");
   const [pleaseAvoid, setPleaseAvoid] = useState("");
   const [itsFor, setItsFor] = useState("");
+  const [selectedEra, setSelectedEra] = useState<string | null>(null);
+  const [eraOpen, setEraOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const recentSongsRef = useRef<string[]>([]);
 
@@ -125,6 +128,7 @@ const AIWelcomeOverlay = ({ eras, onGenerated, onSkip }: AIWelcomeOverlayProps) 
       const { data, error } = await supabase.functions.invoke("ai-deadhead", {
         body: {
           mode: "build",
+          eraId: selectedEra || undefined,
           preferences: preferences !== undefined ? preferences : composePreferences(),
           recentSongs: recentSongsRef.current.length > 0 ? recentSongsRef.current : undefined,
         },
@@ -140,7 +144,7 @@ const AIWelcomeOverlay = ({ eras, onGenerated, onSkip }: AIWelcomeOverlayProps) 
         ...new Set([...recentSongsRef.current, ...generatedSongs]),
       ].slice(-30);
 
-      onGenerated(data, null);
+      onGenerated(data, selectedEra);
     } catch (e: any) {
       console.error("AI error:", e);
       toast.error(e.message || "Cosmic Charlie hit a wrong note. Try again.");
@@ -273,6 +277,59 @@ const AIWelcomeOverlay = ({ eras, onGenerated, onSkip }: AIWelcomeOverlayProps) 
                           </motion.button>
                         );
                       })}
+                    </div>
+
+                    {/* Collapsible era picker */}
+                    <div className="w-full">
+                      <button
+                        onClick={() => setEraOpen((o) => !o)}
+                        className="flex items-center gap-2 w-full justify-center font-body text-xs text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        <span>
+                          {selectedEra
+                            ? `Era: ${eras.find((e) => e.id === selectedEra)?.name || "Selected"}`
+                            : "Pick an era (optional)"}
+                        </span>
+                        <motion.div
+                          animate={{ rotate: eraOpen ? 180 : 0 }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          <ChevronDown className="w-3.5 h-3.5" />
+                        </motion.div>
+                      </button>
+                      <AnimatePresence>
+                        {eraOpen && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="overflow-hidden"
+                          >
+                            <div className="flex flex-wrap gap-2 justify-center pt-3">
+                              {eras.map((era) => (
+                                <EraTooltip key={era.id} eraName={era.name} yearRange={`${era.year_start}–${era.year_end}`}>
+                                  <button
+                                    onClick={() =>
+                                      setSelectedEra(selectedEra === era.id ? null : era.id)
+                                    }
+                                    className={`px-3 py-1.5 text-xs rounded-sm border transition-all duration-200 ${
+                                      selectedEra === era.id
+                                        ? "border-primary bg-primary/15 text-primary shadow-[0_0_12px_hsl(var(--glow-gold))]"
+                                        : "border-border text-muted-foreground hover:border-primary/40 hover:text-foreground"
+                                    }`}
+                                  >
+                                    <span className="font-marker text-xs">{era.name}</span>
+                                    <span className="text-[10px] text-muted-foreground/60 ml-1.5">
+                                      {era.year_start}–{era.year_end}
+                                    </span>
+                                  </button>
+                                </EraTooltip>
+                              ))}
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                     </div>
 
                     <Button
