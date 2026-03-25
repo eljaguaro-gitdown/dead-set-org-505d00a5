@@ -73,6 +73,8 @@ const AIWelcomeOverlay = ({ eras, onGenerated, onSkip }: AIWelcomeOverlayProps) 
   const [mustInclude, setMustInclude] = useState("");
   const [pleaseAvoid, setPleaseAvoid] = useState("");
   const [itsFor, setItsFor] = useState("");
+  const [selectedEra, setSelectedEra] = useState<string | null>(null);
+  const [eraOpen, setEraOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const recentSongsRef = useRef<string[]>([]);
 
