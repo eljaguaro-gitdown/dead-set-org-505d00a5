@@ -276,9 +276,12 @@ const Builder = () => {
   }, [user, navigate]);
 
   const handleApplyAISuggestion = useCallback(
-    async (suggestion: { explanation: string; sets: { setNumber: number; songs: { songId: string; title: string; segueToNext: boolean; notes: string; position: number }[] }[] }) => {
+    async (suggestion: { setlist_name?: string; explanation: string; sets: { setNumber: number; songs: { songId: string; title: string; segueToNext: boolean; notes: string; position: number }[] }[] }) => {
+      const newTitle = suggestion.setlist_name?.trim() || title;
+      setTitle(newTitle);
+      if (suggestion.explanation) setDescription(suggestion.explanation);
+
       if (isGuestMode) {
-        // Clear guest slots and add AI songs locally
         const newSlots: SetlistSlotData[] = [];
         for (const set of suggestion.sets) {
           for (const suggestedSong of set.songs) {
@@ -296,16 +299,15 @@ const Builder = () => {
           }
         }
         setGuestSlots(newSlots);
-        if (suggestion.explanation) setDescription(suggestion.explanation);
       } else {
         for (const slot of slots) {
           await removeSlot(slot.id);
         }
         await addAISongsToCurrentSetlist(suggestion);
-        if (suggestion.explanation) setDescription(suggestion.explanation);
+        if (newTitle !== setlist?.title) updateTitle(newTitle);
       }
     },
-    [isGuestMode, slots, songs, removeSlot]
+    [isGuestMode, slots, songs, removeSlot, title, setlist, updateTitle]
   );
 
   const handleCreateNewFromAI = useCallback(
