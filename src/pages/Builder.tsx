@@ -83,7 +83,7 @@ const Builder = () => {
   // Initialize setlist for authenticated users (create new or load existing)
   const creatingRef = useRef(false);
   useEffect(() => {
-    if (!user || initialized || authLoading || showWelcome) return;
+    if (!user || initialized || authLoading || showWelcome || hasGuestData) return;
     if (!paramId && !setlist) {
       if (creatingRef.current) return;
       creatingRef.current = true;
