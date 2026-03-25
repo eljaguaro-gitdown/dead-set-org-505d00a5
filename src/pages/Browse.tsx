@@ -83,7 +83,7 @@ const Browse = () => {
     const fetchFeatured = async () => {
       const { data } = await supabase
         .from("setlists")
-        .select("*")
+        .select("id, title, creator_id, description, era_id, is_public, is_collaborative, play_count, upvote_count, created_at, updated_at")
         .eq("is_public", true)
         .order("upvote_count", { ascending: false })
         .limit(3);
