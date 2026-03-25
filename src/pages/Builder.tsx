@@ -311,7 +311,7 @@ const Builder = () => {
   );
 
   const handleCreateNewFromAI = useCallback(
-    async (suggestion: { explanation: string; sets: { setNumber: number; songs: { songId: string; title: string; segueToNext: boolean; notes: string; position: number }[] }[] }, customTitle?: string) => {
+    async (suggestion: { setlist_name?: string; explanation: string; sets: { setNumber: number; songs: { songId: string; title: string; segueToNext: boolean; notes: string; position: number }[] }[] }, customTitle?: string) => {
       if (isGuestMode) {
         // In guest mode, just replace current slots and update title
         const firstSongs = suggestion.sets.flatMap(s => s.songs).slice(0, 2).map(s => s.title);
