@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { Shield, Users, ArrowLeft, Loader2, Calendar, Mail, User, Trash2 } from "lucide-react";
+import { Shield, Users, ArrowLeft, Loader2, Calendar, Mail, User, Trash2, ListMusic } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -290,6 +290,13 @@ const Admin = () => {
                       >
                         Last seen {timeAgo(u.lastSignInAt)}
                       </span>
+                      <button
+                        onClick={() => navigate(`/my-setlists?user=${u.id}`)}
+                        className="text-xs font-body text-primary hover:text-primary/80 transition-colors flex items-center gap-1 mt-0.5"
+                      >
+                        <ListMusic className="w-3 h-3" />
+                        {u.setlistCount} setlist{u.setlistCount !== 1 ? "s" : ""}
+                      </button>
                     </div>
 
                     {/* Mobile: compact stats */}
