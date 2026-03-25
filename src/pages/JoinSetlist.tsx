@@ -15,7 +15,6 @@ const JoinSetlist = () => {
   useEffect(() => {
     if (authLoading) return;
     if (!user) {
-      // Redirect to auth, then back here
       navigate(`/auth?redirect=/join/${token}`);
       return;
     }
@@ -26,63 +25,24 @@ const JoinSetlist = () => {
 
     const join = async () => {
       setJoining(true);
-      // Find setlist by share token
-      const { data: setlist, error: findError } = await supabase
-        .from("setlists")
-        .select("id, title, creator_id")
-        .eq("share_token", token)
-        .single();
 
-      if (findError || !setlist) {
-        setError("Setlist not found or invalid link");
-        setJoining(false);
-        return;
-      }
-
-      // If user is the creator, just redirect
-      if (setlist.creator_id === user.id) {
-        navigate(`/builder/${setlist.id}`);
-        return;
-      }
-
-      // Check if already a collaborator
-      const { data: existing } = await supabase
-        .from("collaborators")
-        .select("id")
-        .eq("setlist_id", setlist.id)
-        .eq("user_id", user.id)
-        .maybeSingle();
-
-      if (existing) {
-        navigate(`/builder/${setlist.id}`);
-        return;
-      }
-
-      // Add as collaborator — need the owner to add, so we use a workaround:
-      // The setlist needs to be collaborative, and we insert via the owner's policy
-      // Actually, let's update the setlist to be collaborative and make the insert work
-      // We need to adjust the RLS or use a different approach
-
-      // For now, let's make setlists with share tokens auto-accept
-      // The insert policy requires the setlist owner to insert, so we need an edge case
-      // Let's use the service role via an edge function instead
-      // But for MVP, let's make the insert policy more permissive for shared setlists
-
-      const { error: joinError } = await supabase.from("collaborators").insert({
-        setlist_id: setlist.id,
-        user_id: user.id,
-        role: "editor",
+      const { data, error: invokeError } = await supabase.functions.invoke("join-setlist", {
+        body: { token },
       });
 
-      if (joinError) {
-        // If RLS blocks, show error
-        setError("Unable to join. The setlist owner may need to add you.");
+      if (invokeError || !data?.setlist_id) {
+        setError(data?.error || "Unable to join. The link may be invalid.");
         setJoining(false);
         return;
       }
 
-      toast.success(`Joined "${setlist.title}"!`);
-      navigate(`/builder/${setlist.id}`);
+      if (data.already_owner || data.already_member) {
+        navigate(`/builder/${data.setlist_id}`);
+        return;
+      }
+
+      toast.success(`Joined "${data.title}"!`);
+      navigate(`/builder/${data.setlist_id}`);
     };
 
     join();
