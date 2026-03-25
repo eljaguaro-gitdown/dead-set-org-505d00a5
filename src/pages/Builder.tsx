@@ -231,7 +231,7 @@ const Builder = () => {
     // We have a newly authenticated user with guest slots — save them
     hasSavedGuestRef.current = true;
     const saveGuestSetlist = async () => {
-      const shareToken = crypto.randomUUID().slice(0, 8);
+      const shareToken = crypto.randomUUID();
       const { data: newSetlist, error } = await supabase
         .from("setlists")
         .insert({

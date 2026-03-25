@@ -117,7 +117,7 @@ const Browse = () => {
       setLoading(true);
       setVisibleCount(PAGE_SIZE);
 
-      let query = supabase.from("setlists").select("*", { count: "exact" }).eq("is_public", true);
+      let query = supabase.from("setlists").select("id, title, creator_id, description, era_id, is_public, is_collaborative, play_count, upvote_count, created_at, updated_at", { count: "exact" }).eq("is_public", true);
       if (eraFilter !== "all") query = query.eq("era_id", eraFilter);
 
       let orderCol = "created_at";
