@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import dancingBear from "@/assets/dancing-bear.gif";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { getPostAuthRedirect } from "@/lib/postAuthRedirect";
+
 import StealYourFace from "@/components/StealYourFace";
 import AmbientPlayer from "@/components/AmbientPlayer";
 import PageLayout from "@/components/PageLayout";
@@ -29,13 +29,7 @@ const Index = () => {
   const { user, loading } = useAuth();
   const [featured, setFeatured] = useState<FeaturedSetlist[]>([]);
 
-  useEffect(() => {
-    if (!loading && user) {
-      getPostAuthRedirect(user.id).then((path) => {
-        navigate(path, { replace: true });
-      });
-    }
-  }, [user, loading, navigate]);
+  // No auto-redirect — all users see the landing page
 
   useEffect(() => {
     const fetchFeatured = async () => {
@@ -101,12 +95,21 @@ const Index = () => {
         >
           Browse
         </button>
-        <button
-          onClick={() => navigate("/auth")}
-          className="font-display text-sm tracking-[0.15em] text-muted-foreground hover:text-primary transition-colors uppercase"
-        >
-          Sign In
-        </button>
+        {user ? (
+          <button
+            onClick={() => navigate("/my-setlists")}
+            className="font-display text-sm tracking-[0.15em] text-muted-foreground hover:text-primary transition-colors uppercase"
+          >
+            My Setlists
+          </button>
+        ) : (
+          <button
+            onClick={() => navigate("/auth")}
+            className="font-display text-sm tracking-[0.15em] text-muted-foreground hover:text-primary transition-colors uppercase"
+          >
+            Sign In
+          </button>
+        )}
       </SiteHeader>
 
       {/* Hero — single screen, centered on Cosmic Charlie */}
