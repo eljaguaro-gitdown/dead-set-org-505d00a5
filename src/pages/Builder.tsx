@@ -474,6 +474,11 @@ const Builder = () => {
       }
 
       setWelcomeDismissed(true);
+      // Clear wizard param from URL
+      if (wizardRequested) {
+        searchParams.delete("wizard");
+        setSearchParams(searchParams, { replace: true });
+      }
       setMobileTab("setlist");
 
       const firstPlayable = newSlots.find((s) => s.version?.archive_org_url);
