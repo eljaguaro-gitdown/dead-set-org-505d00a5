@@ -97,7 +97,7 @@ const Builder = () => {
     } else {
       setInitialized(true);
     }
-  }, [user, paramId, initialized, authLoading, setlist, showWelcome]);
+  }, [user, paramId, initialized, authLoading, setlist, showWelcome, hasGuestData]);
 
   // Sync title from loaded setlist
   useEffect(() => {
