@@ -144,7 +144,7 @@ const AIWelcomeOverlay = ({ eras, onGenerated, onSkip }: AIWelcomeOverlayProps) 
         ...new Set([...recentSongsRef.current, ...generatedSongs]),
       ].slice(-30);
 
-      onGenerated(data, null);
+      onGenerated(data, selectedEra);
     } catch (e: any) {
       console.error("AI error:", e);
       toast.error(e.message || "Cosmic Charlie hit a wrong note. Try again.");
