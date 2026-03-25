@@ -158,7 +158,7 @@ const MySetlists = () => {
         <Button
           variant="ghost"
           size="sm"
-          onClick={signOut}
+          onClick={async () => { await signOut(); navigate("/"); }}
           className="text-muted-foreground hover:text-foreground font-body"
         >
           Sign Out

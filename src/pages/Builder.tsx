@@ -672,7 +672,7 @@ const Builder = () => {
                 variant="ghost"
                 size="icon"
                 className="h-8 w-8 sm:h-9 sm:w-9 shrink-0 text-muted-foreground hover:text-foreground"
-                onClick={signOut}
+                onClick={async () => { await signOut(); navigate("/"); }}
                 title="Sign Out"
               >
                 <LogOut className="w-4 sm:w-5 h-4 sm:h-5" />
