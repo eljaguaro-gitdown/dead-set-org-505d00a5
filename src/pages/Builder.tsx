@@ -510,7 +510,13 @@ const Builder = () => {
         <AIWelcomeOverlay
           eras={eras}
           onGenerated={handleWelcomeGenerated}
-          onSkip={() => setWelcomeDismissed(true)}
+          onSkip={() => {
+            setWelcomeDismissed(true);
+            if (wizardRequested) {
+              searchParams.delete("wizard");
+              setSearchParams(searchParams, { replace: true });
+            }
+          }}
         />
       )}
 
