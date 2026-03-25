@@ -28,7 +28,7 @@ export const useSetlist = (user: User | null, setlistId?: string | null) => {
   // Create a new setlist
   const createSetlist = useCallback(async (title: string, eraId?: string | null) => {
     if (!user) return null;
-    const shareToken = crypto.randomUUID().slice(0, 8);
+    const shareToken = crypto.randomUUID();
     const { data, error } = await supabase
       .from("setlists")
       .insert({
