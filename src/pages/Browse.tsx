@@ -83,12 +83,12 @@ const Browse = () => {
     const fetchFeatured = async () => {
       const { data } = await supabase
         .from("setlists")
-        .select("*")
+        .select("id, title, creator_id, description, era_id, is_public, is_collaborative, play_count, upvote_count, created_at, updated_at")
         .eq("is_public", true)
         .order("upvote_count", { ascending: false })
         .limit(3);
       if (!data || data.length === 0) return;
-      const enriched = await enrichSetlists(data);
+      const enriched = await enrichSetlists(data as unknown as Setlist[]);
       setFeatured(enriched);
     };
 
@@ -96,14 +96,14 @@ const Browse = () => {
       const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
       const { data } = await supabase
         .from("setlists")
-        .select("*")
+        .select("id, title, creator_id, description, era_id, is_public, is_collaborative, play_count, upvote_count, created_at, updated_at")
         .eq("is_public", true)
         .gt("play_count", 0)
         .gte("updated_at", sevenDaysAgo)
         .order("play_count", { ascending: false })
         .limit(6);
       if (!data || data.length === 0) return;
-      const enriched = await enrichSetlists(data);
+      const enriched = await enrichSetlists(data as unknown as Setlist[]);
       setTrending(enriched);
     };
 
