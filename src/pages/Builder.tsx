@@ -347,10 +347,12 @@ const Builder = () => {
       if (suggestion.explanation) setDescription(suggestion.explanation);
       const created = await createSetlist(newTitle, selectedEra);
       if (!created) return;
+      // Persist slots directly before navigating (avoids stale closure / unmount issues)
+      await addAISongsToSetlist(suggestion, created.id);
+      if (suggestion.explanation) {
+        await supabase.from("setlists").update({ description: suggestion.explanation }).eq("id", created.id);
+      }
       navigate(`/builder/${created.id}`, { replace: false });
-      setTimeout(async () => {
-        await addAISongsToSetlist(suggestion, created.id);
-      }, 300);
     },
     [isGuestMode, songs, createSetlist, selectedEra, navigate]
   );
@@ -446,7 +448,7 @@ const Builder = () => {
 
   // Handle AI welcome overlay generation
   const handleWelcomeGenerated = useCallback(
-    (suggestion: { setlist_name?: string; explanation: string; sets: { setNumber: number; songs: { songId: string; title: string; segueToNext: boolean; notes: string; position: number }[] }[] }, eraId: string | null) => {
+    async (suggestion: { setlist_name?: string; explanation: string; sets: { setNumber: number; songs: { songId: string; title: string; segueToNext: boolean; notes: string; position: number }[] }[] }, eraId: string | null) => {
       if (eraId) setSelectedEra(eraId);
       const newTitle = suggestion.setlist_name?.trim() || "Untitled Setlist";
       setTitle(newTitle);
@@ -472,7 +474,29 @@ const Builder = () => {
       if (isGuestMode) {
         setGuestSlots(newSlots);
       } else {
-        newSlots.forEach((slot) => addSlot(slot));
+        // For authenticated users, create the setlist first then persist slots directly
+        // (setlist is null at this point because init was skipped while welcome was shown)
+        const created = await createSetlist(newTitle, eraId);
+        if (created) {
+          for (const slot of newSlots) {
+            await supabase.from("setlist_slots").insert({
+              id: slot.id,
+              setlist_id: created.id,
+              set_number: slot.setNumber,
+              position: slot.position,
+              song_id: slot.song.id,
+              notable_version_id: slot.version?.id || null,
+              added_by_user_id: user!.id,
+              notes: slot.notes,
+              segue_to_next: slot.segueToNext,
+            });
+          }
+          // Update description if generated
+          if (suggestion.explanation) {
+            await supabase.from("setlists").update({ description: suggestion.explanation }).eq("id", created.id);
+          }
+          navigate(`/builder/${created.id}`, { replace: true });
+        }
       }
 
       setWelcomeDismissed(true);
@@ -490,7 +514,7 @@ const Builder = () => {
 
       toast.success("Charlie's got you — your dream show is ready! 🎶");
     },
-    [songs, isGuestMode, addSlot, playSingle]
+    [songs, isGuestMode, createSetlist, user, navigate, playSingle]
   );
 
   if (authLoading && paramId) {
