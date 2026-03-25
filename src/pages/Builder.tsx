@@ -441,6 +441,7 @@ const Builder = () => {
       if (eraId) setSelectedEra(eraId);
       const newTitle = suggestion.setlist_name?.trim() || "Untitled Setlist";
       setTitle(newTitle);
+      if (suggestion.explanation) setDescription(suggestion.explanation);
 
       const newSlots: SetlistSlotData[] = [];
       for (const set of suggestion.sets) {

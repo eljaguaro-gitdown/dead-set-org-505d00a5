@@ -371,20 +371,9 @@ const SetlistDisplay = ({
             )}
           </div>
         </div>
-        <AnimatePresence>
-          {description && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              className="overflow-hidden"
-            >
-              <p className="text-sm font-body text-muted-foreground italic leading-relaxed px-1 py-2 border-l-2 border-primary/40 pl-3">
-                {description}
-              </p>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {description && (
+          <DescriptionCollapsible description={description} />
+        )}
       </div>
       <DndContext
         sensors={sensors}
