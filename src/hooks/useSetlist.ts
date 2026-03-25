@@ -36,7 +36,7 @@ export const useSetlist = (user: User | null, setlistId?: string | null) => {
         title,
         era_id: eraId || null,
         share_token: shareToken,
-        is_public: false,
+        is_public: true,
         is_collaborative: false,
       })
       .select()
