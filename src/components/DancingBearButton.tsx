@@ -9,8 +9,8 @@ const DancingBearButton = () => {
     <motion.button
       onClick={() => navigate("/builder")}
       className="group flex items-center gap-2 px-3 py-1.5 rounded-full border border-primary/30 bg-primary/5 hover:bg-primary/15 hover:border-primary/60 transition-all duration-300"
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.95 }}
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.97 }}
       title="Cosmic Charlie AI Setlist Generator"
     >
       {/* Dancing bear image */}
@@ -19,11 +19,10 @@ const DancingBearButton = () => {
         alt="Dancing Bear"
         className="w-7 h-7 object-contain select-none"
         animate={{
-          y: [0, -3, 0, -2, 0],
-          rotate: [0, -8, 0, 8, 0],
+          y: [0, -2, 0],
         }}
         transition={{
-          duration: 1.6,
+          duration: 2.4,
           repeat: Infinity,
           ease: "easeInOut",
         }}
