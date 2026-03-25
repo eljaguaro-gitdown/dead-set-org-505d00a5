@@ -224,7 +224,6 @@ const Builder = () => {
   guestEraRef.current = selectedEra;
 
   const hasSavedGuestRef = useRef(false);
-  const hasGuestData = guestSlots.length > 0;
 
   useEffect(() => {
     if (!user || hasSavedGuestRef.current) return;
