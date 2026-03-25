@@ -83,7 +83,7 @@ const Builder = () => {
   // Initialize setlist for authenticated users (create new or load existing)
   const creatingRef = useRef(false);
   useEffect(() => {
-    if (!user || initialized || authLoading) return;
+    if (!user || initialized || authLoading || showWelcome) return;
     if (!paramId && !setlist) {
       if (creatingRef.current) return;
       creatingRef.current = true;
@@ -97,7 +97,7 @@ const Builder = () => {
     } else {
       setInitialized(true);
     }
-  }, [user, paramId, initialized, authLoading, setlist]);
+  }, [user, paramId, initialized, authLoading, setlist, showWelcome]);
 
   // Sync title from loaded setlist
   useEffect(() => {
