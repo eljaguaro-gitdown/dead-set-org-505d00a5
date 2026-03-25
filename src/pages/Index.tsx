@@ -95,12 +95,21 @@ const Index = () => {
         >
           Browse
         </button>
-        <button
-          onClick={() => navigate("/auth")}
-          className="font-display text-sm tracking-[0.15em] text-muted-foreground hover:text-primary transition-colors uppercase"
-        >
-          Sign In
-        </button>
+        {user ? (
+          <button
+            onClick={() => navigate("/my-setlists")}
+            className="font-display text-sm tracking-[0.15em] text-muted-foreground hover:text-primary transition-colors uppercase"
+          >
+            My Setlists
+          </button>
+        ) : (
+          <button
+            onClick={() => navigate("/auth")}
+            className="font-display text-sm tracking-[0.15em] text-muted-foreground hover:text-primary transition-colors uppercase"
+          >
+            Sign In
+          </button>
+        )}
       </SiteHeader>
 
       {/* Hero — single screen, centered on Cosmic Charlie */}
