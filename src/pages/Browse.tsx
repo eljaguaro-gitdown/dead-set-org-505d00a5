@@ -96,7 +96,7 @@ const Browse = () => {
       const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
       const { data } = await supabase
         .from("setlists")
-        .select("*")
+        .select("id, title, creator_id, description, era_id, is_public, is_collaborative, play_count, upvote_count, created_at, updated_at")
         .eq("is_public", true)
         .gt("play_count", 0)
         .gte("updated_at", sevenDaysAgo)
