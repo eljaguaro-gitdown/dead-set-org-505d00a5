@@ -479,7 +479,7 @@ const SetlistPoster = () => {
                   <motion.button
                     onClick={handleUpvote}
                     disabled={hasUpvoted || upvoting}
-                    className={`flex items-center gap-2 px-5 py-2.5 rounded-full font-hand text-sm transition-all ${
+                    className={`flex items-center gap-2 px-5 py-2.5 rounded-[10px] font-body text-sm transition-all ${
                       hasUpvoted
                         ? "text-[hsl(4_60%_45%)]"
                         : "text-[hsl(28_20%_35%)] hover:text-[hsl(4_60%_45%)]"
@@ -488,7 +488,7 @@ const SetlistPoster = () => {
                       border: `1.5px solid ${hasUpvoted ? "hsl(4 60% 50% / 0.4)" : "hsl(28 20% 55% / 0.3)"}`,
                       backgroundColor: hasUpvoted ? "hsl(4 60% 50% / 0.08)" : "transparent",
                     }}
-                    whileTap={!hasUpvoted ? { scale: 0.95 } : {}}
+                    whileTap={!hasUpvoted ? { scale: 0.97 } : {}}
                   >
                     <Zap className={`w-4 h-4 ${hasUpvoted ? "fill-current" : ""}`} />
                     <span className="font-bold tabular-nums">{upvoteCount}</span>
@@ -497,7 +497,7 @@ const SetlistPoster = () => {
 
                   {/* Play count */}
                   {setlist.play_count > 0 && (
-                    <p className="text-[10px] font-hand tracking-wider" style={{ color: "hsl(28 15% 50%)" }}>
+                    <p className="text-[10px] font-mono tracking-wider" style={{ color: "hsl(28 15% 50%)" }}>
                       ▶ {setlist.play_count} play{setlist.play_count !== 1 ? "s" : ""}
                     </p>
                   )}
@@ -507,7 +507,7 @@ const SetlistPoster = () => {
                     <DancingBear color="gold" />
                     <button
                       onClick={() => navigate("/")}
-                      className="text-[10px] font-hand tracking-widest uppercase transition-colors hover:underline"
+                      className="text-[10px] font-mono tracking-widest uppercase transition-colors hover:underline"
                       style={{ color: "hsl(28 15% 50%)" }}
                     >
                       Built with Dead Set
