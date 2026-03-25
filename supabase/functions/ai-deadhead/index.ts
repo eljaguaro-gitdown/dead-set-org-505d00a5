@@ -228,7 +228,8 @@ CRITICAL RULES:
 - ONLY use songs from the catalog above. Use exact song titles.
 - For EVERY song, include a "notes" field explaining your reasoning.
 - Include a brief explanation that reads like a Deadhead describing the changes.
-- Don't just rearrange — suggest meaningful swaps that elevate the setlist.`;
+- Don't just rearrange — suggest meaningful swaps that elevate the setlist.
+- Include a "setlist_name" — a creative 3-7 word name that captures the essence of THIS specific setlist. Think like a Deadhead labeling their favorite tape.`;
     }
 
     const tools = [
