@@ -65,23 +65,15 @@ serve(async (req) => {
     const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-    // Authenticate the caller
+    // Authenticate the caller (optional — guests can use the wizard too)
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+    let callingUser: any = null;
+    if (authHeader?.startsWith("Bearer ")) {
+      const userClient = createClient(supabaseUrl, supabaseAnonKey, {
+        global: { headers: { Authorization: authHeader } },
       });
-    }
-    const userClient = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: authHeader } },
-    });
-    const { data: { user: callingUser }, error: userError } = await userClient.auth.getUser();
-    if (userError || !callingUser) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      const { data: { user }, error: userError } = await userClient.auth.getUser();
+      if (!userError && user) callingUser = user;
     }
 
     const supabase = createClient(supabaseUrl, supabaseKey);
