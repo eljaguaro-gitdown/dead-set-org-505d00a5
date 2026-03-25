@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import dancingBear from "@/assets/dancing-bear.gif";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { getPostAuthRedirect } from "@/lib/postAuthRedirect";
+
 import StealYourFace from "@/components/StealYourFace";
 import AmbientPlayer from "@/components/AmbientPlayer";
 import PageLayout from "@/components/PageLayout";
