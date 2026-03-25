@@ -88,7 +88,7 @@ const Browse = () => {
         .order("upvote_count", { ascending: false })
         .limit(3);
       if (!data || data.length === 0) return;
-      const enriched = await enrichSetlists(data);
+      const enriched = await enrichSetlists(data as unknown as Setlist[]);
       setFeatured(enriched);
     };
 
