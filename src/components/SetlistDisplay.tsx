@@ -266,6 +266,33 @@ const SetSection = ({
   );
 };
 
+/* ── Collapsible description ── */
+const DescriptionCollapsible = ({ description }: { description: string }) => {
+  const [open, setOpen] = useState(false);
+  return (
+    <div>
+      <button
+        onClick={() => setOpen(!open)}
+        className="flex items-center gap-1.5 text-xs font-body text-primary/80 hover:text-primary transition-colors py-1"
+      >
+        <Sparkles className="w-3 h-3" />
+        <span>Charlie's Liner Notes</span>
+        <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
+      </button>
+      <motion.div
+        initial={false}
+        animate={{ height: open ? "auto" : 0, opacity: open ? 1 : 0 }}
+        transition={{ duration: 0.2 }}
+        className="overflow-hidden"
+      >
+        <p className="text-sm font-body text-muted-foreground italic leading-relaxed px-1 py-2 border-l-2 border-primary/40 pl-3">
+          {description}
+        </p>
+      </motion.div>
+    </div>
+  );
+};
+
 /* ── Main component ── */
 const SetlistDisplay = ({
   slots,
