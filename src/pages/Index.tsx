@@ -113,7 +113,7 @@ const Index = () => {
       </SiteHeader>
 
       {/* Hero — single screen, centered on Cosmic Charlie */}
-      <main className="flex-1 flex flex-col items-center justify-center px-4 relative overflow-hidden min-h-[calc(100vh-80px)]">
+      <main className="flex-1 flex flex-col items-center justify-center px-5 sm:px-4 relative overflow-hidden min-h-[calc(100vh-80px)]">
         {/* Ambient glow */}
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] sm:w-[700px] h-[500px] sm:h-[700px] rounded-full bg-[radial-gradient(circle,hsl(var(--dead-gold)/0.08),transparent_70%)]" />
@@ -127,23 +127,23 @@ const Index = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: "easeOut" }}
-          className="flex flex-col items-center gap-5 sm:gap-7 relative z-10 text-center max-w-xl"
+          className="flex flex-col items-center gap-4 sm:gap-7 relative z-10 text-center max-w-xl w-full"
         >
           {/* SYF logo */}
           <div className="sm:hidden">
-            <StealYourFace size={130} />
+            <StealYourFace size={90} />
           </div>
           <div className="hidden sm:block">
             <StealYourFace size={180} />
           </div>
 
           {/* Primary tagline */}
-          <h1 className="font-display text-3xl sm:text-5xl md:text-6xl tracking-tight text-primary leading-none">
+          <h1 className="font-display text-2xl sm:text-5xl md:text-6xl tracking-tight text-primary leading-none">
             Build your dream Dead show.
           </h1>
 
           {/* Secondary — Cosmic Charlie intro */}
-          <p className="font-body text-sm sm:text-base text-muted-foreground leading-relaxed max-w-md">
+          <p className="font-body text-xs sm:text-base text-muted-foreground leading-relaxed max-w-md px-2">
             Cosmic Charlie knows every setlist the Dead ever played. Tell Charlie your mood, vibe, dream and curate your miracle.
           </p>
 
@@ -155,22 +155,22 @@ const Index = () => {
             onClick={() => navigate("/builder")}
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
-            className="group relative flex items-center gap-4 px-10 sm:px-14 py-5 sm:py-6 bg-primary text-primary-foreground rounded-md shadow-[0_0_40px_hsl(var(--glow-gold))] hover:shadow-[0_0_60px_hsl(var(--glow-gold))] transition-shadow duration-300"
+            className="group relative flex items-center gap-3 sm:gap-4 px-6 sm:px-14 py-4 sm:py-6 bg-primary text-primary-foreground rounded-md shadow-[0_0_40px_hsl(var(--glow-gold))] hover:shadow-[0_0_60px_hsl(var(--glow-gold))] transition-shadow duration-300 w-full sm:w-auto justify-center"
           >
             <img
               src={dancingBear}
               alt="Dancing Bear"
-              className="w-10 h-10 sm:w-12 sm:h-12 object-contain"
+              className="w-8 h-8 sm:w-12 sm:h-12 object-contain"
             />
             <div className="flex flex-col items-start">
-              <span className="font-display text-base sm:text-lg tracking-widest uppercase leading-tight">
+              <span className="font-display text-sm sm:text-lg tracking-widest uppercase leading-tight">
                 Need a Miracle?
               </span>
-              <span className="font-body text-[10px] sm:text-xs text-primary-foreground/70 tracking-wide">
+              <span className="font-body text-[9px] sm:text-xs text-primary-foreground/70 tracking-wide">
                 Let Cosmic Charlie build your dream set
               </span>
             </div>
-            <Star className="w-5 h-5 opacity-60 group-hover:opacity-100 transition-opacity" />
+            <Star className="w-4 h-4 sm:w-5 sm:h-5 opacity-60 group-hover:opacity-100 transition-opacity" />
           </motion.button>
 
           {/* Secondary CTA */}
@@ -178,7 +178,7 @@ const Index = () => {
             variant="outline"
             size="lg"
             onClick={() => navigate("/browse")}
-            className="font-display text-sm px-8 py-5 border-primary/40 text-primary hover:bg-primary/10 tracking-widest uppercase gap-2"
+            className="font-display text-xs sm:text-sm px-6 sm:px-8 py-4 sm:py-5 border-primary/40 text-primary hover:bg-primary/10 tracking-widest uppercase gap-2 w-full sm:w-auto"
           >
             Browse Community Setlists
             <ChevronRight className="w-4 h-4" />
