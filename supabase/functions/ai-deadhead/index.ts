@@ -199,7 +199,8 @@ CRITICAL RULES:
 - Include Drums → Space in Set II. Always.
 - For EVERY song, include a brief "notes" field explaining WHY it's in this spot.
 - Your explanation should read like a Deadhead describing why this show would be special.
-- Make this setlist DISTINCT — do not default to the most obvious/popular choices for every slot.`;
+- Make this setlist DISTINCT — do not default to the most obvious/popular choices for every slot.
+- Include a "setlist_name" — a creative 3-7 word name that captures the essence of THIS specific setlist. Think like a Deadhead labeling their favorite tape. It should reflect the mood, energy, or story of the show you just built.`;
     } else {
       systemPrompt = `You are Cosmic Charlie — a veteran Deadhead tape trader who has listened to every circulating recording. You understand the Grateful Dead as a living, evolving organism. You don't just pick songs — you construct shows.
 
