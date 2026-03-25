@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect, useCallback } from "react";
-import { Star, Wand2, Loader2 } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { Star, Wand2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -21,6 +21,7 @@ interface AISuggestionSet {
 }
 
 interface AISuggestion {
+  setlist_name?: string;
   explanation: string;
   sets: AISuggestionSet[];
 }
@@ -33,6 +34,32 @@ interface AIDeadHeadDialogProps {
   onApplySuggestion: (suggestion: AISuggestion) => void;
   onCreateNewSetlist: (suggestion: AISuggestion, customTitle?: string) => void;
 }
+
+const VIBES = [
+  { id: "high-energy", emoji: "🔥", label: "High Energy" },
+  { id: "spacey", emoji: "🌊", label: "Spacey & Psychedelic" },
+  { id: "mellow", emoji: "🌅", label: "Mellow & Groovy" },
+  { id: "dark", emoji: "🌑", label: "Dark & Heavy" },
+  { id: "party", emoji: "🎉", label: "Party Night" },
+  { id: "emotional", emoji: "💔", label: "Emotional & Raw" },
+  { id: "country", emoji: "🤠", label: "Country & Folk Roots" },
+  { id: "blues", emoji: "🎸", label: "Blues & Grit" },
+];
+
+const PRIORITIES = [
+  { id: "deep-jams", emoji: "🎵", label: "Deep jams — let them stretch out" },
+  { id: "tight", emoji: "⚡", label: "Tight & punchy — no noodling" },
+  { id: "rare", emoji: "💎", label: "Surprise me with rare songs" },
+  { id: "classics", emoji: "⭐", label: "Stick to the classics" },
+  { id: "segues", emoji: "🔗", label: "Lots of segues — keep it flowing" },
+  { id: "journey", emoji: "🎢", label: "Mix of everything — a real journey" },
+];
+
+const slideVariants = {
+  enter: (direction: number) => ({ x: direction > 0 ? 200 : -200, opacity: 0 }),
+  center: { x: 0, opacity: 1 },
+  exit: (direction: number) => ({ x: direction > 0 ? -200 : 200, opacity: 0 }),
+};
 
 const AIDeadHeadDialog = ({
   open,
@@ -51,13 +78,68 @@ const AIDeadHeadDialog = ({
   const nameInputRef = useRef<HTMLInputElement>(null);
   const recentSongsRef = useRef<string[]>([]);
 
+  // Guided build flow state
+  const [buildStep, setBuildStep] = useState(0);
+  const [buildDirection, setBuildDirection] = useState(1);
+  const [selectedVibes, setSelectedVibes] = useState<typeof VIBES>([]);
+  const [selectedPriorities, setSelectedPriorities] = useState<typeof PRIORITIES>([]);
+  const [mustInclude, setMustInclude] = useState("");
+  const [pleaseAvoid, setPleaseAvoid] = useState("");
+  const [itsFor, setItsFor] = useState("");
+
   useEffect(() => {
     if (namingNew) nameInputRef.current?.focus();
   }, [namingNew]);
 
-  const handleGenerate = async () => {
+  const toggleVibe = (vibe: (typeof VIBES)[number]) => {
+    setSelectedVibes((prev) => {
+      const exists = prev.find((v) => v.id === vibe.id);
+      if (exists) return prev.filter((v) => v.id !== vibe.id);
+      if (prev.length >= 2) return prev;
+      return [...prev, vibe];
+    });
+  };
+
+  const togglePriority = (priority: (typeof PRIORITIES)[number]) => {
+    setSelectedPriorities((prev) => {
+      const exists = prev.find((p) => p.id === priority.id);
+      if (exists) return prev.filter((p) => p.id !== priority.id);
+      if (prev.length >= 2) return prev;
+      return [...prev, priority];
+    });
+  };
+
+  const composePreferences = (): string | undefined => {
+    const parts: string[] = [];
+    if (selectedVibes.length > 0) {
+      parts.push(`User wants a ${selectedVibes.map((v) => v.label).join(" and ")} vibe.`);
+    }
+    if (selectedPriorities.length > 0) {
+      parts.push(`${selectedPriorities.map((p) => p.label).join(". ")}.`);
+    }
+    if (mustInclude.trim()) parts.push(`Must include: ${mustInclude.trim()}.`);
+    if (pleaseAvoid.trim()) parts.push(`Please avoid: ${pleaseAvoid.trim()}.`);
+    if (itsFor.trim()) parts.push(`This setlist is for: ${itsFor.trim()}.`);
+    return parts.length > 0 ? parts.join(" ") : undefined;
+  };
+
+  const goNextBuild = () => {
+    setBuildDirection(1);
+    setBuildStep((s) => s + 1);
+  };
+
+  const goBackBuild = () => {
+    setBuildDirection(-1);
+    setBuildStep((s) => s - 1);
+  };
+
+  const handleGenerate = async (overridePrefs?: string) => {
     setLoading(true);
     setSuggestion(null);
+
+    const finalPrefs = mode === "build"
+      ? (overridePrefs !== undefined ? overridePrefs : composePreferences())
+      : (preferences.trim() || undefined);
 
     try {
       const { data, error } = await supabase.functions.invoke("ai-deadhead", {
@@ -65,7 +147,7 @@ const AIDeadHeadDialog = ({
           mode,
           eraId,
           currentSlots: mode === "improve" ? currentSlots : undefined,
-          preferences: preferences.trim() || undefined,
+          preferences: finalPrefs,
           recentSongs: recentSongsRef.current.length > 0 ? recentSongsRef.current : undefined,
         },
       });
@@ -94,7 +176,7 @@ const AIDeadHeadDialog = ({
 
   const handleCreateNew = () => {
     if (!suggestion) return;
-    const title = newSetlistName.trim() || undefined;
+    const title = newSetlistName.trim() || suggestion.setlist_name?.trim() || undefined;
     onCreateNewSetlist(suggestion, title);
     handleReset();
     toast.success("Charlie's cooking up a new setlist...");
@@ -107,6 +189,12 @@ const AIDeadHeadDialog = ({
     setPreferences("");
     setNamingNew(false);
     setNewSetlistName("");
+    setBuildStep(0);
+    setSelectedVibes([]);
+    setSelectedPriorities([]);
+    setMustInclude("");
+    setPleaseAvoid("");
+    setItsFor("");
   };
 
   const handleClose = (open: boolean) => {
@@ -117,6 +205,12 @@ const AIDeadHeadDialog = ({
       setLoading(false);
       setNamingNew(false);
       setNewSetlistName("");
+      setBuildStep(0);
+      setSelectedVibes([]);
+      setSelectedPriorities([]);
+      setMustInclude("");
+      setPleaseAvoid("");
+      setItsFor("");
     }
     onOpenChange(open);
   };
@@ -133,7 +227,8 @@ const AIDeadHeadDialog = ({
         </DialogHeader>
 
         <AnimatePresence mode="wait">
-          {!mode && !suggestion && (
+          {/* Mode selection */}
+          {!mode && !suggestion && !loading && (
             <motion.div
               key="mode-select"
               initial={{ opacity: 0, y: 8 }}
@@ -180,7 +275,214 @@ const AIDeadHeadDialog = ({
             </motion.div>
           )}
 
-          {mode && !suggestion && !loading && (
+          {/* BUILD MODE: Guided 3-step flow */}
+          {mode === "build" && !suggestion && !loading && (
+            <motion.div
+              key="build-guided"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              className="space-y-4"
+            >
+              {/* Step indicator */}
+              <div className="flex items-center justify-center gap-2">
+                {[0, 1, 2].map((s) => (
+                  <div
+                    key={s}
+                    className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                      s === buildStep ? "bg-primary scale-125" : s < buildStep ? "bg-primary/50" : "bg-muted"
+                    }`}
+                  />
+                ))}
+              </div>
+
+              <AnimatePresence mode="wait" custom={buildDirection}>
+                {buildStep === 0 && (
+                  <motion.div
+                    key="vibe"
+                    custom={buildDirection}
+                    variants={slideVariants}
+                    initial="enter"
+                    animate="center"
+                    exit="exit"
+                    transition={{ duration: 0.2 }}
+                    className="space-y-4"
+                  >
+                    <div className="text-center space-y-1">
+                      <h3 className="font-display text-lg text-primary">What's the vibe tonight?</h3>
+                      <p className="font-body text-xs text-muted-foreground">Pick one or two</p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      {VIBES.map((vibe) => {
+                        const selected = selectedVibes.some((v) => v.id === vibe.id);
+                        return (
+                          <motion.button
+                            key={vibe.id}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => toggleVibe(vibe)}
+                            className={`flex items-center gap-2 px-3 py-2.5 rounded-lg border text-left transition-all duration-200 text-sm ${
+                              selected
+                                ? "border-primary bg-primary/15 shadow-[0_0_10px_hsl(var(--glow-gold))]"
+                                : "border-border bg-background hover:border-primary/40"
+                            }`}
+                          >
+                            <span className="text-base">{vibe.emoji}</span>
+                            <span className={`font-body text-xs ${selected ? "text-primary" : "text-foreground"}`}>
+                              {vibe.label}
+                            </span>
+                          </motion.button>
+                        );
+                      })}
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={() => setMode(null)}
+                        className="font-body text-xs text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        ← Back
+                      </button>
+                      <Button
+                        size="sm"
+                        onClick={goNextBuild}
+                        disabled={selectedVibes.length === 0}
+                        className="flex-1 bg-primary text-primary-foreground font-body"
+                      >
+                        Next
+                      </Button>
+                    </div>
+                    <button
+                      onClick={() => handleGenerate(undefined)}
+                      className="w-full font-body text-xs text-muted-foreground/60 hover:text-muted-foreground transition-colors text-center"
+                    >
+                      🎲 Surprise me — skip all this
+                    </button>
+                  </motion.div>
+                )}
+
+                {buildStep === 1 && (
+                  <motion.div
+                    key="priorities"
+                    custom={buildDirection}
+                    variants={slideVariants}
+                    initial="enter"
+                    animate="center"
+                    exit="exit"
+                    transition={{ duration: 0.2 }}
+                    className="space-y-4"
+                  >
+                    <div className="text-center space-y-1">
+                      <h3 className="font-display text-lg text-primary">What matters most?</h3>
+                      <p className="font-body text-xs text-muted-foreground">Pick one or two</p>
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      {PRIORITIES.map((priority) => {
+                        const selected = selectedPriorities.some((p) => p.id === priority.id);
+                        return (
+                          <motion.button
+                            key={priority.id}
+                            whileTap={{ scale: 0.97 }}
+                            onClick={() => togglePriority(priority)}
+                            className={`flex items-center gap-3 px-3 py-2.5 rounded-lg border text-left transition-all duration-200 ${
+                              selected
+                                ? "border-primary bg-primary/15 shadow-[0_0_10px_hsl(var(--glow-gold))]"
+                                : "border-border bg-background hover:border-primary/40"
+                            }`}
+                          >
+                            <span className="text-base">{priority.emoji}</span>
+                            <span className={`font-body text-xs ${selected ? "text-primary" : "text-foreground"}`}>
+                              {priority.label}
+                            </span>
+                          </motion.button>
+                        );
+                      })}
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={goBackBuild}
+                        className="font-body text-xs text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        ← Back
+                      </button>
+                      <Button
+                        size="sm"
+                        onClick={goNextBuild}
+                        disabled={selectedPriorities.length === 0}
+                        className="flex-1 bg-primary text-primary-foreground font-body"
+                      >
+                        Next
+                      </Button>
+                    </div>
+                  </motion.div>
+                )}
+
+                {buildStep === 2 && (
+                  <motion.div
+                    key="specifics"
+                    custom={buildDirection}
+                    variants={slideVariants}
+                    initial="enter"
+                    animate="center"
+                    exit="exit"
+                    transition={{ duration: 0.2 }}
+                    className="space-y-4"
+                  >
+                    <div className="text-center space-y-1">
+                      <h3 className="font-display text-lg text-primary">Anything specific?</h3>
+                      <p className="font-body text-xs text-muted-foreground">Totally optional — skip if you want</p>
+                    </div>
+                    <div className="space-y-3">
+                      <div className="space-y-1">
+                        <label className="font-body text-[10px] text-muted-foreground uppercase tracking-wider">Must include</label>
+                        <Input
+                          value={mustInclude}
+                          onChange={(e) => setMustInclude(e.target.value)}
+                          placeholder="e.g. Scarlet > Fire, Dark Star"
+                          className="bg-background border-border text-foreground font-body text-xs h-8"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="font-body text-[10px] text-muted-foreground uppercase tracking-wider">Please avoid</label>
+                        <Input
+                          value={pleaseAvoid}
+                          onChange={(e) => setPleaseAvoid(e.target.value)}
+                          placeholder="e.g. Touch of Grey, Drums/Space"
+                          className="bg-background border-border text-foreground font-body text-xs h-8"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="font-body text-[10px] text-muted-foreground uppercase tracking-wider">It's for…</label>
+                        <Input
+                          value={itsFor}
+                          onChange={(e) => setItsFor(e.target.value)}
+                          placeholder="e.g. a road trip, converting a friend"
+                          className="bg-background border-border text-foreground font-body text-xs h-8"
+                        />
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={goBackBuild}
+                        className="font-body text-xs text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        ← Back
+                      </button>
+                      <Button
+                        size="sm"
+                        onClick={() => handleGenerate()}
+                        className="flex-1 bg-primary text-primary-foreground font-body gap-1.5"
+                      >
+                        <Star className="w-3.5 h-3.5" />
+                        ✨ Let Charlie Cook
+                      </Button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
+          )}
+
+          {/* IMPROVE MODE: Keep the free-text textarea */}
+          {mode === "improve" && !suggestion && !loading && (
             <motion.div
               key="preferences"
               initial={{ opacity: 0, y: 8 }}
@@ -190,16 +492,12 @@ const AIDeadHeadDialog = ({
             >
               <div>
                 <label className="text-xs text-muted-foreground font-body block mb-1.5">
-                  {mode === "build" ? "Tell Charlie what you're feeling" : "What should Charlie fix?"}
+                  What should Charlie fix?
                 </label>
                 <Textarea
                   value={preferences}
                   onChange={(e) => setPreferences(e.target.value)}
-                  placeholder={
-                    mode === "build"
-                      ? "e.g. Heavy on the jams, include Scarlet > Fire, open with Bertha..."
-                      : "e.g. Set 2 needs more energy, add a space segment before drums..."
-                  }
+                  placeholder="e.g. Set 2 needs more energy, add a space segment before drums..."
                   className="bg-background border-border text-foreground font-body text-sm resize-none h-20"
                 />
               </div>
@@ -214,11 +512,11 @@ const AIDeadHeadDialog = ({
                 </Button>
                 <Button
                   size="sm"
-                  onClick={handleGenerate}
+                  onClick={() => handleGenerate()}
                   className="bg-primary text-primary-foreground font-body gap-1.5 flex-1"
                 >
                   <Star className="w-3.5 h-3.5" />
-                  {mode === "build" ? "Let Charlie Cook" : "Charlie, Fix This"}
+                  Charlie, Fix This
                 </Button>
               </div>
             </motion.div>
@@ -252,6 +550,9 @@ const AIDeadHeadDialog = ({
               exit={{ opacity: 0, y: -8 }}
               className="space-y-4"
             >
+              {suggestion.setlist_name && (
+                <p className="font-display text-sm text-primary text-center">"{suggestion.setlist_name}"</p>
+              )}
               <div className="p-3 rounded-lg bg-primary/5 border border-primary/20">
                 <p className="text-xs text-primary font-body mb-1">Charlie says:</p>
                 <p className="text-sm text-foreground font-body leading-relaxed">
@@ -291,7 +592,7 @@ const AIDeadHeadDialog = ({
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={handleGenerate}
+                    onClick={() => handleGenerate()}
                     className="border-border text-muted-foreground font-body gap-1.5"
                   >
                     <Star className="w-3.5 h-3.5" /> Ask Again
@@ -309,8 +610,7 @@ const AIDeadHeadDialog = ({
                     variant="outline"
                     size="sm"
                     onClick={() => {
-                      const firstSongs = suggestion?.sets.flatMap(s => s.songs).slice(0, 2).map(s => s.title) || [];
-                      setNewSetlistName(firstSongs.length > 0 ? `${firstSongs.join(" > ")}` : "Cosmic Charlie's Pick");
+                      setNewSetlistName(suggestion?.setlist_name?.trim() || "Cosmic Charlie's Pick");
                       setNamingNew(true);
                     }}
                     className="border-primary/30 text-primary font-body gap-1.5 w-full hover:bg-primary/10"
