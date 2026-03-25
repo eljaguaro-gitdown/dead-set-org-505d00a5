@@ -239,6 +239,10 @@ CRITICAL RULES:
           parameters: {
             type: "object",
             properties: {
+              setlist_name: {
+                type: "string",
+                description: "A creative, evocative name for this setlist (3-7 words). Should capture the mood, theme, or story of the show — like a Deadhead might name a legendary tape. Examples: 'Dark Star Rising', 'Sunshine Daydream at the Gorge', 'Deep Blues & Moonlight', 'The Scarlet Fire Express', 'Cosmic Campfire Sessions'. Do NOT include generic words like 'setlist' or 'playlist'. Do NOT include dates. Make it feel like a real show name or a tape label."
+              },
               explanation: {
                 type: "string",
                 description: "Brief explanation of the setlist choices, flow, and what makes this particular setlist special — written like a Deadhead describing a show"
