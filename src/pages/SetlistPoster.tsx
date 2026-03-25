@@ -46,7 +46,7 @@ const SetlistPoster = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { playSingle, playSetlist: globalPlaySetlist } = useAudioPlayer();
+  const { playSingle, playSetlist: globalPlaySetlist, playingSlot } = useAudioPlayer();
   const [setlist, setSetlist] = useState<Setlist | null>(null);
   const [slots, setSlots] = useState<EnrichedSlot[]>([]);
   const [creatorName, setCreatorName] = useState("Unknown Head");
