@@ -130,7 +130,7 @@ const Browse = () => {
       if (!data) { setLoading(false); return; }
       setTotalCount(count || data.length);
 
-      const enriched = await enrichSetlists(data);
+      const enriched = await enrichSetlists(data as unknown as Setlist[]);
       setSetlists(enriched);
       setLoading(false);
     };
