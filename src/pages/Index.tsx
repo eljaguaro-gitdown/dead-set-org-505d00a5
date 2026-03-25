@@ -29,13 +29,7 @@ const Index = () => {
   const { user, loading } = useAuth();
   const [featured, setFeatured] = useState<FeaturedSetlist[]>([]);
 
-  useEffect(() => {
-    if (!loading && user) {
-      getPostAuthRedirect(user.id).then((path) => {
-        navigate(path, { replace: true });
-      });
-    }
-  }, [user, loading, navigate]);
+  // No auto-redirect — all users see the landing page
 
   useEffect(() => {
     const fetchFeatured = async () => {
