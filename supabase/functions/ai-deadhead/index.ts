@@ -272,7 +272,7 @@ CRITICAL RULES:
                 }
               }
             },
-            required: ["explanation", "sets"],
+            required: ["setlist_name", "explanation", "sets"],
             additionalProperties: false
           }
         }
