@@ -224,6 +224,26 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
             via archive.org
           </a>
 
+          <Popover>
+            <PopoverTrigger asChild>
+              <button className="text-muted-foreground hover:text-primary shrink-0 transition-colors" title="Cast to speakers">
+                <Cast className="w-3.5 h-3.5" />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent side="top" align="end" className="w-72 text-xs font-body space-y-2 bg-card border-border">
+              <p className="font-display text-sm text-foreground">🔊 Cast to Sonos & Speakers</p>
+              <div className="space-y-1.5 text-muted-foreground">
+                <p><strong className="text-foreground">Chrome:</strong> Menu (⋮) → "Cast…" → select your Sonos/Chromecast device</p>
+                <p><strong className="text-foreground">macOS:</strong> Click the AirPlay icon in the menu bar → select your Sonos speaker</p>
+                <p><strong className="text-foreground">iPhone/iPad:</strong> Open Control Center → tap AirPlay → select your Sonos</p>
+                <p><strong className="text-foreground">Windows:</strong> Settings → Bluetooth & devices → pair your speaker</p>
+              </div>
+              <p className="text-[10px] text-muted-foreground/60 pt-1 border-t border-border">
+                Sonos One, Beam, Arc, Era & Move support AirPlay 2
+              </p>
+            </PopoverContent>
+          </Popover>
+
           <button onClick={() => setMuted(!muted)} className="text-muted-foreground hover:text-foreground shrink-0">
             {muted ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
           </button>
