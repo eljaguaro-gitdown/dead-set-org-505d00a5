@@ -252,6 +252,11 @@ const SetlistMiniCard = ({ setlist, index }: { setlist: SetlistCard; index: numb
             </span>
           </EraTooltip>
         )}
+        {setlist.play_count > 0 && (
+          <span className="text-[10px] font-body text-muted-foreground/50 flex items-center gap-0.5">
+            ▶ {setlist.play_count}
+          </span>
+        )}
         {setlist.upvote_count > 0 && (
           <span className="text-[10px] font-body text-muted-foreground/50 flex items-center gap-0.5">
             ⚡ {setlist.upvote_count}
