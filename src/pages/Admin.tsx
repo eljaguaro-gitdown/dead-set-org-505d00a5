@@ -73,6 +73,7 @@ const Admin = () => {
         console.error(error);
       } else {
         setUsers(data.users || []);
+        setTraffic(data.traffic || null);
       }
       setLoading(false);
     };
