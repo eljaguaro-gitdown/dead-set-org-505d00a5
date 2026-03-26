@@ -1,0 +1,1 @@
+DROP POLICY "Upvotes viewable on public setlists" ON public.setlist_upvotes;
