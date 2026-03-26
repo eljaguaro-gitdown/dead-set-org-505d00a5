@@ -28,10 +28,19 @@ interface AdminUser {
   setlistCount: number;
 }
 
+interface TrafficStats {
+  totalPageViews: number;
+  totalUnique: number;
+  unique24h: number;
+  unique7d: number;
+  unique30d: number;
+}
+
 const Admin = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const [users, setUsers] = useState<AdminUser[]>([]);
+  const [traffic, setTraffic] = useState<TrafficStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
 
