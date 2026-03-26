@@ -743,10 +743,34 @@ const Builder = () => {
         </div>
       )}
 
-      {/* Main Content */}
+      {/* Main Content — Setlist first, Song Vault second */}
       <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
+        {/* Setlist — hidden on mobile when songs tab is active */}
+        <div className={`flex-1 overflow-hidden flex flex-col ${
+          isMobile ? (mobileTab === "setlist" ? "flex-1" : "hidden") : "lg:max-h-[calc(100vh-85px)]"
+        }`}>
+           <SetlistDisplay
+            slots={activeSlots}
+            activeSlotId={playingSlot ? playingSlot.id : null}
+            description={description}
+            generatingDescription={generatingDescription}
+            onGenerateDescription={handleGenerateDescription}
+            onRemoveSlot={handleRemoveSlot}
+            onToggleSegue={handleToggleSegue}
+            onUpdateNotes={handleUpdateNotes}
+            onReorder={handleReorder}
+            onPlayVersion={(slot) => {
+              playSingle(slot);
+            }}
+            onPlaySetlist={async () => {
+              if (activeSlots.length === 0) return;
+              await globalPlaySetlist(activeSlots, setlist?.id);
+            }}
+          />
+        </div>
+
         {/* Song Vault — hidden on mobile when setlist tab is active */}
-        <div className={`w-full lg:w-[380px] border-b lg:border-b-0 border-r-0 lg:border-r border-border overflow-hidden flex flex-col ${
+        <div className={`w-full lg:w-[380px] border-b lg:border-b-0 border-l-0 lg:border-l border-border overflow-hidden flex flex-col ${
           isMobile ? (mobileTab === "songs" ? "flex-1 pb-12" : "hidden") : "max-h-[calc(100vh-85px)]"
         }`}>
           {songsLoading ? (
@@ -773,30 +797,6 @@ const Builder = () => {
               }}
             />
           )}
-        </div>
-
-        {/* Setlist — hidden on mobile when songs tab is active */}
-        <div className={`flex-1 overflow-hidden flex flex-col ${
-          isMobile ? (mobileTab === "setlist" ? "flex-1" : "hidden") : "lg:max-h-[calc(100vh-85px)]"
-        }`}>
-           <SetlistDisplay
-            slots={activeSlots}
-            activeSlotId={playingSlot ? playingSlot.id : null}
-            description={description}
-            generatingDescription={generatingDescription}
-            onGenerateDescription={handleGenerateDescription}
-            onRemoveSlot={handleRemoveSlot}
-            onToggleSegue={handleToggleSegue}
-            onUpdateNotes={handleUpdateNotes}
-            onReorder={handleReorder}
-            onPlayVersion={(slot) => {
-              playSingle(slot);
-            }}
-            onPlaySetlist={async () => {
-              if (activeSlots.length === 0) return;
-              await globalPlaySetlist(activeSlots, setlist?.id);
-            }}
-          />
         </div>
       </div>
 
