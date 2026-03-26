@@ -54,8 +54,30 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     setState({ playingSlot: null, playlistMode: false, playlistIndex: 0, playlistSlots: [] });
   }, []);
 
-  const playSingle = useCallback((slot: PlayableSlot) => {
+  const playSingle = useCallback(async (slot: PlayableSlot) => {
+    // Start playback immediately so user sees feedback
     setState({ playingSlot: slot, playlistMode: false, playlistIndex: 0, playlistSlots: [] });
+    // Then resolve direct track URL in background if missing
+    if (!slot.directTrackUrl && slot.version?.archive_org_url) {
+      const resolved = await resolveSlot(slot);
+      if (resolved) {
+        setState(prev => prev.playingSlot?.id === slot.id
+          ? { ...prev, playingSlot: resolved }
+          : prev
+        );
+      }
+    } else if (!slot.version?.archive_org_url) {
+      const resolved = await resolveSlot(slot);
+      if (resolved?.version?.archive_org_url) {
+        setState(prev => prev.playingSlot?.id === slot.id
+          ? { ...prev, playingSlot: resolved }
+          : prev
+        );
+      } else {
+        toast.error("Couldn't find audio for this song");
+        setState({ playingSlot: null, playlistMode: false, playlistIndex: 0, playlistSlots: [] });
+      }
+    }
   }, []);
 
   /** Resolve a slot: ensure it has an archive URL and directTrackUrl */
