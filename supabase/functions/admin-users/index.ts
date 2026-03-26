@@ -143,6 +143,39 @@ Deno.serve(async (req) => {
       countMap.set(s.creator_id, (countMap.get(s.creator_id) || 0) + 1);
     });
 
+    // Traffic stats
+    const now = new Date();
+    const oneDayAgo = new Date(now.getTime() - 86400000).toISOString();
+    const sevenDaysAgo = new Date(now.getTime() - 604800000).toISOString();
+    const thirtyDaysAgo = new Date(now.getTime() - 2592000000).toISOString();
+
+    const { count: totalPageViews } = await adminClient
+      .from("page_visits")
+      .select("*", { count: "exact", head: true });
+
+    const { data: visitors24h } = await adminClient
+      .from("page_visits")
+      .select("visitor_id")
+      .gte("created_at", oneDayAgo);
+    const unique24h = new Set((visitors24h || []).map((v: any) => v.visitor_id)).size;
+
+    const { data: visitors7d } = await adminClient
+      .from("page_visits")
+      .select("visitor_id")
+      .gte("created_at", sevenDaysAgo);
+    const unique7d = new Set((visitors7d || []).map((v: any) => v.visitor_id)).size;
+
+    const { data: visitors30d } = await adminClient
+      .from("page_visits")
+      .select("visitor_id")
+      .gte("created_at", thirtyDaysAgo);
+    const unique30d = new Set((visitors30d || []).map((v: any) => v.visitor_id)).size;
+
+    const { data: allVisitors } = await adminClient
+      .from("page_visits")
+      .select("visitor_id");
+    const totalUnique = new Set((allVisitors || []).map((v: any) => v.visitor_id)).size;
+
     const result = (users || []).map((u: any) => {
       const profile = profileMap.get(u.id);
       return {
@@ -157,7 +190,16 @@ Deno.serve(async (req) => {
       };
     });
 
-    return new Response(JSON.stringify({ users: result }), {
+    return new Response(JSON.stringify({
+      users: result,
+      traffic: {
+        totalPageViews: totalPageViews || 0,
+        totalUnique,
+        unique24h,
+        unique7d,
+        unique30d,
+      },
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e: any) {
