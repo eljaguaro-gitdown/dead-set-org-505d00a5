@@ -19,6 +19,7 @@ interface FeaturedSetlist {
   creator_id: string;
   era_id: string | null;
   upvote_count: number;
+  play_count: number;
   creator_name?: string;
   era_name?: string;
   song_count?: number;
@@ -33,7 +34,7 @@ const Index = () => {
     const fetchFeatured = async () => {
       const { data: setlists } = await supabase
         .from("setlists")
-        .select("id, title, creator_id, era_id, upvote_count")
+        .select("id, title, creator_id, era_id, upvote_count, play_count")
         .eq("is_public", true)
         .order("upvote_count", { ascending: false })
         .limit(6);
@@ -235,6 +236,11 @@ const Index = () => {
                     {setlist.era_name && (
                       <span className="px-2 py-0.5 text-[10px] font-mono rounded-md border border-primary/20 text-primary/70 tracking-wider uppercase">
                         {setlist.era_name}
+                      </span>
+                    )}
+                    {setlist.play_count > 0 && (
+                      <span className="text-[10px] font-mono text-muted-foreground/60 tracking-wider">
+                        ▶ {setlist.play_count}
                       </span>
                     )}
                     <span className="text-[10px] font-mono text-muted-foreground/60 tracking-wider">
