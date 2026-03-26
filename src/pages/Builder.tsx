@@ -591,137 +591,128 @@ const Builder = () => {
           )}
         </div>
 
-        {/* Row 2: Toolbar */}
-        <div className="px-2 sm:px-4 py-2 border-t border-border/50 flex items-center gap-1.5 sm:gap-2 overflow-x-auto scrollbar-hide">
-          {/* Set selector */}
-          <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
-            <span className="text-sm text-muted-foreground font-body hidden sm:inline">Add to:</span>
-            {[1, 2, 3].map((n) => (
-              <button
-                key={n}
-                onClick={() => setActiveSet(n)}
-                className={`px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm font-body rounded transition-colors ${
-                  activeSet === n
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {n === 3 ? "E" : `S${n}`}
-              </button>
-            ))}
+        {/* Row 2: Toolbar — 2 rows on mobile, single row on desktop */}
+        <div className="px-2 sm:px-4 py-2 border-t border-border/50 flex flex-col sm:flex-row sm:items-center gap-2">
+          {/* Row 2a: Set selector + Era filter */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex items-center gap-1.5 shrink-0">
+              <span className="text-sm text-muted-foreground font-body hidden sm:inline">Add to:</span>
+              {[1, 2, 3].map((n) => (
+                <button
+                  key={n}
+                  onClick={() => setActiveSet(n)}
+                  className={`px-3 py-2 text-sm font-body rounded transition-colors ${
+                    activeSet === n
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {n === 3 ? "E" : `S${n}`}
+                </button>
+              ))}
+            </div>
+
+            <div className="w-px h-7 bg-border shrink-0 hidden sm:block" />
+
+            {/* Era filter */}
+            <Select value={selectedEra || ""} onValueChange={(v) => setSelectedEra(v || null)}>
+              <SelectTrigger className="w-auto min-w-[100px] max-w-[160px] bg-card border-border text-foreground font-body text-sm h-10 shrink-0">
+                <SelectValue placeholder="All eras" />
+              </SelectTrigger>
+              <SelectContent className="bg-card border-border">
+                {eras.map((era) => (
+                  <SelectItem key={era.id} value={era.id} className="font-body text-sm">
+                    {era.name} ({era.year_start}–{era.year_end})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
-          <div className="w-px h-5 sm:h-6 bg-border shrink-0" />
-
-          {/* Era filter */}
-          <Select value={selectedEra || ""} onValueChange={(v) => setSelectedEra(v || null)}>
-            <SelectTrigger className="w-auto min-w-[80px] sm:min-w-[100px] max-w-[140px] sm:max-w-[160px] bg-card border-border text-foreground font-body text-xs sm:text-sm h-8 sm:h-9 shrink-0">
-              <SelectValue placeholder="All eras" />
-            </SelectTrigger>
-            <SelectContent className="bg-card border-border">
-              {eras.map((era) => (
-                <SelectItem key={era.id} value={era.id} className="font-body text-sm">
-                  {era.name} ({era.year_start}–{era.year_end})
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <div className="w-px h-5 sm:h-6 bg-border shrink-0" />
-
-          {/* Action buttons */}
-          {user && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 sm:h-9 sm:w-9 shrink-0 text-foreground relative"
-              onClick={handleCollaborate}
-              title="Chat"
-            >
-              <MessageCircle className="w-4 sm:w-5 h-4 sm:h-5" />
-              {chatUnread && (
-                <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-primary rounded-full animate-pulse border-2 border-card" />
-              )}
-            </Button>
-          )}
-          <Button
-            variant="default"
-            size="sm"
-            className="shrink-0 h-8 sm:h-9 px-2 sm:px-3 gap-1.5 sm:gap-2 bg-gradient-to-r from-primary to-accent text-primary-foreground font-display text-xs sm:text-sm shadow-md hover:shadow-lg hover:scale-105 transition-all duration-200 animate-pulse hover:animate-none"
-            onClick={() => setAiOpen(true)}
-            title="Cosmic Charlie — Your AI Deadhead"
-          >
-            <Star className="w-4 sm:w-5 h-4 sm:h-5" />
-            <span className="hidden sm:inline">Cosmic Charlie</span>
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className={`h-8 w-8 sm:h-9 sm:w-9 shrink-0 ${setlist?.is_public ? "text-accent" : "text-foreground"}`}
-            onClick={handleTogglePublic}
-            title={setlist?.is_public ? "Public — visible on Browse" : "Private — only you and collaborators"}
-          >
-            <Globe className="w-4 sm:w-5 h-4 sm:h-5" />
-          </Button>
-          {paramId && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 sm:h-9 sm:w-9 shrink-0 text-primary hover:text-primary/80"
-              onClick={() => navigate(`/setlist/${paramId}`)}
-              title="View Poster"
-            >
-              <FileImage className="w-4 sm:w-5 h-4 sm:h-5" />
-            </Button>
-          )}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 sm:h-9 sm:w-9 shrink-0 text-foreground"
-            onClick={handleShare}
-            title="Share"
-          >
-            <Share2 className="w-4 sm:w-5 h-4 sm:h-5" />
-          </Button>
-          {user && (
-            <>
+          {/* Row 2b: Action buttons */}
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {user && (
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 sm:h-9 sm:w-9 shrink-0 text-muted-foreground hover:text-foreground sm:hidden"
-                onClick={() => navigate("/my-setlists")}
-                title="My Setlists"
+                className="h-10 w-10 shrink-0 text-foreground relative"
+                onClick={handleCollaborate}
+                title="Chat"
               >
-                <List className="w-4 h-4" />
+                <MessageCircle className="w-5 h-5" />
+                {chatUnread && (
+                  <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-primary rounded-full animate-pulse border-2 border-card" />
+                )}
               </Button>
+            )}
+            <Button
+              variant="default"
+              size="sm"
+              className="shrink-0 h-10 px-3 gap-2 bg-gradient-to-r from-primary to-accent text-primary-foreground font-display text-sm shadow-md hover:shadow-lg hover:scale-105 transition-all duration-200 animate-pulse hover:animate-none"
+              onClick={() => setAiOpen(true)}
+              title="Cosmic Charlie — Your AI Deadhead"
+            >
+              <Star className="w-5 h-5" />
+              <span className="hidden sm:inline">Cosmic Charlie</span>
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className={`h-10 w-10 shrink-0 ${setlist?.is_public ? "text-accent" : "text-foreground"}`}
+              onClick={handleTogglePublic}
+              title={setlist?.is_public ? "Public — visible on Browse" : "Private — only you and collaborators"}
+            >
+              <Globe className="w-5 h-5" />
+            </Button>
+            {paramId && (
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 sm:h-9 sm:w-9 shrink-0 text-muted-foreground hover:text-foreground"
-                onClick={async () => { await signOut(); navigate("/"); }}
-                title="Sign Out"
+                className="h-10 w-10 shrink-0 text-primary hover:text-primary/80"
+                onClick={() => navigate(`/setlist/${paramId}`)}
+                title="View Poster"
               >
-                <LogOut className="w-4 sm:w-5 h-4 sm:h-5" />
+                <FileImage className="w-5 h-5" />
               </Button>
-            </>
-          )}
+            )}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-10 w-10 shrink-0 text-foreground"
+              onClick={handleShare}
+              title="Share"
+            >
+              <Share2 className="w-5 h-5" />
+            </Button>
+            {user && (
+              <>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-10 w-10 shrink-0 text-muted-foreground hover:text-foreground sm:hidden"
+                  onClick={() => navigate("/my-setlists")}
+                  title="My Setlists"
+                >
+                  <List className="w-5 h-5" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-10 w-10 shrink-0 text-muted-foreground hover:text-foreground"
+                  onClick={async () => { await signOut(); navigate("/"); }}
+                  title="Sign Out"
+                >
+                  <LogOut className="w-5 h-5" />
+                </Button>
+              </>
+            )}
+          </div>
         </div>
       </header>
 
-      {/* Mobile Tab Switcher */}
+      {/* Mobile Tab Switcher — The Set first, Song Vault second */}
       {isMobile && (
         <div className="flex border-b border-border bg-card/50">
-          <button
-            onClick={() => setMobileTab("songs")}
-            className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-body transition-colors ${
-              mobileTab === "songs"
-                ? "text-primary border-b-2 border-primary bg-primary/5"
-                : "text-muted-foreground"
-            }`}
-          >
-            <Music className="w-4 h-4" />
-            Song Vault
-          </button>
           <button
             onClick={() => setMobileTab("setlist")}
             className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-body transition-colors relative ${
@@ -738,13 +729,48 @@ const Builder = () => {
               </span>
             )}
           </button>
+          <button
+            onClick={() => setMobileTab("songs")}
+            className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-body transition-colors ${
+              mobileTab === "songs"
+                ? "text-primary border-b-2 border-primary bg-primary/5"
+                : "text-muted-foreground"
+            }`}
+          >
+            <Music className="w-4 h-4" />
+            Song Vault
+          </button>
         </div>
       )}
 
-      {/* Main Content */}
+      {/* Main Content — Setlist first, Song Vault second */}
       <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
+        {/* Setlist — hidden on mobile when songs tab is active */}
+        <div className={`flex-1 overflow-hidden flex flex-col ${
+          isMobile ? (mobileTab === "setlist" ? "flex-1" : "hidden") : "lg:max-h-[calc(100vh-85px)]"
+        }`}>
+           <SetlistDisplay
+            slots={activeSlots}
+            activeSlotId={playingSlot ? playingSlot.id : null}
+            description={description}
+            generatingDescription={generatingDescription}
+            onGenerateDescription={handleGenerateDescription}
+            onRemoveSlot={handleRemoveSlot}
+            onToggleSegue={handleToggleSegue}
+            onUpdateNotes={handleUpdateNotes}
+            onReorder={handleReorder}
+            onPlayVersion={(slot) => {
+              playSingle(slot);
+            }}
+            onPlaySetlist={async () => {
+              if (activeSlots.length === 0) return;
+              await globalPlaySetlist(activeSlots, setlist?.id);
+            }}
+          />
+        </div>
+
         {/* Song Vault — hidden on mobile when setlist tab is active */}
-        <div className={`w-full lg:w-[380px] border-b lg:border-b-0 border-r-0 lg:border-r border-border overflow-hidden flex flex-col ${
+        <div className={`w-full lg:w-[380px] border-b lg:border-b-0 border-l-0 lg:border-l border-border overflow-hidden flex flex-col ${
           isMobile ? (mobileTab === "songs" ? "flex-1 pb-12" : "hidden") : "max-h-[calc(100vh-85px)]"
         }`}>
           {songsLoading ? (
@@ -771,30 +797,6 @@ const Builder = () => {
               }}
             />
           )}
-        </div>
-
-        {/* Setlist — hidden on mobile when songs tab is active */}
-        <div className={`flex-1 overflow-hidden flex flex-col ${
-          isMobile ? (mobileTab === "setlist" ? "flex-1" : "hidden") : "lg:max-h-[calc(100vh-85px)]"
-        }`}>
-           <SetlistDisplay
-            slots={activeSlots}
-            activeSlotId={playingSlot ? playingSlot.id : null}
-            description={description}
-            generatingDescription={generatingDescription}
-            onGenerateDescription={handleGenerateDescription}
-            onRemoveSlot={handleRemoveSlot}
-            onToggleSegue={handleToggleSegue}
-            onUpdateNotes={handleUpdateNotes}
-            onReorder={handleReorder}
-            onPlayVersion={(slot) => {
-              playSingle(slot);
-            }}
-            onPlaySetlist={async () => {
-              if (activeSlots.length === 0) return;
-              await globalPlaySetlist(activeSlots, setlist?.id);
-            }}
-          />
         </div>
       </div>
 
