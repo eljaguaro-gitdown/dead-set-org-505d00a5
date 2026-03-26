@@ -371,12 +371,12 @@ const MySetlists = () => {
                           {s.title}
                         </span>
                         {s.slot_count > 0 && (
-                          <span className="font-body text-xs sm:text-sm shrink-0 hidden sm:inline" style={{ color: tape.sub }}>
+                          <span className="font-body text-xs sm:text-sm shrink-0" style={{ color: tape.sub }}>
                             {s.slot_count} songs
                           </span>
                         )}
                         {s.play_count > 0 && (
-                          <span className="font-body text-xs sm:text-sm shrink-0 hidden sm:inline" style={{ color: tape.sub }}>
+                          <span className="font-body text-xs sm:text-sm shrink-0" style={{ color: tape.sub }}>
                             ▶ {s.play_count}×
                           </span>
                         )}
