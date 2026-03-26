@@ -225,12 +225,12 @@ const SetlistMiniCard = ({ setlist, index }: { setlist: SetlistCard; index: numb
       {setlist.preview_songs.length > 0 && (
         <div className="mt-2 space-y-0.5">
           {setlist.preview_songs.map((song, i) => (
-            <p key={i} className="font-body text-[10px] text-muted-foreground/50 truncate leading-tight">
+            <p key={i} className="font-body text-xs text-muted-foreground/70 truncate leading-snug">
               {song}
             </p>
           ))}
           {setlist.song_count > 3 && (
-            <p className="font-body text-[10px] text-muted-foreground/30">
+            <p className="font-body text-xs text-muted-foreground/50">
               +{setlist.song_count - 3} more
             </p>
           )}

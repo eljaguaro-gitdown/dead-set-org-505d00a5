@@ -429,12 +429,12 @@ const FeaturedCard = ({ setlist, onClick }: { setlist: SetlistWithMeta; onClick:
         {setlist.preview_songs.length > 0 && (
           <div className="mt-3 pt-3 border-t border-border/30">
             {setlist.preview_songs.map((name, i) => (
-              <p key={i} className="text-[11px] font-body text-muted-foreground/70 leading-relaxed truncate">
+              <p key={i} className="text-xs font-body text-muted-foreground/70 leading-relaxed truncate">
                 {name}
               </p>
             ))}
             {setlist.slot_count > 4 && (
-              <p className="text-[10px] font-body text-muted-foreground/40 mt-0.5">
+              <p className="text-xs font-body text-muted-foreground/50 mt-0.5">
                 + {setlist.slot_count - 4} more
               </p>
             )}
@@ -507,7 +507,7 @@ const SetlistCard = ({ setlist, index, onClick, isFav, onToggleFav }: { setlist:
         {setlist.preview_songs.length > 0 && (
           <div className="mt-3 pt-2 border-t border-border/20 space-y-0.5">
             {setlist.preview_songs.map((name, i) => (
-              <p key={i} className="text-[10px] font-body text-muted-foreground/60 truncate leading-relaxed">
+              <p key={i} className="text-xs font-body text-muted-foreground/70 truncate leading-relaxed">
                 {name}
               </p>
             ))}
