@@ -483,6 +483,7 @@ const SetlistPoster = () => {
                                 </motion.div>
                               )}
                             </AnimatePresence>
+                            </React.Fragment>
                           );
                         })}
                       </div>
