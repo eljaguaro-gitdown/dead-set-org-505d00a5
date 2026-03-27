@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Play, Pause, Volume2, VolumeX, X, Loader2, Cast } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -22,9 +23,11 @@ interface AudioPlayerProps {
   playlistInfo?: { current: number; total: number } | null;
   onNext?: () => void;
   onPrev?: () => void;
+  activeSetlistId?: string | null;
 }
 
-const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false, singleTrackMode = false, directTrackUrl, onClose, onEnded, playlistInfo, onNext, onPrev }: AudioPlayerProps) => {
+const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false, singleTrackMode = false, directTrackUrl, onClose, onEnded, playlistInfo, onNext, onPrev, activeSetlistId }: AudioPlayerProps) => {
+  const navigate = useNavigate();
   const audioRef = useRef<HTMLAudioElement>(null);
   const [tracks, setTracks] = useState<Track[]>([]);
   const [currentTrack, setCurrentTrack] = useState(0);
