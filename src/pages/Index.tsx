@@ -11,6 +11,7 @@ import PageLayout from "@/components/PageLayout";
 import SiteHeader from "@/components/SiteHeader";
 import AdSenseLoader from "@/components/AdSenseLoader";
 import { Button } from "@/components/ui/button";
+import ShareAppButton from "@/components/ShareAppButton";
 import { Star, ChevronRight } from "lucide-react";
 
 interface FeaturedSetlist {
@@ -266,16 +267,19 @@ const Index = () => {
       )}
 
       {/* Minimal footer */}
-      <footer className="py-6 text-center border-t border-border/30">
-        <div className="flex items-center justify-center gap-3 text-[10px] font-mono text-muted-foreground/40 tracking-wider">
-          <span>© Dead Set</span>
-          <span>·</span>
-          <button
-            onClick={() => navigate("/privacy")}
-            className="hover:text-muted-foreground transition-colors"
-          >
-            Privacy
-          </button>
+      <footer className="py-8 border-t border-border/30">
+        <div className="flex flex-col items-center gap-4">
+          <ShareAppButton variant="full" />
+          <div className="flex items-center gap-3 text-[10px] font-mono text-muted-foreground/40 tracking-wider">
+            <span>© Dead Set</span>
+            <span>·</span>
+            <button
+              onClick={() => navigate("/privacy")}
+              className="hover:text-muted-foreground transition-colors"
+            >
+              Privacy
+            </button>
+          </div>
         </div>
       </footer>
     </PageLayout>
