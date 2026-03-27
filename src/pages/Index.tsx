@@ -209,7 +209,7 @@ const Index = () => {
             <div className="flex items-center gap-4">
               <div className="h-px flex-1 bg-border" />
               <span className="font-mono text-[10px] tracking-[0.3em] text-primary/60 uppercase">
-                🔥 Trending All Time
+                🏆 Most Popular
               </span>
               <div className="h-px flex-1 bg-border" />
             </div>
