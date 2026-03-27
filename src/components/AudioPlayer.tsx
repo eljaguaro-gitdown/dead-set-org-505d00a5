@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Play, Pause, Volume2, VolumeX, X, Loader2, Cast } from "lucide-react";
+import { Play, Pause, Volume2, VolumeX, X, Loader2, Cast, ChevronRight } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { matchScore } from "@/lib/archiveOrg";
 
@@ -212,8 +212,9 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
               <p className="text-xs text-destructive font-body truncate">{error}</p>
             ) : (
               <>
-                <p className="text-sm text-foreground font-body truncate font-semibold">
+                <p className="text-sm text-foreground font-body truncate font-semibold flex items-center gap-1">
                   {songTitle}
+                  {activeSetlistId && <ChevronRight className="w-3.5 h-3.5 text-primary/70 shrink-0" />}
                 </p>
                 <p className="text-[11px] text-muted-foreground font-mono truncate tracking-wider">
                   {showDate} {venue ? `· ${venue}` : ""}
