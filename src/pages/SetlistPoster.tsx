@@ -421,9 +421,9 @@ const SetlistPoster = () => {
                                 )}
                               </div>
 
-                              {/* Version info on hover */}
+                              {/* Version info on hover (desktop only, not playing) */}
                               <AnimatePresence>
-                                {isHovered && slot.version && (
+                                {isHovered && !isNowPlaying && slot.version && (
                                   <motion.span
                                     initial={{ opacity: 0, x: 5 }}
                                     animate={{ opacity: 1, x: 0 }}
@@ -436,6 +436,52 @@ const SetlistPoster = () => {
                                 )}
                               </AnimatePresence>
                             </motion.div>
+
+                            {/* Now Playing info card — shows venue/year + Charlie's notes */}
+                            <AnimatePresence>
+                              {isNowPlaying && (
+                                <motion.div
+                                  initial={{ height: 0, opacity: 0 }}
+                                  animate={{ height: "auto", opacity: 1 }}
+                                  exit={{ height: 0, opacity: 0 }}
+                                  transition={{ duration: 0.35, ease: "easeOut" }}
+                                  className="overflow-hidden ml-6"
+                                >
+                                  <div
+                                    className="py-2 px-3 mb-1 rounded-sm border border-dashed"
+                                    style={{
+                                      borderColor: `hsl(${eraTheme.accent} / 0.25)`,
+                                      backgroundColor: `hsl(${eraTheme.accent} / 0.06)`,
+                                    }}
+                                  >
+                                    {slot.version && (slot.version.show_date || slot.version.venue) && (
+                                      <p
+                                        className="font-mono text-[10px] tracking-wider mb-1"
+                                        style={{ color: `hsl(${eraTheme.accent})` }}
+                                      >
+                                        🎧 {slot.version.show_date}{slot.version.venue ? ` · ${slot.version.venue}` : ""}
+                                      </p>
+                                    )}
+                                    {slot.notes && (
+                                      <p
+                                        className="font-hand text-xs leading-relaxed italic"
+                                        style={{ color: "hsl(28 20% 35%)" }}
+                                      >
+                                        "{slot.notes}"
+                                      </p>
+                                    )}
+                                    {!slot.notes && !slot.version?.show_date && (
+                                      <p
+                                        className="font-hand text-xs italic"
+                                        style={{ color: "hsl(28 15% 50%)" }}
+                                      >
+                                        Now playing…
+                                      </p>
+                                    )}
+                                  </div>
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
                           );
                         })}
                       </div>
