@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Plus, Globe, Lock, Music, Trash2, Calendar, Search, User, ArrowDownUp, Star, FileImage } from "lucide-react";
@@ -99,6 +100,14 @@ const MySetlists = () => {
     };
     fetchSetlists();
   }, [user]);
+
+  const handleTogglePrivacy = async (id: string, isPublic: boolean | null, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const newVal = !isPublic;
+    await supabase.from("setlists").update({ is_public: newVal }).eq("id", id);
+    setSetlists((prev) => prev.map((s) => s.id === id ? { ...s, is_public: newVal } : s));
+    toast.success(newVal ? "Setlist is now public" : "Setlist is now private");
+  };
 
   const handleDelete = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -433,6 +442,14 @@ const MySetlists = () => {
                       {/* Mobile: compact actions */}
                       <div className="flex sm:hidden items-center gap-1 shrink-0">
                         <button
+                          onClick={(e) => handleTogglePrivacy(s.id, s.is_public, e)}
+                          className="p-1.5 rounded-md active:bg-black/10 transition-colors"
+                          style={{ color: tape.sub }}
+                          title={s.is_public ? "Public — tap to make private" : "Private — tap to make public"}
+                        >
+                          {s.is_public ? <Globe className="w-4 h-4" /> : <Lock className="w-4 h-4 opacity-50" />}
+                        </button>
+                        <button
                           onClick={(e) => handleDelete(s.id, e)}
                           className="p-1.5 rounded-md active:bg-black/10 transition-colors"
                           style={{ color: tape.sub }}
@@ -446,11 +463,14 @@ const MySetlists = () => {
                         <span className="font-body text-[10px] sm:text-sm" style={{ color: tape.sub }}>
                           {new Date(s.updated_at).toLocaleDateString()}
                         </span>
-                        {s.is_public ? (
-                          <Globe className="w-4 h-4" style={{ color: tape.sub }} />
-                        ) : (
-                          <Lock className="w-4 h-4 opacity-50" style={{ color: tape.sub }} />
-                        )}
+                        <button
+                          onClick={(e) => handleTogglePrivacy(s.id, s.is_public, e)}
+                          className="p-1 rounded-md hover:bg-black/10 transition-colors"
+                          style={{ color: tape.sub }}
+                          title={s.is_public ? "Public — click to make private" : "Private — click to make public"}
+                        >
+                          {s.is_public ? <Globe className="w-4 h-4" /> : <Lock className="w-4 h-4 opacity-50" />}
+                        </button>
                         <button
                           onClick={(e) => { e.stopPropagation(); navigate(`/setlist/${s.id}`); }}
                           className="opacity-0 group-hover:opacity-100 transition-opacity p-1"
