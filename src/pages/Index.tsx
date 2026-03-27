@@ -33,16 +33,22 @@ const Index = () => {
 
   useEffect(() => {
     const fetchFeatured = async () => {
+      // Fetch more than needed, then sort client-side by combined popularity
       const { data: setlists } = await supabase
         .from("setlists")
         .select("id, title, creator_id, era_id, upvote_count, play_count")
         .eq("is_public", true)
-        .order("upvote_count", { ascending: false })
-        .limit(6);
+        .order("play_count", { ascending: false })
+        .limit(50);
 
       if (!setlists || setlists.length === 0) return;
 
-      const creatorIds = [...new Set(setlists.map((s) => s.creator_id))];
+      // Sort by combined score (plays + upvotes) and take top 6
+      const sorted = [...setlists]
+        .sort((a, b) => (b.play_count + b.upvote_count) - (a.play_count + a.upvote_count))
+        .slice(0, 6);
+
+      const creatorIds = [...new Set(sorted.map((s) => s.creator_id))];
       const { data: profiles } = await supabase
         .from("profiles")
         .select("user_id, display_name")
@@ -52,7 +58,7 @@ const Index = () => {
       );
 
       const eraIds = [
-        ...new Set(setlists.map((s) => s.era_id).filter(Boolean)),
+        ...new Set(sorted.map((s) => s.era_id).filter(Boolean)),
       ] as string[];
       let eraMap = new Map<string, string>();
       if (eraIds.length > 0) {
@@ -63,7 +69,7 @@ const Index = () => {
         eraMap = new Map((eras || []).map((e) => [e.id, e.name]));
       }
 
-      const setlistIds = setlists.map((s) => s.id);
+      const setlistIds = sorted.map((s) => s.id);
       const { data: slotCounts } = await supabase
         .from("setlist_slots")
         .select("setlist_id")
@@ -74,7 +80,7 @@ const Index = () => {
       });
 
       setFeatured(
-        setlists.map((s) => ({
+        sorted.map((s) => ({
           ...s,
           creator_name: profileMap.get(s.creator_id) || "Unknown",
           era_name: s.era_id ? eraMap.get(s.era_id) || undefined : undefined,
