@@ -22,6 +22,7 @@ interface AudioPlayerState {
   playlistMode: boolean;
   playlistIndex: number;
   playlistSlots: PlayableSlot[];
+  activeSetlistId: string | null;
 }
 
 interface AudioPlayerContextValue extends AudioPlayerState {
@@ -45,13 +46,14 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     playlistMode: false,
     playlistIndex: 0,
     playlistSlots: [],
+    activeSetlistId: null,
   });
 
   const stateRef = useRef(state);
   useEffect(() => { stateRef.current = state; }, [state]);
 
   const stopPlayback = useCallback(() => {
-    setState({ playingSlot: null, playlistMode: false, playlistIndex: 0, playlistSlots: [] });
+    setState({ playingSlot: null, playlistMode: false, playlistIndex: 0, playlistSlots: [], activeSetlistId: null });
   }, []);
 
   const playSingle = useCallback(async (slot: PlayableSlot) => {
@@ -139,6 +141,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
       playlistMode: true,
       playlistIndex: startIndex,
       playlistSlots: sorted,
+      activeSetlistId: setlistId || null,
     });
   }, []);
 
