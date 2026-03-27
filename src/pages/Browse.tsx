@@ -425,6 +425,11 @@ const FeaturedCard = ({ setlist, onClick }: { setlist: SetlistWithMeta; onClick:
               <Zap className="w-2.5 h-2.5 fill-primary" /> {setlist.upvote_count}
             </span>
           )}
+          {setlist.play_count > 0 && (
+            <span className="text-[10px] font-body text-accent flex items-center gap-0.5">
+              <Play className="w-2.5 h-2.5 fill-accent" /> {setlist.play_count}
+            </span>
+          )}
         </div>
         {setlist.preview_songs.length > 0 && (
           <div className="mt-3 pt-3 border-t border-border/30">
