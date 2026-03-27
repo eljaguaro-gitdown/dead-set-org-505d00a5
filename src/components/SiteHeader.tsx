@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Menu, Shield } from "lucide-react";
 import { motion } from "framer-motion";
 import StealYourFace from "@/components/StealYourFace";
+import ShareAppButton from "@/components/ShareAppButton";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/hooks/useAuth";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
@@ -97,6 +98,7 @@ const SiteHeader = ({ children, large = false }: SiteHeaderProps) => {
           {/* Desktop nav */}
           <div className="hidden sm:flex items-center gap-4 sm:gap-6">
             {nowPlaying}
+            <ShareAppButton />
             {adminLink}
             {children}
           </div>
@@ -109,9 +111,10 @@ const SiteHeader = ({ children, large = false }: SiteHeaderProps) => {
                 </button>
               </SheetTrigger>
               <SheetContent side="right" className="w-[260px] bg-background border-border p-0">
-                <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
+              <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
                 <div className="flex flex-col gap-1 p-4 pt-12">
                   {nowPlaying}
+                  <ShareAppButton variant="full" className="w-full justify-start" />
                   {adminLink}
                   {children}
                 </div>
