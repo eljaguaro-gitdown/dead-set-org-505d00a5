@@ -370,8 +370,9 @@ const SetlistPoster = () => {
                           const xShift = isNowPlaying ? 0 : ((charSum % 5) - 2) * 0.5;
 
                           return (
+                            <React.Fragment key={slot.id}>
                             <motion.div
-                              key={slot.id}
+                              
                               className={`group flex items-center gap-2 py-[5px] transition-colors ${
                                 isNowPlaying ? "now-playing-row" : ""
                               } ${
