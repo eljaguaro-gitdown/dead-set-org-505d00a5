@@ -204,7 +204,10 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
             )}
           </button>
 
-          <div className="flex-1 min-w-0">
+          <div
+            className={`flex-1 min-w-0 ${activeSetlistId ? 'cursor-pointer' : ''}`}
+            onClick={() => activeSetlistId && navigate(`/setlist/${activeSetlistId}`)}
+          >
             {error ? (
               <p className="text-xs text-destructive font-body truncate">{error}</p>
             ) : (
@@ -214,6 +217,7 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
                 </p>
                 <p className="text-[11px] text-muted-foreground font-mono truncate tracking-wider">
                   {showDate} {venue ? `· ${venue}` : ""}
+                  {activeSetlistId && <span className="text-primary/60 ml-1">· View Poster ↗</span>}
                 </p>
               </>
             )}
