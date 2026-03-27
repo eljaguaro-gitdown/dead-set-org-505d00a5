@@ -455,14 +455,22 @@ const SetlistPoster = () => {
                                       backgroundColor: `hsl(${eraTheme.accent} / 0.06)`,
                                     }}
                                   >
-                                    {slot.version && (slot.version.show_date || slot.version.venue) && (
-                                      <p
-                                        className="font-mono text-[10px] tracking-wider mb-1"
-                                        style={{ color: `hsl(${eraTheme.accent})` }}
-                                      >
-                                        🎧 {slot.version.show_date}{slot.version.venue ? ` · ${slot.version.venue}` : ""}
-                                      </p>
-                                    )}
+                                    {/* Show date/venue from slot version OR from the resolved playingSlot version */}
+                                    {(() => {
+                                      const showDate = slot.version?.show_date || playingSlot?.version?.show_date;
+                                      const venue = slot.version?.venue || playingSlot?.version?.venue;
+                                      if (showDate || venue) {
+                                        return (
+                                          <p
+                                            className="font-mono text-[10px] tracking-wider mb-1"
+                                            style={{ color: `hsl(${eraTheme.accent})` }}
+                                          >
+                                            🎧 {showDate}{venue ? ` · ${venue}` : ""}
+                                          </p>
+                                        );
+                                      }
+                                      return null;
+                                    })()}
                                     {slot.notes && (
                                       <p
                                         className="font-hand text-xs leading-relaxed italic"
@@ -471,7 +479,7 @@ const SetlistPoster = () => {
                                         "{slot.notes}"
                                       </p>
                                     )}
-                                    {!slot.notes && !slot.version?.show_date && (
+                                    {!slot.notes && !(slot.version?.show_date || playingSlot?.version?.show_date) && (
                                       <p
                                         className="font-hand text-xs italic"
                                         style={{ color: "hsl(28 15% 50%)" }}
