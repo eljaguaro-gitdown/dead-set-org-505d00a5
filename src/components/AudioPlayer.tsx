@@ -217,7 +217,7 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
                 </p>
                 <p className="text-[11px] text-muted-foreground font-mono truncate tracking-wider">
                   {showDate} {venue ? `· ${venue}` : ""}
-                  {activeSetlistId && <span className="text-primary/60 ml-1">· View Poster ↗</span>}
+                  {activeSetlistId && <span className="text-primary/80 ml-1 animate-[pulse_2s_cubic-bezier(0.4,0,0.6,1)_infinite]">· View Poster ↗</span>}
                 </p>
               </>
             )}
