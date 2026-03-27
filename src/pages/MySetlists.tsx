@@ -100,6 +100,14 @@ const MySetlists = () => {
     fetchSetlists();
   }, [user]);
 
+  const handleTogglePrivacy = async (id: string, isPublic: boolean | null, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const newVal = !isPublic;
+    await supabase.from("setlists").update({ is_public: newVal }).eq("id", id);
+    setSetlists((prev) => prev.map((s) => s.id === id ? { ...s, is_public: newVal } : s));
+    toast.success(newVal ? "Setlist is now public" : "Setlist is now private");
+  };
+
   const handleDelete = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     if (!confirm("Delete this setlist?")) return;
