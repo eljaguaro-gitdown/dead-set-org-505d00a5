@@ -1,18 +1,18 @@
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import dancingBear from "@/assets/dancing-bear.gif";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 
-import StealYourFace from "@/components/StealYourFace";
-import AmbientPlayer from "@/components/AmbientPlayer";
 import PageLayout from "@/components/PageLayout";
 import SiteHeader from "@/components/SiteHeader";
 import AdSenseLoader from "@/components/AdSenseLoader";
-import { Button } from "@/components/ui/button";
+import HeroSection from "@/components/landing/HeroSection";
+import HowItWorks from "@/components/landing/HowItWorks";
+import PersonalNote from "@/components/landing/PersonalNote";
 import ShareAppButton from "@/components/ShareAppButton";
-import { Star, ChevronRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { ChevronRight } from "lucide-react";
 
 interface FeaturedSetlist {
   id: string;
@@ -28,12 +28,11 @@ interface FeaturedSetlist {
 
 const Index = () => {
   const navigate = useNavigate();
-  const { user, loading } = useAuth();
+  const { user } = useAuth();
   const [featured, setFeatured] = useState<FeaturedSetlist[]>([]);
 
   useEffect(() => {
     const fetchFeatured = async () => {
-      // Fetch more than needed, then sort client-side by combined popularity
       const { data: setlists } = await supabase
         .from("setlists")
         .select("id, title, creator_id, era_id, upvote_count, play_count")
@@ -43,7 +42,6 @@ const Index = () => {
 
       if (!setlists || setlists.length === 0) return;
 
-      // Sort by combined score (plays + upvotes) and take top 6
       const sorted = [...setlists]
         .sort((a, b) => (b.play_count + b.upvote_count) - (a.play_count + a.upvote_count))
         .slice(0, 6);
@@ -118,91 +116,13 @@ const Index = () => {
         )}
       </SiteHeader>
 
-      {/* Hero — centered on Cosmic Charlie */}
-      <main className="flex-1 flex flex-col items-center justify-center px-5 sm:px-12 relative overflow-hidden min-h-[calc(100vh-80px)]">
-        {/* Gold radial glow */}
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-[10%] left-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-[radial-gradient(circle,hsl(var(--dead-gold)/0.08),transparent_70%)]" />
-        </div>
+      {/* Hero — headline, subhead, audio strip, CTAs */}
+      <HeroSection />
 
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, ease: "easeOut" }}
-          className="flex flex-col items-center gap-6 sm:gap-8 relative z-10 text-center max-w-2xl w-full"
-        >
-          {/* SYF logo */}
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0 }}
-          >
-            <StealYourFace size={isMobileCheck() ? 80 : 140} />
-          </motion.div>
+      {/* How It Works — 3 steps */}
+      <HowItWorks />
 
-          {/* Primary tagline */}
-          <motion.h1
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.06 }}
-            className="font-display text-3xl sm:text-5xl md:text-6xl text-primary leading-none tracking-tight"
-          >
-            Build your dream Dead show.
-          </motion.h1>
-
-          {/* Secondary — Cosmic Charlie intro */}
-          <motion.p
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.12 }}
-            className="font-body text-sm sm:text-base text-muted-foreground leading-relaxed max-w-md px-2"
-          >
-            Cosmic Charlie knows every setlist the Dead ever played. Tell Charlie your mood, pick an era, and curate your miracle.
-          </motion.p>
-
-          {/* Ambient audio teaser */}
-          <AmbientPlayer />
-
-          {/* Primary CTA — Cosmic Charlie gateway */}
-          <motion.button
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.18 }}
-            onClick={() => navigate("/builder?wizard=true")}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.97 }}
-            className="group relative flex items-center gap-3 sm:gap-4 px-8 sm:px-12 py-4 sm:py-5 bg-primary text-primary-foreground rounded-lg shadow-[0_4px_40px_hsl(var(--glow-gold))] hover:shadow-[0_4px_60px_hsl(var(--glow-gold))] hover:brightness-110 transition-all duration-200 w-full sm:w-auto justify-center"
-          >
-            <img
-              src={dancingBear}
-              alt="Dancing Bear"
-              className="w-8 h-8 sm:w-10 sm:h-10 object-contain"
-            />
-            <div className="flex flex-col items-start">
-              <span className="font-body text-sm sm:text-base font-bold tracking-wide">
-                Need a Miracle?
-              </span>
-              <span className="font-body text-[10px] sm:text-xs text-primary-foreground/70">
-                Let Cosmic Charlie build your dream set
-              </span>
-            </div>
-            <Star className="w-4 h-4 opacity-60 group-hover:opacity-100 transition-opacity" />
-          </motion.button>
-
-          {/* Secondary CTA */}
-          <Button
-            variant="outline"
-            size="lg"
-            onClick={() => navigate("/browse")}
-            className="gap-2 w-full sm:w-auto"
-          >
-            Browse Community Setlists
-            <ChevronRight className="w-4 h-4" />
-          </Button>
-        </motion.div>
-      </main>
-
-      {/* Trending all-time carousel */}
+      {/* Trending carousel */}
       {featured.length > 0 && (
         <section className="py-12 sm:py-20 border-t border-border/30">
           <div className="px-6 sm:px-12 mb-8">
@@ -272,6 +192,9 @@ const Index = () => {
         </section>
       )}
 
+      {/* Personal note — the soul */}
+      <PersonalNote />
+
       {/* Minimal footer */}
       <footer className="py-8 border-t border-border/30">
         <div className="flex flex-col items-center gap-4">
@@ -291,10 +214,5 @@ const Index = () => {
     </PageLayout>
   );
 };
-
-// Simple inline mobile check for stagger
-function isMobileCheck() {
-  return typeof window !== "undefined" && window.innerWidth < 640;
-}
 
 export default Index;
