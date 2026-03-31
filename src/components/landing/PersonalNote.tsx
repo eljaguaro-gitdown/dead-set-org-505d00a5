@@ -1,0 +1,28 @@
+import { motion } from "framer-motion";
+
+const PersonalNote = () => (
+  <motion.section
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+    transition={{ delay: 0.5, duration: 0.6, ease: "easeOut" }}
+    className="py-12 sm:py-20 px-6 sm:px-12"
+  >
+    <div className="max-w-xl mx-auto flex flex-col items-center text-center gap-6">
+      {/* Gold ornament separator */}
+      <span className="text-primary/40 text-lg select-none">✦</span>
+
+      <blockquote className="font-hand text-base sm:text-lg text-muted-foreground leading-relaxed">
+        "The band may be gone, but the music never stopped. Thanks to an incredible
+        community — and the Internet Archive preserving 50 years of live recordings —
+        there are still endless gems waiting to be found. I built Dead Set to help you
+        find them, share them, and keep the flame alive."
+      </blockquote>
+
+      <span className="font-body text-xs text-primary/50 tracking-wider">
+        — Built by a Deadhead, for the community
+      </span>
+    </div>
+  </motion.section>
+);
+
+export default PersonalNote;
