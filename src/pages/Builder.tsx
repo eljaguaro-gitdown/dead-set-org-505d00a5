@@ -48,6 +48,8 @@ const Builder = () => {
   const [miniBarPulse, setMiniBarPulse] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
   const [savedSetlistId, setSavedSetlistId] = useState<string | null>(null);
+  const [guestPromptShown, setGuestPromptShown] = useState(false);
+  const [showGuestPrompt, setShowGuestPrompt] = useState(false);
 
   // Auth modal state
   const [authModalOpen, setAuthModalOpen] = useState(false);
