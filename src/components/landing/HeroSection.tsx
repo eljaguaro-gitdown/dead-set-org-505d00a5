@@ -61,7 +61,7 @@ const HeroSection = () => {
         </motion.div>
 
         {/* 5. Primary CTA */}
-        <motion.div {...fade(0.2)} className="w-full sm:w-auto">
+        <motion.div {...fade(0.2)} className="w-full sm:w-auto flex flex-col items-center gap-2">
           <Button
             size="lg"
             onClick={() => navigate("/builder?wizard=true")}
@@ -70,6 +70,9 @@ const HeroSection = () => {
             Let Cosmic Charlie Build Your Show
             <ChevronRight className="w-4 h-4" />
           </Button>
+          <span className="font-body text-[11px] text-muted-foreground/50">
+            No account needed to start — sign in when you're ready to save
+          </span>
         </motion.div>
 
         {/* 6. Secondary CTA */}
