@@ -872,6 +872,17 @@ const Builder = () => {
         />
       )}
 
+      {/* Guest sign-in prompt */}
+      <GuestSignInPrompt
+        open={showGuestPrompt}
+        onSignIn={() => {
+          setShowGuestPrompt(false);
+          pendingActionRef.current = "save";
+          setAuthModalOpen(true);
+        }}
+        onDismiss={() => setShowGuestPrompt(false)}
+      />
+
       </>}
     </PageLayout>
   );
