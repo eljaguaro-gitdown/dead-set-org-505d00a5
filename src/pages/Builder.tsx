@@ -520,6 +520,17 @@ const Builder = () => {
     [songs, isGuestMode, createSetlist, user, navigate, playSingle]
   );
 
+  // Show guest sign-in prompt after guest builds a setlist with 3+ songs
+  useEffect(() => {
+    if (isGuestMode && guestSlots.length >= 3 && !guestPromptShown) {
+      const timer = setTimeout(() => {
+        setShowGuestPrompt(true);
+        setGuestPromptShown(true);
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [isGuestMode, guestSlots.length, guestPromptShown]);
+
   if (authLoading && paramId) {
     return (
       <PageLayout minimal><div className="flex-1 flex items-center justify-center">
