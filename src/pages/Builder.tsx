@@ -17,6 +17,7 @@ import AIWelcomeOverlay from "@/components/AIWelcomeOverlay";
 import AuthModal from "@/components/AuthModal";
 import MiniSetlistBar from "@/components/MiniSetlistBar";
 import SaveCelebration from "@/components/SaveCelebration";
+import GuestSignInPrompt from "@/components/GuestSignInPrompt";
 import { useSongs } from "@/hooks/useSongs";
 import { useAuth } from "@/hooks/useAuth";
 import { useSetlist } from "@/hooks/useSetlist";
@@ -47,6 +48,8 @@ const Builder = () => {
   const [miniBarPulse, setMiniBarPulse] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
   const [savedSetlistId, setSavedSetlistId] = useState<string | null>(null);
+  const [guestPromptShown, setGuestPromptShown] = useState(false);
+  const [showGuestPrompt, setShowGuestPrompt] = useState(false);
 
   // Auth modal state
   const [authModalOpen, setAuthModalOpen] = useState(false);
@@ -517,6 +520,17 @@ const Builder = () => {
     [songs, isGuestMode, createSetlist, user, navigate, playSingle]
   );
 
+  // Show guest sign-in prompt after guest builds a setlist with 3+ songs
+  useEffect(() => {
+    if (isGuestMode && guestSlots.length >= 3 && !guestPromptShown) {
+      const timer = setTimeout(() => {
+        setShowGuestPrompt(true);
+        setGuestPromptShown(true);
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [isGuestMode, guestSlots.length, guestPromptShown]);
+
   if (authLoading && paramId) {
     return (
       <PageLayout minimal><div className="flex-1 flex items-center justify-center">
@@ -857,6 +871,17 @@ const Builder = () => {
           onDismiss={() => setShowCelebration(false)}
         />
       )}
+
+      {/* Guest sign-in prompt */}
+      <GuestSignInPrompt
+        open={showGuestPrompt}
+        onSignIn={() => {
+          setShowGuestPrompt(false);
+          pendingActionRef.current = "save";
+          setAuthModalOpen(true);
+        }}
+        onDismiss={() => setShowGuestPrompt(false)}
+      />
 
       </>}
     </PageLayout>
