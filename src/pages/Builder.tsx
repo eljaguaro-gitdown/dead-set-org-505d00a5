@@ -17,6 +17,7 @@ import AIWelcomeOverlay from "@/components/AIWelcomeOverlay";
 import AuthModal from "@/components/AuthModal";
 import MiniSetlistBar from "@/components/MiniSetlistBar";
 import SaveCelebration from "@/components/SaveCelebration";
+import GuestSignInPrompt from "@/components/GuestSignInPrompt";
 import { useSongs } from "@/hooks/useSongs";
 import { useAuth } from "@/hooks/useAuth";
 import { useSetlist } from "@/hooks/useSetlist";
