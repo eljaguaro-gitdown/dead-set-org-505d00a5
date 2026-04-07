@@ -17,6 +17,7 @@ import SetlistPoster from "./pages/SetlistPoster";
 import Admin from "./pages/Admin";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import NotFound from "./pages/NotFound";
+import Messages from "./pages/Messages";
 
 const queryClient = new QueryClient();
 
@@ -37,6 +38,7 @@ const App = () => (
             <Route path="/join/:token" element={<JoinSetlist />} />
             <Route path="/browse" element={<Browse />} />
             <Route path="/setlist/:id" element={<SetlistPoster />} />
+            <Route path="/messages" element={<Messages />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/privacy" element={<PrivacyPolicy />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
