@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import EraTooltip from "@/components/EraTooltip";
 import type { Database } from "@/integrations/supabase/types";
 
-type Setlist = Database["public"]["Tables"]["setlists"]["Row"];
+type Setlist = Omit<Database["public"]["Tables"]["setlists"]["Row"], "share_token">;
 
 interface SetlistCard {
   id: string;
