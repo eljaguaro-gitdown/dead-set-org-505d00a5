@@ -17,11 +17,17 @@ const VisitorTracker = () => {
       const visitorId = getVisitorId();
       const pagePath = window.location.pathname;
 
-      await supabase.from("page_visits").insert({
-        visitor_id: visitorId,
-        page_path: pagePath,
-        user_agent: navigator.userAgent,
-      });
+      try {
+        await supabase.functions.invoke("track-visit", {
+          body: {
+            visitor_id: visitorId,
+            page_path: pagePath,
+            user_agent: navigator.userAgent,
+          },
+        });
+      } catch {
+        // Silently fail — analytics should never block UX
+      }
     };
 
     track();
