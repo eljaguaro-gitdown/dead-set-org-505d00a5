@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Menu, Shield } from "lucide-react";
+import { Menu, Shield, MessageCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import StealYourFace from "@/components/StealYourFace";
 import ShareAppButton from "@/components/ShareAppButton";
@@ -50,6 +50,17 @@ const SiteHeader = ({ children, large = false }: SiteHeaderProps) => {
     </button>
   ) : null;
 
+  const messagesLink = user ? (
+    <button
+      onClick={() => navigate("/messages")}
+      className="flex items-center gap-1.5 text-xs font-mono text-muted-foreground hover:text-foreground transition-colors tracking-wider uppercase"
+      title="Messages"
+    >
+      <MessageCircle className="w-3.5 h-3.5" />
+      <span className="hidden sm:inline">Messages</span>
+    </button>
+  ) : null;
+
   const nowPlaying = playingSlot ? (
     <motion.div
       initial={{ opacity: 0, scale: 0.9 }}
@@ -93,12 +104,13 @@ const SiteHeader = ({ children, large = false }: SiteHeaderProps) => {
           Dead Set
         </span>
       </button>
-      {(children || adminLink || nowPlaying) && (
+      {(children || adminLink || messagesLink || nowPlaying) && (
         <>
           {/* Desktop nav */}
           <div className="hidden sm:flex items-center gap-4 sm:gap-6">
             {nowPlaying}
             <ShareAppButton />
+            {messagesLink}
             {adminLink}
             {children}
           </div>
@@ -115,6 +127,7 @@ const SiteHeader = ({ children, large = false }: SiteHeaderProps) => {
                 <div className="flex flex-col gap-1 p-4 pt-12">
                   {nowPlaying}
                   <ShareAppButton variant="full" className="w-full justify-start" />
+                  {messagesLink}
                   {adminLink}
                   {children}
                 </div>
