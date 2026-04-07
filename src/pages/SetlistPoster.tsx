@@ -12,7 +12,7 @@ import ShareDropdown from "@/components/ShareDropdown";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 
-type Setlist = Database["public"]["Tables"]["setlists"]["Row"];
+type Setlist = Omit<Database["public"]["Tables"]["setlists"]["Row"], "share_token">;
 type SetlistSlot = Database["public"]["Tables"]["setlist_slots"]["Row"];
 type Song = Database["public"]["Tables"]["songs"]["Row"];
 type NotableVersion = Database["public"]["Tables"]["notable_versions"]["Row"];
