@@ -41,6 +41,7 @@ const App = () => (
             <Route path="/setlist/:id" element={<SetlistPoster />} />
             <Route path="/messages" element={<Messages />} />
             <Route path="/admin" element={<Admin />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/privacy" element={<PrivacyPolicy />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
