@@ -18,6 +18,8 @@ import AuthModal from "@/components/AuthModal";
 import MiniSetlistBar from "@/components/MiniSetlistBar";
 import SaveCelebration from "@/components/SaveCelebration";
 import GuestSignInPrompt from "@/components/GuestSignInPrompt";
+import ShowPlate from "@/components/ShowPlate";
+import ShareFlow from "@/components/ShareFlow";
 import { useSongs } from "@/hooks/useSongs";
 import { useAuth } from "@/hooks/useAuth";
 import { useSetlist } from "@/hooks/useSetlist";
@@ -942,6 +944,12 @@ const Builder = () => {
               await globalPlaySetlist(activeSlots, setlist?.id);
             }}
           />
+          {/* Live thumbnail plate preview */}
+          {activeSlots.length > 0 && (
+            <div className="p-4 border-t border-border bg-[#0F0E0C]">
+              <ShowPlate setlistName={title || "Untitled"} size="thumb" />
+            </div>
+          )}
         </div>
 
         {/* Song Vault — hidden on mobile when setlist tab is active */}
@@ -986,12 +994,23 @@ const Builder = () => {
         />
       )}
 
-      {/* Share Dialog */}
+      {/* Share Dialog (legacy) */}
       <ShareDialog
-        open={shareOpen}
+        open={shareOpen && !paramId}
         onOpenChange={setShareOpen}
         shareLink={getShareLink()}
       />
+
+      {/* Share Flow with Show Plate (when setlist is saved) */}
+      {paramId && (
+        <ShareFlow
+          open={shareOpen}
+          onClose={() => setShareOpen(false)}
+          setlistId={paramId}
+          setlistName={title}
+          eraName={eras.find(e => e.id === selectedEra)?.name}
+        />
+      )}
 
       {/* Cosmic Charlie Dialog */}
       <CosmicCharlieDialog

@@ -9,6 +9,7 @@ import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 import StealYourFace from "@/components/StealYourFace";
 import DancingBear from "@/components/DancingBear";
 import ShareDropdown from "@/components/ShareDropdown";
+import ShareFlow from "@/components/ShareFlow";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -56,6 +57,7 @@ const SetlistPoster = () => {
   const [upvoteCount, setUpvoteCount] = useState(0);
   const [upvoting, setUpvoting] = useState(false);
   const [hoveredSlot, setHoveredSlot] = useState<string | null>(null);
+  const [shareFlowOpen, setShareFlowOpen] = useState(false);
 
   const eraTheme = useMemo(() => getEraTheme(eraName), [eraName]);
 
@@ -236,6 +238,12 @@ const SetlistPoster = () => {
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-body bg-card/80 border border-border text-foreground hover:border-primary/40 transition-colors"
           >
             <Play className="w-3 h-3 fill-current" /> Play All
+          </button>
+          <button
+            onClick={() => setShareFlowOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-body bg-primary/10 border border-primary/30 text-primary hover:bg-primary/20 transition-colors"
+          >
+            <Share2 className="w-3 h-3" /> Share Plate
           </button>
           <ShareDropdown url={shareUrl} ogUrl={ogShareUrl} title={shareTitle} description={shareDescription} />
         </div>
@@ -583,6 +591,17 @@ const SetlistPoster = () => {
           </div>
         </motion.article>
       </div>
+
+      {/* Share Flow with Show Plate */}
+      <ShareFlow
+        open={shareFlowOpen}
+        onClose={() => setShareFlowOpen(false)}
+        setlistId={id || ""}
+        setlistName={setlist?.title || "Dream Setlist"}
+        eraName={eraName}
+        creatorName={creatorName}
+        songCount={slots.length}
+      />
     </div>
   );
 };

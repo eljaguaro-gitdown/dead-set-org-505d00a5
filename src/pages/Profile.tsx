@@ -11,12 +11,23 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import PageLayout from "@/components/PageLayout";
 import SiteHeader from "@/components/SiteHeader";
+import ShowPlate from "@/components/ShowPlate";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+const US_STATES = [
+  { code: "CA", name: "California" }, { code: "NY", name: "New York" }, { code: "OR", name: "Oregon" },
+  { code: "TX", name: "Texas" }, { code: "OH", name: "Ohio" }, { code: "MA", name: "Massachusetts" },
+  { code: "IL", name: "Illinois" }, { code: "CO", name: "Colorado" }, { code: "WA", name: "Washington" },
+  { code: "GA", name: "Georgia" }, { code: "NJ", name: "New Jersey" }, { code: "PA", name: "Pennsylvania" },
+  { code: "NC", name: "North Carolina" }, { code: "MD", name: "Maryland" }, { code: "CT", name: "Connecticut" },
+];
 
 const Profile = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const [displayName, setDisplayName] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [homeState, setHomeState] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -27,12 +38,13 @@ const Profile = () => {
     const fetchProfile = async () => {
       const { data } = await supabase
         .from("profiles")
-        .select("display_name, avatar_url")
+        .select("display_name, avatar_url, home_state")
         .eq("user_id", user.id)
         .single();
       if (data) {
         setDisplayName(data.display_name || "");
         setAvatarUrl(data.avatar_url);
+        setHomeState((data as any).home_state || "");
       }
       setLoading(false);
     };
@@ -44,7 +56,7 @@ const Profile = () => {
     setSaving(true);
     const { error } = await supabase
       .from("profiles")
-      .update({ display_name: displayName, avatar_url: avatarUrl })
+      .update({ display_name: displayName, avatar_url: avatarUrl, home_state: homeState || null } as any)
       .eq("user_id", user.id);
     setSaving(false);
     if (error) {
@@ -161,7 +173,30 @@ const Profile = () => {
               <Label className="font-body text-sm text-muted-foreground">Email</Label>
               <Input value={user.email || ""} disabled className="bg-muted border-border text-muted-foreground font-body" />
             </div>
+            <div className="space-y-2">
+              <Label className="font-body text-sm text-foreground">Home State</Label>
+              <Select value={homeState} onValueChange={setHomeState}>
+                <SelectTrigger className="bg-card/80 backdrop-blur-sm border-border text-foreground font-body">
+                  <SelectValue placeholder="Select your state" />
+                </SelectTrigger>
+                <SelectContent className="bg-card border-border">
+                  {US_STATES.map((s) => (
+                    <SelectItem key={s.code} value={s.code} className="font-body text-sm">
+                      {s.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground font-body">Your logo plate will flex your home state</p>
+            </div>
           </div>
+
+          {/* Logo Plate Preview */}
+          {homeState && (
+            <div className="p-4 bg-[#0F0E0C] rounded-lg">
+              <ShowPlate setlistName="DEAD SET" venueState={homeState} size="thumb" />
+            </div>
+          )}
 
           <Button onClick={handleSave} disabled={saving} className="w-full font-body gap-1.5">
             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
