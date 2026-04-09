@@ -12,8 +12,8 @@ import SetlistDisplay, { type SetlistSlotData } from "@/components/SetlistDispla
 import CollaboratorAvatars from "@/components/CollaboratorAvatars";
 import ChatSidebar from "@/components/ChatSidebar";
 import ShareDialog from "@/components/ShareDialog";
-import AIDeadHeadDialog from "@/components/AIDeadHeadDialog";
-import AIWelcomeOverlay from "@/components/AIWelcomeOverlay";
+import CosmicCharlieDialog from "@/components/CosmicCharlieDialog";
+import CosmicCharlieWelcome from "@/components/CosmicCharlieWelcome";
 import AuthModal from "@/components/AuthModal";
 import MiniSetlistBar from "@/components/MiniSetlistBar";
 import SaveCelebration from "@/components/SaveCelebration";
