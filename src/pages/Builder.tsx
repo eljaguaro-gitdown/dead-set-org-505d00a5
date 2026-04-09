@@ -927,6 +927,55 @@ const Builder = () => {
         <div className={`flex-1 overflow-hidden flex flex-col ${
           isMobile ? (mobileTab === "setlist" ? "flex-1" : "hidden") : "lg:max-h-[calc(100vh-85px)]"
         }`}>
+          {/* Mobile: Plate + Poster strip at top */}
+          {isMobile && activeSlots.length > 0 && (
+            <div className="border-b border-border bg-[#0F0E0C] px-3 py-3">
+              <div className="flex gap-3 items-start">
+                {/* Plate thumbnail */}
+                <button
+                  className="w-[45%] shrink-0 relative group"
+                  onClick={() => setShareOpen(true)}
+                >
+                  <ShowPlate setlistName={title || "Untitled"} size="thumb" />
+                  <div className="absolute inset-0 flex items-center justify-center opacity-0 active:opacity-100 bg-black/30 rounded-lg transition-opacity">
+                    <span className="flex items-center gap-1 text-white font-display text-xs"><Share2 className="w-3 h-3" /> Share</span>
+                  </div>
+                </button>
+                {/* Mini J-card poster */}
+                <button
+                  className="flex-1 min-w-0 text-left relative group"
+                  onClick={() => paramId ? navigate(`/setlist/${paramId}`) : null}
+                >
+                  <div className="jcard-paper rounded border border-[hsl(28_20%_55%/0.4)] overflow-hidden" style={{ background: "hsl(38 30% 90%)" }}>
+                    <div className="px-3 pt-2 pb-1.5">
+                      <p className="font-display text-[7px] tracking-[0.12em] uppercase" style={{ color: "hsl(28 30% 25%)" }}>Grateful Dead</p>
+                      <p className="font-hand text-xs leading-tight truncate" style={{ color: "hsl(220 60% 30%)" }}>{title || "Untitled"}</p>
+                    </div>
+                    <div className="mx-2 h-[1px]" style={{ background: "repeating-linear-gradient(90deg, hsl(var(--primary) / 0.3) 0px, hsl(var(--primary) / 0.3) 4px, transparent 4px, transparent 7px)" }} />
+                    <div className="px-3 py-1.5">
+                      {[1, 2, 3].map((setNum) => {
+                        const items = activeSlots.filter(s => s.setNumber === setNum);
+                        if (items.length === 0) return null;
+                        return (
+                          <div key={setNum} className="mb-1 last:mb-0">
+                            <p className="font-marker text-[6px] tracking-[0.2em] uppercase" style={{ color: "hsl(var(--primary))" }}>
+                              {setNum === 3 ? "Encore" : `Set ${["", "I", "II"][setNum]}`}
+                            </p>
+                            <p className="font-hand text-[8px] leading-tight truncate" style={{ color: "hsl(220 50% 20%)" }}>
+                              {items.map((s, i) => s.song.title + (s.segueToNext ? " → " : i < items.length - 1 ? ", " : "")).join("")}
+                            </p>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  <div className="absolute inset-0 flex items-center justify-center opacity-0 active:opacity-100 bg-black/30 rounded transition-opacity">
+                    <span className="flex items-center gap-1 text-white font-display text-xs"><FileImage className="w-3 h-3" /> Poster</span>
+                  </div>
+                </button>
+              </div>
+            </div>
+          )}
            <SetlistDisplay
             slots={activeSlots}
             activeSlotId={playingSlot ? playingSlot.id : null}
@@ -945,36 +994,6 @@ const Builder = () => {
               await globalPlaySetlist(activeSlots, setlist?.id);
             }}
           />
-          {/* Show Plate on mobile only */}
-          {isMobile && activeSlots.length > 0 && (
-            <div className="border-t border-border bg-[#0F0E0C]">
-              <div className="p-4">
-                <ShowPlate setlistName={title || "Untitled"} size="thumb" />
-              </div>
-              {paramId && (
-                <div className="px-4 pb-4 flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex-1 gap-2 border-primary/40 text-primary hover:bg-primary/10 hover:border-primary font-display text-sm transition-all"
-                    onClick={() => navigate(`/setlist/${paramId}`)}
-                  >
-                    <FileImage className="w-4 h-4" />
-                    View Poster
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex-1 gap-2 border-primary/40 text-primary hover:bg-primary/10 hover:border-primary font-display text-sm transition-all"
-                    onClick={() => setShareOpen(true)}
-                  >
-                    <Share2 className="w-4 h-4" />
-                    Share Plate
-                  </Button>
-                </div>
-              )}
-            </div>
-          )}
         </div>
 
         {/* Show Plate + Poster preview — between setlist and vault on desktop */}
