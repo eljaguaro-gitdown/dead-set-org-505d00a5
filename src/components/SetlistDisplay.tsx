@@ -121,7 +121,7 @@ const SortableSlotItem = ({
           </button>
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between">
-              <span className="font-body text-sm lg:text-2xl text-foreground font-medium">{slot.song.title}</span>
+              <span className="font-body text-sm lg:text-xl text-foreground font-medium">{slot.song.title}</span>
               <button
                 onClick={() => onRemoveSlot(slot.id)}
                 className="opacity-0 group-hover:opacity-100 transition-opacity"
@@ -131,7 +131,7 @@ const SortableSlotItem = ({
             </div>
             {slot.version && (
               <div className="flex items-center gap-1.5 mt-1">
-                <span className="text-xs text-muted-foreground font-body">
+                <span className="text-xs lg:text-base text-muted-foreground font-body">
                   {slot.version.show_date} — {slot.version.venue}
                 </span>
               </div>
@@ -175,7 +175,7 @@ const SortableSlotItem = ({
                   <span className="hidden sm:inline">Archive.org</span>
                 </a>
                 {(archiveResult.date || archiveResult.venue) && (
-                  <span className="text-[10px] text-muted-foreground font-body">
+                  <span className="text-[10px] lg:text-sm text-muted-foreground font-body">
                     {[archiveResult.date, archiveResult.venue].filter(Boolean).join(" · ")}
                   </span>
                 )}

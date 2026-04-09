@@ -985,31 +985,55 @@ const Builder = () => {
               <ShowPlate setlistName={title || "Untitled"} size="thumb" />
             </div>
 
-            {/* Mini Poster preview */}
-            <div className="mx-4 mb-4 rounded-lg border border-primary/20 bg-gradient-to-b from-[#1a1815] to-[#0d0c0a] p-4 relative overflow-hidden">
-              <div className="absolute inset-0 opacity-[0.04] pointer-events-none" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 256 256\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23n)\'/%3E%3C/svg%3E")' }} />
-              <h4 className="font-hand text-lg text-primary text-center mb-1 relative z-10">{title || "Untitled"}</h4>
-              <div className="h-px bg-primary/20 mb-3" />
-              {[1, 2, 3].map((setNum) => {
-                const setSlotItems = activeSlots.filter(s => s.setNumber === setNum);
-                if (setSlotItems.length === 0) return null;
-                return (
-                  <div key={setNum} className="mb-3 last:mb-0 relative z-10">
-                    <p className="font-mono text-[9px] text-muted-foreground/50 uppercase tracking-widest mb-1">
-                      {setNum === 3 ? "Encore" : `Set ${setNum}`}
-                    </p>
-                    <div className="space-y-0.5">
-                      {setSlotItems.map((slot, i) => (
-                        <span key={slot.id} className="font-body text-xs text-foreground/70 inline">
-                          {slot.song.title}
-                          {slot.segueToNext && <span className="text-primary mx-1">›</span>}
-                          {!slot.segueToNext && i < setSlotItems.length - 1 && <span className="text-muted-foreground/30 mx-1">·</span>}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                );
-              })}
+            {/* J-Card Poster replica */}
+            <div className="mx-4 mb-4 jcard-paper jcard-lines relative border border-[hsl(28_20%_55%/0.5)] rounded overflow-hidden" style={{ background: "hsl(38 30% 90%)" }}>
+              <div className="jcard-margin relative">
+                {/* Top flap */}
+                <div className="px-5 pt-4 pb-3 relative">
+                  <h4 className="font-display text-[10px] tracking-[0.15em] uppercase" style={{ color: "hsl(28 30% 25%)" }}>
+                    Grateful Dead
+                  </h4>
+                  <p className="font-hand text-base leading-tight mt-0.5" style={{ color: "hsl(220 60% 30%)" }}>
+                    {title || "Untitled"}
+                  </p>
+                  <p className="font-hand text-[9px] mt-1" style={{ color: "hsl(28 15% 50%)" }}>
+                    {new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}
+                  </p>
+                </div>
+
+                {/* Dashed divider */}
+                <div className="mx-4 h-[1.5px]" style={{ background: "repeating-linear-gradient(90deg, hsl(var(--primary) / 0.4) 0px, hsl(var(--primary) / 0.4) 6px, transparent 6px, transparent 10px)" }} />
+
+                {/* Song list */}
+                <div className="px-5 py-3 space-y-3">
+                  {[1, 2, 3].map((setNum) => {
+                    const setSlotItems = activeSlots.filter(s => s.setNumber === setNum);
+                    if (setSlotItems.length === 0) return null;
+                    return (
+                      <div key={setNum}>
+                        <h5 className="font-marker text-[8px] tracking-[0.25em] uppercase mb-1" style={{ color: "hsl(var(--primary))" }}>
+                          {setNum === 3 ? "Encore" : `Set ${["", "I", "II"][setNum]}`}
+                        </h5>
+                        <div className="space-y-0">
+                          {setSlotItems.map((slot, i) => (
+                            <div key={slot.id} className="flex items-baseline gap-1.5 py-[2px]">
+                              <span className="text-[8px] font-mono tabular-nums w-3 text-right shrink-0" style={{ color: "hsl(28 15% 50%)" }}>
+                                {i + 1}.
+                              </span>
+                              <span className="font-hand text-[11px] leading-snug" style={{ color: "hsl(220 50% 20%)" }}>
+                                {slot.song.title}
+                              </span>
+                              {slot.segueToNext && (
+                                <span className="text-[9px] font-bold shrink-0" style={{ color: "hsl(var(--primary))" }}>→</span>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
 
             {/* CTA buttons */}
