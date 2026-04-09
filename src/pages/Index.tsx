@@ -95,27 +95,27 @@ const Index = () => {
       <SiteHeader large>
         <button
           onClick={() => navigate("/browse")}
-          className="font-mono text-[10px] tracking-[0.2em] text-muted-foreground hover:text-primary transition-colors uppercase"
+          className="font-mono text-xs sm:text-[10px] tracking-[0.2em] text-muted-foreground hover:text-primary transition-colors uppercase min-h-[44px] flex items-center"
         >
           Browse
         </button>
         <button
           onClick={() => navigate("/builder?wizard=true")}
-          className="font-mono text-[10px] tracking-[0.2em] text-muted-foreground hover:text-primary transition-colors uppercase border border-primary/30 rounded-md px-2 py-1 hover:border-primary/60"
+          className="font-mono text-xs sm:text-[10px] tracking-[0.2em] text-muted-foreground hover:text-primary transition-colors uppercase border border-primary/30 rounded-md px-3 py-2 hover:border-primary/60 min-h-[44px] flex items-center"
         >
           Build a setlist
         </button>
         {user ? (
           <button
             onClick={() => navigate("/my-setlists")}
-            className="font-mono text-[10px] tracking-[0.2em] text-muted-foreground hover:text-primary transition-colors uppercase"
+            className="font-mono text-xs sm:text-[10px] tracking-[0.2em] text-muted-foreground hover:text-primary transition-colors uppercase min-h-[44px] flex items-center"
           >
             My Setlists
           </button>
         ) : (
           <button
             onClick={() => navigate("/auth")}
-            className="font-mono text-[10px] tracking-[0.2em] text-muted-foreground hover:text-primary transition-colors uppercase"
+            className="font-mono text-xs sm:text-[10px] tracking-[0.2em] text-muted-foreground hover:text-primary transition-colors uppercase min-h-[44px] flex items-center"
           >
             Sign In
           </button>
