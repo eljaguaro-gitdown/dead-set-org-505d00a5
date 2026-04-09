@@ -11,7 +11,7 @@ const DancingBearButton = () => {
       className="group flex items-center gap-2 px-3 py-1.5 rounded-full border border-primary/30 bg-primary/5 hover:bg-primary/15 hover:border-primary/60 transition-all duration-300"
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.97 }}
-      title="Cosmic Charlie AI Setlist Generator"
+      title="Cosmic Charlie — Your Deadhead Guide"
     >
       {/* Dancing bear image */}
       <motion.img
