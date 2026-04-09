@@ -38,12 +38,13 @@ const Profile = () => {
     const fetchProfile = async () => {
       const { data } = await supabase
         .from("profiles")
-        .select("display_name, avatar_url")
+        .select("display_name, avatar_url, home_state")
         .eq("user_id", user.id)
         .single();
       if (data) {
         setDisplayName(data.display_name || "");
         setAvatarUrl(data.avatar_url);
+        setHomeState((data as any).home_state || "");
       }
       setLoading(false);
     };
@@ -55,7 +56,7 @@ const Profile = () => {
     setSaving(true);
     const { error } = await supabase
       .from("profiles")
-      .update({ display_name: displayName, avatar_url: avatarUrl })
+      .update({ display_name: displayName, avatar_url: avatarUrl, home_state: homeState || null } as any)
       .eq("user_id", user.id);
     setSaving(false);
     if (error) {
