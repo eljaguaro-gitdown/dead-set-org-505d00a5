@@ -852,16 +852,17 @@ const Builder = () => {
               <Share2 className="w-5 h-5" />
             </Button>
 
-            {/* Secondary: View Poster (only when saved) */}
+            {/* View Poster & Plate — prominent CTA when saved */}
             {paramId && (
               <Button
-                variant="ghost"
-                size="icon"
-                className="h-10 w-10 shrink-0 text-primary hover:text-primary/80"
+                variant="outline"
+                size="sm"
+                className="shrink-0 h-10 px-4 gap-2 border-primary/50 text-primary hover:bg-primary/10 hover:border-primary font-display text-sm transition-all duration-200"
                 onClick={() => navigate(`/setlist/${paramId}`)}
-                title="View Poster"
+                title="View your concert poster and shareable plate"
               >
                 <FileImage className="w-5 h-5" />
+                <span className="hidden sm:inline">View Poster</span>
               </Button>
             )}
 
@@ -944,10 +945,34 @@ const Builder = () => {
               await globalPlaySetlist(activeSlots, setlist?.id);
             }}
           />
-          {/* Live thumbnail plate preview */}
+          {/* Show Plate preview with CTA */}
           {activeSlots.length > 0 && (
-            <div className="p-4 border-t border-border bg-[#0F0E0C]">
-              <ShowPlate setlistName={title || "Untitled"} size="thumb" />
+            <div className="border-t border-border bg-[#0F0E0C]">
+              <div className="p-4">
+                <ShowPlate setlistName={title || "Untitled"} size="thumb" />
+              </div>
+              {paramId && (
+                <div className="px-4 pb-4 flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1 gap-2 border-primary/40 text-primary hover:bg-primary/10 hover:border-primary font-display text-sm transition-all"
+                    onClick={() => navigate(`/setlist/${paramId}`)}
+                  >
+                    <FileImage className="w-4 h-4" />
+                    View Poster
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1 gap-2 border-primary/40 text-primary hover:bg-primary/10 hover:border-primary font-display text-sm transition-all"
+                    onClick={() => setShareOpen(true)}
+                  >
+                    <Share2 className="w-4 h-4" />
+                    Share Plate
+                  </Button>
+                </div>
+              )}
             </div>
           )}
         </div>
