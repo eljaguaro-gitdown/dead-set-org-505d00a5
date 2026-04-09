@@ -416,8 +416,8 @@ const SetlistPoster = () => {
                               {/* Song title — handwritten */}
                               <div className="flex items-baseline gap-1 flex-1 min-w-0">
                                 <span
-                                  className={`font-hand text-[15px] sm:text-base leading-snug transition-colors ${isNowPlaying ? "font-semibold" : ""}`}
-                                  style={{ color: isNowPlaying ? `hsl(${eraTheme.accent})` : "hsl(220 50% 20%)" }}
+                                  className={`font-hand text-xl sm:text-2xl leading-relaxed transition-colors ${isNowPlaying ? "font-semibold" : ""}`}
+                                  style={{ color: isNowPlaying ? `hsl(${eraTheme.accent})` : "hsl(220 40% 12%)" }}
                                 >
                                   {slot.song.title}
                                 </span>
