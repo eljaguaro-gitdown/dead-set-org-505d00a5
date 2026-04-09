@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Star, Share2, Users, LogOut, MessageCircle, Globe, CheckCircle, List, Music, LayoutList, Save, FileImage } from "lucide-react";
+import { Star, Share2, Users, LogOut, MessageCircle, Globe, CheckCircle, List, Music, LayoutList, Save, FileImage, MoreHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import PageLayout from "@/components/PageLayout";
 import { Input } from "@/components/ui/input";
@@ -27,6 +27,85 @@ import type { Database } from "@/integrations/supabase/types";
 
 type Song = Database["public"]["Tables"]["songs"]["Row"];
 type NotableVersion = Database["public"]["Tables"]["notable_versions"]["Row"];
+
+/* Overflow menu sub-component */
+const OverflowMenu = ({
+  user,
+  isMobile,
+  isPublic,
+  onTogglePublic,
+  onCollaborate,
+  onSignOut,
+  onMySetlists,
+  chatUnread,
+}: {
+  user: any;
+  isMobile: boolean;
+  isPublic: boolean;
+  onTogglePublic: () => void;
+  onCollaborate: () => void;
+  onSignOut: () => void;
+  onMySetlists: () => void;
+  chatUnread: boolean;
+}) => {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("click", handler, true);
+    return () => document.removeEventListener("click", handler, true);
+  }, [open]);
+
+  const itemClass = "flex items-center gap-2.5 w-full font-body text-sm px-3 py-2 rounded-lg hover:bg-muted text-left text-foreground transition-colors";
+
+  return (
+    <div ref={ref} className="relative shrink-0">
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-10 w-10 text-muted-foreground hover:text-foreground relative"
+        onClick={() => setOpen((v) => !v)}
+        title="More actions"
+      >
+        <MoreHorizontal className="w-5 h-5" />
+        {chatUnread && user && (
+          <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-primary rounded-full animate-pulse border-2 border-card" />
+        )}
+      </Button>
+      {open && (
+        <div className="absolute right-0 top-full mt-1 z-50 bg-card border border-border rounded-xl shadow-md p-1 min-w-[180px]">
+          <button className={itemClass} onClick={() => { onTogglePublic(); setOpen(false); }}>
+            <Globe className="w-4 h-4" />
+            {isPublic ? "Make private" : "Make public"}
+          </button>
+          {user && (
+            <button className={itemClass} onClick={() => { onCollaborate(); setOpen(false); }}>
+              <MessageCircle className="w-4 h-4" />
+              Chat / Collaborate
+              {chatUnread && <span className="ml-auto w-2 h-2 bg-primary rounded-full" />}
+            </button>
+          )}
+          {user && isMobile && (
+            <button className={itemClass} onClick={() => { onMySetlists(); setOpen(false); }}>
+              <List className="w-4 h-4" />
+              My Setlists
+            </button>
+          )}
+          {user && (
+            <button className={`${itemClass} text-muted-foreground`} onClick={() => { onSignOut(); setOpen(false); }}>
+              <LogOut className="w-4 h-4" />
+              Sign out
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
 
 const Builder = () => {
   const navigate = useNavigate();
@@ -643,41 +722,32 @@ const Builder = () => {
             </Select>
           </div>
 
-          {/* Row 2b: Action buttons */}
-          <div className="flex items-center gap-1.5 flex-wrap">
-            {user && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-10 w-10 shrink-0 text-foreground relative"
-                onClick={handleCollaborate}
-                title="Chat"
-              >
-                <MessageCircle className="w-5 h-5" />
-                {chatUnread && (
-                  <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-primary rounded-full animate-pulse border-2 border-card" />
-                )}
-              </Button>
-            )}
+          {/* Row 2b: Action buttons — collapsed toolbar */}
+          <div className="flex items-center gap-1.5 ml-auto">
+            {/* Primary: Cosmic Charlie */}
             <Button
               variant="default"
               size="sm"
-              className="shrink-0 h-10 px-3 gap-2 bg-gradient-to-r from-primary to-accent text-primary-foreground font-display text-sm shadow-md hover:shadow-lg hover:scale-105 transition-all duration-200 animate-[fadeInScale_0.4s_ease-out_forwards]"
+              className="shrink-0 h-10 px-4 gap-2 bg-gradient-to-r from-primary to-accent text-primary-foreground font-display text-sm shadow-md hover:shadow-lg hover:scale-105 transition-all duration-200 animate-[fadeInScale_0.4s_ease-out_forwards]"
               onClick={() => setAiOpen(true)}
               title="Cosmic Charlie — Your Deadhead Guide"
             >
               <Star className="w-5 h-5" />
               <span className="hidden sm:inline">Cosmic Charlie</span>
             </Button>
+
+            {/* Secondary: Share */}
             <Button
               variant="ghost"
               size="icon"
-              className={`h-10 w-10 shrink-0 ${setlist?.is_public ? "text-accent" : "text-foreground"}`}
-              onClick={handleTogglePublic}
-              title={setlist?.is_public ? "Public — visible on Browse" : "Private — only you and collaborators"}
+              className="h-10 w-10 shrink-0 text-foreground"
+              onClick={handleShare}
+              title="Share"
             >
-              <Globe className="w-5 h-5" />
+              <Share2 className="w-5 h-5" />
             </Button>
+
+            {/* Secondary: View Poster (only when saved) */}
             {paramId && (
               <Button
                 variant="ghost"
@@ -689,37 +759,25 @@ const Builder = () => {
                 <FileImage className="w-5 h-5" />
               </Button>
             )}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-10 w-10 shrink-0 text-foreground"
-              onClick={handleShare}
-              title="Share"
-            >
-              <Share2 className="w-5 h-5" />
-            </Button>
-            {user && (
-              <>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-10 w-10 shrink-0 text-muted-foreground hover:text-foreground sm:hidden"
-                  onClick={() => navigate("/my-setlists")}
-                  title="My Setlists"
-                >
-                  <List className="w-5 h-5" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-10 w-10 shrink-0 text-muted-foreground hover:text-foreground"
-                  onClick={async () => { await signOut(); navigate("/"); }}
-                  title="Sign Out"
-                >
-                  <LogOut className="w-5 h-5" />
-                </Button>
-              </>
-            )}
+
+            {/* Overflow menu */}
+            {(() => {
+              const hasOverflowItems = true; // Globe toggle is always available
+              const showOverflow = isMobile || hasOverflowItems;
+              if (!showOverflow) return null;
+              return (
+                <OverflowMenu
+                  user={user}
+                  isMobile={isMobile}
+                  isPublic={!!setlist?.is_public}
+                  onTogglePublic={handleTogglePublic}
+                  onCollaborate={handleCollaborate}
+                  onSignOut={async () => { await signOut(); navigate("/"); }}
+                  onMySetlists={() => navigate("/my-setlists")}
+                  chatUnread={chatUnread}
+                />
+              );
+            })()}
           </div>
         </div>
       </header>
