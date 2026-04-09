@@ -1136,6 +1136,7 @@ const Builder = () => {
           setlistId={paramId}
           setlistName={title}
           eraName={eras.find(e => e.id === selectedEra)?.name}
+          description={description}
         />
       )}
 

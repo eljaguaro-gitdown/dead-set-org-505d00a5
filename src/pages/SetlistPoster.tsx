@@ -626,6 +626,7 @@ const SetlistPoster = () => {
         eraName={eraName}
         creatorName={creatorName}
         songCount={slots.length}
+        description={setlist?.description}
       />
     </div>
   );
