@@ -966,7 +966,7 @@ const Builder = () => {
                     variant="outline"
                     size="sm"
                     className="flex-1 gap-2 border-primary/40 text-primary hover:bg-primary/10 hover:border-primary font-display text-sm transition-all"
-                    onClick={() => setShareFlowOpen(true)}
+                    onClick={() => setShareOpen(true)}
                   >
                     <Share2 className="w-4 h-4" />
                     Share Plate
