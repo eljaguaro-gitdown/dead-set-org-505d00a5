@@ -28,7 +28,7 @@ interface AISuggestion {
   sets: AISuggestionSet[];
 }
 
-interface AIWelcomeOverlayProps {
+interface CosmicCharlieWelcomeProps {
   eras: Era[];
   onGenerated: (suggestion: AISuggestion, eraId: string | null) => void;
   onSkip: () => void;
@@ -66,7 +66,7 @@ const slideVariants = {
   }),
 };
 
-const AIWelcomeOverlay = ({ eras, onGenerated, onSkip }: AIWelcomeOverlayProps) => {
+const CosmicCharlieWelcome = ({ eras, onGenerated, onSkip }: CosmicCharlieWelcomeProps) => {
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState(1);
   const [selectedVibes, setSelectedVibes] = useState<typeof VIBES>([]);
@@ -505,4 +505,4 @@ const AIWelcomeOverlay = ({ eras, onGenerated, onSkip }: AIWelcomeOverlayProps) 
   );
 };
 
-export default AIWelcomeOverlay;
+export default CosmicCharlieWelcome;
