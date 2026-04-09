@@ -81,10 +81,10 @@ const Auth = () => {
             <StealYourFace size={80} />
             <h1 className="font-display text-4xl text-primary">Dead Set</h1>
             <p className="font-hand text-xl text-muted-foreground">
-              {isSignUp ? "Come on in. There's room." : "The music never stopped."}
+              {isForgot ? "We'll get you back in." : isSignUp ? "Come on in. There's room." : "The music never stopped."}
             </p>
             <p className="font-body text-sm text-muted-foreground/70">
-              {isSignUp ? "Create your account" : "Sign in to your setlists"}
+              {isForgot ? "Enter your email to reset your password" : isSignUp ? "Create your account" : "Sign in to your setlists"}
             </p>
           </div>
 
@@ -100,25 +100,36 @@ const Auth = () => {
                 className="bg-card/80 backdrop-blur-sm border-border text-foreground"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="password" className="font-body text-foreground">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                minLength={6}
-                className="bg-card/80 backdrop-blur-sm border-border text-foreground"
-              />
-            </div>
+            {!isForgot && (
+              <div className="space-y-2">
+                <Label htmlFor="password" className="font-body text-foreground">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  minLength={6}
+                  className="bg-card/80 backdrop-blur-sm border-border text-foreground"
+                />
+              </div>
+            )}
             <Button
               type="submit"
               className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-body"
               disabled={loading}
             >
-              {loading ? "..." : isSignUp ? "Sign Up" : "Sign In"}
+              {loading ? "..." : isForgot ? "Send Reset Link" : isSignUp ? "Sign Up" : "Sign In"}
             </Button>
+            {!isSignUp && !isForgot && (
+              <button
+                type="button"
+                onClick={() => setIsForgot(true)}
+                className="w-full text-center text-sm text-muted-foreground hover:text-primary font-body transition-colors"
+              >
+                Forgot your password?
+              </button>
+            )}
           </form>
 
           <div className="flex items-center gap-3">
