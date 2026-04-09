@@ -337,12 +337,13 @@ const Builder = () => {
   // Gate actions behind auth for guests
   const requireAuth = useCallback((action: "save" | "share" | "collaborate") => {
     if (!user) {
+      cacheGuestData();
       pendingActionRef.current = action;
       setAuthModalOpen(true);
       return true; // blocked
     }
     return false; // allowed
-  }, [user]);
+  }, [user, cacheGuestData]);
 
   // After auth completes, save guest setlist to Supabase
   const handleAuthenticated = useCallback(async () => {
