@@ -175,7 +175,7 @@ const SortableSlotItem = ({
                   <span className="hidden sm:inline">Archive.org</span>
                 </a>
                 {(archiveResult.date || archiveResult.venue) && (
-                  <span className="text-[10px] lg:text-sm text-muted-foreground font-body">
+                  <span className="text-xs lg:text-sm text-muted-foreground font-body">
                     {[archiveResult.date, archiveResult.venue].filter(Boolean).join(" · ")}
                   </span>
                 )}
