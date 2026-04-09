@@ -944,6 +944,12 @@ const Builder = () => {
               await globalPlaySetlist(activeSlots, setlist?.id);
             }}
           />
+          {/* Live thumbnail plate preview */}
+          {activeSlots.length > 0 && (
+            <div className="p-4 border-t border-border bg-[#0F0E0C]">
+              <ShowPlate setlistName={title || "Untitled"} size="thumb" />
+            </div>
+          )}
         </div>
 
         {/* Song Vault — hidden on mobile when setlist tab is active */}
