@@ -17,6 +17,8 @@ interface AuthModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onAuthenticated: () => void;
+  /** Called right before an OAuth redirect so the caller can persist state */
+  onBeforeRedirect?: () => void;
 }
 
 const AuthModal = ({ open, onOpenChange, onAuthenticated }: AuthModalProps) => {

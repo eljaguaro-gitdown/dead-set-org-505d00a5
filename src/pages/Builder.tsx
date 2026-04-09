@@ -163,6 +163,60 @@ const Builder = () => {
   const activeSlots = isGuestMode ? guestSlots : slots;
   const hasGuestData = guestSlots.length > 0;
 
+  // Restore cached guest data from sessionStorage (survives OAuth redirect)
+  const restoredRef = useRef(false);
+  useEffect(() => {
+    if (restoredRef.current || songs.length === 0) return;
+    const cached = sessionStorage.getItem("deadset-guest-cache");
+    if (!cached) return;
+    restoredRef.current = true;
+    try {
+      const parsed = JSON.parse(cached);
+      if (parsed.title) setTitle(parsed.title);
+      if (parsed.era) setSelectedEra(parsed.era);
+      if (parsed.description) setDescription(parsed.description);
+      if (parsed.slots?.length) {
+        const restored: SetlistSlotData[] = parsed.slots
+          .map((s: any) => {
+            const song = songs.find((sg) => sg.id === s.songId);
+            if (!song) return null;
+            return {
+              id: s.id || crypto.randomUUID(),
+              song,
+              version: null,
+              setNumber: s.setNumber,
+              position: s.position,
+              segueToNext: s.segueToNext || false,
+              notes: s.notes || "",
+            };
+          })
+          .filter(Boolean) as SetlistSlotData[];
+        if (restored.length > 0) setGuestSlots(restored);
+      }
+      // Don't clear cache yet — clear after successful save to DB
+    } catch { /* ignore corrupt cache */ }
+  }, [songs]);
+
+  // Helper: cache guest data to sessionStorage before auth redirect
+  const cacheGuestData = useCallback(() => {
+    const currentSlots = guestSlots.length > 0 ? guestSlots : [];
+    if (currentSlots.length === 0) return;
+    const payload = {
+      title,
+      era: selectedEra,
+      description,
+      slots: currentSlots.map((s) => ({
+        id: s.id,
+        songId: s.song.id,
+        setNumber: s.setNumber,
+        position: s.position,
+        segueToNext: s.segueToNext,
+        notes: s.notes,
+      })),
+    };
+    sessionStorage.setItem("deadset-guest-cache", JSON.stringify(payload));
+  }, [guestSlots, title, selectedEra, description]);
+
   // Initialize setlist for authenticated users (create new or load existing)
   const creatingRef = useRef(false);
   useEffect(() => {
