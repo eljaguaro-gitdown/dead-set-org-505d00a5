@@ -7,7 +7,7 @@ interface PageLayoutProps {
 
 const PageLayout = ({ children, className = "" }: PageLayoutProps) => {
   return (
-    <div className={`grain-overlay min-h-screen bg-background flex flex-col relative ${className}`}>
+    <div className={`grain-overlay min-h-screen bg-background flex flex-col relative ${className}`} style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
       {/* Gold radial glow — subtle warmth from above */}
       <div
         className="fixed inset-0 pointer-events-none z-0"

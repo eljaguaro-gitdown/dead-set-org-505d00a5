@@ -12,7 +12,8 @@ const MiniSetlistBar = ({ title, songCount, onExpand, pulse }: MiniSetlistBarPro
   return (
     <motion.button
       onClick={onExpand}
-      className="fixed bottom-0 left-0 right-0 z-40 h-12 bg-card/95 backdrop-blur-sm border-t border-border/60 flex items-center justify-between px-4 md:hidden"
+      className="fixed left-0 right-0 z-40 h-14 bg-card/95 backdrop-blur-sm border-t border-border/60 flex items-center justify-between px-4 md:hidden"
+      style={{ bottom: "env(safe-area-inset-bottom, 0px)" }}
       animate={pulse ? { scale: [1, 1.02, 1] } : {}}
       transition={{ duration: 0.3 }}
     >
