@@ -405,8 +405,8 @@ const SetlistPoster = () => {
                                   <Headphones className="w-3 h-3 inline" style={{ color: `hsl(${eraTheme.accent})` }} />
                                 ) : (
                                   <span
-                                    className="text-[11px] tabular-nums font-mono"
-                                    style={{ color: "hsl(28 15% 50%)" }}
+                                    className="text-base tabular-nums font-mono"
+                                    style={{ color: "hsl(28 15% 40%)" }}
                                   >
                                     {idx + 1}.
                                   </span>
@@ -416,14 +416,14 @@ const SetlistPoster = () => {
                               {/* Song title — handwritten */}
                               <div className="flex items-baseline gap-1 flex-1 min-w-0">
                                 <span
-                                  className={`font-hand text-[15px] sm:text-base leading-snug transition-colors ${isNowPlaying ? "font-semibold" : ""}`}
-                                  style={{ color: isNowPlaying ? `hsl(${eraTheme.accent})` : "hsl(220 50% 20%)" }}
+                                  className={`font-hand text-xl sm:text-2xl leading-relaxed transition-colors ${isNowPlaying ? "font-semibold" : ""}`}
+                                  style={{ color: isNowPlaying ? `hsl(${eraTheme.accent})` : "hsl(220 40% 12%)" }}
                                 >
                                   {slot.song.title}
                                 </span>
                                 {slot.segue_to_next && (
                                   <span
-                                    className="text-sm font-bold shrink-0"
+                                    className="text-xl font-bold shrink-0"
                                     style={{ color: `hsl(${eraTheme.accent})` }}
                                   >
                                     →
