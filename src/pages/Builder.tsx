@@ -252,6 +252,13 @@ const Builder = () => {
     }
   }, [setlist]);
 
+  // Fetch display name for share text
+  useEffect(() => {
+    if (!user) return;
+    supabase.from("profiles").select("display_name").eq("user_id", user.id).single()
+      .then(({ data }) => setDisplayName(data?.display_name || null));
+  }, [user]);
+
   const handleTitleBlur = useCallback(() => {
     if (!isGuestMode && title !== setlist?.title) {
       updateTitle(title);
@@ -1117,6 +1124,8 @@ const Builder = () => {
         open={shareOpen && !paramId}
         onOpenChange={setShareOpen}
         shareLink={getShareLink()}
+        creatorName={displayName || undefined}
+        setlistTitle={title}
       />
 
       {/* Share Flow with Show Plate (when setlist is saved) */}
