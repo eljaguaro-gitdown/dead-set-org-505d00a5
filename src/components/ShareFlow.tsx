@@ -71,6 +71,12 @@ const ShareFlow = ({
     window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`, "_blank");
   };
 
+  const handleTikTok = () => {
+    // TikTok doesn't have a direct share URL — download the plate for upload
+    handleDownload();
+    toast.success("Plate saved — upload it to TikTok!");
+  };
+
   if (!open) return null;
 
   return (
@@ -147,12 +153,15 @@ const ShareFlow = ({
               <Button variant="outline" size="sm" className="flex-1 font-body text-xs" onClick={handleFacebook}>
                 Facebook
               </Button>
+              <Button variant="outline" size="sm" className="flex-1 font-body text-xs" onClick={handleTikTok}>
+                TikTok ↓
+              </Button>
               <Button variant="outline" size="sm" className="flex-1 font-body text-xs" onClick={handleDownload}>
                 Instagram ↓
               </Button>
             </div>
             <p className="text-[10px] text-muted-foreground/50 font-body text-center mt-2">
-              For Instagram: save the plate and share to your story
+              For TikTok & Instagram: save the plate and share to your story
             </p>
           </div>
 
