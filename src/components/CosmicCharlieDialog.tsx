@@ -223,7 +223,7 @@ const CosmicCharlieDialog = ({
             <Star className="w-5 h-5 text-primary fill-primary/30" />
             Cosmic Charlie
           </DialogTitle>
-          <p className="text-xs text-muted-foreground font-body">Your AI Deadhead</p>
+          <p className="text-xs text-muted-foreground font-body">Your Deadhead Guide</p>
         </DialogHeader>
 
         <AnimatePresence mode="wait">
