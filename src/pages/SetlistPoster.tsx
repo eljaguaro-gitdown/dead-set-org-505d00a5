@@ -405,8 +405,8 @@ const SetlistPoster = () => {
                                   <Headphones className="w-3 h-3 inline" style={{ color: `hsl(${eraTheme.accent})` }} />
                                 ) : (
                                   <span
-                                    className="text-[11px] tabular-nums font-mono"
-                                    style={{ color: "hsl(28 15% 50%)" }}
+                                    className="text-base tabular-nums font-mono"
+                                    style={{ color: "hsl(28 15% 40%)" }}
                                   >
                                     {idx + 1}.
                                   </span>
@@ -423,7 +423,7 @@ const SetlistPoster = () => {
                                 </span>
                                 {slot.segue_to_next && (
                                   <span
-                                    className="text-sm font-bold shrink-0"
+                                    className="text-xl font-bold shrink-0"
                                     style={{ color: `hsl(${eraTheme.accent})` }}
                                   >
                                     →
