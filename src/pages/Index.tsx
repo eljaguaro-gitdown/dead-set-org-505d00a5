@@ -99,6 +99,12 @@ const Index = () => {
         >
           Browse
         </button>
+        <button
+          onClick={() => navigate("/builder?wizard=true")}
+          className="font-mono text-[10px] tracking-[0.2em] text-muted-foreground hover:text-primary transition-colors uppercase border border-primary/30 rounded-md px-2 py-1 hover:border-primary/60"
+        >
+          Build a setlist
+        </button>
         {user ? (
           <button
             onClick={() => navigate("/my-setlists")}
@@ -122,14 +128,17 @@ const Index = () => {
       {/* How It Works — 3 steps */}
       <HowItWorks />
 
-      {/* Trending carousel */}
+      {/* Personal note — the soul (humans before algorithms) */}
+      <PersonalNote />
+
+      {/* Community carousel */}
       {featured.length > 0 && (
         <section className="py-12 sm:py-20 border-t border-border/30">
           <div className="px-6 sm:px-12 mb-8">
             <div className="flex items-center gap-4">
               <div className="h-px flex-1 bg-border" />
               <span className="font-mono text-[10px] tracking-[0.3em] text-primary/60 uppercase">
-                🏆 Most Popular
+                From the community
               </span>
               <div className="h-px flex-1 bg-border" />
             </div>
@@ -191,9 +200,6 @@ const Index = () => {
           </div>
         </section>
       )}
-
-      {/* Personal note — the soul */}
-      <PersonalNote />
 
       {/* Minimal footer */}
       <footer className="py-8 border-t border-border/30">
