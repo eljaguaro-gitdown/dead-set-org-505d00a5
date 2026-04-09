@@ -662,9 +662,9 @@ const Builder = () => {
             <Button
               variant="default"
               size="sm"
-              className="shrink-0 h-10 px-3 gap-2 bg-gradient-to-r from-primary to-accent text-primary-foreground font-display text-sm shadow-md hover:shadow-lg hover:scale-105 transition-all duration-200 animate-pulse hover:animate-none"
+              className="shrink-0 h-10 px-3 gap-2 bg-gradient-to-r from-primary to-accent text-primary-foreground font-display text-sm shadow-md hover:shadow-lg hover:scale-105 transition-all duration-200 animate-[fadeInScale_0.4s_ease-out_forwards]"
               onClick={() => setAiOpen(true)}
-              title="Cosmic Charlie — Your AI Deadhead"
+              title="Cosmic Charlie — Your Deadhead Guide"
             >
               <Star className="w-5 h-5" />
               <span className="hidden sm:inline">Cosmic Charlie</span>

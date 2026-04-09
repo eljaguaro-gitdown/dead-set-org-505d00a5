@@ -6,7 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 
 import PageLayout from "@/components/PageLayout";
 import SiteHeader from "@/components/SiteHeader";
-import AdSenseLoader from "@/components/AdSenseLoader";
+
 import HeroSection from "@/components/landing/HeroSection";
 import HowItWorks from "@/components/landing/HowItWorks";
 import PersonalNote from "@/components/landing/PersonalNote";
@@ -91,7 +91,7 @@ const Index = () => {
 
   return (
     <PageLayout>
-      <AdSenseLoader />
+      
       <SiteHeader large>
         <button
           onClick={() => navigate("/browse")}
