@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Menu, Shield, MessageCircle } from "lucide-react";
 import { motion } from "framer-motion";
@@ -122,15 +122,34 @@ const SiteHeader = ({ children, large = false }: SiteHeaderProps) => {
                   <Menu className="w-5 h-5" />
                 </button>
               </SheetTrigger>
-              <SheetContent side="right" className="w-[260px] bg-background border-border p-0">
+              <SheetContent side="right" className="w-[280px] bg-background border-border p-0">
               <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
-                <div className="flex flex-col gap-1 p-4 pt-12">
-                  {nowPlaying}
-                  <ShareAppButton variant="full" className="w-full justify-start" />
-                  {messagesLink}
-                  {adminLink}
-                  {children}
-                </div>
+                <nav className="flex flex-col gap-1 p-5 pt-14">
+                  {nowPlaying && <div className="mb-2">{nowPlaying}</div>}
+                  {React.Children.map(children, (child) =>
+                    child ? (
+                      <SheetClose asChild>
+                        <div className="min-h-[44px] flex items-center">{child}</div>
+                      </SheetClose>
+                    ) : null
+                  )}
+                  <div className="h-px bg-border/40 my-2" />
+                  {messagesLink && (
+                    <SheetClose asChild>
+                      <div className="min-h-[44px] flex items-center">{messagesLink}</div>
+                    </SheetClose>
+                  )}
+                  {adminLink && (
+                    <SheetClose asChild>
+                      <div className="min-h-[44px] flex items-center">{adminLink}</div>
+                    </SheetClose>
+                  )}
+                  <SheetClose asChild>
+                    <div className="min-h-[44px] flex items-center">
+                      <ShareAppButton variant="full" className="w-full justify-start" />
+                    </div>
+                  </SheetClose>
+                </nav>
               </SheetContent>
             </Sheet>
           </div>

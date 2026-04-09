@@ -95,27 +95,27 @@ const Index = () => {
       <SiteHeader large>
         <button
           onClick={() => navigate("/browse")}
-          className="font-mono text-[10px] tracking-[0.2em] text-muted-foreground hover:text-primary transition-colors uppercase"
+          className="font-mono text-xs sm:text-[10px] tracking-[0.2em] text-muted-foreground hover:text-primary transition-colors uppercase min-h-[44px] flex items-center"
         >
           Browse
         </button>
         <button
           onClick={() => navigate("/builder?wizard=true")}
-          className="font-mono text-[10px] tracking-[0.2em] text-muted-foreground hover:text-primary transition-colors uppercase border border-primary/30 rounded-md px-2 py-1 hover:border-primary/60"
+          className="font-mono text-xs sm:text-[10px] tracking-[0.2em] text-muted-foreground hover:text-primary transition-colors uppercase border border-primary/30 rounded-md px-3 py-2 hover:border-primary/60 min-h-[44px] flex items-center"
         >
           Build a setlist
         </button>
         {user ? (
           <button
             onClick={() => navigate("/my-setlists")}
-            className="font-mono text-[10px] tracking-[0.2em] text-muted-foreground hover:text-primary transition-colors uppercase"
+            className="font-mono text-xs sm:text-[10px] tracking-[0.2em] text-muted-foreground hover:text-primary transition-colors uppercase min-h-[44px] flex items-center"
           >
             My Setlists
           </button>
         ) : (
           <button
             onClick={() => navigate("/auth")}
-            className="font-mono text-[10px] tracking-[0.2em] text-muted-foreground hover:text-primary transition-colors uppercase"
+            className="font-mono text-xs sm:text-[10px] tracking-[0.2em] text-muted-foreground hover:text-primary transition-colors uppercase min-h-[44px] flex items-center"
           >
             Sign In
           </button>
@@ -144,8 +144,8 @@ const Index = () => {
             </div>
           </div>
 
-          <div className="overflow-x-auto scrollbar-hide px-6 sm:px-12">
-            <div className="flex gap-5 min-w-max pb-2">
+          <div className="overflow-x-auto scrollbar-hide px-6 sm:px-12 snap-x snap-mandatory">
+            <div className="flex gap-4 sm:gap-5 min-w-max pb-2">
               {featured.map((setlist, i) => (
                 <motion.button
                   key={setlist.id}
@@ -153,7 +153,7 @@ const Index = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.06, duration: 0.4 }}
                   onClick={() => navigate(`/setlist/${setlist.id}`)}
-                  className="w-[240px] sm:w-[280px] shrink-0 border border-border bg-card rounded-xl p-5 text-left hover:border-border/80 hover:-translate-y-0.5 transition-all duration-200 group"
+                  className="w-[220px] sm:w-[280px] shrink-0 snap-start border border-border bg-card rounded-xl p-4 sm:p-5 text-left hover:border-border/80 hover:-translate-y-0.5 transition-all duration-200 group"
                 >
                   <div className="flex items-start justify-between gap-2">
                     <h3 className="font-display text-base font-bold text-foreground truncate group-hover:text-primary transition-colors">

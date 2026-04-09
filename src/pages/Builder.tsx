@@ -642,8 +642,8 @@ const Builder = () => {
       {!showWelcome && <>
       <header className="border-b border-border">
         {/* Row 1: Logo, title, saved indicator */}
-        <div className="px-3 sm:px-6 py-3 sm:py-5 flex items-center gap-2 sm:gap-5">
-          <button onClick={() => navigate("/")} className="font-display text-3xl sm:text-6xl text-primary shrink-0">
+        <div className="px-3 sm:px-6 py-2.5 sm:py-5 flex items-center gap-2 sm:gap-5">
+          <button onClick={() => navigate("/")} className="font-display text-2xl sm:text-6xl text-primary shrink-0">
             DS
           </button>
           {user && (
@@ -659,18 +659,18 @@ const Builder = () => {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             onBlur={handleTitleBlur}
-            className="bg-transparent border-none text-foreground font-display text-xl sm:text-4xl md:text-5xl p-0 h-auto focus-visible:ring-0 min-w-0 flex-1"
+            className="bg-transparent border-none text-foreground font-display text-lg sm:text-4xl md:text-5xl p-0 h-auto focus-visible:ring-0 min-w-0 flex-1"
           />
           {setlist && (
-            <span className="flex items-center gap-1 text-xs sm:text-sm text-accent font-body shrink-0" title="All changes are saved automatically">
-              <CheckCircle className="w-3 sm:w-4 h-3 sm:h-4" /> <span className="hidden sm:inline">Saved</span>
+            <span className="flex items-center gap-1 text-xs text-accent font-body shrink-0" title="All changes are saved automatically">
+              <CheckCircle className="w-3.5 h-3.5" />
             </span>
           )}
           {isGuestMode && guestSlots.length > 0 && (
             <Button
               variant="default"
               size="sm"
-              className="shrink-0 h-8 sm:h-9 px-3 gap-1.5 bg-primary text-primary-foreground font-body text-xs sm:text-sm"
+              className="shrink-0 h-9 px-3 gap-1.5 bg-primary text-primary-foreground font-body text-xs"
               onClick={handleSave}
             >
               <Save className="w-4 h-4" />
@@ -694,7 +694,7 @@ const Builder = () => {
                 <button
                   key={n}
                   onClick={() => setActiveSet(n)}
-                  className={`px-3 py-2 text-sm font-body rounded transition-colors ${
+                  className={`min-w-[44px] min-h-[44px] px-3 py-2 text-sm font-body rounded-[10px] transition-colors ${
                     activeSet === n
                       ? "bg-primary text-primary-foreground"
                       : "bg-muted text-muted-foreground hover:text-foreground"
@@ -787,7 +787,7 @@ const Builder = () => {
         <div className="flex border-b border-border bg-card/50">
           <button
             onClick={() => setMobileTab("setlist")}
-            className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-body transition-colors relative ${
+            className={`flex-1 flex items-center justify-center gap-2 py-3.5 text-sm font-body transition-colors relative ${
               mobileTab === "setlist"
                 ? "text-primary border-b-2 border-primary bg-primary/5"
                 : "text-muted-foreground"
@@ -803,7 +803,7 @@ const Builder = () => {
           </button>
           <button
             onClick={() => setMobileTab("songs")}
-            className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-body transition-colors ${
+            className={`flex-1 flex items-center justify-center gap-2 py-3.5 text-sm font-body transition-colors ${
               mobileTab === "songs"
                 ? "text-primary border-b-2 border-primary bg-primary/5"
                 : "text-muted-foreground"
@@ -843,7 +843,7 @@ const Builder = () => {
 
         {/* Song Vault — hidden on mobile when setlist tab is active */}
         <div className={`w-full lg:w-[380px] border-b lg:border-b-0 border-l-0 lg:border-l border-border overflow-hidden flex flex-col ${
-          isMobile ? (mobileTab === "songs" ? "flex-1 pb-12" : "hidden") : "max-h-[calc(100vh-85px)]"
+          isMobile ? (mobileTab === "songs" ? "flex-1 pb-20" : "hidden") : "max-h-[calc(100vh-85px)]"
         }`}>
           {songsLoading ? (
             <div className="p-4 space-y-3">
