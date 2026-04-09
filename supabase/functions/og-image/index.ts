@@ -155,7 +155,7 @@ Deno.serve(async (req) => {
     // ===== DEFAULT: HTML with OG meta tags for crawlers =====
     const ogTitle = `${setlist.title} — Dead Set`;
     const ogDescription = `A${eraName ? ` ${eraName}` : ""} dream setlist by ${creatorName}. ${songCount} songs including ${firstSongs}...`;
-    const siteUrl = "https://dead-set-harmony.lovable.app";
+    const siteUrl = "https://dead-set.org";
     const canonicalUrl = `${siteUrl}/setlist/${setlistId}`;
     const ogImageUrl = `${supabaseUrl}/functions/v1/og-image?id=${setlistId}&format=image`;
 
