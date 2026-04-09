@@ -26,8 +26,8 @@ const ShareFlow = ({
   const [plateDataUrl, setPlateDataUrl] = useState<string | null>(null);
 
   const shareUrl = `${window.location.origin}/setlist/${setlistId}`;
-  const shareTitle = `${setlistName} — Dead Set`;
-  const shareText = `Just built my${eraName ? ` ${eraName}` : ""} set on Dead Set ⚡ ${setlistName}${venueName ? ` — ${venueName}` : ""}`;
+  const shareTitle = `${setlistName} — Dead-Set.Org`;
+  const shareText = `Just built my${eraName ? ` ${eraName}` : ""} set on Dead-Set.Org ⚡ ${setlistName}${venueName ? ` — ${venueName}` : ""}`;
 
   const handleImageReady = useCallback((dataUrl: string) => {
     setPlateDataUrl(dataUrl);

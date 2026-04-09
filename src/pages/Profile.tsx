@@ -194,7 +194,7 @@ const Profile = () => {
           {/* Logo Plate Preview */}
           {homeState && (
             <div className="p-4 bg-[#0F0E0C] rounded-lg">
-              <ShowPlate setlistName="DEAD SET" venueState={homeState} size="thumb" />
+              <ShowPlate setlistName="DEAD-SET.ORG" venueState={homeState} size="thumb" />
             </div>
           )}
 

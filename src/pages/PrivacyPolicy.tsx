@@ -30,7 +30,7 @@ const PrivacyPolicy = () => {
           <section className="space-y-3">
             <h2 className="font-display text-lg text-foreground">1. Information We Collect</h2>
             <p>
-              When you create an account on Dead Set, we collect your email address and any profile
+              When you create an account on Dead-Set.Org, we collect your email address and any profile
               information you choose to provide (such as a display name or avatar). We also collect
               data you create through the app, including setlists, chat messages, and upvotes.
             </p>
@@ -43,7 +43,7 @@ const PrivacyPolicy = () => {
           <section className="space-y-3">
             <h2 className="font-display text-lg text-foreground">2. How We Use Your Information</h2>
             <ul className="list-disc list-inside space-y-1 pl-2">
-              <li>To provide and maintain the Dead Set service</li>
+              <li>To provide and maintain the Dead-Set.Org service</li>
               <li>To enable collaborative setlist building and sharing</li>
               <li>To communicate with you about your account</li>
               <li>To improve and personalize your experience</li>
@@ -139,7 +139,7 @@ const PrivacyPolicy = () => {
           <section className="space-y-3">
             <h2 className="font-display text-lg text-foreground">8. Children's Privacy</h2>
             <p>
-              Dead Set is not intended for children under 13. We do not knowingly collect personal
+              Dead-Set.Org is not intended for children under 13. We do not knowingly collect personal
               information from children under 13. If you believe we have collected such information,
               please contact us so we can remove it.
             </p>
@@ -165,7 +165,7 @@ const PrivacyPolicy = () => {
 
       <footer className="py-4 text-center border-t border-border/50">
         <p className="font-mono text-[10px] text-muted-foreground/70 tracking-wider">
-          © {new Date().getFullYear()} Dead Set — Built by Deadheads, for Deadheads
+          © {new Date().getFullYear()} Dead-Set.Org — Built by Deadheads, for Deadheads
         </p>
       </footer>
     </PageLayout>

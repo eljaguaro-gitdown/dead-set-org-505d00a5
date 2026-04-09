@@ -79,7 +79,7 @@ const Auth = () => {
         <div className="w-full max-w-sm space-y-8">
           <div className="flex flex-col items-center gap-3">
             <StealYourFace size={80} />
-            <h1 className="font-display text-4xl text-primary">Dead Set</h1>
+            <h1 className="font-display text-4xl text-primary">Dead-Set.Org</h1>
             <p className="font-hand text-xl text-muted-foreground">
               {isForgot ? "We'll get you back in." : isSignUp ? "Come on in. There's room." : "The music never stopped."}
             </p>
@@ -177,7 +177,7 @@ const Auth = () => {
               onClick={() => navigate("/")}
               className="font-mono text-[10px] text-muted-foreground/40 hover:text-muted-foreground tracking-widest uppercase transition-colors"
             >
-              ← Back to Dead Set
+              ← Back to Dead-Set.Org
             </button>
           </div>
         </div>

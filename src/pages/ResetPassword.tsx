@@ -58,7 +58,7 @@ const ResetPassword = () => {
         <div className="w-full max-w-sm space-y-8">
           <div className="flex flex-col items-center gap-3">
             <StealYourFace size={80} />
-            <h1 className="font-display text-4xl text-primary">Dead Set</h1>
+            <h1 className="font-display text-4xl text-primary">Dead-Set.Org</h1>
             <p className="font-hand text-xl text-muted-foreground">
               Pick a new password.
             </p>

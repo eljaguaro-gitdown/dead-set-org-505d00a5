@@ -42,7 +42,7 @@ const ShareDialog = ({ open, onOpenChange, shareLink }: ShareDialogProps) => {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: "Join my Dead Set setlist!",
+          title: "Join my Dead-Set.Org setlist!",
           text: "Collaborate on this Grateful Dead dream setlist",
           url: shareLink,
         });

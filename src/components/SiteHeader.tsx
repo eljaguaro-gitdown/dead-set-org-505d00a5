@@ -101,7 +101,7 @@ const SiteHeader = ({ children, large = false }: SiteHeaderProps) => {
             large ? "text-xl sm:text-2xl md:text-3xl" : "text-lg sm:text-xl md:text-2xl"
           }`}
         >
-          Dead Set
+          Dead-Set.Org
         </span>
       </button>
       {(children || adminLink || messagesLink || nowPlaying) && (
