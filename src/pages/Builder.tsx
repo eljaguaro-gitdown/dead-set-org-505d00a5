@@ -643,41 +643,32 @@ const Builder = () => {
             </Select>
           </div>
 
-          {/* Row 2b: Action buttons */}
-          <div className="flex items-center gap-1.5 flex-wrap">
-            {user && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-10 w-10 shrink-0 text-foreground relative"
-                onClick={handleCollaborate}
-                title="Chat"
-              >
-                <MessageCircle className="w-5 h-5" />
-                {chatUnread && (
-                  <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-primary rounded-full animate-pulse border-2 border-card" />
-                )}
-              </Button>
-            )}
+          {/* Row 2b: Action buttons — collapsed toolbar */}
+          <div className="flex items-center gap-1.5 ml-auto">
+            {/* Primary: Cosmic Charlie */}
             <Button
               variant="default"
               size="sm"
-              className="shrink-0 h-10 px-3 gap-2 bg-gradient-to-r from-primary to-accent text-primary-foreground font-display text-sm shadow-md hover:shadow-lg hover:scale-105 transition-all duration-200 animate-[fadeInScale_0.4s_ease-out_forwards]"
+              className="shrink-0 h-10 px-4 gap-2 bg-gradient-to-r from-primary to-accent text-primary-foreground font-display text-sm shadow-md hover:shadow-lg hover:scale-105 transition-all duration-200 animate-[fadeInScale_0.4s_ease-out_forwards]"
               onClick={() => setAiOpen(true)}
               title="Cosmic Charlie — Your Deadhead Guide"
             >
               <Star className="w-5 h-5" />
               <span className="hidden sm:inline">Cosmic Charlie</span>
             </Button>
+
+            {/* Secondary: Share */}
             <Button
               variant="ghost"
               size="icon"
-              className={`h-10 w-10 shrink-0 ${setlist?.is_public ? "text-accent" : "text-foreground"}`}
-              onClick={handleTogglePublic}
-              title={setlist?.is_public ? "Public — visible on Browse" : "Private — only you and collaborators"}
+              className="h-10 w-10 shrink-0 text-foreground"
+              onClick={handleShare}
+              title="Share"
             >
-              <Globe className="w-5 h-5" />
+              <Share2 className="w-5 h-5" />
             </Button>
+
+            {/* Secondary: View Poster (only when saved) */}
             {paramId && (
               <Button
                 variant="ghost"
@@ -689,37 +680,25 @@ const Builder = () => {
                 <FileImage className="w-5 h-5" />
               </Button>
             )}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-10 w-10 shrink-0 text-foreground"
-              onClick={handleShare}
-              title="Share"
-            >
-              <Share2 className="w-5 h-5" />
-            </Button>
-            {user && (
-              <>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-10 w-10 shrink-0 text-muted-foreground hover:text-foreground sm:hidden"
-                  onClick={() => navigate("/my-setlists")}
-                  title="My Setlists"
-                >
-                  <List className="w-5 h-5" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-10 w-10 shrink-0 text-muted-foreground hover:text-foreground"
-                  onClick={async () => { await signOut(); navigate("/"); }}
-                  title="Sign Out"
-                >
-                  <LogOut className="w-5 h-5" />
-                </Button>
-              </>
-            )}
+
+            {/* Overflow menu */}
+            {(() => {
+              const hasOverflowItems = true; // Globe toggle is always available
+              const showOverflow = isMobile || hasOverflowItems;
+              if (!showOverflow) return null;
+              return (
+                <OverflowMenu
+                  user={user}
+                  isMobile={isMobile}
+                  isPublic={!!setlist?.is_public}
+                  onTogglePublic={handleTogglePublic}
+                  onCollaborate={handleCollaborate}
+                  onSignOut={async () => { await signOut(); navigate("/"); }}
+                  onMySetlists={() => navigate("/my-setlists")}
+                  chatUnread={chatUnread}
+                />
+              );
+            })()}
           </div>
         </div>
       </header>
