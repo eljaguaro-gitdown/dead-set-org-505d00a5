@@ -596,7 +596,6 @@ const SetlistPoster = () => {
             </p>
             <ShowPlate
               setlistName={setlist.title}
-              eraName={eraName}
               size="full"
             />
             <div className="flex justify-center mt-4">
