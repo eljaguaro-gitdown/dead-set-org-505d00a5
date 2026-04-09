@@ -694,7 +694,7 @@ const Builder = () => {
                 <button
                   key={n}
                   onClick={() => setActiveSet(n)}
-                  className={`px-3 py-2 text-sm font-body rounded transition-colors ${
+                  className={`min-w-[44px] min-h-[44px] px-3 py-2 text-sm font-body rounded-[10px] transition-colors ${
                     activeSet === n
                       ? "bg-primary text-primary-foreground"
                       : "bg-muted text-muted-foreground hover:text-foreground"
@@ -787,7 +787,7 @@ const Builder = () => {
         <div className="flex border-b border-border bg-card/50">
           <button
             onClick={() => setMobileTab("setlist")}
-            className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-body transition-colors relative ${
+            className={`flex-1 flex items-center justify-center gap-2 py-3.5 text-sm font-body transition-colors relative ${
               mobileTab === "setlist"
                 ? "text-primary border-b-2 border-primary bg-primary/5"
                 : "text-muted-foreground"
@@ -803,7 +803,7 @@ const Builder = () => {
           </button>
           <button
             onClick={() => setMobileTab("songs")}
-            className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-body transition-colors ${
+            className={`flex-1 flex items-center justify-center gap-2 py-3.5 text-sm font-body transition-colors ${
               mobileTab === "songs"
                 ? "text-primary border-b-2 border-primary bg-primary/5"
                 : "text-muted-foreground"
