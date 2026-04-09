@@ -36,7 +36,7 @@ const EMAIL_TEMPLATES: Record<string, React.ComponentType<any>> = {
 }
 
 // Configuration
-const SITE_NAME = "Dead Set"
+const SITE_NAME = "Dead-Set.Org"
 const SENDER_DOMAIN = "notify.dead-set.org"
 const ROOT_DOMAIN = "dead-set.org"
 const FROM_DOMAIN = "notify.dead-set.org" // Domain shown in From address (may be root or sender subdomain)
