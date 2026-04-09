@@ -2,11 +2,22 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { User } from "@supabase/supabase-js";
 
+interface ConversationMember {
+  userId: string;
+  displayName: string;
+  avatarUrl: string | null;
+}
+
 interface Conversation {
   id: string;
+  isGroup: boolean;
+  name: string | null;
+  // For 1-on-1 backward compat
   otherUserId: string;
   otherUserName: string;
   otherUserAvatar: string | null;
+  // For group chats
+  members: ConversationMember[];
   lastMessageAt: string;
   lastMessagePreview?: string;
   unreadCount: number;
@@ -46,14 +57,29 @@ export const useDirectMessages = (user: User | null) => {
     setLoading(true);
     const { data } = await supabase
       .from("conversations")
-      .select("id, user_one, user_two, last_message_at")
+      .select("id, user_one, user_two, last_message_at, name, is_group")
       .order("last_message_at", { ascending: false });
 
     if (data) {
       const enriched = await Promise.all(
         data.map(async (c) => {
+          // Load members from conversation_members table
+          const { data: membersData } = await supabase
+            .from("conversation_members")
+            .select("user_id")
+            .eq("conversation_id", c.id);
+
+          const memberProfiles = await Promise.all(
+            (membersData || [])
+              .filter((m) => m.user_id !== user.id)
+              .map(async (m) => {
+                const profile = await resolveProfile(m.user_id);
+                return { userId: m.user_id, displayName: profile.name, avatarUrl: profile.avatar };
+              })
+          );
+
           const otherUserId = c.user_one === user.id ? c.user_two : c.user_one;
-          const profile = await resolveProfile(otherUserId);
+          const otherProfile = await resolveProfile(otherUserId);
 
           // Get last message preview
           const { data: lastMsg } = await supabase
@@ -72,11 +98,18 @@ export const useDirectMessages = (user: User | null) => {
             .eq("read", false)
             .neq("sender_id", user.id);
 
+          const displayName = c.is_group
+            ? c.name || memberProfiles.map((m) => m.displayName).join(", ") || "Group Chat"
+            : otherProfile.name;
+
           return {
             id: c.id,
+            isGroup: c.is_group || false,
+            name: c.name,
             otherUserId,
-            otherUserName: profile.name,
-            otherUserAvatar: profile.avatar,
+            otherUserName: displayName,
+            otherUserAvatar: c.is_group ? null : otherProfile.avatar,
+            members: memberProfiles,
             lastMessageAt: c.last_message_at,
             lastMessagePreview: lastMsg?.content,
             unreadCount: count || 0,
@@ -162,7 +195,6 @@ export const useDirectMessages = (user: User | null) => {
               }];
             });
 
-            // Mark as read if not from me
             if (newMsg.sender_id !== user.id) {
               await supabase
                 .from("direct_messages")
@@ -171,7 +203,6 @@ export const useDirectMessages = (user: User | null) => {
             }
           }
 
-          // Refresh conversation list
           loadConversations();
         }
       )
@@ -182,7 +213,7 @@ export const useDirectMessages = (user: User | null) => {
     };
   }, [user, activeConversationId, loadConversations]);
 
-  // Start or find existing conversation
+  // Start or find existing 1-on-1 conversation
   const startConversation = useCallback(async (otherUserId: string) => {
     if (!user) return null;
 
@@ -194,6 +225,7 @@ export const useDirectMessages = (user: User | null) => {
       .select("id")
       .eq("user_one", u1)
       .eq("user_two", u2)
+      .eq("is_group", false)
       .single();
 
     if (existing) {
@@ -204,11 +236,16 @@ export const useDirectMessages = (user: User | null) => {
     // Create new conversation
     const { data: created, error } = await supabase
       .from("conversations")
-      .insert({ user_one: u1, user_two: u2 })
+      .insert({ user_one: u1, user_two: u2, is_group: false })
       .select("id")
       .single();
 
     if (created) {
+      // Add both users to conversation_members
+      await supabase.from("conversation_members").insert([
+        { conversation_id: created.id, user_id: user.id },
+        { conversation_id: created.id, user_id: otherUserId },
+      ]);
       setActiveConversationId(created.id);
       await loadConversations();
       return created.id;
@@ -217,6 +254,47 @@ export const useDirectMessages = (user: User | null) => {
     console.error("Failed to create conversation:", error);
     return null;
   }, [user, loadConversations]);
+
+  // Start a group conversation
+  const startGroupConversation = useCallback(async (memberIds: string[], name?: string) => {
+    if (!user || memberIds.length === 0) return null;
+
+    const allMembers = [user.id, ...memberIds];
+
+    // Create conversation (use user.id for both user_one/user_two as placeholder for groups)
+    const { data: created, error } = await supabase
+      .from("conversations")
+      .insert({
+        user_one: user.id,
+        user_two: memberIds[0],
+        is_group: true,
+        name: name || null,
+      })
+      .select("id")
+      .single();
+
+    if (created) {
+      // Add all members
+      await supabase.from("conversation_members").insert(
+        allMembers.map((uid) => ({ conversation_id: created.id, user_id: uid }))
+      );
+      setActiveConversationId(created.id);
+      await loadConversations();
+      return created.id;
+    }
+
+    console.error("Failed to create group conversation:", error);
+    return null;
+  }, [user, loadConversations]);
+
+  // Add member to existing group
+  const addGroupMember = useCallback(async (conversationId: string, userId: string) => {
+    await supabase.from("conversation_members").insert({
+      conversation_id: conversationId,
+      user_id: userId,
+    });
+    await loadConversations();
+  }, [loadConversations]);
 
   // Send message
   const sendMessage = useCallback(async (content: string) => {
@@ -228,7 +306,6 @@ export const useDirectMessages = (user: User | null) => {
       content: content.trim(),
     });
 
-    // Update last_message_at
     await supabase
       .from("conversations")
       .update({ last_message_at: new Date().toISOString() })
@@ -256,6 +333,8 @@ export const useDirectMessages = (user: User | null) => {
     setActiveConversationId,
     loading,
     startConversation,
+    startGroupConversation,
+    addGroupMember,
     sendMessage,
     searchUsers,
     totalUnread,
