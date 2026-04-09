@@ -189,18 +189,18 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
           />
         </div>
 
-        <div className="px-4 py-2.5 flex items-center gap-3">
+        <div className="px-4 py-3 flex items-center gap-3">
           <button
             onClick={togglePlay}
             disabled={loading || !!error}
-            className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center shrink-0 disabled:opacity-50 transition-all hover:brightness-110"
+            className="w-12 h-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center shrink-0 disabled:opacity-50 transition-all hover:brightness-110"
           >
             {loading ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
+              <Loader2 className="w-5 h-5 animate-spin" />
             ) : playing ? (
-              <Pause className="w-4 h-4" />
+              <Pause className="w-5 h-5" />
             ) : (
-              <Play className="w-4 h-4 ml-0.5" />
+              <Play className="w-5 h-5 ml-0.5" />
             )}
           </button>
 
@@ -209,17 +209,21 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
             onClick={() => activeSetlistId && navigate(`/setlist/${activeSetlistId}`)}
           >
             {error ? (
-              <p className="text-xs text-destructive font-body truncate">{error}</p>
+              <p className="text-sm text-destructive font-body truncate">{error}</p>
             ) : (
               <>
-                <p className="text-sm text-foreground font-body truncate font-semibold flex items-center gap-1">
+                <p className="text-base sm:text-lg text-foreground font-display truncate font-bold flex items-center gap-1.5">
                   {songTitle}
-                  {activeSetlistId && <ChevronRight className="w-3.5 h-3.5 text-primary/70 shrink-0" />}
+                  {activeSetlistId && <ChevronRight className="w-4 h-4 text-primary/70 shrink-0" />}
                 </p>
-                <p className="text-[11px] text-muted-foreground font-mono truncate tracking-wider">
+                <p className="text-sm sm:text-base text-primary/90 font-body truncate font-medium">
                   {showDate} {venue ? `· ${venue}` : ""}
-                  {activeSetlistId && <span className="text-primary/80 ml-1 animate-[pulse_2s_cubic-bezier(0.4,0,0.6,1)_infinite]">· View Poster ↗</span>}
                 </p>
+                {activeSetlistId && (
+                  <p className="text-[10px] text-muted-foreground font-mono tracking-wider mt-0.5 hidden sm:block">
+                    <span className="text-primary/60 animate-[pulse_2s_cubic-bezier(0.4,0,0.6,1)_infinite]">View Poster ↗</span>
+                  </p>
+                )}
               </>
             )}
           </div>
