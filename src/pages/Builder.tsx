@@ -977,6 +977,37 @@ const Builder = () => {
           )}
         </div>
 
+        {/* Show Plate — between setlist and vault on desktop */}
+        {!isMobile && activeSlots.length > 0 && (
+          <div className="w-[320px] border-l border-border bg-[#0F0E0C] flex flex-col shrink-0">
+            <div className="p-4">
+              <ShowPlate setlistName={title || "Untitled"} size="thumb" />
+            </div>
+            {paramId && (
+              <div className="px-4 pb-4 flex flex-col gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full gap-2 border-primary/40 text-primary hover:bg-primary/10 hover:border-primary font-display text-sm transition-all"
+                  onClick={() => navigate(`/setlist/${paramId}`)}
+                >
+                  <FileImage className="w-4 h-4" />
+                  View Poster
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full gap-2 border-primary/40 text-primary hover:bg-primary/10 hover:border-primary font-display text-sm transition-all"
+                  onClick={() => setShareOpen(true)}
+                >
+                  <Share2 className="w-4 h-4" />
+                  Share Plate
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Song Vault — hidden on mobile when setlist tab is active */}
         <div className={`w-full lg:w-[380px] border-b lg:border-b-0 border-l-0 lg:border-l border-border overflow-hidden flex flex-col ${
           isMobile ? (mobileTab === "songs" ? "flex-1 pb-20" : "hidden") : "max-h-[calc(100vh-85px)]"
