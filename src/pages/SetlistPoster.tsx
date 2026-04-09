@@ -471,8 +471,8 @@ const SetlistPoster = () => {
                                       if (showDate || venue) {
                                         return (
                                           <p
-                                            className="font-mono text-[10px] tracking-wider mb-1"
-                                            style={{ color: `hsl(${eraTheme.accent})` }}
+                                            className="font-mono text-xs tracking-wider mb-1"
+                                            style={{ color: "hsl(28 30% 25%)" }}
                                           >
                                             🎧 {showDate}{venue ? ` · ${venue}` : ""}
                                           </p>
@@ -482,7 +482,7 @@ const SetlistPoster = () => {
                                     })()}
                                     {slot.notes && (
                                       <p
-                                        className="font-hand text-xs leading-relaxed italic"
+                                        className="font-hand text-base sm:text-lg leading-relaxed italic"
                                         style={{ color: "hsl(28 20% 35%)" }}
                                       >
                                         "{slot.notes}"
