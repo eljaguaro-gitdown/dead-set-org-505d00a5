@@ -15,9 +15,11 @@ interface ShareDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   shareLink: string;
+  creatorName?: string;
+  setlistTitle?: string;
 }
 
-const ShareDialog = ({ open, onOpenChange, shareLink }: ShareDialogProps) => {
+const ShareDialog = ({ open, onOpenChange, shareLink, creatorName, setlistTitle }: ShareDialogProps) => {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
@@ -38,12 +40,16 @@ const ShareDialog = ({ open, onOpenChange, shareLink }: ShareDialogProps) => {
     }
   };
 
+  const shareText = creatorName && setlistTitle
+    ? `${creatorName} built "${setlistTitle}" on Dead-Set.Org — check it out and collaborate!`
+    : "Check out this setlist on Dead-Set.Org — jump in and collaborate!";
+
   const handleShare = async () => {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: "Join my Dead-Set.Org setlist!",
-          text: "Collaborate on this Grateful Dead dream setlist",
+          title: `${setlistTitle || "Dream Setlist"} — Dead-Set.Org`,
+          text: shareText,
           url: shareLink,
         });
       } catch {
