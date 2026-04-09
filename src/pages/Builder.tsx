@@ -118,7 +118,7 @@ const Builder = () => {
   const [chatOpen, setChatOpen] = useState(false);
   const [chatUnread, setChatUnread] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
-  const [aiOpen, setAiOpen] = useState(false);
+  const [charlieOpen, setCharlieOpen] = useState(false);
   const [initialized, setInitialized] = useState(false);
   const { playSingle, playSetlist: globalPlaySetlist, playingSlot } = useAudioPlayer();
   const [description, setDescription] = useState<string | null>(null);
@@ -361,7 +361,7 @@ const Builder = () => {
     saveGuestSetlist();
   }, [user, navigate]);
 
-  const handleApplyAISuggestion = useCallback(
+  const handleApplySuggestion = useCallback(
     async (suggestion: { setlist_name?: string; explanation: string; sets: { setNumber: number; songs: { songId: string; title: string; segueToNext: boolean; notes: string; position: number }[] }[] }) => {
       const newTitle = suggestion.setlist_name?.trim() || title;
       setTitle(newTitle);
@@ -390,14 +390,14 @@ const Builder = () => {
         for (const slot of slots) {
           await removeSlot(slot.id);
         }
-        await addAISongsToCurrentSetlist(suggestion);
+        await addSongsToCurrentSetlist(suggestion);
         if (newTitle !== setlist?.title) updateTitle(newTitle);
       }
     },
     [isGuestMode, slots, songs, removeSlot, title, setlist, updateTitle]
   );
 
-  const handleCreateNewFromAI = useCallback(
+  const handleCreateNewFromCharlie = useCallback(
     async (suggestion: { setlist_name?: string; explanation: string; sets: { setNumber: number; songs: { songId: string; title: string; segueToNext: boolean; notes: string; position: number }[] }[] }, customTitle?: string) => {
       if (isGuestMode) {
         const newTitle = customTitle || suggestion.setlist_name?.trim() || "Untitled Setlist";
@@ -430,7 +430,7 @@ const Builder = () => {
       const created = await createSetlist(newTitle, selectedEra);
       if (!created) return;
       // Persist slots directly before navigating (avoids stale closure / unmount issues)
-      await addAISongsToSetlist(suggestion, created.id);
+      await addSongsToSetlist(suggestion, created.id);
       if (suggestion.explanation) {
         await supabase.from("setlists").update({ description: suggestion.explanation }).eq("id", created.id);
       }
@@ -439,7 +439,7 @@ const Builder = () => {
     [isGuestMode, songs, createSetlist, selectedEra, navigate]
   );
 
-  const addAISongsToCurrentSetlist = useCallback(
+  const addSongsToCurrentSetlist = useCallback(
     async (suggestion: { sets: { setNumber: number; songs: { songId: string; title: string; segueToNext: boolean; notes: string; position: number }[] }[] }) => {
       for (const set of suggestion.sets) {
         for (const suggestedSong of set.songs) {
@@ -461,7 +461,7 @@ const Builder = () => {
     [songs, addSlot]
   );
 
-  const addAISongsToSetlist = useCallback(
+  const addSongsToSetlist = useCallback(
     async (suggestion: { sets: { setNumber: number; songs: { songId: string; title: string; segueToNext: boolean; notes: string; position: number }[] }[] }, targetSetlistId: string) => {
       for (const set of suggestion.sets) {
         for (const suggestedSong of set.songs) {
@@ -624,9 +624,9 @@ const Builder = () => {
 
   return (
     <PageLayout minimal>
-      {/* AI Welcome Overlay for fresh builder */}
+      {/* Cosmic Charlie Welcome for fresh builder */}
       {showWelcome && (
-        <AIWelcomeOverlay
+        <CosmicCharlieWelcome
           eras={eras}
           onGenerated={handleWelcomeGenerated}
           onSkip={() => {
@@ -729,7 +729,7 @@ const Builder = () => {
               variant="default"
               size="sm"
               className="shrink-0 h-10 px-4 gap-2 bg-gradient-to-r from-primary to-accent text-primary-foreground font-display text-sm shadow-md hover:shadow-lg hover:scale-105 transition-all duration-200 animate-[fadeInScale_0.4s_ease-out_forwards]"
-              onClick={() => setAiOpen(true)}
+              onClick={() => setCharlieOpen(true)}
               title="Cosmic Charlie — Your Deadhead Guide"
             >
               <Star className="w-5 h-5" />
@@ -891,17 +891,17 @@ const Builder = () => {
       />
 
       {/* Cosmic Charlie Dialog */}
-      <AIDeadHeadDialog
-        open={aiOpen}
-        onOpenChange={setAiOpen}
+      <CosmicCharlieDialog
+        open={charlieOpen}
+        onOpenChange={setCharlieOpen}
         eraId={selectedEra}
         currentSlots={activeSlots.map((s) => ({
           songTitle: s.song.title,
           setNumber: s.setNumber,
           segue: s.segueToNext,
         }))}
-        onApplySuggestion={handleApplyAISuggestion}
-        onCreateNewSetlist={handleCreateNewFromAI}
+        onApplySuggestion={handleApplySuggestion}
+        onCreateNewSetlist={handleCreateNewFromCharlie}
       />
 
       {/* Inline Auth Modal for guests */}
