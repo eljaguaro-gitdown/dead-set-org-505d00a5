@@ -131,6 +131,7 @@ const Builder = () => {
   const [savedSetlistId, setSavedSetlistId] = useState<string | null>(null);
   const [guestPromptShown, setGuestPromptShown] = useState(false);
   const [showGuestPrompt, setShowGuestPrompt] = useState(false);
+  const [displayName, setDisplayName] = useState<string | null>(null);
 
   // Auth modal state
   const [authModalOpen, setAuthModalOpen] = useState(false);
