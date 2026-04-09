@@ -17,6 +17,7 @@ import SetlistPoster from "./pages/SetlistPoster";
 import Admin from "./pages/Admin";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import NotFound from "./pages/NotFound";
+import ResetPassword from "./pages/ResetPassword";
 import Messages from "./pages/Messages";
 
 const queryClient = new QueryClient();
