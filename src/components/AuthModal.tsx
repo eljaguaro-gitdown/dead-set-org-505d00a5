@@ -17,9 +17,11 @@ interface AuthModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onAuthenticated: () => void;
+  /** Called right before an OAuth redirect so the caller can persist state */
+  onBeforeRedirect?: () => void;
 }
 
-const AuthModal = ({ open, onOpenChange, onAuthenticated }: AuthModalProps) => {
+const AuthModal = ({ open, onOpenChange, onAuthenticated, onBeforeRedirect }: AuthModalProps) => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -59,8 +61,9 @@ const AuthModal = ({ open, onOpenChange, onAuthenticated }: AuthModalProps) => {
   };
 
   const handleGoogleLogin = async () => {
+    onBeforeRedirect?.();
     const { error } = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
+      redirect_uri: `${window.location.origin}/builder`,
     });
     if (error) toast.error(error.message);
   };

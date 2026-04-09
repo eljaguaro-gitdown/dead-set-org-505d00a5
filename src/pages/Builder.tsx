@@ -163,6 +163,60 @@ const Builder = () => {
   const activeSlots = isGuestMode ? guestSlots : slots;
   const hasGuestData = guestSlots.length > 0;
 
+  // Restore cached guest data from sessionStorage (survives OAuth redirect)
+  const restoredRef = useRef(false);
+  useEffect(() => {
+    if (restoredRef.current || songs.length === 0) return;
+    const cached = sessionStorage.getItem("deadset-guest-cache");
+    if (!cached) return;
+    restoredRef.current = true;
+    try {
+      const parsed = JSON.parse(cached);
+      if (parsed.title) setTitle(parsed.title);
+      if (parsed.era) setSelectedEra(parsed.era);
+      if (parsed.description) setDescription(parsed.description);
+      if (parsed.slots?.length) {
+        const restored: SetlistSlotData[] = parsed.slots
+          .map((s: any) => {
+            const song = songs.find((sg) => sg.id === s.songId);
+            if (!song) return null;
+            return {
+              id: s.id || crypto.randomUUID(),
+              song,
+              version: null,
+              setNumber: s.setNumber,
+              position: s.position,
+              segueToNext: s.segueToNext || false,
+              notes: s.notes || "",
+            };
+          })
+          .filter(Boolean) as SetlistSlotData[];
+        if (restored.length > 0) setGuestSlots(restored);
+      }
+      // Don't clear cache yet — clear after successful save to DB
+    } catch { /* ignore corrupt cache */ }
+  }, [songs]);
+
+  // Helper: cache guest data to sessionStorage before auth redirect
+  const cacheGuestData = useCallback(() => {
+    const currentSlots = guestSlots.length > 0 ? guestSlots : [];
+    if (currentSlots.length === 0) return;
+    const payload = {
+      title,
+      era: selectedEra,
+      description,
+      slots: currentSlots.map((s) => ({
+        id: s.id,
+        songId: s.song.id,
+        setNumber: s.setNumber,
+        position: s.position,
+        segueToNext: s.segueToNext,
+        notes: s.notes,
+      })),
+    };
+    sessionStorage.setItem("deadset-guest-cache", JSON.stringify(payload));
+  }, [guestSlots, title, selectedEra, description]);
+
   // Initialize setlist for authenticated users (create new or load existing)
   const creatingRef = useRef(false);
   useEffect(() => {
@@ -283,12 +337,13 @@ const Builder = () => {
   // Gate actions behind auth for guests
   const requireAuth = useCallback((action: "save" | "share" | "collaborate") => {
     if (!user) {
+      cacheGuestData();
       pendingActionRef.current = action;
       setAuthModalOpen(true);
       return true; // blocked
     }
     return false; // allowed
-  }, [user]);
+  }, [user, cacheGuestData]);
 
   // After auth completes, save guest setlist to Supabase
   const handleAuthenticated = useCallback(async () => {
@@ -309,17 +364,65 @@ const Builder = () => {
 
   useEffect(() => {
     if (!user || hasSavedGuestRef.current) return;
-    if (guestSlotsRef.current.length === 0) return;
-    // We have a newly authenticated user with guest slots — save them
+    // Check in-memory guest slots first, then sessionStorage cache
+    const hasInMemory = guestSlotsRef.current.length > 0;
+    const cachedRaw = sessionStorage.getItem("deadset-guest-cache");
+    if (!hasInMemory && !cachedRaw) return;
+
     hasSavedGuestRef.current = true;
+
     const saveGuestSetlist = async () => {
+      let slotsToSave = guestSlotsRef.current;
+      let titleToSave = guestTitleRef.current;
+      let eraToSave = guestEraRef.current;
+
+      // If no in-memory slots, restore from cache (OAuth redirect case)
+      if (slotsToSave.length === 0 && cachedRaw) {
+        try {
+          const parsed = JSON.parse(cachedRaw);
+          if (parsed.title) titleToSave = parsed.title;
+          if (parsed.era) eraToSave = parsed.era;
+          if (parsed.description) setDescription(parsed.description);
+          // We need songs to resolve IDs — wait for them
+          if (songs.length === 0) {
+            // Songs not loaded yet; reset flag and let effect re-run
+            hasSavedGuestRef.current = false;
+            return;
+          }
+          slotsToSave = (parsed.slots || [])
+            .map((s: any) => {
+              const song = songs.find((sg: any) => sg.id === s.songId);
+              if (!song) return null;
+              return {
+                id: s.id || crypto.randomUUID(),
+                song,
+                version: null,
+                setNumber: s.setNumber,
+                position: s.position,
+                segueToNext: s.segueToNext || false,
+                notes: s.notes || "",
+              };
+            })
+            .filter(Boolean) as SetlistSlotData[];
+          if (slotsToSave.length === 0) {
+            sessionStorage.removeItem("deadset-guest-cache");
+            hasSavedGuestRef.current = false;
+            return;
+          }
+        } catch {
+          sessionStorage.removeItem("deadset-guest-cache");
+          hasSavedGuestRef.current = false;
+          return;
+        }
+      }
+
       const shareToken = crypto.randomUUID();
       const { data: newSetlist, error } = await supabase
         .from("setlists")
         .insert({
           creator_id: user.id,
-          title: guestTitleRef.current,
-          era_id: guestEraRef.current || null,
+          title: titleToSave,
+          era_id: eraToSave || null,
           share_token: shareToken,
           is_public: false,
           is_collaborative: false,
@@ -333,8 +436,7 @@ const Builder = () => {
         return;
       }
 
-      // Persist all guest slots
-      const slotsToInsert = guestSlotsRef.current.map((slot) => ({
+      const slotsToInsert = slotsToSave.map((slot) => ({
         id: slot.id,
         setlist_id: newSetlist.id,
         set_number: slot.setNumber,
@@ -350,7 +452,8 @@ const Builder = () => {
         await supabase.from("setlist_slots").insert(slotsToInsert);
       }
 
-      // Clear guest state
+      // Clear guest state and cache
+      sessionStorage.removeItem("deadset-guest-cache");
       setGuestSlots([]);
       setSavedSetlistId(newSetlist.id);
       setShowCelebration(true);
@@ -359,7 +462,7 @@ const Builder = () => {
       pendingActionRef.current = null;
     };
     saveGuestSetlist();
-  }, [user, navigate]);
+  }, [user, navigate, songs]);
 
   const handleApplySuggestion = useCallback(
     async (suggestion: { setlist_name?: string; explanation: string; sets: { setNumber: number; songs: { songId: string; title: string; segueToNext: boolean; notes: string; position: number }[] }[] }) => {
@@ -909,6 +1012,7 @@ const Builder = () => {
         open={authModalOpen}
         onOpenChange={setAuthModalOpen}
         onAuthenticated={handleAuthenticated}
+        onBeforeRedirect={cacheGuestData}
       />
 
       {/* Mobile mini-setlist bar — shown when browsing Song Vault */}
@@ -934,6 +1038,7 @@ const Builder = () => {
       <GuestSignInPrompt
         open={showGuestPrompt}
         onSignIn={() => {
+          cacheGuestData();
           setShowGuestPrompt(false);
           pendingActionRef.current = "save";
           setAuthModalOpen(true);
