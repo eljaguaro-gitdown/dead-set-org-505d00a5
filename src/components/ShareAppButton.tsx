@@ -9,10 +9,10 @@ import {
 } from "@/components/ui/popover";
 import { toast } from "sonner";
 
-const SHARE_URL = "https://dead-set-harmony.lovable.app";
+const SHARE_URL = "https://dead-set.org";
 const SHARE_TITLE = "Dead Set — Build Your Dream Dead Show";
 const SHARE_TEXT =
-  "Check out Dead Set — an AI-powered Grateful Dead setlist builder. Build your dream show, explore eras, and listen to legendary versions. ⚡🌹";
+  "Check out Dead Set — a Grateful Dead dream setlist builder. Build your dream show, explore eras, and listen to legendary versions. ⚡🌹";
 
 interface ShareAppButtonProps {
   variant?: "icon" | "full";
