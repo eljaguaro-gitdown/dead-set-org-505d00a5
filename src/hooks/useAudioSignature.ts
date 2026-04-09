@@ -19,7 +19,7 @@ export const useAudioSignature = () => {
       sessionStorage.setItem("deadset-sig-played", "1");
 
       const audio = new Audio("/audio/shakedown-signature.mp3");
-      audio.volume = 0.35;
+      audio.volume = 0.7;
       audio.play().catch(() => {});
     };
 
