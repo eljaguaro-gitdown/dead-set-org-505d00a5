@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Send, Search, MessageCircle, Plus, User } from "lucide-react";
+import { ArrowLeft, Send, Search, MessageCircle, Plus, Users, X, Check } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -22,6 +22,7 @@ const Messages = () => {
     setActiveConversationId,
     loading,
     startConversation,
+    startGroupConversation,
     sendMessage,
     searchUsers,
   } = useDirectMessages(user);
@@ -30,6 +31,9 @@ const Messages = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [showSearch, setShowSearch] = useState(false);
+  const [groupMode, setGroupMode] = useState(false);
+  const [selectedUsers, setSelectedUsers] = useState<any[]>([]);
+  const [groupName, setGroupName] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -60,8 +64,30 @@ const Messages = () => {
   };
 
   const handleStartConversation = async (otherUserId: string) => {
+    if (groupMode) {
+      // Toggle user selection for group
+      setSelectedUsers((prev) => {
+        const exists = prev.find((u) => u.user_id === otherUserId);
+        if (exists) return prev.filter((u) => u.user_id !== otherUserId);
+        const userResult = searchResults.find((u) => u.user_id === otherUserId);
+        return userResult ? [...prev, userResult] : prev;
+      });
+      return;
+    }
     await startConversation(otherUserId);
     setShowSearch(false);
+    setSearchQuery("");
+    setSearchResults([]);
+  };
+
+  const handleCreateGroup = async () => {
+    if (selectedUsers.length === 0) return;
+    const memberIds = selectedUsers.map((u) => u.user_id);
+    await startGroupConversation(memberIds, groupName || undefined);
+    setShowSearch(false);
+    setGroupMode(false);
+    setSelectedUsers([]);
+    setGroupName("");
     setSearchQuery("");
     setSearchResults([]);
   };
@@ -100,14 +126,14 @@ const Messages = () => {
             <div className="p-4 border-b border-border flex items-center justify-between">
               <h2 className="font-display text-lg text-foreground">Messages</h2>
               <button
-                onClick={() => setShowSearch(!showSearch)}
+                onClick={() => { setShowSearch(!showSearch); setGroupMode(false); setSelectedUsers([]); }}
                 className="p-2 rounded-md hover:bg-muted transition-colors"
               >
                 <Plus className="w-4 h-4 text-muted-foreground" />
               </button>
             </div>
 
-            {/* User search */}
+            {/* User search / new conversation */}
             <AnimatePresence>
               {showSearch && (
                 <motion.div
@@ -117,6 +143,53 @@ const Messages = () => {
                   className="overflow-hidden border-b border-border"
                 >
                   <div className="p-3">
+                    {/* Toggle: DM vs Group */}
+                    <div className="flex gap-1 mb-2">
+                      <button
+                        onClick={() => { setGroupMode(false); setSelectedUsers([]); }}
+                        className={`flex-1 text-[10px] font-mono uppercase tracking-wider py-1.5 rounded transition-colors ${
+                          !groupMode ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        Direct Message
+                      </button>
+                      <button
+                        onClick={() => setGroupMode(true)}
+                        className={`flex-1 text-[10px] font-mono uppercase tracking-wider py-1.5 rounded transition-colors flex items-center justify-center gap-1 ${
+                          groupMode ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        <Users className="w-3 h-3" /> Group
+                      </button>
+                    </div>
+
+                    {/* Group name input */}
+                    {groupMode && (
+                      <Input
+                        value={groupName}
+                        onChange={(e) => setGroupName(e.target.value)}
+                        placeholder="Group name (optional)..."
+                        className="mb-2 bg-background border-border text-foreground font-body text-sm"
+                      />
+                    )}
+
+                    {/* Selected users for group */}
+                    {groupMode && selectedUsers.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mb-2">
+                        {selectedUsers.map((u) => (
+                          <span
+                            key={u.user_id}
+                            className="inline-flex items-center gap-1 bg-primary/20 text-primary text-[10px] font-body px-2 py-0.5 rounded-full"
+                          >
+                            {u.display_name}
+                            <button onClick={() => setSelectedUsers((prev) => prev.filter((p) => p.user_id !== u.user_id))}>
+                              <X className="w-2.5 h-2.5" />
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
                     <div className="relative">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
                       <Input
@@ -127,27 +200,49 @@ const Messages = () => {
                         autoFocus
                       />
                     </div>
+
                     {searchResults.length > 0 && (
                       <div className="mt-2 space-y-1">
-                        {searchResults.map((u) => (
-                          <button
-                            key={u.user_id}
-                            onClick={() => handleStartConversation(u.user_id)}
-                            className="w-full flex items-center gap-3 p-2 rounded-md hover:bg-muted transition-colors text-left"
-                          >
-                            <Avatar className="w-8 h-8">
-                              <AvatarImage src={u.avatar_url || undefined} />
-                              <AvatarFallback className="bg-primary/20 text-primary text-xs">
-                                {(u.display_name || "?")[0].toUpperCase()}
-                              </AvatarFallback>
-                            </Avatar>
-                            <span className="text-sm font-body text-foreground">{u.display_name || "Unknown"}</span>
-                          </button>
-                        ))}
+                        {searchResults.map((u) => {
+                          const isSelected = selectedUsers.some((s) => s.user_id === u.user_id);
+                          return (
+                            <button
+                              key={u.user_id}
+                              onClick={() => handleStartConversation(u.user_id)}
+                              className={`w-full flex items-center gap-3 p-2 rounded-md hover:bg-muted transition-colors text-left ${
+                                isSelected ? "bg-primary/10" : ""
+                              }`}
+                            >
+                              <Avatar className="w-8 h-8">
+                                <AvatarImage src={u.avatar_url || undefined} />
+                                <AvatarFallback className="bg-primary/20 text-primary text-xs">
+                                  {(u.display_name || "?")[0].toUpperCase()}
+                                </AvatarFallback>
+                              </Avatar>
+                              <span className="text-sm font-body text-foreground flex-1">{u.display_name || "Unknown"}</span>
+                              {groupMode && isSelected && (
+                                <Check className="w-4 h-4 text-primary" />
+                              )}
+                            </button>
+                          );
+                        })}
                       </div>
                     )}
+
                     {searchQuery && searchResults.length === 0 && (
                       <p className="text-xs text-muted-foreground mt-2 text-center">No users found</p>
+                    )}
+
+                    {/* Create group button */}
+                    {groupMode && selectedUsers.length > 0 && (
+                      <Button
+                        onClick={handleCreateGroup}
+                        size="sm"
+                        className="w-full mt-3 bg-primary text-primary-foreground"
+                      >
+                        <Users className="w-3.5 h-3.5 mr-1" />
+                        Create Group ({selectedUsers.length + 1})
+                      </Button>
                     )}
                   </div>
                 </motion.div>
@@ -172,12 +267,18 @@ const Messages = () => {
                     conv.id === activeConversationId ? "bg-muted/70" : ""
                   }`}
                 >
-                  <Avatar className="w-10 h-10 shrink-0">
-                    <AvatarImage src={conv.otherUserAvatar || undefined} />
-                    <AvatarFallback className="bg-primary/20 text-primary text-sm">
-                      {conv.otherUserName[0].toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
+                  {conv.isGroup ? (
+                    <div className="w-10 h-10 shrink-0 rounded-full bg-primary/20 flex items-center justify-center">
+                      <Users className="w-5 h-5 text-primary" />
+                    </div>
+                  ) : (
+                    <Avatar className="w-10 h-10 shrink-0">
+                      <AvatarImage src={conv.otherUserAvatar || undefined} />
+                      <AvatarFallback className="bg-primary/20 text-primary text-sm">
+                        {conv.otherUserName[0].toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                  )}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-display text-foreground truncate">{conv.otherUserName}</span>
@@ -214,13 +315,26 @@ const Messages = () => {
               )}
               {activeConv && (
                 <>
-                  <Avatar className="w-8 h-8">
-                    <AvatarImage src={activeConv.otherUserAvatar || undefined} />
-                    <AvatarFallback className="bg-primary/20 text-primary text-xs">
-                      {activeConv.otherUserName[0].toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <span className="font-display text-sm text-foreground">{activeConv.otherUserName}</span>
+                  {activeConv.isGroup ? (
+                    <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
+                      <Users className="w-4 h-4 text-primary" />
+                    </div>
+                  ) : (
+                    <Avatar className="w-8 h-8">
+                      <AvatarImage src={activeConv.otherUserAvatar || undefined} />
+                      <AvatarFallback className="bg-primary/20 text-primary text-xs">
+                        {activeConv.otherUserName[0].toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                  )}
+                  <div>
+                    <span className="font-display text-sm text-foreground">{activeConv.otherUserName}</span>
+                    {activeConv.isGroup && activeConv.members.length > 0 && (
+                      <p className="text-[10px] text-muted-foreground font-body">
+                        {activeConv.members.length + 1} members
+                      </p>
+                    )}
+                  </div>
                 </>
               )}
             </div>
