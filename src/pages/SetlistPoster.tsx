@@ -9,6 +9,7 @@ import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 import StealYourFace from "@/components/StealYourFace";
 import DancingBear from "@/components/DancingBear";
 import ShareDropdown from "@/components/ShareDropdown";
+import ShareFlow from "@/components/ShareFlow";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -56,6 +57,7 @@ const SetlistPoster = () => {
   const [upvoteCount, setUpvoteCount] = useState(0);
   const [upvoting, setUpvoting] = useState(false);
   const [hoveredSlot, setHoveredSlot] = useState<string | null>(null);
+  const [shareFlowOpen, setShareFlowOpen] = useState(false);
 
   const eraTheme = useMemo(() => getEraTheme(eraName), [eraName]);
 
