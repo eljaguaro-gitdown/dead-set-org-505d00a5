@@ -69,11 +69,14 @@ const Auth = () => {
     <PageLayout>
       <div className="flex-1 flex items-center justify-center px-4">
         <div className="w-full max-w-sm space-y-8">
-          <div className="flex flex-col items-center gap-4">
+          <div className="flex flex-col items-center gap-3">
             <StealYourFace size={80} />
-            <h1 className="font-display text-4xl text-foreground">Dead Set</h1>
-            <p className="text-muted-foreground font-body text-sm">
-              {isSignUp ? "Create your account" : "Welcome back"}
+            <h1 className="font-display text-4xl text-primary">Dead Set</h1>
+            <p className="font-hand text-xl text-muted-foreground">
+              {isSignUp ? "Come on in. There's room." : "The music never stopped."}
+            </p>
+            <p className="font-body text-sm text-muted-foreground/70">
+              {isSignUp ? "Create your account" : "Sign in to your setlists"}
             </p>
           </div>
 
@@ -110,6 +113,12 @@ const Auth = () => {
             </Button>
           </form>
 
+          <div className="flex items-center gap-3">
+            <div className="h-px flex-1 bg-border" />
+            <span className="font-mono text-[10px] text-muted-foreground/50 tracking-widest uppercase">or</span>
+            <div className="h-px flex-1 bg-border" />
+          </div>
+
           <Button
             variant="outline"
             className="w-full border-border text-foreground hover:bg-muted font-body gap-2"
@@ -124,15 +133,23 @@ const Auth = () => {
             Continue with Google
           </Button>
 
-          <p className="text-center text-sm text-muted-foreground font-body">
-            {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
+          <div className="flex flex-col items-center gap-3">
+            <p className="text-center text-sm text-muted-foreground font-body">
+              {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
+              <button
+                onClick={() => setIsSignUp(!isSignUp)}
+                className="text-primary hover:underline"
+              >
+                {isSignUp ? "Sign in" : "Sign up"}
+              </button>
+            </p>
             <button
-              onClick={() => setIsSignUp(!isSignUp)}
-              className="text-primary hover:underline"
+              onClick={() => navigate("/")}
+              className="font-mono text-[10px] text-muted-foreground/40 hover:text-muted-foreground tracking-widest uppercase transition-colors"
             >
-              {isSignUp ? "Sign in" : "Sign up"}
+              ← Back to Dead Set
             </button>
-          </p>
+          </div>
         </div>
       </div>
     </PageLayout>
