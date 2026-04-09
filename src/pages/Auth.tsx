@@ -15,6 +15,7 @@ const Auth = () => {
   const [searchParams] = useSearchParams();
   const explicitRedirect = searchParams.get("redirect");
   const [isSignUp, setIsSignUp] = useState(false);
+  const [isForgot, setIsForgot] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -32,7 +33,14 @@ const Auth = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      if (isSignUp) {
+      if (isForgot) {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/reset-password`,
+        });
+        if (error) throw error;
+        toast.success("Check your email for a reset link!");
+        setIsForgot(false);
+      } else if (isSignUp) {
         const { error, data } = await supabase.auth.signUp({
           email,
           password,
