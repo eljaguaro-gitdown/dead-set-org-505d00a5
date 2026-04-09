@@ -1126,6 +1126,7 @@ const Builder = () => {
         shareLink={getShareLink()}
         creatorName={displayName || undefined}
         setlistTitle={title}
+        description={description}
       />
 
       {/* Share Flow with Show Plate (when setlist is saved) */}
