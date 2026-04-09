@@ -965,6 +965,7 @@ const Builder = () => {
         open={authModalOpen}
         onOpenChange={setAuthModalOpen}
         onAuthenticated={handleAuthenticated}
+        onBeforeRedirect={cacheGuestData}
       />
 
       {/* Mobile mini-setlist bar — shown when browsing Song Vault */}
@@ -990,6 +991,7 @@ const Builder = () => {
       <GuestSignInPrompt
         open={showGuestPrompt}
         onSignIn={() => {
+          cacheGuestData();
           setShowGuestPrompt(false);
           pendingActionRef.current = "save";
           setAuthModalOpen(true);
