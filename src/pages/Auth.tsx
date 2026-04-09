@@ -154,13 +154,24 @@ const Auth = () => {
 
           <div className="flex flex-col items-center gap-3">
             <p className="text-center text-sm text-muted-foreground font-body">
-              {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
-              <button
-                onClick={() => setIsSignUp(!isSignUp)}
-                className="text-primary hover:underline"
-              >
-                {isSignUp ? "Sign in" : "Sign up"}
-              </button>
+              {isForgot ? (
+                <button
+                  onClick={() => setIsForgot(false)}
+                  className="text-primary hover:underline"
+                >
+                  Back to sign in
+                </button>
+              ) : (
+                <>
+                  {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
+                  <button
+                    onClick={() => setIsSignUp(!isSignUp)}
+                    className="text-primary hover:underline"
+                  >
+                    {isSignUp ? "Sign in" : "Sign up"}
+                  </button>
+                </>
+              )}
             </p>
             <button
               onClick={() => navigate("/")}
