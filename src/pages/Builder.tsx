@@ -945,8 +945,8 @@ const Builder = () => {
               await globalPlaySetlist(activeSlots, setlist?.id);
             }}
           />
-          {/* Show Plate preview with CTA */}
-          {activeSlots.length > 0 && (
+          {/* Show Plate on mobile only */}
+          {isMobile && activeSlots.length > 0 && (
             <div className="border-t border-border bg-[#0F0E0C]">
               <div className="p-4">
                 <ShowPlate setlistName={title || "Untitled"} size="thumb" />
