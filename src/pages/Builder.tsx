@@ -405,7 +405,8 @@ const Builder = () => {
         await supabase.from("setlist_slots").insert(slotsToInsert);
       }
 
-      // Clear guest state
+      // Clear guest state and cache
+      sessionStorage.removeItem("deadset-guest-cache");
       setGuestSlots([]);
       setSavedSetlistId(newSetlist.id);
       setShowCelebration(true);
