@@ -173,7 +173,30 @@ const Profile = () => {
               <Label className="font-body text-sm text-muted-foreground">Email</Label>
               <Input value={user.email || ""} disabled className="bg-muted border-border text-muted-foreground font-body" />
             </div>
+            <div className="space-y-2">
+              <Label className="font-body text-sm text-foreground">Home State</Label>
+              <Select value={homeState} onValueChange={setHomeState}>
+                <SelectTrigger className="bg-card/80 backdrop-blur-sm border-border text-foreground font-body">
+                  <SelectValue placeholder="Select your state" />
+                </SelectTrigger>
+                <SelectContent className="bg-card border-border">
+                  {US_STATES.map((s) => (
+                    <SelectItem key={s.code} value={s.code} className="font-body text-sm">
+                      {s.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground font-body">Your logo plate will flex your home state</p>
+            </div>
           </div>
+
+          {/* Logo Plate Preview */}
+          {homeState && (
+            <div className="p-4 bg-[#0F0E0C] rounded-lg">
+              <ShowPlate setlistName="DEAD SET" venueState={homeState} size="thumb" />
+            </div>
+          )}
 
           <Button onClick={handleSave} disabled={saving} className="w-full font-body gap-1.5">
             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
