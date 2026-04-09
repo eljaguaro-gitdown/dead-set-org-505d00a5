@@ -125,7 +125,7 @@ const Profile = () => {
         </Button>
       </SiteHeader>
 
-      <main className="flex-1 max-w-md mx-auto w-full px-4 py-8">
+      <main className="flex-1 max-w-md mx-auto w-full px-4 py-8 overflow-y-auto">
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
