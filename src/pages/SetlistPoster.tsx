@@ -239,6 +239,12 @@ const SetlistPoster = () => {
           >
             <Play className="w-3 h-3 fill-current" /> Play All
           </button>
+          <button
+            onClick={() => setShareFlowOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-body bg-primary/10 border border-primary/30 text-primary hover:bg-primary/20 transition-colors"
+          >
+            <Share2 className="w-3 h-3" /> Share Plate
+          </button>
           <ShareDropdown url={shareUrl} ogUrl={ogShareUrl} title={shareTitle} description={shareDescription} />
         </div>
       </header>
