@@ -10,6 +10,7 @@ import StealYourFace from "@/components/StealYourFace";
 import DancingBear from "@/components/DancingBear";
 import ShareDropdown from "@/components/ShareDropdown";
 import ShareFlow from "@/components/ShareFlow";
+import ShowPlate from "@/components/ShowPlate";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 
