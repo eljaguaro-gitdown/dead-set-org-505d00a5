@@ -10,9 +10,9 @@ import {
 import { toast } from "sonner";
 
 const SHARE_URL = "https://dead-set.org";
-const SHARE_TITLE = "Dead-Set.Org — Build Your Dream Dead Show";
+const SHARE_TITLE = "Dead-Set.Org — The Music Never Stops";
 const SHARE_TEXT =
-  "Check out Dead-Set.Org — a Grateful Dead dream setlist builder. Build your dream show, explore eras, and listen to legendary versions. ⚡🌹";
+  "Check out Dead-Set.Org — built by Deadheads, for Deadheads. Discover rare gems, build your dream show, and explore 50 years of live recordings from the Archive. ⚡🌹";
 
 interface ShareAppButtonProps {
   variant?: "icon" | "full";
