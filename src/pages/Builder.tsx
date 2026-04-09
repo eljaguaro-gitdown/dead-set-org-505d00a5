@@ -977,12 +977,42 @@ const Builder = () => {
           )}
         </div>
 
-        {/* Show Plate — between setlist and vault on desktop */}
+        {/* Show Plate + Poster preview — between setlist and vault on desktop */}
         {!isMobile && activeSlots.length > 0 && (
-          <div className="w-[320px] border-l border-border bg-[#0F0E0C] flex flex-col shrink-0">
+          <div className="w-[320px] border-l border-border bg-[#0F0E0C] flex flex-col shrink-0 overflow-y-auto max-h-[calc(100vh-85px)]">
+            {/* Plate */}
             <div className="p-4">
               <ShowPlate setlistName={title || "Untitled"} size="thumb" />
             </div>
+
+            {/* Mini Poster preview */}
+            <div className="mx-4 mb-4 rounded-lg border border-primary/20 bg-gradient-to-b from-[#1a1815] to-[#0d0c0a] p-4 relative overflow-hidden">
+              <div className="absolute inset-0 opacity-[0.04] pointer-events-none" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 256 256\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23n)\'/%3E%3C/svg%3E")' }} />
+              <h4 className="font-hand text-lg text-primary text-center mb-1 relative z-10">{title || "Untitled"}</h4>
+              <div className="h-px bg-primary/20 mb-3" />
+              {[1, 2, 3].map((setNum) => {
+                const setSlotItems = activeSlots.filter(s => s.setNumber === setNum);
+                if (setSlotItems.length === 0) return null;
+                return (
+                  <div key={setNum} className="mb-3 last:mb-0 relative z-10">
+                    <p className="font-mono text-[9px] text-muted-foreground/50 uppercase tracking-widest mb-1">
+                      {setNum === 3 ? "Encore" : `Set ${setNum}`}
+                    </p>
+                    <div className="space-y-0.5">
+                      {setSlotItems.map((slot, i) => (
+                        <span key={slot.id} className="font-body text-xs text-foreground/70 inline">
+                          {slot.song.title}
+                          {slot.segueToNext && <span className="text-primary mx-1">›</span>}
+                          {!slot.segueToNext && i < setSlotItems.length - 1 && <span className="text-muted-foreground/30 mx-1">·</span>}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* CTA buttons */}
             {paramId && (
               <div className="px-4 pb-4 flex flex-col gap-2">
                 <Button
