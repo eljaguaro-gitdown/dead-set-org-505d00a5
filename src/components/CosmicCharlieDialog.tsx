@@ -26,7 +26,7 @@ interface AISuggestion {
   sets: AISuggestionSet[];
 }
 
-interface AIDeadHeadDialogProps {
+interface CosmicCharlieDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   eraId: string | null;
@@ -61,14 +61,14 @@ const slideVariants = {
   exit: (direction: number) => ({ x: direction > 0 ? -200 : 200, opacity: 0 }),
 };
 
-const AIDeadHeadDialog = ({
+const CosmicCharlieDialog = ({
   open,
   onOpenChange,
   eraId,
   currentSlots,
   onApplySuggestion,
   onCreateNewSetlist,
-}: AIDeadHeadDialogProps) => {
+}: CosmicCharlieDialogProps) => {
   const [mode, setMode] = useState<"build" | "improve" | null>(null);
   const [preferences, setPreferences] = useState("");
   const [loading, setLoading] = useState(false);
@@ -662,4 +662,4 @@ const AIDeadHeadDialog = ({
   );
 };
 
-export default AIDeadHeadDialog;
+export default CosmicCharlieDialog;
