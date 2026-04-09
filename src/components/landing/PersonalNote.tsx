@@ -14,7 +14,7 @@ const PersonalNote = () => (
       <blockquote className="font-hand text-xl sm:text-2xl text-muted-foreground leading-relaxed">
         "The band may be gone, but the music never stopped. Thanks to an incredible
         community — and the Internet Archive preserving 50 years of live recordings —
-        there are still endless gems waiting to be found. I built Dead Set to help you
+        there are still endless gems waiting to be found. I built Dead-Set.Org to help you
         find them, share them, and keep the flame alive."
       </blockquote>
 
