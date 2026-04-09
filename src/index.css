@@ -24,7 +24,7 @@
     --secondary-foreground: 35 20% 92%;
 
     --muted: 240 12% 14%;
-    --muted-foreground: 33 12% 50%;
+    --muted-foreground: 33 15% 65%;
 
     --accent: 40 55% 48%;
     --accent-foreground: 240 20% 4%;
@@ -64,10 +64,10 @@
     --glow-gold: 40 65% 52% / 0.3;
 
     /* Text hierarchy */
-    --text-bright: 35 25% 93%;
-    --text-mid: 30 10% 56%;
-    --text-dim: 30 8% 38%;
-    --text-ghost: 30 6% 22%;
+    --text-bright: 35 25% 95%;
+    --text-mid: 30 12% 68%;
+    --text-dim: 30 10% 50%;
+    --text-ghost: 30 8% 32%;
 
     /* Typography */
     --font-display: 'Playfair Display', serif;
