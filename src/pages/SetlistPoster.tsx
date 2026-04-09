@@ -591,6 +591,17 @@ const SetlistPoster = () => {
           </div>
         </motion.article>
       </div>
+
+      {/* Share Flow with Show Plate */}
+      <ShareFlow
+        open={shareFlowOpen}
+        onClose={() => setShareFlowOpen(false)}
+        setlistId={id || ""}
+        setlistName={setlist?.title || "Dream Setlist"}
+        eraName={eraName}
+        creatorName={creatorName}
+        songCount={slots.length}
+      />
     </div>
   );
 };

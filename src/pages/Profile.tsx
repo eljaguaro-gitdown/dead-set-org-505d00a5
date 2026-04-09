@@ -11,12 +11,23 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import PageLayout from "@/components/PageLayout";
 import SiteHeader from "@/components/SiteHeader";
+import ShowPlate from "@/components/ShowPlate";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+const US_STATES = [
+  { code: "CA", name: "California" }, { code: "NY", name: "New York" }, { code: "OR", name: "Oregon" },
+  { code: "TX", name: "Texas" }, { code: "OH", name: "Ohio" }, { code: "MA", name: "Massachusetts" },
+  { code: "IL", name: "Illinois" }, { code: "CO", name: "Colorado" }, { code: "WA", name: "Washington" },
+  { code: "GA", name: "Georgia" }, { code: "NJ", name: "New Jersey" }, { code: "PA", name: "Pennsylvania" },
+  { code: "NC", name: "North Carolina" }, { code: "MD", name: "Maryland" }, { code: "CT", name: "Connecticut" },
+];
 
 const Profile = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const [displayName, setDisplayName] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [homeState, setHomeState] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
