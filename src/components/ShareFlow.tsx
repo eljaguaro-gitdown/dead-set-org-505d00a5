@@ -16,18 +16,34 @@ interface ShareFlowProps {
   eraName?: string | null;
   creatorName?: string;
   songCount?: number;
+  description?: string | null;
 }
 
 const ShareFlow = ({
   open, onClose, setlistId, setlistName,
   showDate = "", venueName = "", venueState = "",
-  eraName, creatorName, songCount,
+  eraName, creatorName, songCount, description,
 }: ShareFlowProps) => {
   const [plateDataUrl, setPlateDataUrl] = useState<string | null>(null);
 
+  // Distill Charlie's liner notes into a show one-liner for sharing
+  const getShowOneLiner = (): string => {
+    if (description) {
+      // Grab the first sentence as the spirit of the show
+      const firstSentence = description.split(/(?<=[.!?])\s+/)[0] || "";
+      // Trim to ~120 chars for share-friendliness
+      const oneLiner = firstSentence.length > 120
+        ? firstSentence.slice(0, 117).replace(/[,\s]+$/, "") + "…"
+        : firstSentence;
+      if (oneLiner) return oneLiner;
+    }
+    return setlistName;
+  };
+
   const shareUrl = `${window.location.origin}/setlist/${setlistId}`;
   const shareTitle = `${setlistName} — Dead-Set.Org`;
-  const shareText = `Just built my${eraName ? ` ${eraName}` : ""} set on Dead-Set.Org ⚡ ${setlistName}${venueName ? ` — ${venueName}` : ""}`;
+  const oneLiner = getShowOneLiner();
+  const shareText = `${oneLiner} ⚡ ${setlistName} on Dead-Set.Org`;
 
   const handleImageReady = useCallback((dataUrl: string) => {
     setPlateDataUrl(dataUrl);

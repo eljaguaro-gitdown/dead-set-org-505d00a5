@@ -17,9 +17,10 @@ interface ShareDialogProps {
   shareLink: string;
   creatorName?: string;
   setlistTitle?: string;
+  description?: string | null;
 }
 
-const ShareDialog = ({ open, onOpenChange, shareLink, creatorName, setlistTitle }: ShareDialogProps) => {
+const ShareDialog = ({ open, onOpenChange, shareLink, creatorName, setlistTitle, description }: ShareDialogProps) => {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
@@ -40,9 +41,24 @@ const ShareDialog = ({ open, onOpenChange, shareLink, creatorName, setlistTitle 
     }
   };
 
-  const shareText = creatorName && setlistTitle
-    ? `${creatorName} built "${setlistTitle}" on Dead-Set.Org — check it out and collaborate!`
-    : "Check out this setlist on Dead-Set.Org — jump in and collaborate!";
+  // Distill Charlie's notes into a one-liner for the share text
+  const getOneLiner = (): string => {
+    if (description) {
+      const firstSentence = description.split(/(?<=[.!?])\s+/)[0] || "";
+      const trimmed = firstSentence.length > 120
+        ? firstSentence.slice(0, 117).replace(/[,\s]+$/, "") + "…"
+        : firstSentence;
+      if (trimmed) return trimmed;
+    }
+    return "";
+  };
+
+  const oneLiner = getOneLiner();
+  const shareText = oneLiner
+    ? `${oneLiner} ⚡ ${setlistTitle || "Dream Setlist"} on Dead-Set.Org — check it out and collaborate!`
+    : creatorName && setlistTitle
+      ? `${creatorName} built "${setlistTitle}" on Dead-Set.Org — check it out and collaborate!`
+      : "Check out this setlist on Dead-Set.Org — jump in and collaborate!";
 
   const handleShare = async () => {
     if (navigator.share) {
