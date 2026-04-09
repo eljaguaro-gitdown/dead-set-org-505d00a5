@@ -187,7 +187,7 @@ const MySetlists = () => {
             Welcome back{displayName ? `, ${displayName}` : ""} ✦
           </h1>
           <p className="font-body text-sm text-muted-foreground mt-1">
-            Here's what's happening in the Dead Set community.
+            Here's what's happening in the Dead-Set.Org community.
           </p>
         </motion.div>
 

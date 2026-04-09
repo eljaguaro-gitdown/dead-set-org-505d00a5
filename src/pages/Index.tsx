@@ -208,7 +208,7 @@ const Index = () => {
         <div className="flex flex-col items-center gap-4">
           <ShareAppButton variant="full" />
           <div className="flex items-center gap-3 text-[10px] font-mono text-muted-foreground/40 tracking-wider">
-            <span>© Dead Set</span>
+            <span>© Dead-Set.Org</span>
             <span>·</span>
             <button
               onClick={() => navigate("/privacy")}

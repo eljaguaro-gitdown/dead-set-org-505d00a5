@@ -140,7 +140,7 @@ Deno.serve(async (req) => {
         <text x="600" y="268" text-anchor="middle" fill="#8B7A5E" font-family="monospace" font-size="13">${eraName ? escapeXml(eraName) + "  ·  " : ""}curated by ${escapeXml(creatorName)}</text>
         <line x1="200" y1="290" x2="1000" y2="290" stroke="#C8952A" stroke-width="0.5" opacity="0.4"/>
         ${songListSvg}
-        <text x="600" y="${height - 50}" text-anchor="middle" fill="#8B7A5E" font-family="monospace" font-size="11" letter-spacing="3">DEAD SET · ${songCount} SONGS</text>
+        <text x="600" y="${height - 50}" text-anchor="middle" fill="#8B7A5E" font-family="monospace" font-size="11" letter-spacing="3">DEAD-SET.ORG · ${songCount} SONGS</text>
       </svg>`;
 
       return new Response(svg, {
@@ -153,7 +153,7 @@ Deno.serve(async (req) => {
     }
 
     // ===== DEFAULT: HTML with OG meta tags for crawlers =====
-    const ogTitle = `${setlist.title} — Dead Set`;
+    const ogTitle = `${setlist.title} — Dead-Set.Org`;
     const ogDescription = `A${eraName ? ` ${eraName}` : ""} dream setlist by ${creatorName}. ${songCount} songs including ${firstSongs}...`;
     const siteUrl = "https://dead-set.org";
     const canonicalUrl = `${siteUrl}/setlist/${setlistId}`;
@@ -174,7 +174,7 @@ Deno.serve(async (req) => {
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta property="og:url" content="${canonicalUrl}">
-  <meta property="og:site_name" content="Dead Set">
+  <meta property="og:site_name" content="Dead-Set.Org">
   
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="${escapeHtml(ogTitle)}">

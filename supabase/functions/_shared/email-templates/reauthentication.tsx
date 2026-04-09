@@ -20,10 +20,10 @@ interface ReauthenticationEmailProps {
 export const ReauthenticationEmail = ({ token }: ReauthenticationEmailProps) => (
   <Html lang="en" dir="ltr">
     <Head />
-    <Preview>Your Dead Set verification code</Preview>
+    <Preview>Your Dead-Set.Org verification code</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Text style={brand}>☠ DEAD SET</Text>
+        <Text style={brand}>☠ DEAD-SET.ORG</Text>
         <Hr style={divider} />
         <Heading style={h1}>Verify your identity</Heading>
         <Text style={text}>Use this code to confirm it's you:</Text>

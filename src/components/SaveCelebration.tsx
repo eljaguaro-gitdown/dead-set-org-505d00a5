@@ -44,7 +44,7 @@ const SaveCelebration = ({ setlistId, setlistTitle, onDismiss }: SaveCelebration
           <ShareDropdown
             url={posterUrl}
             ogUrl={ogUrl}
-            title={`${setlistTitle} — Dead Set`}
+            title={`${setlistTitle} — Dead-Set.Org`}
             description={`Check out my dream Dead show: ${setlistTitle}`}
           />
         </div>

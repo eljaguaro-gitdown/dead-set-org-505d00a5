@@ -244,7 +244,7 @@ function drawPlate(
   ctx.font = `700 ${brandFontSize}px "Playfair Display", serif`;
   ctx.fillStyle = hexRgba(era.primary, 0.55);
   ctx.textAlign = "center";
-  ctx.fillText("D E A D   S E T", W / 2, H * 0.965);
+  ctx.fillText("D E A D - S E T . O R G", W / 2, H * 0.965);
 
   // 13 — Plate wear (scratches)
   for (let i = 0; i < 55; i++) {

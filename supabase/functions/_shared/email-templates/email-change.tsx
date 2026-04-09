@@ -30,10 +30,10 @@ export const EmailChangeEmail = ({
 }: EmailChangeEmailProps) => (
   <Html lang="en" dir="ltr">
     <Head />
-    <Preview>Confirm your email change on Dead Set</Preview>
+    <Preview>Confirm your email change on Dead-Set.Org</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Text style={brand}>☠ DEAD SET</Text>
+        <Text style={brand}>☠ DEAD-SET.ORG</Text>
         <Hr style={divider} />
         <Heading style={h1}>Confirm your email change</Heading>
         <Text style={text}>

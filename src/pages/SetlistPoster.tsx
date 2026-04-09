@@ -112,7 +112,7 @@ const SetlistPoster = () => {
     if (!setlist || slots.length === 0) return;
     const songNames = slots.slice(0, 3).map((s) => s.song.title).join(", ");
     const desc = `A${eraName ? ` ${eraName}` : ""} dream setlist by ${creatorName}. ${slots.length} songs including ${songNames}...`;
-    const ogTitle = `${setlist.title} — Dead Set`;
+    const ogTitle = `${setlist.title} — Dead-Set.Org`;
     const canonicalUrl = `${window.location.origin}/setlist/${id}`;
     const ogImageUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/og-image?id=${id}`;
 
@@ -164,7 +164,7 @@ const SetlistPoster = () => {
 
   const shareUrl = `${window.location.origin}/setlist/${id}`;
   const ogShareUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/og-image?id=${id}`;
-  const shareTitle = `${setlist?.title || "Dream Setlist"} — Dead Set`;
+  const shareTitle = `${setlist?.title || "Dream Setlist"} — Dead-Set.Org`;
   const shareDescription = setlist && slots.length > 0
     ? `Check out this${eraName ? ` ${eraName}` : ""} dream Dead show by ${creatorName}. ${slots.length} songs!`
     : undefined;
@@ -575,7 +575,7 @@ const SetlistPoster = () => {
                       className="text-[10px] font-mono tracking-widest uppercase transition-colors hover:underline"
                       style={{ color: "hsl(28 15% 50%)" }}
                     >
-                      Built with Dead Set
+                      Built with Dead-Set.Org
                     </button>
                     <DancingBear color="primary" />
                   </div>
@@ -611,7 +611,7 @@ const SetlistPoster = () => {
           {/* === Cassette spine strip below the card === */}
           <div className="cassette-spine mx-4 sm:mx-8 h-8 flex items-center justify-center border-x border-b border-border/40 rounded-b-sm mt-8">
             <span className="font-marker text-[9px] tracking-[0.3em] uppercase text-muted-foreground/50">
-              {setlist.title} · {eraName || "Dead Set"} · {slots.length} songs
+              {setlist.title} · {eraName || "Dead-Set.Org"} · {slots.length} songs
             </span>
           </div>
         </motion.article>

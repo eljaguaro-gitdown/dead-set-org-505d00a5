@@ -28,16 +28,16 @@ export const InviteEmail = ({
 }: InviteEmailProps) => (
   <Html lang="en" dir="ltr">
     <Head />
-    <Preview>You're invited to Dead Set</Preview>
+    <Preview>You're invited to Dead-Set.Org</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Text style={brand}>☠ DEAD SET</Text>
+        <Text style={brand}>☠ DEAD-SET.ORG</Text>
         <Hr style={divider} />
         <Heading style={h1}>You've been invited</Heading>
         <Text style={text}>
           Someone wants you on{' '}
           <Link href={siteUrl} style={link}>
-            <strong>Dead Set</strong>
+            <strong>Dead-Set.Org</strong>
           </Link>
           . Accept the invitation and start building your dream setlists.
         </Text>

@@ -47,7 +47,7 @@ const HeroSection = () => {
           {...fade(0.12)}
           className="font-body text-sm sm:text-base text-muted-foreground leading-relaxed max-w-[600px] px-2"
         >
-          Dead Set pairs you with Cosmic Charlie — a guide who knows every show the Dead ever played.
+          Dead-Set.Org pairs you with Cosmic Charlie — a guide who knows every show the Dead ever played.
           Tell him your mood, pick an era, and he'll build you a full concert from real live recordings
           in the Archive. Every note is real. Every show is yours to discover.
         </motion.p>

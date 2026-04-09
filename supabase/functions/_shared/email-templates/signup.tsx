@@ -30,16 +30,16 @@ export const SignupEmail = ({
 }: SignupEmailProps) => (
   <Html lang="en" dir="ltr">
     <Head />
-    <Preview>Welcome to Dead Set — confirm your email</Preview>
+    <Preview>Welcome to Dead-Set.Org — confirm your email</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Text style={brand}>☠ DEAD SET</Text>
+        <Text style={brand}>☠ DEAD-SET.ORG</Text>
         <Hr style={divider} />
         <Heading style={h1}>Come on in — there's room.</Heading>
         <Text style={text}>
           Thanks for joining{' '}
           <Link href={siteUrl} style={link}>
-            <strong>Dead Set</strong>
+            <strong>Dead-Set.Org</strong>
           </Link>
           . We just need to make sure you're you.
         </Text>
@@ -54,7 +54,7 @@ export const SignupEmail = ({
           Verify &amp; Get Started
         </Button>
         <Text style={footer}>
-          If you didn't sign up for Dead Set, just ignore this — no harm done.
+          If you didn't sign up for Dead-Set.Org, just ignore this — no harm done.
         </Text>
         <Text style={tagline}>The music never stopped. ⚡</Text>
       </Container>

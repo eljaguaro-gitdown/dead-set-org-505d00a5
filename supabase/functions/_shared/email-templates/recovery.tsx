@@ -25,10 +25,10 @@ export const RecoveryEmail = ({
 }: RecoveryEmailProps) => (
   <Html lang="en" dir="ltr">
     <Head />
-    <Preview>Reset your Dead Set password</Preview>
+    <Preview>Reset your Dead-Set.Org password</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Text style={brand}>☠ DEAD SET</Text>
+        <Text style={brand}>☠ DEAD-SET.ORG</Text>
         <Hr style={divider} />
         <Heading style={h1}>Reset your password</Heading>
         <Text style={text}>

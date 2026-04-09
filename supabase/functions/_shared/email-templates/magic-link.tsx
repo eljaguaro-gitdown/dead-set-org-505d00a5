@@ -25,17 +25,17 @@ export const MagicLinkEmail = ({
 }: MagicLinkEmailProps) => (
   <Html lang="en" dir="ltr">
     <Head />
-    <Preview>Your Dead Set login link</Preview>
+    <Preview>Your Dead-Set.Org login link</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Text style={brand}>☠ DEAD SET</Text>
+        <Text style={brand}>☠ DEAD-SET.ORG</Text>
         <Hr style={divider} />
         <Heading style={h1}>Your login link</Heading>
         <Text style={text}>
-          Click below to log back in to Dead Set. This link expires shortly, so don't wait too long.
+          Click below to log back in to Dead-Set.Org. This link expires shortly, so don't wait too long.
         </Text>
         <Button style={button} href={confirmationUrl}>
-          Log In to Dead Set
+          Log In to Dead-Set.Org
         </Button>
         <Text style={footer}>
           Didn't request this? Just ignore it — nothing changes.
