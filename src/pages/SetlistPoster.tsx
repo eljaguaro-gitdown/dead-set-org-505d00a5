@@ -583,8 +583,33 @@ const SetlistPoster = () => {
             </div>
           </div>
 
+          {/* === Show Plate === */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.8, duration: 0.5 }}
+            className="mt-8 p-6 bg-[#0F0E0C] rounded-xl"
+          >
+            <p className="font-mono text-[10px] tracking-[0.2em] uppercase text-muted-foreground/40 text-center mb-4">
+              your show plate
+            </p>
+            <ShowPlate
+              setlistName={setlist.title}
+              eraName={eraName}
+              size="full"
+            />
+            <div className="flex justify-center mt-4">
+              <button
+                onClick={() => setShareFlowOpen(true)}
+                className="flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-body bg-primary/10 border border-primary/30 text-primary hover:bg-primary/20 transition-colors"
+              >
+                <Share2 className="w-4 h-4" /> Share Plate
+              </button>
+            </div>
+          </motion.div>
+
           {/* === Cassette spine strip below the card === */}
-          <div className="cassette-spine mx-4 sm:mx-8 h-8 flex items-center justify-center border-x border-b border-border/40 rounded-b-sm">
+          <div className="cassette-spine mx-4 sm:mx-8 h-8 flex items-center justify-center border-x border-b border-border/40 rounded-b-sm mt-8">
             <span className="font-marker text-[9px] tracking-[0.3em] uppercase text-muted-foreground/50">
               {setlist.title} · {eraName || "Dead Set"} · {slots.length} songs
             </span>
