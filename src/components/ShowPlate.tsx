@@ -239,6 +239,15 @@ function drawPlate(
   ctx.textAlign = "right";
   ctx.fillText(era.label, W * 0.96, H * 0.06);
 
+  // 12b — "DEAD SET" branding bottom-left
+  const brandFontSize = Math.round(H * 0.03);
+  ctx.font = `600 ${brandFontSize}px "JetBrains Mono", monospace`;
+  ctx.fillStyle = hexRgba(era.primary, 0.22);
+  ctx.textAlign = "left";
+  ctx.letterSpacing = `${brandFontSize * 0.3}px`;
+  ctx.fillText("DEAD SET", W * 0.04, H * 0.96);
+  ctx.letterSpacing = "0px";
+
   // 13 — Plate wear (scratches)
   for (let i = 0; i < 55; i++) {
     const sx = Math.random() * W;
