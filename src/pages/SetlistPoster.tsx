@@ -520,8 +520,8 @@ const SetlistPoster = () => {
                     }}
                   >
                     <p
-                      className="font-hand text-sm leading-relaxed italic"
-                      style={{ color: "hsl(28 20% 35%)" }}
+                      className="font-hand text-lg sm:text-xl leading-relaxed italic"
+                      style={{ color: "hsl(28 15% 18%)" }}
                     >
                       {setlist.description}
                     </p>
