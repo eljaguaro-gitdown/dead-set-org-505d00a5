@@ -1,13 +1,13 @@
 project_id = "dplrumaqrdnzwzqmatqr"
 
-[functions.ai-deadhead]
-verify_jwt = false
-
-[functions.admin-users]
-verify_jwt = false
-
-[functions.track-visit]
-verify_jwt = false
-
-[functions.process-email-queue]
-verify_jwt = true
+[functions]
+  [functions.admin-users]
+    verify_jwt = false
+  [functions.ai-deadhead]
+    verify_jwt = false
+  [functions.auth-email-hook]
+    verify_jwt = false
+  [functions.process-email-queue]
+    verify_jwt = true
+  [functions.track-visit]
+    verify_jwt = false
