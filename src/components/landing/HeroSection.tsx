@@ -54,7 +54,7 @@ const HeroSection = () => {
 
         {/* 4. Audio Preview Strip */}
         <motion.div {...fade(0.16)} className="flex flex-col items-center gap-2">
-          <span className="font-mono text-[40px] tracking-[0.2em] text-muted-foreground/50 uppercase">
+          <span className="font-mono text-[25px] tracking-[0.2em] text-muted-foreground/50 uppercase">
             🎧 Now playing from the Archive
           </span>
           <AmbientPlayer />
