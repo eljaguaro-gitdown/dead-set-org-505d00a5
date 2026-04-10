@@ -47,14 +47,14 @@ const HeroSection = () => {
           {...fade(0.12)}
           className="font-body text-sm sm:text-base text-muted-foreground leading-relaxed max-w-[600px] px-2"
         >
-          Dead-Set.Org pairs you with Cosmic Charlie — a guide who knows every show the Dead ever played.
-          Tell him your mood, pick an era, and he'll build you a full concert from real live recordings
-          in the Archive. Every note is real. Every show is yours to discover.
+          Dead-Set.Org pairs you with Cosmic Charlie — a guide who knows every show the Dead ever played. Tell him your
+          mood, pick an era, and he'll build you a full concert from real live recordings in the Archive. Every note is
+          real. Every show is yours to discover.
         </motion.p>
 
         {/* 4. Audio Preview Strip */}
         <motion.div {...fade(0.16)} className="flex flex-col items-center gap-2">
-          <span className="font-mono text-[10px] tracking-[0.2em] text-muted-foreground/50 uppercase">
+          <span className="font-mono text-[40px] tracking-[0.2em] text-muted-foreground/50 uppercase">
             🎧 Now playing from the Archive
           </span>
           <AmbientPlayer />
@@ -77,12 +77,7 @@ const HeroSection = () => {
 
         {/* 6. Secondary CTA */}
         <motion.div {...fade(0.24)} className="w-full sm:w-auto">
-          <Button
-            variant="outline"
-            size="lg"
-            onClick={() => navigate("/browse")}
-            className="w-full sm:w-auto gap-2"
-          >
+          <Button variant="outline" size="lg" onClick={() => navigate("/browse")} className="w-full sm:w-auto gap-2">
             Browse Community Setlists
             <ChevronRight className="w-4 h-4" />
           </Button>
