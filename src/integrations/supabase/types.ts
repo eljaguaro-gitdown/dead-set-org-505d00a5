@@ -414,6 +414,38 @@ export type Database = {
         }
         Relationships: []
       }
+      setlist_comments: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          setlist_id: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          setlist_id: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          setlist_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "setlist_comments_setlist_id_fkey"
+            columns: ["setlist_id"]
+            isOneToOne: false
+            referencedRelation: "setlists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       setlist_slots: {
         Row: {
           added_by_user_id: string | null
