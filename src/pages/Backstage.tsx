@@ -144,6 +144,7 @@ const SubmitButton = ({
    ═══════════════════════════════════════════════════ */
 
 const Backstage = () => {
+  const navigate = useNavigate();
   const [s1, setS1] = useState({ show: "", songs: "", take: "", handle: "" });
   const [s1Done, setS1Done] = useState(false);
   const [s1Loading, setS1Loading] = useState(false);
