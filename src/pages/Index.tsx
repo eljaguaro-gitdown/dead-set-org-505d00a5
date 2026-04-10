@@ -108,12 +108,20 @@ const Index = () => {
           Build a setlist
         </button>
         {user ? (
-          <button
-            onClick={() => navigate("/my-setlists")}
-            className="font-mono text-xs sm:text-[10px] tracking-[0.2em] text-muted-foreground hover:text-primary transition-colors uppercase min-h-[44px] flex items-center"
-          >
-            My Setlists
-          </button>
+          <>
+            <button
+              onClick={() => navigate("/my-setlists")}
+              className="font-mono text-xs sm:text-[10px] tracking-[0.2em] text-muted-foreground hover:text-primary transition-colors uppercase min-h-[44px] flex items-center"
+            >
+              My Setlists
+            </button>
+            <button
+              onClick={() => navigate("/backstage")}
+              className="font-mono text-xs sm:text-[10px] tracking-[0.2em] text-[#C9A84C] hover:text-[#C9A84C]/80 transition-colors uppercase border border-[#C9A84C]/40 rounded-md px-3 py-2 hover:border-[#C9A84C]/70 min-h-[44px] flex items-center"
+            >
+              Backstage
+            </button>
+          </>
         ) : (
           <button
             onClick={() => navigate("/auth")}
