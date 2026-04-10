@@ -220,71 +220,100 @@ export const useDirectMessages = (user: User | null) => {
     const [u1, u2] = user.id < otherUserId ? [user.id, otherUserId] : [otherUserId, user.id];
 
     // Check if conversation exists
-    const { data: existing } = await supabase
+    const { data: existing, error: existingError } = await supabase
       .from("conversations")
       .select("id")
       .eq("user_one", u1)
       .eq("user_two", u2)
       .eq("is_group", false)
-      .single();
+      .maybeSingle();
+
+    if (existingError) {
+      console.error("Failed to check existing conversation:", existingError);
+      return null;
+    }
 
     if (existing) {
       setActiveConversationId(existing.id);
       return existing.id;
     }
 
-    // Create new conversation
-    const { data: created, error } = await supabase
-      .from("conversations")
-      .insert({ user_one: u1, user_two: u2, is_group: false })
-      .select("id")
-      .single();
+    const conversationId = crypto.randomUUID();
 
-    if (created) {
-      // Add both users to conversation_members
-      await supabase.from("conversation_members").insert([
-        { conversation_id: created.id, user_id: user.id },
-        { conversation_id: created.id, user_id: otherUserId },
-      ]);
-      setActiveConversationId(created.id);
-      await loadConversations();
-      return created.id;
+    const { error: createError } = await supabase
+      .from("conversations")
+      .insert({ id: conversationId, user_one: u1, user_two: u2, is_group: false });
+
+    if (createError) {
+      console.error("Failed to create conversation:", createError);
+      return null;
     }
 
-    console.error("Failed to create conversation:", error);
-    return null;
+    const { error: selfMembershipError } = await supabase
+      .from("conversation_members")
+      .insert({ conversation_id: conversationId, user_id: user.id });
+
+    if (selfMembershipError) {
+      console.error("Failed to add current user to conversation:", selfMembershipError);
+      return null;
+    }
+
+    const { error: otherMembershipError } = await supabase
+      .from("conversation_members")
+      .insert({ conversation_id: conversationId, user_id: otherUserId });
+
+    if (otherMembershipError) {
+      console.error("Failed to add recipient to conversation:", otherMembershipError);
+      return null;
+    }
+
+    setActiveConversationId(conversationId);
+    await loadConversations();
+    return conversationId;
   }, [user, loadConversations]);
 
   // Start a group conversation
   const startGroupConversation = useCallback(async (memberIds: string[], name?: string) => {
     if (!user || memberIds.length === 0) return null;
 
-    const allMembers = [user.id, ...memberIds];
+    const conversationId = crypto.randomUUID();
 
-    // Create conversation (use user.id for both user_one/user_two as placeholder for groups)
-    const { data: created, error } = await supabase
+    const { error: createError } = await supabase
       .from("conversations")
       .insert({
+        id: conversationId,
         user_one: user.id,
         user_two: memberIds[0],
         is_group: true,
         name: name || null,
-      })
-      .select("id")
-      .single();
+      });
 
-    if (created) {
-      // Add all members
-      await supabase.from("conversation_members").insert(
-        allMembers.map((uid) => ({ conversation_id: created.id, user_id: uid }))
-      );
-      setActiveConversationId(created.id);
-      await loadConversations();
-      return created.id;
+    if (createError) {
+      console.error("Failed to create group conversation:", createError);
+      return null;
     }
 
-    console.error("Failed to create group conversation:", error);
-    return null;
+    const { error: selfMembershipError } = await supabase
+      .from("conversation_members")
+      .insert({ conversation_id: conversationId, user_id: user.id });
+
+    if (selfMembershipError) {
+      console.error("Failed to add creator to group conversation:", selfMembershipError);
+      return null;
+    }
+
+    const { error: memberInsertError } = await supabase.from("conversation_members").insert(
+      memberIds.map((uid) => ({ conversation_id: conversationId, user_id: uid }))
+    );
+
+    if (memberInsertError) {
+      console.error("Failed to add members to group conversation:", memberInsertError);
+      return null;
+    }
+
+    setActiveConversationId(conversationId);
+    await loadConversations();
+    return conversationId;
   }, [user, loadConversations]);
 
   // Add member to existing group
