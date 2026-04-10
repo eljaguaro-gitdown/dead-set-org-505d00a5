@@ -458,7 +458,7 @@ const Backstage = () => {
                 <FieldLabel>WHAT YOU ALREADY LOVE</FieldLabel>
                 <TextArea
                   rows={3}
-                  placeholder={'What's working? What made you say "yes, this is it"?'}
+                  placeholder={"What\u2019s working? What made you say \u201Cyes, this is it\u201D?"}
                   value={s3.works}
                   onChange={(v) => setS3({ ...s3, works: v })}
                 />
