@@ -434,7 +434,7 @@ const Builder = () => {
           title: titleToSave,
           era_id: eraToSave || null,
           share_token: shareToken,
-          is_public: false,
+          is_public: true,
           is_collaborative: false,
         })
         .select()
