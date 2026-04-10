@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import backstagePassImg from "@/assets/backstage-pass.png";
+import greenMmsImg from "@/assets/green-mms.png";
+import bandStageImg from "@/assets/band-stage.jpg";
 
 /* ─── Pill Button ─── */
 const Pill = ({
@@ -15,10 +18,10 @@ const Pill = ({
   <button
     type="button"
     onClick={onClick}
-    className={`px-3 py-1.5 rounded-full text-xs font-body transition-all duration-200 border ${
+    className={`px-4 py-2 rounded-full text-sm font-body font-medium transition-all duration-200 border ${
       active
-        ? "bg-[#C9A84C] text-[#0D0D0D] border-[#C9A84C]"
-        : "bg-transparent text-[#C9A84C] border-[#C9A84C]/50 hover:border-[#C9A84C]"
+        ? "bg-primary text-[#0D0D0D] border-primary shadow-[0_0_12px_rgba(201,168,76,0.3)]"
+        : "bg-transparent text-primary border-primary/50 hover:border-primary hover:bg-primary/10"
     }`}
   >
     {label}
@@ -30,20 +33,15 @@ const Confirmation = ({
   icon,
   headline,
   subline,
-  headlineFont,
-  sublineFont,
 }: {
   icon: string;
   headline: string;
   subline: string;
-  headlineFont: string;
-  sublineFont: string;
 }) => (
-  <div className="text-center py-16 space-y-3">
-    <p className={`text-xl ${headlineFont}`}>
-      {icon}&ensp;{headline}
-    </p>
-    <p className={`text-sm ${sublineFont}`}>{subline}</p>
+  <div className="text-center py-16 space-y-4">
+    <p className="text-4xl">{icon}</p>
+    <p className="text-2xl font-display italic text-white">{headline}</p>
+    <p className="text-lg font-body text-primary">{subline}</p>
   </div>
 );
 
@@ -53,20 +51,23 @@ const Section = ({
   title,
   orientation,
   children,
+  accent,
 }: {
   number: string;
   title: string;
   orientation: string;
   children: React.ReactNode;
+  accent?: React.ReactNode;
 }) => (
-  <section className="py-16 md:py-24">
-    <p className="font-mono text-[11px] text-[#C9A84C] tracking-[0.2em] uppercase mb-3">
+  <section className="py-16 md:py-24 relative">
+    {accent && <div className="absolute right-0 top-8 opacity-20 pointer-events-none hidden md:block">{accent}</div>}
+    <p className="font-mono text-sm text-primary tracking-[0.2em] uppercase mb-4">
       {number}
     </p>
-    <h2 className="font-display italic text-[30px] md:text-[36px] text-white/95 mb-2">
+    <h2 className="font-display italic text-3xl md:text-4xl text-white mb-3">
       {title}
     </h2>
-    <p className="font-body text-[#A09A8E] text-base mb-10 max-w-lg">
+    <p className="font-body text-white/70 text-lg md:text-xl mb-12 max-w-xl leading-relaxed">
       {orientation}
     </p>
     {children}
@@ -75,7 +76,7 @@ const Section = ({
 
 /* ─── Label ─── */
 const FieldLabel = ({ children }: { children: string }) => (
-  <label className="block font-mono text-[10px] text-[#C9A84C] tracking-[0.2em] uppercase mb-2">
+  <label className="block font-mono text-xs text-primary tracking-[0.15em] uppercase mb-2.5 font-medium">
     {children}
   </label>
 );
@@ -87,7 +88,7 @@ const TextInput = ({ placeholder, value, onChange }: { placeholder: string; valu
     placeholder={placeholder}
     value={value}
     onChange={(e) => onChange(e.target.value)}
-    className="w-full bg-[#141414] border border-[#C9A84C]/20 rounded-md px-4 py-3 font-mono text-sm text-white/90 placeholder:text-[#5a564e] focus:outline-none focus:border-[#C9A84C]/60 transition-colors"
+    className="w-full bg-[#1a1a1a] border border-primary/25 rounded-lg px-5 py-4 font-body text-base text-white placeholder:text-white/30 focus:outline-none focus:border-primary/60 focus:shadow-[0_0_16px_rgba(201,168,76,0.1)] transition-all"
   />
 );
 
@@ -108,7 +109,7 @@ const TextArea = ({
     rows={rows}
     value={value}
     onChange={(e) => onChange(e.target.value)}
-    className="w-full bg-[#141414] border border-[#C9A84C]/20 rounded-md px-4 py-3 font-mono text-sm text-white/90 placeholder:text-[#5a564e] focus:outline-none focus:border-[#C9A84C]/60 transition-colors resize-none"
+    className="w-full bg-[#1a1a1a] border border-primary/25 rounded-lg px-5 py-4 font-body text-base text-white placeholder:text-white/30 focus:outline-none focus:border-primary/60 focus:shadow-[0_0_16px_rgba(201,168,76,0.1)] transition-all resize-none"
   />
 );
 
@@ -118,22 +119,18 @@ const SubmitButton = ({
   onClick,
   loading,
   glow,
-  small,
 }: {
   label: string;
   onClick: () => void;
   loading: boolean;
   glow?: boolean;
-  small?: boolean;
 }) => (
   <button
     type="button"
     onClick={onClick}
     disabled={loading}
-    className={`border border-[#C9A84C] text-[#C9A84C] bg-transparent rounded-md font-body font-semibold transition-all duration-200 disabled:opacity-50 w-full md:w-auto md:min-w-[200px] ${
-      small ? "px-6 py-2.5 text-sm" : "px-8 py-3 text-base"
-    } hover:bg-[#C9A84C] hover:text-[#0D0D0D] ${
-      glow ? "hover:shadow-[0_0_16px_rgba(201,168,76,0.3)]" : ""
+    className={`bg-gradient-to-r from-primary to-[#E8D48B] text-[#0D0D0D] rounded-lg font-body font-bold text-lg px-10 py-4 transition-all duration-300 disabled:opacity-50 w-full md:w-auto md:min-w-[240px] hover:scale-[1.02] active:scale-[0.98] ${
+      glow ? "shadow-[0_0_24px_rgba(201,168,76,0.4)] hover:shadow-[0_0_32px_rgba(201,168,76,0.6)]" : "shadow-[0_0_16px_rgba(201,168,76,0.2)]"
     }`}
   >
     {loading ? "Sending…" : label}
@@ -203,69 +200,87 @@ const Backstage = () => {
   return (
     <div className="min-h-screen bg-[#0D0D0D] text-white">
       {/* ════════════════════════════════════════════
-          LAMINATE HEADER
+          HERO HEADER — Band photo + backstage pass
           ════════════════════════════════════════════ */}
-      <header className="relative overflow-hidden">
-        {/* Watermark — abstract concentric circles */}
-        <svg
-          className="absolute inset-0 w-full h-full pointer-events-none"
-          viewBox="0 0 600 600"
-          preserveAspectRatio="xMidYMid slice"
-          aria-hidden="true"
-        >
-          {[...Array(8)].map((_, i) => (
-            <circle
-              key={i}
-              cx="300"
-              cy="300"
-              r={60 + i * 40}
-              fill="none"
-              stroke="#C9A84C"
-              strokeWidth="0.5"
-              opacity={0.06}
-            />
-          ))}
-        </svg>
+      <header className="relative overflow-hidden min-h-[70vh] flex items-center">
+        {/* Band photo background */}
+        <img
+          src={bandStageImg}
+          alt=""
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+        {/* Dark overlay for readability */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/60 to-[#0D0D0D]" />
 
-        {/* Grain overlay */}
-        <div className="absolute inset-0 opacity-[0.04] pointer-events-none" style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
+        {/* Gold vignette glow */}
+        <div className="absolute inset-0" style={{
+          backgroundImage: "radial-gradient(ellipse at 50% 30%, rgba(201,168,76,0.08) 0%, transparent 60%)",
         }} />
 
-        <div className="relative border border-[#C9A84C] m-4 md:m-8 p-8 md:p-16">
-          <p className="font-mono text-[11px] text-[#C9A84C] tracking-[0.2em] uppercase mb-6">
-            DEAD SET 2 &nbsp;·&nbsp; INNER CIRCLE
-          </p>
-
-          <div className="w-full h-px bg-[#C9A84C]/30 mb-8" />
-
-          <h1 className="font-display italic text-[30px] md:text-[36px] text-white/95 leading-tight mb-6">
-            You're in the room.
-          </h1>
-
-          <div className="max-w-lg space-y-0 font-body text-[#A09A8E] text-base leading-[1.8]">
-            <p>This is where we build it together.</p>
-            <p className="mt-4">
-              A small group of people who love this music
-              as much as we do — and who'll help us make
-              Dead Set the place it deserves to be.
-            </p>
-            <p className="mt-4 text-white/85">
-              Tell us what's working. Tell us what's broken.<br />
-              Tell us what you dream about.
-            </p>
+        <div className="relative z-10 w-full max-w-5xl mx-auto px-6 md:px-12 py-16 flex flex-col md:flex-row items-center gap-10">
+          {/* Backstage pass image */}
+          <div className="flex-shrink-0 w-48 md:w-64 transform -rotate-6 hover:rotate-0 transition-transform duration-500">
+            <img
+              src={backstagePassImg}
+              alt="VIP All Access Backstage Pass"
+              width={512}
+              height={768}
+              className="w-full h-auto drop-shadow-[0_8px_32px_rgba(201,168,76,0.4)]"
+            />
           </div>
 
-          <p className="font-hand text-[18px] text-[#C9A84C] mt-8">
-            "Every show found its way here somehow."
-          </p>
+          {/* Header text */}
+          <div className="text-center md:text-left flex-1">
+            <p className="font-mono text-sm md:text-base text-primary tracking-[0.2em] uppercase mb-4">
+              🎟️&ensp;DEAD SET &nbsp;·&nbsp; ALL ACCESS
+            </p>
+
+            <h1 className="font-display italic text-4xl md:text-5xl lg:text-6xl text-white leading-tight mb-6">
+              You're backstage now.
+            </h1>
+
+            <div className="space-y-4 font-body text-white/80 text-lg md:text-xl leading-relaxed max-w-lg">
+              <p>
+                Welcome to the inner circle. This is where we build Dead Set together — 
+                a small group of people who love this music as much as we do.
+              </p>
+              <p className="text-white">
+                Tell us what's working. Tell us what's broken. Tell us what you dream about.
+              </p>
+            </div>
+
+            <p className="font-display italic text-xl md:text-2xl text-primary mt-8">
+              "Every show found its way here somehow."
+            </p>
+          </div>
         </div>
       </header>
 
       {/* ════════════════════════════════════════════
+          GREEN M&Ms — Fun divider
+          ════════════════════════════════════════════ */}
+      <div className="relative flex justify-center py-6 overflow-hidden">
+        <div className="flex items-center gap-6">
+          <div className="h-px w-24 md:w-40 bg-gradient-to-r from-transparent to-primary/30" />
+          <img
+            src={greenMmsImg}
+            alt="Bowl of green M&Ms — the real backstage rider"
+            width={512}
+            height={512}
+            loading="lazy"
+            className="w-20 md:w-28 h-auto drop-shadow-[0_4px_16px_rgba(0,200,0,0.2)] hover:scale-110 transition-transform duration-300"
+          />
+          <p className="font-body text-white/50 text-sm italic hidden sm:block">
+            Only green ones backstage.
+          </p>
+          <div className="h-px w-24 md:w-40 bg-gradient-to-l from-transparent to-primary/30" />
+        </div>
+      </div>
+
+      {/* ════════════════════════════════════════════
           CONTENT
           ════════════════════════════════════════════ */}
-      <main className="max-w-2xl mx-auto px-6">
+      <main className="max-w-3xl mx-auto px-6 md:px-8">
 
         {/* ── SECTION 01 · Share Your Set ── */}
         <Section
@@ -277,12 +292,10 @@ const Backstage = () => {
             <Confirmation
               icon="✓"
               headline="Your voice is in the room now."
-              headlineFont="font-display italic text-white/95"
-              subline={"\u201CThank you. This means more than you know.\u201D"}
-              sublineFont="font-body text-[#A09A8E]"
+              subline="Thank you. This means more than you know."
             />
           ) : (
-            <div className="space-y-6">
+            <div className="space-y-8">
               <div>
                 <FieldLabel>YOUR FAVORITE SHOW</FieldLabel>
                 <TextInput
@@ -290,7 +303,7 @@ const Backstage = () => {
                   value={s1.show}
                   onChange={(v) => setS1({ ...s1, show: v })}
                 />
-                <p className="font-hand text-sm text-[#A09A8E] mt-1.5">
+                <p className="font-display italic text-base text-white/50 mt-2">
                   Or the one you keep coming back to.
                 </p>
               </div>
@@ -324,34 +337,32 @@ const Backstage = () => {
                 />
               </div>
 
-              <div className="flex justify-center pt-2">
+              <div className="flex justify-center pt-4">
                 <SubmitButton label="Add My Voice" onClick={submitShare} loading={s1Loading} />
               </div>
             </div>
           )}
         </Section>
 
-        <div className="w-full h-px bg-[#C9A84C]/10" />
+        <div className="w-full h-px bg-primary/15" />
 
         {/* ── SECTION 02 · Bug Log ── */}
         <Section
           number="02 ·"
           title="Bug Log"
-          orientation="Something broke. Something felt wrong. Tell us directly."
+          orientation="Something broke. Something felt wrong. Tell us directly — we read every single one."
         >
           {s2Done ? (
             <Confirmation
-              icon="✓"
+              icon="🔧"
               headline="Logged."
-              headlineFont="font-mono text-[#C9A84C]"
-              subline={"\u201CWe\u2019ll look into it.\u201D"}
-              sublineFont="font-body text-[#A09A8E]"
+              subline="We'll look into it."
             />
           ) : (
-            <div className="space-y-6">
+            <div className="space-y-8">
               <div>
                 <FieldLabel>WHERE DID YOU HIT IT</FieldLabel>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-3">
                   {[
                     { label: "Landing Page", value: "landing" },
                     { label: "Builder / Setlist Generator", value: "builder" },
@@ -382,7 +393,7 @@ const Backstage = () => {
 
               <div>
                 <FieldLabel>DID IT REPEAT</FieldLabel>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-3">
                   <Pill label="Yes, every time" active={s2.repeats === true} onClick={() => setS2({ ...s2, repeats: true })} />
                   <Pill label="Just once" active={s2.repeats === false} onClick={() => setS2({ ...s2, repeats: false })} />
                 </div>
@@ -390,7 +401,7 @@ const Backstage = () => {
 
               <div>
                 <FieldLabel>HOW BAD IS IT</FieldLabel>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-3">
                   {[
                     { label: "Can't use the site", value: "blocking" },
                     { label: "Annoying but workable", value: "annoying" },
@@ -403,24 +414,21 @@ const Backstage = () => {
 
               <div>
                 <FieldLabel>DEVICE</FieldLabel>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-3">
                   {["Desktop", "iPhone", "Android", "Tablet"].map((d) => (
                     <Pill key={d} label={d} active={s2.device === d.toLowerCase()} onClick={() => setS2({ ...s2, device: d.toLowerCase() })} />
                   ))}
                 </div>
               </div>
 
-              <div className="flex flex-col items-center gap-4 pt-2">
-                <SubmitButton label="Log It" onClick={submitBug} loading={s2Loading} small />
-                <p className="font-hand text-sm text-[#C9A84C]">
-                  "We read every single one."
-                </p>
+              <div className="flex justify-center pt-4">
+                <SubmitButton label="Log It" onClick={submitBug} loading={s2Loading} />
               </div>
             </div>
           )}
         </Section>
 
-        <div className="w-full h-px bg-[#C9A84C]/10" />
+        <div className="w-full h-px bg-primary/15" />
 
         {/* ── SECTION 03 · Wish List ── */}
         <Section
@@ -430,14 +438,12 @@ const Backstage = () => {
         >
           {s3Done ? (
             <Confirmation
-              icon="✓"
+              icon="✨"
               headline="Wish received."
-              headlineFont="font-display italic text-white/95"
-              subline={"\u201CBuilding it with you.\u201D"}
-              sublineFont="font-hand text-[#C9A84C]"
+              subline="Building it with you."
             />
           ) : (
-            <div className="space-y-6">
+            <div className="space-y-8">
               <div>
                 <FieldLabel>IF YOU COULD ADD ONE THING</FieldLabel>
                 <TextArea
@@ -452,7 +458,7 @@ const Backstage = () => {
                 <FieldLabel>WHAT YOU ALREADY LOVE</FieldLabel>
                 <TextArea
                   rows={3}
-                  placeholder={'What\u2019s working? What made you say \u201Cyes, this is it\u201D?'}
+                  placeholder={'What's working? What made you say "yes, this is it"?'}
                   value={s3.works}
                   onChange={(v) => setS3({ ...s3, works: v })}
                 />
@@ -468,8 +474,8 @@ const Backstage = () => {
                 />
               </div>
 
-              <div className="flex flex-col items-center gap-4 pt-2">
-                <p className="font-hand text-[16px] text-[#C9A84C]">
+              <div className="flex flex-col items-center gap-5 pt-4">
+                <p className="font-display italic text-xl text-primary">
                   "We're building this for you."
                 </p>
                 <SubmitButton label="Send My Wish" onClick={submitWish} loading={s3Loading} glow />
@@ -482,11 +488,11 @@ const Backstage = () => {
       {/* ════════════════════════════════════════════
           FOOTER
           ════════════════════════════════════════════ */}
-      <footer className="border-t border-[#C9A84C]/20 mt-16 py-8 text-center">
-        <p className="font-mono text-[10px] text-[#C9A84C]/60 tracking-[0.15em] uppercase leading-relaxed">
-          DEAD SET 2 &nbsp;·&nbsp; INNER CIRCLE PREVIEW
+      <footer className="border-t border-primary/20 mt-16 py-10 text-center">
+        <p className="font-mono text-sm text-primary/60 tracking-[0.15em] uppercase leading-relaxed">
+          DEAD SET &nbsp;·&nbsp; ALL ACCESS &nbsp;·&nbsp; INNER CIRCLE
           <br />
-          dead-set.org &nbsp;·&nbsp; Not for distribution
+          <span className="text-white/40">dead-set.org</span>
         </p>
       </footer>
     </div>
