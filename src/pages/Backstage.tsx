@@ -278,7 +278,7 @@ const Backstage = () => {
               icon="✓"
               headline="Your voice is in the room now."
               headlineFont="font-display italic text-white/95"
-              subline=""Thank you. This means more than you know.""
+              subline={"\u201CThank you. This means more than you know.\u201D"}
               sublineFont="font-body text-[#A09A8E]"
             />
           ) : (
@@ -344,7 +344,7 @@ const Backstage = () => {
               icon="✓"
               headline="Logged."
               headlineFont="font-mono text-[#C9A84C]"
-              subline=""We'll look into it.""
+              subline={"\u201CWe\u2019ll look into it.\u201D"}
               sublineFont="font-body text-[#A09A8E]"
             />
           ) : (
@@ -433,7 +433,7 @@ const Backstage = () => {
               icon="✓"
               headline="Wish received."
               headlineFont="font-display italic text-white/95"
-              subline=""Building it with you.""
+              subline={"\u201CBuilding it with you.\u201D"}
               sublineFont="font-hand text-[#C9A84C]"
             />
           ) : (
@@ -452,7 +452,7 @@ const Backstage = () => {
                 <FieldLabel>WHAT YOU ALREADY LOVE</FieldLabel>
                 <TextArea
                   rows={3}
-                  placeholder="What's working? What made you say "yes, this is it"?"
+                  placeholder={'What\u2019s working? What made you say \u201Cyes, this is it\u201D?'}
                   value={s3.works}
                   onChange={(v) => setS3({ ...s3, works: v })}
                 />
