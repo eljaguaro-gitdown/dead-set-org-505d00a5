@@ -133,7 +133,7 @@ const SubmitButton = ({
       glow ? "shadow-[0_0_24px_rgba(201,168,76,0.4)] hover:shadow-[0_0_32px_rgba(201,168,76,0.6)]" : "shadow-[0_0_16px_rgba(201,168,76,0.2)]"
     }`}
   >
-    {loading ? "Sending…" : label}
+    {loading ? "Sending\u2026" : label}
   </button>
 );
 
@@ -142,17 +142,14 @@ const SubmitButton = ({
    ═══════════════════════════════════════════════════ */
 
 const Backstage = () => {
-  /* ── Section 01 state ── */
   const [s1, setS1] = useState({ show: "", songs: "", take: "", handle: "" });
   const [s1Done, setS1Done] = useState(false);
   const [s1Loading, setS1Loading] = useState(false);
 
-  /* ── Section 02 state ── */
   const [s2, setS2] = useState({ location: "", description: "", repeats: null as boolean | null, severity: "", device: "" });
   const [s2Done, setS2Done] = useState(false);
   const [s2Loading, setS2Loading] = useState(false);
 
-  /* ── Section 03 state ── */
   const [s3, setS3] = useState({ top: "", works: "", bigger: "" });
   const [s3Done, setS3Done] = useState(false);
   const [s3Loading, setS3Loading] = useState(false);
@@ -199,146 +196,71 @@ const Backstage = () => {
 
   return (
     <div className="min-h-screen bg-[#0D0D0D] text-white">
-      {/* ════════════════════════════════════════════
-          HERO HEADER — Band photo + backstage pass
-          ════════════════════════════════════════════ */}
+      {/* HERO HEADER */}
       <header className="relative overflow-hidden min-h-[70vh] flex items-center">
-        {/* Band photo background */}
-        <img
-          src={bandStageImg}
-          alt=""
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-        {/* Dark overlay for readability */}
+        <img src={bandStageImg} alt="" className="absolute inset-0 w-full h-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/60 to-[#0D0D0D]" />
-
-        {/* Gold vignette glow */}
-        <div className="absolute inset-0" style={{
-          backgroundImage: "radial-gradient(ellipse at 50% 30%, rgba(201,168,76,0.08) 0%, transparent 60%)",
-        }} />
+        <div className="absolute inset-0" style={{ backgroundImage: "radial-gradient(ellipse at 50% 30%, rgba(201,168,76,0.08) 0%, transparent 60%)" }} />
 
         <div className="relative z-10 w-full max-w-5xl mx-auto px-6 md:px-12 py-16 flex flex-col md:flex-row items-center gap-10">
-          {/* Backstage pass image */}
           <div className="flex-shrink-0 w-48 md:w-64 transform -rotate-6 hover:rotate-0 transition-transform duration-500">
-            <img
-              src={backstagePassImg}
-              alt="VIP All Access Backstage Pass"
-              width={512}
-              height={768}
-              className="w-full h-auto drop-shadow-[0_8px_32px_rgba(201,168,76,0.4)]"
-            />
+            <img src={backstagePassImg} alt="VIP All Access Backstage Pass" width={512} height={768} className="w-full h-auto drop-shadow-[0_8px_32px_rgba(201,168,76,0.4)]" />
           </div>
 
-          {/* Header text */}
           <div className="text-center md:text-left flex-1">
             <p className="font-mono text-sm md:text-base text-primary tracking-[0.2em] uppercase mb-4">
               🎟️&ensp;DEAD SET &nbsp;·&nbsp; ALL ACCESS
             </p>
-
             <h1 className="font-display italic text-4xl md:text-5xl lg:text-6xl text-white leading-tight mb-6">
               You're backstage now.
             </h1>
-
             <div className="space-y-4 font-body text-white/80 text-lg md:text-xl leading-relaxed max-w-lg">
-              <p>
-                Welcome to the inner circle. This is where we build Dead Set together — 
-                a small group of people who love this music as much as we do.
-              </p>
-              <p className="text-white">
-                Tell us what's working. Tell us what's broken. Tell us what you dream about.
-              </p>
+              <p>Welcome to the inner circle. This is where we build Dead Set together — a small group of people who love this music as much as we do.</p>
+              <p className="text-white">Tell us what's working. Tell us what's broken. Tell us what you dream about.</p>
             </div>
-
-            <p className="font-display italic text-xl md:text-2xl text-primary mt-8">
-              "Every show found its way here somehow."
-            </p>
+            <p className="font-display italic text-xl md:text-2xl text-primary mt-8">"Every show found its way here somehow."</p>
           </div>
         </div>
       </header>
 
-      {/* ════════════════════════════════════════════
-          GREEN M&Ms — Fun divider
-          ════════════════════════════════════════════ */}
+      {/* GREEN M&Ms divider */}
       <div className="relative flex justify-center py-6 overflow-hidden">
         <div className="flex items-center gap-6">
           <div className="h-px w-24 md:w-40 bg-gradient-to-r from-transparent to-primary/30" />
-          <img
-            src={greenMmsImg}
-            alt="Bowl of green M&Ms — the real backstage rider"
-            width={512}
-            height={512}
-            loading="lazy"
-            className="w-20 md:w-28 h-auto drop-shadow-[0_4px_16px_rgba(0,200,0,0.2)] hover:scale-110 transition-transform duration-300"
-          />
-          <p className="font-body text-white/50 text-sm italic hidden sm:block">
-            Only green ones backstage.
-          </p>
+          <img src={greenMmsImg} alt="Bowl of green M&Ms" width={512} height={512} loading="lazy" className="w-20 md:w-28 h-auto drop-shadow-[0_4px_16px_rgba(0,200,0,0.2)] hover:scale-110 transition-transform duration-300" />
+          <p className="font-body text-white/50 text-sm italic hidden sm:block">Only green ones backstage.</p>
           <div className="h-px w-24 md:w-40 bg-gradient-to-l from-transparent to-primary/30" />
         </div>
       </div>
 
-      {/* ════════════════════════════════════════════
-          CONTENT
-          ════════════════════════════════════════════ */}
+      {/* CONTENT */}
       <main className="max-w-3xl mx-auto px-6 md:px-8">
 
-        {/* ── SECTION 01 · Share Your Set ── */}
+        {/* ── SECTION 01 · Wish List ── */}
         <Section
           number="01 ·"
-          title="Share Your Set"
-          orientation="Your favorite shows, songs, and moments. What does Dead Set help you find?"
+          title="Wish List"
+          orientation="What would make Dead Set the place you come back to every day?"
         >
-          {s1Done ? (
-            <Confirmation
-              icon="✓"
-              headline="Your voice is in the room now."
-              subline="Thank you. This means more than you know."
-            />
+          {s3Done ? (
+            <Confirmation icon="✨" headline="Wish received." subline="Building it with you." />
           ) : (
             <div className="space-y-8">
               <div>
-                <FieldLabel>YOUR FAVORITE SHOW</FieldLabel>
-                <TextInput
-                  placeholder="e.g. Barton Hall, Cornell · May 8, 1977"
-                  value={s1.show}
-                  onChange={(v) => setS1({ ...s1, show: v })}
-                />
-                <p className="font-display italic text-base text-white/50 mt-2">
-                  Or the one you keep coming back to.
-                </p>
+                <FieldLabel>IF YOU COULD ADD ONE THING</FieldLabel>
+                <TextArea rows={4} placeholder="Don't filter yourself. Dream a little." value={s3.top} onChange={(v) => setS3({ ...s3, top: v })} />
               </div>
-
               <div>
-                <FieldLabel>SONGS THAT MOVE YOU</FieldLabel>
-                <TextArea
-                  rows={3}
-                  placeholder="List as many as you want. No wrong answers."
-                  value={s1.songs}
-                  onChange={(v) => setS1({ ...s1, songs: v })}
-                />
+                <FieldLabel>WHAT YOU ALREADY LOVE</FieldLabel>
+                <TextArea rows={3} placeholder={"What\u2019s working? What made you say \u201Cyes, this is it\u201D?"} value={s3.works} onChange={(v) => setS3({ ...s3, works: v })} />
               </div>
-
               <div>
-                <FieldLabel>WHAT DOES DEAD SET DO FOR YOU</FieldLabel>
-                <TextArea
-                  rows={4}
-                  placeholder="Tell us in your own words. Don't be brief."
-                  value={s1.take}
-                  onChange={(v) => setS1({ ...s1, take: v })}
-                />
+                <FieldLabel>THE BIGGER PICTURE</FieldLabel>
+                <TextArea rows={3} placeholder="What should Dead Set be in five years? What does the community need?" value={s3.bigger} onChange={(v) => setS3({ ...s3, bigger: v })} />
               </div>
-
-              <div>
-                <FieldLabel>WHO ARE YOU (OPTIONAL)</FieldLabel>
-                <TextInput
-                  placeholder="Or stay anonymous. Either is fine."
-                  value={s1.handle}
-                  onChange={(v) => setS1({ ...s1, handle: v })}
-                />
-              </div>
-
-              <div className="flex justify-center pt-4">
-                <SubmitButton label="Add My Voice" onClick={submitShare} loading={s1Loading} />
+              <div className="flex flex-col items-center gap-5 pt-4">
+                <p className="font-display italic text-xl text-primary">"We're building this for you."</p>
+                <SubmitButton label="Send My Wish" onClick={submitWish} loading={s3Loading} glow />
               </div>
             </div>
           )}
@@ -353,11 +275,7 @@ const Backstage = () => {
           orientation="Something broke. Something felt wrong. Tell us directly — we read every single one."
         >
           {s2Done ? (
-            <Confirmation
-              icon="🔧"
-              headline="Logged."
-              subline="We'll look into it."
-            />
+            <Confirmation icon="🔧" headline="Logged." subline="We'll look into it." />
           ) : (
             <div className="space-y-8">
               <div>
@@ -371,26 +289,14 @@ const Backstage = () => {
                     { label: "Login / Account", value: "account" },
                     { label: "Other", value: "other" },
                   ].map((opt) => (
-                    <Pill
-                      key={opt.value}
-                      label={opt.label}
-                      active={s2.location === opt.value}
-                      onClick={() => setS2({ ...s2, location: opt.value })}
-                    />
+                    <Pill key={opt.value} label={opt.label} active={s2.location === opt.value} onClick={() => setS2({ ...s2, location: opt.value })} />
                   ))}
                 </div>
               </div>
-
               <div>
                 <FieldLabel>WHAT HAPPENED</FieldLabel>
-                <TextArea
-                  rows={3}
-                  placeholder="Just describe it plainly. No tech jargon needed."
-                  value={s2.description}
-                  onChange={(v) => setS2({ ...s2, description: v })}
-                />
+                <TextArea rows={3} placeholder="Just describe it plainly. No tech jargon needed." value={s2.description} onChange={(v) => setS2({ ...s2, description: v })} />
               </div>
-
               <div>
                 <FieldLabel>DID IT REPEAT</FieldLabel>
                 <div className="flex flex-wrap gap-3">
@@ -398,7 +304,6 @@ const Backstage = () => {
                   <Pill label="Just once" active={s2.repeats === false} onClick={() => setS2({ ...s2, repeats: false })} />
                 </div>
               </div>
-
               <div>
                 <FieldLabel>HOW BAD IS IT</FieldLabel>
                 <div className="flex flex-wrap gap-3">
@@ -411,7 +316,6 @@ const Backstage = () => {
                   ))}
                 </div>
               </div>
-
               <div>
                 <FieldLabel>DEVICE</FieldLabel>
                 <div className="flex flex-wrap gap-3">
@@ -420,7 +324,6 @@ const Backstage = () => {
                   ))}
                 </div>
               </div>
-
               <div className="flex justify-center pt-4">
                 <SubmitButton label="Log It" onClick={submitBug} loading={s2Loading} />
               </div>
@@ -430,64 +333,42 @@ const Backstage = () => {
 
         <div className="w-full h-px bg-primary/15" />
 
-        {/* ── SECTION 03 · Wish List ── */}
+        {/* ── SECTION 03 · Share Your Set ── */}
         <Section
           number="03 ·"
-          title="Wish List"
-          orientation="What would make Dead Set the place you come back to every day?"
+          title="Share Your Set"
+          orientation="Your favorite shows, songs, and moments. What does Dead Set help you find?"
         >
-          {s3Done ? (
-            <Confirmation
-              icon="✨"
-              headline="Wish received."
-              subline="Building it with you."
-            />
+          {s1Done ? (
+            <Confirmation icon="✓" headline="Your voice is in the room now." subline="Thank you. This means more than you know." />
           ) : (
             <div className="space-y-8">
               <div>
-                <FieldLabel>IF YOU COULD ADD ONE THING</FieldLabel>
-                <TextArea
-                  rows={4}
-                  placeholder="Don't filter yourself. Dream a little."
-                  value={s3.top}
-                  onChange={(v) => setS3({ ...s3, top: v })}
-                />
+                <FieldLabel>YOUR FAVORITE SHOW</FieldLabel>
+                <TextInput placeholder="e.g. Barton Hall, Cornell · May 8, 1977" value={s1.show} onChange={(v) => setS1({ ...s1, show: v })} />
+                <p className="font-display italic text-base text-white/50 mt-2">Or the one you keep coming back to.</p>
               </div>
-
               <div>
-                <FieldLabel>WHAT YOU ALREADY LOVE</FieldLabel>
-                <TextArea
-                  rows={3}
-                  placeholder={"What\u2019s working? What made you say \u201Cyes, this is it\u201D?"}
-                  value={s3.works}
-                  onChange={(v) => setS3({ ...s3, works: v })}
-                />
+                <FieldLabel>SONGS THAT MOVE YOU</FieldLabel>
+                <TextArea rows={3} placeholder="List as many as you want. No wrong answers." value={s1.songs} onChange={(v) => setS1({ ...s1, songs: v })} />
               </div>
-
               <div>
-                <FieldLabel>THE BIGGER PICTURE</FieldLabel>
-                <TextArea
-                  rows={3}
-                  placeholder="What should Dead Set be in five years? What does the community need?"
-                  value={s3.bigger}
-                  onChange={(v) => setS3({ ...s3, bigger: v })}
-                />
+                <FieldLabel>WHAT DOES DEAD SET DO FOR YOU</FieldLabel>
+                <TextArea rows={4} placeholder="Tell us in your own words. Don't be brief." value={s1.take} onChange={(v) => setS1({ ...s1, take: v })} />
               </div>
-
-              <div className="flex flex-col items-center gap-5 pt-4">
-                <p className="font-display italic text-xl text-primary">
-                  "We're building this for you."
-                </p>
-                <SubmitButton label="Send My Wish" onClick={submitWish} loading={s3Loading} glow />
+              <div>
+                <FieldLabel>WHO ARE YOU (OPTIONAL)</FieldLabel>
+                <TextInput placeholder="Or stay anonymous. Either is fine." value={s1.handle} onChange={(v) => setS1({ ...s1, handle: v })} />
+              </div>
+              <div className="flex justify-center pt-4">
+                <SubmitButton label="Add My Voice" onClick={submitShare} loading={s1Loading} />
               </div>
             </div>
           )}
         </Section>
       </main>
 
-      {/* ════════════════════════════════════════════
-          FOOTER
-          ════════════════════════════════════════════ */}
+      {/* FOOTER */}
       <footer className="border-t border-primary/20 mt-16 py-10 text-center">
         <p className="font-mono text-sm text-primary/60 tracking-[0.15em] uppercase leading-relaxed">
           DEAD SET &nbsp;·&nbsp; ALL ACCESS &nbsp;·&nbsp; INNER CIRCLE
