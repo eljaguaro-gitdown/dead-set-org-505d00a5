@@ -45,7 +45,7 @@ export const useDirectMessages = (user: User | null) => {
       .from("profiles")
       .select("display_name, avatar_url")
       .eq("user_id", userId)
-      .single();
+      .maybeSingle();
     const profile = { name: data?.display_name || "Unknown", avatar: data?.avatar_url || null };
     profileCache.current.set(userId, profile);
     return profile;
@@ -55,19 +55,40 @@ export const useDirectMessages = (user: User | null) => {
   const loadConversations = useCallback(async () => {
     if (!user) return;
     setLoading(true);
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("conversations")
       .select("id, user_one, user_two, last_message_at, name, is_group")
       .order("last_message_at", { ascending: false });
 
+    if (error) {
+      console.error("Failed to load conversations:", error);
+      setConversations([]);
+      setLoading(false);
+      return;
+    }
+
     if (data) {
       const enriched = await Promise.all(
         data.map(async (c) => {
-          // Load members from conversation_members table
-          const { data: membersData } = await supabase
-            .from("conversation_members")
-            .select("user_id")
-            .eq("conversation_id", c.id);
+          const [{ data: membersData }, { data: lastMsg }, { count }] = await Promise.all([
+            supabase
+              .from("conversation_members")
+              .select("user_id")
+              .eq("conversation_id", c.id),
+            supabase
+              .from("direct_messages")
+              .select("content")
+              .eq("conversation_id", c.id)
+              .order("created_at", { ascending: false })
+              .limit(1)
+              .maybeSingle(),
+            supabase
+              .from("direct_messages")
+              .select("id", { count: "exact", head: true })
+              .eq("conversation_id", c.id)
+              .eq("read", false)
+              .neq("sender_id", user.id),
+          ]);
 
           const memberProfiles = await Promise.all(
             (membersData || [])
@@ -78,25 +99,10 @@ export const useDirectMessages = (user: User | null) => {
               })
           );
 
-          const otherUserId = c.user_one === user.id ? c.user_two : c.user_one;
+          const otherUserId =
+            (membersData || []).find((m) => m.user_id !== user.id)?.user_id ||
+            (c.user_one === user.id ? c.user_two : c.user_one);
           const otherProfile = await resolveProfile(otherUserId);
-
-          // Get last message preview
-          const { data: lastMsg } = await supabase
-            .from("direct_messages")
-            .select("content")
-            .eq("conversation_id", c.id)
-            .order("created_at", { ascending: false })
-            .limit(1)
-            .single();
-
-          // Get unread count
-          const { count } = await supabase
-            .from("direct_messages")
-            .select("id", { count: "exact", head: true })
-            .eq("conversation_id", c.id)
-            .eq("read", false)
-            .neq("sender_id", user.id);
 
           const displayName = c.is_group
             ? c.name || memberProfiles.map((m) => m.displayName).join(", ") || "Group Chat"

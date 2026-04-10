@@ -74,7 +74,8 @@ const Messages = () => {
       });
       return;
     }
-    await startConversation(otherUserId);
+    const conversationId = await startConversation(otherUserId);
+    if (!conversationId) return;
     setShowSearch(false);
     setSearchQuery("");
     setSearchResults([]);
@@ -83,7 +84,8 @@ const Messages = () => {
   const handleCreateGroup = async () => {
     if (selectedUsers.length === 0) return;
     const memberIds = selectedUsers.map((u) => u.user_id);
-    await startGroupConversation(memberIds, groupName || undefined);
+    const conversationId = await startGroupConversation(memberIds, groupName || undefined);
+    if (!conversationId) return;
     setShowSearch(false);
     setGroupMode(false);
     setSelectedUsers([]);
