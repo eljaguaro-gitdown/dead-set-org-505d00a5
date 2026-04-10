@@ -12,14 +12,14 @@ const PersonalNote = () => (
       <span className="text-primary/40 text-xl select-none">✦</span>
 
       <blockquote className="font-hand text-xl sm:text-2xl text-muted-foreground leading-relaxed">
-        "The band may be gone, but the music never stopped. Thanks to an incredible
-        community — and the Internet Archive preserving 50 years of live recordings —
-        there are still endless gems waiting to be found. I built Dead-Set.Org to help you
-        find them, share them, and keep the flame alive."
+        "The band may be gone, but the music will never stop. Thanks to an incredible community — and the Internet
+        Archive preserving 50 years of live recordings — there are still endless gems waiting to be found. I built
+        Dead-Set.Org to help us find them, share them, and keep the flame alive."
       </blockquote>
 
       <span className="font-body text-sm sm:text-base text-primary/60 tracking-wider">
-        — Built by a Deadhead, for the community
+        — Kinda feels like we are on to something fun - curated setlists, parking lot vibes, endless surprise and
+        delight moments. See ya backstage!
       </span>
     </div>
   </motion.section>
