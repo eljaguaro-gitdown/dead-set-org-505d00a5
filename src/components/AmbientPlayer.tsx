@@ -89,8 +89,10 @@ const AmbientPlayer = () => {
       </div>
 
       {/* Track info */}
-      <span className="text-xs font-body text-muted-foreground/70 group-hover:text-muted-foreground transition-colors whitespace-nowrap">
-        {track.title} — <span className="text-muted-foreground/50">{track.venue}, {track.date}</span>
+      <span className="text-base sm:text-lg font-body text-primary group-hover:text-primary/90 transition-colors whitespace-nowrap">
+        <span className="font-semibold">{track.title}</span>
+        <span className="text-muted-foreground mx-1.5">—</span>
+        <span className="text-[hsl(var(--dead-cream))]">{track.venue}, {track.date}</span>
       </span>
     </button>
   );
