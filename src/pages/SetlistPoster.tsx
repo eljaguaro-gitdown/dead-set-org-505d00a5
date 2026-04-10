@@ -616,6 +616,12 @@ const SetlistPoster = () => {
             </span>
           </div>
         </motion.article>
+
+        {/* === Community Comments === */}
+        <SetlistComments
+          setlistId={id || ""}
+          isPublic={!!setlist?.is_public}
+        />
       </div>
 
       {/* Share Flow with Show Plate */}
