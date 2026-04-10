@@ -1,6 +1,8 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { ArrowLeft } from "lucide-react";
 import backstagePassImg from "@/assets/backstage-pass.png";
 import greenMmsImg from "@/assets/green-mms.png";
 import bandStageImg from "@/assets/band-stage.jpg";
@@ -142,6 +144,7 @@ const SubmitButton = ({
    ═══════════════════════════════════════════════════ */
 
 const Backstage = () => {
+  const navigate = useNavigate();
   const [s1, setS1] = useState({ show: "", songs: "", take: "", handle: "" });
   const [s1Done, setS1Done] = useState(false);
   const [s1Loading, setS1Loading] = useState(false);
@@ -197,6 +200,13 @@ const Backstage = () => {
   return (
     <div className="min-h-screen bg-[#0D0D0D] text-white">
       {/* HERO HEADER */}
+      {/* Back to Dead Set — top */}
+      <div className="relative z-20 px-6 pt-4">
+        <button onClick={() => navigate("/")} className="inline-flex items-center gap-2 font-body text-base text-primary hover:text-white transition-colors">
+          <ArrowLeft className="w-4 h-4" /> Back to Dead-Set.Org
+        </button>
+      </div>
+
       <header className="relative overflow-hidden min-h-[70vh] flex items-center">
         <img src={bandStageImg} alt="" className="absolute inset-0 w-full h-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/60 to-[#0D0D0D]" />
@@ -369,7 +379,10 @@ const Backstage = () => {
       </main>
 
       {/* FOOTER */}
-      <footer className="border-t border-primary/20 mt-16 py-10 text-center">
+      <footer className="border-t border-primary/20 mt-16 py-10 text-center space-y-6">
+        <button onClick={() => navigate("/")} className="inline-flex items-center gap-2 font-body text-base text-primary hover:text-white transition-colors mx-auto">
+          <ArrowLeft className="w-4 h-4" /> Back to Dead-Set.Org
+        </button>
         <p className="font-mono text-sm text-primary/60 tracking-[0.15em] uppercase leading-relaxed">
           DEAD SET &nbsp;·&nbsp; ALL ACCESS &nbsp;·&nbsp; INNER CIRCLE
           <br />
