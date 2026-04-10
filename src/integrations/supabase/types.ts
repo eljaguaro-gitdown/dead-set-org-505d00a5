@@ -312,6 +312,87 @@ export type Database = {
           },
         ]
       }
+      insider_bugs: {
+        Row: {
+          created_at: string
+          description: string
+          device: string | null
+          id: string
+          location: string | null
+          repeats: boolean | null
+          severity: string | null
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          device?: string | null
+          id?: string
+          location?: string | null
+          repeats?: boolean | null
+          severity?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          device?: string | null
+          id?: string
+          location?: string | null
+          repeats?: boolean | null
+          severity?: string | null
+        }
+        Relationships: []
+      }
+      insider_shares: {
+        Row: {
+          created_at: string
+          favorite_show: string | null
+          favorite_songs: string | null
+          handle: string | null
+          id: string
+          personal_take: string | null
+        }
+        Insert: {
+          created_at?: string
+          favorite_show?: string | null
+          favorite_songs?: string | null
+          handle?: string | null
+          id?: string
+          personal_take?: string | null
+        }
+        Update: {
+          created_at?: string
+          favorite_show?: string | null
+          favorite_songs?: string | null
+          handle?: string | null
+          id?: string
+          personal_take?: string | null
+        }
+        Relationships: []
+      }
+      insider_wishlist: {
+        Row: {
+          bigger_picture: string | null
+          created_at: string
+          id: string
+          top_request: string | null
+          what_works: string | null
+        }
+        Insert: {
+          bigger_picture?: string | null
+          created_at?: string
+          id?: string
+          top_request?: string | null
+          what_works?: string | null
+        }
+        Update: {
+          bigger_picture?: string | null
+          created_at?: string
+          id?: string
+          top_request?: string | null
+          what_works?: string | null
+        }
+        Relationships: []
+      }
       notable_versions: {
         Row: {
           archive_org_url: string | null
