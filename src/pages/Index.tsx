@@ -117,9 +117,9 @@ const Index = () => {
             </button>
             <button
               onClick={() => navigate("/backstage")}
-              className="font-mono text-xs sm:text-[10px] tracking-[0.2em] text-[#C9A84C] hover:text-[#C9A84C]/80 transition-colors uppercase border border-[#C9A84C]/40 rounded-md px-3 py-2 hover:border-[#C9A84C]/70 min-h-[44px] flex items-center"
+              className="font-display italic text-sm sm:text-base tracking-wide text-[#0D0D0D] bg-gradient-to-r from-[#C9A84C] to-[#E8D48B] hover:from-[#E8D48B] hover:to-[#C9A84C] transition-all duration-300 rounded-md px-5 py-2.5 min-h-[44px] flex items-center gap-2 shadow-[0_0_20px_rgba(201,168,76,0.3)] hover:shadow-[0_0_28px_rgba(201,168,76,0.5)]"
             >
-              Backstage
+              🎟️ Backstage
             </button>
           </>
         ) : (
