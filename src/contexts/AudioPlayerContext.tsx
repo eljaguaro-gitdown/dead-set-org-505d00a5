@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useCallback, useRef, useEffect, type ReactNode } from "react";
-import { findArchiveRecording } from "@/lib/archiveOrg";
+import { findArchiveRecording, findTrackInRecording } from "@/lib/archiveOrg";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 

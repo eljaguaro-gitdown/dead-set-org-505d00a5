@@ -54,6 +54,62 @@ function matchScore(trackTitle: string, songTitle: string): number {
 
 export { matchScore, normalize };
 
+/**
+ * Given a specific archive.org URL and a song title, find the direct track URL
+ * within that specific recording. This avoids the generic search which can
+ * return tracks from entirely different shows.
+ */
+export async function findTrackInRecording(
+  archiveUrl: string,
+  songTitle: string
+): Promise<string | null> {
+  const match = archiveUrl.match(/archive\.org\/details\/([^/?#]+)/);
+  const identifier = match?.[1];
+  if (!identifier) return null;
+
+  try {
+    const res = await fetch(`https://archive.org/metadata/${identifier}`);
+    if (!res.ok) return null;
+    const meta = await res.json();
+
+    const audioFiles = (meta.files || []).filter(
+      (f: any) =>
+        f.format === "VBR MP3" ||
+        f.format === "Ogg Vorbis" ||
+        f.name?.endsWith(".mp3") ||
+        f.name?.endsWith(".ogg")
+    );
+
+    let bestScore = 0;
+    let bestFile: any = null;
+    for (const f of audioFiles) {
+      const title = f.title || f.name || "";
+      const score = matchScore(title, songTitle);
+      if (score > bestScore) {
+        bestScore = score;
+        bestFile = f;
+      }
+    }
+
+    if (bestFile && bestScore >= 40) {
+      const url = `https://archive.org/download/${identifier}/${encodeURIComponent(bestFile.name)}`;
+      if (bestScore < 60) {
+        console.warn(
+          `[QA] Low track match for "${songTitle}": best match "${bestFile.title || bestFile.name}" scored ${bestScore}/100 in ${identifier}`
+        );
+      }
+      return url;
+    }
+
+    console.warn(
+      `[QA] No track match for "${songTitle}" in ${identifier} (best score: ${bestScore})`
+    );
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 export async function findArchiveRecording(songTitle: string): Promise<ArchiveResult | null> {
   const key = songTitle.toLowerCase().trim();
   if (cache.has(key)) return cache.get(key)!;
