@@ -36,6 +36,12 @@ interface TrafficStats {
   unique30d: number;
 }
 
+interface BackstageData {
+  wishlist: Array<{ id: string; top_request: string | null; what_works: string | null; bigger_picture: string | null; created_at: string }>;
+  bugs: Array<{ id: string; description: string; location: string | null; device: string | null; severity: string | null; repeats: boolean | null; created_at: string }>;
+  shares: Array<{ id: string; handle: string | null; favorite_songs: string | null; favorite_show: string | null; personal_take: string | null; created_at: string }>;
+}
+
 const Admin = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
@@ -43,6 +49,7 @@ const Admin = () => {
   const [traffic, setTraffic] = useState<TrafficStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [backstage, setBackstage] = useState<BackstageData>({ wishlist: [], bugs: [], shares: [] });
 
   // Check admin role
   useEffect(() => {
