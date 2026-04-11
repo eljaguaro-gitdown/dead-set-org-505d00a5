@@ -54,11 +54,16 @@ const SiteHeader = ({ children, large = false }: SiteHeaderProps) => {
   const messagesLink = user ? (
     <button
       onClick={() => navigate("/messages")}
-      className="flex items-center gap-1.5 text-xs font-mono text-muted-foreground hover:text-foreground transition-colors tracking-wider uppercase"
+      className="relative flex items-center gap-1.5 text-xs font-mono text-muted-foreground hover:text-foreground transition-colors tracking-wider uppercase"
       title="Messages"
     >
       <MessageCircle className="w-3.5 h-3.5" />
       <span className="hidden sm:inline">Messages</span>
+      {unreadCount > 0 && (
+        <span className="absolute -top-1.5 -right-2.5 min-w-[16px] h-4 px-1 rounded-full bg-primary text-primary-foreground text-[10px] font-mono flex items-center justify-center">
+          {unreadCount > 99 ? "99+" : unreadCount}
+        </span>
+      )}
     </button>
   ) : null;
 
