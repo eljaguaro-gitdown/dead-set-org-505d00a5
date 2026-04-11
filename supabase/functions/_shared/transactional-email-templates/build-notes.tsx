@@ -140,7 +140,7 @@ const BuildNotesEmail = ({
         {/* ── SET I ── */}
         {set1.length > 0 && (
           <Section style={setSection}>
-            <Text style={setLabel}>SET I · FOUNDATION</Text>
+            <Text style={setLabel}>{set1Label || 'SET I · FIXES'}</Text>
             {set1.map((item, i) => (
               <Section key={i} style={changeItem}>
                 <Row>
