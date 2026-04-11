@@ -219,7 +219,7 @@ ${songCatalog}${versionInfo}
 
 CRITICAL RULES:
 - You MUST respond using the suggest_setlist tool.
-- ONLY use songs from the catalog above.
+- ONLY use songs from the SONG CATALOG section above. Do NOT use any song not listed there. The catalog has already been filtered to the correct era.
 - Mark segues accurately with the segueToNext field.
 - Include Drums → Space in Set II. Always.
 - For EVERY song, include a brief "notes" field explaining WHY it's in this spot.
