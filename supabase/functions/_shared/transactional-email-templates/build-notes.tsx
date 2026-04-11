@@ -205,11 +205,19 @@ const BuildNotesEmail = ({
 
         {/* ── FEEDBACK BOX ── */}
         <Section style={feedbackBox}>
-          <Text style={feedbackLabel}>YOUR FEEDBACK SHAPES THE NEXT SET</Text>
+          <Text style={backstageBadgeSt}>Backstage</Text>
+          <Text style={{...feedbackLabel, marginTop: '16px'}}>YOUR FEEDBACK SHAPES THE NEXT SET</Text>
           <Text style={feedbackText}>
-            Found something broken? Have a feature you'd kill for? Head to Backstage — our beta inner circle where your bug reports, wish list items, and ideas go directly into the next build. No ticket system. No support queue. Just Deadheads building together.
+            Backstage is where we build this together. Submit a feature request, log a bug, or tell us about the shows and songs that move you. A small group of people with all-access passes — shaping what Dead Set becomes, one build at a time.
           </Text>
-          <Link href={`${SITE_URL}/backstage?${UTM}`} style={feedbackLink}>OPEN BACKSTAGE ↗</Link>
+          <Text style={feedbackPillRow}>
+            <Link href={`${SITE_URL}/backstage?${UTM}`} style={feedbackPill}>✦&nbsp;&nbsp;Wish List</Link>
+            {' '}
+            <Link href={`${SITE_URL}/backstage?${UTM}`} style={feedbackPill}>⌁&nbsp;&nbsp;Bug Log</Link>
+            {' '}
+            <Link href={`${SITE_URL}/backstage?${UTM}`} style={feedbackPill}>◎&nbsp;&nbsp;Share Your Set</Link>
+          </Text>
+          <Link href={`${SITE_URL}/backstage?${UTM}`} style={feedbackCta}>Go Backstage&nbsp;&nbsp;↗</Link>
         </Section>
 
         {/* ── SIGN-OFF ── */}
