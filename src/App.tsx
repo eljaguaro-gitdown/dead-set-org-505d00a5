@@ -60,6 +60,7 @@ const App = () => (
           </Suspense>
           <GlobalAudioPlayer />
           <VisitorTracker />
+          <PwaInstallBanner />
         </AudioPlayerProvider>
       </BrowserRouter>
     </TooltipProvider>
