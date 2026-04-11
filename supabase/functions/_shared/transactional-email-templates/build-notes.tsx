@@ -72,6 +72,8 @@ const BuildNotesEmail = ({
   statsBugs = 0,
   set1 = [],
   set2 = [],
+  set1Label,
+  set2Label,
   encoreNote,
   nextWeekTeaser,
   betaNote,
