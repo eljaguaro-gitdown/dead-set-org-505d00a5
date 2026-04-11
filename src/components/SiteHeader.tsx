@@ -28,7 +28,7 @@ const SiteHeader = ({ children, large = false }: SiteHeaderProps) => {
   const { user, signOut } = useAuth();
   const { playingSlot, playlistMode, playlistIndex, playlistSlots } = useAudioPlayer();
   const [isAdmin, setIsAdmin] = useState(false);
-
+  const { unreadCount } = useUnreadMessages(user);
   useEffect(() => {
     if (!user) { setIsAdmin(false); return; }
     supabase
