@@ -16,6 +16,8 @@ import {
 import type { TemplateEntry } from './registry.ts'
 
 const SITE_URL = 'https://dead-set.org'
+const UTM = 'utm_source=email&utm_medium=transactional&utm_campaign=welcome'
+const SITE_URL_UTM = `${SITE_URL}?${UTM}`
 
 interface WelcomeEmailProps {
   displayName?: string
@@ -141,7 +143,7 @@ const WelcomeEmail = ({ displayName }: WelcomeEmailProps) => (
         {/* ── CTA ── */}
         <Section style={ctaSection}>
           <Text style={ctaLabel}>Start exploring</Text>
-          <Link href={SITE_URL} style={ctaButton}>Open Dead Set</Link>
+          <Link href={SITE_URL_UTM} style={ctaButton}>Open Dead Set</Link>
           <Text style={ctaSub}>dead-set.org</Text>
         </Section>
 
