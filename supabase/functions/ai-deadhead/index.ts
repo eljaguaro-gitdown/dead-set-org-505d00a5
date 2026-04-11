@@ -148,6 +148,21 @@ ${recentSongs.map((s: string) => `- "${s}"`).join("\n")}`
 
     const userPrefs = preferences ? `USER PREFERENCES: ${preferences}` : "";
 
+    // Cannabis vibe mapping for the AI
+    const cannabisVibeGuide = `
+CANNABIS VIBE MAPPING (use when user selects these vibes):
+- "Indica" = Deep, body-focused relaxation. "In-da-couch" energy. Build a show for nighttime: slow-burning jams, heavy grooves, lullaby closers. Think Stella Blue, Wharf Rat, Ship of Fools, Black Peter, Comes a Time, Brokedown Palace. Long, hypnotic Drums→Space. Dark Star that melts into the cosmos. Tempo stays low-to-mid, dynamics are waves not spikes. The setlist should feel like sinking into a warm bath.
+- "Sativa" = Uplifting, energetic, creative "head high." Daytime energy. Build a show that sparkles: crisp segues, playful jams, bright melodies. Think Scarlet→Fire, Shakedown Street, Eyes of the World, Dancing in the Street, Franklin's Tower, Estimated Prophet. Tempo runs mid-to-high, jams are exploratory but forward-moving. The setlist should feel like sunshine and ideas flowing.
+- "Hybrid" = Balanced blend of both worlds. "Mellow focus" — relaxed but engaged. Build a show with dynamic range: gentle passages next to peaks, contemplative songs followed by burners. Think Friend of the Devil into Deal, Terrapin Station into Playing in the Band. The setlist should feel like a full day — morning calm into afternoon energy into evening reflection.
+
+When cannabis vibes are combined with other vibes, let them MODIFY the other selections:
+- Indica + Dark & Heavy = the heaviest, most hypnotic show possible
+- Sativa + High Energy = absolute peak party energy, relentless
+- Hybrid + Spacey = balanced psychedelia, not too far out, grounded exploration
+- Indica + Mellow = ultra-chill, acoustic-leaning, campfire Dead
+- Sativa + Blues = electric, punchy, uptempo blues-rock
+`;
+
     let systemPrompt: string;
 
     if (mode === "build") {
