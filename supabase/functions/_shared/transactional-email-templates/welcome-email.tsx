@@ -4,20 +4,18 @@ import * as React from 'npm:react@18.3.1'
 
 import {
   Body,
-  Button,
   Container,
   Head,
-  Heading,
   Html,
   Link,
   Preview,
+  Section,
   Text,
   Hr,
 } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
 
-const SITE_NAME = 'Dead-Set.Org'
-const SITE_URL = 'https://dead-set-org.lovable.app'
+const SITE_URL = 'https://dead-set.org'
 
 interface WelcomeEmailProps {
   displayName?: string
@@ -25,37 +23,167 @@ interface WelcomeEmailProps {
 
 const WelcomeEmail = ({ displayName }: WelcomeEmailProps) => (
   <Html lang="en" dir="ltr">
-    <Head />
-    <Preview>Welcome to Dead-Set.Org — your setlists await</Preview>
+    <Head>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&family=DM+Sans:wght@300;400;500&family=Caveat:wght@400;600&family=JetBrains+Mono:wght@400&display=swap');`}</style>
+    </Head>
+    <Preview>Welcome to Dead Set — you found your people</Preview>
     <Body style={main}>
-      <Container style={container}>
-        <Text style={brand}>☠ DEAD-SET.ORG</Text>
-        <Hr style={divider} />
-        <Heading style={h1}>
-          {displayName ? `Welcome aboard, ${displayName}!` : 'Welcome aboard!'}
-        </Heading>
-        <Text style={text}>
-          You're officially part of the{' '}
-          <Link href={SITE_URL} style={link}>
-            <strong>Dead-Set.Org</strong>
-          </Link>{' '}
-          family. Time to build your dream Grateful Dead setlists.
-        </Text>
-        <Text style={text}>
-          Whether you've got a show burned into memory or want to craft the
-          perfect two-set night from scratch — Cosmic Charlie is here to help.
-        </Text>
-        <Button style={button} href={`${SITE_URL}/builder`}>
-          Build Your First Setlist
-        </Button>
-        <Text style={text}>
-          Browse what the community is building, save your favorites, and share
-          your creations with fellow heads.
-        </Text>
-        <Text style={footer}>
-          If you have any questions, just reply to this email. We're all friends here.
-        </Text>
-        <Text style={tagline}>The music never stopped. ⚡</Text>
+      <Container style={wrapper}>
+
+        {/* ── HEADER ── */}
+        <Section style={header}>
+          <div style={headerRuleTop} />
+          <Text style={siteName}>Dead Set</Text>
+          <Text style={headerTagline}>dead-set.org &nbsp;·&nbsp; 2,300 shows &nbsp;·&nbsp; 50 years of magic</Text>
+          <div style={headerRuleBottom} />
+        </Section>
+
+        {/* ── HERO ── */}
+        <Section style={hero}>
+          <Text style={heroEyebrow}>Welcome to the community</Text>
+          <Text style={heroHeadline}>You found your people.<br />And your people found you.</Text>
+          <Text style={heroSub}>A note from the founder</Text>
+        </Section>
+
+        {/* ── DIVIDER ── */}
+        <Section style={dividerSection}>
+          <div style={dividerLine} />
+          <Text style={dividerGlyph}>⌂</Text>
+        </Section>
+
+        {/* ── BODY ── */}
+        <Section style={bodySection}>
+          <Text style={salutation}>Hey Now —</Text>
+
+          <Text style={bodyP}>
+            You're getting this because you signed up for Dead Set — and that means we already have something
+            in common. A shared passion that's hard to explain to people who don't have it, and needs no
+            explanation to people who do.
+          </Text>
+
+          <Text style={bodyP}>Grateful to meet you.</Text>
+
+          <Text style={bodyP}>
+            So — what is Dead Set, why does it exist, and who's behind it? Let me take 60 seconds and answer all three.
+          </Text>
+
+          <Text style={bodyP}>
+            <strong style={gold}>Dead Set is a new way to explore the Grateful Dead's live catalog.</strong> Not a replacement
+            for anything you already love — Relisten, Archive.org, SiriusXM. Additive. Another way in. Built around
+            the idea that the search for the perfect version of your favorite song — by vibe, by era, by mood — is
+            one of the great joys of being a Deadhead. That search never ends. Dead Set is built for it.
+          </Text>
+
+          <Text style={bodyP}>
+            <strong style={gold}>Why does it exist?</strong> Because one night I was listening to Big Steve Parrish pull out
+            a gem from 1973 and I thought: <em>what if we could find these moments ourselves? On demand. By feel?</em>{' '}
+            That question became this.
+          </Text>
+
+          {/* Show callout */}
+          <Section style={showCallout}>
+            <Text style={showCalloutLabel}>The show that started it all</Text>
+            <Text style={showCalloutText}>Birdsong &nbsp;·&nbsp; Roosevelt Stadium &nbsp;·&nbsp; 08-01-1973</Text>
+          </Section>
+
+          <Text style={bodyP}>
+            <strong style={gold}>Who's behind it?</strong> I'm grateful_jaguaro.{' '}
+            <em>(Short but long story for another time.)</em>
+          </Text>
+
+          {/* Identity chips */}
+          <Section style={identityRow}>
+            <span style={chip}>Cyclist</span>{' '}
+            <span style={chip}>Skier</span>{' '}
+            <span style={chip}>Dad</span>{' '}
+            <span style={chip}>Music lover</span>{' '}
+            <span style={chipHighlight}>Deadhead</span>
+          </Section>
+
+          <Text style={bodyP}>
+            A 50-something New Yorker who came to the Bay Area 30 years ago and never looked back.
+            San Francisco called me. Haight Street called me. The people called me. I knew the moment
+            I got here that this was where I was supposed to be. With my people.
+          </Text>
+
+          {/* Pull quote */}
+          <Section style={pullQuote}>
+            <Text style={pullQuoteText}>
+              It's more than the music. It's the community and the experiences we share. The memories, the friends, the soul. If you know, you know.
+            </Text>
+          </Section>
+
+          <Text style={bodyP}>
+            There's this thing that happens among us — the <strong style={gold}>never-ending search</strong>.
+            The discovery of a version of your favorite song you'd never heard before. The moment someone says{' '}
+            <em>"dude, have you heard this? Check this out."</em> Word of mouth. The way we do.
+            That search — that discovery — is one of the great joys of being a Deadhead. The music never runs out.
+          </Text>
+        </Section>
+
+        {/* ── STORY BREAK ── */}
+        <Section style={storyBreak}>
+          <Text style={storyBreakLabel}>The mission</Text>
+          <Text style={storyBreakText}>
+            To be additive to the community. Not to replace Relisten or Archive.org or SiriusXM —
+            but to give us another way in. Another way to find the version that hits you exactly right
+            on exactly the right night.
+          </Text>
+        </Section>
+
+        {/* ── BODY CONTINUED ── */}
+        <Section style={bodySection}>
+          <Text style={bodyP}>
+            It's not perfect. It's raw and improvisational — like the band. It's early. But it's ours.
+          </Text>
+        </Section>
+
+        {/* ── CTA ── */}
+        <Section style={ctaSection}>
+          <Text style={ctaLabel}>Start exploring</Text>
+          <Link href={SITE_URL} style={ctaButton}>Open Dead Set</Link>
+          <Text style={ctaSub}>dead-set.org</Text>
+        </Section>
+
+        {/* ── DIVIDER ── */}
+        <Section style={dividerSection}>
+          <div style={dividerLine} />
+          <Text style={dividerGlyph}>∿</Text>
+        </Section>
+
+        {/* ── SIGN-OFF ── */}
+        <Section style={signoff}>
+          <Text style={signoffText}>
+            I invite you to join me on the mission. Explore, discover, share. And if you find something that moves you —
+            pass the tape.
+          </Text>
+          <Text style={signoffClosing}>Gratefully yours,</Text>
+          <Text style={signoffName}>grateful_jaguaro</Text>
+          <Text style={signoffTitle}>Founder · Dead Set · dead-set.org</Text>
+        </Section>
+
+        {/* ── PS ── */}
+        <Section style={psSection}>
+          <Text style={psText}>
+            <strong style={gold}>P.S.</strong> — The show you're looking for is out there. Let's find it together.
+          </Text>
+        </Section>
+
+        {/* ── FOOTER ── */}
+        <Section style={footer}>
+          <div style={footerRule} />
+          <Text style={footerLogo}>Dead Set · dead-set.org</Text>
+          <Text style={footerCopy}>
+            Sent from{' '}
+            <Link href={`mailto:noreply@notify.dead-set.org`} style={footerLink}>noreply@dead-set.org</Link>
+            <br />
+            By the community, for the community.
+            <br />
+            Please copy and share freely &nbsp;·&nbsp; Trade only
+          </Text>
+          <Text style={footerTapeLabel}>☠ NFA · NOT FOR SALE · FREELY GIVEN ☠</Text>
+        </Section>
+
       </Container>
     </Body>
   </Html>
@@ -63,18 +191,80 @@ const WelcomeEmail = ({ displayName }: WelcomeEmailProps) => (
 
 export const template = {
   component: WelcomeEmail,
-  subject: 'Welcome to Dead-Set.Org — the music never stopped ⚡',
+  subject: 'Welcome to Dead Set — you found your people',
   displayName: 'Welcome email',
   previewData: { displayName: 'Jerry' },
 } satisfies TemplateEntry
 
-const main = { backgroundColor: '#ffffff', fontFamily: "'DM Sans', Arial, sans-serif" }
-const container = { padding: '32px 28px', maxWidth: '480px', margin: '0 auto' }
-const brand = { fontSize: '13px', fontWeight: 'bold' as const, letterSpacing: '3px', color: '#b8860b', margin: '0 0 16px', textAlign: 'center' as const }
-const divider = { borderColor: '#e8e0d0', margin: '0 0 28px' }
-const h1 = { fontSize: '24px', fontWeight: 'bold' as const, fontFamily: "'Playfair Display', Georgia, serif", color: '#0d0d14', margin: '0 0 20px' }
-const text = { fontSize: '15px', color: '#3d3a36', lineHeight: '1.6', margin: '0 0 20px' }
-const link = { color: '#b8860b', textDecoration: 'underline' }
-const button = { backgroundColor: '#b8860b', color: '#ffffff', fontSize: '15px', fontWeight: '600' as const, borderRadius: '10px', padding: '14px 28px', textDecoration: 'none' }
-const footer = { fontSize: '13px', color: '#8a8578', margin: '32px 0 8px', lineHeight: '1.5' }
-const tagline = { fontSize: '12px', color: '#b8860b', fontStyle: 'italic' as const, margin: '8px 0 0' }
+// ── STYLES ──
+
+const gold = { color: '#c9a84c', fontWeight: '500' as const }
+const main = { backgroundColor: '#0a0a0a', fontFamily: "'DM Sans', Arial, sans-serif", color: '#c8c4b0', WebkitFontSmoothing: 'antialiased' as const }
+const wrapper = { maxWidth: '620px', margin: '0 auto', backgroundColor: '#0d0d0d', padding: '0' }
+
+// Header
+const header = { backgroundColor: '#0a0a0a', borderBottom: '1px solid #2a2410', padding: '32px 40px 28px', textAlign: 'center' as const }
+const headerRuleTop = { width: '100%', height: '1px', background: 'linear-gradient(90deg, transparent, #c9a84c 30%, #c9a84c 70%, transparent)', marginBottom: '24px' }
+const siteName = { fontFamily: "'Playfair Display', Georgia, serif", fontSize: '26px', fontWeight: '700' as const, color: '#c9a84c', letterSpacing: '0.08em', textTransform: 'uppercase' as const, margin: '0 0 10px' }
+const headerTagline = { fontFamily: "'JetBrains Mono', monospace", fontSize: '13px', letterSpacing: '0.18em', color: '#b09e78', textTransform: 'uppercase' as const, margin: '0' }
+const headerRuleBottom = { width: '100%', height: '1px', background: 'linear-gradient(90deg, transparent, #2a2410 30%, #2a2410 70%, transparent)', marginTop: '24px' }
+
+// Hero
+const hero = { backgroundColor: '#0a0a0a', padding: '48px 40px 40px', textAlign: 'center' as const, borderBottom: '1px solid #1a1a12' }
+const heroEyebrow = { fontFamily: "'JetBrains Mono', monospace", fontSize: '13px', letterSpacing: '0.22em', color: '#b09e78', textTransform: 'uppercase' as const, margin: '0 0 20px' }
+const heroHeadline = { fontFamily: "'Playfair Display', Georgia, serif", fontSize: '36px', fontWeight: '400' as const, fontStyle: 'italic' as const, color: '#c9a84c', lineHeight: '1.25', margin: '0 0 16px' }
+const heroSub = { fontFamily: "'DM Sans', Arial, sans-serif", fontSize: '15px', fontWeight: '300' as const, color: '#a09880', letterSpacing: '0.04em', margin: '0' }
+
+// Divider
+const dividerSection = { padding: '0 40px', margin: '0', textAlign: 'center' as const }
+const dividerLine = { height: '1px', background: 'linear-gradient(90deg, transparent, #2a2410 20%, #c9a84c 50%, #2a2410 80%, transparent)' }
+const dividerGlyph = { display: 'inline-block', backgroundColor: '#0d0d0d', padding: '0 12px', color: '#c9a84c', fontSize: '14px', margin: '-8px 0 0' }
+
+// Body
+const bodySection = { padding: '44px 48px', backgroundColor: '#0d0d0d' }
+const salutation = { fontFamily: "'Caveat', cursive", fontSize: '22px', color: '#c9a84c', margin: '0 0 24px' }
+const bodyP = { fontFamily: "'DM Sans', Arial, sans-serif", fontSize: '15px', fontWeight: '300' as const, lineHeight: '1.85', color: '#b0ac9a', margin: '0 0 20px' }
+
+// Pull quote
+const pullQuote = { borderLeft: '2px solid #c9a84c', margin: '32px 0', padding: '4px 0 4px 20px' }
+const pullQuoteText = { fontFamily: "'Playfair Display', Georgia, serif", fontSize: '18px', fontStyle: 'italic' as const, color: '#c9a84c', lineHeight: '1.5', margin: '0' }
+
+// Identity chips
+const identityRow = { margin: '28px 0' }
+const chip = { display: 'inline-block', fontFamily: "'JetBrains Mono', monospace", fontSize: '13px', letterSpacing: '0.14em', color: '#a09880', border: '1px solid #4a3e28', borderRadius: '2px', padding: '4px 10px', margin: '4px 4px 4px 0', textTransform: 'uppercase' as const }
+const chipHighlight = { ...chip, color: '#c9a84c', borderColor: '#4a3a18', backgroundColor: '#1a1408' }
+
+// Show callout
+const showCallout = { backgroundColor: '#0f0e08', border: '1px solid #2a2410', borderLeft: '3px solid #c9a84c', borderRadius: '2px', padding: '14px 18px', margin: '4px 0 24px' }
+const showCalloutLabel = { fontFamily: "'JetBrains Mono', monospace", fontSize: '13px', letterSpacing: '0.18em', color: '#a09880', textTransform: 'uppercase' as const, margin: '0 0 7px' }
+const showCalloutText = { fontFamily: "'JetBrains Mono', monospace", fontSize: '14px', color: '#c9a84c', letterSpacing: '0.08em', margin: '0' }
+
+// Story break
+const storyBreak = { backgroundColor: '#0f0e08', borderTop: '1px solid #1e1c10', borderBottom: '1px solid #1e1c10', padding: '32px 48px', margin: '8px 0' }
+const storyBreakLabel = { fontFamily: "'JetBrains Mono', monospace", fontSize: '13px', letterSpacing: '0.22em', color: '#a09880', textTransform: 'uppercase' as const, margin: '0 0 14px' }
+const storyBreakText = { fontFamily: "'Caveat', cursive", fontSize: '20px', color: '#c8c4b0', lineHeight: '1.6', margin: '0' }
+
+// CTA
+const ctaSection = { padding: '40px 48px 44px', textAlign: 'center' as const, backgroundColor: '#0d0d0d' }
+const ctaLabel = { fontFamily: "'JetBrains Mono', monospace", fontSize: '13px', letterSpacing: '0.22em', color: '#a09880', textTransform: 'uppercase' as const, margin: '0 0 20px' }
+const ctaButton = { display: 'inline-block', fontFamily: "'DM Sans', Arial, sans-serif", fontSize: '13px', fontWeight: '500' as const, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: '#0a0a0a', backgroundColor: '#c9a84c', padding: '14px 36px', textDecoration: 'none', borderRadius: '2px' }
+const ctaSub = { fontFamily: "'DM Sans', Arial, sans-serif", fontSize: '14px', color: '#a09880', margin: '16px 0 0' }
+
+// Sign-off
+const signoff = { padding: '8px 48px 40px', backgroundColor: '#0d0d0d' }
+const signoffText = { fontFamily: "'DM Sans', Arial, sans-serif", fontSize: '15px', fontWeight: '300' as const, lineHeight: '1.85', color: '#b0ac9a', margin: '0 0 24px' }
+const signoffClosing = { fontFamily: "'Caveat', cursive", fontSize: '16px', color: '#a09880', margin: '0 0 4px' }
+const signoffName = { fontFamily: "'Caveat', cursive", fontSize: '28px', color: '#c9a84c', margin: '0 0 2px' }
+const signoffTitle = { fontFamily: "'JetBrains Mono', monospace", fontSize: '13px', color: '#a09880', letterSpacing: '0.14em', textTransform: 'uppercase' as const, margin: '0' }
+
+// PS
+const psSection = { padding: '24px 48px 32px', borderTop: '1px solid #1a1a12', backgroundColor: '#0d0d0d' }
+const psText = { fontFamily: "'Playfair Display', Georgia, serif", fontSize: '15px', fontStyle: 'italic' as const, color: '#a09880', lineHeight: '1.7', margin: '0' }
+
+// Footer
+const footer = { backgroundColor: '#080808', borderTop: '1px solid #1a1408', padding: '28px 40px', textAlign: 'center' as const }
+const footerRule = { height: '1px', background: 'linear-gradient(90deg, transparent, #2a2410 30%, #2a2410 70%, transparent)', marginBottom: '22px' }
+const footerLogo = { fontFamily: "'Playfair Display', Georgia, serif", fontSize: '14px', color: '#a09880', letterSpacing: '0.1em', textTransform: 'uppercase' as const, margin: '0 0 10px' }
+const footerCopy = { fontFamily: "'JetBrains Mono', monospace", fontSize: '13px', color: '#8a8270', letterSpacing: '0.14em', textTransform: 'uppercase' as const, lineHeight: '1.8', margin: '0' }
+const footerLink = { color: '#a09880', textDecoration: 'underline' }
+const footerTapeLabel = { fontFamily: "'JetBrains Mono', monospace", fontSize: '13px', color: '#6b6450', letterSpacing: '0.18em', textTransform: 'uppercase' as const, marginTop: '16px', paddingTop: '16px', borderTop: '1px solid #2a2820' }
