@@ -222,6 +222,7 @@ const headerRuleBottom = { width: '100%', height: '1px', background: 'linear-gra
 const hero = { backgroundColor: '#0a0a0a', padding: '40px 40px 24px', textAlign: 'center' as const }
 const heroEyebrow = { fontFamily: "'JetBrains Mono', monospace", fontSize: '13px', letterSpacing: '0.22em', color: '#b09e78', textTransform: 'uppercase' as const, margin: '0 0 16px' }
 const heroHeadline = { fontFamily: "'Playfair Display', Georgia, serif", fontSize: '30px', fontWeight: '400' as const, fontStyle: 'italic' as const, color: '#c9a84c', lineHeight: '1.3', margin: '0' }
+const heroTaglineSt = { fontFamily: "'JetBrains Mono', monospace", fontSize: '13px', letterSpacing: '4px', color: '#b09e78', margin: '16px 0 0' }
 
 // Stats
 const statsSection = { padding: '20px 40px 28px', textAlign: 'center' as const, borderBottom: '1px solid #1a1a12' }
