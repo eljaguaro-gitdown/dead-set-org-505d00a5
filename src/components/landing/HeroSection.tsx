@@ -23,34 +23,31 @@ const HeroSection = () => {
         <div className="absolute top-[10%] left-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-[radial-gradient(circle,hsl(var(--dead-gold)/0.08),transparent_70%)]" />
       </div>
 
-      <motion.div
-        {...fade(0)}
+      <div
         className="flex flex-col items-center gap-6 sm:gap-8 relative z-10 text-center max-w-2xl w-full py-12 sm:py-16"
       >
         {/* 1. SYF Logo */}
-        <motion.div {...fade(0)}>
+        <div>
           <StealYourFace size={isMobile() ? 80 : 140} />
-        </motion.div>
+        </div>
 
         {/* 2. Headline */}
-        <motion.h1
-          {...fade(0.06)}
+        <h1
           className="font-display text-2xl sm:text-4xl md:text-5xl text-primary leading-none tracking-tight"
         >
           2,300 shows. 50 years of magic.
           <br />
           Yours to explore.
-        </motion.h1>
+        </h1>
 
         {/* 3. Subhead */}
-        <motion.p
-          {...fade(0.12)}
+        <p
           className="font-body text-sm sm:text-base text-muted-foreground leading-relaxed max-w-[600px] px-2"
         >
           Dead-Set.Org pairs you with Cosmic Charlie — a guide who knows every show the Dead ever played. Tell him your
           mood, pick an era, and he'll build you a full concert from real live recordings in the Archive. Every note is
           real. Every show is yours to discover.
-        </motion.p>
+        </p>
 
         {/* 4. Audio Preview Strip */}
         <motion.div {...fade(0.16)} className="flex flex-col items-center gap-2">
@@ -82,7 +79,7 @@ const HeroSection = () => {
             <ChevronRight className="w-4 h-4" />
           </Button>
         </motion.div>
-      </motion.div>
+      </div>
     </main>
   );
 };
