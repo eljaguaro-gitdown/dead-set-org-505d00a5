@@ -56,6 +56,8 @@ const App = () => (
               <Route path="/privacy" element={<PrivacyPolicy />} />
               <Route path="/backstage" element={<Backstage />} />
               <Route path="/unsubscribe" element={<Unsubscribe />} />
+              <Route path="/updates" element={<Updates />} />
+              <Route path="/admin/changelog" element={<AdminChangelog />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
