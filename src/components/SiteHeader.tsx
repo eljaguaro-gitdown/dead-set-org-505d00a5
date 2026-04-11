@@ -95,6 +95,12 @@ const SiteHeader = ({ children, large = false }: SiteHeaderProps) => {
     </motion.div>
   ) : null;
 
+  const isRepeatVisitor = typeof window !== "undefined" && !!localStorage.getItem("dead_set_visited");
+
+  useEffect(() => {
+    localStorage.setItem("dead_set_visited", "1");
+  }, []);
+
   return (
     <header className="border-b border-border/50 px-6 sm:px-12 py-4 sm:py-5 flex items-center justify-between">
       <button
@@ -130,8 +136,30 @@ const SiteHeader = ({ children, large = false }: SiteHeaderProps) => {
               </button>
             )}
           </div>
-          {/* Mobile hamburger */}
-          <div className="sm:hidden">
+          {/* Mobile: persistent top-level actions + hamburger */}
+          <div className="sm:hidden flex items-center gap-3">
+            {/* Persistent mobile: Messages for logged-in, Sign In for repeat guests */}
+            {user ? (
+              <button
+                onClick={() => navigate("/messages")}
+                className="relative p-2 text-muted-foreground hover:text-foreground transition-colors"
+                title="Messages"
+              >
+                <MessageCircle className="w-5 h-5" />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-primary text-primary-foreground text-[10px] font-mono flex items-center justify-center">
+                    {unreadCount > 99 ? "99+" : unreadCount}
+                  </span>
+                )}
+              </button>
+            ) : isRepeatVisitor ? (
+              <button
+                onClick={() => navigate("/auth")}
+                className="font-mono text-[10px] tracking-[0.15em] text-primary border border-primary/40 rounded-md px-3 py-1.5 hover:bg-primary/10 transition-colors uppercase"
+              >
+                Sign In
+              </button>
+            ) : null}
             <Sheet>
               <SheetTrigger asChild>
                 <button className="p-2 text-foreground" aria-label="Open menu">
