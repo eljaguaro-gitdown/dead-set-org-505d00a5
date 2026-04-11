@@ -11,21 +11,27 @@ const maybeSendWelcomeEmail = async (user: User) => {
 
   const key = `${WELCOME_SENT_PREFIX}${user.id}`;
   if (localStorage.getItem(key)) return;
-  localStorage.setItem(key, "1");
 
-  // Only send for users created in the last 60s (new signups, not returning logins)
+  // Allow up to 5 minutes for OAuth redirects to complete
   const createdAt = new Date(user.created_at).getTime();
-  if (Date.now() - createdAt > 60_000) return;
+  if (Date.now() - createdAt > 300_000) return;
 
-  const displayName = user.user_metadata?.full_name || user.email?.split("@")[0] || "Deadhead";
-  await supabase.functions.invoke("send-transactional-email", {
-    body: {
-      templateName: "welcome-email",
-      recipientEmail: user.email,
-      idempotencyKey: `welcome-${user.id}`,
-      templateData: { displayName },
-    },
-  }).catch(() => {});
+  try {
+    await supabase.functions.invoke("send-transactional-email", {
+      body: {
+        templateName: "welcome-email",
+        recipientEmail: user.email,
+        idempotencyKey: `welcome-${user.id}`,
+        templateData: {
+          displayName: user.user_metadata?.full_name || user.email?.split("@")[0] || "Deadhead",
+        },
+      },
+    });
+    // Only mark as sent after successful invocation
+    localStorage.setItem(key, "1");
+  } catch {
+    // Don't set the flag so it retries next sign-in
+  }
 };
 
 export const useAuth = () => {
