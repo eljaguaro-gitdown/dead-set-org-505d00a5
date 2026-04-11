@@ -207,9 +207,9 @@ const BuildNotesEmail = ({
         <Section style={feedbackBox}>
           <Text style={feedbackLabel}>YOUR FEEDBACK SHAPES THE NEXT SET</Text>
           <Text style={feedbackText}>
-            Found something broken? Have a feature you'd kill for? Hit reply — this goes straight to grateful_jaguaro. No ticket system. No support queue. Just a Deadhead reading his email.
+            Found something broken? Have a feature you'd kill for? Head to Backstage — our beta inner circle where your bug reports, wish list items, and ideas go directly into the next build. No ticket system. No support queue. Just Deadheads building together.
           </Text>
-          <Link href="mailto:grateful_jaguaro@dead-set.org" style={feedbackLink}>REPLY TO THIS EMAIL ↗</Link>
+          <Link href={`${SITE_URL}/backstage?${UTM}`} style={feedbackLink}>OPEN BACKSTAGE ↗</Link>
         </Section>
 
         {/* ── SIGN-OFF ── */}
