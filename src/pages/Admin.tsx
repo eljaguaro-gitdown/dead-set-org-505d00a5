@@ -286,6 +286,94 @@ const Admin = () => {
           </div>
         </div>
 
+        {/* Backstage Submissions */}
+        <div className="bg-card border border-border rounded-lg overflow-hidden">
+          <div className="px-4 py-3 border-b border-border flex items-center gap-2">
+            <MessageSquare className="w-4 h-4 text-primary" />
+            <h2 className="font-display text-sm text-foreground">Backstage · Inner Circle</h2>
+            <span className="text-xs text-muted-foreground font-body ml-auto">
+              {!loading && `${backstage.wishlist.length + backstage.bugs.length + backstage.shares.length} submissions`}
+            </span>
+          </div>
+
+          {loading ? (
+            <div className="p-8 flex items-center justify-center">
+              <Loader2 className="w-6 h-6 text-primary animate-spin" />
+            </div>
+          ) : (
+            <div className="p-4 space-y-4">
+              {/* Wishlist */}
+              {backstage.wishlist.length > 0 && (
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <Lightbulb className="w-3.5 h-3.5 text-primary" />
+                    <h3 className="font-display text-xs text-primary uppercase tracking-wider">Wish List ({backstage.wishlist.length})</h3>
+                  </div>
+                  <div className="space-y-2">
+                    {backstage.wishlist.map((w) => (
+                      <div key={w.id} className="bg-muted/30 border border-border rounded-md p-3 text-sm font-body">
+                        {w.top_request && <p className="text-foreground"><span className="text-muted-foreground">Top request:</span> {w.top_request}</p>}
+                        {w.what_works && <p className="text-foreground mt-1"><span className="text-muted-foreground">What works:</span> {w.what_works}</p>}
+                        {w.bigger_picture && <p className="text-foreground mt-1"><span className="text-muted-foreground">Bigger picture:</span> {w.bigger_picture}</p>}
+                        <p className="text-xs text-muted-foreground mt-2">{formatDate(w.created_at)}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Bugs */}
+              {backstage.bugs.length > 0 && (
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <Bug className="w-3.5 h-3.5 text-destructive" />
+                    <h3 className="font-display text-xs text-destructive uppercase tracking-wider">Bug Reports ({backstage.bugs.length})</h3>
+                  </div>
+                  <div className="space-y-2">
+                    {backstage.bugs.map((b) => (
+                      <div key={b.id} className="bg-muted/30 border border-border rounded-md p-3 text-sm font-body">
+                        <p className="text-foreground">{b.description}</p>
+                        <div className="flex flex-wrap gap-3 mt-2 text-xs text-muted-foreground">
+                          {b.location && <span>📍 {b.location}</span>}
+                          {b.device && <span>📱 {b.device}</span>}
+                          {b.severity && <span className={b.severity === 'high' ? 'text-destructive' : ''}>⚠️ {b.severity}</span>}
+                          {b.repeats !== null && <span>{b.repeats ? '🔁 Repeats' : 'Once'}</span>}
+                          <span>{formatDate(b.created_at)}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Shares */}
+              {backstage.shares.length > 0 && (
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <Star className="w-3.5 h-3.5 text-primary" />
+                    <h3 className="font-display text-xs text-primary uppercase tracking-wider">Share Your Set ({backstage.shares.length})</h3>
+                  </div>
+                  <div className="space-y-2">
+                    {backstage.shares.map((s) => (
+                      <div key={s.id} className="bg-muted/30 border border-border rounded-md p-3 text-sm font-body">
+                        {s.handle && <p className="text-primary font-medium">@{s.handle}</p>}
+                        {s.favorite_songs && <p className="text-foreground mt-1"><span className="text-muted-foreground">Fav songs:</span> {s.favorite_songs}</p>}
+                        {s.favorite_show && <p className="text-foreground mt-1"><span className="text-muted-foreground">Fav show:</span> {s.favorite_show}</p>}
+                        {s.personal_take && <p className="text-foreground mt-1"><span className="text-muted-foreground">Take:</span> {s.personal_take}</p>}
+                        <p className="text-xs text-muted-foreground mt-2">{formatDate(s.created_at)}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {backstage.wishlist.length === 0 && backstage.bugs.length === 0 && backstage.shares.length === 0 && (
+                <p className="text-sm text-muted-foreground font-body text-center py-4">No submissions yet.</p>
+              )}
+            </div>
+          )}
+        </div>
+
         {/* User List */}
         <div className="bg-card border border-border rounded-lg overflow-hidden">
           <div className="px-4 py-3 border-b border-border flex items-center gap-2">
