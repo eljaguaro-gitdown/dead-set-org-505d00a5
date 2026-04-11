@@ -113,6 +113,16 @@ const SiteHeader = ({ children, large = false }: SiteHeaderProps) => {
             {messagesLink}
             {adminLink}
             {children}
+            {user && (
+              <button
+                onClick={async () => { await signOut(); navigate("/"); }}
+                className="flex items-center gap-1.5 text-xs font-mono text-muted-foreground hover:text-foreground transition-colors tracking-wider uppercase"
+                title="Sign Out"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                <span>Sign Out</span>
+              </button>
+            )}
           </div>
           {/* Mobile hamburger */}
           <div className="sm:hidden">
