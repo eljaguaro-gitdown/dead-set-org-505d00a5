@@ -32,12 +32,22 @@ interface AudioPlayerContextValue extends AudioPlayerState {
   advancePlaylist: (dir: number) => Promise<void>;
 }
 
-const AudioPlayerContext = createContext<AudioPlayerContextValue | null>(null);
+const defaultAudioPlayerContext: AudioPlayerContextValue = {
+  playingSlot: null,
+  playlistMode: false,
+  playlistIndex: 0,
+  playlistSlots: [],
+  activeSetlistId: null,
+  playSingle: () => undefined,
+  playSetlist: async () => undefined,
+  stopPlayback: () => undefined,
+  advancePlaylist: async () => undefined,
+};
+
+const AudioPlayerContext = createContext<AudioPlayerContextValue>(defaultAudioPlayerContext);
 
 export const useAudioPlayer = () => {
-  const ctx = useContext(AudioPlayerContext);
-  if (!ctx) throw new Error("useAudioPlayer must be used within AudioPlayerProvider");
-  return ctx;
+  return useContext(AudioPlayerContext);
 };
 
 export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
