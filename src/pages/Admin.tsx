@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { Shield, Users, ArrowLeft, Loader2, Calendar, Mail, User, Trash2, ListMusic, Eye, Globe, MessageSquare, Bug, Star, Lightbulb } from "lucide-react";
+import { Shield, Users, ArrowLeft, Loader2, Calendar, Mail, User, Trash2, ListMusic, Eye, Globe, MessageSquare, Bug, Star, Lightbulb, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -37,9 +37,13 @@ interface TrafficStats {
 }
 
 interface BackstageData {
-  wishlist: Array<{ id: string; top_request: string | null; what_works: string | null; bigger_picture: string | null; created_at: string }>;
-  bugs: Array<{ id: string; description: string; location: string | null; device: string | null; severity: string | null; repeats: boolean | null; created_at: string }>;
-  shares: Array<{ id: string; handle: string | null; favorite_songs: string | null; favorite_show: string | null; personal_take: string | null; created_at: string }>;
+  wishlist: Array<{ id: string; top_request: string | null; what_works: string | null; bigger_picture: string | null; created_at: string; user_id: string | null }>;
+  bugs: Array<{ id: string; description: string; location: string | null; device: string | null; severity: string | null; repeats: boolean | null; created_at: string; user_id: string | null }>;
+  shares: Array<{ id: string; handle: string | null; favorite_songs: string | null; favorite_show: string | null; personal_take: string | null; created_at: string; user_id: string | null }>;
+}
+
+interface ProfileMap {
+  [userId: string]: { display_name: string | null; avatar_url: string | null };
 }
 
 const Admin = () => {
@@ -50,6 +54,7 @@ const Admin = () => {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [backstage, setBackstage] = useState<BackstageData>({ wishlist: [], bugs: [], shares: [] });
+  const [profileMap, setProfileMap] = useState<ProfileMap>({});
 
   // Check admin role
   useEffect(() => {
