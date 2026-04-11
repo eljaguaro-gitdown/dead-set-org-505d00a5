@@ -544,6 +544,20 @@ const Admin = () => {
                       </span>
                     </div>
 
+                    {/* Send welcome email */}
+                    <button
+                      onClick={() => handleSendWelcome(u.id, u.email, u.displayName)}
+                      disabled={sendingWelcome === u.id}
+                      className="p-1.5 text-muted-foreground hover:text-primary transition-colors shrink-0"
+                      title="Send welcome email"
+                    >
+                      {sendingWelcome === u.id ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        <Mail className="w-3.5 h-3.5" />
+                      )}
+                    </button>
+
                     {/* Delete button */}
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
