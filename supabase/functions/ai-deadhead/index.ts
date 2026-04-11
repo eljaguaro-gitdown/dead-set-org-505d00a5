@@ -81,12 +81,24 @@ serve(async (req) => {
     const { mode, eraId, currentSlots, preferences, recentSongs } = await req.json();
 
     // Fetch songs catalog for context
-    const songsQuery = supabase.from("songs").select("id, title, tags, is_jam_vehicle, typical_set_position, times_played");
-    const { data: songs } = await songsQuery;
+    const { data: allSongs } = await supabase.from("songs").select("id, title, tags, is_jam_vehicle, typical_set_position, times_played, first_played, last_played");
 
     // Fetch eras for context
     const { data: eras } = await supabase.from("eras").select("*");
     const eraInfo = eraId ? eras?.find((e: any) => e.id === eraId) : null;
+
+    // Filter songs by era year range if an era is selected
+    let songs = allSongs || [];
+    if (eraInfo) {
+      songs = songs.filter((s: any) => {
+        if (!s.first_played) return false;
+        const firstYear = parseInt(s.first_played.substring(0, 4), 10);
+        const lastYear = s.last_played ? parseInt(s.last_played.substring(0, 4), 10) : 9999;
+        // Song was in the repertoire during this era if it was first played before era ended
+        // AND last played after era started
+        return firstYear <= eraInfo.year_end && lastYear >= eraInfo.year_start;
+      });
+    }
 
     // Fetch notable versions if era is specified
     let versions: any[] = [];
@@ -95,14 +107,14 @@ serve(async (req) => {
       versions = data || [];
     }
 
-    const songCatalog = (songs || []).map((s: any) =>
+    const songCatalog = songs.map((s: any) =>
       `- "${s.title}" (tags: ${(s.tags || []).join(", ")}, jam: ${s.is_jam_vehicle}, position: ${s.typical_set_position || "any"}, played: ${s.times_played}x)`
     ).join("\n");
 
     const versionInfo = versions.length > 0
       ? `\n\nNotable versions from this era:\n${versions.map((v: any) => {
-          const song = songs?.find((s: any) => s.id === v.song_id);
-          return `- "${song?.title}" ${v.show_date} at ${v.venue}, ${v.city} (rating: ${v.rating}/5)`;
+          const song = songs.find((s: any) => s.id === v.song_id);
+          return `- "${song?.title || 'Unknown'}" ${v.show_date} at ${v.venue}, ${v.city} (rating: ${v.rating}/5)`;
         }).join("\n")}`
       : "";
 
