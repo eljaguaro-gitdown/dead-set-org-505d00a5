@@ -363,7 +363,8 @@ const Admin = () => {
                   <div className="space-y-2">
                     {backstage.wishlist.map((w) => (
                       <div key={w.id} className="bg-muted/30 border border-border rounded-md p-3 text-sm font-body">
-                        {w.top_request && <p className="text-foreground"><span className="text-muted-foreground">Top request:</span> {w.top_request}</p>}
+                        <SubmitterBadge userId={w.user_id} />
+                        {w.top_request && <p className="text-foreground mt-2"><span className="text-muted-foreground">Top request:</span> {w.top_request}</p>}
                         {w.what_works && <p className="text-foreground mt-1"><span className="text-muted-foreground">What works:</span> {w.what_works}</p>}
                         {w.bigger_picture && <p className="text-foreground mt-1"><span className="text-muted-foreground">Bigger picture:</span> {w.bigger_picture}</p>}
                         <p className="text-xs text-muted-foreground mt-2">{formatDate(w.created_at)}</p>
@@ -383,7 +384,8 @@ const Admin = () => {
                   <div className="space-y-2">
                     {backstage.bugs.map((b) => (
                       <div key={b.id} className="bg-muted/30 border border-border rounded-md p-3 text-sm font-body">
-                        <p className="text-foreground">{b.description}</p>
+                        <SubmitterBadge userId={b.user_id} />
+                        <p className="text-foreground mt-2">{b.description}</p>
                         <div className="flex flex-wrap gap-3 mt-2 text-xs text-muted-foreground">
                           {b.location && <span>📍 {b.location}</span>}
                           {b.device && <span>📱 {b.device}</span>}
@@ -407,7 +409,8 @@ const Admin = () => {
                   <div className="space-y-2">
                     {backstage.shares.map((s) => (
                       <div key={s.id} className="bg-muted/30 border border-border rounded-md p-3 text-sm font-body">
-                        {s.handle && <p className="text-primary font-medium">@{s.handle}</p>}
+                        <SubmitterBadge userId={s.user_id} />
+                        {s.handle && <p className="text-primary font-medium mt-1">@{s.handle}</p>}
                         {s.favorite_songs && <p className="text-foreground mt-1"><span className="text-muted-foreground">Fav songs:</span> {s.favorite_songs}</p>}
                         {s.favorite_show && <p className="text-foreground mt-1"><span className="text-muted-foreground">Fav show:</span> {s.favorite_show}</p>}
                         {s.personal_take && <p className="text-foreground mt-1"><span className="text-muted-foreground">Take:</span> {s.personal_take}</p>}
