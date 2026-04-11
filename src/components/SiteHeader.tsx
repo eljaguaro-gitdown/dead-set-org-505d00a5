@@ -159,6 +159,29 @@ const SiteHeader = ({ children, large = false }: SiteHeaderProps) => {
                       <ShareAppButton variant="full" className="w-full justify-start" />
                     </div>
                   </SheetClose>
+                  {user && (
+                    <>
+                      <div className="h-px bg-border/40 my-2" />
+                      <SheetClose asChild>
+                        <button
+                          onClick={() => navigate("/profile")}
+                          className="min-h-[44px] flex items-center gap-1.5 text-xs font-mono text-muted-foreground hover:text-foreground transition-colors tracking-wider uppercase"
+                        >
+                          <User className="w-3.5 h-3.5" />
+                          Profile
+                        </button>
+                      </SheetClose>
+                      <SheetClose asChild>
+                        <button
+                          onClick={async () => { await signOut(); navigate("/"); }}
+                          className="min-h-[44px] flex items-center gap-1.5 text-xs font-mono text-muted-foreground hover:text-foreground transition-colors tracking-wider uppercase"
+                        >
+                          <LogOut className="w-3.5 h-3.5" />
+                          Sign Out
+                        </button>
+                      </SheetClose>
+                    </>
+                  )}
                 </nav>
               </SheetContent>
             </Sheet>
