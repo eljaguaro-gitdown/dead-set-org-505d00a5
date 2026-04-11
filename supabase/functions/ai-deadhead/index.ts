@@ -256,6 +256,7 @@ SEGUE & PAIRING RULES:
 - Drums→Space belongs in Set II, always
 
 ${creativityBlock}
+${cannabisVibeGuide}
 ${avoidBlock}
 
 ${eraContext}
