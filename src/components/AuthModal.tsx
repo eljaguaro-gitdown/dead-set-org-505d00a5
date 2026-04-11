@@ -38,10 +38,10 @@ const AuthModal = ({ open, onOpenChange, onAuthenticated, onBeforeRedirect }: Au
           options: { emailRedirectTo: window.location.origin },
         });
         if (error) throw error;
-        // Send welcome email regardless of session (fire-and-forget)
+        // Send welcome email regardless of session
         if (data.user) {
           const displayName = data.user.user_metadata?.full_name || email.split("@")[0];
-          supabase.functions.invoke("send-transactional-email", {
+          await supabase.functions.invoke("send-transactional-email", {
             body: {
               templateName: "welcome-email",
               recipientEmail: email,
