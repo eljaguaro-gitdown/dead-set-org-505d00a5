@@ -81,6 +81,7 @@ const BuildNotesEmail = ({
         <Section style={hero}>
           <Text style={heroEyebrow}>Week {weekNumber} · {weekLabel}</Text>
           <Text style={heroHeadline}>{editionTitle}</Text>
+          <Text style={heroTaglineSt}>WAIT. NOW. DISCOVER.</Text>
         </Section>
 
         {/* ── STATS ── */}
