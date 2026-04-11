@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Menu, Shield, MessageCircle } from "lucide-react";
+import { Menu, Shield, MessageCircle, LogOut, User } from "lucide-react";
 import { motion } from "framer-motion";
 import StealYourFace from "@/components/StealYourFace";
 import ShareAppButton from "@/components/ShareAppButton";
@@ -24,7 +24,7 @@ interface SiteHeaderProps {
 const SiteHeader = ({ children, large = false }: SiteHeaderProps) => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const { playingSlot, playlistMode, playlistIndex, playlistSlots } = useAudioPlayer();
   const [isAdmin, setIsAdmin] = useState(false);
 
@@ -113,6 +113,16 @@ const SiteHeader = ({ children, large = false }: SiteHeaderProps) => {
             {messagesLink}
             {adminLink}
             {children}
+            {user && (
+              <button
+                onClick={async () => { await signOut(); navigate("/"); }}
+                className="flex items-center gap-1.5 text-xs font-mono text-muted-foreground hover:text-foreground transition-colors tracking-wider uppercase"
+                title="Sign Out"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                <span>Sign Out</span>
+              </button>
+            )}
           </div>
           {/* Mobile hamburger */}
           <div className="sm:hidden">
@@ -149,6 +159,29 @@ const SiteHeader = ({ children, large = false }: SiteHeaderProps) => {
                       <ShareAppButton variant="full" className="w-full justify-start" />
                     </div>
                   </SheetClose>
+                  {user && (
+                    <>
+                      <div className="h-px bg-border/40 my-2" />
+                      <SheetClose asChild>
+                        <button
+                          onClick={() => navigate("/profile")}
+                          className="min-h-[44px] flex items-center gap-1.5 text-xs font-mono text-muted-foreground hover:text-foreground transition-colors tracking-wider uppercase"
+                        >
+                          <User className="w-3.5 h-3.5" />
+                          Profile
+                        </button>
+                      </SheetClose>
+                      <SheetClose asChild>
+                        <button
+                          onClick={async () => { await signOut(); navigate("/"); }}
+                          className="min-h-[44px] flex items-center gap-1.5 text-xs font-mono text-muted-foreground hover:text-foreground transition-colors tracking-wider uppercase"
+                        >
+                          <LogOut className="w-3.5 h-3.5" />
+                          Sign Out
+                        </button>
+                      </SheetClose>
+                    </>
+                  )}
                 </nav>
               </SheetContent>
             </Sheet>
