@@ -349,9 +349,12 @@ const encoreText = { fontFamily: FF_CURSIVE, fontSize: '19px', color: '#c8c4b0',
 
 // Feedback box
 const feedbackBox = { backgroundColor: '#0f0e08', border: '1px solid #2a2410', borderLeft: '3px solid #c9a84c', borderRadius: '2px', padding: '18px 20px', margin: '28px 48px' } as React.CSSProperties
+const backstageBadgeSt = { display: 'inline-block', background: 'linear-gradient(135deg, #d4a832 0%, #f0d060 40%, #c9921a 100%)', borderRadius: '20px', padding: '7px 16px', fontFamily: FF_SANS, fontSize: '13px', fontWeight: '500' as const, color: '#0a0a0a', letterSpacing: '0.04em', margin: '0', lineHeight: '1' } as React.CSSProperties
 const feedbackLabel = { fontFamily: FF_MONO, fontSize: '11px', letterSpacing: '0.18em', color: '#b09e78', textTransform: 'uppercase' as const, margin: '0 0 8px' } as React.CSSProperties
 const feedbackText = { fontFamily: FF_SANS, fontSize: '14px', fontWeight: '300' as const, color: '#b0ac9a', lineHeight: '1.7', margin: '0 0 12px' } as React.CSSProperties
-const feedbackLink = { fontFamily: FF_MONO, fontSize: '12px', color: '#c9a84c', textDecoration: 'none' as const, letterSpacing: '0.08em', textTransform: 'uppercase' as const } as React.CSSProperties
+const feedbackPillRow = { margin: '16px 0 18px' } as React.CSSProperties
+const feedbackPill = { display: 'inline-block', fontFamily: FF_MONO, fontSize: '11px', letterSpacing: '0.10em', textTransform: 'uppercase' as const, color: '#c9a84c', backgroundColor: '#1a1408', border: '1px solid #4a3a18', borderRadius: '2px', padding: '5px 12px', margin: '4px 6px 4px 0', textDecoration: 'none' as const } as React.CSSProperties
+const feedbackCta = { display: 'inline-block', fontFamily: FF_MONO, fontSize: '13px', fontWeight: '500' as const, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#0a0a0a', backgroundColor: '#c9a84c', padding: '10px 22px', borderRadius: '2px', textDecoration: 'none' as const } as React.CSSProperties
 
 // Sign-off
 const signoff = { padding: '28px 48px 8px', backgroundColor: '#0d0d0d' } as React.CSSProperties
