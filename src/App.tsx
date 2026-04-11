@@ -27,6 +27,8 @@ const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const Messages = lazy(() => import("./pages/Messages"));
 const Backstage = lazy(() => import("./pages/Backstage"));
 const Unsubscribe = lazy(() => import("./pages/Unsubscribe"));
+const Updates = lazy(() => import("./pages/Updates"));
+const AdminChangelog = lazy(() => import("./pages/AdminChangelog"));
 
 const queryClient = new QueryClient();
 
@@ -54,6 +56,8 @@ const App = () => (
               <Route path="/privacy" element={<PrivacyPolicy />} />
               <Route path="/backstage" element={<Backstage />} />
               <Route path="/unsubscribe" element={<Unsubscribe />} />
+              <Route path="/updates" element={<Updates />} />
+              <Route path="/admin/changelog" element={<AdminChangelog />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
