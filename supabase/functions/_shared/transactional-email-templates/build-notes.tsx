@@ -42,6 +42,8 @@ interface BuildNotesEmailProps {
   statsBugs?: number
   set1?: ChangeItem[]
   set2?: ChangeItem[]
+  set1Label?: string
+  set2Label?: string
   encoreNote?: string
   nextWeekTeaser?: string
   betaNote?: string
