@@ -143,7 +143,7 @@ ${recentSongs.map((s: string) => `- "${s}"`).join("\n")}`
       : "";
 
     const eraContext = eraInfo
-      ? `ERA CONTEXT: Focus on the ${eraInfo.name} era (${eraInfo.year_start}-${eraInfo.year_end}). ${eraInfo.description || ""}`
+      ? `ERA CONSTRAINT (MANDATORY): This setlist is for the ${eraInfo.name} era (${eraInfo.year_start}-${eraInfo.year_end}). ${eraInfo.description || ""}\nThe song catalog below has ALREADY been filtered to only include songs from this era. You MUST ONLY use songs from the catalog below. Do NOT invent or use songs not listed.`
       : "Draw from the full catalog across all eras, but keep era consistency within each show — don't mix 1972 jamming style with 1989 song selections without good reason.";
 
     const userPrefs = preferences ? `USER PREFERENCES: ${preferences}` : "";
