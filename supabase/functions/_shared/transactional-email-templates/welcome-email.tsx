@@ -44,6 +44,7 @@ const WelcomeEmail = ({ displayName }: WelcomeEmailProps) => (
         <Section style={hero}>
           <Text style={heroEyebrow}>Welcome to the community</Text>
           <Text style={heroHeadline}>You found your people.<br />And your people found you.</Text>
+          <Text style={heroTagline}>Wait. Now. Discover.</Text>
           <Text style={heroSub}>A note from the founder</Text>
         </Section>
 
