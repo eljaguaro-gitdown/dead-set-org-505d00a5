@@ -95,6 +95,12 @@ const SiteHeader = ({ children, large = false }: SiteHeaderProps) => {
     </motion.div>
   ) : null;
 
+  const isRepeatVisitor = typeof window !== "undefined" && !!localStorage.getItem("dead_set_visited");
+
+  useEffect(() => {
+    localStorage.setItem("dead_set_visited", "1");
+  }, []);
+
   return (
     <header className="border-b border-border/50 px-6 sm:px-12 py-4 sm:py-5 flex items-center justify-between">
       <button
@@ -130,8 +136,8 @@ const SiteHeader = ({ children, large = false }: SiteHeaderProps) => {
               </button>
             )}
           </div>
-          {/* Mobile hamburger */}
-          <div className="sm:hidden">
+          {/* Mobile: persistent top-level actions + hamburger */}
+          <div className="sm:hidden flex items-center gap-3">
             <Sheet>
               <SheetTrigger asChild>
                 <button className="p-2 text-foreground" aria-label="Open menu">
