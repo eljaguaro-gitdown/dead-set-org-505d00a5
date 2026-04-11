@@ -224,6 +224,7 @@ ERA-SPECIFIC GUIDANCE:
 - Final Chapter (1991-1995): Vince Welnick era. Bruce Hornsby guests. Occasional magic. Liberty, Samba in the Rain.
 
 ${creativityBlock}
+${cannabisVibeGuide}
 ${avoidBlock}
 
 ${eraContext}
