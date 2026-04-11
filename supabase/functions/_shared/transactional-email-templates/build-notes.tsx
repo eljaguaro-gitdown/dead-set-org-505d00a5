@@ -273,6 +273,7 @@ export const template = {
     statsUpdates: 22,
     statsFeedback: 6,
     statsBugs: 4,
+    betaNote: "Before there's a launch. Before there's an app store listing. Before anyone else gets a look — there's you. The people in this list are shaping what Dead Set becomes. Your feedback, your bug reports, your feature requests — they're not going into a ticket queue. They're going directly into the next build.\n\nI don't take that lightly. Every session you spend in the app, every reply you send, every \"dude have you heard this\" moment you have and share with me — that's a gift. I am genuinely, gratefully yours for it.",
     set1Label: 'SET I · FOUNDATION',
     set1: [
       { tag: 'new', title: 'Setlist builder with drag-and-drop', detail: 'Multi-set creation, drag reordering, segue markers, and per-song notes. The core of Dead Set.' },
