@@ -80,6 +80,14 @@ const AuthModal = ({ open, onOpenChange, onAuthenticated, onBeforeRedirect }: Au
     if (error) toast.error(error.message);
   };
 
+  const handleAppleLogin = async () => {
+    onBeforeRedirect?.();
+    const { error } = await lovable.auth.signInWithOAuth("apple", {
+      redirect_uri: `${window.location.origin}/builder`,
+    });
+    if (error) toast.error(error.message);
+  };
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="bottom" className="bg-card border-border rounded-t-2xl max-h-[85vh] overflow-y-auto">

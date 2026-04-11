@@ -85,6 +85,13 @@ const Auth = () => {
     if (error) toast.error(error.message);
   };
 
+  const handleAppleLogin = async () => {
+    const { error } = await lovable.auth.signInWithOAuth("apple", {
+      redirect_uri: window.location.origin,
+    });
+    if (error) toast.error(error.message);
+  };
+
   return (
     <PageLayout>
       <div className="flex-1 flex items-center justify-center px-4">
