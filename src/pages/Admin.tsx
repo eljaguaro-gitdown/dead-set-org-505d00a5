@@ -74,14 +74,24 @@ const Admin = () => {
     if (!isAdmin) return;
     const fetchUsers = async () => {
       setLoading(true);
-      const { data, error } = await supabase.functions.invoke("admin-users");
-      if (error) {
+      const [usersRes, wishlistRes, bugsRes, sharesRes] = await Promise.all([
+        supabase.functions.invoke("admin-users"),
+        supabase.from("insider_wishlist").select("*").order("created_at", { ascending: false }),
+        supabase.from("insider_bugs").select("*").order("created_at", { ascending: false }),
+        supabase.from("insider_shares").select("*").order("created_at", { ascending: false }),
+      ]);
+      if (usersRes.error) {
         toast.error("Failed to load users");
-        console.error(error);
+        console.error(usersRes.error);
       } else {
-        setUsers(data.users || []);
-        setTraffic(data.traffic || null);
+        setUsers(usersRes.data.users || []);
+        setTraffic(usersRes.data.traffic || null);
       }
+      setBackstage({
+        wishlist: wishlistRes.data || [],
+        bugs: bugsRes.data || [],
+        shares: sharesRes.data || [],
+      });
       setLoading(false);
     };
     fetchUsers();
