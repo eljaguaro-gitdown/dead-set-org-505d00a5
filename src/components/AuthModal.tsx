@@ -38,17 +38,19 @@ const AuthModal = ({ open, onOpenChange, onAuthenticated, onBeforeRedirect }: Au
           options: { emailRedirectTo: window.location.origin },
         });
         if (error) throw error;
-        if (data.session) {
-          // Send welcome email (fire-and-forget)
-          const displayName = data.session.user?.user_metadata?.full_name || email.split("@")[0];
-          supabase.functions.invoke("send-transactional-email", {
+        // Send welcome email regardless of session
+        if (data.user) {
+          const displayName = data.user.user_metadata?.full_name || email.split("@")[0];
+          await supabase.functions.invoke("send-transactional-email", {
             body: {
               templateName: "welcome-email",
               recipientEmail: email,
-              idempotencyKey: `welcome-${data.session.user?.id}`,
+              idempotencyKey: `welcome-${data.user.id}`,
               templateData: { displayName },
             },
           }).catch(() => {});
+        }
+        if (data.session) {
           onOpenChange(false);
           onAuthenticated();
         } else {
