@@ -331,16 +331,24 @@ const CosmicCharlieWelcome = ({ eras, onGenerated, onSkip }: CosmicCharlieWelcom
                         return (
                           <motion.button
                             key={e.id}
-                            whileTap={{ scale: 0.96 }}
+                            whileTap={{ scale: 0.93 }}
+                            whileHover={{ y: -2 }}
                             onClick={() => setSelectedEnergy(active ? null : e.id)}
-                            className={`flex items-center justify-center px-3 py-3.5 rounded-lg border text-center transition-all duration-200 ${
+                            className={`flex flex-col items-center gap-1.5 px-3 py-4 rounded-xl border transition-all duration-200 ${
                               active
-                                ? "border-primary bg-primary/15 shadow-[0_0_12px_hsl(var(--glow-gold))]"
-                                : "border-border bg-card hover:border-primary/40"
+                                ? "border-primary bg-primary/15 shadow-[0_0_16px_hsl(var(--glow-gold))]"
+                                : "border-border bg-card hover:border-primary/40 hover:bg-card/80"
                             }`}
                           >
+                            <motion.span
+                              className="text-2xl"
+                              animate={active ? { scale: [1, 1.2, 1] } : {}}
+                              transition={{ duration: 0.3 }}
+                            >
+                              {e.emoji}
+                            </motion.span>
                             <span
-                              className={`font-body text-sm ${
+                              className={`font-body text-xs ${
                                 active ? "text-primary font-medium" : "text-foreground"
                               }`}
                             >
@@ -357,22 +365,30 @@ const CosmicCharlieWelcome = ({ eras, onGenerated, onSkip }: CosmicCharlieWelcom
                     </p>
 
                     {/* Textures — multi select, 2 columns */}
-                    <div className="grid grid-cols-2 gap-2.5 w-full">
+                    <div className="grid grid-cols-3 gap-2 w-full">
                       {TEXTURES.map((t) => {
                         const active = selectedTextures.includes(t.id);
                         return (
                           <motion.button
                             key={t.id}
-                            whileTap={{ scale: 0.96 }}
+                            whileTap={{ scale: 0.93 }}
+                            whileHover={{ y: -2 }}
                             onClick={() => toggleTexture(t.id)}
-                            className={`flex items-center justify-center px-3 py-3 rounded-lg border text-center transition-all duration-200 ${
+                            className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border transition-all duration-200 ${
                               active
                                 ? "border-primary bg-primary/15 shadow-[0_0_12px_hsl(var(--glow-gold))]"
-                                : "border-border bg-card hover:border-primary/40"
+                                : "border-border bg-card hover:border-primary/40 hover:bg-card/80"
                             }`}
                           >
+                            <motion.span
+                              className="text-base"
+                              animate={active ? { rotate: [0, -10, 10, 0] } : {}}
+                              transition={{ duration: 0.4 }}
+                            >
+                              {t.emoji}
+                            </motion.span>
                             <span
-                              className={`font-body text-sm ${
+                              className={`font-body text-xs ${
                                 active ? "text-primary font-medium" : "text-foreground"
                               }`}
                             >
@@ -489,8 +505,15 @@ const CosmicCharlieWelcome = ({ eras, onGenerated, onSkip }: CosmicCharlieWelcom
                                 : "border-border bg-card hover:border-primary/40"
                             }`}
                           >
-                            {/* Radio circle */}
-                            <div className="mt-0.5 flex-shrink-0">
+                            {/* Emoji + Radio */}
+                            <div className="mt-0.5 flex-shrink-0 flex items-center gap-2">
+                              <motion.span
+                                className="text-lg"
+                                animate={active ? { scale: [1, 1.3, 1] } : {}}
+                                transition={{ duration: 0.3 }}
+                              >
+                                {p.emoji}
+                              </motion.span>
                               <div
                                 className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-colors duration-200 ${
                                   active ? "border-primary" : "border-muted-foreground/40"
