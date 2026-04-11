@@ -14,6 +14,63 @@ export type Database = {
   }
   public: {
     Tables: {
+      changelog_entries: {
+        Row: {
+          created_at: string
+          credit: string | null
+          detail: string
+          edition_title: string
+          encore_note: string | null
+          id: string
+          next_week_teaser: string | null
+          published: boolean
+          set_number: number
+          tag: Database["public"]["Enums"]["changelog_tag"]
+          title: string
+          week_label: string
+          week_number: number
+          week_stats_bugs: number
+          week_stats_feedback: number
+          week_stats_updates: number
+        }
+        Insert: {
+          created_at?: string
+          credit?: string | null
+          detail?: string
+          edition_title?: string
+          encore_note?: string | null
+          id?: string
+          next_week_teaser?: string | null
+          published?: boolean
+          set_number?: number
+          tag: Database["public"]["Enums"]["changelog_tag"]
+          title: string
+          week_label: string
+          week_number: number
+          week_stats_bugs?: number
+          week_stats_feedback?: number
+          week_stats_updates?: number
+        }
+        Update: {
+          created_at?: string
+          credit?: string | null
+          detail?: string
+          edition_title?: string
+          encore_note?: string | null
+          id?: string
+          next_week_teaser?: string | null
+          published?: boolean
+          set_number?: number
+          tag?: Database["public"]["Enums"]["changelog_tag"]
+          title?: string
+          week_label?: string
+          week_number?: number
+          week_stats_bugs?: number
+          week_stats_feedback?: number
+          week_stats_updates?: number
+        }
+        Relationships: []
+      }
       chat_messages: {
         Row: {
           content: string
@@ -822,6 +879,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
+      changelog_tag: "fix" | "new" | "improved" | "beta"
       collaborator_role: "owner" | "editor" | "viewer"
       set_position: "opener" | "early" | "mid" | "late" | "closer" | "encore"
     }
@@ -952,6 +1010,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "moderator", "user"],
+      changelog_tag: ["fix", "new", "improved", "beta"],
       collaborator_role: ["owner", "editor", "viewer"],
       set_position: ["opener", "early", "mid", "late", "closer", "encore"],
     },
