@@ -19,39 +19,41 @@ const SITE_URL = 'https://dead-set.org'
 const UTM = 'utm_source=email&utm_medium=transactional&utm_campaign=welcome'
 const SITE_URL_UTM = `${SITE_URL}?${UTM}`
 
+const FF_SERIF = "Georgia, 'Times New Roman', serif"
+const FF_MONO = "'Courier New', Courier, monospace"
+const FF_SANS = "Arial, Helvetica, sans-serif"
+const FF_CURSIVE = "'Brush Script MT', 'Segoe Script', cursive"
+
 interface WelcomeEmailProps {
   displayName?: string
 }
 
 const WelcomeEmail = ({ displayName }: WelcomeEmailProps) => (
   <Html lang="en" dir="ltr">
-    <Head>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&family=DM+Sans:wght@300;400;500&family=Caveat:wght@400;600&family=JetBrains+Mono:wght@400&display=swap');`}</style>
-    </Head>
+    <Head />
     <Preview>Welcome to Dead Set — you found your people</Preview>
     <Body style={main}>
       <Container style={wrapper}>
 
         {/* ── HEADER ── */}
         <Section style={header}>
-          <div style={headerRuleTop} />
-          <Text style={siteName}>Dead Set</Text>
-          <Text style={headerTagline}>dead-set.org &nbsp;·&nbsp; 2,300 shows &nbsp;·&nbsp; 50 years of magic</Text>
-          <div style={headerRuleBottom} />
+          <Hr style={ruleGold} />
+          <Text style={siteName}>DEAD SET</Text>
+          <Text style={headerTagline}>DEAD-SET.ORG &nbsp;·&nbsp; 2,300 SHOWS &nbsp;·&nbsp; 50 YEARS OF MAGIC</Text>
+          <Hr style={ruleMuted} />
         </Section>
 
         {/* ── HERO ── */}
         <Section style={hero}>
-          <Text style={heroEyebrow}>Welcome to the community</Text>
+          <Text style={heroEyebrow}>WELCOME TO THE COMMUNITY</Text>
           <Text style={heroHeadline}>You found your people.<br />And your people found you.</Text>
-          <Text style={heroTagline}>Wait. Now. Discover.</Text>
+          <Text style={heroTagline}>WAIT. NOW. DISCOVER.</Text>
           <Text style={heroSub}>A note from the founder</Text>
         </Section>
 
         {/* ── DIVIDER ── */}
         <Section style={dividerSection}>
-          <div style={dividerLine} />
-          <Text style={dividerGlyph}>⌂</Text>
+          <Hr style={ruleMuted} />
         </Section>
 
         {/* ── BODY ── */}
@@ -85,23 +87,14 @@ const WelcomeEmail = ({ displayName }: WelcomeEmailProps) => (
 
           {/* Show callout */}
           <Section style={showCallout}>
-            <Text style={showCalloutLabel}>The show that started it all</Text>
-            <Text style={showCalloutText}>Birdsong &nbsp;·&nbsp; Roosevelt Stadium &nbsp;·&nbsp; 08-01-1973</Text>
+            <Text style={showCalloutLabel}>THE SHOW THAT STARTED IT ALL</Text>
+            <Text style={showCalloutText}>Birdsong · Roosevelt Stadium · 08-01-1973</Text>
           </Section>
 
           <Text style={bodyP}>
             <strong style={gold}>Who's behind it?</strong> I'm grateful_jaguaro.{' '}
             <em>(Short but long story for another time.)</em>
           </Text>
-
-          {/* Identity chips */}
-          <Section style={identityRow}>
-            <span style={chip}>Cyclist</span>{' '}
-            <span style={chip}>Skier</span>{' '}
-            <span style={chip}>Dad</span>{' '}
-            <span style={chip}>Music lover</span>{' '}
-            <span style={chipHighlight}>Deadhead</span>
-          </Section>
 
           <Text style={bodyP}>
             A 50-something New Yorker who came to the Bay Area 30 years ago and never looked back.
@@ -126,7 +119,7 @@ const WelcomeEmail = ({ displayName }: WelcomeEmailProps) => (
 
         {/* ── STORY BREAK ── */}
         <Section style={storyBreak}>
-          <Text style={storyBreakLabel}>The mission</Text>
+          <Text style={storyBreakLabel}>THE MISSION</Text>
           <Text style={storyBreakText}>
             To be additive to the community. Not to replace Relisten or Archive.org or SiriusXM —
             but to give us another way in. Another way to find the version that hits you exactly right
@@ -143,15 +136,14 @@ const WelcomeEmail = ({ displayName }: WelcomeEmailProps) => (
 
         {/* ── CTA ── */}
         <Section style={ctaSection}>
-          <Text style={ctaLabel}>Start exploring</Text>
-          <Link href={SITE_URL_UTM} style={ctaButton}>Open Dead Set</Link>
+          <Text style={ctaLabel}>START EXPLORING</Text>
+          <Link href={SITE_URL_UTM} style={ctaButton}>OPEN DEAD SET</Link>
           <Text style={ctaSub}>dead-set.org</Text>
         </Section>
 
         {/* ── DIVIDER ── */}
         <Section style={dividerSection}>
-          <div style={dividerLine} />
-          <Text style={dividerGlyph}>∿</Text>
+          <Hr style={ruleMuted} />
         </Section>
 
         {/* ── SIGN-OFF ── */}
@@ -162,7 +154,7 @@ const WelcomeEmail = ({ displayName }: WelcomeEmailProps) => (
           </Text>
           <Text style={signoffClosing}>Gratefully yours,</Text>
           <Text style={signoffName}>grateful_jaguaro</Text>
-          <Text style={signoffTitle}>Founder · Dead Set · dead-set.org</Text>
+          <Text style={signoffTitle}>FOUNDER · DEAD SET · DEAD-SET.ORG</Text>
         </Section>
 
         {/* ── PS ── */}
@@ -174,15 +166,15 @@ const WelcomeEmail = ({ displayName }: WelcomeEmailProps) => (
 
         {/* ── FOOTER ── */}
         <Section style={footer}>
-          <div style={footerRule} />
-          <Text style={footerLogo}>Dead Set · dead-set.org</Text>
+          <Hr style={ruleMuted} />
+          <Text style={footerLogo}>DEAD SET · DEAD-SET.ORG</Text>
           <Text style={footerCopy}>
             Sent from{' '}
-            <Link href={`mailto:noreply@notify.dead-set.org`} style={footerLink}>noreply@dead-set.org</Link>
+            <Link href="mailto:noreply@notify.dead-set.org" style={footerLink}>noreply@dead-set.org</Link>
             <br />
             By the community, for the community.
             <br />
-            Please copy and share freely &nbsp;·&nbsp; Trade only
+            Please copy and share freely · Trade only
           </Text>
           <Text style={footerTapeLabel}>☠ NFA · NOT FOR SALE · FREELY GIVEN ☠</Text>
         </Section>
@@ -199,76 +191,58 @@ export const template = {
   previewData: { displayName: 'Jerry' },
 } satisfies TemplateEntry
 
-// ── STYLES ──
+// ── STYLES (Gmail-safe: no gradients, no <style> tags, web-safe fonts) ──
 
 const gold = { color: '#c9a84c', fontWeight: '500' as const }
-const main = { backgroundColor: '#0a0a0a', fontFamily: "'DM Sans', Arial, sans-serif", color: '#c8c4b0', WebkitFontSmoothing: 'antialiased' as const }
+const main = { backgroundColor: '#0a0a0a', fontFamily: FF_SANS, color: '#c8c4b0' }
 const wrapper = { maxWidth: '620px', margin: '0 auto', backgroundColor: '#0d0d0d', padding: '0' }
 
-// Header
+const ruleGold = { borderColor: '#c9a84c', borderTop: '1px solid #c9a84c', margin: '0 0 24px' }
+const ruleMuted = { borderColor: '#2a2410', borderTop: '1px solid #2a2410', margin: '0' }
+
 const header = { backgroundColor: '#0a0a0a', borderBottom: '1px solid #2a2410', padding: '32px 40px 28px', textAlign: 'center' as const }
-const headerRuleTop = { width: '100%', height: '1px', background: 'linear-gradient(90deg, transparent, #c9a84c 30%, #c9a84c 70%, transparent)', marginBottom: '24px' }
-const siteName = { fontFamily: "'Playfair Display', Georgia, serif", fontSize: '26px', fontWeight: '700' as const, color: '#c9a84c', letterSpacing: '0.08em', textTransform: 'uppercase' as const, margin: '0 0 10px' }
-const headerTagline = { fontFamily: "'JetBrains Mono', monospace", fontSize: '13px', letterSpacing: '0.18em', color: '#b09e78', textTransform: 'uppercase' as const, margin: '0' }
-const headerRuleBottom = { width: '100%', height: '1px', background: 'linear-gradient(90deg, transparent, #2a2410 30%, #2a2410 70%, transparent)', marginTop: '24px' }
+const siteName = { fontFamily: FF_SERIF, fontSize: '26px', fontWeight: '700' as const, color: '#c9a84c', letterSpacing: '3px', margin: '0 0 10px' }
+const headerTagline = { fontFamily: FF_MONO, fontSize: '12px', letterSpacing: '2px', color: '#b09e78', margin: '0' }
 
-// Hero
 const hero = { backgroundColor: '#0a0a0a', padding: '48px 40px 40px', textAlign: 'center' as const, borderBottom: '1px solid #1a1a12' }
-const heroEyebrow = { fontFamily: "'JetBrains Mono', monospace", fontSize: '13px', letterSpacing: '0.22em', color: '#b09e78', textTransform: 'uppercase' as const, margin: '0 0 20px' }
-const heroHeadline = { fontFamily: "'Playfair Display', Georgia, serif", fontSize: '36px', fontWeight: '400' as const, fontStyle: 'italic' as const, color: '#c9a84c', lineHeight: '1.25', margin: '0 0 16px' }
-const heroSub = { fontFamily: "'DM Sans', Arial, sans-serif", fontSize: '15px', fontWeight: '300' as const, color: '#a09880', letterSpacing: '0.04em', margin: '0' }
-const heroTagline = { fontFamily: "'JetBrains Mono', monospace", fontSize: '14px', letterSpacing: '0.28em', color: '#b09e78', textTransform: 'uppercase' as const, margin: '20px 0 24px' }
+const heroEyebrow = { fontFamily: FF_MONO, fontSize: '12px', letterSpacing: '3px', color: '#b09e78', margin: '0 0 20px' }
+const heroHeadline = { fontFamily: FF_SERIF, fontSize: '32px', fontWeight: '400' as const, fontStyle: 'italic' as const, color: '#c9a84c', lineHeight: '1.3', margin: '0 0 16px' }
+const heroTagline = { fontFamily: FF_MONO, fontSize: '13px', letterSpacing: '4px', color: '#b09e78', margin: '16px 0 20px' }
+const heroSub = { fontFamily: FF_SANS, fontSize: '15px', fontWeight: '300' as const, color: '#a09880', letterSpacing: '1px', margin: '0' }
 
-// Divider
 const dividerSection = { padding: '0 40px', margin: '0', textAlign: 'center' as const }
-const dividerLine = { height: '1px', background: 'linear-gradient(90deg, transparent, #2a2410 20%, #c9a84c 50%, #2a2410 80%, transparent)' }
-const dividerGlyph = { display: 'inline-block', backgroundColor: '#0d0d0d', padding: '0 12px', color: '#c9a84c', fontSize: '14px', margin: '-8px 0 0' }
 
-// Body
-const bodySection = { padding: '44px 48px', backgroundColor: '#0d0d0d' }
-const salutation = { fontFamily: "'Caveat', cursive", fontSize: '22px', color: '#c9a84c', margin: '0 0 24px' }
-const bodyP = { fontFamily: "'DM Sans', Arial, sans-serif", fontSize: '15px', fontWeight: '300' as const, lineHeight: '1.85', color: '#b0ac9a', margin: '0 0 20px' }
+const bodySection = { padding: '40px 40px', backgroundColor: '#0d0d0d' }
+const salutation = { fontFamily: FF_CURSIVE, fontSize: '22px', color: '#c9a84c', margin: '0 0 24px' }
+const bodyP = { fontFamily: FF_SANS, fontSize: '15px', fontWeight: '300' as const, lineHeight: '1.8', color: '#b0ac9a', margin: '0 0 18px' }
 
-// Pull quote
-const pullQuote = { borderLeft: '2px solid #c9a84c', margin: '32px 0', padding: '4px 0 4px 20px' }
-const pullQuoteText = { fontFamily: "'Playfair Display', Georgia, serif", fontSize: '18px', fontStyle: 'italic' as const, color: '#c9a84c', lineHeight: '1.5', margin: '0' }
+const pullQuote = { borderLeft: '2px solid #c9a84c', margin: '28px 0', padding: '4px 0 4px 20px' }
+const pullQuoteText = { fontFamily: FF_SERIF, fontSize: '17px', fontStyle: 'italic' as const, color: '#c9a84c', lineHeight: '1.5', margin: '0' }
 
-// Identity chips
-const identityRow = { margin: '28px 0' }
-const chip = { display: 'inline-block', fontFamily: "'JetBrains Mono', monospace", fontSize: '13px', letterSpacing: '0.14em', color: '#a09880', border: '1px solid #4a3e28', borderRadius: '2px', padding: '4px 10px', margin: '4px 4px 4px 0', textTransform: 'uppercase' as const }
-const chipHighlight = { ...chip, color: '#c9a84c', borderColor: '#4a3a18', backgroundColor: '#1a1408' }
+const showCallout = { backgroundColor: '#0f0e08', border: '1px solid #2a2410', borderLeft: '3px solid #c9a84c', padding: '14px 18px', margin: '4px 0 24px' }
+const showCalloutLabel = { fontFamily: FF_MONO, fontSize: '12px', letterSpacing: '2px', color: '#a09880', margin: '0 0 7px' }
+const showCalloutText = { fontFamily: FF_MONO, fontSize: '14px', color: '#c9a84c', letterSpacing: '1px', margin: '0' }
 
-// Show callout
-const showCallout = { backgroundColor: '#0f0e08', border: '1px solid #2a2410', borderLeft: '3px solid #c9a84c', borderRadius: '2px', padding: '14px 18px', margin: '4px 0 24px' }
-const showCalloutLabel = { fontFamily: "'JetBrains Mono', monospace", fontSize: '13px', letterSpacing: '0.18em', color: '#a09880', textTransform: 'uppercase' as const, margin: '0 0 7px' }
-const showCalloutText = { fontFamily: "'JetBrains Mono', monospace", fontSize: '14px', color: '#c9a84c', letterSpacing: '0.08em', margin: '0' }
+const storyBreak = { backgroundColor: '#0f0e08', borderTop: '1px solid #1e1c10', borderBottom: '1px solid #1e1c10', padding: '28px 40px', margin: '8px 0' }
+const storyBreakLabel = { fontFamily: FF_MONO, fontSize: '12px', letterSpacing: '3px', color: '#a09880', margin: '0 0 14px' }
+const storyBreakText = { fontFamily: FF_CURSIVE, fontSize: '19px', color: '#c8c4b0', lineHeight: '1.6', margin: '0' }
 
-// Story break
-const storyBreak = { backgroundColor: '#0f0e08', borderTop: '1px solid #1e1c10', borderBottom: '1px solid #1e1c10', padding: '32px 48px', margin: '8px 0' }
-const storyBreakLabel = { fontFamily: "'JetBrains Mono', monospace", fontSize: '13px', letterSpacing: '0.22em', color: '#a09880', textTransform: 'uppercase' as const, margin: '0 0 14px' }
-const storyBreakText = { fontFamily: "'Caveat', cursive", fontSize: '20px', color: '#c8c4b0', lineHeight: '1.6', margin: '0' }
+const ctaSection = { padding: '36px 40px 40px', textAlign: 'center' as const, backgroundColor: '#0d0d0d' }
+const ctaLabel = { fontFamily: FF_MONO, fontSize: '12px', letterSpacing: '3px', color: '#a09880', margin: '0 0 20px' }
+const ctaButton = { display: 'inline-block', fontFamily: FF_SANS, fontSize: '13px', fontWeight: '700' as const, letterSpacing: '2px', color: '#0a0a0a', backgroundColor: '#c9a84c', padding: '14px 36px', textDecoration: 'none' }
+const ctaSub = { fontFamily: FF_SANS, fontSize: '14px', color: '#a09880', margin: '16px 0 0' }
 
-// CTA
-const ctaSection = { padding: '40px 48px 44px', textAlign: 'center' as const, backgroundColor: '#0d0d0d' }
-const ctaLabel = { fontFamily: "'JetBrains Mono', monospace", fontSize: '13px', letterSpacing: '0.22em', color: '#a09880', textTransform: 'uppercase' as const, margin: '0 0 20px' }
-const ctaButton = { display: 'inline-block', fontFamily: "'DM Sans', Arial, sans-serif", fontSize: '13px', fontWeight: '500' as const, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: '#0a0a0a', backgroundColor: '#c9a84c', padding: '14px 36px', textDecoration: 'none', borderRadius: '2px' }
-const ctaSub = { fontFamily: "'DM Sans', Arial, sans-serif", fontSize: '14px', color: '#a09880', margin: '16px 0 0' }
+const signoff = { padding: '8px 40px 36px', backgroundColor: '#0d0d0d' }
+const signoffText = { fontFamily: FF_SANS, fontSize: '15px', fontWeight: '300' as const, lineHeight: '1.8', color: '#b0ac9a', margin: '0 0 24px' }
+const signoffClosing = { fontFamily: FF_CURSIVE, fontSize: '16px', color: '#a09880', margin: '0 0 4px' }
+const signoffName = { fontFamily: FF_CURSIVE, fontSize: '26px', color: '#c9a84c', margin: '0 0 2px' }
+const signoffTitle = { fontFamily: FF_MONO, fontSize: '12px', color: '#a09880', letterSpacing: '2px', margin: '0' }
 
-// Sign-off
-const signoff = { padding: '8px 48px 40px', backgroundColor: '#0d0d0d' }
-const signoffText = { fontFamily: "'DM Sans', Arial, sans-serif", fontSize: '15px', fontWeight: '300' as const, lineHeight: '1.85', color: '#b0ac9a', margin: '0 0 24px' }
-const signoffClosing = { fontFamily: "'Caveat', cursive", fontSize: '16px', color: '#a09880', margin: '0 0 4px' }
-const signoffName = { fontFamily: "'Caveat', cursive", fontSize: '28px', color: '#c9a84c', margin: '0 0 2px' }
-const signoffTitle = { fontFamily: "'JetBrains Mono', monospace", fontSize: '13px', color: '#a09880', letterSpacing: '0.14em', textTransform: 'uppercase' as const, margin: '0' }
+const psSection = { padding: '24px 40px 28px', borderTop: '1px solid #1a1a12', backgroundColor: '#0d0d0d' }
+const psText = { fontFamily: FF_SERIF, fontSize: '15px', fontStyle: 'italic' as const, color: '#a09880', lineHeight: '1.7', margin: '0' }
 
-// PS
-const psSection = { padding: '24px 48px 32px', borderTop: '1px solid #1a1a12', backgroundColor: '#0d0d0d' }
-const psText = { fontFamily: "'Playfair Display', Georgia, serif", fontSize: '15px', fontStyle: 'italic' as const, color: '#a09880', lineHeight: '1.7', margin: '0' }
-
-// Footer
 const footer = { backgroundColor: '#080808', borderTop: '1px solid #1a1408', padding: '28px 40px', textAlign: 'center' as const }
-const footerRule = { height: '1px', background: 'linear-gradient(90deg, transparent, #2a2410 30%, #2a2410 70%, transparent)', marginBottom: '22px' }
-const footerLogo = { fontFamily: "'Playfair Display', Georgia, serif", fontSize: '14px', color: '#a09880', letterSpacing: '0.1em', textTransform: 'uppercase' as const, margin: '0 0 10px' }
-const footerCopy = { fontFamily: "'JetBrains Mono', monospace", fontSize: '13px', color: '#8a8270', letterSpacing: '0.14em', textTransform: 'uppercase' as const, lineHeight: '1.8', margin: '0' }
+const footerLogo = { fontFamily: FF_SERIF, fontSize: '14px', color: '#a09880', letterSpacing: '2px', margin: '0 0 10px' }
+const footerCopy = { fontFamily: FF_MONO, fontSize: '12px', color: '#8a8270', letterSpacing: '1px', lineHeight: '1.8', margin: '0' }
 const footerLink = { color: '#a09880', textDecoration: 'underline' }
-const footerTapeLabel = { fontFamily: "'JetBrains Mono', monospace", fontSize: '13px', color: '#6b6450', letterSpacing: '0.18em', textTransform: 'uppercase' as const, marginTop: '16px', paddingTop: '16px', borderTop: '1px solid #2a2820' }
+const footerTapeLabel = { fontFamily: FF_MONO, fontSize: '12px', color: '#6b6450', letterSpacing: '2px', marginTop: '16px', paddingTop: '16px', borderTop: '1px solid #2a2820' }
