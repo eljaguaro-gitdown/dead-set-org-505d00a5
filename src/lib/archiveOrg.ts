@@ -91,7 +91,7 @@ export async function findTrackInRecording(
       }
     }
 
-    if (bestFile && bestScore >= 40) {
+    if (bestFile && bestScore >= 60) {
       const url = `https://archive.org/download/${identifier}/${encodeURIComponent(bestFile.name)}`;
       if (bestScore < 60) {
         console.warn(
@@ -157,7 +157,7 @@ export async function findArchiveRecording(songTitle: string): Promise<ArchiveRe
             }
           }
 
-          if (bestFile && bestScore >= 40) {
+          if (bestFile && bestScore >= 60) {
             const result: ArchiveResult = {
               url: `https://archive.org/details/${identifier}`,
               date: doc.date ? doc.date.split("T")[0] : null,
