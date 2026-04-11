@@ -176,7 +176,7 @@ const BuildNotesEmail = ({
         {/* ── SET II ── */}
         {set2.length > 0 && (
           <Section style={setSection}>
-            <Text style={setLabel}>SET II · NEW &amp; IMPROVED</Text>
+            <Text style={setLabel}>{set2Label || 'SET II · NEW & IMPROVED'}</Text>
             {set2.map((item, i) => (
               <Section key={i} style={changeItem}>
                 <Row>
