@@ -48,6 +48,16 @@ const Auth = () => {
         });
         if (error) throw error;
         if (data.session && data.session.user) {
+          // Send welcome email (fire-and-forget)
+          const displayName = data.session.user.user_metadata?.full_name || email.split("@")[0];
+          supabase.functions.invoke("send-transactional-email", {
+            body: {
+              templateName: "welcome-email",
+              recipientEmail: email,
+              idempotencyKey: `welcome-${data.session.user.id}`,
+              templateData: { displayName },
+            },
+          }).catch(() => {});
           await smartRedirect(data.session.user.id);
         } else {
           toast.success("Check your email to confirm your account!");

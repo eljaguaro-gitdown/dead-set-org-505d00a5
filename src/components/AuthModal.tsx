@@ -39,6 +39,16 @@ const AuthModal = ({ open, onOpenChange, onAuthenticated, onBeforeRedirect }: Au
         });
         if (error) throw error;
         if (data.session) {
+          // Send welcome email (fire-and-forget)
+          const displayName = data.session.user?.user_metadata?.full_name || email.split("@")[0];
+          supabase.functions.invoke("send-transactional-email", {
+            body: {
+              templateName: "welcome-email",
+              recipientEmail: email,
+              idempotencyKey: `welcome-${data.session.user?.id}`,
+              templateData: { displayName },
+            },
+          }).catch(() => {});
           onOpenChange(false);
           onAuthenticated();
         } else {
