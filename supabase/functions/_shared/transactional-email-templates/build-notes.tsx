@@ -42,6 +42,8 @@ interface BuildNotesEmailProps {
   statsBugs?: number
   set1?: ChangeItem[]
   set2?: ChangeItem[]
+  set1Label?: string
+  set2Label?: string
   encoreNote?: string
   nextWeekTeaser?: string
   betaNote?: string
@@ -70,6 +72,8 @@ const BuildNotesEmail = ({
   statsBugs = 0,
   set1 = [],
   set2 = [],
+  set1Label,
+  set2Label,
   encoreNote,
   nextWeekTeaser,
   betaNote,
@@ -140,7 +144,7 @@ const BuildNotesEmail = ({
         {/* ── SET I ── */}
         {set1.length > 0 && (
           <Section style={setSection}>
-            <Text style={setLabel}>SET I · FIXES</Text>
+            <Text style={setLabel}>{set1Label || 'SET I · FIXES'}</Text>
             {set1.map((item, i) => (
               <Section key={i} style={changeItem}>
                 <Row>
@@ -172,7 +176,7 @@ const BuildNotesEmail = ({
         {/* ── SET II ── */}
         {set2.length > 0 && (
           <Section style={setSection}>
-            <Text style={setLabel}>SET II · NEW &amp; IMPROVED</Text>
+            <Text style={setLabel}>{set2Label || 'SET II · NEW & IMPROVED'}</Text>
             {set2.map((item, i) => (
               <Section key={i} style={changeItem}>
                 <Row>
@@ -265,24 +269,32 @@ export const template = {
   previewData: {
     weekNumber: 1,
     weekLabel: 'Apr 7–11, 2026',
-    editionTitle: 'What Got Better This Week',
-    statsUpdates: 12,
-    statsFeedback: 4,
-    statsBugs: 3,
+    editionTitle: 'The First Set',
+    statsUpdates: 22,
+    statsFeedback: 6,
+    statsBugs: 4,
     betaNote: "Before there's a launch. Before there's an app store listing. Before anyone else gets a look — there's you. The people in this list are shaping what Dead Set becomes. Your feedback, your bug reports, your feature requests — they're not going into a ticket queue. They're going directly into the next build.\n\nI don't take that lightly. Every session you spend in the app, every reply you send, every \"dude have you heard this\" moment you have and share with me — that's a gift. I am genuinely, gratefully yours for it.",
+    set1Label: 'SET I · FOUNDATION',
     set1: [
-      { tag: 'fix', title: 'Era filter returning wrong decade', detail: '1977 shows were occasionally appearing in the 1970–74 bucket. Fixed the date range boundary logic.' },
-      { tag: 'fix', title: 'Mobile CTA button not tapping on iPhone SE', detail: 'Touch target was too small on smaller screens. Expanded the hit area.', credit: 'reported by a beta Deadhead' },
-      { tag: 'fix', title: 'Cosmic Charlie occasionally returning duplicate songs', detail: 'Deduplication logic now runs before the setlist is assembled, not after.' },
+      { tag: 'new', title: 'Setlist builder with drag-and-drop', detail: 'Multi-set creation, drag reordering, segue markers, and per-song notes. The core of Dead Set.' },
+      { tag: 'new', title: 'Song Vault — full Grateful Dead catalog', detail: '300+ songs with era tags, jam vehicle flags, set position hints, and times-played stats.' },
+      { tag: 'new', title: 'Authentication with Google sign-in', detail: 'Full auth flow with email/password and Google OAuth. Profiles with display name, avatar uploads, and home state.' },
+      { tag: 'new', title: 'PWA with mobile install', detail: 'Install Dead Set on your home screen like a native app. Service worker caching for faster loads.' },
+      { tag: 'new', title: 'Era system with seven Dead eras', detail: 'Primal Dead through Vince Era. Color-coded throughout the app.' },
     ],
     set2: [
-      { tag: 'new', title: 'Surprise Me shortcut', detail: 'Skip the preference flow entirely. One tap, Cosmic Charlie takes the wheel.' },
-      { tag: 'new', title: 'Phil-only era filter', detail: 'Filter setlists by Phil Lesh-led lineups. Because someone asked, and they were right to ask.', credit: 'built for a beta Deadhead who knows what they want' },
-      { tag: 'improved', title: 'Cosmic Charlie response time', detail: '40% faster on average. The setlist generation pipeline got leaner.' },
-      { tag: 'improved', title: 'Setlist poster layout on mobile', detail: 'The two-column setlist was collapsing awkwardly on narrow screens. Cleaned up the responsive layout.' },
-      { tag: 'beta', title: 'Show score (early preview)', detail: 'Paste any setlist and get a rating of how legendary that night was. Rough edges — that\'s why you\'re here.' },
+      { tag: 'new', title: 'Cosmic Charlie — AI setlist generator', detail: 'Describe a vibe, pick an era, set the length. Cosmic Charlie builds your dream setlist from real Dead song data.' },
+      { tag: 'new', title: 'Archive.org live audio streaming', detail: 'Tap any song to hear the actual live recording. Auto-matched tracks, full playlist mode, global audio player.' },
+      { tag: 'new', title: 'Browse & discover community setlists', detail: 'Search, sort by popularity or date, filter by era. Era-coded cards with song previews.' },
+      { tag: 'new', title: 'Show Plate poster & share flow', detail: 'Visual setlist poster with venue, date, and era branding. Download as image or copy a direct link.' },
+      { tag: 'new', title: 'Collaborative setlists with real-time chat', detail: 'Invite friends via share token. Build together with a live chat sidebar.' },
+      { tag: 'new', title: 'Direct messaging between Deadheads', detail: 'Private conversations with unread indicators and real-time delivery.' },
+      { tag: 'new', title: 'Favorites, upvotes & comments', detail: 'Heart setlists, upvote community builds, leave comments. Play counts tracked automatically.' },
+      { tag: 'new', title: 'Backstage — beta feedback hub', detail: 'Bug reports, feature wish list, and personal Dead stories. Everything goes directly into the next build.' },
+      { tag: 'new', title: 'Ambient player on the landing page', detail: "Curated rotation of legendary Dead performances spanning every era — from '69 Fillmore to '89 Meadowlands." },
+      { tag: 'new', title: 'Build Notes & branded email system', detail: 'Weekly changelog, public /updates page, admin editor, and branded email notifications.' },
     ],
-    encoreNote: "This was a fast week. Shipping multiple times a day is the only way to build something that actually works — you can't think your way to a good product, you have to play it live.\n\nThe Phil filter came from one of you. That's the whole point. Keep telling me what's broken, what's missing, what would make you come back tomorrow. I'm reading every message.\n\nYou're the reason this exists. Not just the app — the feeling that it's worth building at all. You are the first set. You set the tone. Everything that comes after carries your fingerprints on it.\n\nGratefully. Always.",
+    encoreNote: "This was a fast week. Shipping multiple times a day is the only way to build something that actually works — you can't think your way to a good product, you have to play it live.\n\nEvery feature you see here was built, tested, and shipped in real time. No roadmap committee. No six-month planning cycle. Just one builder, a small group of Deadheads, and the belief that the best way to honor this music is to make something worth using.\n\nYou're the reason this exists. Not just the app — the feeling that it's worth building at all. You are the first set. You set the tone. Everything that comes after carries your fingerprints on it.\n\nGratefully. Always.",
     nextWeekTeaser: 'Better search · Era tooltips · Something you haven\'t asked for yet',
   },
 } satisfies TemplateEntry
