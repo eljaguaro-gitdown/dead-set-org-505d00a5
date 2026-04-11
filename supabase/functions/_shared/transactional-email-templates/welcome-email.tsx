@@ -217,6 +217,7 @@ const hero = { backgroundColor: '#0a0a0a', padding: '48px 40px 40px', textAlign:
 const heroEyebrow = { fontFamily: "'JetBrains Mono', monospace", fontSize: '13px', letterSpacing: '0.22em', color: '#b09e78', textTransform: 'uppercase' as const, margin: '0 0 20px' }
 const heroHeadline = { fontFamily: "'Playfair Display', Georgia, serif", fontSize: '36px', fontWeight: '400' as const, fontStyle: 'italic' as const, color: '#c9a84c', lineHeight: '1.25', margin: '0 0 16px' }
 const heroSub = { fontFamily: "'DM Sans', Arial, sans-serif", fontSize: '15px', fontWeight: '300' as const, color: '#a09880', letterSpacing: '0.04em', margin: '0' }
+const heroTagline = { fontFamily: "'Playfair Display', Georgia, serif", fontSize: '20px', fontStyle: 'italic' as const, color: '#c9a84c', letterSpacing: '0.06em', margin: '8px 0 16px' }
 
 // Divider
 const dividerSection = { padding: '0 40px', margin: '0', textAlign: 'center' as const }
