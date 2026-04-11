@@ -44,6 +44,9 @@ const VIBES = [
   { id: "emotional", emoji: "💔", label: "Emotional & Raw" },
   { id: "country", emoji: "🤠", label: "Country & Folk Roots" },
   { id: "blues", emoji: "🎸", label: "Blues & Grit" },
+  { id: "indica", emoji: "🌙", label: "Indica" },
+  { id: "sativa", emoji: "☀️", label: "Sativa" },
+  { id: "hybrid", emoji: "🌿", label: "Hybrid" },
 ];
 
 const PRIORITIES = [
@@ -95,7 +98,7 @@ const CosmicCharlieDialog = ({
     setSelectedVibes((prev) => {
       const exists = prev.find((v) => v.id === vibe.id);
       if (exists) return prev.filter((v) => v.id !== vibe.id);
-      if (prev.length >= 2) return prev;
+      if (prev.length >= 4) return prev;
       return [...prev, vibe];
     });
   };
@@ -310,7 +313,7 @@ const CosmicCharlieDialog = ({
                   >
                     <div className="text-center space-y-1">
                       <h3 className="font-display text-lg text-primary">What's the vibe tonight?</h3>
-                      <p className="font-body text-xs text-muted-foreground">Pick one or two</p>
+                      <p className="font-body text-xs text-muted-foreground">Pick up to four</p>
                     </div>
                     <div className="grid grid-cols-2 gap-2">
                       {VIBES.map((vibe) => {
