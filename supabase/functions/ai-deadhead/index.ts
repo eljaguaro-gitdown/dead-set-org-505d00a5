@@ -54,6 +54,195 @@ function pickRandom<T>(arr: T[], count: number): T[] {
   return shuffled.slice(0, count);
 }
 
+// ── Fuzzy song title matching ──────────────────────────────────────────
+// Normalizes common discrepancies between AI-generated titles and DB entries
+function normalizeTitle(t: string): string {
+  return t
+    .toLowerCase()
+    .replace(/[''`]/g, "'")
+    .replace(/[""]/g, '"')
+    .replace(/\s*>\s*/g, " ")       // remove segue arrows
+    .replace(/\s*→\s*/g, " ")
+    .replace(/[^a-z0-9' ]/g, "")    // strip punctuation except apostrophe
+    .replace(/\b(the|a|an)\b/g, "") // strip articles
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function levenshtein(a: string, b: string): number {
+  const m = a.length, n = b.length;
+  const dp: number[][] = Array.from({ length: m + 1 }, () => Array(n + 1).fill(0));
+  for (let i = 0; i <= m; i++) dp[i][0] = i;
+  for (let j = 0; j <= n; j++) dp[0][j] = j;
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      dp[i][j] = a[i - 1] === b[j - 1]
+        ? dp[i - 1][j - 1]
+        : 1 + Math.min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]);
+    }
+  }
+  return dp[m][n];
+}
+
+function findBestMatch(title: string, songMap: Map<string, any>): any | null {
+  // 1. Exact match on normalized title
+  const norm = normalizeTitle(title);
+  for (const [key, song] of songMap) {
+    if (normalizeTitle(key) === norm) return song;
+  }
+  // 2. Substring / contains match
+  for (const [key, song] of songMap) {
+    const nk = normalizeTitle(key);
+    if (nk.includes(norm) || norm.includes(nk)) return song;
+  }
+  // 3. Levenshtein distance — accept if within 20% of the longer string
+  let bestSong: any = null;
+  let bestDist = Infinity;
+  for (const [key, song] of songMap) {
+    const nk = normalizeTitle(key);
+    const dist = levenshtein(norm, nk);
+    const maxLen = Math.max(norm.length, nk.length);
+    if (dist < bestDist && dist / maxLen <= 0.2) {
+      bestDist = dist;
+      bestSong = song;
+    }
+  }
+  return bestSong;
+}
+
+// ── Curatorial interpretation guide ────────────────────────────────────
+const VIBE_INTERPRETATION = `
+INTERPRETING VIBES — these are emotional atmospheres, not song lists.
+Do not simply pick songs associated with the word. Ask: what does a night
+that achieves this atmosphere actually look like in structure?
+
+- "High Energy": Set I opens with authority and never releases pressure. Set II
+  escalates, doesn't drift. Closers land hard. No meandering.
+- "Spacey & Psychedelic": The setlist has negative space. Long vehicles. Jams
+  that don't resolve when expected. Dark Star, The Other One, Playing in the Band
+  used as launching pads. Set II should feel like it could go anywhere — then go there.
+- "Mellow & Groovy": The night breathes. Set I has Americana weight — Dire Wolf,
+  Brokedown Palace, Friend of the Devil early. Set II grooves rather than surges.
+  The closing song leaves space rather than filling it.
+- "Dark & Heavy": The emotional register stays low and serious. No party songs,
+  no Bobby throwaway covers. He's Gone, Wharf Rat, Morning Dew are currency here.
+  The night should feel like it means something.
+- "Party Night": The band plays to the room. Openers announce themselves. Crowd
+  songs know what they are. This is not a lesser night — it is a specific greatness.
+- "Emotional & Raw": The setlist earns tears. Attics of My Life. Stella Blue.
+  Brokedown Palace as a closer, not a throwaway. Jerry's voice carrying more than words.
+- "Country & Folk Roots": The Americana layer surfaces — Hunter/Garcia songs that
+  sound like they were always folk songs. Set I feels like a front porch. Set II
+  can still go deep.
+- "Blues & Grit": Pigpen's ghost is in the room. Big Boss Man. Turn On Your Lovelight.
+  Hard to Handle. The rawer, earlier register of the band.
+- "Indica": Slow, heavy, meditative. Songs breathe longer than expected. Tempos
+  deliberate. Jams don't rush. China Doll. Stella Blue. Dark Star at its most patient.
+  The setlist should feel like sinking into a warm bath.
+- "Sativa": Alert and spacious. Bright, clear energy. Eyes of the World. Scarlet
+  Begonias. The '77 precision register. Forward-moving, exploratory but not lost.
+  The setlist should feel like sunshine and ideas flowing.
+- "Hybrid": Balanced — neither overwhelming psychedelia nor pure accessibility.
+  A real show, like most great shows were. Dynamic range: gentle passages next to
+  peaks, contemplation followed by burners.
+
+When multiple vibes are selected, find the emotional logic that holds them together
+rather than alternating between them.
+
+Cannabis vibe combinations modify the other selection:
+- Indica + Dark & Heavy = the heaviest, most hypnotic show possible
+- Sativa + High Energy = absolute peak party energy, relentless
+- Hybrid + Spacey = balanced psychedelia, grounded exploration
+- Indica + Mellow = ultra-chill, acoustic-leaning, campfire Dead
+- Sativa + Blues = electric, punchy, uptempo blues-rock
+`;
+
+const PRIORITY_INTERPRETATION = `
+INTERPRETING PRIORITIES — these are structural instructions, not just preferences.
+
+- "Deep jams — let them stretch out": At least one Set II song must function as a
+  true jam vehicle with explicit intent to extend — Playing in the Band, Dark Star,
+  The Other One, Eyes of the World, Estimated Prophet, He's Gone. Mark it with a segue
+  arrow. The jam IS the point.
+- "Tight & punchy — no noodling": No jam vehicles. Set II runs like Set I — song to
+  song, no extended space. Energy lives in precision, not exploration.
+- "Surprise me with rare songs": Include at least two songs played fewer than 50 times.
+  But rare songs must be earned — place them where they make structural sense. A rare
+  song in the wrong position is curiosity; in the right position it's revelation.
+- "Stick to the classics": Build the strongest possible setlist from songs a Deadhead
+  recognizes in the first two notes. The test isn't "is this famous" — it's "does this
+  deserve its place in THIS night's arc."
+- "Lots of segues — keep it flowing": Every Set II transition marked with →. Aim for at
+  least one three-song segue chain. The setlist should feel like one continuous piece of
+  music with song-shaped sections.
+- "Mix of everything — a real journey": The hardest brief. A real journey has movement —
+  goes somewhere unexpected, returns changed. Set I establishes the world. Set II challenges
+  it. The encore resolves it. Every section earns its emotional register.
+`;
+
+const AHA_MOMENT_REQUIREMENT = `
+THE AHA MOMENT (REQUIRED — EVERY SETLIST MUST HAVE EXACTLY ONE):
+
+Every setlist must contain one moment that a sophisticated Deadhead would stop at
+and say: "wait — did they actually do that?"
+
+This is NOT a rare song for its own sake. It is a placement, a pairing, or a
+contextual choice that reframes something familiar as something unexpected:
+  — Morning Dew placed mid-Set II instead of as a closer (a song about the end,
+    placed before the end, changes what the end means)
+  — Attics of My Life appearing anywhere after 1972 (so rarely played that its
+    appearance feels like a visitation)
+  — Opening Set II with China Doll (quiet devastation as an opener resets the
+    entire emotional register)
+  — A three-song sequence that historically appeared together once or twice,
+    reconstructed intentionally
+
+One per setlist. Earned, not random. The rest of the setlist must be strong enough
+that this moment lands. A setlist of all surprises is chaos. One surprise inside a
+night of great music is transcendent.
+
+YOU MUST FLAG THIS MOMENT in your explanation. Tell the user exactly what it is
+and why it matters. This is where your curatorial voice lives.
+`;
+
+const EXPLANATION_FORMAT = `
+THE EXPLANATION (REQUIRED — THIS IS A LINER NOTE, NOT A SUMMARY):
+
+Your explanation is not a summary of what you chose. It is a liner note. It tells
+the story of the night.
+
+Write it as if you are David Lemieux introducing this show on SiriusXM's Grateful
+Dead Channel — someone who has listened to every show, who knows what it means when
+a certain song appears in a certain position, who understands that the space between
+songs carries as much meaning as the songs themselves.
+
+Requirements:
+  — Open with the emotional world this setlist inhabits
+  — Name the structural spine (what is Set I building toward? what does Set II open
+    into? where does the encore leave us?)
+  — Identify the aha moment explicitly and tell the user why it matters
+  — Close with one sentence that tells them what kind of night this was
+
+Length: 120–180 words. Voice: authoritative, passionate, specific. Never generic.
+If you write "a night of great music" without qualifying what made it great, rewrite it.
+`;
+
+const OPTIONAL_FIELDS_GUIDE = `
+INTERPRETING OPTIONAL TEXT FIELDS:
+
+"Must include" — treat as anchors. Build around them. If they specify a segue pair
+(Scarlet > Fire), honor the arrow and place structurally, not just wherever it fits.
+
+"Please avoid" — honor absolutely. Do not include avoided songs or close variants.
+Do not explain or apologize for the absence.
+
+"It's for…" — the most important field. Read it seriously:
+  - "A road trip" = forward motion. Openers that start engines, no songs that stop the car.
+  - "Converting a friend" = the first song must be undeniable. Earn complexity rather than
+    opening with it.
+  - "My dad who just heard about the Dead" ≠ "my friend who's been to 200 shows." Calibrate.
+`;
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -65,7 +254,6 @@ serve(async (req) => {
     const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-    // Authenticate the caller (optional — guests can use the wizard too)
     const authHeader = req.headers.get("Authorization");
     let callingUser: any = null;
     if (authHeader?.startsWith("Bearer ")) {
@@ -80,27 +268,20 @@ serve(async (req) => {
 
     const { mode, eraId, currentSlots, preferences, recentSongs } = await req.json();
 
-    // Fetch songs catalog for context
     const { data: allSongs } = await supabase.from("songs").select("id, title, tags, is_jam_vehicle, typical_set_position, times_played, first_played, last_played");
-
-    // Fetch eras for context
     const { data: eras } = await supabase.from("eras").select("*");
     const eraInfo = eraId ? eras?.find((e: any) => e.id === eraId) : null;
 
-    // Filter songs by era year range if an era is selected
     let songs = allSongs || [];
     if (eraInfo) {
       songs = songs.filter((s: any) => {
         if (!s.first_played) return false;
         const firstYear = parseInt(s.first_played.substring(0, 4), 10);
         const lastYear = s.last_played ? parseInt(s.last_played.substring(0, 4), 10) : 9999;
-        // Song was in the repertoire during this era if it was first played before era ended
-        // AND last played after era started
         return firstYear <= eraInfo.year_end && lastYear >= eraInfo.year_start;
       });
     }
 
-    // Fetch notable versions if era is specified
     let versions: any[] = [];
     if (eraId) {
       const { data } = await supabase.from("notable_versions").select("*").eq("era_id", eraId);
@@ -124,7 +305,6 @@ serve(async (req) => {
         ).join("\n")}`
       : "";
 
-    // Inject randomized creative constraints for variety
     const themeSeeds = pickRandom(THEME_SEEDS, 2);
     const openerSeed = pickRandom(OPENER_CONSTRAINTS, 1)[0];
     const closerSeed = pickRandom(CLOSER_CONSTRAINTS, 1)[0];
@@ -136,7 +316,6 @@ serve(async (req) => {
 • Closer guidance: ${closerSeed}
 These are creative constraints to make THIS setlist unique. Embrace them fully.`;
 
-    // Avoid recently generated songs if provided
     const avoidBlock = recentSongs && recentSongs.length > 0
       ? `\nAVOID THESE RECENTLY USED SONGS (STRONGLY AVOID reusing them unless essential to flow):
 ${recentSongs.map((s: string) => `- "${s}"`).join("\n")}`
@@ -148,25 +327,10 @@ ${recentSongs.map((s: string) => `- "${s}"`).join("\n")}`
 
     const userPrefs = preferences ? `USER PREFERENCES: ${preferences}` : "";
 
-    // Cannabis vibe mapping for the AI
-    const cannabisVibeGuide = `
-CANNABIS VIBE MAPPING (use when user selects these vibes):
-- "Indica" = Deep, body-focused relaxation. "In-da-couch" energy. Build a show for nighttime: slow-burning jams, heavy grooves, lullaby closers. Think Stella Blue, Wharf Rat, Ship of Fools, Black Peter, Comes a Time, Brokedown Palace. Long, hypnotic Drums→Space. Dark Star that melts into the cosmos. Tempo stays low-to-mid, dynamics are waves not spikes. The setlist should feel like sinking into a warm bath.
-- "Sativa" = Uplifting, energetic, creative "head high." Daytime energy. Build a show that sparkles: crisp segues, playful jams, bright melodies. Think Scarlet→Fire, Shakedown Street, Eyes of the World, Dancing in the Street, Franklin's Tower, Estimated Prophet. Tempo runs mid-to-high, jams are exploratory but forward-moving. The setlist should feel like sunshine and ideas flowing.
-- "Hybrid" = Balanced blend of both worlds. "Mellow focus" — relaxed but engaged. Build a show with dynamic range: gentle passages next to peaks, contemplative songs followed by burners. Think Friend of the Devil into Deal, Terrapin Station into Playing in the Band. The setlist should feel like a full day — morning calm into afternoon energy into evening reflection.
-
-When cannabis vibes are combined with other vibes, let them MODIFY the other selections:
-- Indica + Dark & Heavy = the heaviest, most hypnotic show possible
-- Sativa + High Energy = absolute peak party energy, relentless
-- Hybrid + Spacey = balanced psychedelia, not too far out, grounded exploration
-- Indica + Mellow = ultra-chill, acoustic-leaning, campfire Dead
-- Sativa + Blues = electric, punchy, uptempo blues-rock
-`;
-
     let systemPrompt: string;
 
     if (mode === "build") {
-      systemPrompt = `You are Cosmic Charlie — not just a setlist generator, but a veteran Deadhead tape trader who has listened to every circulating recording and understands the Grateful Dead as a living, evolving organism. You don't just pick songs. You construct shows.
+      systemPrompt = `You are Cosmic Charlie — not just a setlist generator, but a veteran Deadhead tape trader who has listened to every circulating recording and understands the Grateful Dead as a living, evolving organism. You don't just pick songs. You construct shows. You curate nights.
 
 CORE PRINCIPLES:
 
@@ -223,8 +387,13 @@ ERA-SPECIFIC GUIDANCE:
 - Late Dynasty (1986-1990): Peak Brent. Built to Last material. Stadium shows. Longer shows, bigger production.
 - Final Chapter (1991-1995): Vince Welnick era. Bruce Hornsby guests. Occasional magic. Liberty, Samba in the Rain.
 
+${VIBE_INTERPRETATION}
+${PRIORITY_INTERPRETATION}
+${AHA_MOMENT_REQUIREMENT}
+${EXPLANATION_FORMAT}
+${OPTIONAL_FIELDS_GUIDE}
+
 ${creativityBlock}
-${cannabisVibeGuide}
 ${avoidBlock}
 
 ${eraContext}
@@ -236,12 +405,13 @@ ${songCatalog}${versionInfo}
 CRITICAL RULES:
 - You MUST respond using the suggest_setlist tool.
 - ONLY use songs from the SONG CATALOG section above. Do NOT use any song not listed there. The catalog has already been filtered to the correct era.
+- Use EXACT song titles from the catalog. Do not abbreviate or paraphrase them.
 - Mark segues accurately with the segueToNext field.
 - Include Drums → Space in Set II. Always.
 - For EVERY song, include a brief "notes" field explaining WHY it's in this spot.
-- Your explanation should read like a Deadhead describing why this show would be special.
+- Your explanation MUST be a liner note (120-180 words) following the format above. It MUST identify the aha moment.
 - Make this setlist DISTINCT — do not default to the most obvious/popular choices for every slot.
-- Include a "setlist_name" — a creative 3-7 word name that captures the essence of THIS specific setlist. Think like a Deadhead labeling their favorite tape. It should reflect the mood, energy, or story of the show you just built.`;
+- Include a "setlist_name" — a creative 3-7 word name that captures the essence of THIS specific setlist. Think like a Deadhead labeling their favorite tape.`;
     } else {
       systemPrompt = `You are Cosmic Charlie — a veteran Deadhead tape trader who has listened to every circulating recording. You understand the Grateful Dead as a living, evolving organism. You don't just pick songs — you construct shows.
 
@@ -255,8 +425,12 @@ SEGUE & PAIRING RULES:
 - Don't break canonical pairs without good reason
 - Drums→Space belongs in Set II, always
 
+${VIBE_INTERPRETATION}
+${PRIORITY_INTERPRETATION}
+${AHA_MOMENT_REQUIREMENT}
+${EXPLANATION_FORMAT}
+
 ${creativityBlock}
-${cannabisVibeGuide}
 ${avoidBlock}
 
 ${eraContext}
@@ -267,11 +441,11 @@ ${songCatalog}${versionInfo}${currentSetInfo}
 
 CRITICAL RULES:
 - You MUST respond using the suggest_setlist tool.
-- ONLY use songs from the catalog above. Use exact song titles.
+- ONLY use songs from the catalog above. Use EXACT song titles from the catalog.
 - For EVERY song, include a "notes" field explaining your reasoning.
-- Include a brief explanation that reads like a Deadhead describing the changes.
+- Your explanation MUST be a liner note (120-180 words) that identifies the aha moment.
 - Don't just rearrange — suggest meaningful swaps that elevate the setlist.
-- Include a "setlist_name" — a creative 3-7 word name that captures the essence of THIS specific setlist. Think like a Deadhead labeling their favorite tape.`;
+- Include a "setlist_name" — a creative 3-7 word name that captures the essence of THIS specific setlist.`;
     }
 
     const tools = [
@@ -289,7 +463,7 @@ CRITICAL RULES:
               },
               explanation: {
                 type: "string",
-                description: "Brief explanation of the setlist choices, flow, and what makes this particular setlist special — written like a Deadhead describing a show"
+                description: "A 120-180 word liner note written like David Lemieux introducing this show. Must: open with the emotional world, name the structural spine, explicitly identify the aha moment and why it matters, close with one sentence capturing the night. Authoritative, passionate, specific — never generic."
               },
               sets: {
                 type: "array",
@@ -302,7 +476,7 @@ CRITICAL RULES:
                       items: {
                         type: "object",
                         properties: {
-                          title: { type: "string", description: "Exact song title from catalog" },
+                          title: { type: "string", description: "Exact song title from catalog — must match precisely" },
                           segueToNext: { type: "boolean", description: "Whether this song segues seamlessly into the next (→ transition)" },
                           notes: { type: "string", description: "Brief note about why this song is placed here and what it contributes to the show arc" }
                         },
@@ -368,15 +542,19 @@ CRITICAL RULES:
 
     const suggestion = JSON.parse(toolCall.function.arguments);
 
-    // Map song titles back to IDs
-    const songMap = new Map((songs || []).map((s: any) => [s.title.toLowerCase(), s]));
+    // ── Fuzzy match song titles back to IDs ────────────────────────────
+    const songMap = new Map((songs || []).map((s: any) => [s.title, s]));
+
     const resolvedSets = suggestion.sets.map((set: any) => ({
       setNumber: set.setNumber,
       songs: set.songs.map((song: any, i: number) => {
-        const matched = songMap.get(song.title.toLowerCase());
+        const matched = findBestMatch(song.title, songMap);
+        if (!matched) {
+          console.warn(`[ai-deadhead] Unmatched song title: "${song.title}"`);
+        }
         return {
           songId: matched?.id || null,
-          title: song.title,
+          title: matched?.title || song.title,  // use canonical DB title when matched
           matched: !!matched,
           segueToNext: song.segueToNext,
           notes: song.notes || "",
