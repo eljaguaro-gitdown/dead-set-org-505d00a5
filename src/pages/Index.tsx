@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,6 +12,7 @@ import HeroSection from "@/components/landing/HeroSection";
 import HowItWorks from "@/components/landing/HowItWorks";
 import PersonalNote from "@/components/landing/PersonalNote";
 import ShareAppButton from "@/components/ShareAppButton";
+import LastUpdatedBadge from "@/components/LastUpdatedBadge";
 import { Button } from "@/components/ui/button";
 import { ChevronRight } from "lucide-react";
 
@@ -213,19 +214,22 @@ const Index = () => {
 
       {/* Minimal footer */}
       <footer className="py-8 border-t border-border/30">
-        <div className="flex flex-col items-center gap-4">
-          <ShareAppButton variant="full" />
-          <div className="flex items-center gap-3 text-[10px] font-mono text-muted-foreground/40 tracking-wider">
-            <span>© Dead-Set.Org</span>
-            <span>·</span>
-            <button
-              onClick={() => navigate("/privacy")}
-              className="hover:text-muted-foreground transition-colors"
-            >
-              Privacy
-            </button>
+          <div className="flex flex-col items-center gap-3">
+            <LastUpdatedBadge />
+            <ShareAppButton variant="full" />
+            <div className="flex items-center gap-3 text-[10px] font-mono text-muted-foreground/40 tracking-wider">
+              <span>© Dead-Set.Org</span>
+              <span>·</span>
+              <Link to="/updates" className="hover:text-muted-foreground transition-colors">Build Notes</Link>
+              <span>·</span>
+              <button
+                onClick={() => navigate("/privacy")}
+                className="hover:text-muted-foreground transition-colors"
+              >
+                Privacy
+              </button>
+            </div>
           </div>
-        </div>
       </footer>
     </PageLayout>
   );
