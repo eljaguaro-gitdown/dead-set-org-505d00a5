@@ -27,6 +27,8 @@ const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const Messages = lazy(() => import("./pages/Messages"));
 const Backstage = lazy(() => import("./pages/Backstage"));
 const Unsubscribe = lazy(() => import("./pages/Unsubscribe"));
+const Updates = lazy(() => import("./pages/Updates"));
+const AdminChangelog = lazy(() => import("./pages/AdminChangelog"));
 
 const queryClient = new QueryClient();
 
