@@ -37,43 +37,48 @@ interface CosmicCharlieWelcomeProps {
 // ── Data ────────────────────────────────────────────────────────────────
 
 const ENERGY = [
-  { id: "exploratory", label: "Exploratory & deep" },
-  { id: "driving", label: "Tight & driving" },
-  { id: "mellow", label: "Mellow & slow" },
+  { id: "exploratory", emoji: "🌀", label: "Exploratory & deep" },
+  { id: "driving", emoji: "⚡", label: "Tight & driving" },
+  { id: "mellow", emoji: "🌙", label: "Mellow & slow" },
 ] as const;
 
 const TEXTURES = [
-  { id: "joyful", label: "Joyful" },
-  { id: "dark", label: "Dark & heavy" },
-  { id: "raw", label: "Raw & emotional" },
-  { id: "psychedelic", label: "Psychedelic" },
-  { id: "roots", label: "Roots & earthy" },
-  { id: "party", label: "Party" },
+  { id: "joyful", emoji: "☀️", label: "Joyful" },
+  { id: "dark", emoji: "🖤", label: "Dark & heavy" },
+  { id: "raw", emoji: "🩸", label: "Raw & emotional" },
+  { id: "psychedelic", emoji: "👁️", label: "Psychedelic" },
+  { id: "roots", emoji: "🌾", label: "Roots & earthy" },
+  { id: "party", emoji: "🔥", label: "Party" },
 ] as const;
 
 const PRIORITIES = [
   {
     id: "jam",
+    emoji: "🎆",
     title: "Let one song become the whole second set",
     desc: "A true jam vehicle that goes somewhere real — Dark Star, Playing, Eyes",
   },
   {
     id: "tight",
+    emoji: "🎯",
     title: "Song after song — no wandering",
     desc: "Tight show, precision is the point",
   },
   {
     id: "rare",
+    emoji: "💎",
     title: "Surprise me with songs I've never heard in a setlist",
     desc: "Rare songs, rare placements, deep cuts",
   },
   {
     id: "canonical",
+    emoji: "👑",
     title: "Show me the greatest version of a great night",
     desc: "The canonical songs, in the right order, at the right level",
   },
   {
     id: "flow",
+    emoji: "🌊",
     title: "Flow — one continuous piece of music",
     desc: "Segues everywhere, nothing stops, nothing restarts",
   },
