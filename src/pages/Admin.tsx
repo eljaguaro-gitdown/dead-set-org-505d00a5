@@ -92,11 +92,31 @@ const Admin = () => {
         setUsers(usersRes.data.users || []);
         setTraffic(usersRes.data.traffic || null);
       }
-      setBackstage({
-        wishlist: wishlistRes.data || [],
-        bugs: bugsRes.data || [],
-        shares: sharesRes.data || [],
-      });
+      const bsData = {
+        wishlist: (wishlistRes.data as any[]) || [],
+        bugs: (bugsRes.data as any[]) || [],
+        shares: (sharesRes.data as any[]) || [],
+      };
+      setBackstage(bsData);
+
+      // Collect unique user_ids from submissions and fetch profiles
+      const allUserIds = [
+        ...bsData.wishlist.map((w: any) => w.user_id),
+        ...bsData.bugs.map((b: any) => b.user_id),
+        ...bsData.shares.map((s: any) => s.user_id),
+      ].filter((id): id is string => !!id);
+      const uniqueIds = [...new Set(allUserIds)];
+      if (uniqueIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("user_id, display_name, avatar_url")
+          .in("user_id", uniqueIds);
+        if (profiles) {
+          const map: ProfileMap = {};
+          profiles.forEach((p) => { map[p.user_id] = { display_name: p.display_name, avatar_url: p.avatar_url }; });
+          setProfileMap(map);
+        }
+      }
       setLoading(false);
     };
     fetchUsers();
