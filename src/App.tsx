@@ -7,6 +7,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AudioPlayerProvider } from "@/contexts/AudioPlayerContext";
 import GlobalAudioPlayer from "@/components/GlobalAudioPlayer";
 import VisitorTracker from "@/components/VisitorTracker";
+import PwaInstallBanner from "@/components/PwaInstallBanner";
 
 // Eagerly load the landing page for fastest FCP/LCP
 import Index from "./pages/Index";
