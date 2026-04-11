@@ -123,6 +123,32 @@ const Admin = () => {
   }, [isAdmin]);
 
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [sendingWelcome, setSendingWelcome] = useState<string | null>(null);
+
+  const handleSendWelcome = async (userId: string, email: string, displayName: string | null) => {
+    setSendingWelcome(userId);
+    try {
+      const { data, error } = await supabase.functions.invoke("send-transactional-email", {
+        body: {
+          templateName: "welcome-email",
+          recipientEmail: email,
+          idempotencyKey: `manual-welcome-${userId}-${Date.now()}`,
+          templateData: { name: displayName || email.split("@")[0] },
+        },
+      });
+      if (error) throw error;
+      if (data?.success) {
+        toast.success(`Welcome email sent to ${email}`);
+      } else {
+        toast.error(data?.reason === "email_suppressed" ? `${email} is on the suppression list` : "Failed to send");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Failed to send welcome email");
+      console.error(err);
+    } finally {
+      setSendingWelcome(null);
+    }
+  };
 
   const handleDeleteUser = async (userId: string) => {
     setDeleting(userId);
