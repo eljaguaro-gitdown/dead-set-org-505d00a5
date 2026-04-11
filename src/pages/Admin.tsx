@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { Shield, Users, ArrowLeft, Loader2, Calendar, Mail, User, Trash2, ListMusic, Eye, Globe, MessageSquare, Bug, Star, Lightbulb } from "lucide-react";
+import { Shield, Users, ArrowLeft, Loader2, Calendar, Mail, User, Trash2, ListMusic, Eye, Globe, MessageSquare, Bug, Star, Lightbulb, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -37,9 +37,13 @@ interface TrafficStats {
 }
 
 interface BackstageData {
-  wishlist: Array<{ id: string; top_request: string | null; what_works: string | null; bigger_picture: string | null; created_at: string }>;
-  bugs: Array<{ id: string; description: string; location: string | null; device: string | null; severity: string | null; repeats: boolean | null; created_at: string }>;
-  shares: Array<{ id: string; handle: string | null; favorite_songs: string | null; favorite_show: string | null; personal_take: string | null; created_at: string }>;
+  wishlist: Array<{ id: string; top_request: string | null; what_works: string | null; bigger_picture: string | null; created_at: string; user_id: string | null }>;
+  bugs: Array<{ id: string; description: string; location: string | null; device: string | null; severity: string | null; repeats: boolean | null; created_at: string; user_id: string | null }>;
+  shares: Array<{ id: string; handle: string | null; favorite_songs: string | null; favorite_show: string | null; personal_take: string | null; created_at: string; user_id: string | null }>;
+}
+
+interface ProfileMap {
+  [userId: string]: { display_name: string | null; avatar_url: string | null };
 }
 
 const Admin = () => {
@@ -50,6 +54,7 @@ const Admin = () => {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [backstage, setBackstage] = useState<BackstageData>({ wishlist: [], bugs: [], shares: [] });
+  const [profileMap, setProfileMap] = useState<ProfileMap>({});
 
   // Check admin role
   useEffect(() => {
@@ -87,11 +92,31 @@ const Admin = () => {
         setUsers(usersRes.data.users || []);
         setTraffic(usersRes.data.traffic || null);
       }
-      setBackstage({
-        wishlist: wishlistRes.data || [],
-        bugs: bugsRes.data || [],
-        shares: sharesRes.data || [],
-      });
+      const bsData = {
+        wishlist: (wishlistRes.data as any[]) || [],
+        bugs: (bugsRes.data as any[]) || [],
+        shares: (sharesRes.data as any[]) || [],
+      };
+      setBackstage(bsData);
+
+      // Collect unique user_ids from submissions and fetch profiles
+      const allUserIds = [
+        ...bsData.wishlist.map((w: any) => w.user_id),
+        ...bsData.bugs.map((b: any) => b.user_id),
+        ...bsData.shares.map((s: any) => s.user_id),
+      ].filter((id): id is string => !!id);
+      const uniqueIds = [...new Set(allUserIds)];
+      if (uniqueIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("user_id, display_name, avatar_url")
+          .in("user_id", uniqueIds);
+        if (profiles) {
+          const map: ProfileMap = {};
+          profiles.forEach((p) => { map[p.user_id] = { display_name: p.display_name, avatar_url: p.avatar_url }; });
+          setProfileMap(map);
+        }
+      }
       setLoading(false);
     };
     fetchUsers();
@@ -151,6 +176,32 @@ const Admin = () => {
     const days = Math.floor(hours / 24);
     if (days < 30) return `${days}d ago`;
     return formatDate(dateStr);
+  };
+
+  const SubmitterBadge = ({ userId }: { userId: string | null }) => {
+    if (!userId) return <span className="text-xs text-muted-foreground italic">Anonymous</span>;
+    const profile = profileMap[userId];
+    const name = profile?.display_name || "Unknown user";
+    return (
+      <div className="flex items-center gap-2">
+        <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center shrink-0 overflow-hidden">
+          {profile?.avatar_url ? (
+            <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
+          ) : (
+            <User className="w-3 h-3 text-primary" />
+          )}
+        </div>
+        <span className="text-xs text-foreground font-medium">{name}</span>
+        <button
+          onClick={() => navigate(`/messages?to=${userId}`)}
+          className="inline-flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-colors ml-1"
+          title={`Message ${name}`}
+        >
+          <Send className="w-3 h-3" />
+          Reply
+        </button>
+      </div>
+    );
   };
 
   if (authLoading) {
@@ -312,7 +363,8 @@ const Admin = () => {
                   <div className="space-y-2">
                     {backstage.wishlist.map((w) => (
                       <div key={w.id} className="bg-muted/30 border border-border rounded-md p-3 text-sm font-body">
-                        {w.top_request && <p className="text-foreground"><span className="text-muted-foreground">Top request:</span> {w.top_request}</p>}
+                        <SubmitterBadge userId={w.user_id} />
+                        {w.top_request && <p className="text-foreground mt-2"><span className="text-muted-foreground">Top request:</span> {w.top_request}</p>}
                         {w.what_works && <p className="text-foreground mt-1"><span className="text-muted-foreground">What works:</span> {w.what_works}</p>}
                         {w.bigger_picture && <p className="text-foreground mt-1"><span className="text-muted-foreground">Bigger picture:</span> {w.bigger_picture}</p>}
                         <p className="text-xs text-muted-foreground mt-2">{formatDate(w.created_at)}</p>
@@ -332,7 +384,8 @@ const Admin = () => {
                   <div className="space-y-2">
                     {backstage.bugs.map((b) => (
                       <div key={b.id} className="bg-muted/30 border border-border rounded-md p-3 text-sm font-body">
-                        <p className="text-foreground">{b.description}</p>
+                        <SubmitterBadge userId={b.user_id} />
+                        <p className="text-foreground mt-2">{b.description}</p>
                         <div className="flex flex-wrap gap-3 mt-2 text-xs text-muted-foreground">
                           {b.location && <span>📍 {b.location}</span>}
                           {b.device && <span>📱 {b.device}</span>}
@@ -356,7 +409,8 @@ const Admin = () => {
                   <div className="space-y-2">
                     {backstage.shares.map((s) => (
                       <div key={s.id} className="bg-muted/30 border border-border rounded-md p-3 text-sm font-body">
-                        {s.handle && <p className="text-primary font-medium">@{s.handle}</p>}
+                        <SubmitterBadge userId={s.user_id} />
+                        {s.handle && <p className="text-primary font-medium mt-1">@{s.handle}</p>}
                         {s.favorite_songs && <p className="text-foreground mt-1"><span className="text-muted-foreground">Fav songs:</span> {s.favorite_songs}</p>}
                         {s.favorite_show && <p className="text-foreground mt-1"><span className="text-muted-foreground">Fav show:</span> {s.favorite_show}</p>}
                         {s.personal_take && <p className="text-foreground mt-1"><span className="text-muted-foreground">Take:</span> {s.personal_take}</p>}

@@ -321,6 +321,7 @@ export type Database = {
           location: string | null
           repeats: boolean | null
           severity: string | null
+          user_id: string | null
         }
         Insert: {
           created_at?: string
@@ -330,6 +331,7 @@ export type Database = {
           location?: string | null
           repeats?: boolean | null
           severity?: string | null
+          user_id?: string | null
         }
         Update: {
           created_at?: string
@@ -339,6 +341,7 @@ export type Database = {
           location?: string | null
           repeats?: boolean | null
           severity?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -350,6 +353,7 @@ export type Database = {
           handle: string | null
           id: string
           personal_take: string | null
+          user_id: string | null
         }
         Insert: {
           created_at?: string
@@ -358,6 +362,7 @@ export type Database = {
           handle?: string | null
           id?: string
           personal_take?: string | null
+          user_id?: string | null
         }
         Update: {
           created_at?: string
@@ -366,6 +371,7 @@ export type Database = {
           handle?: string | null
           id?: string
           personal_take?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -375,6 +381,7 @@ export type Database = {
           created_at: string
           id: string
           top_request: string | null
+          user_id: string | null
           what_works: string | null
         }
         Insert: {
@@ -382,6 +389,7 @@ export type Database = {
           created_at?: string
           id?: string
           top_request?: string | null
+          user_id?: string | null
           what_works?: string | null
         }
         Update: {
@@ -389,6 +397,7 @@ export type Database = {
           created_at?: string
           id?: string
           top_request?: string | null
+          user_id?: string | null
           what_works?: string | null
         }
         Relationships: []
