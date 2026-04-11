@@ -166,6 +166,7 @@ const Backstage = () => {
       favorite_songs: s1.songs || null,
       personal_take: s1.take || null,
       handle: s1.handle || null,
+      user_id: user?.id || null,
     } as any);
     setS1Loading(false);
     if (error) { toast.error("Something went wrong. Try again."); return; }
@@ -181,6 +182,7 @@ const Backstage = () => {
       repeats: s2.repeats,
       severity: s2.severity || null,
       device: s2.device || null,
+      user_id: user?.id || null,
     } as any);
     setS2Loading(false);
     if (error) { toast.error("Something went wrong. Try again."); return; }
@@ -193,6 +195,7 @@ const Backstage = () => {
       top_request: s3.top || null,
       what_works: s3.works || null,
       bigger_picture: s3.bigger || null,
+      user_id: user?.id || null,
     } as any);
     setS3Loading(false);
     if (error) { toast.error("Something went wrong. Try again."); return; }
