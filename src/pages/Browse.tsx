@@ -209,12 +209,14 @@ const Browse = () => {
       <AdSenseLoader />
       <SiteHeader large>
         <DancingBearButton />
-        <button
-          onClick={() => navigate("/auth")}
-          className="font-display text-sm tracking-[0.15em] text-muted-foreground hover:text-primary transition-colors uppercase"
-        >
-          Sign In
-        </button>
+        {!isAuthenticated && (
+          <button
+            onClick={() => navigate("/auth")}
+            className="font-display text-sm tracking-[0.15em] text-muted-foreground hover:text-primary transition-colors uppercase"
+          >
+            Sign In
+          </button>
+        )}
       </SiteHeader>
 
       {/* Featured Section */}
