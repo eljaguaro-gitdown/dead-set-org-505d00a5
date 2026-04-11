@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -6,21 +7,25 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AudioPlayerProvider } from "@/contexts/AudioPlayerContext";
 import GlobalAudioPlayer from "@/components/GlobalAudioPlayer";
 import VisitorTracker from "@/components/VisitorTracker";
+
+// Eagerly load the landing page for fastest FCP/LCP
 import Index from "./pages/Index";
-import Auth from "./pages/Auth";
-import Builder from "./pages/Builder";
-import MySetlists from "./pages/MySetlists";
-import Profile from "./pages/Profile";
-import JoinSetlist from "./pages/JoinSetlist";
-import Browse from "./pages/Browse";
-import SetlistPoster from "./pages/SetlistPoster";
-import Admin from "./pages/Admin";
-import PrivacyPolicy from "./pages/PrivacyPolicy";
-import NotFound from "./pages/NotFound";
-import ResetPassword from "./pages/ResetPassword";
-import Messages from "./pages/Messages";
-import Backstage from "./pages/Backstage";
-import Unsubscribe from "./pages/Unsubscribe";
+
+// Lazy-load all other routes to reduce initial bundle size
+const Auth = lazy(() => import("./pages/Auth"));
+const Builder = lazy(() => import("./pages/Builder"));
+const MySetlists = lazy(() => import("./pages/MySetlists"));
+const Profile = lazy(() => import("./pages/Profile"));
+const JoinSetlist = lazy(() => import("./pages/JoinSetlist"));
+const Browse = lazy(() => import("./pages/Browse"));
+const SetlistPoster = lazy(() => import("./pages/SetlistPoster"));
+const Admin = lazy(() => import("./pages/Admin"));
+const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
+const Messages = lazy(() => import("./pages/Messages"));
+const Backstage = lazy(() => import("./pages/Backstage"));
+const Unsubscribe = lazy(() => import("./pages/Unsubscribe"));
 
 const queryClient = new QueryClient();
 
@@ -31,25 +36,27 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AudioPlayerProvider>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/my-setlists" element={<MySetlists />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/builder" element={<Builder />} />
-            <Route path="/builder/:id" element={<Builder />} />
-            <Route path="/join/:token" element={<JoinSetlist />} />
-            <Route path="/browse" element={<Browse />} />
-            <Route path="/setlist/:id" element={<SetlistPoster />} />
-            <Route path="/messages" element={<Messages />} />
-            <Route path="/admin" element={<Admin />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/privacy" element={<PrivacyPolicy />} />
-            <Route path="/backstage" element={<Backstage />} />
-            <Route path="/unsubscribe" element={<Unsubscribe />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <Suspense fallback={null}>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/my-setlists" element={<MySetlists />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/builder" element={<Builder />} />
+              <Route path="/builder/:id" element={<Builder />} />
+              <Route path="/join/:token" element={<JoinSetlist />} />
+              <Route path="/browse" element={<Browse />} />
+              <Route path="/setlist/:id" element={<SetlistPoster />} />
+              <Route path="/messages" element={<Messages />} />
+              <Route path="/admin" element={<Admin />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/privacy" element={<PrivacyPolicy />} />
+              <Route path="/backstage" element={<Backstage />} />
+              <Route path="/unsubscribe" element={<Unsubscribe />} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Suspense>
           <GlobalAudioPlayer />
           <VisitorTracker />
         </AudioPlayerProvider>
