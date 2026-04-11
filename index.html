@@ -29,10 +29,36 @@
   <meta property="og:description" content="Build, share, and collaborate on dream Grateful Dead setlists. Explore notable versions from every era, 1965-1995.">
   <meta name="twitter:description" content="Build, share, and collaborate on dream Grateful Dead setlists. Explore notable versions from every era, 1965-1995.">
     <!-- AdSense loaded conditionally via AdSenseLoader component on content-rich pages -->
+
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="Dead Set">
+    <link rel="apple-touch-icon" href="/icons/icon-192.png">
+    <meta name="theme-color" content="#0a0a0a">
 </head>
 
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <script>
+      // Register service worker only in production (not in iframes or preview hosts)
+      if ('serviceWorker' in navigator) {
+        var isInIframe = false;
+        try { isInIframe = window.self !== window.top; } catch(e) { isInIframe = true; }
+        var isPreview = window.location.hostname.indexOf('id-preview--') !== -1 ||
+                        window.location.hostname.indexOf('lovableproject.com') !== -1;
+        if (!isInIframe && !isPreview) {
+          navigator.serviceWorker.register('/sw.js');
+        } else {
+          // Clean up any stale SW in preview/iframe
+          navigator.serviceWorker.getRegistrations().then(function(regs) {
+            regs.forEach(function(r) { r.unregister(); });
+          });
+        }
+      }
+    </script>
   </body>
 </html>
