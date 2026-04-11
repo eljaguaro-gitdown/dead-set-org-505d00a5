@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Star, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -34,28 +34,52 @@ interface CosmicCharlieWelcomeProps {
   onSkip: () => void;
 }
 
-const VIBES = [
-  { id: "high-energy", emoji: "🔥", label: "High Energy" },
-  { id: "spacey", emoji: "🌊", label: "Spacey & Psychedelic" },
-  { id: "mellow", emoji: "🌅", label: "Mellow & Groovy" },
-  { id: "dark", emoji: "🌑", label: "Dark & Heavy" },
-  { id: "party", emoji: "🎉", label: "Party Night" },
-  { id: "emotional", emoji: "💔", label: "Emotional & Raw" },
-  { id: "country", emoji: "🤠", label: "Country & Folk Roots" },
-  { id: "blues", emoji: "🎸", label: "Blues & Grit" },
-  { id: "indica", emoji: "🌙", label: "Indica" },
-  { id: "sativa", emoji: "☀️", label: "Sativa" },
-  { id: "hybrid", emoji: "🌿", label: "Hybrid" },
-];
+// ── Data ────────────────────────────────────────────────────────────────
+
+const ENERGY = [
+  { id: "exploratory", label: "Exploratory & deep" },
+  { id: "driving", label: "Tight & driving" },
+  { id: "mellow", label: "Mellow & slow" },
+] as const;
+
+const TEXTURES = [
+  { id: "joyful", label: "Joyful" },
+  { id: "dark", label: "Dark & heavy" },
+  { id: "raw", label: "Raw & emotional" },
+  { id: "psychedelic", label: "Psychedelic" },
+  { id: "roots", label: "Roots & earthy" },
+  { id: "party", label: "Party" },
+] as const;
 
 const PRIORITIES = [
-  { id: "deep-jams", emoji: "🎵", label: "Deep jams — let them stretch out" },
-  { id: "tight", emoji: "⚡", label: "Tight & punchy — no noodling" },
-  { id: "rare", emoji: "💎", label: "Surprise me with rare songs" },
-  { id: "classics", emoji: "⭐", label: "Stick to the classics" },
-  { id: "segues", emoji: "🔗", label: "Lots of segues — keep it flowing" },
-  { id: "journey", emoji: "🎢", label: "Mix of everything — a real journey" },
-];
+  {
+    id: "jam",
+    title: "Let one song become the whole second set",
+    desc: "A true jam vehicle that goes somewhere real — Dark Star, Playing, Eyes",
+  },
+  {
+    id: "tight",
+    title: "Song after song — no wandering",
+    desc: "Tight show, precision is the point",
+  },
+  {
+    id: "rare",
+    title: "Surprise me with songs I've never heard in a setlist",
+    desc: "Rare songs, rare placements, deep cuts",
+  },
+  {
+    id: "canonical",
+    title: "Show me the greatest version of a great night",
+    desc: "The canonical songs, in the right order, at the right level",
+  },
+  {
+    id: "flow",
+    title: "Flow — one continuous piece of music",
+    desc: "Segues everywhere, nothing stops, nothing restarts",
+  },
+] as const;
+
+// ── Animation ───────────────────────────────────────────────────────────
 
 const slideVariants = {
   enter: (direction: number) => ({
@@ -69,62 +93,98 @@ const slideVariants = {
   }),
 };
 
+// ── Component ───────────────────────────────────────────────────────────
+
 const CosmicCharlieWelcome = ({ eras, onGenerated, onSkip }: CosmicCharlieWelcomeProps) => {
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState(1);
-  const [selectedVibes, setSelectedVibes] = useState<typeof VIBES>([]);
-  const [selectedPriorities, setSelectedPriorities] = useState<typeof PRIORITIES>([]);
+
+  // Step 0
+  const [selectedEnergy, setSelectedEnergy] = useState<string | null>(null);
+  const [selectedTextures, setSelectedTextures] = useState<string[]>([]);
+  const [selectedEra, setSelectedEra] = useState<string | null>(null);
+  const [eraOpen, setEraOpen] = useState(false);
+
+  // Step 1
+  const [selectedPriority, setSelectedPriority] = useState<string | null>(null);
+
+  // Step 2
   const [mustInclude, setMustInclude] = useState("");
   const [pleaseAvoid, setPleaseAvoid] = useState("");
   const [itsFor, setItsFor] = useState("");
-  const [selectedEra, setSelectedEra] = useState<string | null>(null);
-  const [eraOpen, setEraOpen] = useState(false);
+
   const [loading, setLoading] = useState(false);
   const recentSongsRef = useRef<string[]>([]);
 
-  const toggleVibe = (vibe: (typeof VIBES)[number]) => {
-    setSelectedVibes((prev) => {
-      const exists = prev.find((v) => v.id === vibe.id);
-      if (exists) return prev.filter((v) => v.id !== vibe.id);
-      if (prev.length >= 4) return prev;
-      return [...prev, vibe];
-    });
-  };
+  // ── Helpers ─────────────────────────────────────────────────────────
 
-  const togglePriority = (priority: (typeof PRIORITIES)[number]) => {
-    setSelectedPriorities((prev) => {
-      const exists = prev.find((p) => p.id === priority.id);
-      if (exists) return prev.filter((p) => p.id !== priority.id);
+  const toggleTexture = (id: string) => {
+    setSelectedTextures((prev) => {
+      if (prev.includes(id)) return prev.filter((t) => t !== id);
       if (prev.length >= 2) return prev;
-      return [...prev, priority];
+      return [...prev, id];
     });
   };
 
-  const goNext = () => {
-    setDirection(1);
-    setStep((s) => s + 1);
-  };
+  const goNext = () => { setDirection(1); setStep((s) => s + 1); };
+  const goBack = () => { setDirection(-1); setStep((s) => s - 1); };
 
-  const goBack = () => {
-    setDirection(-1);
-    setStep((s) => s - 1);
-  };
+  // ── composePreferences ──────────────────────────────────────────────
 
   const composePreferences = (): string | undefined => {
     const parts: string[] = [];
-    if (selectedVibes.length > 0) {
-      const vibeLabels = selectedVibes.map((v) => v.label).join(" and ");
-      parts.push(`User wants a ${vibeLabels} vibe.`);
+
+    if (selectedEnergy) {
+      const energyMap: Record<string, string> = {
+        exploratory: "This setlist should be exploratory and unhurried. The second set is the point. Long vehicles, open space, jams that don't resolve when expected. Songs are launching pads, not destinations.",
+        driving: "This setlist should be tight and driving — song after song with authority. No meandering. Every song earns its place through precision and momentum, not length.",
+        mellow: "This setlist should breathe. Set I carries Americana weight. The second set grooves rather than surges. The closing song leaves space rather than filling it.",
+      };
+      parts.push(energyMap[selectedEnergy]);
     }
-    if (selectedPriorities.length > 0) {
-      const priorityLabels = selectedPriorities.map((p) => p.label).join(". ");
-      parts.push(`${priorityLabels}.`);
+
+    if (selectedTextures.length > 0) {
+      const textureMap: Record<string, string> = {
+        joyful: "The emotional register is joyful — the band playing like they love being there.",
+        dark: "The emotional register is dark and serious. No party songs, no throwaway covers. He's Gone, Wharf Rat, Morning Dew are the currency of this night.",
+        raw: "The emotional register is raw. Songs that carry weight beyond their words. Jerry's voice doing more than singing.",
+        psychedelic: "The psychedelic dimension is primary. Songs chosen for where they can go, not where they've been.",
+        roots: "The Americana and folk roots of the Dead should surface — the Hunter/Garcia songs that sound like they were always folk songs.",
+        party: "The band is playing to the room. Openers that announce themselves. Songs that know what they are and deliver it.",
+      };
+      const textureLines = selectedTextures.map((t) => textureMap[t]).filter(Boolean);
+      parts.push(textureLines.join(" "));
     }
-    if (mustInclude.trim()) parts.push(`Must include: ${mustInclude.trim()}.`);
-    if (pleaseAvoid.trim()) parts.push(`Please avoid: ${pleaseAvoid.trim()}.`);
-    if (itsFor.trim()) parts.push(`This setlist is for: ${itsFor.trim()}.`);
-    return parts.length > 0 ? parts.join(" ") : undefined;
+
+    if (selectedPriority) {
+      const priorityMap: Record<string, string> = {
+        jam: "The user's single priority is depth. One song — Dark Star, Playing in the Band, The Other One, Eyes of the World, or Estimated Prophet — must become the center of gravity for the entire second set. Everything before it builds toward it. Everything after emerges from it changed. Mark jam vehicle extensions with segue arrows.",
+        tight: "The user's priority is precision. No extended jam vehicles. Set II runs like Set I — song to song, purposeful. The energy is in the tightness, not the exploration.",
+        rare: "The user wants to be surprised. Include at least two songs with genuine rarity — songs played fewer than 50 times in the band's history, or songs placed in positions where they almost never appeared. Rare songs must be structurally earned, not dropped in randomly. Flag each one in the explanation.",
+        canonical: "Build the strongest possible version of a transcendent night from the songs a Deadhead would recognize immediately. The test is not 'is this song famous' — it is 'does this song deserve its place in this night's arc.' Every song must justify its position.",
+        flow: "Every Set II transition must be a segue, marked with →. Aim for at least one three-song segue chain. The setlist should feel like one continuous piece of music that happens to have song-shaped sections within it.",
+      };
+      parts.push(priorityMap[selectedPriority]);
+    }
+
+    if (mustInclude.trim()) {
+      parts.push(`Required inclusions (treat as anchors — build around them): ${mustInclude.trim()}. If a segue pair is specified (e.g. Scarlet > Fire), honor the arrow and place the pair where it makes structural sense.`);
+    }
+
+    if (pleaseAvoid.trim()) {
+      parts.push(`Do not include: ${pleaseAvoid.trim()}. Honor this absolutely.`);
+    }
+
+    if (itsFor.trim()) {
+      parts.push(`Context that shapes everything: this setlist is for "${itsFor.trim()}". Read this seriously. A road trip means forward motion — openers that start engines, no songs that stop the car. Converting a friend means the first song must be undeniable. A late night alone means introspective, not social. Calibrate the entire setlist against this context.`);
+    }
+
+    parts.push(`REQUIRED: Include exactly one moment in this setlist that a sophisticated Deadhead would stop at and say 'wait — did they actually do that?' This is not a rare song for its own sake. It is a placement, a pairing, or a sequence that reframes something familiar as something unexpected. Examples: Morning Dew placed mid-Set II instead of as a closer; Attics of My Life appearing anywhere after 1972; a historically rare segue pair reconstructed intentionally. One per setlist. The rest of the setlist must be strong enough that this moment lands.`);
+
+    return parts.length > 0 ? parts.join("\n\n") : undefined;
   };
+
+  // ── Generate ────────────────────────────────────────────────────────
 
   const handleGenerate = async (preferences?: string) => {
     setLoading(true);
@@ -155,6 +215,8 @@ const CosmicCharlieWelcome = ({ eras, onGenerated, onSkip }: CosmicCharlieWelcom
       setLoading(false);
     }
   };
+
+  // ── Render ──────────────────────────────────────────────────────────
 
   return (
     <motion.div
@@ -238,6 +300,7 @@ const CosmicCharlieWelcome = ({ eras, onGenerated, onSkip }: CosmicCharlieWelcom
 
               {/* Steps */}
               <AnimatePresence mode="wait" custom={direction}>
+                {/* ── Step 0: Energy + Textures ─────────────────────── */}
                 {step === 0 && (
                   <motion.div
                     key="step0"
@@ -251,32 +314,64 @@ const CosmicCharlieWelcome = ({ eras, onGenerated, onSkip }: CosmicCharlieWelcom
                   >
                     <div className="text-center space-y-1">
                       <h1 className="font-display text-2xl sm:text-3xl text-primary">
-                        What's the vibe tonight?
+                        What kind of night is it?
                       </h1>
-                      <p className="font-body text-sm text-muted-foreground">Pick up to four</p>
+                      <p className="font-body text-sm text-muted-foreground">Pick one energy</p>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-2.5 w-full">
-                      {VIBES.map((vibe) => {
-                        const selected = selectedVibes.some((v) => v.id === vibe.id);
+                    {/* Energy — single select, 3 columns */}
+                    <div className="grid grid-cols-3 gap-2.5 w-full">
+                      {ENERGY.map((e) => {
+                        const active = selectedEnergy === e.id;
                         return (
                           <motion.button
-                            key={vibe.id}
+                            key={e.id}
                             whileTap={{ scale: 0.96 }}
-                            onClick={() => toggleVibe(vibe)}
-                            className={`flex items-center gap-2.5 px-3.5 py-3 rounded-lg border text-left transition-all duration-200 ${
-                              selected
+                            onClick={() => setSelectedEnergy(active ? null : e.id)}
+                            className={`flex items-center justify-center px-3 py-3.5 rounded-lg border text-center transition-all duration-200 ${
+                              active
                                 ? "border-primary bg-primary/15 shadow-[0_0_12px_hsl(var(--glow-gold))]"
                                 : "border-border bg-card hover:border-primary/40"
                             }`}
                           >
-                            <span className="text-xl">{vibe.emoji}</span>
                             <span
                               className={`font-body text-sm ${
-                                selected ? "text-primary" : "text-foreground"
+                                active ? "text-primary font-medium" : "text-foreground"
                               }`}
                             >
-                              {vibe.label}
+                              {e.label}
+                            </span>
+                          </motion.button>
+                        );
+                      })}
+                    </div>
+
+                    {/* Section divider */}
+                    <p className="font-body text-xs text-muted-foreground uppercase tracking-wider">
+                      Texture — pick one or two
+                    </p>
+
+                    {/* Textures — multi select, 2 columns */}
+                    <div className="grid grid-cols-2 gap-2.5 w-full">
+                      {TEXTURES.map((t) => {
+                        const active = selectedTextures.includes(t.id);
+                        return (
+                          <motion.button
+                            key={t.id}
+                            whileTap={{ scale: 0.96 }}
+                            onClick={() => toggleTexture(t.id)}
+                            className={`flex items-center justify-center px-3 py-3 rounded-lg border text-center transition-all duration-200 ${
+                              active
+                                ? "border-primary bg-primary/15 shadow-[0_0_12px_hsl(var(--glow-gold))]"
+                                : "border-border bg-card hover:border-primary/40"
+                            }`}
+                          >
+                            <span
+                              className={`font-body text-sm ${
+                                active ? "text-primary font-medium" : "text-foreground"
+                              }`}
+                            >
+                              {t.label}
                             </span>
                           </motion.button>
                         );
@@ -339,7 +434,7 @@ const CosmicCharlieWelcome = ({ eras, onGenerated, onSkip }: CosmicCharlieWelcom
                     <Button
                       size="lg"
                       onClick={goNext}
-                      disabled={selectedVibes.length === 0}
+                      disabled={!selectedEnergy}
                       className="w-full font-display text-base px-8 py-6 bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_30px_hsl(var(--glow-gold))] tracking-widest uppercase gap-2"
                     >
                       Next
@@ -351,16 +446,10 @@ const CosmicCharlieWelcome = ({ eras, onGenerated, onSkip }: CosmicCharlieWelcom
                     >
                       🎲 Surprise me — skip all this
                     </button>
-
-                    <button
-                      onClick={onSkip}
-                      className="font-body text-xs text-muted-foreground/60 hover:text-muted-foreground transition-colors underline underline-offset-2"
-                    >
-                      or build from scratch →
-                    </button>
                   </motion.div>
                 )}
 
+                {/* ── Step 1: Priority (radio) ──────────────────────── */}
                 {step === 1 && (
                   <motion.div
                     key="step1"
@@ -374,33 +463,55 @@ const CosmicCharlieWelcome = ({ eras, onGenerated, onSkip }: CosmicCharlieWelcom
                   >
                     <div className="text-center space-y-1">
                       <h1 className="font-display text-2xl sm:text-3xl text-primary">
-                        What matters most?
+                        What's the one thing that matters most?
                       </h1>
-                      <p className="font-body text-sm text-muted-foreground">Pick one or two</p>
+                      <p className="font-body text-sm text-muted-foreground">
+                        Pick one — this shapes the whole night
+                      </p>
                     </div>
 
                     <div className="flex flex-col gap-2.5 w-full">
-                      {PRIORITIES.map((priority) => {
-                        const selected = selectedPriorities.some((p) => p.id === priority.id);
+                      {PRIORITIES.map((p) => {
+                        const active = selectedPriority === p.id;
                         return (
                           <motion.button
-                            key={priority.id}
+                            key={p.id}
                             whileTap={{ scale: 0.97 }}
-                            onClick={() => togglePriority(priority)}
-                            className={`flex items-center gap-3 px-4 py-3 rounded-lg border text-left transition-all duration-200 ${
-                              selected
+                            onClick={() => setSelectedPriority(active ? null : p.id)}
+                            className={`flex items-start gap-3.5 px-4 py-3.5 rounded-lg border text-left transition-all duration-200 ${
+                              active
                                 ? "border-primary bg-primary/15 shadow-[0_0_12px_hsl(var(--glow-gold))]"
                                 : "border-border bg-card hover:border-primary/40"
                             }`}
                           >
-                            <span className="text-lg">{priority.emoji}</span>
-                            <span
-                              className={`font-body text-sm ${
-                                selected ? "text-primary" : "text-foreground"
-                              }`}
-                            >
-                              {priority.label}
-                            </span>
+                            {/* Radio circle */}
+                            <div className="mt-0.5 flex-shrink-0">
+                              <div
+                                className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-colors duration-200 ${
+                                  active ? "border-primary" : "border-muted-foreground/40"
+                                }`}
+                              >
+                                {active && (
+                                  <motion.div
+                                    initial={{ scale: 0 }}
+                                    animate={{ scale: 1 }}
+                                    className="w-2 h-2 rounded-full bg-primary"
+                                  />
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex flex-col gap-0.5">
+                              <span
+                                className={`font-body text-sm font-semibold ${
+                                  active ? "text-primary" : "text-foreground"
+                                }`}
+                              >
+                                {p.title}
+                              </span>
+                              <span className="font-body text-xs text-muted-foreground">
+                                {p.desc}
+                              </span>
+                            </div>
                           </motion.button>
                         );
                       })}
@@ -416,7 +527,7 @@ const CosmicCharlieWelcome = ({ eras, onGenerated, onSkip }: CosmicCharlieWelcom
                       <Button
                         size="lg"
                         onClick={goNext}
-                        disabled={selectedPriorities.length === 0}
+                        disabled={!selectedPriority}
                         className="flex-1 font-display text-base px-8 py-6 bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_30px_hsl(var(--glow-gold))] tracking-widest uppercase gap-2"
                       >
                         Next
@@ -425,6 +536,7 @@ const CosmicCharlieWelcome = ({ eras, onGenerated, onSkip }: CosmicCharlieWelcom
                   </motion.div>
                 )}
 
+                {/* ── Step 2: Specifics ─────────────────────────────── */}
                 {step === 2 && (
                   <motion.div
                     key="step2"
@@ -441,7 +553,7 @@ const CosmicCharlieWelcome = ({ eras, onGenerated, onSkip }: CosmicCharlieWelcom
                         Anything specific?
                       </h1>
                       <p className="font-body text-sm text-muted-foreground">
-                        Totally optional — skip if you want
+                        All optional — skip straight to Charlie if you want
                       </p>
                     </div>
 
@@ -468,14 +580,15 @@ const CosmicCharlieWelcome = ({ eras, onGenerated, onSkip }: CosmicCharlieWelcom
                           className="bg-card border-border text-foreground font-body text-sm"
                         />
                       </div>
-                      <div className="space-y-1.5">
+                      {/* Gold-bordered invitation field */}
+                      <div className="space-y-1.5 border-l-2 border-[hsl(var(--dead-gold))] pl-3.5 bg-primary/5 rounded-r-lg py-2.5 pr-3">
                         <label className="font-body text-xs text-muted-foreground uppercase tracking-wider">
-                          It's for…
+                          What does a perfect night feel like to you?
                         </label>
                         <Input
                           value={itsFor}
                           onChange={(e) => setItsFor(e.target.value)}
-                          placeholder="e.g. a road trip, converting a friend"
+                          placeholder="e.g. a late night drive alone, converting a friend"
                           className="bg-card border-border text-foreground font-body text-sm"
                         />
                       </div>
@@ -497,6 +610,13 @@ const CosmicCharlieWelcome = ({ eras, onGenerated, onSkip }: CosmicCharlieWelcom
                         Let Charlie Cook
                       </Button>
                     </div>
+
+                    <button
+                      onClick={onSkip}
+                      className="font-body text-xs text-muted-foreground/60 hover:text-muted-foreground transition-colors underline underline-offset-2"
+                    >
+                      or build from scratch →
+                    </button>
                   </motion.div>
                 )}
               </AnimatePresence>
