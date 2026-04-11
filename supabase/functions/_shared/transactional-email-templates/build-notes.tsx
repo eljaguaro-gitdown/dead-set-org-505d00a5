@@ -205,11 +205,19 @@ const BuildNotesEmail = ({
 
         {/* ── FEEDBACK BOX ── */}
         <Section style={feedbackBox}>
-          <Text style={feedbackLabel}>YOUR FEEDBACK SHAPES THE NEXT SET</Text>
+          <Text style={backstageBadgeSt}>Backstage</Text>
+          <Text style={{...feedbackLabel, marginTop: '16px'}}>YOUR FEEDBACK SHAPES THE NEXT SET</Text>
           <Text style={feedbackText}>
-            Found something broken? Have a feature you'd kill for? Head to Backstage — our beta inner circle where your bug reports, wish list items, and ideas go directly into the next build. No ticket system. No support queue. Just Deadheads building together.
+            Backstage is where we build this together. Submit a feature request, log a bug, or tell us about the shows and songs that move you. A small group of people with all-access passes — shaping what Dead Set becomes, one build at a time.
           </Text>
-          <Link href={`${SITE_URL}/backstage?${UTM}`} style={feedbackLink}>OPEN BACKSTAGE ↗</Link>
+          <Text style={feedbackPillRow}>
+            <Link href={`${SITE_URL}/backstage?${UTM}`} style={feedbackPill}>✦&nbsp;&nbsp;Wish List</Link>
+            {' '}
+            <Link href={`${SITE_URL}/backstage?${UTM}`} style={feedbackPill}>⌁&nbsp;&nbsp;Bug Log</Link>
+            {' '}
+            <Link href={`${SITE_URL}/backstage?${UTM}`} style={feedbackPill}>◎&nbsp;&nbsp;Share Your Set</Link>
+          </Text>
+          <Link href={`${SITE_URL}/backstage?${UTM}`} style={feedbackCta}>Go Backstage&nbsp;&nbsp;↗</Link>
         </Section>
 
         {/* ── SIGN-OFF ── */}
@@ -341,9 +349,12 @@ const encoreText = { fontFamily: FF_CURSIVE, fontSize: '19px', color: '#c8c4b0',
 
 // Feedback box
 const feedbackBox = { backgroundColor: '#0f0e08', border: '1px solid #2a2410', borderLeft: '3px solid #c9a84c', borderRadius: '2px', padding: '18px 20px', margin: '28px 48px' } as React.CSSProperties
+const backstageBadgeSt = { display: 'inline-block', background: 'linear-gradient(135deg, #d4a832 0%, #f0d060 40%, #c9921a 100%)', borderRadius: '20px', padding: '7px 16px', fontFamily: FF_SANS, fontSize: '13px', fontWeight: '500' as const, color: '#0a0a0a', letterSpacing: '0.04em', margin: '0', lineHeight: '1' } as React.CSSProperties
 const feedbackLabel = { fontFamily: FF_MONO, fontSize: '11px', letterSpacing: '0.18em', color: '#b09e78', textTransform: 'uppercase' as const, margin: '0 0 8px' } as React.CSSProperties
 const feedbackText = { fontFamily: FF_SANS, fontSize: '14px', fontWeight: '300' as const, color: '#b0ac9a', lineHeight: '1.7', margin: '0 0 12px' } as React.CSSProperties
-const feedbackLink = { fontFamily: FF_MONO, fontSize: '12px', color: '#c9a84c', textDecoration: 'none' as const, letterSpacing: '0.08em', textTransform: 'uppercase' as const } as React.CSSProperties
+const feedbackPillRow = { margin: '16px 0 18px' } as React.CSSProperties
+const feedbackPill = { display: 'inline-block', fontFamily: FF_MONO, fontSize: '11px', letterSpacing: '0.10em', textTransform: 'uppercase' as const, color: '#c9a84c', backgroundColor: '#1a1408', border: '1px solid #4a3a18', borderRadius: '2px', padding: '5px 12px', margin: '4px 6px 4px 0', textDecoration: 'none' as const } as React.CSSProperties
+const feedbackCta = { display: 'inline-block', fontFamily: FF_MONO, fontSize: '13px', fontWeight: '500' as const, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#0a0a0a', backgroundColor: '#c9a84c', padding: '10px 22px', borderRadius: '2px', textDecoration: 'none' as const } as React.CSSProperties
 
 // Sign-off
 const signoff = { padding: '28px 48px 8px', backgroundColor: '#0d0d0d' } as React.CSSProperties
