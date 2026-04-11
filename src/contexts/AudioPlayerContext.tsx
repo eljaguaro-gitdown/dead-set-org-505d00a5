@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useCallback, useRef, useEffect, type ReactNode } from "react";
-import { findArchiveRecording } from "@/lib/archiveOrg";
+import { findArchiveRecording, findTrackInRecording } from "@/lib/archiveOrg";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -85,15 +85,19 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
   /** Resolve a slot: ensure it has an archive URL and directTrackUrl */
   const resolveSlot = async (slot: PlayableSlot): Promise<PlayableSlot | null> => {
     if (slot.version?.archive_org_url && slot.directTrackUrl) return slot;
+
     if (slot.version?.archive_org_url && !slot.directTrackUrl) {
-      // Has show URL but no direct track — try to find direct track
-      const result = await findArchiveRecording(slot.song.title);
-      if (result?.directTrackUrl) {
-        return { ...slot, directTrackUrl: result.directTrackUrl };
+      // Has a specific show URL — find the track WITHIN that recording
+      const directUrl = await findTrackInRecording(slot.version.archive_org_url, slot.song.title);
+      if (directUrl) {
+        return { ...slot, directTrackUrl: directUrl };
       }
-      return slot; // Still usable, just less precise
+      // Couldn't find specific track in that recording — still usable via AudioPlayer fallback
+      console.warn(`[QA] Could not resolve direct track for "${slot.song.title}" in ${slot.version.archive_org_url}`);
+      return slot;
     }
-    // No archive URL at all — search
+
+    // No archive URL at all — do a generic search as last resort
     const result = await findArchiveRecording(slot.song.title);
     if (result) {
       return {
