@@ -67,7 +67,7 @@ const PwaInstallBanner = () => {
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 animate-in slide-in-from-bottom duration-500 safe-area-bottom">
-      <div className="mx-3 mb-3 rounded-2xl border border-border bg-card/95 backdrop-blur-xl shadow-2xl overflow-hidden">
+      <div className="mx-3 mb-3 rounded-2xl border-2 border-primary/40 bg-gradient-to-br from-primary to-[hsl(40_55%_42%)] shadow-[0_0_30px_hsl(var(--dead-gold)/0.25)] overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-4 pt-4 pb-2">
           <div className="flex items-center gap-3">
@@ -76,20 +76,20 @@ const PwaInstallBanner = () => {
               alt="Dead Set icon"
               width={44}
               height={44}
-              className="rounded-xl"
+              className="rounded-xl shadow-md"
             />
             <div>
-              <h3 className="font-bold text-foreground text-sm leading-tight">
+              <h3 className="font-bold text-primary-foreground text-sm leading-tight">
                 Add Dead Set to Home Screen
               </h3>
-              <p className="text-muted-foreground text-xs mt-0.5">
+              <p className="text-primary-foreground/70 text-xs mt-0.5">
                 Quick access, app-like experience
               </p>
             </div>
           </div>
           <button
             onClick={handleDismiss}
-            className="p-1.5 rounded-full hover:bg-muted/60 text-muted-foreground transition-colors"
+            className="p-1.5 rounded-full hover:bg-primary-foreground/10 text-primary-foreground/60 transition-colors"
             aria-label="Dismiss install banner"
           >
             <X className="w-4 h-4" />
@@ -99,35 +99,32 @@ const PwaInstallBanner = () => {
         {/* Instructions or Install button */}
         <div className="px-4 pb-4 pt-1">
           {deferredPrompt ? (
-            /* Chrome/Edge — native prompt available */
             <button
               onClick={handleInstall}
-              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 transition-colors"
+              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-primary-foreground text-primary font-semibold text-sm hover:bg-primary-foreground/90 transition-colors"
             >
               <Download className="w-4 h-4" />
               Install App
             </button>
           ) : platform === "ios" ? (
-            /* Safari on iOS */
-            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+            <div className="flex items-center gap-3 text-xs text-primary-foreground/80">
               <span className="flex items-center gap-1">
-                Tap <Share className="w-3.5 h-3.5 text-accent inline" />
+                Tap <Share className="w-3.5 h-3.5 text-primary-foreground inline" />
               </span>
-              <span className="text-border">→</span>
+              <span className="text-primary-foreground/40">→</span>
               <span className="flex items-center gap-1">
-                then <span className="font-medium text-foreground">"Add to Home Screen"</span>
-                <Plus className="w-3.5 h-3.5 text-accent inline" />
+                then <span className="font-semibold text-primary-foreground">"Add to Home Screen"</span>
+                <Plus className="w-3.5 h-3.5 text-primary-foreground inline" />
               </span>
             </div>
           ) : (
-            /* Android Chrome fallback (no beforeinstallprompt fired) */
-            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+            <div className="flex items-center gap-3 text-xs text-primary-foreground/80">
               <span className="flex items-center gap-1">
-                Tap <MoreVertical className="w-3.5 h-3.5 text-accent inline" />
+                Tap <MoreVertical className="w-3.5 h-3.5 text-primary-foreground inline" />
               </span>
-              <span className="text-border">→</span>
+              <span className="text-primary-foreground/40">→</span>
               <span className="flex items-center gap-1">
-                <span className="font-medium text-foreground">"Add to Home Screen"</span>
+                <span className="font-semibold text-primary-foreground">"Add to Home Screen"</span>
               </span>
             </div>
           )}
