@@ -2,10 +2,11 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Plus, Globe, Lock, Music, Trash2, Calendar, Search, User, ArrowDownUp, Star, FileImage } from "lucide-react";
+import { Plus, Globe, Lock, Music, Trash2, Calendar, Search, User, ArrowDownUp, Star, FileImage, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useFavorites } from "@/hooks/useFavorites";
 import PageLayout from "@/components/PageLayout";
 import SiteHeader from "@/components/SiteHeader";
 import CommunityHighlights from "@/components/CommunityHighlights";
@@ -21,11 +22,25 @@ interface SetlistWithMeta extends SetlistRow {
   inferredDecade?: string | null;
 }
 
+interface SavedSetlist {
+  id: string;
+  title: string;
+  creator_name: string;
+  creator_avatar: string | null;
+  slot_count: number;
+  play_count: number;
+  upvote_count: number;
+  era_name: string | null;
+}
+
 const MySetlists = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading, signOut } = useAuth();
+  const { favoriteIds, toggleFavorite } = useFavorites();
   const [setlists, setSetlists] = useState<SetlistWithMeta[]>([]);
+  const [savedSetlists, setSavedSetlists] = useState<SavedSetlist[]>([]);
   const [loading, setLoading] = useState(true);
+  const [savedLoading, setSavedLoading] = useState(true);
   const [sortBy, setSortBy] = useState<"recent" | "most_played" | "name">("recent");
   const [displayName, setDisplayName] = useState<string | null>(null);
 
@@ -100,6 +115,70 @@ const MySetlists = () => {
     };
     fetchSetlists();
   }, [user]);
+
+  // Fetch favorited setlists from other creators
+  useEffect(() => {
+    if (!user || favoriteIds.size === 0) {
+      setSavedSetlists([]);
+      setSavedLoading(false);
+      return;
+    }
+    const fetchSaved = async () => {
+      setSavedLoading(true);
+      const favIds = Array.from(favoriteIds);
+      
+      // Fetch setlists that the user favorited but didn't create
+      const { data: setlistData } = await supabase
+        .from("setlists")
+        .select("id, title, creator_id, play_count, upvote_count, era_id")
+        .in("id", favIds)
+        .neq("creator_id", user.id);
+
+      if (!setlistData || setlistData.length === 0) {
+        setSavedSetlists([]);
+        setSavedLoading(false);
+        return;
+      }
+
+      // Fetch creator profiles, era names, and slot counts in parallel
+      const creatorIds = [...new Set(setlistData.map((s) => s.creator_id))];
+      const eraIds = [...new Set(setlistData.map((s) => s.era_id).filter(Boolean))] as string[];
+      const setlistIds = setlistData.map((s) => s.id);
+
+      const [profilesRes, erasRes, slotsRes] = await Promise.all([
+        supabase.from("profiles").select("user_id, display_name, avatar_url").in("user_id", creatorIds),
+        eraIds.length > 0
+          ? supabase.from("eras").select("id, name").in("id", eraIds)
+          : Promise.resolve({ data: [] }),
+        supabase.from("setlist_slots").select("setlist_id").in("setlist_id", setlistIds),
+      ]);
+
+      const profileMap = new Map((profilesRes.data || []).map((p) => [p.user_id, p]));
+      const eraMap = new Map((erasRes.data || []).map((e) => [e.id, e.name]));
+      const countMap = new Map<string, number>();
+      (slotsRes.data || []).forEach((s) => {
+        countMap.set(s.setlist_id, (countMap.get(s.setlist_id) || 0) + 1);
+      });
+
+      setSavedSetlists(
+        setlistData.map((s) => {
+          const profile = profileMap.get(s.creator_id);
+          return {
+            id: s.id,
+            title: s.title,
+            creator_name: profile?.display_name || "Unknown",
+            creator_avatar: profile?.avatar_url || null,
+            slot_count: countMap.get(s.id) || 0,
+            play_count: s.play_count,
+            upvote_count: s.upvote_count,
+            era_name: s.era_id ? eraMap.get(s.era_id) || null : null,
+          };
+        })
+      );
+      setSavedLoading(false);
+    };
+    fetchSaved();
+  }, [user, favoriteIds]);
 
   const handleTogglePrivacy = async (id: string, isPublic: boolean | null, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -504,6 +583,86 @@ const MySetlists = () => {
               );
             })}
           </div>
+        )}
+
+        {/* Saved / Favorited Setlists from other creators */}
+        {!savedLoading && savedSetlists.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.5 }}
+            className="mt-10"
+          >
+            <div className="flex items-center gap-3 mb-4">
+              <Heart className="w-4 h-4 text-primary fill-primary" />
+              <h2 className="font-display text-lg text-foreground">Saved Setlists</h2>
+              <span className="text-xs text-muted-foreground font-body">
+                {savedSetlists.length} saved
+              </span>
+            </div>
+
+            <div className="space-y-2">
+              {savedSetlists.map((s, i) => (
+                <motion.button
+                  key={s.id}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.04 }}
+                  onClick={() => navigate(`/setlist/${s.id}`)}
+                  className="w-full text-left rounded-xl border border-border bg-card/80 p-4 group hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all duration-200"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <h3 className="font-display text-base text-foreground group-hover:text-primary transition-colors truncate">
+                        {s.title}
+                      </h3>
+                      <div className="flex items-center gap-2 mt-1">
+                        {s.creator_avatar ? (
+                          <img src={s.creator_avatar} alt="" className="w-4 h-4 rounded-full object-cover" />
+                        ) : (
+                          <div className="w-4 h-4 rounded-full bg-muted" />
+                        )}
+                        <span className="text-[10px] font-body text-muted-foreground">
+                          by {s.creator_name}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 mt-2 flex-wrap">
+                        {s.era_name && (
+                          <span className="px-2 py-0.5 text-[10px] font-body rounded-full border border-primary/20 text-primary/70">
+                            {s.era_name}
+                          </span>
+                        )}
+                        <span className="text-[10px] font-body text-muted-foreground">
+                          {s.slot_count} songs
+                        </span>
+                        {s.play_count > 0 && (
+                          <span className="text-[10px] font-body text-muted-foreground">
+                            ▶ {s.play_count} plays
+                          </span>
+                        )}
+                        {s.upvote_count > 0 && (
+                          <span className="text-[10px] font-body text-primary">
+                            ⚡ {s.upvote_count}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <button
+                      onClick={async (e) => {
+                        e.stopPropagation();
+                        await toggleFavorite(s.id);
+                        toast.success("Removed from saved setlists");
+                      }}
+                      className="shrink-0 p-2 rounded-lg hover:bg-muted transition-colors"
+                      title="Remove from saved"
+                    >
+                      <Heart className="w-4 h-4 text-primary fill-primary" />
+                    </button>
+                  </div>
+                </motion.button>
+              ))}
+            </div>
+          </motion.div>
         )}
       </main>
     </PageLayout>
