@@ -545,7 +545,7 @@ const TrendingCard = ({ setlist, onClick }: { setlist: SetlistWithMeta; onClick:
         <p className="text-[9px] font-body text-muted-foreground mt-1 truncate">{setlist.creator_name}</p>
         <div className="flex items-center gap-2 mt-2">
           <span className="text-[10px] font-body text-accent flex items-center gap-0.5">
-            <Play className="w-2.5 h-2.5 fill-accent" /> {setlist.play_count}
+            <Play className="w-2.5 h-2.5 fill-accent" /> {setlist.play_count} plays
           </span>
           <span className="text-[9px] font-body text-muted-foreground">{setlist.slot_count} songs</span>
         </div>
