@@ -429,7 +429,7 @@ const FeaturedCard = ({ setlist, onClick }: { setlist: SetlistWithMeta; onClick:
           )}
           {setlist.play_count > 0 && (
             <span className="text-[10px] font-body text-accent flex items-center gap-0.5">
-              <Play className="w-2.5 h-2.5 fill-accent" /> {setlist.play_count}
+              <Play className="w-2.5 h-2.5 fill-accent" /> {setlist.play_count} plays
             </span>
           )}
         </div>
@@ -495,9 +495,7 @@ const SetlistCard = ({ setlist, index, onClick, isFav, onToggleFav }: { setlist:
               </span>
             </EraTooltip>
           )}
-          <span className="text-[10px] font-body text-muted-foreground flex items-center gap-0.5">
-            <Music className="w-2.5 h-2.5" /> {setlist.slot_count}
-          </span>
+          <span className="text-[10px] font-body text-muted-foreground">{setlist.slot_count} songs</span>
           {setlist.upvote_count > 0 && (
             <span className="text-[10px] font-body text-primary flex items-center gap-0.5">
               <Zap className="w-2.5 h-2.5 fill-primary" /> {setlist.upvote_count}
@@ -505,7 +503,7 @@ const SetlistCard = ({ setlist, index, onClick, isFav, onToggleFav }: { setlist:
           )}
           {setlist.play_count > 0 && (
             <span className="text-[10px] font-body text-muted-foreground flex items-center gap-0.5">
-              <Play className="w-2.5 h-2.5" /> {setlist.play_count}
+              <Play className="w-2.5 h-2.5" /> {setlist.play_count} plays
             </span>
           )}
         </div>
