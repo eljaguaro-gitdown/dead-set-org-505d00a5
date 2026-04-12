@@ -584,6 +584,86 @@ const MySetlists = () => {
             })}
           </div>
         )}
+
+        {/* Saved / Favorited Setlists from other creators */}
+        {!savedLoading && savedSetlists.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.5 }}
+            className="mt-10"
+          >
+            <div className="flex items-center gap-3 mb-4">
+              <Heart className="w-4 h-4 text-primary fill-primary" />
+              <h2 className="font-display text-lg text-foreground">Saved Setlists</h2>
+              <span className="text-xs text-muted-foreground font-body">
+                {savedSetlists.length} saved
+              </span>
+            </div>
+
+            <div className="space-y-2">
+              {savedSetlists.map((s, i) => (
+                <motion.button
+                  key={s.id}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.04 }}
+                  onClick={() => navigate(`/setlist/${s.id}`)}
+                  className="w-full text-left rounded-xl border border-border bg-card/80 p-4 group hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all duration-200"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <h3 className="font-display text-base text-foreground group-hover:text-primary transition-colors truncate">
+                        {s.title}
+                      </h3>
+                      <div className="flex items-center gap-2 mt-1">
+                        {s.creator_avatar ? (
+                          <img src={s.creator_avatar} alt="" className="w-4 h-4 rounded-full object-cover" />
+                        ) : (
+                          <div className="w-4 h-4 rounded-full bg-muted" />
+                        )}
+                        <span className="text-[10px] font-body text-muted-foreground">
+                          by {s.creator_name}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 mt-2 flex-wrap">
+                        {s.era_name && (
+                          <span className="px-2 py-0.5 text-[10px] font-body rounded-full border border-primary/20 text-primary/70">
+                            {s.era_name}
+                          </span>
+                        )}
+                        <span className="text-[10px] font-body text-muted-foreground">
+                          {s.slot_count} songs
+                        </span>
+                        {s.play_count > 0 && (
+                          <span className="text-[10px] font-body text-muted-foreground">
+                            ▶ {s.play_count} plays
+                          </span>
+                        )}
+                        {s.upvote_count > 0 && (
+                          <span className="text-[10px] font-body text-primary">
+                            ⚡ {s.upvote_count}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <button
+                      onClick={async (e) => {
+                        e.stopPropagation();
+                        await toggleFavorite(s.id);
+                        toast.success("Removed from saved setlists");
+                      }}
+                      className="shrink-0 p-2 rounded-lg hover:bg-muted transition-colors"
+                      title="Remove from saved"
+                    >
+                      <Heart className="w-4 h-4 text-primary fill-primary" />
+                    </button>
+                  </div>
+                </motion.button>
+              ))}
+            </div>
+          </motion.div>
+        )}
       </main>
     </PageLayout>
   );
