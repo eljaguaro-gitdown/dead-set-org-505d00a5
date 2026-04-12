@@ -116,6 +116,70 @@ const MySetlists = () => {
     fetchSetlists();
   }, [user]);
 
+  // Fetch favorited setlists from other creators
+  useEffect(() => {
+    if (!user || favoriteIds.size === 0) {
+      setSavedSetlists([]);
+      setSavedLoading(false);
+      return;
+    }
+    const fetchSaved = async () => {
+      setSavedLoading(true);
+      const favIds = Array.from(favoriteIds);
+      
+      // Fetch setlists that the user favorited but didn't create
+      const { data: setlistData } = await supabase
+        .from("setlists")
+        .select("id, title, creator_id, play_count, upvote_count, era_id")
+        .in("id", favIds)
+        .neq("creator_id", user.id);
+
+      if (!setlistData || setlistData.length === 0) {
+        setSavedSetlists([]);
+        setSavedLoading(false);
+        return;
+      }
+
+      // Fetch creator profiles, era names, and slot counts in parallel
+      const creatorIds = [...new Set(setlistData.map((s) => s.creator_id))];
+      const eraIds = [...new Set(setlistData.map((s) => s.era_id).filter(Boolean))] as string[];
+      const setlistIds = setlistData.map((s) => s.id);
+
+      const [profilesRes, erasRes, slotsRes] = await Promise.all([
+        supabase.from("profiles").select("user_id, display_name, avatar_url").in("user_id", creatorIds),
+        eraIds.length > 0
+          ? supabase.from("eras").select("id, name").in("id", eraIds)
+          : Promise.resolve({ data: [] }),
+        supabase.from("setlist_slots").select("setlist_id").in("setlist_id", setlistIds),
+      ]);
+
+      const profileMap = new Map((profilesRes.data || []).map((p) => [p.user_id, p]));
+      const eraMap = new Map((erasRes.data || []).map((e) => [e.id, e.name]));
+      const countMap = new Map<string, number>();
+      (slotsRes.data || []).forEach((s) => {
+        countMap.set(s.setlist_id, (countMap.get(s.setlist_id) || 0) + 1);
+      });
+
+      setSavedSetlists(
+        setlistData.map((s) => {
+          const profile = profileMap.get(s.creator_id);
+          return {
+            id: s.id,
+            title: s.title,
+            creator_name: profile?.display_name || "Unknown",
+            creator_avatar: profile?.avatar_url || null,
+            slot_count: countMap.get(s.id) || 0,
+            play_count: s.play_count,
+            upvote_count: s.upvote_count,
+            era_name: s.era_id ? eraMap.get(s.era_id) || null : null,
+          };
+        })
+      );
+      setSavedLoading(false);
+    };
+    fetchSaved();
+  }, [user, favoriteIds]);
+
   const handleTogglePrivacy = async (id: string, isPublic: boolean | null, e: React.MouseEvent) => {
     e.stopPropagation();
     const newVal = !isPublic;
