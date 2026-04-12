@@ -22,11 +22,25 @@ interface SetlistWithMeta extends SetlistRow {
   inferredDecade?: string | null;
 }
 
+interface SavedSetlist {
+  id: string;
+  title: string;
+  creator_name: string;
+  creator_avatar: string | null;
+  slot_count: number;
+  play_count: number;
+  upvote_count: number;
+  era_name: string | null;
+}
+
 const MySetlists = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading, signOut } = useAuth();
+  const { favoriteIds, toggleFavorite } = useFavorites();
   const [setlists, setSetlists] = useState<SetlistWithMeta[]>([]);
+  const [savedSetlists, setSavedSetlists] = useState<SavedSetlist[]>([]);
   const [loading, setLoading] = useState(true);
+  const [savedLoading, setSavedLoading] = useState(true);
   const [sortBy, setSortBy] = useState<"recent" | "most_played" | "name">("recent");
   const [displayName, setDisplayName] = useState<string | null>(null);
 
