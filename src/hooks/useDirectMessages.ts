@@ -345,7 +345,34 @@ export const useDirectMessages = (user: User | null) => {
       .from("conversations")
       .update({ last_message_at: new Date().toISOString() })
       .eq("id", activeConversationId);
-  }, [user, activeConversationId]);
+
+    // Fire-and-forget: notify recipient via email
+    const activeConv = conversations.find((c) => c.id === activeConversationId);
+    if (activeConv) {
+      const senderProfile = await supabase
+        .from("profiles")
+        .select("display_name")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      const senderName = senderProfile.data?.display_name || user.email?.split("@")[0] || "A Deadhead";
+
+      // For 1-on-1 conversations, notify the other user
+      // For group chats, notify all other members
+      const recipientIds = activeConv.isGroup
+        ? activeConv.members.map((m) => m.userId)
+        : [activeConv.otherUserId];
+
+      recipientIds.forEach((recipientUserId) => {
+        supabase.functions.invoke("notify-dm", {
+          body: {
+            recipientUserId,
+            senderName,
+            messagePreview: content.trim().slice(0, 200),
+          },
+        }).catch(() => {});
+      });
+    }
+  }, [user, activeConversationId, conversations]);
 
   // Search users
   const searchUsers = useCallback(async (query: string) => {
