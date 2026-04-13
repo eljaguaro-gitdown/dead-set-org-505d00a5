@@ -355,6 +355,9 @@ const Messages = () => {
                         {activeConv.members.length + 1} members
                       </p>
                     )}
+                    {!activeConv.isGroup && onlineUserIds.has(activeConv.otherUserId) && (
+                      <p className="text-[10px] text-green-500 font-body">Online</p>
+                    )}
                   </div>
                 </>
               )}
