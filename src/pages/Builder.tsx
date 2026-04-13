@@ -468,6 +468,7 @@ const Builder = () => {
       setSavedSetlistId(newSetlist.id);
       setShowCelebration(true);
       navigate(`/builder/${newSetlist.id}`, { replace: true });
+      setMobileTab("setlist");
 
       pendingActionRef.current = null;
     };
