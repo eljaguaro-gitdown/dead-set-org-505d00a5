@@ -220,5 +220,3 @@ const ShareFlow = ({
 };
 
 export default ShareFlow;
-
-export default ShareFlow;
