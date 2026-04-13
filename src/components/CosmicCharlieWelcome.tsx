@@ -525,8 +525,8 @@ const CosmicCharlieWelcome = ({ eras, onGenerated, onSkip }: CosmicCharlieWelcom
                   </motion.div>
                 )}
 
-                {/* ── Step 1: Priority (radio) ──────────────────────── */}
-                {step === 1 && (
+                {/* ── Step 2: Priority (radio) ──────────────────────── */}
+                {step === 2 && (
                   <motion.div
                     key="step1"
                     custom={direction}
@@ -619,8 +619,8 @@ const CosmicCharlieWelcome = ({ eras, onGenerated, onSkip }: CosmicCharlieWelcom
                   </motion.div>
                 )}
 
-                {/* ── Step 2: Specifics ─────────────────────────────── */}
-                {step === 2 && (
+                {/* ── Step 3: Specifics ─────────────────────────────── */}
+                {step === 3 && (
                   <motion.div
                     key="step2"
                     custom={direction}
