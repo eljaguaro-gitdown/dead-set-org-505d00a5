@@ -462,6 +462,10 @@ const Builder = () => {
         await supabase.from("setlist_slots").insert(slotsToInsert);
       }
 
+      // Mark initialized BEFORE clearing guest data to prevent the
+      // init effect from racing and trying to create a duplicate setlist
+      setInitialized(true);
+
       // Clear guest state and cache
       sessionStorage.removeItem("deadset-guest-cache");
       setGuestSlots([]);
