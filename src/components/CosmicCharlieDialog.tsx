@@ -94,7 +94,7 @@ const CosmicCharlieDialog = ({
   onApplySuggestion,
   onCreateNewSetlist,
 }: CosmicCharlieDialogProps) => {
-  const [mode, setMode] = useState<"build" | "improve" | null>(null);
+  const [mode, setMode] = useState<"build" | "improve" | "explore" | null>(null);
   const [preferences, setPreferences] = useState("");
   const [loading, setLoading] = useState(false);
   const [suggestion, setSuggestion] = useState<AISuggestion | null>(null);
@@ -111,6 +111,43 @@ const CosmicCharlieDialog = ({
   const [mustInclude, setMustInclude] = useState("");
   const [pleaseAvoid, setPleaseAvoid] = useState("");
   const [itsFor, setItsFor] = useState("");
+
+  // Version Explorer state
+  const [exploreStep, setExploreStep] = useState(0);
+  const [songSearch, setSongSearch] = useState("");
+  const [selectedSong, setSelectedSong] = useState<Song | null>(null);
+  const [allSongs, setAllSongs] = useState<Song[]>([]);
+  const [allEras, setAllEras] = useState<Era[]>([]);
+  const [selectedEraIds, setSelectedEraIds] = useState<string[]>([]);
+  const [surpriseMe, setSurpriseMe] = useState(false);
+  const [exploreResult, setExploreResult] = useState<ExploreResult | null>(null);
+
+  // Load songs & eras when explore mode is entered
+  useEffect(() => {
+    if (mode !== "explore") return;
+    const load = async () => {
+      const [songsRes, erasRes] = await Promise.all([
+        supabase.from("songs").select("*").order("title"),
+        supabase.from("eras").select("*").order("year_start"),
+      ]);
+      if (songsRes.data) setAllSongs(songsRes.data);
+      if (erasRes.data) setAllEras(erasRes.data);
+    };
+    load();
+  }, [mode]);
+
+  const filteredSongs = useMemo(() => {
+    if (!songSearch.trim()) return [];
+    const q = songSearch.toLowerCase();
+    return allSongs.filter((s) => s.title.toLowerCase().includes(q)).slice(0, 8);
+  }, [songSearch, allSongs]);
+
+  const toggleEra = (eraId: string) => {
+    setSelectedEraIds((prev) =>
+      prev.includes(eraId) ? prev.filter((id) => id !== eraId) : [...prev, eraId]
+    );
+    setSurpriseMe(false);
+  };
 
   useEffect(() => {
     if (namingNew) nameInputRef.current?.focus();
