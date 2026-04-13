@@ -37,7 +37,7 @@ export const trackShare = async ({
       share_type: shareType,
       channel,
       setlist_id: setlistId ?? null,
-      metadata: metadata ?? null,
+      metadata: (metadata as Record<string, string>) ?? null,
     }]);
   } catch {
     // Silent fail — never block UX for analytics
