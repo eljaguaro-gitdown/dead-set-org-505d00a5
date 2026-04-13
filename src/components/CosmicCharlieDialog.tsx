@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useMemo } from "react";
-import { Star, Wand2, Search, Disc3 } from "lucide-react";
+import { Star, Wand2, Search, Disc3, Play } from "lucide-react";
+import { useAudioPlayer, type PlayableSlot } from "@/contexts/AudioPlayerContext";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
