@@ -11,13 +11,18 @@ export const useOnlineUserIds = (enabled: boolean) => {
   useEffect(() => {
     if (!enabled) return;
 
-    const channel = supabase.channel("online_visitors");
+    const listenerId = `ids_${Math.random().toString(36).slice(2)}`;
+
+    const channel = supabase.channel("online_visitors", {
+      config: { presence: { key: listenerId } },
+    });
 
     channel
       .on("presence", { event: "sync" }, () => {
         const state = channel.presenceState();
         const ids = new Set<string>();
         for (const key of Object.keys(state)) {
+          if (key === listenerId) continue;
           const presences = state[key] as any[];
           if (presences?.[0]?.user_id) {
             ids.add(presences[0].user_id);
@@ -25,7 +30,11 @@ export const useOnlineUserIds = (enabled: boolean) => {
         }
         setOnlineIds(ids);
       })
-      .subscribe();
+      .subscribe(async (status) => {
+        if (status === "SUBSCRIBED") {
+          await channel.track({ _listener: true });
+        }
+      });
 
     return () => {
       supabase.removeChannel(channel);
