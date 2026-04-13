@@ -336,12 +336,17 @@ const Messages = () => {
                       <Users className="w-4 h-4 text-primary" />
                     </div>
                   ) : (
-                    <Avatar className="w-8 h-8">
-                      <AvatarImage src={activeConv.otherUserAvatar || undefined} />
-                      <AvatarFallback className="bg-primary/20 text-primary text-xs">
-                        {activeConv.otherUserName[0].toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
+                    <div className="relative">
+                      <Avatar className="w-8 h-8">
+                        <AvatarImage src={activeConv.otherUserAvatar || undefined} />
+                        <AvatarFallback className="bg-primary/20 text-primary text-xs">
+                          {activeConv.otherUserName[0].toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      {onlineUserIds.has(activeConv.otherUserId) && (
+                        <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-card" />
+                      )}
+                    </div>
                   )}
                   <div>
                     <span className="font-display text-sm text-foreground">{activeConv.otherUserName}</span>
