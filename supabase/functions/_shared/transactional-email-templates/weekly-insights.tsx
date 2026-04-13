@@ -184,7 +184,7 @@ const WeeklyInsights = ({
 export const template: TemplateEntry = {
   component: WeeklyInsights,
   subject: (data) => `☠️ Dead Set Weekly Insights — ${data.weekLabel || 'Report'}`,
-  to: 'grateful_jaguaro@dead-set.org',
+  to: 'eljaguaro@gmail.com',
   displayName: 'Weekly Insights Report',
   previewData: {
     weekLabel: 'Week of April 7, 2026',

@@ -171,7 +171,7 @@ Be specific, data-driven, and actionable. Reference actual numbers. If growth is
     const { error } = await supabase.functions.invoke('send-transactional-email', {
       body: {
         templateName: 'weekly-insights',
-        recipientEmail: 'grateful_jaguaro@dead-set.org',
+        recipientEmail: 'eljaguaro@gmail.com',
         idempotencyKey: `weekly-insights-${weekStart}`,
         templateData: {
           weekLabel,
