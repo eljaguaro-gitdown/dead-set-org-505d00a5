@@ -1,10 +1,12 @@
 import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Download, Link2, Share2, ArrowLeft } from "lucide-react";
+import { X, Download, Link2, Share2, ArrowLeft, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import ShowPlate from "./ShowPlate";
 import { trackShare } from "@/lib/trackShare";
+import SendToFriendDialog from "./SendToFriendDialog";
+import { useAuth } from "@/hooks/useAuth";
 
 interface ShareFlowProps {
   open: boolean;
@@ -26,6 +28,8 @@ const ShareFlow = ({
   eraName, creatorName, songCount, description,
 }: ShareFlowProps) => {
   const [plateDataUrl, setPlateDataUrl] = useState<string | null>(null);
+  const [dmOpen, setDmOpen] = useState(false);
+  const { user } = useAuth();
 
   // Distill Charlie's liner notes into a show one-liner for sharing
   const getShowOneLiner = (): string => {
@@ -169,7 +173,12 @@ const ShareFlow = ({
               <span className="font-mono text-[10px] text-muted-foreground/50 tracking-widest uppercase">or share to</span>
               <div className="h-px flex-1 bg-border" />
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
+              {user && (
+                <Button variant="outline" size="sm" className="flex-1 font-body text-xs gap-1.5" onClick={() => setDmOpen(true)}>
+                  <MessageCircle className="w-3.5 h-3.5" /> Message
+                </Button>
+              )}
               <Button variant="outline" size="sm" className="flex-1 font-body text-xs" onClick={handleTwitter}>
                 𝕏 / Twitter
               </Button>
@@ -194,6 +203,16 @@ const ShareFlow = ({
               <ArrowLeft className="w-3 h-3 inline mr-1" /> Back to Setlist
             </button>
           </div>
+
+          {user && (
+            <SendToFriendDialog
+              open={dmOpen}
+              onOpenChange={setDmOpen}
+              shareUrl={shareUrl}
+              shareText={shareText}
+              setlistId={setlistId}
+            />
+          )}
         </motion.div>
       </motion.div>
     </AnimatePresence>

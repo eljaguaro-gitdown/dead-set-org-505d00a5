@@ -1,7 +1,9 @@
 import { useState, useRef, useEffect } from "react";
-import { Share2, Copy, Check, Twitter, Facebook } from "lucide-react";
+import { Share2, Copy, Check, Twitter, Facebook, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 import { trackShare } from "@/lib/trackShare";
+import { useAuth } from "@/hooks/useAuth";
+import SendToFriendDialog from "./SendToFriendDialog";
 
 interface ShareDropdownProps {
   url: string;
@@ -14,7 +16,9 @@ interface ShareDropdownProps {
 const ShareDropdown = ({ url, ogUrl, title, description }: ShareDropdownProps) => {
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [dmOpen, setDmOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const { user } = useAuth();
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -94,7 +98,25 @@ const ShareDropdown = ({ url, ogUrl, title, description }: ShareDropdownProps) =
             <Facebook className="w-4 h-4 text-muted-foreground" />
             Share on Facebook
           </button>
+          {user && (
+            <button
+              onClick={() => { setOpen(false); setDmOpen(true); }}
+              className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm font-body text-foreground hover:bg-muted/50 transition-colors"
+            >
+              <MessageCircle className="w-4 h-4 text-muted-foreground" />
+              Send to Friend
+            </button>
+          )}
         </div>
+      )}
+
+      {user && (
+        <SendToFriendDialog
+          open={dmOpen}
+          onOpenChange={setDmOpen}
+          shareUrl={url}
+          shareText={title}
+        />
       )}
     </div>
   );
