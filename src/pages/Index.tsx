@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useAudioSignature } from "@/hooks/useAudioSignature";
+import { getVariant } from "@/lib/abTest";
 
 import PageLayout from "@/components/PageLayout";
 import SiteHeader from "@/components/SiteHeader";
@@ -33,6 +34,14 @@ const Index = () => {
   const { user } = useAuth();
   useAudioSignature();
   const [featured, setFeatured] = useState<FeaturedSetlist[]>([]);
+
+  // A/B test: variant B auto-starts the wizard
+  useEffect(() => {
+    const variant = getVariant();
+    if (variant === "B" && !user) {
+      navigate("/builder?wizard=true", { replace: true });
+    }
+  }, [navigate, user]);
 
   useEffect(() => {
     const fetchFeatured = async () => {

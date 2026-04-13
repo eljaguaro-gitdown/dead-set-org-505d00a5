@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      ab_test_assignments: {
+        Row: {
+          converted: boolean
+          created_at: string
+          id: string
+          test_name: string
+          user_id: string | null
+          variant: string
+          visitor_id: string
+        }
+        Insert: {
+          converted?: boolean
+          created_at?: string
+          id?: string
+          test_name: string
+          user_id?: string | null
+          variant: string
+          visitor_id: string
+        }
+        Update: {
+          converted?: boolean
+          created_at?: string
+          id?: string
+          test_name?: string
+          user_id?: string | null
+          variant?: string
+          visitor_id?: string
+        }
+        Relationships: []
+      }
       changelog_entries: {
         Row: {
           created_at: string
