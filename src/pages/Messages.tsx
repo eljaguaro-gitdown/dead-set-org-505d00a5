@@ -37,6 +37,7 @@ const Messages = () => {
   const [selectedUsers, setSelectedUsers] = useState<any[]>([]);
   const [groupName, setGroupName] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const onlineUserIds = useOnlineUserIds(!!user);
 
   useEffect(() => {
     if (!authLoading && !user) navigate("/auth");
