@@ -139,7 +139,7 @@ const DailyUserReport = ({
 export const template: TemplateEntry = {
   component: DailyUserReport,
   subject: (data) => `☠️ Dead Set Daily — ${data.reportDate || 'Report'}`,
-  to: 'grateful_jaguaro@dead-set.org',
+  to: 'eljaguaro@gmail.com',
   displayName: 'Daily User Report',
   previewData: {
     totalUsers: 42,
