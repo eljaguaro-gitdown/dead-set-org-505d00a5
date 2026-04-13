@@ -35,21 +35,26 @@ const Index = () => {
   useAudioSignature();
   const [featured, setFeatured] = useState<FeaturedSetlist[]>([]);
 
-  // A/B test: variant B auto-starts the wizard
+  // A/B test: variant B auto-starts the wizard (first landing only)
   useEffect(() => {
-    if (loading) return; // wait for auth to resolve
-    if (user) return;    // never redirect logged-in users
+    if (loading) return;
+    if (user) return;
 
-    // Never redirect during an OAuth return — tokens are in the URL and
-    // navigating away would strip them before auth can process them.
+    // Never redirect during an OAuth return
     const isOAuthReturn =
       window.location.hash.includes("access_token") ||
       window.location.hash.includes("refresh_token") ||
       new URLSearchParams(window.location.search).has("code");
     if (isOAuthReturn) return;
 
+    // Only redirect once per session — if the user navigated back to "/",
+    // don't hijack them again.
+    const alreadyRedirected = sessionStorage.getItem("ds_ab_redirected");
+    if (alreadyRedirected) return;
+
     const variant = getVariant();
     if (variant === "B") {
+      sessionStorage.setItem("ds_ab_redirected", "1");
       navigate("/builder?wizard=true", { replace: true });
     }
   }, [navigate, user, loading]);
