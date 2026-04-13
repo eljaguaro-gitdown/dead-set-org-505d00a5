@@ -19,3 +19,5 @@ project_id = "dplrumaqrdnzwzqmatqr"
     verify_jwt = false
   [functions.handle-email-suppression]
     verify_jwt = false
+  [functions.daily-user-report]
+    verify_jwt = false
