@@ -71,6 +71,16 @@ export const useAuth = () => {
   const didInit = useRef(false);
 
   useEffect(() => {
+    // Detect OAuth return — URL hash contains access_token or refresh_token
+    const isOAuthReturn = window.location.hash.includes("access_token") ||
+      window.location.hash.includes("refresh_token") ||
+      new URLSearchParams(window.location.search).has("code");
+
+    // Pre-set session flag so getSession doesn't race and sign out
+    if (isOAuthReturn) {
+      sessionStorage.setItem(SESSION_FLAG, "1");
+    }
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "SIGNED_IN") {
         sessionStorage.setItem(SESSION_FLAG, "1");
