@@ -35,6 +35,14 @@ const Index = () => {
   useAudioSignature();
   const [featured, setFeatured] = useState<FeaturedSetlist[]>([]);
 
+  // A/B test: variant B auto-starts the wizard
+  useEffect(() => {
+    const variant = getVariant();
+    if (variant === "B" && !user) {
+      navigate("/builder?wizard=true", { replace: true });
+    }
+  }, [navigate, user]);
+
   useEffect(() => {
     const fetchFeatured = async () => {
       const { data: setlists } = await supabase
