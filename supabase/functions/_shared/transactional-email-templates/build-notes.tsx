@@ -96,7 +96,7 @@ const BuildNotesEmail = ({
         <Section style={showHeader}>
           <Text style={showNumber}>BETA · EDITION {String(weekNumber).padStart(3, '0')}</Text>
           <Text style={showTitle}>{editionTitle}</Text>
-          <Text style={heroTaglineSt}>WAIT. NOW. DISCOVER.</Text>
+          <Text style={heroTaglineSt}>WAKE. NOW. DISCOVER.</Text>
           <Text style={showVenue}>DEAD SET LAB · SAN FRANCISCO, CA · BETA SEASON</Text>
         </Section>
 
