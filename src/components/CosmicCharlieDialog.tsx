@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect } from "react";
-import { Star, Wand2 } from "lucide-react";
+import { useState, useRef, useEffect, useMemo } from "react";
+import { Star, Wand2, Search, Disc3 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -7,6 +7,10 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
+import type { Database } from "@/integrations/supabase/types";
+
+type Song = Database["public"]["Tables"]["songs"]["Row"];
+type Era = Database["public"]["Tables"]["eras"]["Row"];
 
 interface AISuggestionSet {
   setNumber: number;
@@ -18,6 +22,24 @@ interface AISuggestionSet {
     notes: string;
     position: number;
   }[];
+}
+
+interface ExploreVersion {
+  songTitle: string;
+  showDate: string;
+  venue: string | null;
+  city: string | null;
+  description: string | null;
+  archiveUrl: string | null;
+  rating: number | null;
+  eraName: string | null;
+  whyThisVersion: string;
+}
+
+interface ExploreResult {
+  songTitle: string;
+  linerNotes: string;
+  versions: ExploreVersion[];
 }
 
 interface AISuggestion {
@@ -72,7 +94,7 @@ const CosmicCharlieDialog = ({
   onApplySuggestion,
   onCreateNewSetlist,
 }: CosmicCharlieDialogProps) => {
-  const [mode, setMode] = useState<"build" | "improve" | null>(null);
+  const [mode, setMode] = useState<"build" | "improve" | "explore" | null>(null);
   const [preferences, setPreferences] = useState("");
   const [loading, setLoading] = useState(false);
   const [suggestion, setSuggestion] = useState<AISuggestion | null>(null);
@@ -89,6 +111,43 @@ const CosmicCharlieDialog = ({
   const [mustInclude, setMustInclude] = useState("");
   const [pleaseAvoid, setPleaseAvoid] = useState("");
   const [itsFor, setItsFor] = useState("");
+
+  // Version Explorer state
+  const [exploreStep, setExploreStep] = useState(0);
+  const [songSearch, setSongSearch] = useState("");
+  const [selectedSong, setSelectedSong] = useState<Song | null>(null);
+  const [allSongs, setAllSongs] = useState<Song[]>([]);
+  const [allEras, setAllEras] = useState<Era[]>([]);
+  const [selectedEraIds, setSelectedEraIds] = useState<string[]>([]);
+  const [surpriseMe, setSurpriseMe] = useState(false);
+  const [exploreResult, setExploreResult] = useState<ExploreResult | null>(null);
+
+  // Load songs & eras when explore mode is entered
+  useEffect(() => {
+    if (mode !== "explore") return;
+    const load = async () => {
+      const [songsRes, erasRes] = await Promise.all([
+        supabase.from("songs").select("*").order("title"),
+        supabase.from("eras").select("*").order("year_start"),
+      ]);
+      if (songsRes.data) setAllSongs(songsRes.data);
+      if (erasRes.data) setAllEras(erasRes.data);
+    };
+    load();
+  }, [mode]);
+
+  const filteredSongs = useMemo(() => {
+    if (!songSearch.trim()) return [];
+    const q = songSearch.toLowerCase();
+    return allSongs.filter((s) => s.title.toLowerCase().includes(q)).slice(0, 8);
+  }, [songSearch, allSongs]);
+
+  const toggleEra = (eraId: string) => {
+    setSelectedEraIds((prev) =>
+      prev.includes(eraId) ? prev.filter((id) => id !== eraId) : [...prev, eraId]
+    );
+    setSurpriseMe(false);
+  };
 
   useEffect(() => {
     if (namingNew) nameInputRef.current?.focus();
@@ -170,6 +229,33 @@ const CosmicCharlieDialog = ({
     }
   };
 
+  const handleExplore = async () => {
+    if (!selectedSong) return;
+    setLoading(true);
+    setExploreResult(null);
+
+    try {
+      const { data, error } = await supabase.functions.invoke("ai-deadhead", {
+        body: {
+          mode: "explore",
+          songTitle: selectedSong.title,
+          songId: selectedSong.id,
+          eraIds: surpriseMe ? null : selectedEraIds.length > 0 ? selectedEraIds : null,
+        },
+      });
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      setExploreResult(data);
+    } catch (e: any) {
+      console.error("AI error:", e);
+      toast.error(e.message || "Cosmic Charlie hit a wrong note. Try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleApply = () => {
     if (!suggestion) return;
     onApplySuggestion(suggestion);
@@ -185,6 +271,15 @@ const CosmicCharlieDialog = ({
     toast.success("Charlie's cooking up a new setlist...");
   };
 
+  const resetExploreState = () => {
+    setExploreStep(0);
+    setSongSearch("");
+    setSelectedSong(null);
+    setSelectedEraIds([]);
+    setSurpriseMe(false);
+    setExploreResult(null);
+  };
+
   const handleReset = () => {
     onOpenChange(false);
     setMode(null);
@@ -198,6 +293,7 @@ const CosmicCharlieDialog = ({
     setMustInclude("");
     setPleaseAvoid("");
     setItsFor("");
+    resetExploreState();
   };
 
   const handleClose = (open: boolean) => {
@@ -214,6 +310,7 @@ const CosmicCharlieDialog = ({
       setMustInclude("");
       setPleaseAvoid("");
       setItsFor("");
+      resetExploreState();
     }
     onOpenChange(open);
   };
@@ -271,6 +368,22 @@ const CosmicCharlieDialog = ({
                     <h3 className="font-display text-sm text-foreground">Ask Charlie to Improve This</h3>
                     <p className="text-xs text-muted-foreground font-body mt-0.5">
                       Charlie'll optimize flow, suggest swaps &amp; find segue opportunities
+                    </p>
+                  </div>
+                </div>
+              </button>
+              <button
+                onClick={() => setMode("explore")}
+                className="w-full p-4 rounded-lg border border-border bg-background hover:border-primary/50 hover:bg-primary/5 transition-all text-left group"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-md bg-primary/10 text-primary group-hover:bg-primary/20 transition-colors">
+                    <Disc3 className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-display text-sm text-foreground">Version Explorer</h3>
+                    <p className="text-xs text-muted-foreground font-body mt-0.5">
+                      Discover the best versions of your favorite song across eras
                     </p>
                   </div>
                 </div>
@@ -521,6 +634,128 @@ const CosmicCharlieDialog = ({
                   <Star className="w-3.5 h-3.5" />
                   Charlie, Fix This
                 </Button>
+              </div>
+            </motion.div>
+          )}
+
+          {/* EXPLORE MODE: Version Explorer wizard */}
+          {mode === "explore" && !exploreResult && !loading && (
+            <motion.div key="explore-wizard" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} className="space-y-4">
+              <div className="flex items-center justify-center gap-2">
+                {[0, 1].map((s) => (
+                  <div key={s} className={`w-2 h-2 rounded-full transition-all duration-300 ${s === exploreStep ? "bg-primary scale-125" : s < exploreStep ? "bg-primary/50" : "bg-muted"}`} />
+                ))}
+              </div>
+              <AnimatePresence mode="wait" custom={1}>
+                {exploreStep === 0 && (
+                  <motion.div key="explore-song" custom={1} variants={slideVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.2 }} className="space-y-4">
+                    <div className="text-center space-y-1">
+                      <h3 className="font-display text-lg text-primary">Which song?</h3>
+                      <p className="font-body text-xs text-muted-foreground">Pick the song you want to explore</p>
+                    </div>
+                    {selectedSong ? (
+                      <div className="flex items-center gap-2 p-3 rounded-lg border border-primary bg-primary/10">
+                        <Disc3 className="w-4 h-4 text-primary" />
+                        <span className="font-body text-sm text-foreground flex-1">{selectedSong.title}</span>
+                        <button onClick={() => { setSelectedSong(null); setSongSearch(""); }} className="text-xs text-muted-foreground hover:text-foreground">Change</button>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <div className="relative">
+                          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                          <Input value={songSearch} onChange={(e) => setSongSearch(e.target.value)} placeholder="Search for a song..." className="bg-background border-border text-foreground font-body text-xs h-8 pl-8" autoFocus />
+                        </div>
+                        {filteredSongs.length > 0 && (
+                          <div className="max-h-48 overflow-y-auto rounded-lg border border-border bg-background">
+                            {filteredSongs.map((song) => (
+                              <button key={song.id} onClick={() => { setSelectedSong(song); setSongSearch(""); }} className="w-full text-left px-3 py-2 hover:bg-primary/5 transition-colors border-b border-border last:border-b-0">
+                                <span className="font-body text-xs text-foreground">{song.title}</span>
+                                {song.times_played != null && <span className="text-[10px] text-muted-foreground ml-2">{song.times_played}x played</span>}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    <div className="flex items-center gap-3">
+                      <button onClick={() => setMode(null)} className="font-body text-xs text-muted-foreground hover:text-foreground transition-colors">← Back</button>
+                      <Button size="sm" onClick={() => setExploreStep(1)} disabled={!selectedSong} className="flex-1 bg-primary text-primary-foreground font-body">Next</Button>
+                    </div>
+                  </motion.div>
+                )}
+                {exploreStep === 1 && (
+                  <motion.div key="explore-eras" custom={1} variants={slideVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.2 }} className="space-y-4">
+                    <div className="text-center space-y-1">
+                      <h3 className="font-display text-lg text-primary">Which eras?</h3>
+                      <p className="font-body text-xs text-muted-foreground">Pick one or more, or let Charlie surprise you</p>
+                    </div>
+                    <motion.button whileTap={{ scale: 0.97 }} onClick={() => { setSurpriseMe(true); setSelectedEraIds([]); }} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg border text-left transition-all duration-200 ${surpriseMe ? "border-primary bg-primary/15 shadow-[0_0_10px_hsl(var(--glow-gold))]" : "border-border bg-background hover:border-primary/40"}`}>
+                      <span className="text-base">🎲</span>
+                      <span className={`font-body text-xs ${surpriseMe ? "text-primary" : "text-foreground"}`}>Surprise me — all eras</span>
+                    </motion.button>
+                    <div className="grid grid-cols-2 gap-2">
+                      {allEras.map((era) => {
+                        const selected = selectedEraIds.includes(era.id);
+                        return (
+                          <motion.button key={era.id} whileTap={{ scale: 0.95 }} onClick={() => toggleEra(era.id)} className={`flex flex-col px-3 py-2 rounded-lg border text-left transition-all duration-200 text-xs ${selected ? "border-primary bg-primary/15 shadow-[0_0_10px_hsl(var(--glow-gold))]" : "border-border bg-background hover:border-primary/40"}`}>
+                            <span className={`font-body ${selected ? "text-primary" : "text-foreground"}`}>{era.name}</span>
+                            <span className="text-[10px] text-muted-foreground">{era.year_start}–{era.year_end}</span>
+                          </motion.button>
+                        );
+                      })}
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <button onClick={() => setExploreStep(0)} className="font-body text-xs text-muted-foreground hover:text-foreground transition-colors">← Back</button>
+                      <Button size="sm" onClick={handleExplore} disabled={!surpriseMe && selectedEraIds.length === 0} className="flex-1 bg-primary text-primary-foreground font-body gap-1.5">
+                        <Disc3 className="w-3.5 h-3.5" /> 🔍 Explore Versions
+                      </Button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
+          )}
+
+          {/* EXPLORE RESULTS */}
+          {exploreResult && (
+            <motion.div key="explore-result" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} className="space-y-4">
+              <div className="text-center">
+                <h3 className="font-display text-lg text-primary">"{exploreResult.songTitle}"</h3>
+                <p className="text-xs text-muted-foreground font-body mt-1">Version Explorer</p>
+              </div>
+              <div className="p-3 rounded-lg bg-primary/5 border border-primary/20">
+                <p className="text-xs text-primary font-body mb-1">Charlie's Liner Notes:</p>
+                <p className="text-sm text-foreground font-body leading-relaxed whitespace-pre-line">{exploreResult.linerNotes}</p>
+              </div>
+              <div className="space-y-3">
+                {exploreResult.versions.map((v, i) => (
+                  <div key={i} className="p-3 rounded-lg border border-border bg-background space-y-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <p className="font-display text-sm text-foreground">{v.showDate}</p>
+                        <p className="text-xs text-muted-foreground font-body">{[v.venue, v.city].filter(Boolean).join(", ")}</p>
+                      </div>
+                      {v.rating && (
+                        <div className="flex items-center gap-0.5">
+                          {Array.from({ length: v.rating }).map((_, j) => (
+                            <Star key={j} className="w-3 h-3 text-primary fill-primary" />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    {v.eraName && <span className="inline-block text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary font-body">{v.eraName}</span>}
+                    <p className="text-xs text-foreground/80 font-body leading-relaxed">{v.whyThisVersion}</p>
+                    {v.archiveUrl && (
+                      <a href={v.archiveUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-primary hover:underline font-body">🎧 Listen on Archive.org</a>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <div className="flex gap-2 pt-2">
+                <Button variant="outline" size="sm" onClick={() => { setExploreResult(null); setExploreStep(1); }} className="border-border text-muted-foreground font-body gap-1.5">
+                  <Disc3 className="w-3.5 h-3.5" /> Try Again
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => { setExploreResult(null); resetExploreState(); setMode(null); }} className="border-border text-muted-foreground font-body flex-1">Done</Button>
               </div>
             </motion.div>
           )}
