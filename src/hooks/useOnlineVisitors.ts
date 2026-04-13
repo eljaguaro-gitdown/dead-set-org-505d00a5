@@ -21,7 +21,9 @@ export const useOnlineVisitors = (enabled: boolean) => {
   useEffect(() => {
     if (!enabled) return;
 
-    const channel = supabase.channel("online_visitors_admin_listener");
+    const channel = supabase.channel("online_visitors", {
+      config: { presence: { key: `admin_listener_${Math.random().toString(36).slice(2)}` } },
+    });
 
     channel
       .on("presence", { event: "sync" }, () => {
