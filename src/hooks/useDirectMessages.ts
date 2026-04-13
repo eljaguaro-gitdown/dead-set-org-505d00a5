@@ -360,19 +360,35 @@ export const useDirectMessages = (user: User | null) => {
           .maybeSingle();
         const senderName = senderProfile.data?.display_name || user.email?.split("@")[0] || "A Deadhead";
 
+        // Check which users are currently online via presence
+        const onlineUserIds = new Set<string>();
+        try {
+          const presenceChannel = supabase.channel("online_visitors");
+          const state = presenceChannel.presenceState();
+          for (const key of Object.keys(state)) {
+            const presences = state[key] as any[];
+            if (presences?.[0]?.user_id) {
+              onlineUserIds.add(presences[0].user_id);
+            }
+          }
+        } catch {}
+
         const recipientIds = activeConv.isGroup
           ? activeConv.members.map((m) => m.userId)
           : [activeConv.otherUserId];
 
-        recipientIds.forEach((recipientUserId) => {
-          supabase.functions.invoke("notify-dm", {
-            body: {
-              recipientUserId,
-              senderName,
-              messagePreview: content.trim().slice(0, 200),
-            },
-          }).catch(() => {});
-        });
+        // Only notify offline recipients
+        recipientIds
+          .filter((id) => !onlineUserIds.has(id))
+          .forEach((recipientUserId) => {
+            supabase.functions.invoke("notify-dm", {
+              body: {
+                recipientUserId,
+                senderName,
+                messagePreview: content.trim().slice(0, 200),
+              },
+            }).catch(() => {});
+          });
       }
     } finally {
       sendingRef.current = false;
