@@ -188,7 +188,9 @@ const Browse = () => {
   };
 
   const filtered = useMemo(() => {
-    let result = setlists;
+    let result = setlists
+      // Hide empty/untitled setlists from public browse
+      .filter((s) => s.slot_count > 0 && s.title !== "Untitled Setlist");
     if (showFavoritesOnly) {
       result = result.filter((s) => isFavorite(s.id));
     }
