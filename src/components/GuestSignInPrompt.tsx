@@ -53,7 +53,7 @@ const GuestSignInPrompt = ({ open, onSignIn, onDismiss }: GuestSignInPromptProps
               Nice setlist! Ready to keep it?
             </h3>
             <p className="font-body text-sm text-muted-foreground">
-              Sign in to unlock the full experience:
+              Create a free account to unlock the full experience:
             </p>
           </div>
 
@@ -68,9 +68,16 @@ const GuestSignInPrompt = ({ open, onSignIn, onDismiss }: GuestSignInPromptProps
             ))}
           </ul>
 
-          <Button onClick={onSignIn} className="w-full mb-3" size="lg">
-            Sign in to save
+          <Button onClick={onSignIn} className="w-full mb-2" size="lg">
+            🎟️ Create a free account
           </Button>
+
+          <p className="text-center text-xs font-body text-muted-foreground/60 mb-3">
+            Already have one?{" "}
+            <button onClick={onSignIn} className="text-primary hover:underline">
+              Sign in
+            </button>
+          </p>
 
           <button
             onClick={onDismiss}
