@@ -390,7 +390,7 @@ const Messages = () => {
                   placeholder="Type a message..."
                   className="bg-background border-border text-foreground font-body text-sm"
                 />
-                <Button type="submit" size="sm" className="bg-primary text-primary-foreground shrink-0" disabled={!input.trim()}>
+                <Button type="submit" size="sm" className="bg-primary text-primary-foreground shrink-0" disabled={!input.trim() || sending}>
                   <Send className="w-3.5 h-3.5" />
                 </Button>
               </form>
