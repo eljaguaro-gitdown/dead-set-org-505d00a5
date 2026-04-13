@@ -229,6 +229,33 @@ const CosmicCharlieDialog = ({
     }
   };
 
+  const handleExplore = async () => {
+    if (!selectedSong) return;
+    setLoading(true);
+    setExploreResult(null);
+
+    try {
+      const { data, error } = await supabase.functions.invoke("ai-deadhead", {
+        body: {
+          mode: "explore",
+          songTitle: selectedSong.title,
+          songId: selectedSong.id,
+          eraIds: surpriseMe ? null : selectedEraIds.length > 0 ? selectedEraIds : null,
+        },
+      });
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      setExploreResult(data);
+    } catch (e: any) {
+      console.error("AI error:", e);
+      toast.error(e.message || "Cosmic Charlie hit a wrong note. Try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleApply = () => {
     if (!suggestion) return;
     onApplySuggestion(suggestion);
