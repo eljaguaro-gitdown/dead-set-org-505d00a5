@@ -267,8 +267,8 @@ const SetSection = ({
 };
 
 /* ── Collapsible description ── */
-const DescriptionCollapsible = ({ description }: { description: string }) => {
-  const [open, setOpen] = useState(false);
+const DescriptionCollapsible = ({ description, defaultOpen = true }: { description: string; defaultOpen?: boolean }) => {
+  const [open, setOpen] = useState(defaultOpen);
   return (
     <div>
       <button
