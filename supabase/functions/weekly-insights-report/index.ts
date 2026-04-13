@@ -139,7 +139,7 @@ Be specific, data-driven, and actionable. Reference actual numbers. If growth is
     let aiRecommendations: string[] = []
 
     try {
-      const aiRes = await fetch('https://ai-gateway.lovable.dev/chat/completions', {
+      const aiRes = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
