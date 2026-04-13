@@ -16,7 +16,9 @@ interface ShareDropdownProps {
 const ShareDropdown = ({ url, ogUrl, title, description }: ShareDropdownProps) => {
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [dmOpen, setDmOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const { user } = useAuth();
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
