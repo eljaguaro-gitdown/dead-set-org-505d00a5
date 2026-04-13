@@ -24,6 +24,24 @@ interface AISuggestionSet {
   }[];
 }
 
+interface ExploreVersion {
+  songTitle: string;
+  showDate: string;
+  venue: string | null;
+  city: string | null;
+  description: string | null;
+  archiveUrl: string | null;
+  rating: number | null;
+  eraName: string | null;
+  whyThisVersion: string;
+}
+
+interface ExploreResult {
+  songTitle: string;
+  linerNotes: string;
+  versions: ExploreVersion[];
+}
+
 interface AISuggestion {
   setlist_name?: string;
   explanation: string;
