@@ -231,7 +231,9 @@ const SetSection = ({
   onUpdateNotes: (id: string, notes: string) => void;
   onPlayVersion?: (slot: SetlistSlotData) => void;
 }) => {
-  const setSlots = slots.filter((s) => s.setNumber === setNumber);
+  const setSlots = slots
+    .filter((s) => s.setNumber === setNumber)
+    .sort((a, b) => a.position - b.position);
   const ids = setSlots.map((s) => s.id);
 
   return (
