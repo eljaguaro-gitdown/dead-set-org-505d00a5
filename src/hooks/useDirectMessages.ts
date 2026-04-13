@@ -363,12 +363,17 @@ export const useDirectMessages = (user: User | null) => {
         // Check which users are currently online via presence
         const onlineUserIds = new Set<string>();
         try {
-          const presenceChannel = supabase.channel("online_visitors");
-          const state = presenceChannel.presenceState();
-          for (const key of Object.keys(state)) {
-            const presences = state[key] as any[];
-            if (presences?.[0]?.user_id) {
-              onlineUserIds.add(presences[0].user_id);
+          // Find the already-subscribed presence channel (PresenceBroadcaster creates it)
+          const existingChannel = supabase.getChannels().find(
+            (ch) => ch.topic === "realtime:online_visitors"
+          );
+          if (existingChannel) {
+            const state = existingChannel.presenceState();
+            for (const key of Object.keys(state)) {
+              const presences = state[key] as any[];
+              if (presences?.[0]?.user_id) {
+                onlineUserIds.add(presences[0].user_id);
+              }
             }
           }
         } catch {}
