@@ -777,11 +777,40 @@ const CosmicCharlieDialog = ({
                   </div>
                 ))}
               </div>
-              <div className="flex gap-2 pt-2">
-                <Button variant="outline" size="sm" onClick={() => { setExploreResult(null); setExploreStep(1); }} className="border-border text-muted-foreground font-body gap-1.5">
-                  <Disc3 className="w-3.5 h-3.5" /> Try Again
+              <div className="flex flex-col gap-2 pt-2">
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    if (!exploreResult || !selectedSong) return;
+                    const fakeSuggestion: AISuggestion = {
+                      setlist_name: `${exploreResult.songTitle} — Listening Guide`,
+                      explanation: exploreResult.linerNotes,
+                      sets: [{
+                        setNumber: 1,
+                        songs: exploreResult.versions.map((v, i) => ({
+                          songId: selectedSong.id,
+                          title: exploreResult.songTitle,
+                          matched: true,
+                          segueToNext: false,
+                          notes: `${v.showDate} — ${v.venue || "Unknown Venue"}${v.whyThisVersion ? ` • ${v.whyThisVersion}` : ""}`,
+                          position: i + 1,
+                        })),
+                      }],
+                    };
+                    onCreateNewSetlist(fakeSuggestion, fakeSuggestion.setlist_name);
+                    handleReset();
+                    toast.success("Listening guide saved as a new setlist! 🎧");
+                  }}
+                  className="bg-primary text-primary-foreground font-body gap-1.5 w-full"
+                >
+                  <Star className="w-3.5 h-3.5" /> Save as Listening Guide
                 </Button>
-                <Button variant="outline" size="sm" onClick={() => { setExploreResult(null); resetExploreState(); setMode(null); }} className="border-border text-muted-foreground font-body flex-1">Done</Button>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" onClick={() => { setExploreResult(null); setExploreStep(1); }} className="border-border text-muted-foreground font-body gap-1.5">
+                    <Disc3 className="w-3.5 h-3.5" /> Try Again
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={() => { setExploreResult(null); resetExploreState(); setMode(null); }} className="border-border text-muted-foreground font-body flex-1">Done</Button>
+                </div>
               </div>
             </motion.div>
           )}
