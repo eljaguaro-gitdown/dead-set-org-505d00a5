@@ -1,7 +1,9 @@
 import { useState, useRef, useEffect } from "react";
-import { Share2, Copy, Check, Twitter, Facebook } from "lucide-react";
+import { Share2, Copy, Check, Twitter, Facebook, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 import { trackShare } from "@/lib/trackShare";
+import { useAuth } from "@/hooks/useAuth";
+import SendToFriendDialog from "./SendToFriendDialog";
 
 interface ShareDropdownProps {
   url: string;
