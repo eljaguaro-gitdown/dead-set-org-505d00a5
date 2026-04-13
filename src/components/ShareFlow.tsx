@@ -203,11 +203,6 @@ const ShareFlow = ({
               <ArrowLeft className="w-3 h-3 inline mr-1" /> Back to Setlist
             </button>
           </div>
-        </motion.div>
-      </motion.div>
-    </AnimatePresence>
-  );
-};
 
           {user && (
             <SendToFriendDialog
@@ -223,5 +218,7 @@ const ShareFlow = ({
     </AnimatePresence>
   );
 };
+
+export default ShareFlow;
 
 export default ShareFlow;
