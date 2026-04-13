@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect } from "react";
-import { Star, Wand2 } from "lucide-react";
+import { useState, useRef, useEffect, useMemo } from "react";
+import { Star, Wand2, Search, Disc3 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -7,6 +7,10 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
+import type { Database } from "@/integrations/supabase/types";
+
+type Song = Database["public"]["Tables"]["songs"]["Row"];
+type Era = Database["public"]["Tables"]["eras"]["Row"];
 
 interface AISuggestionSet {
   setNumber: number;
