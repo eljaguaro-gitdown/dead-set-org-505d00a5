@@ -308,8 +308,60 @@ const CosmicCharlieWelcome = ({ eras, onGenerated, onSkip }: CosmicCharlieWelcom
 
               {/* Steps */}
               <AnimatePresence mode="wait" custom={direction}>
-                {/* ── Step 0: Energy + Textures ─────────────────────── */}
+                {/* ── Step 0: Welcome Intro ─────────────────────── */}
                 {step === 0 && (
+                  <motion.div
+                    key="welcome"
+                    custom={direction}
+                    variants={slideVariants}
+                    initial="enter"
+                    animate="center"
+                    exit="exit"
+                    transition={{ duration: 0.25, ease: "easeInOut" }}
+                    className="w-full flex flex-col items-center gap-6"
+                  >
+                    <StealYourFace size={72} />
+
+                    <div className="text-center space-y-2">
+                      <h1 className="font-display text-2xl sm:text-3xl text-primary leading-tight">
+                        Welcome to Dead-Set.Org
+                      </h1>
+                      <p className="font-mono text-[10px] tracking-[0.28em] text-muted-foreground/50 uppercase">
+                        Wake. Now. Discover.
+                      </p>
+                    </div>
+
+                    <p className="font-body text-sm sm:text-base text-muted-foreground leading-relaxed text-center max-w-md px-2">
+                      The Grateful Dead played over 2,300 shows across 30 years — and thanks to the Internet Archive,
+                      nearly all of them are preserved in full. Dead-Set.Org helps you explore that legacy.
+                    </p>
+
+                    <p className="font-body text-sm text-muted-foreground/80 leading-relaxed text-center max-w-md px-2">
+                      You're about to meet <span className="text-primary font-medium">Cosmic Charlie</span> — your personal guide
+                      who knows every show the Dead ever played. Tell him what kind of night you're in the mood for,
+                      and he'll build you a full concert from real live recordings. Every note is real.
+                    </p>
+
+                    <Button
+                      size="lg"
+                      onClick={goNext}
+                      className="w-full sm:w-auto gap-2 text-base px-8 py-5 shadow-[0_4px_40px_hsl(var(--glow-gold))]"
+                    >
+                      Let's Go
+                      <ChevronRight className="w-4 h-4" />
+                    </Button>
+
+                    <button
+                      onClick={onSkip}
+                      className="font-body text-xs text-muted-foreground/50 hover:text-muted-foreground transition-colors"
+                    >
+                      I'll build my own setlist instead
+                    </button>
+                  </motion.div>
+                )}
+
+                {/* ── Step 1: Energy + Textures ─────────────────────── */}
+                {step === 1 && (
                   <motion.div
                     key="step0"
                     custom={direction}
