@@ -95,6 +95,7 @@ const CosmicCharlieDialog = ({
   onApplySuggestion,
   onCreateNewSetlist,
 }: CosmicCharlieDialogProps) => {
+  const { playSingle } = useAudioPlayer();
   const [mode, setMode] = useState<"build" | "improve" | "explore" | null>(null);
   const [preferences, setPreferences] = useState("");
   const [loading, setLoading] = useState(false);
