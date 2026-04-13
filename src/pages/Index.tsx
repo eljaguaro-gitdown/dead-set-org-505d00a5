@@ -31,7 +31,7 @@ interface FeaturedSetlist {
 
 const Index = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   useAudioSignature();
   const [featured, setFeatured] = useState<FeaturedSetlist[]>([]);
 
