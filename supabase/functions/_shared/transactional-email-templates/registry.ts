@@ -13,10 +13,12 @@ import { template as welcomeEmail } from './welcome-email.tsx'
 import { template as buildNotes } from './build-notes.tsx'
 import { template as newSignupNotification } from './new-signup-notification.tsx'
 import { template as lotDispatch } from './lot-dispatch.tsx'
+import { template as dmNotification } from './dm-notification.tsx'
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'welcome-email': welcomeEmail,
   'build-notes': buildNotes,
   'new-signup-notification': newSignupNotification,
   'lot-dispatch': lotDispatch,
+  'dm-notification': dmNotification,
 }
