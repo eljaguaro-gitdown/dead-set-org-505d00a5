@@ -372,6 +372,22 @@ const CosmicCharlieDialog = ({
                   </div>
                 </div>
               </button>
+              <button
+                onClick={() => setMode("explore")}
+                className="w-full p-4 rounded-lg border border-border bg-background hover:border-primary/50 hover:bg-primary/5 transition-all text-left group"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-md bg-primary/10 text-primary group-hover:bg-primary/20 transition-colors">
+                    <Disc3 className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-display text-sm text-foreground">Version Explorer</h3>
+                    <p className="text-xs text-muted-foreground font-body mt-0.5">
+                      Discover the best versions of your favorite song across eras
+                    </p>
+                  </div>
+                </div>
+              </button>
             </motion.div>
           )}
 
