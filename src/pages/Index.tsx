@@ -39,6 +39,15 @@ const Index = () => {
   useEffect(() => {
     if (loading) return; // wait for auth to resolve
     if (user) return;    // never redirect logged-in users
+
+    // Never redirect during an OAuth return — tokens are in the URL and
+    // navigating away would strip them before auth can process them.
+    const isOAuthReturn =
+      window.location.hash.includes("access_token") ||
+      window.location.hash.includes("refresh_token") ||
+      new URLSearchParams(window.location.search).has("code");
+    if (isOAuthReturn) return;
+
     const variant = getVariant();
     if (variant === "B") {
       navigate("/builder?wizard=true", { replace: true });
