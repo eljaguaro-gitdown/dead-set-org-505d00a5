@@ -321,41 +321,36 @@ const SetlistDisplay = ({
       const overSlot = slots.find((s) => s.id === over.id);
       if (!activeSlot || !overSlot) return;
 
-      // If moving between sets, change the set number
       const targetSetNumber = overSlot.setNumber;
 
-      // Get slots for the source and target sets
       if (activeSlot.setNumber === targetSetNumber) {
-        // Same set: simple reorder
+        // Same set: reorder within the set
         const setSlots = slots.filter((s) => s.setNumber === targetSetNumber);
+        const otherSlots = slots.filter((s) => s.setNumber !== targetSetNumber);
         const oldIndex = setSlots.findIndex((s) => s.id === active.id);
         const newIndex = setSlots.findIndex((s) => s.id === over.id);
-        const reordered = arrayMove(setSlots, oldIndex, newIndex);
-
-        const newSlots = slots.map((s) => {
-          if (s.setNumber !== targetSetNumber) return s;
-          const idx = reordered.findIndex((r) => r.id === s.id);
-          return { ...s, position: idx };
-        });
-        onReorder(newSlots);
+        const reordered = arrayMove(setSlots, oldIndex, newIndex).map((s, i) => ({
+          ...s,
+          position: i,
+        }));
+        onReorder([...otherSlots, ...reordered]);
       } else {
-        // Cross-set move
-        const newSlots = slots.map((s) => {
-          if (s.id === active.id) {
-            return { ...s, setNumber: targetSetNumber };
-          }
-          return s;
+        // Cross-set move: change the set number first
+        const updated = slots.map((s) =>
+          s.id === active.id ? { ...s, setNumber: targetSetNumber } : s
+        );
+        // Recalculate positions per set and rebuild the array
+        const bySet = new Map<number, SetlistSlotData[]>();
+        for (const s of updated) {
+          const arr = bySet.get(s.setNumber) || [];
+          arr.push(s);
+          bySet.set(s.setNumber, arr);
+        }
+        const recalculated: SetlistSlotData[] = [];
+        bySet.forEach((setSlots) => {
+          setSlots.sort((a, b) => a.position - b.position);
+          setSlots.forEach((s, i) => recalculated.push({ ...s, position: i }));
         });
-
-        // Recalculate positions for affected sets
-        const recalculated = newSlots.map((s) => {
-          const setSlots = newSlots
-            .filter((ss) => ss.setNumber === s.setNumber)
-            .sort((a, b) => a.position - b.position);
-          const idx = setSlots.findIndex((ss) => ss.id === s.id);
-          return { ...s, position: idx };
-        });
-
         onReorder(recalculated);
       }
     },
