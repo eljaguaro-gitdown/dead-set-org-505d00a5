@@ -22,7 +22,7 @@ interface AuthModalProps {
 }
 
 const AuthModal = ({ open, onOpenChange, onAuthenticated, onBeforeRedirect }: AuthModalProps) => {
-  const [isSignUp, setIsSignUp] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
