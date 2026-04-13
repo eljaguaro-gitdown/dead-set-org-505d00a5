@@ -11,7 +11,7 @@ export const useOnlineUserIds = (enabled: boolean) => {
   useEffect(() => {
     if (!enabled) return;
 
-    const channel = supabase.channel("online_visitors");
+    const channel = supabase.channel("online_visitors_ids_listener");
 
     channel
       .on("presence", { event: "sync" }, () => {
