@@ -77,6 +77,7 @@ export const useAuth = () => {
       if (session?.user) {
           maybeSendWelcomeEmail(session.user);
           notifyNewSignup(session.user);
+          markConversion();
         }
       }
       if (event === "SIGNED_OUT") {
