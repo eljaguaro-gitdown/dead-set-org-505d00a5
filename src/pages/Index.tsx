@@ -37,11 +37,13 @@ const Index = () => {
 
   // A/B test: variant B auto-starts the wizard
   useEffect(() => {
+    if (loading) return; // wait for auth to resolve
+    if (user) return;    // never redirect logged-in users
     const variant = getVariant();
-    if (variant === "B" && !user) {
+    if (variant === "B") {
       navigate("/builder?wizard=true", { replace: true });
     }
-  }, [navigate, user]);
+  }, [navigate, user, loading]);
 
   useEffect(() => {
     const fetchFeatured = async () => {
