@@ -638,6 +638,128 @@ const CosmicCharlieDialog = ({
             </motion.div>
           )}
 
+          {/* EXPLORE MODE: Version Explorer wizard */}
+          {mode === "explore" && !exploreResult && !loading && (
+            <motion.div key="explore-wizard" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} className="space-y-4">
+              <div className="flex items-center justify-center gap-2">
+                {[0, 1].map((s) => (
+                  <div key={s} className={`w-2 h-2 rounded-full transition-all duration-300 ${s === exploreStep ? "bg-primary scale-125" : s < exploreStep ? "bg-primary/50" : "bg-muted"}`} />
+                ))}
+              </div>
+              <AnimatePresence mode="wait" custom={1}>
+                {exploreStep === 0 && (
+                  <motion.div key="explore-song" custom={1} variants={slideVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.2 }} className="space-y-4">
+                    <div className="text-center space-y-1">
+                      <h3 className="font-display text-lg text-primary">Which song?</h3>
+                      <p className="font-body text-xs text-muted-foreground">Pick the song you want to explore</p>
+                    </div>
+                    {selectedSong ? (
+                      <div className="flex items-center gap-2 p-3 rounded-lg border border-primary bg-primary/10">
+                        <Disc3 className="w-4 h-4 text-primary" />
+                        <span className="font-body text-sm text-foreground flex-1">{selectedSong.title}</span>
+                        <button onClick={() => { setSelectedSong(null); setSongSearch(""); }} className="text-xs text-muted-foreground hover:text-foreground">Change</button>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <div className="relative">
+                          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                          <Input value={songSearch} onChange={(e) => setSongSearch(e.target.value)} placeholder="Search for a song..." className="bg-background border-border text-foreground font-body text-xs h-8 pl-8" autoFocus />
+                        </div>
+                        {filteredSongs.length > 0 && (
+                          <div className="max-h-48 overflow-y-auto rounded-lg border border-border bg-background">
+                            {filteredSongs.map((song) => (
+                              <button key={song.id} onClick={() => { setSelectedSong(song); setSongSearch(""); }} className="w-full text-left px-3 py-2 hover:bg-primary/5 transition-colors border-b border-border last:border-b-0">
+                                <span className="font-body text-xs text-foreground">{song.title}</span>
+                                {song.times_played != null && <span className="text-[10px] text-muted-foreground ml-2">{song.times_played}x played</span>}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    <div className="flex items-center gap-3">
+                      <button onClick={() => setMode(null)} className="font-body text-xs text-muted-foreground hover:text-foreground transition-colors">← Back</button>
+                      <Button size="sm" onClick={() => setExploreStep(1)} disabled={!selectedSong} className="flex-1 bg-primary text-primary-foreground font-body">Next</Button>
+                    </div>
+                  </motion.div>
+                )}
+                {exploreStep === 1 && (
+                  <motion.div key="explore-eras" custom={1} variants={slideVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.2 }} className="space-y-4">
+                    <div className="text-center space-y-1">
+                      <h3 className="font-display text-lg text-primary">Which eras?</h3>
+                      <p className="font-body text-xs text-muted-foreground">Pick one or more, or let Charlie surprise you</p>
+                    </div>
+                    <motion.button whileTap={{ scale: 0.97 }} onClick={() => { setSurpriseMe(true); setSelectedEraIds([]); }} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg border text-left transition-all duration-200 ${surpriseMe ? "border-primary bg-primary/15 shadow-[0_0_10px_hsl(var(--glow-gold))]" : "border-border bg-background hover:border-primary/40"}`}>
+                      <span className="text-base">🎲</span>
+                      <span className={`font-body text-xs ${surpriseMe ? "text-primary" : "text-foreground"}`}>Surprise me — all eras</span>
+                    </motion.button>
+                    <div className="grid grid-cols-2 gap-2">
+                      {allEras.map((era) => {
+                        const selected = selectedEraIds.includes(era.id);
+                        return (
+                          <motion.button key={era.id} whileTap={{ scale: 0.95 }} onClick={() => toggleEra(era.id)} className={`flex flex-col px-3 py-2 rounded-lg border text-left transition-all duration-200 text-xs ${selected ? "border-primary bg-primary/15 shadow-[0_0_10px_hsl(var(--glow-gold))]" : "border-border bg-background hover:border-primary/40"}`}>
+                            <span className={`font-body ${selected ? "text-primary" : "text-foreground"}`}>{era.name}</span>
+                            <span className="text-[10px] text-muted-foreground">{era.year_start}–{era.year_end}</span>
+                          </motion.button>
+                        );
+                      })}
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <button onClick={() => setExploreStep(0)} className="font-body text-xs text-muted-foreground hover:text-foreground transition-colors">← Back</button>
+                      <Button size="sm" onClick={handleExplore} disabled={!surpriseMe && selectedEraIds.length === 0} className="flex-1 bg-primary text-primary-foreground font-body gap-1.5">
+                        <Disc3 className="w-3.5 h-3.5" /> 🔍 Explore Versions
+                      </Button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
+          )}
+
+          {/* EXPLORE RESULTS */}
+          {exploreResult && (
+            <motion.div key="explore-result" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} className="space-y-4">
+              <div className="text-center">
+                <h3 className="font-display text-lg text-primary">"{exploreResult.songTitle}"</h3>
+                <p className="text-xs text-muted-foreground font-body mt-1">Version Explorer</p>
+              </div>
+              <div className="p-3 rounded-lg bg-primary/5 border border-primary/20">
+                <p className="text-xs text-primary font-body mb-1">Charlie's Liner Notes:</p>
+                <p className="text-sm text-foreground font-body leading-relaxed whitespace-pre-line">{exploreResult.linerNotes}</p>
+              </div>
+              <div className="space-y-3">
+                {exploreResult.versions.map((v, i) => (
+                  <div key={i} className="p-3 rounded-lg border border-border bg-background space-y-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <p className="font-display text-sm text-foreground">{v.showDate}</p>
+                        <p className="text-xs text-muted-foreground font-body">{[v.venue, v.city].filter(Boolean).join(", ")}</p>
+                      </div>
+                      {v.rating && (
+                        <div className="flex items-center gap-0.5">
+                          {Array.from({ length: v.rating }).map((_, j) => (
+                            <Star key={j} className="w-3 h-3 text-primary fill-primary" />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    {v.eraName && <span className="inline-block text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary font-body">{v.eraName}</span>}
+                    <p className="text-xs text-foreground/80 font-body leading-relaxed">{v.whyThisVersion}</p>
+                    {v.archiveUrl && (
+                      <a href={v.archiveUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-primary hover:underline font-body">🎧 Listen on Archive.org</a>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <div className="flex gap-2 pt-2">
+                <Button variant="outline" size="sm" onClick={() => { setExploreResult(null); setExploreStep(1); }} className="border-border text-muted-foreground font-body gap-1.5">
+                  <Disc3 className="w-3.5 h-3.5" /> Try Again
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => { setExploreResult(null); resetExploreState(); setMode(null); }} className="border-border text-muted-foreground font-body flex-1">Done</Button>
+              </div>
+            </motion.div>
+          )}
+
           {loading && (
             <motion.div
               key="loading"
