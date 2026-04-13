@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Share2, Copy, Check, Twitter, Facebook } from "lucide-react";
 import { toast } from "sonner";
+import { trackShare } from "@/lib/trackShare";
 
 interface ShareDropdownProps {
   url: string;
@@ -41,6 +42,7 @@ const ShareDropdown = ({ url, ogUrl, title, description }: ShareDropdownProps) =
     await navigator.clipboard.writeText(url);
     setCopied(true);
     toast.success("Link copied!");
+    trackShare({ shareType: "setlist", channel: "copy_link" });
     setTimeout(() => { setCopied(false); setOpen(false); }, 1500);
   };
 
@@ -49,12 +51,14 @@ const ShareDropdown = ({ url, ogUrl, title, description }: ShareDropdownProps) =
   const shareTwitter = () => {
     const tweetUrl = `https://x.com/intent/tweet?text=${encodeURIComponent(title)}&url=${encodeURIComponent(socialUrl)}`;
     window.open(tweetUrl, "_blank", "noopener,noreferrer,width=550,height=420");
+    trackShare({ shareType: "setlist", channel: "twitter" });
     setOpen(false);
   };
 
   const shareFacebook = () => {
     const fbUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(socialUrl)}`;
     window.open(fbUrl, "_blank", "noopener,noreferrer,width=550,height=420");
+    trackShare({ shareType: "setlist", channel: "facebook" });
     setOpen(false);
   };
 

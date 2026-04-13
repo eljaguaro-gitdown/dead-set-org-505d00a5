@@ -4,6 +4,7 @@ import { X, Download, Link2, Share2, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import ShowPlate from "./ShowPlate";
+import { trackShare } from "@/lib/trackShare";
 
 interface ShareFlowProps {
   open: boolean;
@@ -56,12 +57,14 @@ const ShareFlow = ({
     a.download = `deadset-${slug}.png`;
     a.href = plateDataUrl;
     a.click();
+    trackShare({ shareType: "poster", channel: "download_plate", setlistId });
     toast.success("Plate saved!");
   };
 
   const handleCopyLink = async () => {
     try {
       await navigator.clipboard.writeText(shareUrl);
+      trackShare({ shareType: "setlist", channel: "copy_link", setlistId });
       toast.success("Link copied!");
     } catch {
       toast.error("Couldn't copy link");
@@ -72,6 +75,7 @@ const ShareFlow = ({
     if (navigator.share) {
       try {
         await navigator.share({ title: shareTitle, text: shareText, url: shareUrl });
+        trackShare({ shareType: "setlist", channel: "native_share", setlistId });
       } catch { /* cancelled */ }
     } else {
       handleCopyLink();
@@ -81,15 +85,18 @@ const ShareFlow = ({
   const handleTwitter = () => {
     const text = encodeURIComponent(`${shareText} ${shareUrl}`);
     window.open(`https://twitter.com/intent/tweet?text=${text}`, "_blank");
+    trackShare({ shareType: "setlist", channel: "twitter", setlistId });
   };
 
   const handleFacebook = () => {
     window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`, "_blank");
+    trackShare({ shareType: "setlist", channel: "facebook", setlistId });
   };
 
   const handleTikTok = () => {
     // TikTok doesn't have a direct share URL — download the plate for upload
     handleDownload();
+    trackShare({ shareType: "poster", channel: "tiktok", setlistId });
     toast.success("Plate saved — upload it to TikTok!");
   };
 
