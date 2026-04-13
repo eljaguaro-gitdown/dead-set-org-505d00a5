@@ -271,6 +271,15 @@ const CosmicCharlieDialog = ({
     toast.success("Charlie's cooking up a new setlist...");
   };
 
+  const resetExploreState = () => {
+    setExploreStep(0);
+    setSongSearch("");
+    setSelectedSong(null);
+    setSelectedEraIds([]);
+    setSurpriseMe(false);
+    setExploreResult(null);
+  };
+
   const handleReset = () => {
     onOpenChange(false);
     setMode(null);
@@ -284,6 +293,7 @@ const CosmicCharlieDialog = ({
     setMustInclude("");
     setPleaseAvoid("");
     setItsFor("");
+    resetExploreState();
   };
 
   const handleClose = (open: boolean) => {
@@ -300,6 +310,7 @@ const CosmicCharlieDialog = ({
       setMustInclude("");
       setPleaseAvoid("");
       setItsFor("");
+      resetExploreState();
     }
     onOpenChange(open);
   };
