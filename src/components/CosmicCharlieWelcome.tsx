@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Star, ChevronDown } from "lucide-react";
+import { Star, ChevronDown, ChevronRight } from "lucide-react";
+import StealYourFace from "@/components/StealYourFace";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
@@ -100,8 +101,10 @@ const slideVariants = {
 
 // ── Component ───────────────────────────────────────────────────────────
 
+const TOTAL_STEPS = 4; // welcome(0) + energy(1) + priority(2) + specifics(3)
+
 const CosmicCharlieWelcome = ({ eras, onGenerated, onSkip }: CosmicCharlieWelcomeProps) => {
-  const [step, setStep] = useState(0);
+  const [step, setStep] = useState(0); // 0 = welcome intro
   const [direction, setDirection] = useState(1);
 
   // Step 0
