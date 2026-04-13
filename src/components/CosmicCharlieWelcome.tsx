@@ -292,7 +292,7 @@ const CosmicCharlieWelcome = ({ eras, onGenerated, onSkip }: CosmicCharlieWelcom
 
               {/* Step dots */}
               <div className="flex gap-2">
-                {[0, 1, 2].map((s) => (
+                {Array.from({ length: TOTAL_STEPS }).map((_, s) => (
                   <div
                     key={s}
                     className={`w-2 h-2 rounded-full transition-all duration-300 ${
