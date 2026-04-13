@@ -55,7 +55,7 @@ interface LotDispatchProps {
 const LotDispatchEmail = ({
   showNumber = 'Grateful Dead Night #414',
   artist = 'Stu Allen & Mars Hotel',
-  heroTagline = 'Wait. Now. Discover.',
+  heroTagline = 'Wake. Now. Discover.',
   venue = 'Ashkenaz',
   location = 'Berkeley, CA',
   date = 'Fri, Apr 10',
