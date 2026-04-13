@@ -107,14 +107,40 @@ const AuthModal = ({ open, onOpenChange, onAuthenticated, onBeforeRedirect }: Au
       <SheetContent side="bottom" className="bg-card border-border rounded-t-2xl max-h-[85vh] overflow-y-auto">
         <SheetHeader className="text-center pb-2">
           <SheetTitle className="font-display text-2xl text-foreground">
-            Save your setlist
+            {isSignUp ? "Create your account" : "Welcome back"}
           </SheetTitle>
           <SheetDescription className="font-body text-muted-foreground">
-            Sign in so you don't lose what you've built.
+            {isSignUp
+              ? "Join the community — it's free."
+              : "Sign in to pick up where you left off."}
           </SheetDescription>
         </SheetHeader>
 
         <div className="space-y-5 pt-4 max-w-sm mx-auto">
+          {/* Toggle: prominent tab-style switcher */}
+          <div className="flex rounded-lg border border-border overflow-hidden">
+            <button
+              onClick={() => setIsSignUp(true)}
+              className={`flex-1 py-2.5 text-sm font-body font-medium transition-colors ${
+                isSignUp
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-transparent text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              🎟️ New here? Sign up
+            </button>
+            <button
+              onClick={() => setIsSignUp(false)}
+              className={`flex-1 py-2.5 text-sm font-body font-medium transition-colors ${
+                !isSignUp
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-transparent text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Sign in
+            </button>
+          </div>
+
           {/* Google OAuth */}
           <Button
             variant="outline"
@@ -184,19 +210,11 @@ const AuthModal = ({ open, onOpenChange, onAuthenticated, onBeforeRedirect }: Au
               className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-body"
               disabled={loading}
             >
-              {loading ? "..." : isSignUp ? "Sign Up" : "Sign In"}
+              {loading ? "..." : isSignUp ? "Create Account" : "Sign In"}
             </Button>
           </form>
 
-          <p className="text-center text-sm text-muted-foreground font-body pb-4">
-            {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
-            <button
-              onClick={() => setIsSignUp(!isSignUp)}
-              className="text-primary hover:underline"
-            >
-              {isSignUp ? "Sign in" : "Sign up"}
-            </button>
-          </p>
+          <div className="pb-4" />
         </div>
       </SheetContent>
     </Sheet>
