@@ -266,7 +266,161 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { mode, eraId, currentSlots, preferences, recentSongs } = await req.json();
+    const { mode, eraId, currentSlots, preferences, recentSongs, songTitle, songId, eraIds } = await req.json();
+
+    // ── EXPLORE MODE — Version Explorer ──────────────────────────────────
+    if (mode === "explore") {
+      const { data: allSongs } = await supabase.from("songs").select("*");
+      const { data: allEras } = await supabase.from("eras").select("*");
+
+      // Get the song
+      const song = (allSongs || []).find((s: any) => s.id === songId);
+      if (!song) {
+        return new Response(JSON.stringify({ error: "Song not found" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Get notable versions for this song, optionally filtered by eras
+      let versionsQuery = supabase.from("notable_versions").select("*").eq("song_id", songId);
+      if (eraIds && eraIds.length > 0) {
+        versionsQuery = versionsQuery.in("era_id", eraIds);
+      }
+      const { data: versions } = await versionsQuery.order("rating", { ascending: false });
+
+      const eraMap = new Map((allEras || []).map((e: any) => [e.id, e]));
+
+      const versionsContext = (versions || []).map((v: any) => {
+        const era = v.era_id ? eraMap.get(v.era_id) : null;
+        return `- ${v.show_date} at ${v.venue || "Unknown Venue"}, ${v.city || "Unknown City"} (rating: ${v.rating}/5, era: ${era?.name || "Unknown"})${v.description ? ` — "${v.description}"` : ""}${v.archive_org_url ? ` [archive: ${v.archive_org_url}]` : ""}`;
+      }).join("\n");
+
+      const selectedEraNames = eraIds && eraIds.length > 0
+        ? eraIds.map((id: string) => eraMap.get(id)?.name || "Unknown").join(", ")
+        : "all eras";
+
+      const exploreSystemPrompt = `You are Cosmic Charlie — a veteran Deadhead tape trader and version connoisseur. You've listened to every circulating recording and you know exactly which versions of a song are essential listening.
+
+A user wants to discover the best versions of "${song.title}" across ${selectedEraNames}.
+
+YOUR JOB:
+1. Select 5-8 of the best, most interesting, or most historically significant versions of this song.
+2. For EACH version, explain WHY it matters — what makes this particular performance special. Reference the band's chemistry that night, the jamming style, the audience energy, the historical context, the era's sound. Write as if you're a knowledgeable tape trader telling a friend what to listen to and why.
+3. Write comprehensive liner notes (200-300 words) that tell the story of this song across eras. How did it evolve? What changed? Which version represents a turning point? What should a listener pay attention to when comparing versions?
+
+CRITICAL VOICE GUIDELINES:
+- Write like David Lemieux or a Rolling Stone critic. Authoritative, passionate, specific.
+- Reference real Deadhead community consensus where appropriate — "this is the version tape traders pass around," "widely considered the definitive reading," "a sleeper that the hardcore heads know about."
+- Don't just describe the music — tell the STORY of why this version matters in the broader context of the song's evolution.
+- If a version is from a famous show, mention that context.
+- If a version represents a stylistic shift in how the band approached the song, explain that.
+
+${versionsContext.length > 0 ? `KNOWN NOTABLE VERSIONS IN THE DATABASE:\n${versionsContext}\n\nUse these as your primary source. You may also reference other well-known versions not in the database if they're historically significant.` : `No pre-cataloged versions found for this song. Use your knowledge of the Grateful Dead's performance history to recommend the most noteworthy versions.`}
+
+SONG INFO:
+- Title: ${song.title}
+- Times played: ${song.times_played || "Unknown"}
+- First played: ${song.first_played || "Unknown"}
+- Last played: ${song.last_played || "Unknown"}
+- Jam vehicle: ${song.is_jam_vehicle ? "Yes" : "No"}
+- Tags: ${(song.tags || []).join(", ") || "None"}
+
+You MUST respond using the explore_versions tool.`;
+
+      const exploreTools = [
+        {
+          type: "function",
+          function: {
+            name: "explore_versions",
+            description: "Return curated versions of a song with detailed liner notes.",
+            parameters: {
+              type: "object",
+              properties: {
+                linerNotes: {
+                  type: "string",
+                  description: "200-300 word liner notes telling the story of this song across eras. Written like David Lemieux or a Rolling Stone critic. Must cover how the song evolved, which versions represent turning points, and what listeners should pay attention to."
+                },
+                versions: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      showDate: { type: "string", description: "Show date (YYYY-MM-DD format)" },
+                      venue: { type: "string", description: "Venue name" },
+                      city: { type: "string", description: "City and state" },
+                      eraName: { type: "string", description: "Era name (e.g., 'Jazz-Fusion Peak', 'The \\'77 Sound')" },
+                      rating: { type: "number", description: "Rating 1-5" },
+                      archiveUrl: { type: "string", description: "Archive.org URL if known, or null" },
+                      whyThisVersion: { type: "string", description: "50-100 word explanation of why this specific version is essential listening. Reference the band's playing, the historical context, community consensus, and what makes it stand out." }
+                    },
+                    required: ["showDate", "venue", "city", "eraName", "rating", "whyThisVersion"],
+                    additionalProperties: false
+                  }
+                }
+              },
+              required: ["linerNotes", "versions"],
+              additionalProperties: false
+            }
+          }
+        }
+      ];
+
+      const exploreResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${LOVABLE_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "google/gemini-3-flash-preview",
+          temperature: 0.8,
+          messages: [
+            { role: "system", content: exploreSystemPrompt },
+            { role: "user", content: `I love "${song.title}" and I want to discover the best versions I haven't heard yet. ${eraIds && eraIds.length > 0 ? `I'm especially interested in versions from: ${selectedEraNames}.` : "Surprise me — show me the best from across all eras."} Tell me which recordings to listen to and why each one matters.` },
+          ],
+          tools: exploreTools,
+          tool_choice: { type: "function", function: { name: "explore_versions" } },
+        }),
+      });
+
+      if (!exploreResponse.ok) {
+        if (exploreResponse.status === 429) {
+          return new Response(JSON.stringify({ error: "Rate limit exceeded. Please try again in a moment." }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
+        if (exploreResponse.status === 402) {
+          return new Response(JSON.stringify({ error: "AI credits exhausted. Add credits in workspace settings." }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
+        const text = await exploreResponse.text();
+        console.error("AI gateway error:", exploreResponse.status, text);
+        throw new Error("AI gateway error");
+      }
+
+      const exploreData = await exploreResponse.json();
+      const exploreToolCall = exploreData.choices?.[0]?.message?.tool_calls?.[0];
+      if (!exploreToolCall) throw new Error("No tool call in response");
+
+      const exploreResult = JSON.parse(exploreToolCall.function.arguments);
+
+      // Try to match versions back to DB notable_versions for archive URLs
+      const enrichedVersions = exploreResult.versions.map((v: any) => {
+        // Check if we have a DB version with matching date
+        const dbVersion = (versions || []).find((dbv: any) => dbv.show_date === v.showDate);
+        return {
+          ...v,
+          archiveUrl: v.archiveUrl || dbVersion?.archive_org_url || null,
+          description: dbVersion?.description || null,
+        };
+      });
+
+      return new Response(JSON.stringify({
+        songTitle: song.title,
+        linerNotes: exploreResult.linerNotes,
+        versions: enrichedVersions,
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const { data: allSongs } = await supabase.from("songs").select("id, title, tags, is_jam_vehicle, typical_set_position, times_played, first_played, last_played");
     const { data: eras } = await supabase.from("eras").select("*");
