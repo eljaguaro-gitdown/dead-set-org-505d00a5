@@ -733,6 +733,47 @@ export type Database = {
           },
         ]
       }
+      share_events: {
+        Row: {
+          channel: string
+          created_at: string
+          id: string
+          metadata: Json | null
+          setlist_id: string | null
+          share_type: string
+          user_id: string | null
+          visitor_id: string | null
+        }
+        Insert: {
+          channel: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          setlist_id?: string | null
+          share_type: string
+          user_id?: string | null
+          visitor_id?: string | null
+        }
+        Update: {
+          channel?: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          setlist_id?: string | null
+          share_type?: string
+          user_id?: string | null
+          visitor_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "share_events_setlist_id_fkey"
+            columns: ["setlist_id"]
+            isOneToOne: false
+            referencedRelation: "setlists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       songs: {
         Row: {
           first_played: string | null
