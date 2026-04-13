@@ -331,46 +331,51 @@ export const useDirectMessages = (user: User | null) => {
     await loadConversations();
   }, [loadConversations]);
 
-  // Send message
+  // Send message (with guard against double-sends)
+  const sendingRef = useRef(false);
   const sendMessage = useCallback(async (content: string) => {
     if (!user || !activeConversationId || !content.trim()) return;
+    if (sendingRef.current) return;
+    sendingRef.current = true;
 
-    await supabase.from("direct_messages").insert({
-      conversation_id: activeConversationId,
-      sender_id: user.id,
-      content: content.trim(),
-    });
-
-    await supabase
-      .from("conversations")
-      .update({ last_message_at: new Date().toISOString() })
-      .eq("id", activeConversationId);
-
-    // Fire-and-forget: notify recipient via email
-    const activeConv = conversations.find((c) => c.id === activeConversationId);
-    if (activeConv) {
-      const senderProfile = await supabase
-        .from("profiles")
-        .select("display_name")
-        .eq("user_id", user.id)
-        .maybeSingle();
-      const senderName = senderProfile.data?.display_name || user.email?.split("@")[0] || "A Deadhead";
-
-      // For 1-on-1 conversations, notify the other user
-      // For group chats, notify all other members
-      const recipientIds = activeConv.isGroup
-        ? activeConv.members.map((m) => m.userId)
-        : [activeConv.otherUserId];
-
-      recipientIds.forEach((recipientUserId) => {
-        supabase.functions.invoke("notify-dm", {
-          body: {
-            recipientUserId,
-            senderName,
-            messagePreview: content.trim().slice(0, 200),
-          },
-        }).catch(() => {});
+    try {
+      await supabase.from("direct_messages").insert({
+        conversation_id: activeConversationId,
+        sender_id: user.id,
+        content: content.trim(),
       });
+
+      await supabase
+        .from("conversations")
+        .update({ last_message_at: new Date().toISOString() })
+        .eq("id", activeConversationId);
+
+      // Fire-and-forget: notify recipient via email
+      const activeConv = conversations.find((c) => c.id === activeConversationId);
+      if (activeConv) {
+        const senderProfile = await supabase
+          .from("profiles")
+          .select("display_name")
+          .eq("user_id", user.id)
+          .maybeSingle();
+        const senderName = senderProfile.data?.display_name || user.email?.split("@")[0] || "A Deadhead";
+
+        const recipientIds = activeConv.isGroup
+          ? activeConv.members.map((m) => m.userId)
+          : [activeConv.otherUserId];
+
+        recipientIds.forEach((recipientUserId) => {
+          supabase.functions.invoke("notify-dm", {
+            body: {
+              recipientUserId,
+              senderName,
+              messagePreview: content.trim().slice(0, 200),
+            },
+          }).catch(() => {});
+        });
+      }
+    } finally {
+      sendingRef.current = false;
     }
   }, [user, activeConversationId, conversations]);
 
