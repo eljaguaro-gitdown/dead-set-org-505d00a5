@@ -31,14 +31,14 @@ export const trackShare = async ({
     const { data: { user } } = await supabase.auth.getUser();
     const visitorId = localStorage.getItem("ds_visitor_id") || undefined;
 
-    await supabase.from("share_events").insert({
+    await supabase.from("share_events").insert([{
       user_id: user?.id ?? null,
       visitor_id: visitorId ?? null,
       share_type: shareType,
       channel,
       setlist_id: setlistId ?? null,
       metadata: metadata ?? null,
-    });
+    }]);
   } catch {
     // Silent fail — never block UX for analytics
   }
