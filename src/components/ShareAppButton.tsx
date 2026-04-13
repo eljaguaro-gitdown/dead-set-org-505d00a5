@@ -8,6 +8,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { toast } from "sonner";
+import { trackShare } from "@/lib/trackShare";
 
 const SHARE_URL = "https://dead-set.org";
 const SHARE_TITLE = "Dead-Set.Org — The Music Never Stops";
@@ -37,12 +38,14 @@ const ShareAppButton = ({ variant = "icon", className = "" }: ShareAppButtonProp
     }
     setCopied(true);
     toast.success("Link copied!");
+    trackShare({ shareType: "app_link", channel: "copy_link" });
     setTimeout(() => setCopied(false), 2000);
   };
 
   const handleNativeShare = async () => {
     try {
       await navigator.share({ title: SHARE_TITLE, text: SHARE_TEXT, url: SHARE_URL });
+      trackShare({ shareType: "app_link", channel: "native_share" });
       setOpen(false);
     } catch {
       // user cancelled
@@ -52,12 +55,14 @@ const ShareAppButton = ({ variant = "icon", className = "" }: ShareAppButtonProp
   const handleSMS = () => {
     const body = encodeURIComponent(`${SHARE_TEXT}\n${SHARE_URL}`);
     window.open(`sms:?body=${body}`, "_blank");
+    trackShare({ shareType: "app_link", channel: "sms" });
     setOpen(false);
   };
 
   const handleWhatsApp = () => {
     const text = encodeURIComponent(`${SHARE_TEXT}\n${SHARE_URL}`);
     window.open(`https://wa.me/?text=${text}`, "_blank");
+    trackShare({ shareType: "app_link", channel: "whatsapp" });
     setOpen(false);
   };
 
@@ -65,12 +70,14 @@ const ShareAppButton = ({ variant = "icon", className = "" }: ShareAppButtonProp
     const subject = encodeURIComponent(SHARE_TITLE);
     const body = encodeURIComponent(`${SHARE_TEXT}\n\n${SHARE_URL}`);
     window.open(`mailto:?subject=${subject}&body=${body}`, "_blank");
+    trackShare({ shareType: "app_link", channel: "email" });
     setOpen(false);
   };
 
   const handleTwitter = () => {
     const text = encodeURIComponent(`${SHARE_TEXT}\n${SHARE_URL}`);
     window.open(`https://twitter.com/intent/tweet?text=${text}`, "_blank");
+    trackShare({ shareType: "app_link", channel: "twitter" });
     setOpen(false);
   };
 
