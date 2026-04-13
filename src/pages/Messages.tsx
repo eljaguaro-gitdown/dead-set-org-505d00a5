@@ -10,6 +10,7 @@ import SiteHeader from "@/components/SiteHeader";
 import { useAuth } from "@/hooks/useAuth";
 import { useDirectMessages } from "@/hooks/useDirectMessages";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useOnlineUserIds } from "@/hooks/useOnlineUserIds";
 
 const Messages = () => {
   const navigate = useNavigate();
