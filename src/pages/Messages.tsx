@@ -28,6 +28,7 @@ const Messages = () => {
   } = useDirectMessages(user);
 
   const [input, setInput] = useState("");
+  const [sending, setSending] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [showSearch, setShowSearch] = useState(false);
@@ -58,9 +59,15 @@ const Messages = () => {
   }, [searchQuery, searchUsers]);
 
   const handleSend = async () => {
-    if (!input.trim()) return;
-    await sendMessage(input);
+    if (!input.trim() || sending) return;
+    setSending(true);
+    const msg = input;
     setInput("");
+    try {
+      await sendMessage(msg);
+    } finally {
+      setSending(false);
+    }
   };
 
   const handleStartConversation = async (otherUserId: string) => {
@@ -383,7 +390,7 @@ const Messages = () => {
                   placeholder="Type a message..."
                   className="bg-background border-border text-foreground font-body text-sm"
                 />
-                <Button type="submit" size="sm" className="bg-primary text-primary-foreground shrink-0" disabled={!input.trim()}>
+                <Button type="submit" size="sm" className="bg-primary text-primary-foreground shrink-0" disabled={!input.trim() || sending}>
                   <Send className="w-3.5 h-3.5" />
                 </Button>
               </form>
