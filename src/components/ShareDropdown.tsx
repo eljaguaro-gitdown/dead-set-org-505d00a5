@@ -98,7 +98,25 @@ const ShareDropdown = ({ url, ogUrl, title, description }: ShareDropdownProps) =
             <Facebook className="w-4 h-4 text-muted-foreground" />
             Share on Facebook
           </button>
+          {user && (
+            <button
+              onClick={() => { setOpen(false); setDmOpen(true); }}
+              className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm font-body text-foreground hover:bg-muted/50 transition-colors"
+            >
+              <MessageCircle className="w-4 h-4 text-muted-foreground" />
+              Send to Friend
+            </button>
+          )}
         </div>
+      )}
+
+      {user && (
+        <SendToFriendDialog
+          open={dmOpen}
+          onOpenChange={setDmOpen}
+          shareUrl={url}
+          shareText={title}
+        />
       )}
     </div>
   );
