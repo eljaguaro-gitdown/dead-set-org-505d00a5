@@ -59,6 +59,60 @@ export { matchScore, normalize };
  * within that specific recording. This avoids the generic search which can
  * return tracks from entirely different shows.
  */
+function isAudioFile(f: any): boolean {
+  const fmt = f.format || "";
+  const name = (f.name || "").toLowerCase();
+  return (
+    fmt === "VBR MP3" ||
+    fmt === "Ogg Vorbis" ||
+    fmt === "Flac" ||
+    fmt === "24bit Flac" ||
+    name.endsWith(".mp3") ||
+    name.endsWith(".ogg") ||
+    name.endsWith(".flac")
+  );
+}
+
+function findBestTrack(files: any[], songTitle: string): { file: any; score: number } | null {
+  const audioFiles = files.filter(isAudioFile);
+  let bestScore = 0;
+  let bestFile: any = null;
+  for (const f of audioFiles) {
+    const title = f.title || f.name || "";
+    const score = matchScore(title, songTitle);
+    if (score > bestScore) {
+      bestScore = score;
+      bestFile = f;
+    }
+  }
+  return bestFile && bestScore >= 60 ? { file: bestFile, score: bestScore } : null;
+}
+
+/**
+ * Try fetching metadata for an identifier, with fallback variants
+ * (e.g. stripping .flac16 suffix which often has empty metadata).
+ */
+async function fetchMetadataWithFallback(identifier: string): Promise<{ files: any[]; resolvedId: string } | null> {
+  const variants = [identifier];
+  // Many AI-generated URLs use .flac16 suffix identifiers that have empty metadata;
+  // the base identifier (without .flac16) usually works
+  if (/\.flac\d*$/i.test(identifier)) {
+    variants.push(identifier.replace(/\.flac\d*$/i, ""));
+  }
+  for (const id of variants) {
+    try {
+      const res = await fetch(`https://archive.org/metadata/${id}`);
+      if (!res.ok) continue;
+      const meta = await res.json();
+      const files = meta.files || [];
+      if (files.length > 0) return { files, resolvedId: id };
+    } catch {
+      continue;
+    }
+  }
+  return null;
+}
+
 export async function findTrackInRecording(
   archiveUrl: string,
   songTitle: string
@@ -67,47 +121,18 @@ export async function findTrackInRecording(
   const identifier = match?.[1];
   if (!identifier) return null;
 
-  try {
-    const res = await fetch(`https://archive.org/metadata/${identifier}`);
-    if (!res.ok) return null;
-    const meta = await res.json();
+  const meta = await fetchMetadataWithFallback(identifier);
+  if (!meta) return null;
 
-    const audioFiles = (meta.files || []).filter(
-      (f: any) =>
-        f.format === "VBR MP3" ||
-        f.format === "Ogg Vorbis" ||
-        f.name?.endsWith(".mp3") ||
-        f.name?.endsWith(".ogg")
-    );
-
-    let bestScore = 0;
-    let bestFile: any = null;
-    for (const f of audioFiles) {
-      const title = f.title || f.name || "";
-      const score = matchScore(title, songTitle);
-      if (score > bestScore) {
-        bestScore = score;
-        bestFile = f;
-      }
-    }
-
-    if (bestFile && bestScore >= 60) {
-      const url = `https://archive.org/download/${identifier}/${encodeURIComponent(bestFile.name)}`;
-      if (bestScore < 60) {
-        console.warn(
-          `[QA] Low track match for "${songTitle}": best match "${bestFile.title || bestFile.name}" scored ${bestScore}/100 in ${identifier}`
-        );
-      }
-      return url;
-    }
-
-    console.warn(
-      `[QA] No track match for "${songTitle}" in ${identifier} (best score: ${bestScore})`
-    );
-    return null;
-  } catch {
-    return null;
+  const best = findBestTrack(meta.files, songTitle);
+  if (best) {
+    return `https://archive.org/download/${meta.resolvedId}/${encodeURIComponent(best.file.name)}`;
   }
+
+  console.warn(
+    `[QA] No track match for "${songTitle}" in ${meta.resolvedId} (best score: 0)`
+  );
+  return null;
 }
 
 export async function findArchiveRecording(songTitle: string): Promise<ArchiveResult | null> {
