@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
-import { Share2, ExternalLink, PartyPopper } from "lucide-react";
+import { Share2, ExternalLink, PartyPopper, Compass } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 import ShareDropdown from "@/components/ShareDropdown";
 
 interface SaveCelebrationProps {
@@ -10,6 +11,7 @@ interface SaveCelebrationProps {
 }
 
 const SaveCelebration = ({ setlistId, setlistTitle, onDismiss }: SaveCelebrationProps) => {
+  const navigate = useNavigate();
   const posterUrl = `${window.location.origin}/setlist/${setlistId}`;
   const ogUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/og-image?id=${setlistId}`;
 
@@ -56,7 +58,26 @@ const SaveCelebration = ({ setlistId, setlistTitle, onDismiss }: SaveCelebration
           View your poster <ExternalLink className="w-3 h-3" />
         </a>
 
-        <div className="mt-5">
+        {/* Post-save nudge to Browse */}
+        <div className="mt-5 pt-4 border-t border-border/40">
+          <p className="font-body text-xs text-muted-foreground mb-3">
+            Discover what other Deadheads are building
+          </p>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              onDismiss();
+              navigate("/browse");
+            }}
+            className="gap-1.5 font-body text-xs"
+          >
+            <Compass className="w-3.5 h-3.5" />
+            Browse Community Setlists
+          </Button>
+        </div>
+
+        <div className="mt-4">
           <button
             onClick={onDismiss}
             className="text-xs font-body text-muted-foreground/50 hover:text-muted-foreground transition-colors"

@@ -72,12 +72,20 @@ const HeroSection = () => {
           </span>
         </motion.div>
 
-        {/* 6. Secondary CTA */}
-        <motion.div {...fade(0.24)} className="w-full sm:w-auto">
-          <Button variant="outline" size="lg" onClick={() => navigate("/browse")} className="w-full sm:w-auto gap-2">
-            Browse Community Setlists
+        {/* 6. Secondary CTA — elevated for discoverability */}
+        <motion.div {...fade(0.24)} className="w-full sm:w-auto flex flex-col items-center gap-2">
+          <Button
+            variant="outline"
+            size="lg"
+            onClick={() => navigate("/browse")}
+            className="w-full sm:w-auto gap-2 border-primary/40 text-primary hover:bg-primary/10 hover:border-primary/60"
+          >
+            🔍 Browse Community Setlists
             <ChevronRight className="w-4 h-4" />
           </Button>
+          <span className="font-body text-xs text-muted-foreground/60">
+            See what other Deadheads are building
+          </span>
         </motion.div>
       </div>
     </main>
