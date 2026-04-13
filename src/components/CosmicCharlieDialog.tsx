@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useMemo } from "react";
-import { Star, Wand2, Search, Disc3 } from "lucide-react";
+import { Star, Wand2, Search, Disc3, Play } from "lucide-react";
+import { useAudioPlayer, type PlayableSlot } from "@/contexts/AudioPlayerContext";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -94,6 +95,7 @@ const CosmicCharlieDialog = ({
   onApplySuggestion,
   onCreateNewSetlist,
 }: CosmicCharlieDialogProps) => {
+  const { playSingle } = useAudioPlayer();
   const [mode, setMode] = useState<"build" | "improve" | "explore" | null>(null);
   const [preferences, setPreferences] = useState("");
   const [loading, setLoading] = useState(false);
@@ -746,7 +748,31 @@ const CosmicCharlieDialog = ({
                     {v.eraName && <span className="inline-block text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary font-body">{v.eraName}</span>}
                     <p className="text-xs text-foreground/80 font-body leading-relaxed">{v.whyThisVersion}</p>
                     {v.archiveUrl && (
-                      <a href={v.archiveUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-primary hover:underline font-body">🎧 Listen on Archive.org</a>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-7 text-xs font-body gap-1 border-primary/30 text-primary hover:bg-primary/10"
+                          onClick={() => {
+                            const slot: PlayableSlot = {
+                              id: `explore-${i}-${v.showDate}`,
+                              song: { id: "", title: exploreResult.songTitle },
+                              version: {
+                                id: "", song_id: "", show_date: v.showDate,
+                                archive_org_url: v.archiveUrl!, venue: v.venue,
+                                city: v.city, era_id: null, rating: v.rating, description: v.description,
+                              },
+                              setNumber: 1,
+                              position: i,
+                              segueToNext: false,
+                            };
+                            playSingle(slot);
+                          }}
+                        >
+                          <Play className="w-3 h-3 fill-current" /> Play this version
+                        </Button>
+                        <a href={v.archiveUrl} target="_blank" rel="noopener noreferrer" className="text-[10px] text-muted-foreground hover:text-primary hover:underline font-body">Archive.org ↗</a>
+                      </div>
                     )}
                   </div>
                 ))}
