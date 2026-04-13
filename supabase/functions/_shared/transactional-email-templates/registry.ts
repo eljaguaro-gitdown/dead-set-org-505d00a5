@@ -15,6 +15,7 @@ import { template as newSignupNotification } from './new-signup-notification.tsx
 import { template as lotDispatch } from './lot-dispatch.tsx'
 import { template as dmNotification } from './dm-notification.tsx'
 import { template as dailyUserReport } from './daily-user-report.tsx'
+import { template as weeklyInsights } from './weekly-insights.tsx'
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'welcome-email': welcomeEmail,
@@ -23,4 +24,5 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'lot-dispatch': lotDispatch,
   'dm-notification': dmNotification,
   'daily-user-report': dailyUserReport,
+  'weekly-insights': weeklyInsights,
 }
