@@ -35,6 +35,7 @@ const PwaInstallBanner = () => {
     const handler = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
+      (window as any).__pwaInstallPrompt = e;
     };
     window.addEventListener("beforeinstallprompt", handler);
 
