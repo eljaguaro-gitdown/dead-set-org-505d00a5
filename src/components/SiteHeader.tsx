@@ -194,6 +194,29 @@ const SiteHeader = ({ children, large = false }: SiteHeaderProps) => {
                       <div className="min-h-[44px] flex items-center">{adminLink}</div>
                     </SheetClose>
                   )}
+                  {!window.matchMedia("(display-mode: standalone)").matches && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) && (
+                    <SheetClose asChild>
+                      <button
+                        onClick={() => {
+                          const standalone = window.matchMedia("(display-mode: standalone)").matches || (navigator as any).standalone === true;
+                          if (standalone) return;
+                          // Try native prompt if available
+                          const evt = (window as any).__pwaInstallPrompt;
+                          if (evt) {
+                            evt.prompt();
+                          } else if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+                            alert('Tap the Share button (square with arrow) then "Add to Home Screen"');
+                          } else {
+                            alert('Tap the browser menu (⋮) then "Add to Home Screen"');
+                          }
+                        }}
+                        className="min-h-[44px] flex items-center gap-1.5 text-xs font-mono text-primary hover:text-primary/80 transition-colors tracking-wider uppercase"
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                        Install App
+                      </button>
+                    </SheetClose>
+                  )}
                   <SheetClose asChild>
                     <div className="min-h-[44px] flex items-center">
                       <ShareAppButton variant="full" className="w-full justify-start" />
