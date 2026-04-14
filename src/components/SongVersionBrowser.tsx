@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { Zap, ExternalLink, Headphones, Star, Loader2, ArrowUpDown, Calendar, TrendingUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { findManyArchiveRecordings, type ArchiveVersion } from "@/lib/archiveOrg";
+import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 
 type Song = Database["public"]["Tables"]["songs"]["Row"];
@@ -20,6 +21,8 @@ const SongVersionBrowser = ({ song, curatedVersions, onSelectSong, onPlayArchive
   const [archiveVersions, setArchiveVersions] = useState<ArchiveVersion[]>([]);
   const [loading, setLoading] = useState(true);
   const [sortMode, setSortMode] = useState<SortMode>("rating");
+  const [descriptions, setDescriptions] = useState<Record<string, string>>({});
+  const [loadingDescriptions, setLoadingDescriptions] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -32,6 +35,37 @@ const SongVersionBrowser = ({ song, curatedVersions, onSelectSong, onPlayArchive
     });
     return () => { cancelled = true; };
   }, [song.id, song.title]);
+
+  // Fetch AI descriptions for the top-rated versions
+  useEffect(() => {
+    if (archiveVersions.length === 0 || loading) return;
+    let cancelled = false;
+    setLoadingDescriptions(true);
+
+    const topByRating = [...archiveVersions]
+      .sort((a, b) => (b.avgRating || 0) - (a.avgRating || 0))
+      .slice(0, 10);
+
+    supabase.functions.invoke("describe-versions", {
+      body: {
+        songTitle: song.title,
+        versions: topByRating.map((v) => ({
+          identifier: v.identifier,
+          date: v.date,
+          venue: v.venue,
+          rating: v.avgRating,
+        })),
+      },
+    }).then(({ data, error }) => {
+      if (!cancelled && data?.descriptions) {
+        setDescriptions(data.descriptions);
+      }
+      if (error) console.warn("Failed to fetch version descriptions:", error);
+      if (!cancelled) setLoadingDescriptions(false);
+    });
+
+    return () => { cancelled = true; };
+  }, [archiveVersions, loading, song.title]);
 
   // Merge: curated versions first (highlighted), then archive versions (deduped by date)
   const curatedDates = new Set(curatedVersions.map((v) => v.show_date));
@@ -129,6 +163,7 @@ const SongVersionBrowser = ({ song, curatedVersions, onSelectSong, onPlayArchive
                 key={av.identifier}
                 version={av}
                 songTitle={song.title}
+                description={descriptions[av.identifier]}
                 onSelect={() => handleSelectArchiveVersion(av)}
                 onPlayArchive={onPlayArchive}
               />
@@ -201,11 +236,13 @@ function CuratedVersionCard({
 function ArchiveVersionCard({
   version: av,
   songTitle,
+  description,
   onSelect,
   onPlayArchive,
 }: {
   version: ArchiveVersion;
   songTitle: string;
+  description?: string;
   onSelect: () => void;
   onPlayArchive?: (url: string, songTitle: string, showDate: string, venue?: string | null) => void;
 }) {
@@ -245,6 +282,9 @@ function ArchiveVersionCard({
       </div>
       {av.venue && (
         <p className="text-xs text-muted-foreground font-body mt-0.5">{av.venue}</p>
+      )}
+      {description && (
+        <p className="text-xs text-accent/80 font-body mt-1 italic">"{description}"</p>
       )}
     </button>
   );
