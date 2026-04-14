@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 /**
  * Broadcasts the current visitor's presence on a shared Realtime channel.
@@ -7,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
  */
 export const usePresence = () => {
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const { user } = useAuth();
 
   useEffect(() => {
     const visitorId = localStorage.getItem("ds_visitor_id") || crypto.randomUUID();
@@ -14,8 +16,7 @@ export const usePresence = () => {
       localStorage.setItem("ds_visitor_id", visitorId);
     }
 
-    const buildPresenceState = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+    const init = async () => {
       let displayName: string | null = null;
       let avatarUrl: string | null = null;
 
@@ -29,7 +30,7 @@ export const usePresence = () => {
         avatarUrl = profile?.avatar_url || null;
       }
 
-      return {
+      const presenceState = {
         visitor_id: visitorId,
         user_id: user?.id || null,
         display_name: displayName,
@@ -37,10 +38,6 @@ export const usePresence = () => {
         page: window.location.pathname,
         joined_at: new Date().toISOString(),
       };
-    };
-
-    const init = async () => {
-      const presenceState = await buildPresenceState();
 
       const channel = supabase.channel("online_visitors", {
         config: { presence: { key: visitorId } },
@@ -77,5 +74,5 @@ export const usePresence = () => {
         supabase.removeChannel(channelRef.current);
       }
     };
-  }, []);
+  }, [user]);
 };
