@@ -1,6 +1,9 @@
 import { useEffect, useRef } from "react";
+import { useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+
+const HEARTBEAT_INTERVAL = 30_000; // 30s heartbeat to keep presence fresh
 
 /**
  * Broadcasts the current visitor's presence on a shared Realtime channel.
@@ -8,8 +11,11 @@ import { useAuth } from "@/hooks/useAuth";
  */
 export const usePresence = () => {
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const presenceRef = useRef<Record<string, unknown> | null>(null);
   const { user } = useAuth();
+  const location = useLocation();
 
+  // Initialize channel once when user changes
   useEffect(() => {
     const visitorId = localStorage.getItem("ds_visitor_id") || crypto.randomUUID();
     if (!localStorage.getItem("ds_visitor_id")) {
@@ -39,6 +45,8 @@ export const usePresence = () => {
         joined_at: new Date().toISOString(),
       };
 
+      presenceRef.current = presenceState;
+
       const channel = supabase.channel("online_visitors", {
         config: { presence: { key: visitorId } },
       });
@@ -55,14 +63,18 @@ export const usePresence = () => {
 
       channelRef.current = channel;
 
-      // Update page path on navigation
-      const updatePage = () => {
-        channel.track({ ...presenceState, page: window.location.pathname });
-      };
-      window.addEventListener("popstate", updatePage);
+      // Heartbeat: re-track periodically so stale entries don't linger
+      const heartbeat = setInterval(() => {
+        if (channelRef.current && presenceRef.current) {
+          channelRef.current.track({
+            ...presenceRef.current,
+            page: window.location.pathname,
+          });
+        }
+      }, HEARTBEAT_INTERVAL);
 
       return () => {
-        window.removeEventListener("popstate", updatePage);
+        clearInterval(heartbeat);
       };
     };
 
@@ -72,7 +84,18 @@ export const usePresence = () => {
       cleanupPromise.then((cleanup) => cleanup?.());
       if (channelRef.current) {
         supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
       }
+      presenceRef.current = null;
     };
   }, [user]);
+
+  // Update page on every React Router navigation
+  useEffect(() => {
+    if (channelRef.current && presenceRef.current) {
+      const updated = { ...presenceRef.current, page: location.pathname };
+      presenceRef.current = updated;
+      channelRef.current.track(updated);
+    }
+  }, [location.pathname]);
 };
