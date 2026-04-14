@@ -78,34 +78,23 @@ const Index = () => {
         .sort((a, b) => (b.play_count + b.upvote_count) - (a.play_count + a.upvote_count))
         .slice(0, 6);
 
+      // Run all three lookups in parallel instead of sequentially
       const creatorIds = [...new Set(sorted.map((s) => s.creator_id))];
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("user_id, display_name")
-        .in("user_id", creatorIds);
-      const profileMap = new Map(
-        (profiles || []).map((p) => [p.user_id, p.display_name])
-      );
-
-      const eraIds = [
-        ...new Set(sorted.map((s) => s.era_id).filter(Boolean)),
-      ] as string[];
-      let eraMap = new Map<string, string>();
-      if (eraIds.length > 0) {
-        const { data: eras } = await supabase
-          .from("eras")
-          .select("id, name")
-          .in("id", eraIds);
-        eraMap = new Map((eras || []).map((e) => [e.id, e.name]));
-      }
-
+      const eraIds = [...new Set(sorted.map((s) => s.era_id).filter(Boolean))] as string[];
       const setlistIds = sorted.map((s) => s.id);
-      const { data: slotCounts } = await supabase
-        .from("setlist_slots")
-        .select("setlist_id")
-        .in("setlist_id", setlistIds);
+
+      const [profilesRes, erasRes, slotsRes] = await Promise.all([
+        supabase.from("profiles").select("user_id, display_name").in("user_id", creatorIds),
+        eraIds.length > 0
+          ? supabase.from("eras").select("id, name").in("id", eraIds)
+          : Promise.resolve({ data: [] as { id: string; name: string }[] }),
+        supabase.from("setlist_slots").select("setlist_id").in("setlist_id", setlistIds),
+      ]);
+
+      const profileMap = new Map((profilesRes.data || []).map((p) => [p.user_id, p.display_name]));
+      const eraMap = new Map(((erasRes.data || []) as { id: string; name: string }[]).map((e) => [e.id, e.name]));
       const countMap = new Map<string, number>();
-      (slotCounts || []).forEach((s) => {
+      (slotsRes.data || []).forEach((s) => {
         countMap.set(s.setlist_id, (countMap.get(s.setlist_id) || 0) + 1);
       });
 
