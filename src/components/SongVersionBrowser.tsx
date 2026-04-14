@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { Zap, ExternalLink, Headphones, Star, Loader2, ArrowUpDown, Calendar, TrendingUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { findManyArchiveRecordings, type ArchiveVersion } from "@/lib/archiveOrg";
+import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 
 type Song = Database["public"]["Tables"]["songs"]["Row"];
