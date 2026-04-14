@@ -58,7 +58,7 @@ const HeroSection = () => {
         </motion.div>
 
         {/* 5. Primary CTA */}
-        <motion.div {...fade(0.2)} className="w-full sm:w-auto flex flex-col items-center gap-2">
+        <motion.div {...fade(0.2)} className="w-full sm:w-auto flex flex-col items-center gap-3">
           <Button
             size="lg"
             onClick={() => navigate("/builder?wizard=true")}
@@ -70,6 +70,12 @@ const HeroSection = () => {
           <span className="font-body text-sm sm:text-base text-muted-foreground/80">
             No account needed to start — sign in when you're ready to save
           </span>
+          <button
+            onClick={() => navigate("/auth")}
+            className="font-mono text-xs tracking-[0.15em] text-primary/70 hover:text-primary transition-colors underline underline-offset-4 decoration-primary/30 hover:decoration-primary/60"
+          >
+            Returning user? Sign in here
+          </button>
         </motion.div>
 
         {/* 6. Secondary CTA — elevated for discoverability */}
