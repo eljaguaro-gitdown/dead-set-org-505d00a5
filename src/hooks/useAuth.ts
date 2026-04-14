@@ -87,7 +87,7 @@ export const useAuth = () => {
       if (session?.user) {
           maybeSendWelcomeEmail(session.user);
           notifyNewSignup(session.user);
-          markConversion();
+          markConversion(session.user.id);
         }
       }
       if (event === "SIGNED_OUT") {
