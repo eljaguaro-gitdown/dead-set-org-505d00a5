@@ -44,6 +44,8 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
   }, []);
 
   useEffect(() => {
+    let cancelled = false;
+
     const fetchTracks = async () => {
       setLoading(true);
       setError(null);
@@ -65,8 +67,10 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
 
       try {
         const res = await fetch(`https://archive.org/metadata/${identifier}`);
+        if (cancelled) return;
         if (!res.ok) throw new Error("Failed to fetch metadata");
         const meta = await res.json();
+        if (cancelled) return;
 
         const audioFiles = (meta.files || [])
           .filter((f: any) =>
@@ -96,12 +100,15 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
           setCurrentTrack(bestIdx);
         }
       } catch {
-        setError("Couldn't load audio from archive.org");
+        if (!cancelled) {
+          setError("Couldn't load audio from archive.org");
+        }
       }
-      setLoading(false);
+      if (!cancelled) setLoading(false);
     };
 
     fetchTracks();
+    return () => { cancelled = true; };
   }, [archiveUrl, songTitle, getIdentifier, directTrackUrl]);
 
   useEffect(() => {
