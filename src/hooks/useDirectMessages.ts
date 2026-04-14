@@ -51,7 +51,7 @@ export const useDirectMessages = (user: User | null) => {
     return profile;
   };
 
-  // Load conversations
+  // Load conversations — batched queries to avoid N+1
   const loadConversations = useCallback(async () => {
     if (!user) return;
     setLoading(true);
@@ -67,63 +67,110 @@ export const useDirectMessages = (user: User | null) => {
       return;
     }
 
-    if (data) {
-      const enriched = await Promise.all(
-        data.map(async (c) => {
-          const [{ data: membersData }, { data: lastMsg }, { count }] = await Promise.all([
-            supabase
-              .from("conversation_members")
-              .select("user_id")
-              .eq("conversation_id", c.id),
-            supabase
-              .from("direct_messages")
-              .select("content")
-              .eq("conversation_id", c.id)
-              .order("created_at", { ascending: false })
-              .limit(1)
-              .maybeSingle(),
-            supabase
-              .from("direct_messages")
-              .select("id", { count: "exact", head: true })
-              .eq("conversation_id", c.id)
-              .eq("read", false)
-              .neq("sender_id", user.id),
-          ]);
-
-          const memberProfiles = await Promise.all(
-            (membersData || [])
-              .filter((m) => m.user_id !== user.id)
-              .map(async (m) => {
-                const profile = await resolveProfile(m.user_id);
-                return { userId: m.user_id, displayName: profile.name, avatarUrl: profile.avatar };
-              })
-          );
-
-          const otherUserId =
-            (membersData || []).find((m) => m.user_id !== user.id)?.user_id ||
-            (c.user_one === user.id ? c.user_two : c.user_one);
-          const otherProfile = await resolveProfile(otherUserId);
-
-          const displayName = c.is_group
-            ? c.name || memberProfiles.map((m) => m.displayName).join(", ") || "Group Chat"
-            : otherProfile.name;
-
-          return {
-            id: c.id,
-            isGroup: c.is_group || false,
-            name: c.name,
-            otherUserId,
-            otherUserName: displayName,
-            otherUserAvatar: c.is_group ? null : otherProfile.avatar,
-            members: memberProfiles,
-            lastMessageAt: c.last_message_at,
-            lastMessagePreview: lastMsg?.content,
-            unreadCount: count || 0,
-          };
-        })
-      );
-      setConversations(enriched);
+    if (!data || data.length === 0) {
+      setConversations([]);
+      setLoading(false);
+      return;
     }
+
+    const conversationIds = data.map((c) => c.id);
+
+    // Batch: get all members, last messages, and unread counts in 3 queries
+    const [membersRes, lastMsgsRes, unreadRes] = await Promise.all([
+      supabase
+        .from("conversation_members")
+        .select("conversation_id, user_id")
+        .in("conversation_id", conversationIds),
+      supabase
+        .from("direct_messages")
+        .select("conversation_id, content, created_at")
+        .in("conversation_id", conversationIds)
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("direct_messages")
+        .select("conversation_id", { count: "exact" })
+        .in("conversation_id", conversationIds)
+        .eq("read", false)
+        .neq("sender_id", user.id),
+    ]);
+
+    // Build lookup maps
+    const membersByConv = new Map<string, string[]>();
+    for (const m of membersRes.data || []) {
+      const list = membersByConv.get(m.conversation_id) || [];
+      list.push(m.user_id);
+      membersByConv.set(m.conversation_id, list);
+    }
+
+    // Last message per conversation (first occurrence since sorted desc)
+    const lastMsgByConv = new Map<string, string>();
+    for (const m of lastMsgsRes.data || []) {
+      if (!lastMsgByConv.has(m.conversation_id)) {
+        lastMsgByConv.set(m.conversation_id, m.content);
+      }
+    }
+
+    // Unread counts per conversation
+    const unreadByConv = new Map<string, number>();
+    for (const m of unreadRes.data || []) {
+      unreadByConv.set(m.conversation_id, (unreadByConv.get(m.conversation_id) || 0) + 1);
+    }
+
+    // Collect all unique user IDs we need profiles for
+    const allOtherUserIds = new Set<string>();
+    for (const c of data) {
+      const members = membersByConv.get(c.id) || [];
+      for (const uid of members) {
+        if (uid !== user.id) allOtherUserIds.add(uid);
+      }
+      // Fallback from conversation record
+      const fallbackOther = c.user_one === user.id ? c.user_two : c.user_one;
+      allOtherUserIds.add(fallbackOther);
+    }
+
+    // Batch fetch all profiles at once
+    if (allOtherUserIds.size > 0) {
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("user_id, display_name, avatar_url")
+        .in("user_id", [...allOtherUserIds]);
+      for (const p of profiles || []) {
+        profileCache.current.set(p.user_id, {
+          name: p.display_name || "Unknown",
+          avatar: p.avatar_url || null,
+        });
+      }
+    }
+
+    const enriched = data.map((c) => {
+      const members = (membersByConv.get(c.id) || []).filter((uid) => uid !== user.id);
+      const memberProfiles = members.map((uid) => {
+        const profile = profileCache.current.get(uid) || { name: "Unknown", avatar: null };
+        return { userId: uid, displayName: profile.name, avatarUrl: profile.avatar };
+      });
+
+      const otherUserId = members[0] || (c.user_one === user.id ? c.user_two : c.user_one);
+      const otherProfile = profileCache.current.get(otherUserId) || { name: "Unknown", avatar: null };
+
+      const displayName = c.is_group
+        ? c.name || memberProfiles.map((m) => m.displayName).join(", ") || "Group Chat"
+        : otherProfile.name;
+
+      return {
+        id: c.id,
+        isGroup: c.is_group || false,
+        name: c.name,
+        otherUserId,
+        otherUserName: displayName,
+        otherUserAvatar: c.is_group ? null : otherProfile.avatar,
+        members: memberProfiles,
+        lastMessageAt: c.last_message_at,
+        lastMessagePreview: lastMsgByConv.get(c.id),
+        unreadCount: unreadByConv.get(c.id) || 0,
+      };
+    });
+
+    setConversations(enriched);
     setLoading(false);
   }, [user]);
 
