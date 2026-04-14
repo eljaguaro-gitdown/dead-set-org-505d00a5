@@ -143,7 +143,12 @@ const SortableSlotItem = ({
           </button>
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between">
-              <span className="font-body text-base lg:text-xl text-foreground font-medium">{slot.song.title}</span>
+              <span className="font-body text-base lg:text-xl text-foreground font-medium flex items-center gap-2">
+                {slot.song.title}
+                {onPlayVersion && (
+                  <Play className="w-3.5 h-3.5 text-primary opacity-0 group-hover:opacity-70 transition-opacity fill-current shrink-0" />
+                )}
+              </span>
               <button
                 onClick={() => onRemoveSlot(slot.id)}
                 className="opacity-0 group-hover:opacity-100 transition-opacity"

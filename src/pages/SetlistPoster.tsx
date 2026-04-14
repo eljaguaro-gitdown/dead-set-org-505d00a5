@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Share2, Zap, Play, Headphones } from "lucide-react";
+import { ArrowLeft, Share2, Zap, Play } from "lucide-react";
 import SetlistComments from "@/components/SetlistComments";
 import EraTooltip from "@/components/EraTooltip";
 import { supabase } from "@/integrations/supabase/client";
@@ -171,7 +171,6 @@ const SetlistPoster = () => {
     : undefined;
 
   const handlePlaySong = (slot: EnrichedSlot) => {
-    if (!slot.version?.archive_org_url) return;
     playSingle({
       id: slot.id,
       song: { id: slot.song.id, title: slot.song.title },
@@ -366,7 +365,6 @@ const SetlistPoster = () => {
                       {/* Songs — each on its own "ruled line" */}
                       <div className="space-y-0">
                         {setSlots.map((slot, idx) => {
-                          const hasAudio = !!slot.version?.archive_org_url;
                           const isHovered = hoveredSlot === slot.id;
                           const isNowPlaying = playingSlot?.id === slot.id;
                           const charSum = slot.id.split("").reduce((a, c) => a + c.charCodeAt(0), 0);
@@ -377,13 +375,11 @@ const SetlistPoster = () => {
                             <React.Fragment key={slot.id}>
                             <motion.div
                               
-                              className={`group flex items-center gap-2 py-[5px] transition-colors ${
+                              className={`group flex items-center gap-2 py-[5px] transition-colors cursor-pointer hover:bg-[hsl(38_50%_80%/0.3)] ${
                                 isNowPlaying ? "now-playing-row" : ""
-                              } ${
-                                hasAudio ? "cursor-pointer hover:bg-[hsl(38_50%_80%/0.3)]" : ""
                               }`}
                               style={{ minHeight: "28px", transform: `rotate(${rotation}deg) translateX(${xShift}px)` }}
-                              onClick={() => hasAudio && handlePlaySong(slot)}
+                              onClick={() => handlePlaySong(slot)}
                               onMouseEnter={() => setHoveredSlot(slot.id)}
                               onMouseLeave={() => setHoveredSlot(null)}
                               initial={{ opacity: 0, x: -6 }}
@@ -396,8 +392,8 @@ const SetlistPoster = () => {
                                   <span className="now-playing-bars" style={{ color: `hsl(${eraTheme.accent})` }}>
                                     <span /><span /><span />
                                   </span>
-                                ) : hasAudio && isHovered ? (
-                                  <Headphones className="w-3 h-3 inline" style={{ color: `hsl(${eraTheme.accent})` }} />
+                                ) : isHovered ? (
+                                  <Play className="w-3 h-3 inline fill-current" style={{ color: `hsl(${eraTheme.accent})` }} />
                                 ) : (
                                   <span
                                     className="text-base tabular-nums font-mono"
