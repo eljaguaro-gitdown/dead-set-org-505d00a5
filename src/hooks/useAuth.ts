@@ -82,9 +82,12 @@ export const useAuth = () => {
     }
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "SIGNED_IN") {
-        sessionStorage.setItem(SESSION_FLAG, "1");
-      if (session?.user) {
+      if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED" || event === "INITIAL_SESSION") {
+        if (session) {
+          sessionStorage.setItem(SESSION_FLAG, "1");
+          didInit.current = true;
+        }
+        if (event === "SIGNED_IN" && session?.user) {
           maybeSendWelcomeEmail(session.user);
           notifyNewSignup(session.user);
           markConversion(session.user.id);
@@ -98,13 +101,16 @@ export const useAuth = () => {
     });
 
     supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (session && !sessionStorage.getItem(SESSION_FLAG) && !didInit.current) {
-        didInit.current = true;
+      // If onAuthStateChange already handled init, skip
+      if (didInit.current) return;
+      didInit.current = true;
+
+      if (session && !sessionStorage.getItem(SESSION_FLAG) && !isOAuthReturn) {
+        // Stale session from a previous browser session — sign out
         await supabase.auth.signOut();
         setUser(null);
         setLoading(false);
       } else {
-        didInit.current = true;
         setUser(session?.user ?? null);
         setLoading(false);
       }
