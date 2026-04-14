@@ -163,6 +163,7 @@ const SongVersionBrowser = ({ song, curatedVersions, onSelectSong, onPlayArchive
                 key={av.identifier}
                 version={av}
                 songTitle={song.title}
+                description={descriptions[av.identifier]}
                 onSelect={() => handleSelectArchiveVersion(av)}
                 onPlayArchive={onPlayArchive}
               />
@@ -235,11 +236,13 @@ function CuratedVersionCard({
 function ArchiveVersionCard({
   version: av,
   songTitle,
+  description,
   onSelect,
   onPlayArchive,
 }: {
   version: ArchiveVersion;
   songTitle: string;
+  description?: string;
   onSelect: () => void;
   onPlayArchive?: (url: string, songTitle: string, showDate: string, venue?: string | null) => void;
 }) {
@@ -279,6 +282,9 @@ function ArchiveVersionCard({
       </div>
       {av.venue && (
         <p className="text-xs text-muted-foreground font-body mt-0.5">{av.venue}</p>
+      )}
+      {description && (
+        <p className="text-xs text-accent/80 font-body mt-1 italic">"{description}"</p>
       )}
     </button>
   );
