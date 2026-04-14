@@ -1,8 +1,8 @@
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Zap, ChevronDown, ChevronUp, ExternalLink, Headphones } from "lucide-react";
+import { Search, Zap, ChevronDown, ChevronUp } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
+import SongVersionBrowser from "@/components/SongVersionBrowser";
 import type { Database } from "@/integrations/supabase/types";
 
 type Song = Database["public"]["Tables"]["songs"]["Row"];
@@ -31,7 +31,7 @@ const SongVault = ({ songs, eraId, onSelectSong, getNotableVersions, onPlayArchi
   const [tagFilter, setTagFilter] = useState<string | null>(null);
   const [positionFilter, setPositionFilter] = useState<string | null>(null);
   const [expandedSong, setExpandedSong] = useState<string | null>(null);
-  const [versions, setVersions] = useState<NotableVersion[]>([]);
+  const [curatedVersions, setCuratedVersions] = useState<NotableVersion[]>([]);
 
   const filteredSongs = useMemo(() => {
     return songs.filter((s) => {
@@ -49,7 +49,7 @@ const SongVault = ({ songs, eraId, onSelectSong, getNotableVersions, onPlayArchi
     }
     setExpandedSong(songId);
     const data = await getNotableVersions(songId, eraId);
-    setVersions(data || []);
+    setCuratedVersions(data || []);
   };
 
   const tags = ["rocker", "jam", "ballad", "country", "space", "blues"];
@@ -107,7 +107,7 @@ const SongVault = ({ songs, eraId, onSelectSong, getNotableVersions, onPlayArchi
               className="p-3 rounded-lg bg-card border border-border hover:border-primary/30 cursor-pointer transition-colors group active:scale-[0.97] md:active:scale-100"
               onClick={() => {
                 if (window.innerWidth < 768 && expandedSong !== song.id) {
-                  onSelectSong(song);
+                  handleExpand(song.id);
                 } else {
                   handleExpand(song.id);
                 }
@@ -122,17 +122,11 @@ const SongVault = ({ songs, eraId, onSelectSong, getNotableVersions, onPlayArchi
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   <span className="text-xs text-muted-foreground font-body">{song.times_played}x</span>
-                  <button
-                    className="hidden md:block"
-                    onClick={(e) => { e.stopPropagation(); handleExpand(song.id); }}
-                  >
-                    {expandedSong === song.id ? (
-                      <ChevronUp className="w-4 h-4 text-muted-foreground" />
-                    ) : (
-                      <ChevronDown className="w-4 h-4 text-muted-foreground" />
-                    )}
-                  </button>
-                  <ChevronDown className="w-4 h-4 text-muted-foreground md:hidden" />
+                  {expandedSong === song.id ? (
+                    <ChevronUp className="w-4 h-4 text-muted-foreground" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                  )}
                 </div>
               </div>
               <div className="flex gap-1 mt-1.5">
@@ -152,58 +146,12 @@ const SongVault = ({ songs, eraId, onSelectSong, getNotableVersions, onPlayArchi
                   exit={{ height: 0, opacity: 0 }}
                   className="overflow-hidden"
                 >
-                  <div className="p-3 ml-2 border-l-2 border-primary/30 space-y-2">
-                    <button
-                      onClick={() => onSelectSong(song)}
-                      className="w-full text-left p-2 rounded bg-muted/50 hover:bg-muted text-sm font-body text-foreground transition-colors"
-                    >
-                      + Add song (no specific version)
-                    </button>
-                    {versions.map((v) => (
-                      <button
-                        key={v.id}
-                        onClick={() => onSelectSong(song, v)}
-                        className="w-full text-left p-2 rounded bg-card border border-border hover:border-primary/30 transition-colors"
-                      >
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm font-body text-foreground">{v.show_date}</span>
-                          <div className="flex items-center gap-1">
-                            {Array.from({ length: v.rating || 0 }).map((_, i) => (
-                              <Zap key={i} className="w-3 h-3 text-accent fill-accent" />
-                            ))}
-                            {v.archive_org_url && (
-                              <>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    onPlayArchive?.(v.archive_org_url!, song.title, v.show_date, v.venue);
-                                  }}
-                                  className="ml-1"
-                                  title="Preview audio"
-                                >
-                                  <Headphones className="w-3 h-3 text-accent hover:text-primary transition-colors" />
-                                </button>
-                                <a
-                                  href={v.archive_org_url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  onClick={(e) => e.stopPropagation()}
-                                  className="ml-1"
-                                >
-                                  <ExternalLink className="w-3 h-3 text-secondary" />
-                                </a>
-                              </>
-                            )}
-                          </div>
-                        </div>
-                        <p className="text-xs text-muted-foreground font-body mt-0.5">{v.venue}, {v.city}</p>
-                        <p className="text-xs text-muted-foreground/70 font-body mt-0.5">{v.description}</p>
-                      </button>
-                    ))}
-                    {versions.length === 0 && (
-                      <p className="text-xs text-muted-foreground font-body px-2">No notable versions for this era</p>
-                    )}
-                  </div>
+                  <SongVersionBrowser
+                    song={song}
+                    curatedVersions={curatedVersions}
+                    onSelectSong={onSelectSong}
+                    onPlayArchive={onPlayArchive}
+                  />
                 </motion.div>
               )}
             </AnimatePresence>
