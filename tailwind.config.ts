@@ -102,11 +102,16 @@ export default {
           from: { opacity: "0", transform: "scale(0.95)" },
           to: { opacity: "1", transform: "scale(1)" },
         },
+        "spin-slow": {
+          from: { transform: "rotate(0deg)" },
+          to: { transform: "rotate(360deg)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         eq: "eq 0.8s ease-in-out infinite",
+        "spin-slow": "spin-slow 60s linear infinite",
       },
     },
   },
