@@ -100,7 +100,7 @@ const SongVault = ({ songs, eraId, onSelectSong, getNotableVersions, onPlayArchi
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-2 space-y-1">
+      <div className="flex-1 overflow-y-auto p-2 space-y-1 pb-20 md:pb-2">
         {filteredSongs.map((song) => (
           <div key={song.id}>
             <motion.div
