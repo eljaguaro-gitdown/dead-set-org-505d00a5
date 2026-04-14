@@ -21,6 +21,8 @@ const SongVersionBrowser = ({ song, curatedVersions, onSelectSong, onPlayArchive
   const [archiveVersions, setArchiveVersions] = useState<ArchiveVersion[]>([]);
   const [loading, setLoading] = useState(true);
   const [sortMode, setSortMode] = useState<SortMode>("rating");
+  const [descriptions, setDescriptions] = useState<Record<string, string>>({});
+  const [loadingDescriptions, setLoadingDescriptions] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
