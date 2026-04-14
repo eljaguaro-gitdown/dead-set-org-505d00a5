@@ -91,14 +91,44 @@ export const useSetlist = (user: User | null, setlistId?: string | null) => {
         .map((slot) => {
           const song = songsMap.get(slot.song_id);
           if (!song) return null;
+
+          let version = slot.notable_version_id ? versionsMap.get(slot.notable_version_id) || null : null;
+          let notes = slot.notes || "";
+
+          // Reconstruct synthetic archive version from stored metadata
+          if (!version && notes.startsWith("{\"__archive\":true")) {
+            try {
+              const nlIndex = notes.indexOf("\n");
+              const metaStr = nlIndex > -1 ? notes.substring(0, nlIndex) : notes;
+              const meta = JSON.parse(metaStr);
+              if (meta.__archive) {
+                version = {
+                  id: `archive-reconstructed-${slot.id}`,
+                  song_id: slot.song_id,
+                  show_date: meta.show_date || "",
+                  archive_org_url: meta.archive_org_url || null,
+                  venue: meta.venue || null,
+                  city: null,
+                  era_id: null,
+                  rating: meta.rating || null,
+                  description: null,
+                };
+                // Strip the metadata line from user-visible notes
+                notes = nlIndex > -1 ? notes.substring(nlIndex + 1) : "";
+              }
+            } catch {
+              // Not valid JSON, leave as-is
+            }
+          }
+
           return {
             id: slot.id,
             song,
-            version: slot.notable_version_id ? versionsMap.get(slot.notable_version_id) || null : null,
+            version,
             setNumber: slot.set_number,
             position: slot.position,
             segueToNext: slot.segue_to_next || false,
-            notes: slot.notes || "",
+            notes,
           };
         })
         .filter(Boolean) as SetlistSlotData[];
@@ -137,17 +167,40 @@ export const useSetlist = (user: User | null, setlistId?: string | null) => {
   // Save slot to DB (debounced)
   const persistSlot = useCallback(async (slot: SetlistSlotData, setlistId: string) => {
     if (!user) return;
-    await supabase.from("setlist_slots").upsert({
+
+    // Synthetic archive versions (from the Vault browser) have IDs like "archive-..."
+    // These aren't real DB records, so we must NOT use them as FK values.
+    // Instead, store the archive metadata in the notes field so we can reconstruct on reload.
+    const isSyntheticVersion = slot.version?.id?.startsWith("archive-");
+    const notableVersionId = isSyntheticVersion ? null : (slot.version?.id || null);
+
+    let notes = slot.notes || "";
+    if (isSyntheticVersion && slot.version) {
+      const archiveMeta = JSON.stringify({
+        __archive: true,
+        show_date: slot.version.show_date,
+        venue: slot.version.venue,
+        archive_org_url: slot.version.archive_org_url,
+        rating: slot.version.rating,
+      });
+      // Prepend metadata as a hidden JSON line, keep user notes after
+      notes = archiveMeta + (notes ? "\n" + notes : "");
+    }
+
+    const { error } = await supabase.from("setlist_slots").upsert({
       id: slot.id,
       setlist_id: setlistId,
       set_number: slot.setNumber,
       position: slot.position,
       song_id: slot.song.id,
-      notable_version_id: slot.version?.id || null,
+      notable_version_id: notableVersionId,
       added_by_user_id: user.id,
-      notes: slot.notes,
+      notes,
       segue_to_next: slot.segueToNext,
     });
+    if (error) {
+      console.error("Failed to persist slot:", error);
+    }
   }, [user]);
 
   const addSlot = useCallback(async (slot: SetlistSlotData) => {
@@ -175,8 +228,23 @@ export const useSetlist = (user: User | null, setlistId?: string | null) => {
         const slot = slots.find((s) => s.id === id);
         if (!slot) return;
         const merged = { ...slot, ...updates };
+
+        // Preserve archive metadata prefix in notes for synthetic versions
+        let notesToSave = merged.notes || "";
+        const isSyntheticVersion = merged.version?.id?.startsWith("archive-");
+        if (isSyntheticVersion && merged.version) {
+          const archiveMeta = JSON.stringify({
+            __archive: true,
+            show_date: merged.version.show_date,
+            venue: merged.version.venue,
+            archive_org_url: merged.version.archive_org_url,
+            rating: merged.version.rating,
+          });
+          notesToSave = archiveMeta + (notesToSave ? "\n" + notesToSave : "");
+        }
+
         await supabase.from("setlist_slots").update({
-          notes: merged.notes,
+          notes: notesToSave,
           segue_to_next: merged.segueToNext,
           position: merged.position,
           set_number: merged.setNumber,
