@@ -40,18 +40,28 @@ export const getVariant = (): ABVariant => {
   return variant;
 };
 
-/** Mark the current visitor as converted (signed up) */
-export const markConversion = async () => {
+/** Mark the current visitor as converted (signed up).
+ *  Accepts an optional userId so we don't race with auth state settling. */
+export const markConversion = async (userId?: string) => {
   const visitorId = localStorage.getItem("ds_visitor_id");
   if (!visitorId) return;
 
+  // Skip if we already marked this visitor converted locally
+  const CONVERTED_KEY = "ds_ab_converted";
+  if (localStorage.getItem(CONVERTED_KEY)) return;
+
   try {
-    await supabase
+    const uid = userId || (await supabase.auth.getUser()).data.user?.id;
+    const { error } = await supabase
       .from("ab_test_assignments")
-      .update({ converted: true, user_id: (await supabase.auth.getUser()).data.user?.id })
+      .update({ converted: true, user_id: uid || null })
       .eq("visitor_id", visitorId)
       .eq("test_name", TEST_NAME);
+
+    if (!error) {
+      localStorage.setItem(CONVERTED_KEY, "1");
+    }
   } catch {
-    // Silent fail
+    // Silent fail — will retry next sign-in
   }
 };
