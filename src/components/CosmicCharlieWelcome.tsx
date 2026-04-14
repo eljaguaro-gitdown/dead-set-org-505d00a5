@@ -353,7 +353,7 @@ const CosmicCharlieWelcome = ({ eras, onGenerated, onSkip }: CosmicCharlieWelcom
 
                     <button
                       onClick={onSkip}
-                      className="font-body text-xs text-muted-foreground/50 hover:text-muted-foreground transition-colors"
+                      className="font-body text-lg text-muted-foreground hover:text-primary transition-colors underline underline-offset-4 decoration-muted-foreground/40 hover:decoration-primary/60"
                     >
                       I'll build my own setlist instead
                     </button>
