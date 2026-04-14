@@ -109,7 +109,29 @@ const SortableSlotItem = ({
 
   return (
     <div ref={setNodeRef} style={style}>
-      <div className={`rounded-lg bg-card border p-3 group transition-all duration-300 ${isPlaying ? 'border-primary ring-2 ring-primary/30 shadow-[0_0_20px_-4px_hsl(var(--primary)/0.4)]' : 'border-border song-glow'}`}>
+        <div
+          className={`rounded-lg bg-card border p-3 group transition-all duration-300 ${isPlaying ? 'border-primary ring-2 ring-primary/30 shadow-[0_0_20px_-4px_hsl(var(--primary)/0.4)]' : 'border-border song-glow'} ${onPlayVersion ? 'cursor-pointer hover:border-primary/50' : ''}`}
+          onClick={(e) => {
+            // Don't trigger play if clicking on interactive elements
+            const target = e.target as HTMLElement;
+            if (target.closest('button') || target.closest('a') || target.closest('textarea')) return;
+            if (!onPlayVersion) return;
+            const playSlot = {
+              ...slot,
+              version: slot.version || (archiveResult ? {
+                id: "", song_id: slot.song.id, show_date: archiveResult.date || "",
+                archive_org_url: archiveResult.url, venue: archiveResult.venue,
+                city: null, era_id: null, rating: null, description: null,
+              } : undefined),
+            };
+            if (playSlot.version?.archive_org_url || archiveResult?.url) {
+              if (playSlot.version && !playSlot.version.archive_org_url && archiveResult) {
+                playSlot.version = { ...playSlot.version, archive_org_url: archiveResult.url };
+              }
+              onPlayVersion(playSlot);
+            }
+          }}
+        >
         <div className="flex items-start gap-2">
           <button
             {...attributes}
