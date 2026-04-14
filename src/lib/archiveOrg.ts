@@ -220,6 +220,52 @@ export async function findArchiveRecording(songTitle: string): Promise<ArchiveRe
 }
 
 /**
+ * Search Archive.org for MANY recordings of a given song, returning metadata
+ * for each. Used to let users browse all available versions.
+ */
+export interface ArchiveVersion {
+  identifier: string;
+  url: string;
+  date: string | null;
+  venue: string | null;
+  avgRating: number | null;
+  directTrackUrl?: string | null;
+}
+
+const multiCache = new Map<string, ArchiveVersion[]>();
+
+export async function findManyArchiveRecordings(
+  songTitle: string,
+  maxResults = 50
+): Promise<ArchiveVersion[]> {
+  const key = songTitle.toLowerCase().trim();
+  if (multiCache.has(key)) return multiCache.get(key)!;
+
+  try {
+    const query = encodeURIComponent(`collection:GratefulDead "${songTitle}"`);
+    const apiUrl = `https://archive.org/advancedsearch.php?q=${query}&fl=identifier,date,avg_rating,venue&sort[]=avg_rating+desc&output=json&rows=${maxResults}`;
+    const res = await fetch(apiUrl);
+    if (!res.ok) return [];
+    const data = await res.json();
+    const docs = data?.response?.docs;
+    if (!docs || docs.length === 0) return [];
+
+    const versions: ArchiveVersion[] = docs.map((doc: any) => ({
+      identifier: doc.identifier,
+      url: `https://archive.org/details/${doc.identifier}`,
+      date: doc.date ? doc.date.split("T")[0] : null,
+      venue: doc.venue || null,
+      avgRating: doc.avg_rating ? Number(doc.avg_rating) : null,
+    }));
+
+    multiCache.set(key, versions);
+    return versions;
+  } catch {
+    return [];
+  }
+}
+
+/**
  * Batch lookup for multiple songs. Runs in parallel with a concurrency limit.
  */
 export async function findArchiveRecordings(
