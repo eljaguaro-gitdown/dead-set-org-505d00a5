@@ -137,17 +137,40 @@ export const useSetlist = (user: User | null, setlistId?: string | null) => {
   // Save slot to DB (debounced)
   const persistSlot = useCallback(async (slot: SetlistSlotData, setlistId: string) => {
     if (!user) return;
-    await supabase.from("setlist_slots").upsert({
+
+    // Synthetic archive versions (from the Vault browser) have IDs like "archive-..."
+    // These aren't real DB records, so we must NOT use them as FK values.
+    // Instead, store the archive metadata in the notes field so we can reconstruct on reload.
+    const isSyntheticVersion = slot.version?.id?.startsWith("archive-");
+    const notableVersionId = isSyntheticVersion ? null : (slot.version?.id || null);
+
+    let notes = slot.notes || "";
+    if (isSyntheticVersion && slot.version) {
+      const archiveMeta = JSON.stringify({
+        __archive: true,
+        show_date: slot.version.show_date,
+        venue: slot.version.venue,
+        archive_org_url: slot.version.archive_org_url,
+        rating: slot.version.rating,
+      });
+      // Prepend metadata as a hidden JSON line, keep user notes after
+      notes = archiveMeta + (notes ? "\n" + notes : "");
+    }
+
+    const { error } = await supabase.from("setlist_slots").upsert({
       id: slot.id,
       setlist_id: setlistId,
       set_number: slot.setNumber,
       position: slot.position,
       song_id: slot.song.id,
-      notable_version_id: slot.version?.id || null,
+      notable_version_id: notableVersionId,
       added_by_user_id: user.id,
-      notes: slot.notes,
+      notes,
       segue_to_next: slot.segueToNext,
     });
+    if (error) {
+      console.error("Failed to persist slot:", error);
+    }
   }, [user]);
 
   const addSlot = useCallback(async (slot: SetlistSlotData) => {
