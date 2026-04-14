@@ -52,6 +52,10 @@ const Index = () => {
     const alreadyRedirected = sessionStorage.getItem("ds_ab_redirected");
     if (alreadyRedirected) return;
 
+    // Don't auto-redirect returning visitors — only truly new ones
+    const isReturningVisitor = localStorage.getItem("ds_visitor_id");
+    if (isReturningVisitor) return;
+
     const variant = getVariant();
     if (variant === "B") {
       sessionStorage.setItem("ds_ab_redirected", "1");
