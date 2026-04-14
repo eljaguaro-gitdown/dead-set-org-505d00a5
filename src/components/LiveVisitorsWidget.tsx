@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { User } from "lucide-react";
 import { useOnlineVisitors, type OnlineVisitor } from "@/hooks/useOnlineVisitors";
 
@@ -15,8 +16,28 @@ const pageName = (path: string) => {
   return path;
 };
 
+const formatDuration = (joinedAt: string) => {
+  const diff = Math.max(0, Date.now() - new Date(joinedAt).getTime());
+  const secs = Math.floor(diff / 1000);
+  if (secs < 60) return `${secs}s`;
+  const mins = Math.floor(secs / 60);
+  if (mins < 60) return `${mins}m`;
+  const hrs = Math.floor(mins / 60);
+  return `${hrs}h ${mins % 60}m`;
+};
+
+/** Forces a re-render every 10s so durations stay fresh */
+const useTick = (intervalMs: number) => {
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setTick((t) => t + 1), intervalMs);
+    return () => clearInterval(id);
+  }, [intervalMs]);
+};
+
 const LiveVisitorsWidget = ({ enabled }: { enabled: boolean }) => {
   const visitors = useOnlineVisitors(enabled);
+  useTick(10_000);
 
   const authed = visitors.filter((v) => v.user_id);
   const anonymous = visitors.filter((v) => !v.user_id);
@@ -40,12 +61,10 @@ const LiveVisitorsWidget = ({ enabled }: { enabled: boolean }) => {
         </div>
       ) : (
         <div className="divide-y divide-border">
-          {/* Authenticated visitors first */}
           {authed.map((v) => (
             <VisitorRow key={v.visitor_id} visitor={v} />
           ))}
 
-          {/* Anonymous summary */}
           {anonymous.length > 0 && (
             <div className="px-4 py-3 flex items-center gap-3">
               <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center shrink-0">
@@ -84,6 +103,9 @@ const VisitorRow = ({ visitor }: { visitor: OnlineVisitor }) => (
         📍 {pageName(visitor.page)}
       </p>
     </div>
+    <span className="text-xs font-mono text-muted-foreground/80 tabular-nums shrink-0">
+      {formatDuration(visitor.joined_at)}
+    </span>
     <span className="relative flex h-2 w-2 shrink-0">
       <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
     </span>
