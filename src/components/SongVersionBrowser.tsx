@@ -36,6 +36,15 @@ const SongVersionBrowser = ({ song, curatedVersions, onSelectSong, onPlayArchive
   // Merge: curated versions first (highlighted), then archive versions (deduped by date)
   const curatedDates = new Set(curatedVersions.map((v) => v.show_date));
 
+  const sortedVersions = useMemo(() => {
+    const filtered = archiveVersions.filter((av) => !curatedDates.has(av.date || ""));
+    return [...filtered].sort((a, b) => {
+      if (sortMode === "rating") return (b.avgRating || 0) - (a.avgRating || 0);
+      if (sortMode === "date-asc") return (a.date || "").localeCompare(b.date || "");
+      return (b.date || "").localeCompare(a.date || "");
+    });
+  }, [archiveVersions, curatedDates, sortMode]);
+
   const handleSelectArchiveVersion = (av: ArchiveVersion) => {
     // Create a synthetic NotableVersion so the builder can use it
     const syntheticVersion: NotableVersion = {
