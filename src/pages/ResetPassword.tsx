@@ -8,6 +8,8 @@ import { toast } from "sonner";
 import PageLayout from "@/components/PageLayout";
 import StealYourFace from "@/components/StealYourFace";
 
+const SESSION_FLAG = "dead_set_active_session";
+
 const ResetPassword = () => {
   const navigate = useNavigate();
   const [password, setPassword] = useState("");
@@ -43,6 +45,7 @@ const ResetPassword = () => {
     try {
       const { error } = await supabase.auth.updateUser({ password });
       if (error) throw error;
+      sessionStorage.setItem(SESSION_FLAG, "1");
       toast.success("Password updated! You're all set.");
       navigate("/builder");
     } catch (err: any) {

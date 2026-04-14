@@ -21,6 +21,8 @@ interface AuthModalProps {
   onBeforeRedirect?: () => void;
 }
 
+const SESSION_FLAG = "dead_set_active_session";
+
 const AuthModal = ({ open, onOpenChange, onAuthenticated, onBeforeRedirect }: AuthModalProps) => {
   const [isSignUp, setIsSignUp] = useState(true);
   const [email, setEmail] = useState("");
@@ -65,17 +67,21 @@ const AuthModal = ({ open, onOpenChange, onAuthenticated, onBeforeRedirect }: Au
           }).catch(() => {});
         }
         if (data.session) {
+          sessionStorage.setItem(SESSION_FLAG, "1");
           onOpenChange(false);
           onAuthenticated();
         } else {
           toast.success("Check your email to confirm your account!");
         }
       } else {
-        const { error } = await supabase.auth.signInWithPassword({
+        const { error, data } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
         if (error) throw error;
+        if (data.session) {
+          sessionStorage.setItem(SESSION_FLAG, "1");
+        }
         onOpenChange(false);
         onAuthenticated();
       }
