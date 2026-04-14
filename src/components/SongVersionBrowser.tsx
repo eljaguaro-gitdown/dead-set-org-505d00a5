@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Zap, ExternalLink, Headphones, Star, Loader2 } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
+import { Zap, ExternalLink, Headphones, Star, Loader2, ArrowUpDown, Calendar, TrendingUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { findManyArchiveRecordings, type ArchiveVersion } from "@/lib/archiveOrg";
 import type { Database } from "@/integrations/supabase/types";
@@ -14,9 +14,12 @@ interface SongVersionBrowserProps {
   onPlayArchive?: (url: string, songTitle: string, showDate: string, venue?: string | null) => void;
 }
 
+type SortMode = "rating" | "date-asc" | "date-desc";
+
 const SongVersionBrowser = ({ song, curatedVersions, onSelectSong, onPlayArchive }: SongVersionBrowserProps) => {
   const [archiveVersions, setArchiveVersions] = useState<ArchiveVersion[]>([]);
   const [loading, setLoading] = useState(true);
+  const [sortMode, setSortMode] = useState<SortMode>("rating");
 
   useEffect(() => {
     let cancelled = false;
@@ -32,6 +35,15 @@ const SongVersionBrowser = ({ song, curatedVersions, onSelectSong, onPlayArchive
 
   // Merge: curated versions first (highlighted), then archive versions (deduped by date)
   const curatedDates = new Set(curatedVersions.map((v) => v.show_date));
+
+  const sortedVersions = useMemo(() => {
+    const filtered = archiveVersions.filter((av) => !curatedDates.has(av.date || ""));
+    return [...filtered].sort((a, b) => {
+      if (sortMode === "rating") return (b.avgRating || 0) - (a.avgRating || 0);
+      if (sortMode === "date-asc") return (a.date || "").localeCompare(b.date || "");
+      return (b.date || "").localeCompare(a.date || "");
+    });
+  }, [archiveVersions, curatedDates, sortMode]);
 
   const handleSelectArchiveVersion = (av: ArchiveVersion) => {
     // Create a synthetic NotableVersion so the builder can use it
@@ -84,12 +96,35 @@ const SongVersionBrowser = ({ song, curatedVersions, onSelectSong, onPlayArchive
         </div>
       ) : archiveVersions.length > 0 ? (
         <div className="space-y-1.5">
-          <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-body">
-            From the Archive · {archiveVersions.length} recordings found
-          </p>
-          {archiveVersions
-            .filter((av) => !curatedDates.has(av.date || ""))
-            .map((av) => (
+          <div className="flex items-center justify-between">
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-body">
+              From the Archive · {archiveVersions.filter((av) => !curatedDates.has(av.date || "")).length} recordings
+            </p>
+            <div className="flex items-center gap-0.5">
+              <button
+                onClick={() => setSortMode("rating")}
+                className={`p-1 rounded transition-colors ${sortMode === "rating" ? "text-accent" : "text-muted-foreground hover:text-foreground"}`}
+                title="Sort by rating"
+              >
+                <TrendingUp className="w-3.5 h-3.5" />
+              </button>
+              <button
+                onClick={() => setSortMode("date-asc")}
+                className={`p-1 rounded transition-colors ${sortMode === "date-asc" ? "text-accent" : "text-muted-foreground hover:text-foreground"}`}
+                title="Oldest first"
+              >
+                <Calendar className="w-3.5 h-3.5" />
+              </button>
+              <button
+                onClick={() => setSortMode("date-desc")}
+                className={`p-1 rounded transition-colors ${sortMode === "date-desc" ? "text-accent" : "text-muted-foreground hover:text-foreground"}`}
+                title="Newest first"
+              >
+                <ArrowUpDown className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+          {sortedVersions.map((av) => (
               <ArchiveVersionCard
                 key={av.identifier}
                 version={av}
