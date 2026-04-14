@@ -13,7 +13,11 @@ const fade = (delay: number) => ({
 
 const isMobile = () => typeof window !== "undefined" && window.innerWidth < 640;
 
-const HeroSection = () => {
+interface HeroSectionProps {
+  showReturningSignIn?: boolean;
+}
+
+const HeroSection = ({ showReturningSignIn = true }: HeroSectionProps) => {
   const navigate = useNavigate();
 
   return (
@@ -70,12 +74,14 @@ const HeroSection = () => {
           <span className="font-body text-sm sm:text-base text-muted-foreground/80">
             No account needed to start — sign in when you're ready to save
           </span>
-          <button
-            onClick={() => navigate("/auth")}
-            className="font-mono text-xs tracking-[0.15em] text-primary/70 hover:text-primary transition-colors underline underline-offset-4 decoration-primary/30 hover:decoration-primary/60"
-          >
-            Returning user? Sign in here
-          </button>
+          {showReturningSignIn && (
+            <button
+              onClick={() => navigate("/auth")}
+              className="font-mono text-xs tracking-[0.15em] text-primary/70 hover:text-primary transition-colors underline underline-offset-4 decoration-primary/30 hover:decoration-primary/60"
+            >
+              Returning user? Sign in here
+            </button>
+          )}
         </motion.div>
 
         {/* 6. Secondary CTA — elevated for discoverability */}

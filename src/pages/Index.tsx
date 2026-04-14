@@ -152,7 +152,7 @@ const Index = () => {
       </SiteHeader>
 
       {/* Hero — headline, subhead, audio strip, CTAs */}
-      <HeroSection />
+      <HeroSection showReturningSignIn={!user} />
 
       {/* How It Works — 3 steps */}
       <HowItWorks />
