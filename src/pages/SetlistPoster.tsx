@@ -98,7 +98,34 @@ const SetlistPoster = () => {
                 ? supabase.from("notable_versions").select("*").eq("id", slot.notable_version_id).single()
                 : Promise.resolve({ data: null }),
             ]);
-            return { ...slot, song: songRes.data!, version: versionRes.data } as EnrichedSlot;
+
+            let version = versionRes.data;
+            let notes = slot.notes || "";
+
+            // Reconstruct synthetic archive version from stored metadata in notes
+            if (!version && notes.startsWith("{\"__archive\":true")) {
+              try {
+                const nlIndex = notes.indexOf("\n");
+                const metaStr = nlIndex > -1 ? notes.substring(0, nlIndex) : notes;
+                const meta = JSON.parse(metaStr);
+                if (meta.__archive) {
+                  version = {
+                    id: `archive-reconstructed-${slot.id}`,
+                    song_id: slot.song_id,
+                    show_date: meta.show_date || "",
+                    archive_org_url: meta.archive_org_url || null,
+                    venue: meta.venue || null,
+                    city: null,
+                    era_id: null,
+                    rating: meta.rating || null,
+                    description: null,
+                  };
+                  notes = nlIndex > -1 ? notes.substring(nlIndex + 1) : "";
+                }
+              } catch { /* not valid JSON */ }
+            }
+
+            return { ...slot, notes, song: songRes.data!, version } as EnrichedSlot;
           })
         );
         setSlots(enriched);
