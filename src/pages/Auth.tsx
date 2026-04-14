@@ -10,6 +10,8 @@ import PageLayout from "@/components/PageLayout";
 import StealYourFace from "@/components/StealYourFace";
 import { getPostAuthRedirect } from "@/lib/postAuthRedirect";
 
+const SESSION_FLAG = "dead_set_active_session";
+
 const Auth = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -74,6 +76,7 @@ const Auth = () => {
           }).catch(() => {});
         }
         if (data.session && data.session.user) {
+          sessionStorage.setItem(SESSION_FLAG, "1");
           await smartRedirect(data.session.user.id);
         } else {
           toast.success("Check your email to confirm your account!");
@@ -82,6 +85,7 @@ const Auth = () => {
         const { error, data } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         if (data.session?.user) {
+          sessionStorage.setItem(SESSION_FLAG, "1");
           await smartRedirect(data.session.user.id);
         }
       }
