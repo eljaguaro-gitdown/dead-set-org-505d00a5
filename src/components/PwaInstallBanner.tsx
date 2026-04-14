@@ -22,7 +22,7 @@ const PwaInstallBanner = () => {
 
     // Check if dismissed recently (7 days)
     const dismissed = localStorage.getItem("pwa-banner-dismissed");
-    if (dismissed && Date.now() - Number(dismissed) < 7 * 24 * 60 * 60 * 1000) return;
+    if (dismissed && Date.now() - Number(dismissed) < 24 * 60 * 60 * 1000) return;
 
     // Detect platform
     if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
@@ -39,7 +39,7 @@ const PwaInstallBanner = () => {
     window.addEventListener("beforeinstallprompt", handler);
 
     // Show banner after a short delay so it doesn't flash immediately
-    const timer = setTimeout(() => setShowBanner(true), 3000);
+    const timer = setTimeout(() => setShowBanner(true), 1000);
 
     return () => {
       window.removeEventListener("beforeinstallprompt", handler);
