@@ -36,6 +36,37 @@ const SongVersionBrowser = ({ song, curatedVersions, onSelectSong, onPlayArchive
     return () => { cancelled = true; };
   }, [song.id, song.title]);
 
+  // Fetch AI descriptions for the top-rated versions
+  useEffect(() => {
+    if (archiveVersions.length === 0 || loading) return;
+    let cancelled = false;
+    setLoadingDescriptions(true);
+
+    const topByRating = [...archiveVersions]
+      .sort((a, b) => (b.avgRating || 0) - (a.avgRating || 0))
+      .slice(0, 10);
+
+    supabase.functions.invoke("describe-versions", {
+      body: {
+        songTitle: song.title,
+        versions: topByRating.map((v) => ({
+          identifier: v.identifier,
+          date: v.date,
+          venue: v.venue,
+          rating: v.avgRating,
+        })),
+      },
+    }).then(({ data, error }) => {
+      if (!cancelled && data?.descriptions) {
+        setDescriptions(data.descriptions);
+      }
+      if (error) console.warn("Failed to fetch version descriptions:", error);
+      if (!cancelled) setLoadingDescriptions(false);
+    });
+
+    return () => { cancelled = true; };
+  }, [archiveVersions, loading, song.title]);
+
   // Merge: curated versions first (highlighted), then archive versions (deduped by date)
   const curatedDates = new Set(curatedVersions.map((v) => v.show_date));
 
