@@ -228,8 +228,23 @@ export const useSetlist = (user: User | null, setlistId?: string | null) => {
         const slot = slots.find((s) => s.id === id);
         if (!slot) return;
         const merged = { ...slot, ...updates };
+
+        // Preserve archive metadata prefix in notes for synthetic versions
+        let notesToSave = merged.notes || "";
+        const isSyntheticVersion = merged.version?.id?.startsWith("archive-");
+        if (isSyntheticVersion && merged.version) {
+          const archiveMeta = JSON.stringify({
+            __archive: true,
+            show_date: merged.version.show_date,
+            venue: merged.version.venue,
+            archive_org_url: merged.version.archive_org_url,
+            rating: merged.version.rating,
+          });
+          notesToSave = archiveMeta + (notesToSave ? "\n" + notesToSave : "");
+        }
+
         await supabase.from("setlist_slots").update({
-          notes: merged.notes,
+          notes: notesToSave,
           segue_to_next: merged.segueToNext,
           position: merged.position,
           set_number: merged.setNumber,
