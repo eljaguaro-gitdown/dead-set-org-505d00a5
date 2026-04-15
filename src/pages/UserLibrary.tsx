@@ -22,6 +22,7 @@ interface SetlistWithMeta {
   slot_count: number;
   preview_songs: string[];
   created_at: string;
+  is_public: boolean;
 }
 
 interface UserProfile {
