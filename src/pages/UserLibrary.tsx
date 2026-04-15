@@ -220,9 +220,14 @@ const UserLibrary = () => {
                   <div className="h-0.5" style={{ background: `hsl(${eraColor} / 0.5)` }} />
                   <div className="p-4">
                     <div className="flex items-center justify-between mb-2">
-                      <h3 className="font-display text-sm text-foreground group-hover:text-primary transition-colors leading-tight line-clamp-2">
-                        {setlist.title}
-                      </h3>
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <h3 className="font-display text-sm text-foreground group-hover:text-primary transition-colors leading-tight line-clamp-2">
+                          {setlist.title}
+                        </h3>
+                        {!setlist.is_public && (
+                          <Lock className="w-3 h-3 text-muted-foreground/60 shrink-0" title="Private" />
+                        )}
+                      </div>
                       <FavoriteButton isFavorite={isFavorite(setlist.id)} onToggle={() => handleToggleFav(setlist.id)} />
                     </div>
                     <div className="flex items-center gap-2 mt-2 flex-wrap">
