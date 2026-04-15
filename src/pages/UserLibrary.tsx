@@ -133,6 +133,7 @@ const UserLibrary = () => {
             slot_count: slots.length,
             preview_songs: preview,
             created_at: s.created_at,
+            is_public: s.is_public ?? true,
           };
         })
         .filter((s) => s.slot_count > 0 && s.title !== "Untitled Setlist");
