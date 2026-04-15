@@ -112,12 +112,12 @@ const SortableSlotItem = ({
         <div
           className={`rounded-lg bg-card border p-3 group transition-all duration-300 ${isPlaying ? 'border-primary ring-2 ring-primary/30 shadow-[0_0_20px_-4px_hsl(var(--primary)/0.4)]' : 'border-border song-glow'} ${onPlayVersion ? 'cursor-pointer hover:border-primary/50' : ''}`}
           onClick={(e) => {
-            // Don't trigger play if clicking on interactive elements
             const target = e.target as HTMLElement;
             if (target.closest('button') || target.closest('a') || target.closest('textarea')) return;
             if (!onPlayVersion) return;
             const playSlot = {
               ...slot,
+              directTrackUrl: archiveResult?.directTrackUrl || null,
               version: slot.version || (archiveResult ? {
                 id: "", song_id: slot.song.id, show_date: archiveResult.date || "",
                 archive_org_url: archiveResult.url, venue: archiveResult.venue,
@@ -170,6 +170,7 @@ const SortableSlotItem = ({
                   onClick={() => {
                     const playSlot = {
                       ...slot,
+                      directTrackUrl: archiveResult.directTrackUrl || null,
                       version: slot.version || {
                         id: "",
                         song_id: slot.song.id,

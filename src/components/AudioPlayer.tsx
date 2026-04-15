@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Play, Pause, Volume2, VolumeX, X, Loader2, Cast, ChevronRight } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { matchScore } from "@/lib/archiveOrg";
+import { findTrackInRecording, matchScore } from "@/lib/archiveOrg";
 
 interface Track {
   title: string;
@@ -49,11 +49,12 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
     const fetchTracks = async () => {
       setLoading(true);
       setError(null);
+      setTracks([]);
+      setCurrentTrack(0);
 
-      // If we have a direct track URL, just use it
+      // If we already know the exact track, use it immediately.
       if (directTrackUrl) {
         setTracks([{ title: songTitle, src: directTrackUrl }]);
-        setCurrentTrack(0);
         setLoading(false);
         return;
       }
@@ -66,6 +67,16 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
       }
 
       try {
+        // First try to resolve the exact song inside this recording.
+        const resolvedTrackUrl = await findTrackInRecording(archiveUrl, songTitle);
+        if (cancelled) return;
+        if (resolvedTrackUrl) {
+          setTracks([{ title: songTitle, src: resolvedTrackUrl }]);
+          setLoading(false);
+          return;
+        }
+
+        // Only fall back to fuzzy matching if exact resolution fails.
         const res = await fetch(`https://archive.org/metadata/${identifier}`);
         if (cancelled) return;
         if (!res.ok) throw new Error("Failed to fetch metadata");
@@ -87,7 +98,6 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
           setError("No audio files found");
         } else {
           setTracks(audioFiles);
-          // Use fuzzy matching to find the right track
           let bestIdx = 0;
           let bestScore = 0;
           audioFiles.forEach((t: Track, i: number) => {
