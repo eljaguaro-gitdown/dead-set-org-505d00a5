@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Music, Play, Zap, ArrowLeft } from "lucide-react";
+import { Music, Play, Zap, ArrowLeft, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import PageLayout from "@/components/PageLayout";
 import SiteHeader from "@/components/SiteHeader";
 import DancingBearButton from "@/components/DancingBearButton";
@@ -21,6 +22,7 @@ interface SetlistWithMeta {
   slot_count: number;
   preview_songs: string[];
   created_at: string;
+  is_public: boolean;
 }
 
 interface UserProfile {
@@ -50,10 +52,12 @@ const getEraColor = (eraName: string | null) => {
 const UserLibrary = () => {
   const { userId } = useParams<{ userId: string }>();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { isFavorite, toggleFavorite, isAuthenticated } = useFavorites();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [setlists, setSetlists] = useState<SetlistWithMeta[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     if (!userId) return;
@@ -61,15 +65,29 @@ const UserLibrary = () => {
     const fetch = async () => {
       setLoading(true);
 
-      // Fetch profile and public setlists in parallel
+      // Check if viewer is admin
+      let viewerIsAdmin = false;
+      if (user) {
+        const { data: roleData } = await supabase.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin").maybeSingle();
+        viewerIsAdmin = !!roleData;
+        setIsAdmin(viewerIsAdmin);
+      }
+
+      // Build setlists query — admin sees all, others see public only
+      let setlistsQuery = supabase
+        .from("setlists")
+        .select("id, title, era_id, play_count, upvote_count, created_at, is_public")
+        .eq("creator_id", userId!)
+        .order("created_at", { ascending: false });
+
+      if (!viewerIsAdmin) {
+        setlistsQuery = setlistsQuery.eq("is_public", true);
+      }
+
+      // Fetch profile and setlists in parallel
       const [profileRes, setlistsRes] = await Promise.all([
-        supabase.from("profiles").select("user_id, display_name, avatar_url").eq("user_id", userId).single(),
-        supabase
-          .from("setlists")
-          .select("id, title, era_id, play_count, upvote_count, created_at")
-          .eq("creator_id", userId)
-          .eq("is_public", true)
-          .order("created_at", { ascending: false }),
+        supabase.from("profiles").select("user_id, display_name, avatar_url").eq("user_id", userId!).single(),
+        setlistsQuery,
       ]);
 
       if (profileRes.data) setProfile(profileRes.data);
@@ -115,6 +133,7 @@ const UserLibrary = () => {
             slot_count: slots.length,
             preview_songs: preview,
             created_at: s.created_at,
+            is_public: s.is_public ?? true,
           };
         })
         .filter((s) => s.slot_count > 0 && s.title !== "Untitled Setlist");
@@ -165,7 +184,10 @@ const UserLibrary = () => {
           <div>
             <h1 className="font-display text-2xl text-foreground">{displayName}</h1>
             <p className="font-body text-sm text-muted-foreground">
-              {loading ? "Loading..." : `${setlists.length} public setlist${setlists.length !== 1 ? "s" : ""}`}
+              {loading ? "Loading..." : isAdmin
+                ? `${setlists.length} setlist${setlists.length !== 1 ? "s" : ""} (${setlists.filter(s => !s.is_public).length} private)`
+                : `${setlists.length} public setlist${setlists.length !== 1 ? "s" : ""}`
+              }
             </p>
           </div>
         </div>
@@ -198,9 +220,14 @@ const UserLibrary = () => {
                   <div className="h-0.5" style={{ background: `hsl(${eraColor} / 0.5)` }} />
                   <div className="p-4">
                     <div className="flex items-center justify-between mb-2">
-                      <h3 className="font-display text-sm text-foreground group-hover:text-primary transition-colors leading-tight line-clamp-2">
-                        {setlist.title}
-                      </h3>
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <h3 className="font-display text-sm text-foreground group-hover:text-primary transition-colors leading-tight line-clamp-2">
+                          {setlist.title}
+                        </h3>
+                        {!setlist.is_public && (
+                          <Lock className="w-3 h-3 text-muted-foreground/60 shrink-0" />
+                        )}
+                      </div>
                       <FavoriteButton isFavorite={isFavorite(setlist.id)} onToggle={() => handleToggleFav(setlist.id)} />
                     </div>
                     <div className="flex items-center gap-2 mt-2 flex-wrap">
