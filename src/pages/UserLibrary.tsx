@@ -225,7 +225,7 @@ const UserLibrary = () => {
                           {setlist.title}
                         </h3>
                         {!setlist.is_public && (
-                          <Lock className="w-3 h-3 text-muted-foreground/60 shrink-0" title="Private" />
+                          <Lock className="w-3 h-3 text-muted-foreground/60 shrink-0" />
                         )}
                       </div>
                       <FavoriteButton isFavorite={isFavorite(setlist.id)} onToggle={() => handleToggleFav(setlist.id)} />
