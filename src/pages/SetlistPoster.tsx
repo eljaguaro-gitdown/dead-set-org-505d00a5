@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Share2, Zap, Play } from "lucide-react";
 import SetlistComments from "@/components/SetlistComments";
@@ -326,7 +326,7 @@ const SetlistPoster = () => {
                   className="font-hand text-sm mt-2"
                   style={{ color: "hsl(28 20% 40%)" }}
                 >
-                  curated by <span className="underline decoration-wavy decoration-1 underline-offset-2">{creatorName}</span>
+                  curated by <Link to={`/user/${setlist.creator_id}`} className="underline decoration-wavy decoration-1 underline-offset-2 hover:opacity-70 transition-opacity">{creatorName}</Link>
                   {eraName && (
                     <>
                       {" · "}
