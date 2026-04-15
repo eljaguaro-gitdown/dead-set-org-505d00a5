@@ -8,6 +8,7 @@ const GlobalAudioPlayer = () => {
 
   return (
     <AudioPlayer
+      key={`${playingSlot.id}-${playingSlot.directTrackUrl || playingSlot.version?.archive_org_url || playingSlot.song.id}`}
       archiveUrl={playingSlot.version.archive_org_url}
       songTitle={playingSlot.song.title}
       showDate={playingSlot.version.show_date}
