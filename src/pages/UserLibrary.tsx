@@ -184,7 +184,10 @@ const UserLibrary = () => {
           <div>
             <h1 className="font-display text-2xl text-foreground">{displayName}</h1>
             <p className="font-body text-sm text-muted-foreground">
-              {loading ? "Loading..." : `${setlists.length} public setlist${setlists.length !== 1 ? "s" : ""}`}
+              {loading ? "Loading..." : isAdmin
+                ? `${setlists.length} setlist${setlists.length !== 1 ? "s" : ""} (${setlists.filter(s => !s.is_public).length} private)`
+                : `${setlists.length} public setlist${setlists.length !== 1 ? "s" : ""}`
+              }
             </p>
           </div>
         </div>
