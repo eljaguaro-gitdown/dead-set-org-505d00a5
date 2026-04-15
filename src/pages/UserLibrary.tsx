@@ -52,10 +52,12 @@ const getEraColor = (eraName: string | null) => {
 const UserLibrary = () => {
   const { userId } = useParams<{ userId: string }>();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { isFavorite, toggleFavorite, isAuthenticated } = useFavorites();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [setlists, setSetlists] = useState<SetlistWithMeta[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     if (!userId) return;
