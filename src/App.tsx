@@ -30,6 +30,7 @@ const Backstage = lazy(() => import("./pages/Backstage"));
 const Unsubscribe = lazy(() => import("./pages/Unsubscribe"));
 const Updates = lazy(() => import("./pages/Updates"));
 const AdminChangelog = lazy(() => import("./pages/AdminChangelog"));
+const UserLibrary = lazy(() => import("./pages/UserLibrary"));
 
 const queryClient = new QueryClient();
 
@@ -59,6 +60,7 @@ const App = () => (
               <Route path="/unsubscribe" element={<Unsubscribe />} />
               <Route path="/updates" element={<Updates />} />
               <Route path="/admin/changelog" element={<AdminChangelog />} />
+              <Route path="/user/:userId" element={<UserLibrary />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
