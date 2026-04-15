@@ -194,9 +194,9 @@ const Index = () => {
                       </span>
                     )}
                   </div>
-                  <p className="font-body text-xs text-muted-foreground mt-1 truncate">
+                  <Link to={`/user/${setlist.creator_id}`} onClick={(e) => e.stopPropagation()} className="font-body text-xs text-muted-foreground mt-1 truncate block hover:text-primary transition-colors">
                     by {setlist.creator_name}
-                  </p>
+                  </Link>
                   <div className="flex items-center gap-2 mt-3">
                     {setlist.era_name && (
                       <span className="px-2 py-0.5 text-[10px] font-mono rounded-md border border-primary/20 text-primary/70 tracking-wider uppercase">

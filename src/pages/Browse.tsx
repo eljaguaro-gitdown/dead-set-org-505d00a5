@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Zap, Search, SortAsc, Play, Music, TrendingUp, Heart } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -407,7 +407,7 @@ const FeaturedCard = ({ setlist, onClick }: { setlist: SetlistWithMeta; onClick:
           ) : (
             <div className="w-5 h-5 rounded-full bg-muted" />
           )}
-          <span className="text-[10px] font-body text-muted-foreground">{setlist.creator_name}</span>
+          <Link to={`/user/${setlist.creator_id}`} onClick={(e) => e.stopPropagation()} className="text-[10px] font-body text-muted-foreground hover:text-primary transition-colors">{setlist.creator_name}</Link>
         </div>
         <h3 className="font-display text-lg text-foreground group-hover:text-primary transition-colors leading-tight line-clamp-2">
           {setlist.title}
@@ -475,7 +475,7 @@ const SetlistCard = ({ setlist, index, onClick, isFav, onToggleFav }: { setlist:
             ) : (
               <div className="w-4 h-4 rounded-full bg-muted" />
             )}
-            <span className="text-[10px] font-body text-muted-foreground truncate">{setlist.creator_name}</span>
+            <Link to={`/user/${setlist.creator_id}`} onClick={(e) => e.stopPropagation()} className="text-[10px] font-body text-muted-foreground truncate hover:text-primary transition-colors">{setlist.creator_name}</Link>
           </div>
           <FavoriteButton isFavorite={isFav} onToggle={() => onToggleFav(setlist.id)} />
         </div>
@@ -544,7 +544,7 @@ const TrendingCard = ({ setlist, onClick }: { setlist: SetlistWithMeta; onClick:
         <h3 className="font-display text-xs text-foreground group-hover:text-primary transition-colors leading-tight line-clamp-2">
           {setlist.title}
         </h3>
-        <p className="text-[9px] font-body text-muted-foreground mt-1 truncate">{setlist.creator_name}</p>
+        <Link to={`/user/${setlist.creator_id}`} onClick={(e) => e.stopPropagation()} className="text-[9px] font-body text-muted-foreground mt-1 truncate block hover:text-primary transition-colors">{setlist.creator_name}</Link>
         <div className="flex items-center gap-2 mt-2">
           <span className="text-[10px] font-body text-accent flex items-center gap-0.5">
             <Play className="w-2.5 h-2.5 fill-accent" /> {setlist.play_count} plays

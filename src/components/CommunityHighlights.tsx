@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { TrendingUp, Zap, Music, ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,6 +11,7 @@ type Setlist = Omit<Database["public"]["Tables"]["setlists"]["Row"], "share_toke
 interface SetlistCard {
   id: string;
   title: string;
+  creator_id: string;
   creator_name: string;
   creator_avatar: string | null;
   era_name: string | null;
@@ -85,6 +86,7 @@ const CommunityHighlights = () => {
         return {
           id: s.id,
           title: s.title,
+          creator_id: s.creator_id,
           creator_name: profile?.display_name || "Unknown Head",
           creator_avatar: profile?.avatar_url || null,
           era_name: s.era_id ? eraMap.get(s.era_id) || null : null,
@@ -217,9 +219,9 @@ const SetlistMiniCard = ({ setlist, index }: { setlist: SetlistCard; index: numb
       <h4 className="font-display text-sm text-foreground truncate group-hover:text-primary transition-colors leading-tight">
         {setlist.title}
       </h4>
-      <p className="font-body text-[11px] text-muted-foreground mt-1 truncate">
+      <Link to={`/user/${setlist.creator_id}`} onClick={(e) => e.stopPropagation()} className="font-body text-[11px] text-muted-foreground mt-1 truncate block hover:text-primary transition-colors">
         by {setlist.creator_name}
-      </p>
+      </Link>
 
       {/* Song preview */}
       {setlist.preview_songs.length > 0 && (
