@@ -65,15 +65,29 @@ const UserLibrary = () => {
     const fetch = async () => {
       setLoading(true);
 
-      // Fetch profile and public setlists in parallel
+      // Check if viewer is admin
+      let viewerIsAdmin = false;
+      if (user) {
+        const { data: roleData } = await supabase.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin").maybeSingle();
+        viewerIsAdmin = !!roleData;
+        setIsAdmin(viewerIsAdmin);
+      }
+
+      // Build setlists query — admin sees all, others see public only
+      let setlistsQuery = supabase
+        .from("setlists")
+        .select("id, title, era_id, play_count, upvote_count, created_at, is_public")
+        .eq("creator_id", userId!)
+        .order("created_at", { ascending: false });
+
+      if (!viewerIsAdmin) {
+        setlistsQuery = setlistsQuery.eq("is_public", true);
+      }
+
+      // Fetch profile and setlists in parallel
       const [profileRes, setlistsRes] = await Promise.all([
-        supabase.from("profiles").select("user_id, display_name, avatar_url").eq("user_id", userId).single(),
-        supabase
-          .from("setlists")
-          .select("id, title, era_id, play_count, upvote_count, created_at")
-          .eq("creator_id", userId)
-          .eq("is_public", true)
-          .order("created_at", { ascending: false }),
+        supabase.from("profiles").select("user_id, display_name, avatar_url").eq("user_id", userId!).single(),
+        setlistsQuery,
       ]);
 
       if (profileRes.data) setProfile(profileRes.data);
