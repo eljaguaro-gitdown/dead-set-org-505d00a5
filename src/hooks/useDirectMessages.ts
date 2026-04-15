@@ -331,12 +331,15 @@ export const useDirectMessages = (user: User | null) => {
 
     const conversationId = crypto.randomUUID();
 
+    // Must satisfy CHECK (user_one < user_two) constraint
+    const [u1, u2] = user.id < memberIds[0] ? [user.id, memberIds[0]] : [memberIds[0], user.id];
+
     const { error: createError } = await supabase
       .from("conversations")
       .insert({
         id: conversationId,
-        user_one: user.id,
-        user_two: memberIds[0],
+        user_one: u1,
+        user_two: u2,
         is_group: true,
         name: name || null,
       });
