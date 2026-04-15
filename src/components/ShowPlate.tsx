@@ -195,12 +195,27 @@ function drawPlate(
     ctx.stroke();
   });
 
-  // 9 + 10 — Main plate text with lightning bolt
-  const mainFontSize = Math.round(H * 0.295);
-  ctx.font = `700 ${mainFontSize}px "Playfair Display", serif`;
-  ctx.fillStyle = hexRgba(era.primary, 0.93);
+  // 9 + 10 — Main plate text with lightning bolt (auto-sized to fit)
+  const maxTextW = W * 0.82; // keep text within 82% of plate width
+  let mainFontSize = Math.round(H * 0.295);
   ctx.textBaseline = "alphabetic";
   const mainY = H * 0.765;
+
+  // Measure and shrink until it fits
+  const measureTotal = (fs: number) => {
+    ctx.font = `700 ${fs}px "Playfair Display", serif`;
+    if (plateRight) {
+      return ctx.measureText(plateLeft).width + fs * 0.35 + ctx.measureText(plateRight).width;
+    }
+    return ctx.measureText(plateLeft).width;
+  };
+
+  while (mainFontSize > 40 && measureTotal(mainFontSize) > maxTextW) {
+    mainFontSize -= 4;
+  }
+
+  ctx.font = `700 ${mainFontSize}px "Playfair Display", serif`;
+  ctx.fillStyle = hexRgba(era.primary, 0.93);
 
   if (plateRight) {
     const leftWidth = ctx.measureText(plateLeft).width;
@@ -212,7 +227,6 @@ function drawPlate(
     ctx.textAlign = "left";
     ctx.fillText(plateLeft, startX, mainY);
 
-    // Lightning bolt
     const boltX = startX + leftWidth + boltW / 2;
     const boltSize = mainFontSize * 0.5;
     drawBolt(ctx, boltX, mainY - mainFontSize * 0.4, boltSize, hexRgba(era.accent, 0.88));
