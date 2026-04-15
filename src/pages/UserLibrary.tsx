@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Music, Play, Zap, ArrowLeft } from "lucide-react";
+import { Music, Play, Zap, ArrowLeft, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import PageLayout from "@/components/PageLayout";
 import SiteHeader from "@/components/SiteHeader";
 import DancingBearButton from "@/components/DancingBearButton";
