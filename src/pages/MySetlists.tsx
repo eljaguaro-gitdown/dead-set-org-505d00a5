@@ -585,6 +585,56 @@ const MySetlists = () => {
           </div>
         )}
 
+        {/* Private setlist reminder */}
+        {!loading && (() => {
+          const privateSetlists = setlists.filter(s => !s.is_public);
+          if (privateSetlists.length === 0) return null;
+          return (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3, duration: 0.4 }}
+              className="mt-4 rounded-xl border border-primary/20 bg-primary/5 p-4"
+            >
+              <div className="flex items-start gap-3">
+                <Lock className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="font-body text-sm text-foreground">
+                    You have {privateSetlists.length} private setlist{privateSetlists.length !== 1 ? "s" : ""}
+                  </p>
+                  <p className="font-body text-xs text-muted-foreground mt-0.5">
+                    Share your creations with the Dead-Set community — make them public so others can discover and enjoy them.
+                  </p>
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    {privateSetlists.slice(0, 5).map((s) => (
+                      <Button
+                        key={s.id}
+                        variant="outline"
+                        size="sm"
+                        className="gap-1.5 border-primary/30 text-primary font-body text-xs h-7 px-2.5 hover:bg-primary/10"
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          await supabase.from("setlists").update({ is_public: true }).eq("id", s.id);
+                          setSetlists((prev) => prev.map((sl) => sl.id === s.id ? { ...sl, is_public: true } : sl));
+                          toast.success(`"${s.title}" is now public`);
+                        }}
+                      >
+                        <Globe className="w-3 h-3" />
+                        <span className="truncate max-w-[120px]">{s.title}</span>
+                      </Button>
+                    ))}
+                    {privateSetlists.length > 5 && (
+                      <span className="font-body text-xs text-muted-foreground self-center">
+                        +{privateSetlists.length - 5} more
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          );
+        })()}
+
         {/* Saved / Favorited Setlists from other creators */}
         {!savedLoading && savedSetlists.length > 0 && (
           <motion.div
