@@ -218,7 +218,7 @@ const Admin = () => {
             <User className="w-3 h-3 text-primary" />
           )}
         </div>
-        <span className="text-xs text-foreground font-medium">{name}</span>
+        <button onClick={() => navigate(`/user/${userId}`)} className="text-xs text-foreground font-medium hover:text-primary transition-colors">{name}</button>
         <button
           onClick={() => navigate(`/messages?to=${userId}`)}
           className="inline-flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-colors ml-1"
@@ -496,9 +496,12 @@ const Admin = () => {
                     {/* Info */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className="font-body text-sm text-foreground font-medium truncate">
+                        <button
+                          onClick={() => navigate(`/user/${u.id}`)}
+                          className="font-body text-sm text-foreground font-medium truncate hover:text-primary transition-colors"
+                        >
                           {u.displayName || u.email?.split("@")[0]}
-                        </span>
+                        </button>
                         {!u.emailConfirmedAt && (
                           <span className="text-[10px] px-1.5 py-0.5 rounded bg-yellow-500/10 text-yellow-600 font-body">
                             Unverified
@@ -530,7 +533,7 @@ const Admin = () => {
                         Last seen {timeAgo(u.lastSignInAt)}
                       </span>
                       <button
-                        onClick={() => navigate(`/my-setlists?user=${u.id}`)}
+                        onClick={() => navigate(`/user/${u.id}`)}
                         className="text-xs font-body text-primary hover:text-primary/80 transition-colors flex items-center gap-1 mt-0.5"
                       >
                         <ListMusic className="w-3 h-3" />
