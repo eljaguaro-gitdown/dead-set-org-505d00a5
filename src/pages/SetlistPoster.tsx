@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Share2, Zap, Play } from "lucide-react";
@@ -13,6 +13,7 @@ import ShareDropdown from "@/components/ShareDropdown";
 import ShareFlow from "@/components/ShareFlow";
 import ShowPlate from "@/components/ShowPlate";
 import { toast } from "sonner";
+import { findArchiveRecordings, type ArchiveResult } from "@/lib/archiveOrg";
 import type { Database } from "@/integrations/supabase/types";
 
 type Setlist = Omit<Database["public"]["Tables"]["setlists"]["Row"], "share_token">;
@@ -60,6 +61,7 @@ const SetlistPoster = () => {
   const [upvoting, setUpvoting] = useState(false);
   const [hoveredSlot, setHoveredSlot] = useState<string | null>(null);
   const [shareFlowOpen, setShareFlowOpen] = useState(false);
+  const [resolvedArchives, setResolvedArchives] = useState<Record<string, ArchiveResult | null>>({});
 
   const eraTheme = useMemo(() => getEraTheme(eraName), [eraName]);
 
@@ -174,6 +176,38 @@ const SetlistPoster = () => {
       .then(({ data }) => setHasUpvoted(!!data));
   }, [id, user]);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    const resolveArchives = async () => {
+      const unresolvedSongs = Array.from(
+        new Set(
+          slots
+            .filter((slot) => !slot.version?.archive_org_url)
+            .map((slot) => slot.song.title)
+        )
+      );
+
+      if (unresolvedSongs.length === 0) return;
+
+      const results = await findArchiveRecordings(unresolvedSongs);
+      if (cancelled) return;
+
+      const nextResolved: Record<string, ArchiveResult | null> = {};
+      unresolvedSongs.forEach((title) => {
+        nextResolved[title] = results.get(title) ?? null;
+      });
+
+      setResolvedArchives((prev) => ({ ...prev, ...nextResolved }));
+    };
+
+    resolveArchives();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [slots]);
+
   const handleUpvote = async () => {
     if (!user) { toast.error("Sign in to upvote"); navigate("/auth"); return; }
     if (!id || hasUpvoted || upvoting) return;
@@ -197,26 +231,37 @@ const SetlistPoster = () => {
     ? `Check out this${eraName ? ` ${eraName}` : ""} dream Dead show by ${creatorName}. ${slots.length} songs!`
     : undefined;
 
-  const handlePlaySong = (slot: EnrichedSlot) => {
-    playSingle({
+  const buildPlayableSlot = useCallback((slot: EnrichedSlot) => {
+    const resolvedArchive = resolvedArchives[slot.song.title] ?? null;
+    const resolvedVersion = slot.version || (resolvedArchive ? {
+      id: "",
+      song_id: slot.song.id,
+      show_date: resolvedArchive.date || "",
+      archive_org_url: resolvedArchive.url,
+      venue: resolvedArchive.venue,
+      city: null,
+      era_id: null,
+      rating: null,
+      description: null,
+    } : null);
+
+    return {
       id: slot.id,
       song: { id: slot.song.id, title: slot.song.title },
-      version: slot.version,
+      version: resolvedVersion,
       setNumber: slot.set_number,
       position: slot.position,
       segueToNext: slot.segue_to_next || false,
-    });
+      directTrackUrl: resolvedArchive?.directTrackUrl || null,
+    };
+  }, [resolvedArchives]);
+
+  const handlePlaySong = (slot: EnrichedSlot) => {
+    playSingle(buildPlayableSlot(slot));
   };
 
   const handlePlayAll = async () => {
-    const playable = slots.map((s) => ({
-      id: s.id,
-      song: { id: s.song.id, title: s.song.title },
-      version: s.version,
-      setNumber: s.set_number,
-      position: s.position,
-      segueToNext: s.segue_to_next || false,
-    }));
+    const playable = slots.map(buildPlayableSlot);
     await globalPlaySetlist(playable, id);
   };
 
