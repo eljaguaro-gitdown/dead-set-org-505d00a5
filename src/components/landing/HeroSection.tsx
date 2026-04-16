@@ -3,6 +3,8 @@ import { motion } from "framer-motion";
 import { ChevronRight } from "lucide-react";
 import StealYourFace from "@/components/StealYourFace";
 import AmbientPlayer from "@/components/AmbientPlayer";
+import SocialProof from "@/components/landing/SocialProof";
+import FeaturedCards from "@/components/landing/FeaturedCards";
 import { Button } from "@/components/ui/button";
 
 const fade = (delay: number) => ({
@@ -13,11 +15,24 @@ const fade = (delay: number) => ({
 
 const isMobile = () => typeof window !== "undefined" && window.innerWidth < 640;
 
-interface HeroSectionProps {
-  showReturningSignIn?: boolean;
+interface FeaturedSetlist {
+  id: string;
+  title: string;
+  creator_id: string;
+  era_id: string | null;
+  upvote_count: number;
+  play_count: number;
+  creator_name?: string;
+  era_name?: string;
+  song_count?: number;
 }
 
-const HeroSection = ({ showReturningSignIn = true }: HeroSectionProps) => {
+interface HeroSectionProps {
+  showReturningSignIn?: boolean;
+  featured?: FeaturedSetlist[];
+}
+
+const HeroSection = ({ showReturningSignIn = true, featured = [] }: HeroSectionProps) => {
   const navigate = useNavigate();
 
   return (
@@ -28,30 +43,32 @@ const HeroSection = ({ showReturningSignIn = true }: HeroSectionProps) => {
       </div>
 
       <div
-        className="flex flex-col items-center gap-6 sm:gap-8 relative z-10 text-center max-w-2xl w-full py-12 sm:py-16"
+        className="flex flex-col items-center gap-5 sm:gap-8 relative z-10 text-center max-w-2xl w-full py-10 sm:py-16"
       >
         {/* 1. SYF Logo */}
         <div>
-          <StealYourFace size={isMobile() ? 80 : 140} />
+          <StealYourFace size={isMobile() ? 72 : 140} />
         </div>
 
-        {/* 2. Headline */}
+        {/* 2. Headline — tighter for mobile */}
         <h1
           className="font-display text-2xl sm:text-4xl md:text-5xl text-primary leading-none tracking-tight"
         >
-          2,300 shows. 50 years of magic.
+          Your dream Dead show,
           <br />
-          Yours to explore.
+          built from real recordings.
         </h1>
 
-        {/* 3. Subhead */}
+        {/* 3. Subhead — one punchy sentence */}
         <p
-          className="font-body text-sm sm:text-base text-muted-foreground leading-relaxed max-w-[600px] px-2"
+          className="font-body text-sm sm:text-base text-muted-foreground leading-relaxed max-w-[480px] px-2"
         >
-          Dead-Set.Org pairs you with Cosmic Charlie — a guide who knows every show the Dead ever played. Tell him your
-          mood, pick an era, and he'll build you a full concert from real live recordings in the Archive. Every note is
-          real. Every show is yours to discover.
+          Tell Cosmic Charlie your vibe and he'll craft a full concert
+          from 2,300+ shows in the Archive — every note is real.
         </p>
+
+        {/* 3b. Social proof */}
+        <SocialProof />
 
         {/* 4. Audio Preview Strip */}
         <motion.div {...fade(0.16)} className="flex flex-col items-center gap-2">
@@ -72,22 +89,23 @@ const HeroSection = ({ showReturningSignIn = true }: HeroSectionProps) => {
             <ChevronRight className="w-4 h-4" />
           </Button>
           {showReturningSignIn && (
-            <span className="font-body text-sm sm:text-base text-muted-foreground/80">
-              No account needed to start — sign in when you're ready to save
+            <span className="font-body text-sm text-muted-foreground/80">
+              No account needed — sign in when you're ready to save
             </span>
           )}
           {showReturningSignIn && (
             <button
               onClick={() => navigate("/auth")}
-              className="font-mono text-xs tracking-[0.15em] text-primary/70 hover:text-primary transition-colors underline underline-offset-4 decoration-primary/30 hover:decoration-primary/60"
+              className="font-mono text-sm tracking-[0.15em] text-primary/70 hover:text-primary transition-colors underline underline-offset-4 decoration-primary/30 hover:decoration-primary/60"
             >
               Returning user? Sign in here
             </button>
           )}
         </motion.div>
 
-        {/* 6. Secondary CTA — elevated for discoverability */}
-        <motion.div {...fade(0.24)} className="w-full sm:w-auto flex flex-col items-center gap-2">
+        {/* 6. Browse CTA with visual preview cards */}
+        <motion.div {...fade(0.24)} className="w-full flex flex-col items-center gap-3">
+          {featured.length > 0 && <FeaturedCards setlists={featured} />}
           <Button
             variant="outline"
             size="lg"
@@ -97,9 +115,6 @@ const HeroSection = ({ showReturningSignIn = true }: HeroSectionProps) => {
             🔍 Browse Community Setlists
             <ChevronRight className="w-4 h-4" />
           </Button>
-          <span className="font-body text-xs text-muted-foreground/60">
-            See what other Deadheads are building
-          </span>
         </motion.div>
       </div>
     </main>

@@ -52,11 +52,10 @@ export const markConversion = async (userId?: string) => {
 
   try {
     const uid = userId || (await supabase.auth.getUser()).data.user?.id;
-    const { error } = await supabase
-      .from("ab_test_assignments")
-      .update({ converted: true, user_id: uid || null })
-      .eq("visitor_id", visitorId)
-      .eq("test_name", TEST_NAME);
+    const { error } = await supabase.rpc("mark_ab_conversion", {
+      p_visitor_id: visitorId,
+      p_user_id: uid || null,
+    });
 
     if (!error) {
       localStorage.setItem(CONVERTED_KEY, "1");
