@@ -1004,6 +1004,28 @@ const Builder = () => {
               </div>
             </div>
           )}
+
+          {/* Idle nudge — no songs after 10s */}
+          {showIdleNudge && activeSlots.length === 0 && !showWelcome && (
+            <motion.div
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mx-3 mt-3 p-4 rounded-xl border border-primary/30 bg-primary/5 text-center"
+            >
+              <p className="font-body text-sm text-foreground mb-2">
+                Not sure where to start? 🎶
+              </p>
+              <Button
+                size="sm"
+                onClick={() => { setShowIdleNudge(false); setCharlieOpen(true); }}
+                className="gap-2 font-body text-sm"
+              >
+                <Star className="w-4 h-4" />
+                Let Cosmic Charlie Build Your Show
+              </Button>
+            </motion.div>
+          )}
+
            <SetlistDisplay
             slots={activeSlots}
             activeSlotId={playingSlot ? playingSlot.id : null}
