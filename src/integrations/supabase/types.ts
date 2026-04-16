@@ -926,6 +926,10 @@ export type Database = {
         Returns: boolean
       }
       is_setlist_public: { Args: { _setlist_id: string }; Returns: boolean }
+      mark_ab_conversion: {
+        Args: { p_user_id?: string; p_visitor_id: string }
+        Returns: undefined
+      }
       move_to_dlq: {
         Args: {
           dlq_name: string
