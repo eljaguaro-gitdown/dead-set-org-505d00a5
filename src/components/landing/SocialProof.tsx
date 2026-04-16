@@ -19,7 +19,11 @@ const SocialProof = () => {
     fetch();
   }, []);
 
-  if (!stats || (stats.setlists === 0 && stats.users === 0)) return null;
+  // Hidden until we cross meaningful scale — restore once both thresholds are met.
+  const SETLIST_THRESHOLD = 10000;
+  const USER_THRESHOLD = 5000;
+  if (!stats) return null;
+  if (stats.setlists < SETLIST_THRESHOLD || stats.users < USER_THRESHOLD) return null;
 
   return (
     <motion.div
