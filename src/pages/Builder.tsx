@@ -729,6 +729,20 @@ const Builder = () => {
     }
   }, [isGuestMode, guestSlots.length, guestPromptShown]);
 
+  // Idle nudge: if builder has 0 songs after 10s, suggest Cosmic Charlie
+  useEffect(() => {
+    if (showWelcome || activeSlots.length > 0 || charlieOpen || showIdleNudge) return;
+    const timer = setTimeout(() => {
+      if (activeSlots.length === 0) setShowIdleNudge(true);
+    }, 10000);
+    return () => clearTimeout(timer);
+  }, [showWelcome, activeSlots.length, charlieOpen, showIdleNudge]);
+
+  // Dismiss idle nudge when songs are added or Charlie opens
+  useEffect(() => {
+    if (activeSlots.length > 0 || charlieOpen) setShowIdleNudge(false);
+  }, [activeSlots.length, charlieOpen]);
+
   if (authLoading && paramId) {
     return (
       <PageLayout minimal><div className="flex-1 flex items-center justify-center">
