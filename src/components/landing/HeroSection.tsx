@@ -71,9 +71,11 @@ const HeroSection = ({ showReturningSignIn = true }: HeroSectionProps) => {
             Let Cosmic Charlie Build Your Show
             <ChevronRight className="w-4 h-4" />
           </Button>
-          <span className="font-body text-sm sm:text-base text-muted-foreground/80">
-            No account needed to start — sign in when you're ready to save
-          </span>
+          {showReturningSignIn && (
+            <span className="font-body text-sm sm:text-base text-muted-foreground/80">
+              No account needed to start — sign in when you're ready to save
+            </span>
+          )}
           {showReturningSignIn && (
             <button
               onClick={() => navigate("/auth")}
