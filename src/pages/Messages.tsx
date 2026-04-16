@@ -12,13 +12,13 @@ import { useDirectMessages } from "@/hooks/useDirectMessages";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useOnlineUserIds } from "@/hooks/useOnlineUserIds";
 
-const urlRegex = /(https?:\/\/[^\s]+)/g;
+const URL_REGEX = /(https?:\/\/[^\s]+)/g;
 const Linkify = ({ children }: { children: string }) => {
-  const parts = children.split(urlRegex);
+  const parts = children.split(URL_REGEX);
   return (
     <>
       {parts.map((part, i) =>
-        urlRegex.test(part) ? (
+        /^https?:\/\//.test(part) ? (
           <a key={i} href={part} target="_blank" rel="noopener noreferrer" className="underline break-all">
             {part}
           </a>
