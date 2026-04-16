@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { Star, Share2, Users, LogOut, MessageCircle, Globe, CheckCircle, List, Music, LayoutList, Save, FileImage, MoreHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -132,6 +133,7 @@ const Builder = () => {
   const [guestPromptShown, setGuestPromptShown] = useState(false);
   const [showGuestPrompt, setShowGuestPrompt] = useState(false);
   const [displayName, setDisplayName] = useState<string | null>(null);
+  const [showIdleNudge, setShowIdleNudge] = useState(false);
 
   // Auth modal state
   const [authModalOpen, setAuthModalOpen] = useState(false);
@@ -728,6 +730,20 @@ const Builder = () => {
     }
   }, [isGuestMode, guestSlots.length, guestPromptShown]);
 
+  // Idle nudge: if builder has 0 songs after 10s, suggest Cosmic Charlie
+  useEffect(() => {
+    if (showWelcome || activeSlots.length > 0 || charlieOpen || showIdleNudge) return;
+    const timer = setTimeout(() => {
+      if (activeSlots.length === 0) setShowIdleNudge(true);
+    }, 10000);
+    return () => clearTimeout(timer);
+  }, [showWelcome, activeSlots.length, charlieOpen, showIdleNudge]);
+
+  // Dismiss idle nudge when songs are added or Charlie opens
+  useEffect(() => {
+    if (activeSlots.length > 0 || charlieOpen) setShowIdleNudge(false);
+  }, [activeSlots.length, charlieOpen]);
+
   if (authLoading && paramId) {
     return (
       <PageLayout minimal><div className="flex-1 flex items-center justify-center">
@@ -989,6 +1005,28 @@ const Builder = () => {
               </div>
             </div>
           )}
+
+          {/* Idle nudge — no songs after 10s */}
+          {showIdleNudge && activeSlots.length === 0 && !showWelcome && (
+            <motion.div
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mx-3 mt-3 p-4 rounded-xl border border-primary/30 bg-primary/5 text-center"
+            >
+              <p className="font-body text-sm text-foreground mb-2">
+                Not sure where to start? 🎶
+              </p>
+              <Button
+                size="sm"
+                onClick={() => { setShowIdleNudge(false); setCharlieOpen(true); }}
+                className="gap-2 font-body text-sm"
+              >
+                <Star className="w-4 h-4" />
+                Let Cosmic Charlie Build Your Show
+              </Button>
+            </motion.div>
+          )}
+
            <SetlistDisplay
             slots={activeSlots}
             activeSlotId={playingSlot ? playingSlot.id : null}

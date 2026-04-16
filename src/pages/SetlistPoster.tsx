@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Share2, Zap, Play } from "lucide-react";
+import { ArrowLeft, Share2, Zap, Play, Heart } from "lucide-react";
 import SetlistComments from "@/components/SetlistComments";
+import { useFavorites } from "@/hooks/useFavorites";
 import EraTooltip from "@/components/EraTooltip";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -51,6 +52,7 @@ const SetlistPoster = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { playSingle, playSetlist: globalPlaySetlist, playingSlot } = useAudioPlayer();
+  const { isFavorite, toggleFavorite } = useFavorites();
   const [setlist, setSetlist] = useState<Setlist | null>(null);
   const [slots, setSlots] = useState<EnrichedSlot[]>([]);
   const [creatorName, setCreatorName] = useState("Unknown Head");
@@ -603,25 +605,49 @@ const SetlistPoster = () => {
                 />
 
                 <div className="flex flex-col items-center gap-4">
-                  {/* Upvote button */}
-                  <motion.button
-                    onClick={handleUpvote}
-                    disabled={hasUpvoted || upvoting}
-                    className={`flex items-center gap-2 px-5 py-2.5 rounded-[10px] font-body text-sm transition-all ${
-                      hasUpvoted
-                        ? "text-[hsl(4_60%_45%)]"
-                        : "text-[hsl(28_20%_35%)] hover:text-[hsl(4_60%_45%)]"
-                    }`}
-                    style={{
-                      border: `1.5px solid ${hasUpvoted ? "hsl(4 60% 50% / 0.4)" : "hsl(28 20% 55% / 0.3)"}`,
-                      backgroundColor: hasUpvoted ? "hsl(4 60% 50% / 0.08)" : "transparent",
-                    }}
-                    whileTap={!hasUpvoted ? { scale: 0.97 } : {}}
-                  >
-                    <Zap className={`w-4 h-4 ${hasUpvoted ? "fill-current" : ""}`} />
-                    <span className="font-bold tabular-nums">{upvoteCount}</span>
-                    <span className="text-xs opacity-60">{hasUpvoted ? "⚡ Upvoted" : "Upvote this tape"}</span>
-                  </motion.button>
+                  {/* Action buttons — larger for mobile */}
+                  <div className="flex items-center gap-4">
+                    {/* Upvote button — prominent */}
+                    <motion.button
+                      onClick={handleUpvote}
+                      disabled={hasUpvoted || upvoting}
+                      className={`flex items-center gap-2.5 px-6 py-3 rounded-xl font-body text-base transition-all ${
+                        hasUpvoted
+                          ? "text-[hsl(4_60%_45%)]"
+                          : "text-[hsl(28_20%_35%)] hover:text-[hsl(4_60%_45%)]"
+                      }`}
+                      style={{
+                        border: `2px solid ${hasUpvoted ? "hsl(4 60% 50% / 0.4)" : "hsl(28 20% 55% / 0.3)"}`,
+                        backgroundColor: hasUpvoted ? "hsl(4 60% 50% / 0.08)" : "transparent",
+                      }}
+                      whileTap={!hasUpvoted ? { scale: 0.95 } : {}}
+                    >
+                      <Zap className={`w-5 h-5 ${hasUpvoted ? "fill-current" : ""}`} />
+                      <span className="font-bold tabular-nums text-lg">{upvoteCount}</span>
+                      <span className="text-sm opacity-70">{hasUpvoted ? "⚡ Upvoted" : "Upvote"}</span>
+                    </motion.button>
+
+                    {/* Favorite button — prominent */}
+                    <motion.button
+                      onClick={() => {
+                        if (!user) { toast.error("Sign in to save favorites"); navigate("/auth"); return; }
+                        if (id) toggleFavorite(id);
+                      }}
+                      className={`flex items-center gap-2 px-5 py-3 rounded-xl font-body text-base transition-all ${
+                        isFavorite(id || "")
+                          ? "text-[hsl(340_70%_45%)]"
+                          : "text-[hsl(28_20%_35%)] hover:text-[hsl(340_70%_45%)]"
+                      }`}
+                      style={{
+                        border: `2px solid ${isFavorite(id || "") ? "hsl(340 70% 50% / 0.4)" : "hsl(28 20% 55% / 0.3)"}`,
+                        backgroundColor: isFavorite(id || "") ? "hsl(340 70% 50% / 0.08)" : "transparent",
+                      }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <Heart className={`w-5 h-5 ${isFavorite(id || "") ? "fill-current" : ""}`} />
+                      <span className="text-sm opacity-70">{isFavorite(id || "") ? "Saved" : "Save"}</span>
+                    </motion.button>
+                  </div>
 
                   {/* Play count */}
                   {setlist.play_count > 0 && (
