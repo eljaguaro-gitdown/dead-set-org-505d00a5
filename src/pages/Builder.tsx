@@ -132,6 +132,7 @@ const Builder = () => {
   const [guestPromptShown, setGuestPromptShown] = useState(false);
   const [showGuestPrompt, setShowGuestPrompt] = useState(false);
   const [displayName, setDisplayName] = useState<string | null>(null);
+  const [showIdleNudge, setShowIdleNudge] = useState(false);
 
   // Auth modal state
   const [authModalOpen, setAuthModalOpen] = useState(false);
