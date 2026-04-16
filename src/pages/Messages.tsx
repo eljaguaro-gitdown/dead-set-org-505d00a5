@@ -382,7 +382,7 @@ const Messages = () => {
                         isMe ? "bg-primary text-primary-foreground" : "bg-muted text-foreground"
                       }`}
                     >
-                      {msg.content}
+                      <Linkify>{msg.content}</Linkify>
                     </div>
                   </div>
                 );
