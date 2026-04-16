@@ -12,6 +12,24 @@ import { useDirectMessages } from "@/hooks/useDirectMessages";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useOnlineUserIds } from "@/hooks/useOnlineUserIds";
 
+const urlRegex = /(https?:\/\/[^\s]+)/g;
+const Linkify = ({ children }: { children: string }) => {
+  const parts = children.split(urlRegex);
+  return (
+    <>
+      {parts.map((part, i) =>
+        urlRegex.test(part) ? (
+          <a key={i} href={part} target="_blank" rel="noopener noreferrer" className="underline break-all">
+            {part}
+          </a>
+        ) : (
+          <span key={i}>{part}</span>
+        )
+      )}
+    </>
+  );
+};
+
 const Messages = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
