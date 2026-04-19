@@ -4,68 +4,16 @@ import type { User } from "@supabase/supabase-js";
 import { markConversion } from "@/lib/abTest";
 
 const SESSION_FLAG = "dead_set_active_session";
-const WELCOME_SENT_PREFIX = "dead_set_welcome_sent_";
 
 type AuthSnapshot = {
   user: User | null;
   loading: boolean;
 };
 
-const notifyNewSignup = async (user: User) => {
-  const key = `dead_set_signup_notified_${user.id}`;
-  if (localStorage.getItem(key)) return;
-
-  const createdAt = new Date(user.created_at).getTime();
-  if (Date.now() - createdAt > 300_000) return;
-
-  try {
-    const provider = user.app_metadata?.provider || "email";
-    const displayName = user.user_metadata?.full_name || user.email?.split("@")[0] || "Deadhead";
-    await supabase.functions.invoke("send-transactional-email", {
-      body: {
-        templateName: "new-signup-notification",
-        recipientEmail: "grateful_jaguaro@dead-set.org",
-        idempotencyKey: `new-signup-notify-${user.id}`,
-        templateData: {
-          userEmail: user.email,
-          displayName,
-          provider,
-          signupTime: user.created_at,
-        },
-      },
-    });
-    localStorage.setItem(key, "1");
-  } catch {
-    // Retry next sign-in
-  }
-};
-
-const maybeSendWelcomeEmail = async (user: User) => {
-  const provider = user.app_metadata?.provider;
-  if (!provider || provider === "email") return;
-
-  const key = `${WELCOME_SENT_PREFIX}${user.id}`;
-  if (localStorage.getItem(key)) return;
-
-  const createdAt = new Date(user.created_at).getTime();
-  if (Date.now() - createdAt > 300_000) return;
-
-  try {
-    await supabase.functions.invoke("send-transactional-email", {
-      body: {
-        templateName: "welcome-email",
-        recipientEmail: user.email,
-        idempotencyKey: `welcome-${user.id}`,
-        templateData: {
-          displayName: user.user_metadata?.full_name || user.email?.split("@")[0] || "Deadhead",
-        },
-      },
-    });
-    localStorage.setItem(key, "1");
-  } catch {
-    // Don't set the flag so it retries next sign-in
-  }
-};
+// Welcome and admin-notification emails are now sent server-side via a
+// database trigger on auth.users (handle_new_user_emails). No client-side
+// dispatch is needed — every signup reliably fires both emails regardless
+// of provider or page lifecycle timing.
 
 let authSnapshot: AuthSnapshot = {
   user: null,
