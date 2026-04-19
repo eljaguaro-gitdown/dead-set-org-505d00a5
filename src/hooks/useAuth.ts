@@ -78,8 +78,6 @@ const ensureAuthInitialized = () => {
       }
 
       if (event === "SIGNED_IN" && session?.user) {
-        maybeSendWelcomeEmail(session.user);
-        notifyNewSignup(session.user);
         markConversion(session.user.id);
       }
     }
