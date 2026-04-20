@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { Instagram } from "lucide-react";
 
 const PersonalNote = () => (
   <motion.section
@@ -21,6 +22,16 @@ const PersonalNote = () => (
         — Kinda feels like we are on to something fun - curated setlists, parking lot vibes, endless surprise and
         delight moments. See ya backstage!
       </span>
+
+      <a
+        href="https://instagram.com/grateful_jaguaro"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-primary/30 text-primary/80 hover:text-primary hover:border-primary/60 hover:bg-primary/5 transition-all font-body text-sm"
+      >
+        <Instagram className="w-4 h-4" />
+        <span>Follow @grateful_jaguaro on Instagram</span>
+      </a>
     </div>
   </motion.section>
 );

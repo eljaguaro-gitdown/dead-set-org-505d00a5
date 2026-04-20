@@ -15,7 +15,7 @@ import PersonalNote from "@/components/landing/PersonalNote";
 import ShareAppButton from "@/components/ShareAppButton";
 import LastUpdatedBadge from "@/components/LastUpdatedBadge";
 import { Button } from "@/components/ui/button";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Instagram } from "lucide-react";
 
 interface FeaturedSetlist {
   id: string;
@@ -235,6 +235,16 @@ const Index = () => {
           <div className="flex flex-col items-center gap-3">
             <LastUpdatedBadge />
             <ShareAppButton variant="full" />
+            <a
+              href="https://instagram.com/grateful_jaguaro"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 text-[11px] font-mono text-muted-foreground/70 hover:text-primary tracking-wider transition-colors"
+              aria-label="Follow Dead-Set.Org on Instagram"
+            >
+              <Instagram className="w-3.5 h-3.5" />
+              <span>@grateful_jaguaro</span>
+            </a>
             <div className="flex items-center gap-3 text-[10px] font-mono text-muted-foreground/40 tracking-wider">
               <span>© Dead-Set.Org</span>
               <span>·</span>
