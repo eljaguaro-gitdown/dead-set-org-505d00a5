@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
@@ -6,9 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { AlertTriangle } from "lucide-react";
 import PageLayout from "@/components/PageLayout";
 import StealYourFace from "@/components/StealYourFace";
 import { getPostAuthRedirect } from "@/lib/postAuthRedirect";
+import { detectInAppBrowser } from "@/lib/inAppBrowser";
 
 const SESSION_FLAG = "dead_set_active_session";
 
@@ -21,6 +23,7 @@ const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const { isInApp, appName } = useMemo(() => detectInAppBrowser(), []);
 
   const smartRedirect = async (userId: string) => {
     if (explicitRedirect) {
@@ -97,6 +100,13 @@ const Auth = () => {
   };
 
   const handleGoogleLogin = async () => {
+    if (isInApp) {
+      toast.error(
+        `Google sign-in doesn't work inside ${appName}. Tap the ⋯ menu and choose "Open in Safari" — or use email below.`,
+        { duration: 7000 }
+      );
+      return;
+    }
     const { error } = await lovable.auth.signInWithOAuth("google", {
       redirect_uri: window.location.origin,
     });
@@ -104,6 +114,13 @@ const Auth = () => {
   };
 
   const handleAppleLogin = async () => {
+    if (isInApp) {
+      toast.error(
+        `Apple sign-in doesn't work inside ${appName}. Tap the ⋯ menu and choose "Open in Safari" — or use email below.`,
+        { duration: 7000 }
+      );
+      return;
+    }
     const { error } = await lovable.auth.signInWithOAuth("apple", {
       redirect_uri: window.location.origin,
     });
@@ -175,10 +192,24 @@ const Auth = () => {
             <div className="h-px flex-1 bg-border" />
           </div>
 
+          {isInApp && (
+            <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 flex gap-3">
+              <AlertTriangle className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <p className="font-body text-sm text-foreground">
+                  You're browsing inside {appName}
+                </p>
+                <p className="font-body text-xs text-muted-foreground">
+                  Google &amp; Apple sign-in won't work here. Tap <span className="font-mono">⋯</span> &rarr; <span className="text-foreground">Open in Safari</span>, or just use email below — it works everywhere.
+                </p>
+              </div>
+            </div>
+          )}
+
           <div className="space-y-3">
             <Button
               variant="outline"
-              className="w-full border-border text-foreground hover:bg-muted font-body gap-2"
+              className="w-full border-border text-foreground hover:bg-muted font-body gap-2 disabled:opacity-50"
               onClick={handleGoogleLogin}
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24">
