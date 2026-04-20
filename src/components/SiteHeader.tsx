@@ -4,6 +4,7 @@ import { Menu, Shield, MessageCircle, LogOut, User, Download } from "lucide-reac
 import { motion } from "framer-motion";
 import StealYourFace from "@/components/StealYourFace";
 import ShareAppButton from "@/components/ShareAppButton";
+import AnnouncementsBell from "@/components/AnnouncementsBell";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/hooks/useAuth";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
@@ -125,6 +126,7 @@ const SiteHeader = ({ children, large = false }: SiteHeaderProps) => {
           <div className="hidden sm:flex items-center gap-4 sm:gap-6">
             {nowPlaying}
             <ShareAppButton />
+            {user && <AnnouncementsBell variant="desktop" />}
             {messagesLink}
             {adminLink}
             {children}
@@ -141,23 +143,26 @@ const SiteHeader = ({ children, large = false }: SiteHeaderProps) => {
           </div>
           {/* Mobile: persistent top-level actions + hamburger */}
           <div className="sm:hidden flex items-center gap-3">
-            {/* Persistent mobile: Messages for logged-in, Sign In for repeat guests */}
+            {/* Persistent mobile: Announcements + Messages for logged-in, Sign In for repeat guests */}
             {user ? (
-              <button
-                onClick={() => navigate("/messages")}
-                className="relative p-2 text-muted-foreground hover:text-foreground transition-colors"
-                title="Messages"
-              >
-                <MessageCircle className="w-5 h-5" />
-                {unreadCount > 0 && (
-                  <>
-                    <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-primary text-primary-foreground text-[10px] font-mono flex items-center justify-center z-10">
-                      {unreadCount > 99 ? "99+" : unreadCount}
-                    </span>
-                    <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-primary animate-ping opacity-75" />
-                  </>
-                )}
-              </button>
+              <>
+                <AnnouncementsBell variant="mobile" />
+                <button
+                  onClick={() => navigate("/messages")}
+                  className="relative p-2 text-muted-foreground hover:text-foreground transition-colors"
+                  title="Messages"
+                >
+                  <MessageCircle className="w-5 h-5" />
+                  {unreadCount > 0 && (
+                    <>
+                      <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-primary text-primary-foreground text-[10px] font-mono flex items-center justify-center z-10">
+                        {unreadCount > 99 ? "99+" : unreadCount}
+                      </span>
+                      <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-primary animate-ping opacity-75" />
+                    </>
+                  )}
+                </button>
+              </>
             ) : isRepeatVisitor ? (
               <button
                 onClick={() => navigate("/auth")}
