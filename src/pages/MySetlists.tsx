@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Plus, Globe, Lock, Music, Trash2, Calendar, Search, User, ArrowDownUp, Star, FileImage, Heart } from "lucide-react";
+import { Plus, Globe, Lock, Music, Trash2, Calendar, Search, User, ArrowDownUp, Star, FileImage, Heart, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -306,6 +306,33 @@ const MySetlists = () => {
           </button>
         </motion.div>
 
+        {/* Backstage nudge — persistent invitation to shape the app */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.32, duration: 0.5 }}
+          className="mb-8"
+        >
+          <button
+            onClick={() => navigate("/backstage")}
+            className="w-full group rounded-xl border border-border/60 hover:border-primary/40 bg-card/40 hover:bg-card/70 transition-all p-4 text-left flex items-center gap-3"
+          >
+            <div className="w-9 h-9 rounded-lg bg-muted/40 group-hover:bg-primary/10 flex items-center justify-center transition-colors shrink-0">
+              <Sparkles className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <h3 className="font-display text-sm text-foreground">
+                Backstage — shape the next set
+              </h3>
+              <p className="font-body text-xs text-muted-foreground mt-0.5">
+                Drop a wish, flag a bug, share your story. Every note lands in the build.
+              </p>
+            </div>
+            <span className="font-body text-xs text-muted-foreground/60 group-hover:text-primary transition-colors shrink-0 hidden sm:inline">
+              Visit →
+            </span>
+          </button>
+        </motion.div>
 
         {/* Setlists list */}
         <div className="flex items-center justify-between mb-4">
