@@ -169,8 +169,11 @@ const WelcomeEmail = ({ displayName }: WelcomeEmailProps) => (
           <Hr style={ruleMuted} />
           <Text style={footerLogo}>DEAD SET · DEAD-SET.ORG</Text>
           <Text style={footerCopy}>
-            Sent from{' '}
-            <Link href="mailto:noreply@notify.dead-set.org" style={footerLink}>noreply@dead-set.org</Link>
+            Reply directly to{' '}
+            <Link href="mailto:grateful_jaguaro@dead-set.org" style={footerLink}>grateful_jaguaro@dead-set.org</Link>
+            <br />
+            Follow on Instagram{' '}
+            <Link href="https://instagram.com/grateful_jaguaro" style={footerLink}>@grateful_jaguaro</Link>
             <br />
             By the community, for the community.
             <br />
