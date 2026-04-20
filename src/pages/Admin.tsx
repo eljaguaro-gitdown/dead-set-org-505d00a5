@@ -5,6 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Shield, Users, ArrowLeft, Loader2, Calendar, Mail, User, Trash2, ListMusic, Eye, Globe, MessageSquare, Bug, Star, Lightbulb, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import LiveVisitorsWidget from "@/components/LiveVisitorsWidget";
+import AdminAnnouncementsPanel from "@/components/AdminAnnouncementsPanel";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -323,6 +324,9 @@ const Admin = () => {
             </p>
           </div>
         </div>
+
+        {/* Broadcast Announcements */}
+        <AdminAnnouncementsPanel />
 
         {/* Traffic Stats */}
         <div className="bg-card border border-border rounded-lg overflow-hidden">
