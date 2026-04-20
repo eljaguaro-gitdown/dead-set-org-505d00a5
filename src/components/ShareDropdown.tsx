@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Share2, Copy, Check, Twitter, Facebook, MessageCircle } from "lucide-react";
+import { Share2, Copy, Check, Twitter, Facebook, MessageCircle, Smartphone } from "lucide-react";
 import { toast } from "sonner";
 import { trackShare } from "@/lib/trackShare";
 import { useAuth } from "@/hooks/useAuth";
@@ -19,6 +19,7 @@ const ShareDropdown = ({ url, ogUrl, title, description }: ShareDropdownProps) =
   const [dmOpen, setDmOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
+  const hasNativeShare = typeof navigator !== "undefined" && !!navigator.share;
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -28,22 +29,20 @@ const ShareDropdown = ({ url, ogUrl, title, description }: ShareDropdownProps) =
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  const handleShare = async () => {
-    // Mobile: native share sheet
-    if (navigator.share) {
-      try {
-        await navigator.share({ title, text: description || title, url });
-        return;
-      } catch {
-        // User cancelled or not supported — fall through to dropdown
-      }
-    }
-    // Desktop: toggle dropdown
-    setOpen((o) => !o);
-  };
+  // Always show our menu so users can pick in-app DM, copy, socials, or native share.
+  const handleToggle = () => setOpen((o) => !o);
 
   const copyLink = async () => {
-    await navigator.clipboard.writeText(url);
+    try {
+      await navigator.clipboard.writeText(url);
+    } catch {
+      const ta = document.createElement("textarea");
+      ta.value = url;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+    }
     setCopied(true);
     toast.success("Link copied!");
     trackShare({ shareType: "setlist", channel: "copy_link" });
@@ -66,17 +65,38 @@ const ShareDropdown = ({ url, ogUrl, title, description }: ShareDropdownProps) =
     setOpen(false);
   };
 
+  const shareNative = async () => {
+    if (!navigator.share) return;
+    try {
+      await navigator.share({ title, text: description || title, url });
+      trackShare({ shareType: "setlist", channel: "native_share" });
+    } catch {
+      // user cancelled — keep menu open so they can pick another option
+      return;
+    }
+    setOpen(false);
+  };
+
   return (
     <div ref={ref} className="relative">
       <button
-        onClick={handleShare}
+        onClick={handleToggle}
         className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-body bg-card/80 border border-border text-foreground hover:border-primary/40 transition-colors"
       >
         <Share2 className="w-3 h-3" /> Share
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full mt-2 w-48 bg-card border border-border rounded-lg shadow-xl z-50 overflow-hidden animate-scale-in">
+        <div className="absolute right-0 top-full mt-2 w-52 bg-card border border-border rounded-lg shadow-xl z-50 overflow-hidden animate-scale-in">
+          {user && (
+            <button
+              onClick={() => { setOpen(false); setDmOpen(true); }}
+              className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm font-body text-foreground hover:bg-muted/50 transition-colors"
+            >
+              <MessageCircle className="w-4 h-4 text-primary" />
+              Send to a Deadhead
+            </button>
+          )}
           <button
             onClick={copyLink}
             className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm font-body text-foreground hover:bg-muted/50 transition-colors"
@@ -98,13 +118,13 @@ const ShareDropdown = ({ url, ogUrl, title, description }: ShareDropdownProps) =
             <Facebook className="w-4 h-4 text-muted-foreground" />
             Share on Facebook
           </button>
-          {user && (
+          {hasNativeShare && (
             <button
-              onClick={() => { setOpen(false); setDmOpen(true); }}
-              className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm font-body text-foreground hover:bg-muted/50 transition-colors"
+              onClick={shareNative}
+              className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm font-body text-foreground hover:bg-muted/50 transition-colors border-t border-border/50"
             >
-              <MessageCircle className="w-4 h-4 text-muted-foreground" />
-              Send to Friend
+              <Smartphone className="w-4 h-4 text-muted-foreground" />
+              More apps…
             </button>
           )}
         </div>

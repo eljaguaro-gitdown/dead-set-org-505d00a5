@@ -113,6 +113,8 @@ const SendToFriendDialog = ({
     setSentTo((prev) => new Set(prev).add(friend.userId));
     trackShare({ shareType: "setlist", channel: "sms", setlistId, metadata: { via: "in_app_dm" } });
     toast.success(`Sent to ${friend.displayName}!`);
+    // Auto-close after a beat so the user sees confirmation and isn't stranded
+    setTimeout(() => onOpenChange(false), 900);
   };
 
   return (
@@ -131,9 +133,18 @@ const SendToFriendDialog = ({
           )}
 
           {!loading && friends.length === 0 && (
-            <p className="text-sm text-muted-foreground font-body py-4 text-center">
-              No conversations yet. Message someone first!
-            </p>
+            <div className="py-4 text-center space-y-3">
+              <p className="text-sm text-muted-foreground font-body">
+                No conversations yet.
+              </p>
+              <a
+                href="/browse"
+                className="inline-block text-xs font-body text-primary hover:text-primary/80 underline underline-offset-2"
+                onClick={() => onOpenChange(false)}
+              >
+                Find Deadheads on Browse →
+              </a>
+            </div>
           )}
 
           {friends.map((friend) => {
