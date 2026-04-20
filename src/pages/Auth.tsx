@@ -231,6 +231,10 @@ const Auth = () => {
               </svg>
               Continue with Apple
             </Button>
+
+            <p className="text-center font-body text-xs text-muted-foreground/70 pt-1">
+              Trouble with Google or Apple? <span className="text-foreground">Email signup works on every browser.</span>
+            </p>
           </div>
 
           <div className="flex flex-col items-center gap-3">
