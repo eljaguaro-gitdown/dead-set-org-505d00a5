@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
-import { Play, Pause, Volume2, VolumeX, X, Loader2, Cast, ChevronRight } from "lucide-react";
+import { motion, AnimatePresence, useMotionValue, useDragControls } from "framer-motion";
+import { Play, Pause, Volume2, VolumeX, X, Loader2, Cast, ChevronRight, GripHorizontal } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { findTrackInRecording, matchScore } from "@/lib/archiveOrg";
 
@@ -37,6 +37,15 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
   const [duration, setDuration] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const dragControls = useDragControls();
+  const y = useMotionValue(0);
+  // Persisted vertical offset (negative = lifted up). Restored across mounts.
+  const [yOffset, setYOffset] = useState<number>(() => {
+    if (typeof window === "undefined") return 0;
+    const stored = Number(window.localStorage.getItem("audioPlayerYOffset"));
+    return Number.isFinite(stored) ? stored : 0;
+  });
+  useEffect(() => { y.set(yOffset); }, [yOffset, y]);
 
   const getIdentifier = useCallback((url: string) => {
     const match = url.match(/archive\.org\/details\/([^/?#]+)/);
@@ -180,10 +189,37 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
     <AnimatePresence>
       <motion.div
         initial={{ y: 80, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
+        animate={{ opacity: 1 }}
         exit={{ y: 80, opacity: 0 }}
-        className="fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-card/95 backdrop-blur-lg"
+        style={{ y }}
+        drag="y"
+        dragControls={dragControls}
+        dragListener={false}
+        dragMomentum={false}
+        dragElastic={0.05}
+        dragConstraints={{ top: -window.innerHeight + 200, bottom: 0 }}
+        onDragEnd={(_, info) => {
+          const next = Math.min(0, Math.max(-window.innerHeight + 200, yOffset + info.offset.y));
+          setYOffset(next);
+          try { window.localStorage.setItem("audioPlayerYOffset", String(next)); } catch {}
+        }}
+        className="fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-card/95 backdrop-blur-lg shadow-2xl"
       >
+        {/* Drag handle — lift the player up to reveal content beneath */}
+        <button
+          type="button"
+          aria-label="Drag to reposition player"
+          onPointerDown={(e) => dragControls.start(e)}
+          onDoubleClick={() => {
+            setYOffset(0);
+            try { window.localStorage.setItem("audioPlayerYOffset", "0"); } catch {}
+          }}
+          className="absolute -top-3 left-1/2 -translate-x-1/2 z-10 h-6 px-3 flex items-center justify-center rounded-full border border-border bg-card/95 backdrop-blur-lg text-muted-foreground hover:text-foreground cursor-grab active:cursor-grabbing touch-none shadow-md"
+          title="Drag to move · double-click to reset"
+        >
+          <GripHorizontal className="w-3.5 h-3.5" />
+        </button>
+
         <audio
           ref={audioRef}
           src={track?.src}
