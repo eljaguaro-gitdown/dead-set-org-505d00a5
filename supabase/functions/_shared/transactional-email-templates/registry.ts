@@ -14,6 +14,7 @@ import { template as buildNotes } from './build-notes.tsx'
 import { template as newSignupNotification } from './new-signup-notification.tsx'
 import { template as lotDispatch } from './lot-dispatch.tsx'
 import { template as dmNotification } from './dm-notification.tsx'
+import { template as commentNotification } from './comment-notification.tsx'
 import { template as dailyUserReport } from './daily-user-report.tsx'
 import { template as weeklyInsights } from './weekly-insights.tsx'
 
@@ -23,6 +24,7 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'new-signup-notification': newSignupNotification,
   'lot-dispatch': lotDispatch,
   'dm-notification': dmNotification,
+  'comment-notification': commentNotification,
   'daily-user-report': dailyUserReport,
   'weekly-insights': weeklyInsights,
 }

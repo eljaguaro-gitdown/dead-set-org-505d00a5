@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Bell, ExternalLink } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Bell, ExternalLink, MessageCircle } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import {
   Popover,
@@ -7,6 +8,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { useAnnouncements } from "@/hooks/useAnnouncements";
+import { useCommentNotifications } from "@/hooks/useCommentNotifications";
 import { useAuth } from "@/hooks/useAuth";
 
 interface AnnouncementsBellProps {
@@ -15,16 +17,25 @@ interface AnnouncementsBellProps {
 
 const AnnouncementsBell = ({ variant = "desktop" }: AnnouncementsBellProps) => {
   const { user } = useAuth();
-  const { announcements, readIds, unreadCount, markAllRead } = useAnnouncements(user);
+  const { announcements, readIds, unreadCount: annUnread, markAllRead: markAnnRead } = useAnnouncements(user);
+  const {
+    notifications: commentNotifs,
+    unreadCount: commentUnread,
+    markAllRead: markCommentsRead,
+  } = useCommentNotifications(user);
   const [open, setOpen] = useState(false);
 
   if (!user) return null;
 
+  const unreadCount = annUnread + commentUnread;
+
   const handleOpenChange = (next: boolean) => {
     setOpen(next);
     if (next && unreadCount > 0) {
-      // Mark all read when opened
-      setTimeout(() => markAllRead(), 800);
+      setTimeout(() => {
+        markAnnRead();
+        markCommentsRead();
+      }, 800);
     }
   };
 
@@ -81,62 +92,123 @@ const AnnouncementsBell = ({ variant = "desktop" }: AnnouncementsBellProps) => {
           )}
         </div>
         <div className="flex-1 overflow-y-auto">
-          {announcements.length === 0 ? (
+          {/* Comment notifications */}
+          {commentNotifs.length > 0 && (
+            <div>
+              <div className="px-4 py-2 bg-muted/20 border-b border-border/40 flex items-center gap-2">
+                <MessageCircle className="w-3.5 h-3.5 text-primary/70" />
+                <span className="font-mono text-[10px] text-muted-foreground tracking-wider uppercase">
+                  Notes on your setlists
+                </span>
+                {commentUnread > 0 && (
+                  <span className="font-mono text-[10px] text-primary tracking-wider uppercase ml-auto">
+                    {commentUnread} new
+                  </span>
+                )}
+              </div>
+              <ul className="divide-y divide-border/40">
+                {commentNotifs.slice(0, 10).map((n) => (
+                  <li
+                    key={n.id}
+                    className={`px-4 py-3 ${!n.read ? "bg-primary/[0.04]" : ""}`}
+                  >
+                    <Link
+                      to={`/setlist/${n.setlist_id}`}
+                      onClick={() => setOpen(false)}
+                      className="flex items-start gap-2 group"
+                    >
+                      {!n.read && (
+                        <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <h4 className="font-display text-sm text-foreground leading-snug group-hover:text-primary transition-colors">
+                          {n.commenter_name || "A Deadhead"} on{" "}
+                          <span className="text-primary/80">
+                            {n.setlist_title || "your setlist"}
+                          </span>
+                        </h4>
+                        {n.preview && (
+                          <p className="font-body text-xs text-muted-foreground mt-1 line-clamp-2">
+                            "{n.preview}"
+                          </p>
+                        )}
+                        <p className="font-mono text-[10px] text-muted-foreground/60 mt-2 tracking-wider uppercase">
+                          {formatDistanceToNow(new Date(n.created_at), { addSuffix: true })}
+                        </p>
+                      </div>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Announcements section */}
+          {announcements.length === 0 && commentNotifs.length === 0 ? (
             <div className="px-4 py-10 text-center">
               <p className="font-body text-sm text-muted-foreground">
-                No announcements yet.
+                No notifications yet.
               </p>
               <p className="font-body text-xs text-muted-foreground/60 mt-1">
                 The music never stops — check back soon.
               </p>
             </div>
-          ) : (
-            <ul className="divide-y divide-border/40">
-              {announcements.map((a) => {
-                const isUnread = !readIds.has(a.id);
-                return (
-                  <li
-                    key={a.id}
-                    className={`px-4 py-3 ${isUnread ? "bg-primary/[0.04]" : ""}`}
-                  >
-                    <div className="flex items-start gap-2">
-                      {isUnread && (
-                        <span
-                          className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0"
-                          aria-label="Unread"
-                        />
-                      )}
-                      <div className="min-w-0 flex-1">
-                        <h4 className="font-display text-sm text-foreground leading-snug">
-                          {a.title}
-                        </h4>
-                        <p className="font-body text-xs text-muted-foreground mt-1 whitespace-pre-wrap leading-relaxed">
-                          {a.body}
-                        </p>
-                        {a.cta_url && a.cta_label && (
-                          <a
-                            href={a.cta_url}
-                            target={a.cta_url.startsWith("http") ? "_blank" : undefined}
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 mt-2 font-mono text-[11px] text-primary hover:text-primary/80 tracking-wider uppercase"
-                            onClick={() => setOpen(false)}
-                          >
-                            {a.cta_label}
-                            {a.cta_url.startsWith("http") && (
-                              <ExternalLink className="w-3 h-3" />
-                            )}
-                          </a>
+          ) : announcements.length > 0 ? (
+            <>
+              {commentNotifs.length > 0 && (
+                <div className="px-4 py-2 bg-muted/20 border-b border-t border-border/40 flex items-center gap-2">
+                  <span className="font-mono text-[10px] text-muted-foreground tracking-wider uppercase">
+                    From Adrian
+                  </span>
+                </div>
+              )}
+              <ul className="divide-y divide-border/40">
+                {announcements.map((a) => {
+                  const isUnread = !readIds.has(a.id);
+                  return (
+                    <li
+                      key={a.id}
+                      className={`px-4 py-3 ${isUnread ? "bg-primary/[0.04]" : ""}`}
+                    >
+                      <div className="flex items-start gap-2">
+                        {isUnread && (
+                          <span
+                            className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0"
+                            aria-label="Unread"
+                          />
                         )}
-                        <p className="font-mono text-[10px] text-muted-foreground/60 mt-2 tracking-wider uppercase">
-                          {formatDistanceToNow(new Date(a.created_at), { addSuffix: true })}
-                        </p>
+                        <div className="min-w-0 flex-1">
+                          <h4 className="font-display text-sm text-foreground leading-snug">
+                            {a.title}
+                          </h4>
+                          <p className="font-body text-xs text-muted-foreground mt-1 whitespace-pre-wrap leading-relaxed">
+                            {a.body}
+                          </p>
+                          {a.cta_url && a.cta_label && (
+                            <a
+                              href={a.cta_url}
+                              target={a.cta_url.startsWith("http") ? "_blank" : undefined}
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 mt-2 font-mono text-[11px] text-primary hover:text-primary/80 tracking-wider uppercase"
+                              onClick={() => setOpen(false)}
+                            >
+                              {a.cta_label}
+                              {a.cta_url.startsWith("http") && (
+                                <ExternalLink className="w-3 h-3" />
+                              )}
+                            </a>
+                          )}
+                          <p className="font-mono text-[10px] text-muted-foreground/60 mt-2 tracking-wider uppercase">
+                            {formatDistanceToNow(new Date(a.created_at), { addSuffix: true })}
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
+                    </li>
+                  );
+                })}
+              </ul>
+            </>
+          ) : null}
         </div>
       </PopoverContent>
     </Popover>

@@ -230,6 +230,60 @@ export type Database = {
           },
         ]
       }
+      comment_notifications: {
+        Row: {
+          comment_id: string
+          commenter_name: string | null
+          commenter_user_id: string
+          created_at: string
+          id: string
+          preview: string | null
+          read: boolean
+          recipient_user_id: string
+          setlist_id: string
+          setlist_title: string | null
+        }
+        Insert: {
+          comment_id: string
+          commenter_name?: string | null
+          commenter_user_id: string
+          created_at?: string
+          id?: string
+          preview?: string | null
+          read?: boolean
+          recipient_user_id: string
+          setlist_id: string
+          setlist_title?: string | null
+        }
+        Update: {
+          comment_id?: string
+          commenter_name?: string | null
+          commenter_user_id?: string
+          created_at?: string
+          id?: string
+          preview?: string | null
+          read?: boolean
+          recipient_user_id?: string
+          setlist_id?: string
+          setlist_title?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comment_notifications_comment_id_fkey"
+            columns: ["comment_id"]
+            isOneToOne: false
+            referencedRelation: "setlist_comments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comment_notifications_setlist_id_fkey"
+            columns: ["setlist_id"]
+            isOneToOne: false
+            referencedRelation: "setlists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       conversation_members: {
         Row: {
           conversation_id: string
