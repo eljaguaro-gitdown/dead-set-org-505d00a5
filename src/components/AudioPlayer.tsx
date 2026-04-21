@@ -189,9 +189,21 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
     <AnimatePresence>
       <motion.div
         initial={{ y: 80, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
+        animate={{ opacity: 1 }}
         exit={{ y: 80, opacity: 0 }}
-        className="fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-card/95 backdrop-blur-lg"
+        style={{ y }}
+        drag="y"
+        dragControls={dragControls}
+        dragListener={false}
+        dragMomentum={false}
+        dragElastic={0.05}
+        dragConstraints={{ top: -window.innerHeight + 200, bottom: 0 }}
+        onDragEnd={(_, info) => {
+          const next = Math.min(0, Math.max(-window.innerHeight + 200, yOffset + info.offset.y));
+          setYOffset(next);
+          try { window.localStorage.setItem("audioPlayerYOffset", String(next)); } catch {}
+        }}
+        className="fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-card/95 backdrop-blur-lg shadow-2xl"
       >
         <audio
           ref={audioRef}
