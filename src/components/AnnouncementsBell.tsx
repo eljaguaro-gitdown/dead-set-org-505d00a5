@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Bell, ExternalLink } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Bell, ExternalLink, MessageCircle } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import {
   Popover,
@@ -7,6 +8,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { useAnnouncements } from "@/hooks/useAnnouncements";
+import { useCommentNotifications } from "@/hooks/useCommentNotifications";
 import { useAuth } from "@/hooks/useAuth";
 
 interface AnnouncementsBellProps {
@@ -15,16 +17,25 @@ interface AnnouncementsBellProps {
 
 const AnnouncementsBell = ({ variant = "desktop" }: AnnouncementsBellProps) => {
   const { user } = useAuth();
-  const { announcements, readIds, unreadCount, markAllRead } = useAnnouncements(user);
+  const { announcements, readIds, unreadCount: annUnread, markAllRead: markAnnRead } = useAnnouncements(user);
+  const {
+    notifications: commentNotifs,
+    unreadCount: commentUnread,
+    markAllRead: markCommentsRead,
+  } = useCommentNotifications(user);
   const [open, setOpen] = useState(false);
 
   if (!user) return null;
 
+  const unreadCount = annUnread + commentUnread;
+
   const handleOpenChange = (next: boolean) => {
     setOpen(next);
     if (next && unreadCount > 0) {
-      // Mark all read when opened
-      setTimeout(() => markAllRead(), 800);
+      setTimeout(() => {
+        markAnnRead();
+        markCommentsRead();
+      }, 800);
     }
   };
 
