@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
-import { Play, Pause, Volume2, VolumeX, X, Loader2, Cast, ChevronRight } from "lucide-react";
+import { motion, AnimatePresence, useMotionValue, useDragControls } from "framer-motion";
+import { Play, Pause, Volume2, VolumeX, X, Loader2, Cast, ChevronRight, GripHorizontal } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { findTrackInRecording, matchScore } from "@/lib/archiveOrg";
 
