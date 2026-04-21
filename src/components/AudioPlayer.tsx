@@ -37,6 +37,15 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
   const [duration, setDuration] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const dragControls = useDragControls();
+  const y = useMotionValue(0);
+  // Persisted vertical offset (negative = lifted up). Restored across mounts.
+  const [yOffset, setYOffset] = useState<number>(() => {
+    if (typeof window === "undefined") return 0;
+    const stored = Number(window.localStorage.getItem("audioPlayerYOffset"));
+    return Number.isFinite(stored) ? stored : 0;
+  });
+  useEffect(() => { y.set(yOffset); }, [yOffset, y]);
 
   const getIdentifier = useCallback((url: string) => {
     const match = url.match(/archive\.org\/details\/([^/?#]+)/);
