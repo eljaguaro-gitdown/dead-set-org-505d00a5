@@ -83,7 +83,9 @@ const SetlistComments = ({ setlistId, isPublic }: SetlistCommentsProps) => {
     }
 
     setPosting(true);
+    const newId = crypto.randomUUID();
     const { error } = await supabase.from("setlist_comments").insert({
+      id: newId,
       setlist_id: setlistId,
       user_id: user.id,
       content: trimmed,
@@ -94,6 +96,55 @@ const SetlistComments = ({ setlistId, isPublic }: SetlistCommentsProps) => {
     } else {
       setNewComment("");
       await fetchComments();
+
+      // Notify setlist owner via email if they're offline.
+      // The DB trigger always inserts an in-app notification (bell);
+      // this just adds the email path for offline owners.
+      try {
+        const { data: setlist } = await supabase
+          .from("setlists")
+          .select("creator_id")
+          .eq("id", setlistId)
+          .maybeSingle();
+
+        if (setlist?.creator_id && setlist.creator_id !== user.id) {
+          // Check presence: skip email if owner is currently online
+          const onlineUserIds = new Set<string>();
+          const existingChannel = supabase.getChannels().find(
+            (ch) => ch.topic === "realtime:online_visitors"
+          );
+          if (existingChannel) {
+            const state = existingChannel.presenceState();
+            for (const key of Object.keys(state)) {
+              const presences = state[key] as any[];
+              if (presences?.[0]?.user_id) {
+                onlineUserIds.add(presences[0].user_id);
+              }
+            }
+          }
+
+          if (!onlineUserIds.has(setlist.creator_id)) {
+            const { data: profile } = await supabase
+              .from("profiles")
+              .select("display_name")
+              .eq("user_id", user.id)
+              .maybeSingle();
+            const commenterName =
+              profile?.display_name || user.email?.split("@")[0] || "A Deadhead";
+
+            supabase.functions.invoke("notify-comment", {
+              body: {
+                setlistId,
+                commentId: newId,
+                commenterName,
+                preview: trimmed.slice(0, 200),
+              },
+            }).catch(() => {});
+          }
+        }
+      } catch {
+        /* fire-and-forget */
+      }
     }
     setPosting(false);
   };
