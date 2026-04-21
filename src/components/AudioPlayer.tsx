@@ -205,6 +205,21 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
         }}
         className="fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-card/95 backdrop-blur-lg shadow-2xl"
       >
+        {/* Drag handle — lift the player up to reveal content beneath */}
+        <button
+          type="button"
+          aria-label="Drag to reposition player"
+          onPointerDown={(e) => dragControls.start(e)}
+          onDoubleClick={() => {
+            setYOffset(0);
+            try { window.localStorage.setItem("audioPlayerYOffset", "0"); } catch {}
+          }}
+          className="absolute -top-3 left-1/2 -translate-x-1/2 z-10 h-6 px-3 flex items-center justify-center rounded-full border border-border bg-card/95 backdrop-blur-lg text-muted-foreground hover:text-foreground cursor-grab active:cursor-grabbing touch-none shadow-md"
+          title="Drag to move · double-click to reset"
+        >
+          <GripHorizontal className="w-3.5 h-3.5" />
+        </button>
+
         <audio
           ref={audioRef}
           src={track?.src}
