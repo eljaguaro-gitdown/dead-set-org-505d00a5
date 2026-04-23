@@ -15,6 +15,7 @@ interface DayRow {
   day: string; // YYYY-MM-DD
   visitors: number;
   ctaClicks: number;
+  ctaClicksV2: number; // above-the-fold variant
   authVisits: number;
   signups: number;
 }
@@ -28,7 +29,7 @@ const buildDayBuckets = (days: number): Record<string, DayRow> => {
     const d = new Date(now);
     d.setUTCDate(d.getUTCDate() - i);
     const key = fmtDay(d);
-    buckets[key] = { day: key, visitors: 0, ctaClicks: 0, authVisits: 0, signups: 0 };
+    buckets[key] = { day: key, visitors: 0, ctaClicks: 0, ctaClicksV2: 0, authVisits: 0, signups: 0 };
   }
   return buckets;
 };
@@ -85,7 +86,11 @@ const FunnelWidget = ({ signupDates, enabled }: FunnelWidgetProps) => {
 
       for (const c of ctaRes.data ?? []) {
         const day = fmtDay(new Date(c.created_at));
-        if (buckets[day]) buckets[day].ctaClicks++;
+        if (!buckets[day]) continue;
+        buckets[day].ctaClicks++;
+        if (c.channel === "hero_primary_builder_v2_above_fold") {
+          buckets[day].ctaClicksV2++;
+        }
       }
 
       for (const ts of signupDates) {
@@ -109,10 +114,11 @@ const FunnelWidget = ({ signupDates, enabled }: FunnelWidgetProps) => {
         (acc, r) => ({
           visitors: acc.visitors + r.visitors,
           ctaClicks: acc.ctaClicks + r.ctaClicks,
+          ctaClicksV2: acc.ctaClicksV2 + r.ctaClicksV2,
           authVisits: acc.authVisits + r.authVisits,
           signups: acc.signups + r.signups,
         }),
-        { visitors: 0, ctaClicks: 0, authVisits: 0, signups: 0 },
+        { visitors: 0, ctaClicks: 0, ctaClicksV2: 0, authVisits: 0, signups: 0 },
       ),
     [rows],
   );
@@ -193,7 +199,9 @@ const FunnelWidget = ({ signupDates, enabled }: FunnelWidgetProps) => {
           </div>
 
           <p className="px-4 py-2 text-xs font-body text-muted-foreground/70 border-t border-border">
-            CTA clicks tracked from landing-page hero buttons. Older clicks may be missing if tracking was added recently.
+            CTA clicks tracked from landing-page hero buttons. Of {totals.ctaClicks} total,{" "}
+            <span className="text-primary font-bold">{totals.ctaClicksV2}</span> came from the new
+            above-the-fold mobile variant. Older clicks may be missing if tracking was added recently.
           </p>
         </>
       )}
