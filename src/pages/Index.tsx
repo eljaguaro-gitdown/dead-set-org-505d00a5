@@ -106,6 +106,26 @@ const Index = () => {
       );
     };
     fetchFeatured();
+
+    const channel = supabase
+      .channel("landing-community-feed")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "setlists" },
+        (payload) => {
+          const newSetlist = payload.new as {
+            is_public: boolean | null;
+          };
+
+          if (!newSetlist.is_public) return;
+          fetchFeatured();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   return (
