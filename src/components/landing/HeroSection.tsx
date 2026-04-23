@@ -36,81 +36,83 @@ interface HeroSectionProps {
 const HeroSection = ({ showReturningSignIn = true, featured = [] }: HeroSectionProps) => {
   const navigate = useNavigate();
 
+  const handlePrimaryCta = () => {
+    trackCtaClick("hero_primary_builder_v2_above_fold", "/builder?wizard=true");
+    navigate("/builder?wizard=true");
+  };
+
   return (
-    <main className="flex-1 flex flex-col items-center justify-center px-5 sm:px-12 relative overflow-hidden">
+    <main className="flex-1 flex flex-col items-center justify-start sm:justify-center px-5 sm:px-12 relative overflow-hidden">
       {/* Gold radial glow */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-[10%] left-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-[radial-gradient(circle,hsl(var(--dead-gold)/0.08),transparent_70%)]" />
       </div>
 
-      <div
-        className="flex flex-col items-center gap-5 sm:gap-8 relative z-10 text-center max-w-2xl w-full py-10 sm:py-16"
-      >
-        {/* 1. SYF Logo */}
+      <div className="flex flex-col items-center gap-4 sm:gap-8 relative z-10 text-center max-w-2xl w-full pt-6 pb-10 sm:py-16">
+        {/* 1. SYF Logo — smaller on mobile to free above-fold space */}
         <div>
-          <StealYourFace size={isMobile() ? 72 : 140} />
+          <StealYourFace size={isMobile() ? 56 : 140} />
         </div>
 
         {/* 2. Headline — tighter for mobile */}
-        <h1
-          className="font-display text-2xl sm:text-4xl md:text-5xl text-primary leading-none tracking-tight"
-        >
+        <h1 className="font-display text-[26px] leading-[1.05] sm:text-4xl md:text-5xl text-primary tracking-tight">
           Your dream Dead show,
           <br />
           built from real recordings.
         </h1>
 
-        {/* 3. Subhead — one punchy sentence */}
-        <p
-          className="font-body text-sm sm:text-base text-muted-foreground leading-relaxed max-w-[480px] px-2"
-        >
-          Tell Cosmic Charlie your vibe and he'll craft a full concert
-          from 2,300+ shows in the Archive — every note is real.
+        {/* 3. Subhead — short on mobile, full on desktop */}
+        <p className="font-body text-sm sm:text-base text-muted-foreground leading-snug sm:leading-relaxed max-w-[480px] px-2">
+          <span className="sm:hidden">Tell Cosmic Charlie your vibe — he'll build a full concert from real Archive recordings.</span>
+          <span className="hidden sm:inline">
+            Tell Cosmic Charlie your vibe and he'll craft a full concert
+            from 2,300+ shows in the Archive — every note is real.
+          </span>
         </p>
 
-        {/* 3b. Social proof */}
+        {/* 4. Primary CTA — promoted above the fold on mobile */}
+        <motion.div {...fade(0.12)} className="w-full sm:w-auto flex flex-col items-center gap-2 sm:gap-3">
+          <Button
+            size="lg"
+            onClick={handlePrimaryCta}
+            className="w-full sm:w-auto gap-2 text-base px-8 sm:px-12 py-5 shadow-[0_4px_40px_hsl(var(--glow-gold))] hover:shadow-[0_4px_60px_hsl(var(--glow-gold))]"
+          >
+            <span className="sm:hidden">Start Building My Show</span>
+            <span className="hidden sm:inline">Let Cosmic Charlie Build Your Show</span>
+            <ChevronRight className="w-4 h-4" />
+          </Button>
+          {showReturningSignIn && (
+            <span className="font-body text-xs sm:text-sm text-muted-foreground/80">
+              No account needed — sign in when you save
+            </span>
+          )}
+        </motion.div>
+
+        {/* 5. Social proof — moved below CTA on mobile */}
         <SocialProof />
 
-        {/* 4. Audio Preview Strip */}
-        <motion.div {...fade(0.16)} className="flex flex-col items-center gap-2">
-          <span className="font-mono text-[25px] tracking-[0.2em] text-muted-foreground/50 uppercase">
+        {/* 6. Audio Preview Strip */}
+        <motion.div {...fade(0.18)} className="flex flex-col items-center gap-2 w-full">
+          <span className="font-mono text-[11px] sm:text-[13px] tracking-[0.2em] text-muted-foreground/50 uppercase">
             🎧 Now playing from the Archive
           </span>
           <AmbientPlayer />
         </motion.div>
 
-        {/* 5. Primary CTA */}
-        <motion.div {...fade(0.2)} className="w-full sm:w-auto flex flex-col items-center gap-3">
-          <Button
-            size="lg"
+        {/* 7. Returning user link */}
+        {showReturningSignIn && (
+          <button
             onClick={() => {
-              trackCtaClick("hero_primary_builder", "/builder?wizard=true");
-              navigate("/builder?wizard=true");
+              trackCtaClick("hero_returning_signin", "/auth");
+              navigate("/auth");
             }}
-            className="w-full sm:w-auto gap-2 text-base px-8 sm:px-12 py-5 shadow-[0_4px_40px_hsl(var(--glow-gold))] hover:shadow-[0_4px_60px_hsl(var(--glow-gold))]"
+            className="font-mono text-sm tracking-[0.15em] text-primary/70 hover:text-primary transition-colors underline underline-offset-4 decoration-primary/30 hover:decoration-primary/60"
           >
-            Let Cosmic Charlie Build Your Show
-            <ChevronRight className="w-4 h-4" />
-          </Button>
-          {showReturningSignIn && (
-            <span className="font-body text-sm text-muted-foreground/80">
-              No account needed — sign in when you're ready to save
-            </span>
-          )}
-          {showReturningSignIn && (
-            <button
-              onClick={() => {
-                trackCtaClick("hero_returning_signin", "/auth");
-                navigate("/auth");
-              }}
-              className="font-mono text-sm tracking-[0.15em] text-primary/70 hover:text-primary transition-colors underline underline-offset-4 decoration-primary/30 hover:decoration-primary/60"
-            >
-              Returning user? Sign in here
-            </button>
-          )}
-        </motion.div>
+            Returning user? Sign in here
+          </button>
+        )}
 
-        {/* 6. Browse CTA with visual preview cards */}
+        {/* 8. Browse CTA with visual preview cards */}
         <motion.div {...fade(0.24)} className="w-full flex flex-col items-center gap-3">
           {featured.length > 0 && <FeaturedCards setlists={featured} />}
           <Button
