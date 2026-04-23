@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { Zap, ExternalLink, Headphones, Star, Loader2, ArrowUpDown, Calendar, TrendingUp } from "lucide-react";
+import { Zap, ExternalLink, Headphones, Star, Loader2, ArrowUpDown, Calendar, TrendingUp, Heart } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { findManyArchiveRecordings, type ArchiveVersion } from "@/lib/archiveOrg";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,11 +13,27 @@ interface SongVersionBrowserProps {
   curatedVersions: NotableVersion[];
   onSelectSong: (song: Song, version?: NotableVersion) => void;
   onPlayArchive?: (url: string, songTitle: string, showDate: string, venue?: string | null) => void;
+  isFavoriteVersion?: (input: {
+    songId: string;
+    notableVersionId?: string | null;
+    versionShowDate?: string | null;
+    versionVenue?: string | null;
+    versionArchiveOrgUrl?: string | null;
+    versionRating?: number | null;
+  }) => boolean;
+  onToggleFavoriteVersion?: (input: {
+    songId: string;
+    notableVersionId?: string | null;
+    versionShowDate?: string | null;
+    versionVenue?: string | null;
+    versionArchiveOrgUrl?: string | null;
+    versionRating?: number | null;
+  }) => void | Promise<void>;
 }
 
 type SortMode = "rating" | "date-asc" | "date-desc";
 
-const SongVersionBrowser = ({ song, curatedVersions, onSelectSong, onPlayArchive }: SongVersionBrowserProps) => {
+const SongVersionBrowser = ({ song, curatedVersions, onSelectSong, onPlayArchive, isFavoriteVersion, onToggleFavoriteVersion }: SongVersionBrowserProps) => {
   const [archiveVersions, setArchiveVersions] = useState<ArchiveVersion[]>([]);
   const [loading, setLoading] = useState(true);
   const [sortMode, setSortMode] = useState<SortMode>("rating");
@@ -117,6 +133,8 @@ const SongVersionBrowser = ({ song, curatedVersions, onSelectSong, onPlayArchive
               songTitle={song.title}
               onSelect={() => onSelectSong(song, v)}
               onPlayArchive={onPlayArchive}
+              isFavorite={isFavoriteVersion?.({ songId: song.id, notableVersionId: v.id }) || false}
+              onToggleFavorite={() => onToggleFavoriteVersion?.({ songId: song.id, notableVersionId: v.id })}
             />
           ))}
         </div>
@@ -166,6 +184,20 @@ const SongVersionBrowser = ({ song, curatedVersions, onSelectSong, onPlayArchive
                 description={descriptions[av.identifier]}
                 onSelect={() => handleSelectArchiveVersion(av)}
                 onPlayArchive={onPlayArchive}
+                isFavorite={isFavoriteVersion?.({
+                  songId: song.id,
+                  versionShowDate: av.date || null,
+                  versionVenue: av.venue || null,
+                  versionArchiveOrgUrl: av.url,
+                  versionRating: av.avgRating ? Math.min(5, Math.round(av.avgRating)) : null,
+                }) || false}
+                onToggleFavorite={() => onToggleFavoriteVersion?.({
+                  songId: song.id,
+                  versionShowDate: av.date || null,
+                  versionVenue: av.venue || null,
+                  versionArchiveOrgUrl: av.url,
+                  versionRating: av.avgRating ? Math.min(5, Math.round(av.avgRating)) : null,
+                })}
               />
             ))}
         </div>
@@ -183,11 +215,15 @@ function CuratedVersionCard({
   songTitle,
   onSelect,
   onPlayArchive,
+  isFavorite,
+  onToggleFavorite,
 }: {
   version: NotableVersion;
   songTitle: string;
   onSelect: () => void;
   onPlayArchive?: (url: string, songTitle: string, showDate: string, venue?: string | null) => void;
+  isFavorite: boolean;
+  onToggleFavorite?: () => void | Promise<void>;
 }) {
   return (
     <button
@@ -202,6 +238,16 @@ function CuratedVersionCard({
           ))}
           {v.archive_org_url && (
             <>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  void onToggleFavorite?.();
+                }}
+                className="ml-1"
+                title={isFavorite ? "Remove version from favorites" : "Add version to favorites"}
+              >
+                <Heart className={`w-3 h-3 transition-colors ${isFavorite ? "text-primary fill-primary" : "text-muted-foreground hover:text-primary"}`} />
+              </button>
               <button
                 onClick={(e) => {
                   e.stopPropagation();
@@ -239,12 +285,16 @@ function ArchiveVersionCard({
   description,
   onSelect,
   onPlayArchive,
+  isFavorite,
+  onToggleFavorite,
 }: {
   version: ArchiveVersion;
   songTitle: string;
   description?: string;
   onSelect: () => void;
   onPlayArchive?: (url: string, songTitle: string, showDate: string, venue?: string | null) => void;
+  isFavorite: boolean;
+  onToggleFavorite?: () => void | Promise<void>;
 }) {
   return (
     <button
@@ -259,6 +309,16 @@ function ArchiveVersionCard({
               ★ {av.avgRating.toFixed(1)}
             </Badge>
           )}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              void onToggleFavorite?.();
+            }}
+            className="ml-1"
+            title={isFavorite ? "Remove version from favorites" : "Add version to favorites"}
+          >
+            <Heart className={`w-3 h-3 transition-colors ${isFavorite ? "text-primary fill-primary" : "text-muted-foreground hover:text-primary"}`} />
+          </button>
           <button
             onClick={(e) => {
               e.stopPropagation();
