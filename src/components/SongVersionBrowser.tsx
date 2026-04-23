@@ -236,18 +236,18 @@ function CuratedVersionCard({
           {Array.from({ length: v.rating || 0 }).map((_, i) => (
             <Zap key={i} className="w-3 h-3 text-accent fill-accent" />
           ))}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              void onToggleFavorite?.();
+            }}
+            className="ml-1"
+            title={isFavorite ? "Remove version from favorites" : "Add version to favorites"}
+          >
+            <Heart className={`w-3 h-3 transition-colors ${isFavorite ? "text-primary fill-primary" : "text-muted-foreground hover:text-primary"}`} />
+          </button>
           {v.archive_org_url && (
             <>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  void onToggleFavorite?.();
-                }}
-                className="ml-1"
-                title={isFavorite ? "Remove version from favorites" : "Add version to favorites"}
-              >
-                <Heart className={`w-3 h-3 transition-colors ${isFavorite ? "text-primary fill-primary" : "text-muted-foreground hover:text-primary"}`} />
-              </button>
               <button
                 onClick={(e) => {
                   e.stopPropagation();

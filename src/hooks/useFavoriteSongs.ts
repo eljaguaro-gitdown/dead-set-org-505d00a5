@@ -88,7 +88,18 @@ export const useFavoriteSongs = () => {
   }, [user]);
 
   const favoriteSongIds = useMemo(
-    () => new Set(favoriteSongs.map((song) => song.song_id)),
+    () =>
+      new Set(
+        favoriteSongs
+          .filter(
+            (song) =>
+              !song.notable_version_id &&
+              !song.version_show_date &&
+              !song.version_venue &&
+              !song.version_archive_org_url
+          )
+          .map((song) => song.song_id)
+      ),
     [favoriteSongs]
   );
 
