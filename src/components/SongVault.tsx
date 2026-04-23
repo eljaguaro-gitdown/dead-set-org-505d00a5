@@ -127,7 +127,7 @@ const SongVault = ({ songs, eraId, onSelectSong, getNotableVersions, onPlayArchi
                   <button
                     onClick={async (e) => {
                       e.stopPropagation();
-                      const result = await toggleFavoriteSong(song.id);
+                      const result = await toggleFavoriteSong({ songId: song.id });
                       if (result.requiresAuth) {
                         toast.error("Sign in to save favorite songs");
                         return;
