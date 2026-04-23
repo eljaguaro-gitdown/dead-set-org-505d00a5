@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useAudioSignature } from "@/hooks/useAudioSignature";
 import { getVariant } from "@/lib/abTest";
+import { COMMUNITY_FEED_OPTIMISTIC_INSERT, type CommunityFeedSetlist } from "@/lib/communityFeedEvents";
 
 import PageLayout from "@/components/PageLayout";
 import SiteHeader from "@/components/SiteHeader";
@@ -27,6 +28,7 @@ interface FeaturedSetlist {
   creator_name?: string;
   era_name?: string;
   song_count?: number;
+  created_at: string;
 }
 
 const Index = () => {
@@ -105,6 +107,18 @@ const Index = () => {
         }))
       );
     };
+
+    const handleOptimisticInsert = (event: Event) => {
+      const { detail } = event as CustomEvent<CommunityFeedSetlist>;
+
+      setFeatured((prev) => {
+        const next = [detail, ...prev.filter((item) => item.id !== detail.id)];
+        return next
+          .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+          .slice(0, 6);
+      });
+    };
+
     fetchFeatured();
 
     const channel = supabase
@@ -123,7 +137,10 @@ const Index = () => {
       )
       .subscribe();
 
+    window.addEventListener(COMMUNITY_FEED_OPTIMISTIC_INSERT, handleOptimisticInsert as EventListener);
+
     return () => {
+      window.removeEventListener(COMMUNITY_FEED_OPTIMISTIC_INSERT, handleOptimisticInsert as EventListener);
       supabase.removeChannel(channel);
     };
   }, []);
