@@ -1,8 +1,10 @@
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Zap, ChevronDown, ChevronUp } from "lucide-react";
+import { Search, Zap, ChevronDown, ChevronUp, Heart } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import SongVersionBrowser from "@/components/SongVersionBrowser";
+import { toast } from "sonner";
+import { useFavoriteSongs } from "@/hooks/useFavoriteSongs";
 import type { Database } from "@/integrations/supabase/types";
 
 type Song = Database["public"]["Tables"]["songs"]["Row"];
@@ -32,6 +34,7 @@ const SongVault = ({ songs, eraId, onSelectSong, getNotableVersions, onPlayArchi
   const [positionFilter, setPositionFilter] = useState<string | null>(null);
   const [expandedSong, setExpandedSong] = useState<string | null>(null);
   const [curatedVersions, setCuratedVersions] = useState<NotableVersion[]>([]);
+  const { isFavoriteSong, toggleFavoriteSong } = useFavoriteSongs();
 
   const filteredSongs = useMemo(() => {
     return songs.filter((s) => {
@@ -121,6 +124,25 @@ const SongVault = ({ songs, eraId, onSelectSong, getNotableVersions, onPlayArchi
                   <span className="font-body text-sm text-foreground truncate">{song.title}</span>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    onClick={async (e) => {
+                      e.stopPropagation();
+                      const result = await toggleFavoriteSong(song.id);
+                      if (result.requiresAuth) {
+                        toast.error("Sign in to save favorite songs");
+                        return;
+                      }
+                      if (!result.ok) {
+                        toast.error("Could not update favorite songs");
+                        return;
+                      }
+                      toast.success(result.favorited ? `${song.title} added to favorite songs` : `${song.title} removed from favorite songs`);
+                    }}
+                    className="p-1.5 rounded-md text-muted-foreground hover:text-primary transition-colors"
+                    title={isFavoriteSong(song.id) ? "Remove from favorite songs" : "Add to favorite songs"}
+                  >
+                    <Heart className={`w-4 h-4 ${isFavoriteSong(song.id) ? "fill-primary text-primary" : ""}`} />
+                  </button>
                   <span className="text-xs text-muted-foreground font-body">{song.times_played}x</span>
                   {expandedSong === song.id ? (
                     <ChevronUp className="w-4 h-4 text-muted-foreground" />
