@@ -26,6 +26,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useSetlist } from "@/hooks/useSetlist";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
+import { emitCommunityFeedOptimisticInsert } from "@/lib/communityFeedEvents";
 import type { Database } from "@/integrations/supabase/types";
 
 type Song = Database["public"]["Tables"]["songs"]["Row"];
@@ -645,8 +646,22 @@ const Builder = () => {
 
   const handleTogglePublic = useCallback(() => {
     if (requireAuth("save")) return;
-    togglePublic();
-  }, [requireAuth, togglePublic]);
+    togglePublic().then((updatedSetlist) => {
+      if (!updatedSetlist?.is_public || !user) return;
+
+      emitCommunityFeedOptimisticInsert({
+        id: updatedSetlist.id,
+        title: updatedSetlist.title,
+        creator_id: updatedSetlist.creator_id,
+        era_id: updatedSetlist.era_id,
+        upvote_count: updatedSetlist.upvote_count,
+        play_count: updatedSetlist.play_count,
+        creator_name: displayName || "Unknown",
+        song_count: activeSlots.length,
+        created_at: updatedSetlist.created_at,
+      });
+    });
+  }, [requireAuth, togglePublic, user, displayName, activeSlots]);
 
   // Handle AI welcome overlay generation
   const handleWelcomeGenerated = useCallback(
