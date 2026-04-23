@@ -34,7 +34,7 @@ const SongVault = ({ songs, eraId, onSelectSong, getNotableVersions, onPlayArchi
   const [positionFilter, setPositionFilter] = useState<string | null>(null);
   const [expandedSong, setExpandedSong] = useState<string | null>(null);
   const [curatedVersions, setCuratedVersions] = useState<NotableVersion[]>([]);
-  const { isFavoriteSong, toggleFavoriteSong } = useFavoriteSongs();
+  const { isFavoriteSong, isFavoriteVersion, toggleFavoriteSong } = useFavoriteSongs();
 
   const filteredSongs = useMemo(() => {
     return songs.filter((s) => {
@@ -127,7 +127,7 @@ const SongVault = ({ songs, eraId, onSelectSong, getNotableVersions, onPlayArchi
                   <button
                     onClick={async (e) => {
                       e.stopPropagation();
-                      const result = await toggleFavoriteSong(song.id);
+                      const result = await toggleFavoriteSong({ songId: song.id });
                       if (result.requiresAuth) {
                         toast.error("Sign in to save favorite songs");
                         return;
@@ -173,6 +173,19 @@ const SongVault = ({ songs, eraId, onSelectSong, getNotableVersions, onPlayArchi
                     curatedVersions={curatedVersions}
                     onSelectSong={onSelectSong}
                     onPlayArchive={onPlayArchive}
+                    isFavoriteVersion={isFavoriteVersion}
+                    onToggleFavoriteVersion={async (version) => {
+                      const result = await toggleFavoriteSong(version);
+                      if (result.requiresAuth) {
+                        toast.error("Sign in to save favorite versions");
+                        return;
+                      }
+                      if (!result.ok) {
+                        toast.error("Could not update favorite versions");
+                        return;
+                      }
+                      toast.success(result.favorited ? `${song.title} version added to favorites` : `${song.title} version removed from favorites`);
+                    }}
                   />
                 </motion.div>
               )}

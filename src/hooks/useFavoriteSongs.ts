@@ -5,12 +5,41 @@ import { useAuth } from "./useAuth";
 interface FavoriteSongRow {
   id: string;
   song_id: string;
+  notable_version_id: string | null;
+  version_show_date: string | null;
+  version_venue: string | null;
+  version_archive_org_url: string | null;
+  version_rating: number | null;
   created_at: string;
 }
 
 interface FavoriteSongSetlistLink {
   setlist_id: string;
 }
+
+interface ToggleFavoriteSongInput {
+  songId: string;
+  notableVersionId?: string | null;
+  versionShowDate?: string | null;
+  versionVenue?: string | null;
+  versionArchiveOrgUrl?: string | null;
+  versionRating?: number | null;
+}
+
+const matchesFavorite = (favorite: FavoriteSongRow, input: ToggleFavoriteSongInput) => {
+  const notableVersionId = input.notableVersionId ?? null;
+  const versionShowDate = input.versionShowDate ?? null;
+  const versionVenue = input.versionVenue ?? null;
+  const versionArchiveOrgUrl = input.versionArchiveOrgUrl ?? null;
+
+  return (
+    favorite.song_id === input.songId &&
+    (favorite.notable_version_id ?? null) === notableVersionId &&
+    (favorite.version_show_date ?? null) === versionShowDate &&
+    (favorite.version_venue ?? null) === versionVenue &&
+    (favorite.version_archive_org_url ?? null) === versionArchiveOrgUrl
+  );
+};
 
 export const useFavoriteSongs = () => {
   const { user } = useAuth();
@@ -40,7 +69,7 @@ export const useFavoriteSongs = () => {
       const [{ data: favoriteData }, { data: linkData }] = await Promise.all([
         (supabase as any)
           .from("favorite_songs")
-          .select("id, song_id, created_at")
+          .select("id, song_id, notable_version_id, version_show_date, version_venue, version_archive_org_url, version_rating, created_at")
           .eq("user_id", user.id)
           .order("created_at", { ascending: false }),
         (supabase as any)
@@ -59,7 +88,23 @@ export const useFavoriteSongs = () => {
   }, [user]);
 
   const favoriteSongIds = useMemo(
-    () => new Set(favoriteSongs.map((song) => song.song_id)),
+    () =>
+      new Set(
+        favoriteSongs
+          .filter(
+            (song) =>
+              !song.notable_version_id &&
+              !song.version_show_date &&
+              !song.version_venue &&
+              !song.version_archive_org_url
+          )
+          .map((song) => song.song_id)
+      ),
+    [favoriteSongs]
+  );
+
+  const favoriteVersionIds = useMemo(
+    () => new Set(favoriteSongs.map((song) => song.notable_version_id).filter(Boolean) as string[]),
     [favoriteSongs]
   );
 
@@ -68,14 +113,37 @@ export const useFavoriteSongs = () => {
     [favoriteSongIds]
   );
 
+  const isFavoriteVersion = useCallback(
+    (input: ToggleFavoriteSongInput) => {
+      return favoriteSongs.some((favorite) => matchesFavorite(favorite, input));
+    },
+    [favoriteSongs]
+  );
+
   const toggleFavoriteSong = useCallback(
-    async (songId: string) => {
+    async ({
+      songId,
+      notableVersionId = null,
+      versionShowDate = null,
+      versionVenue = null,
+      versionArchiveOrgUrl = null,
+      versionRating = null,
+    }: ToggleFavoriteSongInput) => {
       if (!user) return { ok: false, requiresAuth: true as const };
 
-      const existing = favoriteSongs.find((song) => song.song_id === songId);
+      const payload: ToggleFavoriteSongInput = {
+        songId,
+        notableVersionId,
+        versionShowDate,
+        versionVenue,
+        versionArchiveOrgUrl,
+        versionRating,
+      };
+
+      const existing = favoriteSongs.find((song) => matchesFavorite(song, payload));
 
       if (existing) {
-        setFavoriteSongs((prev) => prev.filter((song) => song.song_id !== songId));
+        setFavoriteSongs((prev) => prev.filter((song) => song.id !== existing.id));
 
         const { error } = await (supabase as any)
           .from("favorite_songs")
@@ -83,7 +151,7 @@ export const useFavoriteSongs = () => {
           .eq("id", existing.id);
 
         if (error) {
-          setFavoriteSongs((prev) => [existing, ...prev]);
+          setFavoriteSongs((prev) => [existing, ...prev.filter((song) => song.id !== existing.id)]);
           return { ok: false, requiresAuth: false as const };
         }
 
@@ -92,25 +160,38 @@ export const useFavoriteSongs = () => {
       }
 
       const optimistic: FavoriteSongRow = {
-        id: `optimistic-${songId}`,
+        id: `optimistic-${songId}-${notableVersionId || "base"}`,
         song_id: songId,
+        notable_version_id: notableVersionId,
+        version_show_date: versionShowDate,
+        version_venue: versionVenue,
+        version_archive_org_url: versionArchiveOrgUrl,
+        version_rating: versionRating,
         created_at: new Date().toISOString(),
       };
 
-      setFavoriteSongs((prev) => [optimistic, ...prev.filter((song) => song.song_id !== songId)]);
+      setFavoriteSongs((prev) => [optimistic, ...prev.filter((song) => song.id !== optimistic.id)]);
 
       const { data, error } = await (supabase as any)
-          .from("favorite_songs")
-        .insert({ user_id: user.id, song_id: songId })
-        .select("id, song_id, created_at")
+        .from("favorite_songs")
+        .insert({
+          user_id: user.id,
+          song_id: songId,
+          notable_version_id: notableVersionId,
+          version_show_date: versionShowDate,
+          version_venue: versionVenue,
+          version_archive_org_url: versionArchiveOrgUrl,
+          version_rating: versionRating,
+        })
+        .select("id, song_id, notable_version_id, version_show_date, version_venue, version_archive_org_url, version_rating, created_at")
         .single();
 
       if (error) {
-        setFavoriteSongs((prev) => prev.filter((song) => song.song_id !== songId));
+        setFavoriteSongs((prev) => prev.filter((song) => song.id !== optimistic.id));
         return { ok: false, requiresAuth: false as const };
       }
 
-      setFavoriteSongs((prev) => [data as FavoriteSongRow, ...prev.filter((song) => song.song_id !== songId)]);
+      setFavoriteSongs((prev) => [data as FavoriteSongRow, ...prev.filter((song) => song.id !== optimistic.id)]);
       await refreshFavoriteSetlistLink(user.id);
       return { ok: true, requiresAuth: false as const, favorited: true as const };
     },
@@ -120,8 +201,10 @@ export const useFavoriteSongs = () => {
   return {
     favoriteSongs,
     favoriteSongIds,
+    favoriteVersionIds,
     favoriteSetlistId,
     isFavoriteSong,
+    isFavoriteVersion,
     toggleFavoriteSong,
     loading,
     isAuthenticated: !!user,

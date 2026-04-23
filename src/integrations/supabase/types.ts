@@ -522,22 +522,44 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          notable_version_id: string | null
           song_id: string
           user_id: string
+          version_archive_org_url: string | null
+          version_rating: number | null
+          version_show_date: string | null
+          version_venue: string | null
         }
         Insert: {
           created_at?: string
           id?: string
+          notable_version_id?: string | null
           song_id: string
           user_id: string
+          version_archive_org_url?: string | null
+          version_rating?: number | null
+          version_show_date?: string | null
+          version_venue?: string | null
         }
         Update: {
           created_at?: string
           id?: string
+          notable_version_id?: string | null
           song_id?: string
           user_id?: string
+          version_archive_org_url?: string | null
+          version_rating?: number | null
+          version_show_date?: string | null
+          version_venue?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "favorite_songs_notable_version_id_fkey"
+            columns: ["notable_version_id"]
+            isOneToOne: false
+            referencedRelation: "notable_versions"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "favorite_songs_song_id_fkey"
             columns: ["song_id"]
@@ -803,6 +825,7 @@ export type Database = {
       setlist_slots: {
         Row: {
           added_by_user_id: string | null
+          favorite_song_id: string | null
           id: string
           notable_version_id: string | null
           notes: string | null
@@ -814,6 +837,7 @@ export type Database = {
         }
         Insert: {
           added_by_user_id?: string | null
+          favorite_song_id?: string | null
           id?: string
           notable_version_id?: string | null
           notes?: string | null
@@ -825,6 +849,7 @@ export type Database = {
         }
         Update: {
           added_by_user_id?: string | null
+          favorite_song_id?: string | null
           id?: string
           notable_version_id?: string | null
           notes?: string | null

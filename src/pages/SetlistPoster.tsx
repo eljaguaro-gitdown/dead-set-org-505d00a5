@@ -15,6 +15,7 @@ import ShareFlow from "@/components/ShareFlow";
 import ShowPlate from "@/components/ShowPlate";
 import { toast } from "sonner";
 import { findArchiveRecordings, type ArchiveResult } from "@/lib/archiveOrg";
+import { useFavoriteSongs } from "@/hooks/useFavoriteSongs";
 import type { Database } from "@/integrations/supabase/types";
 
 type Setlist = Omit<Database["public"]["Tables"]["setlists"]["Row"], "share_token">;
@@ -53,6 +54,7 @@ const SetlistPoster = () => {
   const { user } = useAuth();
   const { playSingle, playSetlist: globalPlaySetlist, playingSlot } = useAudioPlayer();
   const { isFavorite, toggleFavorite } = useFavorites();
+  const { isFavoriteVersion, toggleFavoriteSong } = useFavoriteSongs();
   const [setlist, setSetlist] = useState<Setlist | null>(null);
   const [slots, setSlots] = useState<EnrichedSlot[]>([]);
   const [creatorName, setCreatorName] = useState("Unknown Head");
@@ -444,6 +446,18 @@ const SetlistPoster = () => {
                           const charSum = slot.id.split("").reduce((a, c) => a + c.charCodeAt(0), 0);
                           const rotation = isNowPlaying ? 0 : ((charSum % 7) - 3) * 0.3;
                           const xShift = isNowPlaying ? 0 : ((charSum % 5) - 2) * 0.5;
+                          const favoritePayload = slot.version?.id?.startsWith("archive-")
+                            ? {
+                                songId: slot.song.id,
+                                versionShowDate: slot.version.show_date,
+                                versionVenue: slot.version.venue,
+                                versionArchiveOrgUrl: slot.version.archive_org_url,
+                                versionRating: slot.version.rating,
+                              }
+                            : slot.version
+                              ? { songId: slot.song.id, notableVersionId: slot.version.id }
+                              : { songId: slot.song.id };
+                          const isSongFavorited = isFavoriteVersion(favoritePayload);
 
                           return (
                             <React.Fragment key={slot.id}>
@@ -495,6 +509,29 @@ const SetlistPoster = () => {
                                   </span>
                                 )}
                               </div>
+                              <button
+                                onClick={async (e) => {
+                                  e.stopPropagation();
+                                  const result = await toggleFavoriteSong(favoritePayload);
+                                  if (result.requiresAuth) {
+                                    toast.error("Sign in to save favorite songs");
+                                    return;
+                                  }
+                                  if (!result.ok) {
+                                    toast.error("Could not update favorite songs");
+                                    return;
+                                  }
+                                  toast.success(
+                                    result.favorited
+                                      ? `${slot.song.title} added to favorite songs`
+                                      : `${slot.song.title} removed from favorite songs`
+                                  );
+                                }}
+                                className="shrink-0 p-1 rounded-sm hover:bg-[hsl(38_50%_80%/0.35)] transition-colors"
+                                title={isSongFavorited ? "Remove from favorite songs" : "Add to favorite songs"}
+                              >
+                                <Heart className={`w-3.5 h-3.5 ${isSongFavorited ? "fill-current" : ""}`} style={{ color: isSongFavorited ? `hsl(${eraTheme.accent})` : "hsl(28 15% 45%)" }} />
+                              </button>
 
                               {/* Version info on hover (desktop only, not playing) */}
                               <AnimatePresence>
