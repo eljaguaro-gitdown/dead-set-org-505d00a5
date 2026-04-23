@@ -882,7 +882,7 @@ const MySetlists = () => {
                   </div>
                   <button
                     onClick={async () => {
-                      const result = await toggleFavoriteSong(song.id);
+                       const result = await toggleFavoriteSong({ songId: song.id });
                       if (!result.ok) {
                         toast.error(result.requiresAuth ? "Sign in to save favorite songs" : "Could not update favorite songs");
                         return;

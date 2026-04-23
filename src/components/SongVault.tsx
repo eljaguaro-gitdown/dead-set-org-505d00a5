@@ -175,7 +175,7 @@ const SongVault = ({ songs, eraId, onSelectSong, getNotableVersions, onPlayArchi
                     onPlayArchive={onPlayArchive}
                     isFavoriteVersion={isFavoriteVersion}
                     onToggleFavoriteVersion={async (version) => {
-                      const result = await toggleFavoriteSong({ songId: song.id, notableVersionId: version.id });
+                      const result = await toggleFavoriteSong(version);
                       if (result.requiresAuth) {
                         toast.error("Sign in to save favorite versions");
                         return;
