@@ -67,16 +67,14 @@ const Index = () => {
     const fetchFeatured = async () => {
       const { data: setlists } = await supabase
         .from("setlists")
-        .select("id, title, creator_id, era_id, upvote_count, play_count")
+        .select("id, title, creator_id, era_id, upvote_count, play_count, created_at")
         .eq("is_public", true)
-        .order("play_count", { ascending: false })
-        .limit(50);
+        .order("created_at", { ascending: false })
+        .limit(6);
 
       if (!setlists || setlists.length === 0) return;
 
-      const sorted = [...setlists]
-        .sort((a, b) => (b.play_count + b.upvote_count) - (a.play_count + a.upvote_count))
-        .slice(0, 6);
+      const sorted = setlists;
 
       // Run all three lookups in parallel instead of sequentially
       const creatorIds = [...new Set(sorted.map((s) => s.creator_id))];
