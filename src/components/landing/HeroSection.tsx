@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ChevronRight } from "lucide-react";
+import { trackCtaClick } from "@/lib/trackCtaClick";
 import StealYourFace from "@/components/StealYourFace";
 import AmbientPlayer from "@/components/AmbientPlayer";
 import SocialProof from "@/components/landing/SocialProof";
@@ -82,7 +83,10 @@ const HeroSection = ({ showReturningSignIn = true, featured = [] }: HeroSectionP
         <motion.div {...fade(0.2)} className="w-full sm:w-auto flex flex-col items-center gap-3">
           <Button
             size="lg"
-            onClick={() => navigate("/builder?wizard=true")}
+            onClick={() => {
+              trackCtaClick("hero_primary_builder", "/builder?wizard=true");
+              navigate("/builder?wizard=true");
+            }}
             className="w-full sm:w-auto gap-2 text-base px-8 sm:px-12 py-5 shadow-[0_4px_40px_hsl(var(--glow-gold))] hover:shadow-[0_4px_60px_hsl(var(--glow-gold))]"
           >
             Let Cosmic Charlie Build Your Show
@@ -95,7 +99,10 @@ const HeroSection = ({ showReturningSignIn = true, featured = [] }: HeroSectionP
           )}
           {showReturningSignIn && (
             <button
-              onClick={() => navigate("/auth")}
+              onClick={() => {
+                trackCtaClick("hero_returning_signin", "/auth");
+                navigate("/auth");
+              }}
               className="font-mono text-sm tracking-[0.15em] text-primary/70 hover:text-primary transition-colors underline underline-offset-4 decoration-primary/30 hover:decoration-primary/60"
             >
               Returning user? Sign in here
@@ -109,7 +116,10 @@ const HeroSection = ({ showReturningSignIn = true, featured = [] }: HeroSectionP
           <Button
             variant="outline"
             size="lg"
-            onClick={() => navigate("/browse")}
+            onClick={() => {
+              trackCtaClick("hero_browse", "/browse");
+              navigate("/browse");
+            }}
             className="w-full sm:w-auto gap-2 border-primary/40 text-primary hover:bg-primary/10 hover:border-primary/60"
           >
             🔍 Browse Community Setlists
