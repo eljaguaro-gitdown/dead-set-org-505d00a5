@@ -489,6 +489,64 @@ export type Database = {
         }
         Relationships: []
       }
+      favorite_song_setlists: {
+        Row: {
+          created_at: string
+          id: string
+          setlist_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          setlist_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          setlist_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "favorite_song_setlists_setlist_id_fkey"
+            columns: ["setlist_id"]
+            isOneToOne: true
+            referencedRelation: "setlists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      favorite_songs: {
+        Row: {
+          created_at: string
+          id: string
+          song_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          song_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          song_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "favorite_songs_song_id_fkey"
+            columns: ["song_id"]
+            isOneToOne: false
+            referencedRelation: "songs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       favorites: {
         Row: {
           created_at: string
@@ -1016,6 +1074,10 @@ export type Database = {
       enqueue_email: {
         Args: { payload: Json; queue_name: string }
         Returns: number
+      }
+      ensure_favorite_song_setlist: {
+        Args: { _user_id: string }
+        Returns: string
       }
       has_role: {
         Args: {
