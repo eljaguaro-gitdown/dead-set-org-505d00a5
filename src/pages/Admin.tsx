@@ -5,6 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Shield, Users, ArrowLeft, Loader2, Calendar, Mail, User, Trash2, ListMusic, Eye, Globe, MessageSquare, Bug, Star, Lightbulb, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import LiveVisitorsWidget from "@/components/LiveVisitorsWidget";
+import FunnelWidget from "@/components/FunnelWidget";
 import AdminAnnouncementsPanel from "@/components/AdminAnnouncementsPanel";
 import {
   AlertDialog,
@@ -367,6 +368,12 @@ const Admin = () => {
             </div>
           </div>
         </div>
+
+        {/* Conversion Funnel */}
+        <FunnelWidget
+          enabled={isAdmin}
+          signupDates={users.map((u) => u.createdAt).filter(Boolean)}
+        />
 
         {/* Live Visitors */}
         <LiveVisitorsWidget enabled={isAdmin} />
