@@ -72,10 +72,15 @@ const SiteHeader = ({ children, large = false }: SiteHeaderProps) => {
   ) : null;
 
   const nowPlaying = playingSlot ? (
-    <motion.div
+    <motion.button
+      type="button"
+      onClick={() => activeSetlistId && navigate(`/setlist/${activeSetlistId}`)}
+      disabled={!activeSetlistId}
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
-      className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-primary/10 border border-primary/20 max-w-[180px] sm:max-w-[220px]"
+      className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-primary/10 border border-primary/20 max-w-[180px] sm:max-w-[220px] hover:bg-primary/20 hover:border-primary/40 transition-colors disabled:cursor-default disabled:hover:bg-primary/10 disabled:hover:border-primary/20"
+      title={activeSetlistId ? "Open setlist" : "Now playing"}
+      aria-label={activeSetlistId ? `Open setlist for ${playingSlot.song.title}` : `Now playing: ${playingSlot.song.title}`}
     >
       {/* Animated equalizer bars */}
       <div className="flex items-end gap-[2px] h-3 shrink-0">
@@ -96,7 +101,7 @@ const SiteHeader = ({ children, large = false }: SiteHeaderProps) => {
           {playlistIndex + 1}/{playlistSlots.length}
         </span>
       )}
-    </motion.div>
+    </motion.button>
   ) : null;
 
   const isRepeatVisitor = typeof window !== "undefined" && !!localStorage.getItem("dead_set_visited");
