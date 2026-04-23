@@ -18,6 +18,16 @@ export const useFavoriteSongs = () => {
   const [favoriteSetlistId, setFavoriteSetlistId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
+  const refreshFavoriteSetlistLink = useCallback(async (userId: string) => {
+    const { data } = await (supabase as any)
+      .from("favorite_song_setlists")
+      .select("setlist_id")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    setFavoriteSetlistId((data as FavoriteSongSetlistLink | null)?.setlist_id || null);
+  }, []);
+
   useEffect(() => {
     if (!user) {
       setFavoriteSongs([]);
@@ -67,8 +77,7 @@ export const useFavoriteSongs = () => {
       if (existing) {
         setFavoriteSongs((prev) => prev.filter((song) => song.song_id !== songId));
 
-        const { error } = await supabase
-          as any
+        const { error } = await (supabase as any)
           .from("favorite_songs")
           .delete()
           .eq("id", existing.id);
@@ -78,13 +87,7 @@ export const useFavoriteSongs = () => {
           return { ok: false, requiresAuth: false as const };
         }
 
-        const { data: linkData } = await (supabase as any)
-          .from("favorite_song_setlists")
-          .select("setlist_id")
-          .eq("user_id", user.id)
-          .maybeSingle();
-
-        setFavoriteSetlistId((linkData as FavoriteSongSetlistLink | null)?.setlist_id || null);
+        await refreshFavoriteSetlistLink(user.id);
         return { ok: true, requiresAuth: false as const, favorited: false as const };
       }
 
@@ -108,16 +111,10 @@ export const useFavoriteSongs = () => {
       }
 
       setFavoriteSongs((prev) => [data as FavoriteSongRow, ...prev.filter((song) => song.song_id !== songId)]);
-      const { data: linkData } = await (supabase as any)
-        .from("favorite_song_setlists")
-        .select("setlist_id")
-        .eq("user_id", user.id)
-        .maybeSingle();
-
-      setFavoriteSetlistId((linkData as FavoriteSongSetlistLink | null)?.setlist_id || null);
+      await refreshFavoriteSetlistLink(user.id);
       return { ok: true, requiresAuth: false as const, favorited: true as const };
     },
-    [user, favoriteSongs]
+    [user, favoriteSongs, refreshFavoriteSetlistLink]
   );
 
   return {
