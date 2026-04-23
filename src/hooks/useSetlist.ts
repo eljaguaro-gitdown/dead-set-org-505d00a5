@@ -262,9 +262,17 @@ export const useSetlist = (user: User | null, setlistId?: string | null) => {
   const togglePublic = useCallback(async () => {
     if (!setlist) return;
     const newVal = !setlist.is_public;
-    await supabase.from("setlists").update({ is_public: newVal }).eq("id", setlist.id);
-    setSetlist((prev) => prev ? { ...prev, is_public: newVal } : prev);
+    const { error } = await supabase.from("setlists").update({ is_public: newVal }).eq("id", setlist.id);
+    if (error) {
+      console.error("Failed to update setlist visibility:", error);
+      toast.error("Could not update setlist visibility");
+      return null;
+    }
+
+    const updatedSetlist = { ...setlist, is_public: newVal };
+    setSetlist(updatedSetlist);
     toast.success(newVal ? "Setlist is now public" : "Setlist is now private");
+    return updatedSetlist;
   }, [setlist]);
 
   // Generate share link
