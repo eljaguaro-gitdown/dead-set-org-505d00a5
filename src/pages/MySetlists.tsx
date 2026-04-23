@@ -10,6 +10,7 @@ import { useFavorites } from "@/hooks/useFavorites";
 import PageLayout from "@/components/PageLayout";
 import SiteHeader from "@/components/SiteHeader";
 import CommunityHighlights from "@/components/CommunityHighlights";
+import { emitCommunityFeedOptimisticInsert } from "@/lib/communityFeedEvents";
 
 import type { Database } from "@/integrations/supabase/types";
 
@@ -183,8 +184,28 @@ const MySetlists = () => {
   const handleTogglePrivacy = async (id: string, isPublic: boolean | null, e: React.MouseEvent) => {
     e.stopPropagation();
     const newVal = !isPublic;
-    await supabase.from("setlists").update({ is_public: newVal }).eq("id", id);
+    const currentSetlist = setlists.find((s) => s.id === id);
+    const { error } = await supabase.from("setlists").update({ is_public: newVal }).eq("id", id);
+    if (error) {
+      toast.error("Could not update setlist visibility");
+      return;
+    }
+
     setSetlists((prev) => prev.map((s) => s.id === id ? { ...s, is_public: newVal } : s));
+    if (newVal && user && currentSetlist) {
+      emitCommunityFeedOptimisticInsert({
+        id: currentSetlist.id,
+        title: currentSetlist.title,
+        creator_id: currentSetlist.creator_id,
+        era_id: currentSetlist.era_id,
+        upvote_count: currentSetlist.upvote_count,
+        play_count: currentSetlist.play_count,
+        creator_name: displayName || "Unknown",
+        era_name: currentSetlist.eraData?.name || null,
+        song_count: currentSetlist.slot_count,
+        created_at: currentSetlist.created_at,
+      });
+    }
     toast.success(newVal ? "Setlist is now public" : "Setlist is now private");
   };
 
@@ -641,8 +662,28 @@ const MySetlists = () => {
                         className="gap-1.5 border-primary/30 text-primary font-body text-xs h-7 px-2.5 hover:bg-primary/10"
                         onClick={async (e) => {
                           e.stopPropagation();
-                          await supabase.from("setlists").update({ is_public: true }).eq("id", s.id);
+                           const currentSetlist = setlists.find((sl) => sl.id === s.id);
+                           const { error } = await supabase.from("setlists").update({ is_public: true }).eq("id", s.id);
+                           if (error) {
+                             toast.error("Could not update setlist visibility");
+                             return;
+                           }
+
                           setSetlists((prev) => prev.map((sl) => sl.id === s.id ? { ...sl, is_public: true } : sl));
+                           if (user && currentSetlist) {
+                             emitCommunityFeedOptimisticInsert({
+                               id: currentSetlist.id,
+                               title: currentSetlist.title,
+                               creator_id: currentSetlist.creator_id,
+                               era_id: currentSetlist.era_id,
+                               upvote_count: currentSetlist.upvote_count,
+                               play_count: currentSetlist.play_count,
+                               creator_name: displayName || "Unknown",
+                               era_name: currentSetlist.eraData?.name || null,
+                               song_count: currentSetlist.slot_count,
+                               created_at: currentSetlist.created_at,
+                             });
+                           }
                           toast.success(`"${s.title}" is now public`);
                         }}
                       >
