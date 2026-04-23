@@ -18,7 +18,8 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { motion } from "framer-motion";
-import { X, GripVertical, ChevronRight, ChevronDown, ExternalLink, Headphones, Play, Sparkles, Loader2, RefreshCw } from "lucide-react";
+import { X, GripVertical, ChevronRight, ChevronDown, ExternalLink, Headphones, Play, Sparkles, Loader2, RefreshCw, Heart } from "lucide-react";
+import { useFavoriteSongs } from "@/hooks/useFavoriteSongs";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { findArchiveRecording, type ArchiveResult } from "@/lib/archiveOrg";
@@ -69,6 +70,7 @@ const SortableSlotItem = ({
   onUpdateNotes: (id: string, notes: string) => void;
   onPlayVersion?: (slot: SetlistSlotData) => void;
 }) => {
+  const { isFavoriteVersion, toggleFavoriteSong } = useFavoriteSongs();
   const {
     attributes,
     listeners,
@@ -107,6 +109,20 @@ const SortableSlotItem = ({
     opacity: isDragging ? 0.5 : 1,
     zIndex: isDragging ? 50 : undefined,
   };
+
+  const favoritePayload = slot.version?.id?.startsWith("archive-")
+    ? {
+        songId: slot.song.id,
+        versionShowDate: slot.version.show_date,
+        versionVenue: slot.version.venue,
+        versionArchiveOrgUrl: slot.version.archive_org_url,
+        versionRating: slot.version.rating,
+      }
+    : slot.version
+      ? { songId: slot.song.id, notableVersionId: slot.version.id }
+      : { songId: slot.song.id };
+
+  const isFavorited = isFavoriteVersion(favoritePayload);
 
   return (
     <div ref={setNodeRef} style={style}>
@@ -150,12 +166,22 @@ const SortableSlotItem = ({
                   <Play className="w-3.5 h-3.5 text-primary opacity-0 group-hover:opacity-70 transition-opacity fill-current shrink-0" />
                 )}
               </span>
-              <button
-                onClick={() => onRemoveSlot(slot.id)}
-                className="opacity-0 group-hover:opacity-100 transition-opacity"
-              >
-                <X className="w-4 h-4 text-muted-foreground hover:text-primary" />
-              </button>
+              <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    await toggleFavoriteSong(favoritePayload);
+                  }}
+                  title={isFavorited ? "Remove from favorite songs" : "Add to favorite songs"}
+                >
+                  <Heart className={`w-4 h-4 transition-colors ${isFavorited ? "text-primary fill-primary" : "text-muted-foreground hover:text-primary"}`} />
+                </button>
+                <button
+                  onClick={() => onRemoveSlot(slot.id)}
+                >
+                  <X className="w-4 h-4 text-muted-foreground hover:text-primary" />
+                </button>
+              </div>
             </div>
             {slot.version && (
               <div className="flex items-center gap-1.5 mt-1">

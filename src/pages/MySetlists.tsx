@@ -41,6 +41,10 @@ interface FavoriteSongCard {
   times_played: number | null;
   tags: string[] | null;
   added_at: string;
+  notable_version_id: string | null;
+  version_show_date: string | null;
+  version_venue: string | null;
+  version_archive_org_url: string | null;
 }
 
 const MySetlists = () => {
@@ -94,6 +98,10 @@ const MySetlists = () => {
               times_played: song.times_played,
               tags: song.tags,
               added_at: favorite.created_at,
+              notable_version_id: favorite.notable_version_id,
+              version_show_date: favorite.version_show_date,
+              version_venue: favorite.version_venue,
+              version_archive_org_url: favorite.version_archive_org_url,
             };
           })
           .filter(Boolean) as FavoriteSongCard[]
@@ -877,12 +885,23 @@ const MySetlists = () => {
                     </div>
                     <div className="flex items-center gap-3 mt-1 text-[10px] font-body text-muted-foreground flex-wrap">
                       <span>Saved {new Date(song.added_at).toLocaleDateString()}</span>
+                        {(song.version_show_date || song.version_venue) ? (
+                          <span>
+                            {[song.version_show_date, song.version_venue].filter(Boolean).join(" · ")}
+                          </span>
+                        ) : null}
                       {song.times_played ? <span>{song.times_played} plays</span> : null}
                     </div>
                   </div>
                   <button
                     onClick={async () => {
-                       const result = await toggleFavoriteSong({ songId: song.id });
+                       const result = await toggleFavoriteSong({
+                         songId: song.id,
+                         notableVersionId: song.notable_version_id,
+                         versionShowDate: song.version_show_date,
+                         versionVenue: song.version_venue,
+                         versionArchiveOrgUrl: song.version_archive_org_url,
+                       });
                       if (!result.ok) {
                         toast.error(result.requiresAuth ? "Sign in to save favorite songs" : "Could not update favorite songs");
                         return;
