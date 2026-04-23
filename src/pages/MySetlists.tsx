@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useFavorites } from "@/hooks/useFavorites";
+import { useFavoriteSongs } from "@/hooks/useFavoriteSongs";
 import PageLayout from "@/components/PageLayout";
 import SiteHeader from "@/components/SiteHeader";
 import CommunityHighlights from "@/components/CommunityHighlights";
@@ -34,12 +35,22 @@ interface SavedSetlist {
   era_name: string | null;
 }
 
+interface FavoriteSongCard {
+  id: string;
+  title: string;
+  times_played: number | null;
+  tags: string[] | null;
+  added_at: string;
+}
+
 const MySetlists = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading, signOut } = useAuth();
   const { favoriteIds, toggleFavorite } = useFavorites();
+  const { favoriteSongs, favoriteSetlistId, toggleFavoriteSong } = useFavoriteSongs();
   const [setlists, setSetlists] = useState<SetlistWithMeta[]>([]);
   const [savedSetlists, setSavedSetlists] = useState<SavedSetlist[]>([]);
+  const [favoriteSongsList, setFavoriteSongsList] = useState<FavoriteSongCard[]>([]);
   const [loading, setLoading] = useState(true);
   const [savedLoading, setSavedLoading] = useState(true);
   const [sortBy, setSortBy] = useState<"recent" | "most_played" | "name">("recent");
@@ -57,6 +68,40 @@ const MySetlists = () => {
         setDisplayName(data?.display_name || null);
       });
   }, [user]);
+
+  useEffect(() => {
+    if (favoriteSongs.length === 0) {
+      setFavoriteSongsList([]);
+      return;
+    }
+
+    const fetchFavoriteSongs = async () => {
+      const songIds = favoriteSongs.map((song) => song.song_id);
+      const { data } = await supabase
+        .from("songs")
+        .select("id, title, times_played, tags")
+        .in("id", songIds);
+
+      const songMap = new Map((data || []).map((song) => [song.id, song]));
+      setFavoriteSongsList(
+        favoriteSongs
+          .map((favorite) => {
+            const song = songMap.get(favorite.song_id);
+            if (!song) return null;
+            return {
+              id: song.id,
+              title: song.title,
+              times_played: song.times_played,
+              tags: song.tags,
+              added_at: favorite.created_at,
+            };
+          })
+          .filter(Boolean) as FavoriteSongCard[]
+      );
+    };
+
+    fetchFavoriteSongs();
+  }, [favoriteSongs]);
 
   useEffect(() => {
     if (!user) return;
@@ -778,6 +823,78 @@ const MySetlists = () => {
                     </button>
                   </div>
                 </motion.button>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
+        {favoriteSongsList.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.35, duration: 0.5 }}
+            className="mt-10 space-y-4"
+          >
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <Heart className="w-4 h-4 text-primary fill-primary" />
+                <div>
+                  <h2 className="font-display text-lg text-foreground">Favorite Songs</h2>
+                  <p className="font-body text-xs text-muted-foreground mt-0.5">
+                    Your saved songs and the auto-built favorites set.
+                  </p>
+                </div>
+              </div>
+              {favoriteSetlistId && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="border-primary/30 text-primary font-body"
+                  onClick={() => navigate(`/builder/${favoriteSetlistId}`)}
+                >
+                  Open favorites setlist
+                </Button>
+              )}
+            </div>
+
+            <div className="grid gap-2">
+              {favoriteSongsList.map((song, i) => (
+                <motion.div
+                  key={song.id}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.03 }}
+                  className="rounded-xl border border-border bg-card/80 p-4 flex items-start justify-between gap-3"
+                >
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h3 className="font-display text-base text-foreground">{song.title}</h3>
+                      {song.tags?.slice(0, 3).map((tag) => (
+                        <span key={tag} className="px-2 py-0.5 text-[10px] font-body rounded-full border border-primary/20 text-primary/70">
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                    <div className="flex items-center gap-3 mt-1 text-[10px] font-body text-muted-foreground flex-wrap">
+                      <span>Saved {new Date(song.added_at).toLocaleDateString()}</span>
+                      {song.times_played ? <span>{song.times_played} plays</span> : null}
+                    </div>
+                  </div>
+                  <button
+                    onClick={async () => {
+                      const result = await toggleFavoriteSong(song.id);
+                      if (!result.ok) {
+                        toast.error(result.requiresAuth ? "Sign in to save favorite songs" : "Could not update favorite songs");
+                        return;
+                      }
+                      toast.success(result.favorited ? `${song.title} added to favorite songs` : `${song.title} removed from favorite songs`);
+                    }}
+                    className="shrink-0 p-2 rounded-lg hover:bg-muted transition-colors"
+                    title="Remove from favorite songs"
+                  >
+                    <Heart className="w-4 h-4 text-primary fill-primary" />
+                  </button>
+                </motion.div>
               ))}
             </div>
           </motion.div>
