@@ -28,12 +28,12 @@ export const useFavoriteSongs = () => {
     const fetchFavorites = async () => {
       setLoading(true);
       const [{ data: favoriteData }, { data: linkData }] = await Promise.all([
-        supabase
+        (supabase as any)
           .from("favorite_songs")
           .select("id, song_id, created_at")
           .eq("user_id", user.id)
           .order("created_at", { ascending: false }),
-        supabase
+        (supabase as any)
           .from("favorite_song_setlists")
           .select("setlist_id")
           .eq("user_id", user.id)
@@ -68,6 +68,7 @@ export const useFavoriteSongs = () => {
         setFavoriteSongs((prev) => prev.filter((song) => song.song_id !== songId));
 
         const { error } = await supabase
+          as any
           .from("favorite_songs")
           .delete()
           .eq("id", existing.id);
@@ -77,6 +78,13 @@ export const useFavoriteSongs = () => {
           return { ok: false, requiresAuth: false as const };
         }
 
+        const { data: linkData } = await (supabase as any)
+          .from("favorite_song_setlists")
+          .select("setlist_id")
+          .eq("user_id", user.id)
+          .maybeSingle();
+
+        setFavoriteSetlistId((linkData as FavoriteSongSetlistLink | null)?.setlist_id || null);
         return { ok: true, requiresAuth: false as const, favorited: false as const };
       }
 
@@ -88,8 +96,8 @@ export const useFavoriteSongs = () => {
 
       setFavoriteSongs((prev) => [optimistic, ...prev.filter((song) => song.song_id !== songId)]);
 
-      const { data, error } = await supabase
-        .from("favorite_songs")
+      const { data, error } = await (supabase as any)
+          .from("favorite_songs")
         .insert({ user_id: user.id, song_id: songId })
         .select("id, song_id, created_at")
         .single();
@@ -100,6 +108,13 @@ export const useFavoriteSongs = () => {
       }
 
       setFavoriteSongs((prev) => [data as FavoriteSongRow, ...prev.filter((song) => song.song_id !== songId)]);
+      const { data: linkData } = await (supabase as any)
+        .from("favorite_song_setlists")
+        .select("setlist_id")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      setFavoriteSetlistId((linkData as FavoriteSongSetlistLink | null)?.setlist_id || null);
       return { ok: true, requiresAuth: false as const, favorited: true as const };
     },
     [user, favoriteSongs]
