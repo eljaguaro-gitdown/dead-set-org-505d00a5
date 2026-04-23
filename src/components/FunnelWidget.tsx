@@ -15,6 +15,7 @@ interface DayRow {
   day: string; // YYYY-MM-DD
   visitors: number;
   ctaClicks: number;
+  ctaClicksV2: number; // above-the-fold variant
   authVisits: number;
   signups: number;
 }
@@ -28,7 +29,7 @@ const buildDayBuckets = (days: number): Record<string, DayRow> => {
     const d = new Date(now);
     d.setUTCDate(d.getUTCDate() - i);
     const key = fmtDay(d);
-    buckets[key] = { day: key, visitors: 0, ctaClicks: 0, authVisits: 0, signups: 0 };
+    buckets[key] = { day: key, visitors: 0, ctaClicks: 0, ctaClicksV2: 0, authVisits: 0, signups: 0 };
   }
   return buckets;
 };
