@@ -237,6 +237,7 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
           src={track?.src}
           onTimeUpdate={handleTimeUpdate}
           onEnded={handleEnded}
+          onError={handleAudioError}
           onLoadedMetadata={handleTimeUpdate}
           muted={muted}
         />
