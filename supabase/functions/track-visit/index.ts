@@ -8,8 +8,8 @@ const corsHeaders = {
 
 // Simple in-memory rate limiter (per isolate lifetime)
 const rateLimits = new Map<string, { count: number; resetAt: number }>();
-const RATE_LIMIT_WINDOW_MS = 60_000; // 1 minute
-const RATE_LIMIT_MAX = 10; // max 10 inserts per visitor per minute
+const RATE_LIMIT_WINDOW_MS = 60_000;
+const RATE_LIMIT_MAX = 10;
 
 function isRateLimited(visitorId: string): boolean {
   const now = Date.now();
@@ -22,14 +22,29 @@ function isRateLimited(visitorId: string): boolean {
   return entry.count > RATE_LIMIT_MAX;
 }
 
-// UUID v4 pattern
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
-Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+/** Parse a referrer URL or explicit ref param into a normalized source bucket. */
+function classifySource(referrer: string | null, refParam: string | null): string | null {
+  const r = (refParam || "").toLowerCase().trim();
+  if (r === "lovable" || r === "lovable.dev") return "lovable";
+  if (!referrer) return refParam ? r.slice(0, 64) : null;
+  try {
+    const host = new URL(referrer).hostname.toLowerCase();
+    if (host.endsWith("lovable.dev") || host.endsWith("lovable.app")) return "lovable";
+    if (host.includes("google.")) return "google";
+    if (host.includes("facebook.") || host.includes("fb.")) return "facebook";
+    if (host.includes("twitter.") || host === "t.co" || host.includes("x.com")) return "twitter";
+    if (host.includes("reddit.")) return "reddit";
+    if (host.includes("instagram.")) return "instagram";
+    return host.slice(0, 64);
+  } catch {
+    return null;
   }
+}
 
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   if (req.method !== "POST") {
     return new Response(JSON.stringify({ error: "Method not allowed" }), {
       status: 405,
@@ -39,25 +54,20 @@ Deno.serve(async (req) => {
 
   try {
     const body = await req.json();
-    const { visitor_id, page_path, user_agent } = body;
+    const { visitor_id, page_path, user_agent, referrer, ref_param } = body;
 
-    // Validate visitor_id: must be a UUID
     if (!visitor_id || typeof visitor_id !== "string" || !UUID_RE.test(visitor_id)) {
       return new Response(JSON.stringify({ error: "Invalid visitor_id" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-
-    // Validate page_path
     if (!page_path || typeof page_path !== "string" || page_path.length > 512) {
       return new Response(JSON.stringify({ error: "Invalid page_path" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-
-    // Validate user_agent
     if (user_agent !== undefined && user_agent !== null) {
       if (typeof user_agent !== "string" || user_agent.length > 1024) {
         return new Response(JSON.stringify({ error: "Invalid user_agent" }), {
@@ -67,7 +77,16 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Rate limit check
+    const cleanReferrer =
+      typeof referrer === "string" && referrer.length > 0 && referrer.length <= 1024
+        ? referrer
+        : null;
+    const cleanRefParam =
+      typeof ref_param === "string" && ref_param.length > 0 && ref_param.length <= 64
+        ? ref_param
+        : null;
+    const landingSource = classifySource(cleanReferrer, cleanRefParam);
+
     if (isRateLimited(visitor_id)) {
       return new Response(JSON.stringify({ error: "Rate limited" }), {
         status: 429,
@@ -85,6 +104,8 @@ Deno.serve(async (req) => {
       visitor_id,
       page_path: page_path.slice(0, 512),
       user_agent: user_agent ? user_agent.slice(0, 1024) : null,
+      referrer: cleanReferrer ? cleanReferrer.slice(0, 1024) : null,
+      landing_source: landingSource,
     });
 
     if (error) {
@@ -95,10 +116,26 @@ Deno.serve(async (req) => {
       });
     }
 
-    return new Response(JSON.stringify({ ok: true }), {
+    // First-touch attribution: only insert if visitor has no row yet
+    // (PRIMARY KEY conflict on duplicate is silently ignored)
+    if (landingSource || cleanReferrer) {
+      await supabase
+        .from("visitor_attribution")
+        .insert({
+          visitor_id,
+          first_referrer: cleanReferrer ? cleanReferrer.slice(0, 1024) : null,
+          first_source: landingSource,
+          first_landing_path: page_path.slice(0, 512),
+        })
+        .select()
+        .maybeSingle()
+        .then(() => null, () => null); // ignore conflicts
+    }
+
+    return new Response(JSON.stringify({ ok: true, source: landingSource }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
-  } catch (e) {
+  } catch (_e) {
     return new Response(JSON.stringify({ error: "Bad request" }), {
       status: 400,
       headers: { ...corsHeaders, "Content-Type": "application/json" },

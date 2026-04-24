@@ -16,6 +16,8 @@ const VisitorTracker = () => {
     const track = async () => {
       const visitorId = getVisitorId();
       const pagePath = window.location.pathname;
+      const referrer = document.referrer || null;
+      const refParam = new URLSearchParams(window.location.search).get("ref");
 
       try {
         await supabase.functions.invoke("track-visit", {
@@ -23,6 +25,8 @@ const VisitorTracker = () => {
             visitor_id: visitorId,
             page_path: pagePath,
             user_agent: navigator.userAgent,
+            referrer,
+            ref_param: refParam,
           },
         });
       } catch {

@@ -34,10 +34,18 @@ const buildDayBuckets = (days: number): Record<string, DayRow> => {
   return buckets;
 };
 
+interface LovableStats {
+  visitors24h: number;
+  signups24h: number;
+  visitorsTotal: number;
+  signupsTotal: number;
+}
+
 const FunnelWidget = ({ signupDates, enabled }: FunnelWidgetProps) => {
   const [range, setRange] = useState<Range>(7);
   const [loading, setLoading] = useState(true);
   const [rows, setRows] = useState<DayRow[]>([]);
+  const [lovable, setLovable] = useState<LovableStats | null>(null);
 
   useEffect(() => {
     if (!enabled) return;
@@ -53,7 +61,9 @@ const FunnelWidget = ({ signupDates, enabled }: FunnelWidgetProps) => {
       const buckets = buildDayBuckets(range);
 
       // Fetch in parallel — admins have SELECT on both tables via RLS
-      const [visitsRes, ctaRes] = await Promise.all([
+      const dayMs = 86_400_000;
+      const since24h = new Date(Date.now() - dayMs).toISOString();
+      const [visitsRes, ctaRes, lovableAttrRes, lovableVisits24hRes] = await Promise.all([
         supabase
           .from("page_visits")
           .select("visitor_id, page_path, created_at")
@@ -64,6 +74,17 @@ const FunnelWidget = ({ signupDates, enabled }: FunnelWidgetProps) => {
           .select("created_at, channel")
           .eq("share_type", "cta_click")
           .gte("created_at", sinceIso)
+          .limit(50_000),
+        supabase
+          .from("visitor_attribution")
+          .select("visitor_id, user_id, signed_up_at")
+          .eq("first_source", "lovable")
+          .limit(50_000),
+        supabase
+          .from("page_visits")
+          .select("visitor_id")
+          .eq("landing_source", "lovable")
+          .gte("created_at", since24h)
           .limit(50_000),
       ]);
 
@@ -97,6 +118,21 @@ const FunnelWidget = ({ signupDates, enabled }: FunnelWidgetProps) => {
         const day = fmtDay(new Date(ts));
         if (buckets[day]) buckets[day].signups++;
       }
+
+      // Lovable attribution stats (independent of range — always cumulative + 24h)
+      const lovableAttr = lovableAttrRes.data ?? [];
+      const lovable24hVisitorIds = new Set(
+        (lovableVisits24hRes.data ?? []).map((v) => v.visitor_id),
+      );
+      const signups24hCutoff = Date.now() - dayMs;
+      setLovable({
+        visitors24h: lovable24hVisitorIds.size,
+        signups24h: lovableAttr.filter(
+          (a) => a.signed_up_at && new Date(a.signed_up_at).getTime() > signups24hCutoff,
+        ).length,
+        visitorsTotal: lovableAttr.length,
+        signupsTotal: lovableAttr.filter((a) => a.user_id).length,
+      });
 
       setRows(Object.values(buckets).reverse()); // newest first
       setLoading(false);
@@ -159,6 +195,31 @@ const FunnelWidget = ({ signupDates, enabled }: FunnelWidgetProps) => {
             <FunnelStat label="/auth visits" value={totals.authVisits} sub={pct(totals.authVisits, totals.visitors)} />
             <FunnelStat label="Signups" value={totals.signups} sub={pct(totals.signups, totals.visitors)} highlight />
           </div>
+
+          {/* Lovable referral attribution */}
+          {lovable && (
+            <div className="px-4 py-3 border-b border-border bg-primary/5">
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <div className="flex items-center gap-2">
+                  <span className="text-base">🌀</span>
+                  <h3 className="font-display text-sm text-primary">Lovable Referrals</h3>
+                  <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground/70">
+                    launched apr 24
+                  </span>
+                </div>
+                <div className="flex items-center gap-4 text-xs font-mono">
+                  <span className="text-muted-foreground">
+                    24h: <span className="text-foreground font-bold">{lovable.visitors24h}</span> visits ·{" "}
+                    <span className="text-primary font-bold">{lovable.signups24h}</span> signups
+                  </span>
+                  <span className="text-muted-foreground">
+                    total: <span className="text-foreground font-bold">{lovable.visitorsTotal}</span> →{" "}
+                    <span className="text-primary font-bold">{lovable.signupsTotal}</span> ({pct(lovable.signupsTotal, lovable.visitorsTotal)})
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Daily breakdown */}
           <div className="overflow-x-auto">
