@@ -433,27 +433,9 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
           )}
 
           {playlistInfo && (
-            <div className="flex items-center gap-1 shrink-0">
-              <button
-                onClick={onPrev}
-                disabled={playlistInfo.current <= 1}
-                className="text-muted-foreground hover:text-foreground disabled:opacity-30 transition-colors"
-                title="Previous song"
-              >
-                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
-              </button>
-              <span className="text-[10px] text-muted-foreground font-body tabular-nums">
-                {playlistInfo.current}/{playlistInfo.total}
-              </span>
-              <button
-                onClick={onNext}
-                disabled={playlistInfo.current >= playlistInfo.total}
-                className="text-muted-foreground hover:text-foreground disabled:opacity-30 transition-colors"
-                title="Next song"
-              >
-                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
-              </button>
-            </div>
+            <span className="text-[10px] text-muted-foreground font-body tabular-nums shrink-0" title="Position in setlist">
+              {playlistInfo.current}/{playlistInfo.total}
+            </span>
           )}
 
           <button onClick={onClose} className="text-muted-foreground hover:text-foreground shrink-0">
