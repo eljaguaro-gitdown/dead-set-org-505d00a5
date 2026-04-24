@@ -185,6 +185,39 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
     }
   }, [currentTrack, tracks]);
 
+  // iOS / Android lock-screen "Now Playing" metadata.
+  // Without this, the OS falls back to the page title + favicon (which is why
+  // the Lovable graphic was appearing). Sets Steal Your Face as artwork and
+  // Dead-Set.Org as the artist line.
+  useEffect(() => {
+    if (typeof window === "undefined" || !("mediaSession" in navigator)) return;
+    try {
+      navigator.mediaSession.metadata = new window.MediaMetadata({
+        title: songTitle || "Dead-Set.Org",
+        artist: "Dead-Set.Org",
+        album: venue ? `${venue}${showDate ? ` • ${showDate}` : ""}` : "The music never stopped.",
+        artwork: [
+          { src: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
+          { src: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
+        ],
+      });
+      navigator.mediaSession.setActionHandler?.("play", () => audioRef.current?.play().catch(() => {}));
+      navigator.mediaSession.setActionHandler?.("pause", () => audioRef.current?.pause());
+      navigator.mediaSession.setActionHandler?.("nexttrack", onNext ? () => onNext() : null);
+      navigator.mediaSession.setActionHandler?.("previoustrack", onPrev ? () => onPrev() : null);
+    } catch {
+      // MediaSession not fully supported — silently ignore
+    }
+  }, [songTitle, venue, showDate, onNext, onPrev]);
+
+  // Keep playback state in sync with the OS widget
+  useEffect(() => {
+    if (typeof window === "undefined" || !("mediaSession" in navigator)) return;
+    try {
+      navigator.mediaSession.playbackState = playing ? "playing" : "paused";
+    } catch { /* noop */ }
+  }, [playing]);
+
   const togglePlay = () => {
     if (!audioRef.current) return;
     if (playing) {
