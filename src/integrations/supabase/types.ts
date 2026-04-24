@@ -743,21 +743,27 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          landing_source: string | null
           page_path: string
+          referrer: string | null
           user_agent: string | null
           visitor_id: string
         }
         Insert: {
           created_at?: string
           id?: string
+          landing_source?: string | null
           page_path?: string
+          referrer?: string | null
           user_agent?: string | null
           visitor_id: string
         }
         Update: {
           created_at?: string
           id?: string
+          landing_source?: string | null
           page_path?: string
+          referrer?: string | null
           user_agent?: string | null
           visitor_id?: string
         }
@@ -1084,6 +1090,36 @@ export type Database = {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
+        }
+        Relationships: []
+      }
+      visitor_attribution: {
+        Row: {
+          first_landing_path: string | null
+          first_referrer: string | null
+          first_seen_at: string
+          first_source: string | null
+          signed_up_at: string | null
+          user_id: string | null
+          visitor_id: string
+        }
+        Insert: {
+          first_landing_path?: string | null
+          first_referrer?: string | null
+          first_seen_at?: string
+          first_source?: string | null
+          signed_up_at?: string | null
+          user_id?: string | null
+          visitor_id: string
+        }
+        Update: {
+          first_landing_path?: string | null
+          first_referrer?: string | null
+          first_seen_at?: string
+          first_source?: string | null
+          signed_up_at?: string | null
+          user_id?: string | null
+          visitor_id?: string
         }
         Relationships: []
       }
