@@ -119,6 +119,21 @@ const FunnelWidget = ({ signupDates, enabled }: FunnelWidgetProps) => {
         if (buckets[day]) buckets[day].signups++;
       }
 
+      // Lovable attribution stats (independent of range — always cumulative + 24h)
+      const lovableAttr = lovableAttrRes.data ?? [];
+      const lovable24hVisitorIds = new Set(
+        (lovableVisits24hRes.data ?? []).map((v) => v.visitor_id),
+      );
+      const signups24hCutoff = Date.now() - dayMs;
+      setLovable({
+        visitors24h: lovable24hVisitorIds.size,
+        signups24h: lovableAttr.filter(
+          (a) => a.signed_up_at && new Date(a.signed_up_at).getTime() > signups24hCutoff,
+        ).length,
+        visitorsTotal: lovableAttr.length,
+        signupsTotal: lovableAttr.filter((a) => a.user_id).length,
+      });
+
       setRows(Object.values(buckets).reverse()); // newest first
       setLoading(false);
     };
