@@ -163,6 +163,7 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
   };
 
   const handleEnded = () => {
+    console.log("[AudioPlayer] track ended", { songTitle, singleTrackMode, hasOnEnded: !!onEnded });
     if (singleTrackMode) {
       setPlaying(false);
       onEnded?.();
@@ -173,6 +174,17 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
     } else {
       setPlaying(false);
       onEnded?.();
+    }
+  };
+
+  const handleAudioError = () => {
+    console.warn("[AudioPlayer] audio error", { songTitle, src: track?.src });
+    // In playlist mode, advance past the broken track so the queue keeps moving.
+    if (singleTrackMode && onEnded) {
+      setPlaying(false);
+      onEnded();
+    } else {
+      setError("Couldn't play this track");
     }
   };
 
