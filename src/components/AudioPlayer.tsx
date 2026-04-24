@@ -26,6 +26,18 @@ interface AudioPlayerProps {
   activeSetlistId?: string | null;
 }
 
+// Default seconds of no `timeupdate` before we treat a playlist track as stalled and skip it.
+// Override at runtime via `localStorage.setItem("playlistStallTimeoutMs", "20000")`.
+const DEFAULT_STALL_TIMEOUT_MS = 12000;
+
+const readStallTimeoutMs = (): number => {
+  if (typeof window === "undefined") return DEFAULT_STALL_TIMEOUT_MS;
+  const raw = Number(window.localStorage.getItem("playlistStallTimeoutMs"));
+  // Clamp: 0 disables, otherwise require a sane minimum so we don't skip prematurely.
+  if (!Number.isFinite(raw) || raw <= 0) return DEFAULT_STALL_TIMEOUT_MS;
+  return Math.max(3000, raw);
+};
+
 const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false, singleTrackMode = false, directTrackUrl, onClose, onEnded, playlistInfo, onNext, onPrev, activeSetlistId }: AudioPlayerProps) => {
   const navigate = useNavigate();
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -46,6 +58,30 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
     return Number.isFinite(stored) ? stored : 0;
   });
   useEffect(() => { y.set(yOffset); }, [yOffset, y]);
+
+  // Stall watchdog: if no `timeupdate` fires within the configured window while in
+  // playlist mode and actively playing, treat the track as stuck and advance.
+  const lastTimeUpdateRef = useRef<number>(Date.now());
+  const stallTimeoutMsRef = useRef<number>(readStallTimeoutMs());
+  useEffect(() => {
+    if (!singleTrackMode || !onEnded || !playing || !!error) return;
+    lastTimeUpdateRef.current = Date.now();
+    const intervalMs = 1500;
+    const interval = window.setInterval(() => {
+      const elapsed = Date.now() - lastTimeUpdateRef.current;
+      if (elapsed >= stallTimeoutMsRef.current) {
+        console.warn("[AudioPlayer] stall detected — auto-skipping", {
+          songTitle,
+          elapsedMs: elapsed,
+          thresholdMs: stallTimeoutMsRef.current,
+        });
+        window.clearInterval(interval);
+        setPlaying(false);
+        onEnded();
+      }
+    }, intervalMs);
+    return () => window.clearInterval(interval);
+  }, [singleTrackMode, onEnded, playing, error, songTitle, currentTrack]);
 
   const getIdentifier = useCallback((url: string) => {
     const match = url.match(/archive\.org\/details\/([^/?#]+)/);
@@ -161,6 +197,7 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
 
   const handleTimeUpdate = () => {
     if (!audioRef.current) return;
+    lastTimeUpdateRef.current = Date.now();
     setProgress(audioRef.current.currentTime);
     setDuration(audioRef.current.duration || 0);
   };
