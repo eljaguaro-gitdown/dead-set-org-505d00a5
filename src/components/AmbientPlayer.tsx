@@ -56,29 +56,50 @@ const FEATURED_TRACKS: FeaturedTrack[] = [
 ];
 
 const AmbientPlayer = () => {
-  const { playSingle, playingSlot, stopPlayback } = useAudioPlayer();
+  const { playSingle, playingSlot, stopPlayback, playlistMode } = useAudioPlayer();
 
-  const track = useMemo(() => {
+  const ambientTrack = useMemo(() => {
     return FEATURED_TRACKS[Math.floor(Math.random() * FEATURED_TRACKS.length)];
   }, []);
 
-  const isThisTrackPlaying = playingSlot?.song?.title?.toLowerCase().includes(track.title.split("→")[0].trim().toLowerCase()) ?? false;
+  // When the global player is active (setlist or single from anywhere), mirror it here.
+  // Otherwise show the rotating ambient archive pick. Reverts automatically on stop.
+  const isMirroringGlobal = !!playingSlot;
+
+  const display = isMirroringGlobal
+    ? {
+        title: playingSlot.song.title,
+        venue: playingSlot.version?.venue || "Archive.org",
+        date: playingSlot.version?.show_date || "",
+      }
+    : {
+        title: ambientTrack.title,
+        venue: ambientTrack.venue,
+        date: ambientTrack.date,
+      };
+
+  // While mirroring, treat as playing. Otherwise only true if THIS ambient track happens to be the one playing.
+  const isPlaying = isMirroringGlobal
+    ? true
+    : (playingSlot?.song?.title?.toLowerCase().includes(ambientTrack.title.split("→")[0].trim().toLowerCase()) ?? false);
 
   const handleToggle = () => {
-    if (isThisTrackPlaying) {
+    // Direct control: if anything is playing globally (setlist or single), stop it.
+    if (isMirroringGlobal) {
       stopPlayback();
       return;
     }
 
+    // Otherwise start the ambient archive track.
     const slot: PlayableSlot = {
-      id: `ambient-${track.title}`,
-      song: { id: `ambient-song`, title: track.title },
+      id: `ambient-${ambientTrack.title}`,
+      song: { id: `ambient-song`, title: ambientTrack.title },
       version: {
         id: `ambient-version`,
         song_id: `ambient-song`,
-        show_date: track.date,
-        venue: track.venue,
-        archive_org_url: track.archiveUrl,
+        show_date: ambientTrack.date,
+        venue: ambientTrack.venue,
+        archive_org_url: ambientTrack.archiveUrl,
         description: null,
         city: null,
         era_id: null,
@@ -92,15 +113,20 @@ const AmbientPlayer = () => {
     playSingle(slot);
   };
 
+  const labelPrefix = isMirroringGlobal
+    ? (playlistMode ? "From your setlist" : "Now playing")
+    : null;
+
   return (
     <button
       onClick={handleToggle}
-      className="flex items-center gap-3 group cursor-pointer py-2 px-3 rounded-full border border-primary/10 hover:border-primary/25 bg-card/30 backdrop-blur-sm transition-all"
-      aria-label={isThisTrackPlaying ? "Pause" : "Play featured track"}
+      className="flex items-center gap-3 group cursor-pointer py-2 px-3 rounded-full border border-primary/10 hover:border-primary/25 bg-card/30 backdrop-blur-sm transition-all max-w-full"
+      aria-label={isPlaying ? "Pause" : "Play featured track"}
+      title={isMirroringGlobal ? "Stop playback" : "Play featured track"}
     >
       {/* Play/Pause icon */}
-      <div className="w-7 h-7 rounded-full bg-primary/15 flex items-center justify-center group-hover:bg-primary/25 transition-colors">
-        {isThisTrackPlaying ? (
+      <div className="w-7 h-7 rounded-full bg-primary/15 flex items-center justify-center group-hover:bg-primary/25 transition-colors shrink-0">
+        {isPlaying ? (
           <Pause className="w-3 h-3 text-primary fill-primary" />
         ) : (
           <Play className="w-3 h-3 text-primary fill-primary ml-0.5" />
@@ -108,26 +134,37 @@ const AmbientPlayer = () => {
       </div>
 
       {/* Waveform bars */}
-      <div className="flex items-end gap-[2px] h-3.5">
+      <div className="flex items-end gap-[2px] h-3.5 shrink-0">
         {[1, 2, 3, 4].map((i) => (
           <span
             key={i}
             className={`w-[2px] rounded-full bg-primary/60 ${
-              isThisTrackPlaying ? "animate-eq" : ""
+              isPlaying ? "animate-eq" : ""
             }`}
             style={{
-              height: isThisTrackPlaying ? undefined : `${4 + (i % 3) * 3}px`,
-              animationDelay: isThisTrackPlaying ? `${i * 0.12}s` : undefined,
+              height: isPlaying ? undefined : `${4 + (i % 3) * 3}px`,
+              animationDelay: isPlaying ? `${i * 0.12}s` : undefined,
             }}
           />
         ))}
       </div>
 
       {/* Track info */}
-      <span className="text-base sm:text-lg font-body text-primary group-hover:text-primary/90 transition-colors whitespace-nowrap">
-        <span className="font-semibold">{track.title}</span>
-        <span className="text-muted-foreground mx-1.5">—</span>
-        <span className="text-[hsl(var(--dead-cream))]">{track.venue}, {track.date}</span>
+      <span className="text-base sm:text-lg font-body text-primary group-hover:text-primary/90 transition-colors truncate min-w-0">
+        {labelPrefix && (
+          <span className="text-[10px] uppercase tracking-[0.15em] text-primary/60 mr-2 font-mono">
+            {labelPrefix}
+          </span>
+        )}
+        <span className="font-semibold">{display.title}</span>
+        {(display.venue || display.date) && (
+          <>
+            <span className="text-muted-foreground mx-1.5">—</span>
+            <span className="text-[hsl(var(--dead-cream))]">
+              {display.venue}{display.venue && display.date ? ", " : ""}{display.date}
+            </span>
+          </>
+        )}
       </span>
     </button>
   );
