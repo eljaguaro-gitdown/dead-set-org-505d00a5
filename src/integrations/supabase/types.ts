@@ -1168,6 +1168,10 @@ export type Database = {
         Returns: boolean
       }
       is_setlist_public: { Args: { _setlist_id: string }; Returns: boolean }
+      link_visitor_to_user: {
+        Args: { _visitor_id: string }
+        Returns: undefined
+      }
       mark_ab_conversion: {
         Args: { p_user_id?: string; p_visitor_id: string }
         Returns: undefined
