@@ -197,6 +197,7 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
 
   const handleTimeUpdate = () => {
     if (!audioRef.current) return;
+    lastTimeUpdateRef.current = Date.now();
     setProgress(audioRef.current.currentTime);
     setDuration(audioRef.current.duration || 0);
   };
