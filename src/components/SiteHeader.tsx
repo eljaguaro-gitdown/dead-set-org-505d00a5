@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Menu, Shield, MessageCircle, LogOut, User, Download } from "lucide-react";
+import { Menu, Shield, MessageCircle, LogOut, User, Download, ListMusic, Home } from "lucide-react";
 import { motion } from "framer-motion";
 import StealYourFace from "@/components/StealYourFace";
 import ShareAppButton from "@/components/ShareAppButton";
@@ -9,6 +9,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/hooks/useAuth";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
+import { useHomeBase } from "@/hooks/useHomeBase";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Sheet,
