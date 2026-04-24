@@ -196,6 +196,31 @@ const FunnelWidget = ({ signupDates, enabled }: FunnelWidgetProps) => {
             <FunnelStat label="Signups" value={totals.signups} sub={pct(totals.signups, totals.visitors)} highlight />
           </div>
 
+          {/* Lovable referral attribution */}
+          {lovable && (
+            <div className="px-4 py-3 border-b border-border bg-primary/5">
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <div className="flex items-center gap-2">
+                  <span className="text-base">🌀</span>
+                  <h3 className="font-display text-sm text-primary">Lovable Referrals</h3>
+                  <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground/70">
+                    launched apr 24
+                  </span>
+                </div>
+                <div className="flex items-center gap-4 text-xs font-mono">
+                  <span className="text-muted-foreground">
+                    24h: <span className="text-foreground font-bold">{lovable.visitors24h}</span> visits ·{" "}
+                    <span className="text-primary font-bold">{lovable.signups24h}</span> signups
+                  </span>
+                  <span className="text-muted-foreground">
+                    total: <span className="text-foreground font-bold">{lovable.visitorsTotal}</span> →{" "}
+                    <span className="text-primary font-bold">{lovable.signupsTotal}</span> ({pct(lovable.signupsTotal, lovable.visitorsTotal)})
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Daily breakdown */}
           <div className="overflow-x-auto">
             <table className="w-full text-sm font-mono">
