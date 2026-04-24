@@ -302,10 +302,24 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
         </div>
 
         <div className="px-4 py-3 flex items-center gap-3">
+          {/* Prominent Prev button — playlist mode only. Always enabled if there's a previous track. */}
+          {playlistInfo && (
+            <button
+              onClick={onPrev}
+              disabled={playlistInfo.current <= 1}
+              className="w-9 h-9 rounded-full bg-muted/60 text-foreground flex items-center justify-center shrink-0 disabled:opacity-30 hover:bg-muted transition-colors"
+              title="Previous song"
+              aria-label="Previous song"
+            >
+              <SkipBack className="w-4 h-4" />
+            </button>
+          )}
+
           <button
             onClick={togglePlay}
             disabled={loading || !!error}
             className="w-12 h-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center shrink-0 disabled:opacity-50 transition-all hover:brightness-110"
+            aria-label={playing ? "Pause" : "Play"}
           >
             {loading ? (
               <Loader2 className="w-5 h-5 animate-spin" />
@@ -315,6 +329,34 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
               <Play className="w-5 h-5 ml-0.5" />
             )}
           </button>
+
+          {/* Prominent Next button — playlist mode only. Always enabled, even mid-load or on error. */}
+          {playlistInfo && (
+            <button
+              onClick={onNext}
+              disabled={playlistInfo.current >= playlistInfo.total}
+              className="w-9 h-9 rounded-full bg-muted/60 text-foreground flex items-center justify-center shrink-0 disabled:opacity-30 hover:bg-muted transition-colors"
+              title="Next song"
+              aria-label="Next song"
+            >
+              <SkipForward className="w-4 h-4" />
+            </button>
+          )}
+
+          {/* Skip — distinct from Next: useful when the current track refuses to load.
+              Mirrors Next behavior but stays bright/visible during loading & error states. */}
+          {playlistInfo && (loading || !!error) && (
+            <button
+              onClick={onNext}
+              disabled={playlistInfo.current >= playlistInfo.total}
+              className="h-9 px-2.5 rounded-md bg-destructive/15 text-destructive border border-destructive/30 flex items-center gap-1 shrink-0 disabled:opacity-30 hover:bg-destructive/25 transition-colors text-xs font-mono uppercase tracking-wider"
+              title="Skip this track"
+              aria-label="Skip this track"
+            >
+              <FastForward className="w-3.5 h-3.5" />
+              Skip
+            </button>
+          )}
 
           <div
             className={`flex-1 min-w-0 ${activeSetlistId ? 'cursor-pointer' : ''}`}
