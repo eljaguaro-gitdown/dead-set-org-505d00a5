@@ -1,0 +1,1 @@
+DROP POLICY IF EXISTS "Service role updates" ON public.visitor_attribution;
