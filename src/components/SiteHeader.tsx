@@ -74,36 +74,63 @@ const SiteHeader = ({ children, large = false }: SiteHeaderProps) => {
   ) : null;
 
   const nowPlaying = playingSlot ? (
-    <motion.button
-      type="button"
-      onClick={() => activeSetlistId && navigate(`/setlist/${activeSetlistId}`)}
-      disabled={!activeSetlistId}
+    <motion.div
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
-      className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-primary/10 border border-primary/20 max-w-[180px] sm:max-w-[220px] hover:bg-primary/20 hover:border-primary/40 transition-colors disabled:cursor-default disabled:hover:bg-primary/10 disabled:hover:border-primary/20"
-      title={activeSetlistId ? "Open setlist" : "Now playing"}
-      aria-label={activeSetlistId ? `Open setlist for ${playingSlot.song.title}` : `Now playing: ${playingSlot.song.title}`}
+      className="flex items-stretch rounded-md bg-primary/10 border border-primary/20 max-w-[220px] sm:max-w-[260px] overflow-hidden"
     >
-      {/* Animated equalizer bars */}
-      <div className="flex items-end gap-[2px] h-3 shrink-0">
-        {[0, 1, 2].map((i) => (
-          <motion.div
-            key={i}
-            className="w-[2px] bg-primary rounded-full"
-            animate={{ height: ["4px", "12px", "6px", "10px", "4px"] }}
-            transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.15, ease: "easeInOut" }}
-          />
-        ))}
-      </div>
-      <span className="text-[10px] sm:text-xs font-body text-foreground truncate">
-        {playingSlot.song.title}
-      </span>
-      {playlistMode && (
-        <span className="text-[9px] font-mono text-muted-foreground tabular-nums shrink-0">
-          {playlistIndex + 1}/{playlistSlots.length}
+      <button
+        type="button"
+        onClick={() => activeSetlistId && navigate(`/setlist/${activeSetlistId}`)}
+        disabled={!activeSetlistId}
+        className="flex items-center gap-1.5 px-2 py-1 hover:bg-primary/15 transition-colors disabled:cursor-default disabled:hover:bg-transparent min-w-0"
+        title={activeSetlistId ? "Open setlist" : "Now playing"}
+        aria-label={activeSetlistId ? `Open setlist for ${playingSlot.song.title}` : `Now playing: ${playingSlot.song.title}`}
+      >
+        <div className="flex items-end gap-[2px] h-3 shrink-0">
+          {[0, 1, 2].map((i) => (
+            <motion.div
+              key={i}
+              className="w-[2px] bg-primary rounded-full"
+              animate={{ height: ["4px", "12px", "6px", "10px", "4px"] }}
+              transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.15, ease: "easeInOut" }}
+            />
+          ))}
+        </div>
+        <span className="text-[10px] sm:text-xs font-body text-foreground truncate">
+          {playingSlot.song.title}
         </span>
+        {playlistMode && (
+          <span className="text-[9px] font-mono text-muted-foreground tabular-nums shrink-0">
+            {playlistIndex + 1}/{playlistSlots.length}
+          </span>
+        )}
+      </button>
+      {shouldShowReturn && (
+        <button
+          type="button"
+          onClick={() => navigate("/my-setlists")}
+          className="flex items-center justify-center px-1.5 border-l border-primary/20 text-primary/80 hover:text-primary hover:bg-primary/15 transition-colors shrink-0"
+          title="Back to My Setlists"
+          aria-label="Back to My Setlists"
+        >
+          <Home className="w-3.5 h-3.5" />
+        </button>
       )}
-    </motion.button>
+    </motion.div>
+  ) : null;
+
+  const returnToSetlistsPill = shouldShowReturn ? (
+    <button
+      type="button"
+      onClick={() => navigate("/my-setlists")}
+      className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-primary/10 border border-primary/30 text-primary hover:bg-primary/20 hover:border-primary/50 transition-colors"
+      title="Back to My Setlists"
+      aria-label="Back to My Setlists"
+    >
+      <ListMusic className="w-3.5 h-3.5" />
+      <span className="text-[10px] sm:text-xs font-mono tracking-wider uppercase hidden sm:inline">My Setlists</span>
+    </button>
   ) : null;
 
   const isRepeatVisitor = typeof window !== "undefined" && !!localStorage.getItem("dead_set_visited");
