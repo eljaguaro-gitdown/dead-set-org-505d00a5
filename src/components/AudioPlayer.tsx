@@ -130,6 +130,15 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
     return () => { cancelled = true; };
   }, [archiveUrl, songTitle, getIdentifier, directTrackUrl]);
 
+  // If track resolution fails while in a playlist, skip ahead instead of stalling.
+  useEffect(() => {
+    if (error && singleTrackMode && onEnded) {
+      console.warn("[AudioPlayer] resolution failed in playlist — auto-advancing", { songTitle, error });
+      const t = setTimeout(() => onEnded(), 600);
+      return () => clearTimeout(t);
+    }
+  }, [error, singleTrackMode, onEnded, songTitle]);
+
   useEffect(() => {
     if (tracks.length > 0 && audioRef.current) {
       audioRef.current.load();
