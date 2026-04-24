@@ -130,6 +130,15 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
     return () => { cancelled = true; };
   }, [archiveUrl, songTitle, getIdentifier, directTrackUrl]);
 
+  // If track resolution fails while in a playlist, skip ahead instead of stalling.
+  useEffect(() => {
+    if (error && singleTrackMode && onEnded) {
+      console.warn("[AudioPlayer] resolution failed in playlist — auto-advancing", { songTitle, error });
+      const t = setTimeout(() => onEnded(), 600);
+      return () => clearTimeout(t);
+    }
+  }, [error, singleTrackMode, onEnded, songTitle]);
+
   useEffect(() => {
     if (tracks.length > 0 && audioRef.current) {
       audioRef.current.load();
@@ -163,6 +172,7 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
   };
 
   const handleEnded = () => {
+    console.log("[AudioPlayer] track ended", { songTitle, singleTrackMode, hasOnEnded: !!onEnded });
     if (singleTrackMode) {
       setPlaying(false);
       onEnded?.();
@@ -173,6 +183,17 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
     } else {
       setPlaying(false);
       onEnded?.();
+    }
+  };
+
+  const handleAudioError = () => {
+    console.warn("[AudioPlayer] audio error", { songTitle, src: track?.src });
+    // In playlist mode, advance past the broken track so the queue keeps moving.
+    if (singleTrackMode && onEnded) {
+      setPlaying(false);
+      onEnded();
+    } else {
+      setError("Couldn't play this track");
     }
   };
 
@@ -225,6 +246,7 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
           src={track?.src}
           onTimeUpdate={handleTimeUpdate}
           onEnded={handleEnded}
+          onError={handleAudioError}
           onLoadedMetadata={handleTimeUpdate}
           muted={muted}
         />
