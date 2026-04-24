@@ -31,6 +31,7 @@ const SiteHeader = ({ children, large = false }: SiteHeaderProps) => {
   const { playingSlot, playlistMode, playlistIndex, playlistSlots, activeSetlistId } = useAudioPlayer();
   const [isAdmin, setIsAdmin] = useState(false);
   const { unreadCount } = useUnreadMessages(user);
+  const { shouldShowReturn } = useHomeBase();
   useEffect(() => {
     if (!user) { setIsAdmin(false); return; }
     supabase
