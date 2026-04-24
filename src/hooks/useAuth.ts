@@ -79,6 +79,16 @@ const ensureAuthInitialized = () => {
 
       if (event === "SIGNED_IN" && session?.user) {
         markConversion(session.user.id);
+        // Link this signup to its visitor attribution (Lovable referral tracking, etc.)
+        const visitorId = typeof window !== "undefined"
+          ? localStorage.getItem("ds_visitor_id")
+          : null;
+        if (visitorId) {
+          supabase.rpc("link_visitor_to_user", { _visitor_id: visitorId }).then(
+            () => null,
+            () => null,
+          );
+        }
       }
     }
 
