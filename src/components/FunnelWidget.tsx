@@ -34,10 +34,18 @@ const buildDayBuckets = (days: number): Record<string, DayRow> => {
   return buckets;
 };
 
+interface LovableStats {
+  visitors24h: number;
+  signups24h: number;
+  visitorsTotal: number;
+  signupsTotal: number;
+}
+
 const FunnelWidget = ({ signupDates, enabled }: FunnelWidgetProps) => {
   const [range, setRange] = useState<Range>(7);
   const [loading, setLoading] = useState(true);
   const [rows, setRows] = useState<DayRow[]>([]);
+  const [lovable, setLovable] = useState<LovableStats | null>(null);
 
   useEffect(() => {
     if (!enabled) return;
@@ -53,7 +61,9 @@ const FunnelWidget = ({ signupDates, enabled }: FunnelWidgetProps) => {
       const buckets = buildDayBuckets(range);
 
       // Fetch in parallel — admins have SELECT on both tables via RLS
-      const [visitsRes, ctaRes] = await Promise.all([
+      const dayMs = 86_400_000;
+      const since24h = new Date(Date.now() - dayMs).toISOString();
+      const [visitsRes, ctaRes, lovableAttrRes, lovableVisits24hRes] = await Promise.all([
         supabase
           .from("page_visits")
           .select("visitor_id, page_path, created_at")
@@ -64,6 +74,17 @@ const FunnelWidget = ({ signupDates, enabled }: FunnelWidgetProps) => {
           .select("created_at, channel")
           .eq("share_type", "cta_click")
           .gte("created_at", sinceIso)
+          .limit(50_000),
+        supabase
+          .from("visitor_attribution")
+          .select("visitor_id, user_id, signed_up_at")
+          .eq("first_source", "lovable")
+          .limit(50_000),
+        supabase
+          .from("page_visits")
+          .select("visitor_id")
+          .eq("landing_source", "lovable")
+          .gte("created_at", since24h)
           .limit(50_000),
       ]);
 
