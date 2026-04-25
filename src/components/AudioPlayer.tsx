@@ -115,15 +115,18 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
 
       try {
         // First try to resolve the exact song inside this recording.
+        audioDebug.log("player", "resolving track in recording", { identifier, song: songTitle });
         const resolvedTrackUrl = await findTrackInRecording(archiveUrl, songTitle);
         if (cancelled) return;
         if (resolvedTrackUrl) {
+          audioDebug.log("player", "track resolved", { url: resolvedTrackUrl });
           setTracks([{ title: songTitle, src: resolvedTrackUrl }]);
           setLoading(false);
           return;
         }
 
         // Only fall back to fuzzy matching if exact resolution fails.
+        audioDebug.log("player", "exact resolve failed — fetching metadata for fuzzy match", { identifier }, "warn");
         const res = await fetch(`https://archive.org/metadata/${identifier}`);
         if (cancelled) return;
         if (!res.ok) throw new Error("Failed to fetch metadata");
@@ -142,6 +145,7 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
           }));
 
         if (audioFiles.length === 0) {
+          audioDebug.log("player", "no audio files in recording", { identifier }, "error");
           setError("No audio files found");
         } else {
           setTracks(audioFiles);
@@ -154,10 +158,12 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
               bestIdx = i;
             }
           });
+          audioDebug.log("player", "fuzzy match selected", { index: bestIdx, score: bestScore, total: audioFiles.length });
           setCurrentTrack(bestIdx);
         }
-      } catch {
+      } catch (e) {
         if (!cancelled) {
+          audioDebug.log("player", "metadata fetch failed", { identifier, error: String(e) }, "error");
           setError("Couldn't load audio from archive.org");
         }
       }
@@ -224,8 +230,12 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
     if (!audioRef.current) return;
     if (playing) {
       audioRef.current.pause();
+      audioDebug.setPlaybackState("paused");
     } else {
-      audioRef.current.play().catch(() => {});
+      audioRef.current.play().catch((e) => {
+        audioDebug.log("player", "play() rejected", { error: String(e) }, "error");
+      });
+      audioDebug.setPlaybackState("playing");
     }
     setPlaying(!playing);
   };
