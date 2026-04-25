@@ -60,30 +60,104 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
   });
   useEffect(() => { y.set(yOffset); }, [yOffset, y]);
 
-  // Stall watchdog: if no `timeupdate` fires within the configured window while in
-  // playlist mode and actively playing, treat the track as stuck and advance.
+  // Stall watchdog: if no `timeupdate` fires within the configured window while
+  // actively playing, attempt one retry (re-resolve + reload). If the retry also
+  // stalls, fall back to advancing the playlist when in playlist mode.
   const lastTimeUpdateRef = useRef<number>(Date.now());
   const stallTimeoutMsRef = useRef<number>(readStallTimeoutMs());
+  // Tracks whether we've already attempted a retry for the current track/src.
+  // Reset whenever the resolved track src changes (new track or re-resolution).
+  const retriedRef = useRef<boolean>(false);
+  const [retrying, setRetrying] = useState(false);
+
+  // Re-resolve the current song's track URL from archive.org and swap it in.
+  // Used by the retry flow when playback stalls or errors mid-song.
+  const attemptRetry = useCallback(async (reason: "stall" | "error") => {
+    if (retriedRef.current) return false;
+    retriedRef.current = true;
+    setRetrying(true);
+    audioDebug.log("player", "retry initiated", { song: songTitle, reason }, "warn");
+    console.warn("[AudioPlayer] retry initiated", { songTitle, reason });
+
+    const resumeAt = audioRef.current?.currentTime ?? 0;
+    try {
+      // Prefer re-resolving via archive.org so a transient CDN miss can
+      // produce a fresh download URL. Fall back to the existing src.
+      let nextUrl: string | null = null;
+      if (archiveUrl) {
+        nextUrl = await findTrackInRecording(archiveUrl, songTitle);
+      }
+      const finalUrl = nextUrl || tracks[currentTrack]?.src || null;
+      if (!finalUrl) {
+        audioDebug.log("player", "retry failed — no URL", { song: songTitle }, "error");
+        setRetrying(false);
+        return false;
+      }
+      setTracks((prev) => {
+        const copy = [...prev];
+        if (copy[currentTrack]) copy[currentTrack] = { ...copy[currentTrack], src: finalUrl };
+        return copy;
+      });
+      // Give React a tick to apply the new src, then reload + seek + play.
+      setTimeout(() => {
+        const el = audioRef.current;
+        if (!el) return;
+        try {
+          el.load();
+          const onLoaded = () => {
+            try { if (resumeAt > 1) el.currentTime = Math.max(0, resumeAt - 1); } catch {}
+            el.play().catch(() => {});
+            el.removeEventListener("loadedmetadata", onLoaded);
+          };
+          el.addEventListener("loadedmetadata", onLoaded);
+        } catch {}
+        lastTimeUpdateRef.current = Date.now();
+        setRetrying(false);
+        setPlaying(true);
+      }, 50);
+      audioDebug.log("player", "retry applied", { song: songTitle, url: finalUrl, resumeAt });
+      return true;
+    } catch (e) {
+      audioDebug.log("player", "retry threw", { song: songTitle, error: String(e) }, "error");
+      setRetrying(false);
+      return false;
+    }
+  }, [archiveUrl, songTitle, tracks, currentTrack]);
+
+  // Reset the retry budget whenever we switch tracks or the resolved src changes.
   useEffect(() => {
-    if (!singleTrackMode || !onEnded || !playing || !!error) return;
+    retriedRef.current = false;
+  }, [currentTrack, tracks[currentTrack]?.src]);
+
+  useEffect(() => {
+    if (!playing || !!error) return;
     lastTimeUpdateRef.current = Date.now();
     const intervalMs = 1500;
-    const interval = window.setInterval(() => {
+    const interval = window.setInterval(async () => {
+      if (retrying) return;
       const elapsed = Date.now() - lastTimeUpdateRef.current;
-      if (elapsed >= stallTimeoutMsRef.current) {
-        audioDebug.log("player", "stall detected — auto-skipping", { song: songTitle, elapsedMs: elapsed }, "warn");
-        console.warn("[AudioPlayer] stall detected — auto-skipping", {
-          songTitle,
-          elapsedMs: elapsed,
-          thresholdMs: stallTimeoutMsRef.current,
-        });
+      if (elapsed < stallTimeoutMsRef.current) return;
+
+      // First stall: try one retry before giving up.
+      if (!retriedRef.current) {
         window.clearInterval(interval);
-        setPlaying(false);
-        onEnded();
+        const ok = await attemptRetry("stall");
+        if (!ok && singleTrackMode && onEnded) {
+          setPlaying(false);
+          onEnded();
+        }
+        return;
       }
+
+      // Already retried — skip if we can, otherwise just stop.
+      audioDebug.log("player", "stall after retry — giving up", { song: songTitle, elapsedMs: elapsed }, "warn");
+      console.warn("[AudioPlayer] stall after retry — giving up", { songTitle, elapsedMs: elapsed });
+      window.clearInterval(interval);
+      setPlaying(false);
+      if (singleTrackMode && onEnded) onEnded();
     }, intervalMs);
     return () => window.clearInterval(interval);
-  }, [singleTrackMode, onEnded, playing, error, songTitle, currentTrack]);
+  }, [singleTrackMode, onEnded, playing, error, songTitle, currentTrack, attemptRetry, retrying]);
 
   const getIdentifier = useCallback((url: string) => {
     const match = url.match(/archive\.org\/details\/([^/?#]+)/);
@@ -270,12 +344,20 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
     }
   };
 
-  const handleAudioError = () => {
+  const handleAudioError = async () => {
     const src = tracks[currentTrack]?.src;
     audioDebug.log("player", "audio element error", { song: songTitle, src }, "error");
     audioDebug.setPlaybackState("error");
     console.warn("[AudioPlayer] audio error", { songTitle, src: track?.src });
-    // In playlist mode, advance past the broken track so the queue keeps moving.
+
+    // Try one retry before giving up. Re-resolves the track URL and reloads.
+    if (!retriedRef.current) {
+      const ok = await attemptRetry("error");
+      if (ok) return;
+    }
+
+    // Retry failed (or already used). In playlist mode, advance past the
+    // broken track so the queue keeps moving.
     if (singleTrackMode && onEnded) {
       setPlaying(false);
       onEnded();
