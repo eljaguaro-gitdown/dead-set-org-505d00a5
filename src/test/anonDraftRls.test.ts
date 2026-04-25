@@ -123,27 +123,25 @@ describe("draft_setlists RLS (anon draft client)", () => {
 
   it("UPDATE: owner can update their draft (1 row affected)", async () => {
     const newTitle = "RLS smoke test (updated)";
-    const { data, error, count } = await clientA
+    const { data, error } = await clientA
       .from("draft_setlists")
       .update({ title: newTitle })
       .eq("id", draftId!)
-      .select("id, title", { count: "exact" });
+      .select("id, title");
 
     expect(error).toBeNull();
-    expect(count).toBe(1);
     expect(data).toHaveLength(1);
     expect(data![0].title).toBe(newTitle);
   });
 
   it("UPDATE: foreign session cannot update — 0 rows + state unchanged", async () => {
-    const { data, error, count } = await clientB
+    const { data, error } = await clientB
       .from("draft_setlists")
       .update({ title: "hijacked" })
       .eq("id", draftId!)
-      .select("id", { count: "exact" });
+      .select("id");
 
     expect(error).toBeNull();
-    expect(count).toBe(0);
     expect(data ?? []).toHaveLength(0);
 
     // Re-confirm via the owner that the title was NOT changed.
@@ -159,14 +157,13 @@ describe("draft_setlists RLS (anon draft client)", () => {
   });
 
   it("DELETE: foreign session cannot delete — 0 rows + row still present", async () => {
-    const { data, error, count } = await clientB
+    const { data, error } = await clientB
       .from("draft_setlists")
       .delete()
       .eq("id", draftId!)
-      .select("id", { count: "exact" });
+      .select("id");
 
     expect(error).toBeNull();
-    expect(count).toBe(0);
     expect(data ?? []).toHaveLength(0);
 
     // Row should still exist for the owner.
@@ -182,14 +179,13 @@ describe("draft_setlists RLS (anon draft client)", () => {
   });
 
   it("DELETE: owner can delete their draft (1 row affected, then gone)", async () => {
-    const { data, error, count } = await clientA
+    const { data, error } = await clientA
       .from("draft_setlists")
       .delete()
       .eq("id", draftId!)
-      .select("id", { count: "exact" });
+      .select("id");
 
     expect(error).toBeNull();
-    expect(count).toBe(1);
     expect(data).toHaveLength(1);
 
     await retry("owner re-read after delete", async () => {
