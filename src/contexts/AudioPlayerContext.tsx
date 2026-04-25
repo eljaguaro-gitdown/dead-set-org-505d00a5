@@ -64,16 +64,24 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => { stateRef.current = state; }, [state]);
 
   const stopPlayback = useCallback(() => {
+    audioDebug.log("context", "stopPlayback");
+    audioDebug.setSlot(null, null, null, null);
+    audioDebug.setPlaybackState("stopped");
     setState({ playingSlot: null, playlistMode: false, playlistIndex: 0, playlistSlots: [], activeSetlistId: null });
   }, []);
 
   const playSingle = useCallback(async (slot: PlayableSlot) => {
+    audioDebug.log("context", "playSingle", { id: slot.id, song: slot.song.title, hasUrl: !!slot.version?.archive_org_url, hasDirect: !!slot.directTrackUrl });
+    audioDebug.setSlot(slot.id, slot.song.title, slot.version?.archive_org_url ?? null, slot.directTrackUrl ?? null);
+    audioDebug.setPlaybackState("starting");
     // Start playback immediately so user sees feedback
     setState({ playingSlot: slot, playlistMode: false, playlistIndex: 0, playlistSlots: [], activeSetlistId: null });
     // Then resolve direct track URL in background if missing
     if (!slot.directTrackUrl && slot.version?.archive_org_url) {
       const resolved = await resolveSlot(slot);
       if (resolved) {
+        audioDebug.setDirectTrackUrl(resolved.directTrackUrl ?? null);
+        audioDebug.log("context", "resolved direct track", { url: resolved.directTrackUrl });
         setState(prev => prev.playingSlot?.id === slot.id
           ? { ...prev, playingSlot: resolved }
           : prev
@@ -82,11 +90,13 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     } else if (!slot.version?.archive_org_url) {
       const resolved = await resolveSlot(slot);
       if (resolved?.version?.archive_org_url) {
+        audioDebug.setSlot(resolved.id, resolved.song.title, resolved.version.archive_org_url, resolved.directTrackUrl ?? null);
         setState(prev => prev.playingSlot?.id === slot.id
           ? { ...prev, playingSlot: resolved }
           : prev
         );
       } else {
+        audioDebug.log("context", "no audio found for song", { song: slot.song.title }, "error");
         toast.error("Couldn't find audio for this song");
         setState({ playingSlot: null, playlistMode: false, playlistIndex: 0, playlistSlots: [], activeSetlistId: null });
       }
@@ -99,16 +109,19 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
 
     if (slot.version?.archive_org_url && !slot.directTrackUrl) {
       // Has a specific show URL — find the track WITHIN that recording
+      audioDebug.log("resolve", "findTrackInRecording", { url: slot.version.archive_org_url, song: slot.song.title });
       const directUrl = await findTrackInRecording(slot.version.archive_org_url, slot.song.title);
       if (directUrl) {
         return { ...slot, directTrackUrl: directUrl };
       }
       // Couldn't find specific track in that recording — still usable via AudioPlayer fallback
+      audioDebug.log("resolve", "no direct track in recording — falling back", { song: slot.song.title }, "warn");
       console.warn(`[QA] Could not resolve direct track for "${slot.song.title}" in ${slot.version.archive_org_url}`);
       return slot;
     }
 
     // No archive URL at all — do a generic search as last resort
+    audioDebug.log("resolve", "findArchiveRecording (generic search)", { song: slot.song.title });
     const result = await findArchiveRecording(slot.song.title);
     if (result) {
       return {
