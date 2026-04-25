@@ -1,4 +1,4 @@
-const CACHE_NAME = 'dead-set-shell-v1';
+const CACHE_NAME = 'dead-set-shell-v2';
 const SHELL_URLS = [
   '/',
   '/manifest.json',
@@ -17,9 +17,13 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
       Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
-    )
+    ).then(() => self.clients.claim())
   );
-  self.clients.claim();
+});
+
+// Allow page to trigger immediate activation of a waiting SW
+self.addEventListener('message', (event) => {
+  if (event.data === 'SKIP_WAITING') self.skipWaiting();
 });
 
 self.addEventListener('fetch', (event) => {
