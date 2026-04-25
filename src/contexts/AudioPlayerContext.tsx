@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useCallback, useRef, useEffect, type ReactNode } from "react";
 import { findArchiveRecording, findTrackInRecording } from "@/lib/archiveOrg";
+import { audioDebug } from "@/lib/audioDebug";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -63,16 +64,24 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => { stateRef.current = state; }, [state]);
 
   const stopPlayback = useCallback(() => {
+    audioDebug.log("context", "stopPlayback");
+    audioDebug.setSlot(null, null, null, null);
+    audioDebug.setPlaybackState("stopped");
     setState({ playingSlot: null, playlistMode: false, playlistIndex: 0, playlistSlots: [], activeSetlistId: null });
   }, []);
 
   const playSingle = useCallback(async (slot: PlayableSlot) => {
+    audioDebug.log("context", "playSingle", { id: slot.id, song: slot.song.title, hasUrl: !!slot.version?.archive_org_url, hasDirect: !!slot.directTrackUrl });
+    audioDebug.setSlot(slot.id, slot.song.title, slot.version?.archive_org_url ?? null, slot.directTrackUrl ?? null);
+    audioDebug.setPlaybackState("starting");
     // Start playback immediately so user sees feedback
     setState({ playingSlot: slot, playlistMode: false, playlistIndex: 0, playlistSlots: [], activeSetlistId: null });
     // Then resolve direct track URL in background if missing
     if (!slot.directTrackUrl && slot.version?.archive_org_url) {
       const resolved = await resolveSlot(slot);
       if (resolved) {
+        audioDebug.setDirectTrackUrl(resolved.directTrackUrl ?? null);
+        audioDebug.log("context", "resolved direct track", { url: resolved.directTrackUrl });
         setState(prev => prev.playingSlot?.id === slot.id
           ? { ...prev, playingSlot: resolved }
           : prev
@@ -81,11 +90,13 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     } else if (!slot.version?.archive_org_url) {
       const resolved = await resolveSlot(slot);
       if (resolved?.version?.archive_org_url) {
+        audioDebug.setSlot(resolved.id, resolved.song.title, resolved.version.archive_org_url, resolved.directTrackUrl ?? null);
         setState(prev => prev.playingSlot?.id === slot.id
           ? { ...prev, playingSlot: resolved }
           : prev
         );
       } else {
+        audioDebug.log("context", "no audio found for song", { song: slot.song.title }, "error");
         toast.error("Couldn't find audio for this song");
         setState({ playingSlot: null, playlistMode: false, playlistIndex: 0, playlistSlots: [], activeSetlistId: null });
       }
@@ -98,16 +109,19 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
 
     if (slot.version?.archive_org_url && !slot.directTrackUrl) {
       // Has a specific show URL — find the track WITHIN that recording
+      audioDebug.log("resolve", "findTrackInRecording", { url: slot.version.archive_org_url, song: slot.song.title });
       const directUrl = await findTrackInRecording(slot.version.archive_org_url, slot.song.title);
       if (directUrl) {
         return { ...slot, directTrackUrl: directUrl };
       }
       // Couldn't find specific track in that recording — still usable via AudioPlayer fallback
+      audioDebug.log("resolve", "no direct track in recording — falling back", { song: slot.song.title }, "warn");
       console.warn(`[QA] Could not resolve direct track for "${slot.song.title}" in ${slot.version.archive_org_url}`);
       return slot;
     }
 
     // No archive URL at all — do a generic search as last resort
+    audioDebug.log("resolve", "findArchiveRecording (generic search)", { song: slot.song.title });
     const result = await findArchiveRecording(slot.song.title);
     if (result) {
       return {
@@ -125,6 +139,8 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
 
   const playSetlist = useCallback(async (slots: PlayableSlot[], setlistId?: string) => {
     if (slots.length === 0) return;
+    audioDebug.log("context", "playSetlist", { count: slots.length, setlistId });
+    audioDebug.setPlaybackState("starting");
     const sorted = [...slots].sort((a, b) => a.setNumber - b.setNumber || a.position - b.position);
 
     let startIndex = -1;
@@ -141,6 +157,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     }
 
     if (!startSlot || startIndex < 0) {
+      audioDebug.log("context", "no audio found in setlist", { setlistId }, "error");
       toast.error("Couldn't find audio for any songs in the setlist");
       return;
     }
@@ -150,6 +167,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
       supabase.rpc("increment_play_count", { _setlist_id: setlistId });
     }
 
+    audioDebug.setSlot(startSlot.id, startSlot.song.title, startSlot.version?.archive_org_url ?? null, startSlot.directTrackUrl ?? null);
     setState({
       playingSlot: startSlot,
       playlistMode: true,
@@ -161,10 +179,12 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
 
   const advancePlaylist = useCallback(async (dir: number) => {
     const { playlistIndex, playlistSlots } = stateRef.current;
+    audioDebug.log("context", "advancePlaylist", { dir, fromIndex: playlistIndex });
 
     for (let i = playlistIndex + dir; i >= 0 && i < playlistSlots.length; i += dir) {
       const resolved = await resolveSlot(playlistSlots[i]);
       if (resolved?.version?.archive_org_url) {
+        audioDebug.setSlot(resolved.id, resolved.song.title, resolved.version.archive_org_url, resolved.directTrackUrl ?? null);
         setState((prev) => ({
           ...prev,
           playlistIndex: i,
@@ -172,8 +192,10 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
         }));
         return;
       }
+      audioDebug.log("context", "skipping unresolved slot in playlist", { index: i, song: playlistSlots[i].song.title }, "warn");
     }
 
+    audioDebug.log("context", "end of setlist", {});
     stopPlayback();
     toast.info("End of setlist");
   }, [stopPlayback]);

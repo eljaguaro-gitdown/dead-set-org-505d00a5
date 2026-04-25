@@ -4,6 +4,7 @@ import { motion, AnimatePresence, useMotionValue, useDragControls } from "framer
 import { Play, Pause, Volume2, VolumeX, X, Loader2, Cast, ChevronRight, GripHorizontal, SkipForward, SkipBack, FastForward } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { findTrackInRecording, matchScore } from "@/lib/archiveOrg";
+import { audioDebug } from "@/lib/audioDebug";
 
 interface Track {
   title: string;
@@ -70,6 +71,7 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
     const interval = window.setInterval(() => {
       const elapsed = Date.now() - lastTimeUpdateRef.current;
       if (elapsed >= stallTimeoutMsRef.current) {
+        audioDebug.log("player", "stall detected — auto-skipping", { song: songTitle, elapsedMs: elapsed }, "warn");
         console.warn("[AudioPlayer] stall detected — auto-skipping", {
           songTitle,
           elapsedMs: elapsed,
@@ -113,15 +115,18 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
 
       try {
         // First try to resolve the exact song inside this recording.
+        audioDebug.log("player", "resolving track in recording", { identifier, song: songTitle });
         const resolvedTrackUrl = await findTrackInRecording(archiveUrl, songTitle);
         if (cancelled) return;
         if (resolvedTrackUrl) {
+          audioDebug.log("player", "track resolved", { url: resolvedTrackUrl });
           setTracks([{ title: songTitle, src: resolvedTrackUrl }]);
           setLoading(false);
           return;
         }
 
         // Only fall back to fuzzy matching if exact resolution fails.
+        audioDebug.log("player", "exact resolve failed — fetching metadata for fuzzy match", { identifier }, "warn");
         const res = await fetch(`https://archive.org/metadata/${identifier}`);
         if (cancelled) return;
         if (!res.ok) throw new Error("Failed to fetch metadata");
@@ -140,6 +145,7 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
           }));
 
         if (audioFiles.length === 0) {
+          audioDebug.log("player", "no audio files in recording", { identifier }, "error");
           setError("No audio files found");
         } else {
           setTracks(audioFiles);
@@ -152,10 +158,12 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
               bestIdx = i;
             }
           });
+          audioDebug.log("player", "fuzzy match selected", { index: bestIdx, score: bestScore, total: audioFiles.length });
           setCurrentTrack(bestIdx);
         }
-      } catch {
+      } catch (e) {
         if (!cancelled) {
+          audioDebug.log("player", "metadata fetch failed", { identifier, error: String(e) }, "error");
           setError("Couldn't load audio from archive.org");
         }
       }
@@ -222,8 +230,12 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
     if (!audioRef.current) return;
     if (playing) {
       audioRef.current.pause();
+      audioDebug.setPlaybackState("paused");
     } else {
-      audioRef.current.play().catch(() => {});
+      audioRef.current.play().catch((e) => {
+        audioDebug.log("player", "play() rejected", { error: String(e) }, "error");
+      });
+      audioDebug.setPlaybackState("playing");
     }
     setPlaying(!playing);
   };
@@ -242,6 +254,8 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
   };
 
   const handleEnded = () => {
+    audioDebug.log("player", "track ended", { song: songTitle });
+    audioDebug.setPlaybackState("ended");
     console.log("[AudioPlayer] track ended", { songTitle, singleTrackMode, hasOnEnded: !!onEnded });
     if (singleTrackMode) {
       setPlaying(false);
@@ -257,6 +271,9 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
   };
 
   const handleAudioError = () => {
+    const src = tracks[currentTrack]?.src;
+    audioDebug.log("player", "audio element error", { song: songTitle, src }, "error");
+    audioDebug.setPlaybackState("error");
     console.warn("[AudioPlayer] audio error", { songTitle, src: track?.src });
     // In playlist mode, advance past the broken track so the queue keeps moving.
     if (singleTrackMode && onEnded) {
