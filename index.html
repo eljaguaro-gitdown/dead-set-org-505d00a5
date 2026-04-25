@@ -51,7 +51,40 @@
         var isPreview = window.location.hostname.indexOf('id-preview--') !== -1 ||
                         window.location.hostname.indexOf('lovableproject.com') !== -1;
         if (!isInIframe && !isPreview) {
-          navigator.serviceWorker.register('/sw.js');
+          navigator.serviceWorker.register('/sw.js').then(function(reg) {
+            // Check for updates immediately and every 60 minutes
+            reg.update();
+            setInterval(function() { reg.update(); }, 60 * 60 * 1000);
+
+            // When a new SW is found, tell it to activate as soon as it's installed
+            reg.addEventListener('updatefound', function() {
+              var newWorker = reg.installing;
+              if (!newWorker) return;
+              newWorker.addEventListener('statechange', function() {
+                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                  // New version available — activate it
+                  newWorker.postMessage('SKIP_WAITING');
+                }
+              });
+            });
+          });
+
+          // Reload once the new SW takes control so users get fresh assets
+          var hasReloaded = false;
+          navigator.serviceWorker.addEventListener('controllerchange', function() {
+            if (hasReloaded) return;
+            hasReloaded = true;
+            window.location.reload();
+          });
+
+          // Also re-check for updates when the tab becomes visible again
+          document.addEventListener('visibilitychange', function() {
+            if (document.visibilityState === 'visible') {
+              navigator.serviceWorker.getRegistration().then(function(reg) {
+                if (reg) reg.update();
+              });
+            }
+          });
         } else {
           // Clean up any stale SW in preview/iframe
           navigator.serviceWorker.getRegistrations().then(function(regs) {
