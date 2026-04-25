@@ -80,17 +80,16 @@ describe("draft_setlists RLS (anon draft client)", () => {
   });
 
   it("INSERT: owner can create a draft (1 row affected)", async () => {
-    const { data, error, count } = await clientA
+    const { data, error } = await clientA
       .from("draft_setlists")
       .insert({
         anon_session_id: sessionA,
         title: "RLS smoke test draft",
         songs: [],
       })
-      .select("*", { count: "exact" });
+      .select("*");
 
     expect(error).toBeNull();
-    expect(count).toBe(1);
     expect(data).toHaveLength(1);
     expect(data![0].anon_session_id).toBe(sessionA);
     draftId = data![0].id;
