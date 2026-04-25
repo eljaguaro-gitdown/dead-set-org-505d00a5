@@ -9,6 +9,7 @@ import GlobalAudioPlayer from "@/components/GlobalAudioPlayer";
 import VisitorTracker from "@/components/VisitorTracker";
 import PresenceBroadcaster from "@/components/PresenceBroadcaster";
 import PwaInstallBanner from "@/components/PwaInstallBanner";
+import AudioDebugPanel from "@/components/AudioDebugPanel";
 
 // Eagerly load the landing page for fastest FCP/LCP
 import Index from "./pages/Index";
@@ -69,6 +70,7 @@ const App = () => (
           <VisitorTracker />
           <PresenceBroadcaster />
           <PwaInstallBanner />
+          <AudioDebugPanel />
         </AudioPlayerProvider>
       </BrowserRouter>
     </TooltipProvider>
