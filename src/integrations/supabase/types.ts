@@ -378,6 +378,42 @@ export type Database = {
           },
         ]
       }
+      draft_setlists: {
+        Row: {
+          anon_session_id: string
+          cosmic_charlie_input: Json | null
+          created_at: string
+          era_filter: string | null
+          expires_at: string
+          id: string
+          songs: Json
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          anon_session_id: string
+          cosmic_charlie_input?: Json | null
+          created_at?: string
+          era_filter?: string | null
+          expires_at?: string
+          id?: string
+          songs?: Json
+          title?: string
+          updated_at?: string
+        }
+        Update: {
+          anon_session_id?: string
+          cosmic_charlie_input?: Json | null
+          created_at?: string
+          era_filter?: string | null
+          expires_at?: string
+          id?: string
+          songs?: Json
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       email_send_log: {
         Row: {
           created_at: string
@@ -1128,6 +1164,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cleanup_expired_drafts: { Args: never; Returns: number }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
