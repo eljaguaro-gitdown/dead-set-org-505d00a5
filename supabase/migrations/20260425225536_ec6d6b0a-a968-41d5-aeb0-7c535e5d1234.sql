@@ -1,0 +1,1 @@
+DELETE FROM public.suppressed_emails WHERE email = 'grateful_jaguaro@dead-set.org';
