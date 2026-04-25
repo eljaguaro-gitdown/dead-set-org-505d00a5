@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
+import CosmicCharlieAvatar from "@/components/CosmicCharlieAvatar";
 import type { Database } from "@/integrations/supabase/types";
 
 type Song = Database["public"]["Tables"]["songs"]["Row"];
