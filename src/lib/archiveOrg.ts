@@ -100,14 +100,27 @@ async function fetchMetadataWithFallback(identifier: string): Promise<{ files: a
     variants.push(identifier.replace(/\.flac\d*$/i, ""));
   }
   for (const id of variants) {
-    try {
-      const res = await fetch(`https://archive.org/metadata/${id}`);
-      if (!res.ok) continue;
-      const meta = await res.json();
-      const files = meta.files || [];
-      if (files.length > 0) return { files, resolvedId: id };
-    } catch {
-      continue;
+    // One retry for transient archive.org failures (504/503 are common).
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        const res = await fetch(`https://archive.org/metadata/${id}`);
+        if (!res.ok) {
+          if (attempt === 0 && (res.status >= 500 || res.status === 429)) {
+            await new Promise((r) => setTimeout(r, 600));
+            continue;
+          }
+          break;
+        }
+        const meta = await res.json();
+        const files = meta.files || [];
+        if (files.length > 0) return { files, resolvedId: id };
+        break;
+      } catch {
+        if (attempt === 0) {
+          await new Promise((r) => setTimeout(r, 600));
+          continue;
+        }
+      }
     }
   }
   return null;
