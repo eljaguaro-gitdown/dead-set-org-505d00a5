@@ -80,7 +80,7 @@ const BuildNotesEmail = ({
 }: BuildNotesEmailProps) => (
   <Html lang="en" dir="ltr">
     <Head />
-    <Preview>Dead Set Build Notes — Week {weekNumber}: {editionTitle}</Preview>
+    <Preview>{`Dead Set Build Notes — Week ${weekNumber}: ${editionTitle}`}</Preview>
     <Body style={main}>
       <Container style={wrapper}>
 
