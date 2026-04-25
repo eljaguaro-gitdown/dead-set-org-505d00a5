@@ -4,6 +4,7 @@ import { motion, AnimatePresence, useMotionValue, useDragControls } from "framer
 import { Play, Pause, Volume2, VolumeX, X, Loader2, Cast, ChevronRight, GripHorizontal, SkipForward, SkipBack, FastForward } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { findTrackInRecording, matchScore } from "@/lib/archiveOrg";
+import { audioDebug } from "@/lib/audioDebug";
 
 interface Track {
   title: string;
@@ -70,6 +71,7 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
     const interval = window.setInterval(() => {
       const elapsed = Date.now() - lastTimeUpdateRef.current;
       if (elapsed >= stallTimeoutMsRef.current) {
+        audioDebug.log("player", "stall detected — auto-skipping", { song: songTitle, elapsedMs: elapsed }, "warn");
         console.warn("[AudioPlayer] stall detected — auto-skipping", {
           songTitle,
           elapsedMs: elapsed,
@@ -242,6 +244,8 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
   };
 
   const handleEnded = () => {
+    audioDebug.log("player", "track ended", { song: songTitle });
+    audioDebug.setPlaybackState("ended");
     console.log("[AudioPlayer] track ended", { songTitle, singleTrackMode, hasOnEnded: !!onEnded });
     if (singleTrackMode) {
       setPlaying(false);
@@ -257,6 +261,9 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
   };
 
   const handleAudioError = () => {
+    const src = tracks[currentTrack]?.src;
+    audioDebug.log("player", "audio element error", { song: songTitle, src }, "error");
+    audioDebug.setPlaybackState("error");
     console.warn("[AudioPlayer] audio error", { songTitle, src: track?.src });
     // In playlist mode, advance past the broken track so the queue keeps moving.
     if (singleTrackMode && onEnded) {
