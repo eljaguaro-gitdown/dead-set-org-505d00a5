@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
+import CosmicCharlieAvatar from "@/components/CosmicCharlieAvatar";
 import type { Database } from "@/integrations/supabase/types";
 
 type Song = Database["public"]["Tables"]["songs"]["Row"];
@@ -321,11 +322,15 @@ const CosmicCharlieDialog = ({
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="bg-card border-border max-w-lg max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="font-display text-xl text-foreground flex items-center gap-2">
-            <Star className="w-5 h-5 text-primary fill-primary/30" />
-            Cosmic Charlie
-          </DialogTitle>
-          <p className="text-xs text-muted-foreground font-body">Your Deadhead Guide</p>
+          <div className="flex items-center gap-3">
+            <CosmicCharlieAvatar size={48} animate />
+            <div>
+              <DialogTitle className="font-display text-xl text-foreground">
+                Cosmic Charlie
+              </DialogTitle>
+              <p className="text-xs text-muted-foreground font-body">Your Deadhead Guide</p>
+            </div>
+          </div>
         </DialogHeader>
 
         <AnimatePresence mode="wait">

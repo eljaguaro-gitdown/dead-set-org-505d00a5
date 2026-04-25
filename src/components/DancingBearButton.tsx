@@ -1,32 +1,20 @@
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import dancingBear from "@/assets/dancing-bear.gif";
+import CosmicCharlieAvatar from "@/components/CosmicCharlieAvatar";
 
 const DancingBearButton = () => {
   const navigate = useNavigate();
 
   return (
     <motion.button
-      onClick={() => navigate("/builder")}
-      className="group flex items-center gap-2 px-3 py-1.5 rounded-full border border-primary/30 bg-primary/5 hover:bg-primary/15 hover:border-primary/60 transition-all duration-300"
+      onClick={() => navigate("/builder?wizard=true")}
+      className="group flex items-center gap-2.5 pl-1 pr-3.5 py-1 rounded-full border border-primary/30 bg-primary/5 hover:bg-primary/15 hover:border-primary/60 transition-all duration-300"
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.97 }}
       title="Cosmic Charlie — Your Deadhead Guide"
     >
-      {/* Dancing bear image */}
-      <motion.img
-        src={dancingBear}
-        alt="Dancing Bear"
-        className="w-7 h-7 object-contain select-none"
-        animate={{
-          y: [0, -2, 0],
-        }}
-        transition={{
-          duration: 2.4,
-          repeat: Infinity,
-          ease: "easeInOut",
-        }}
-      />
+      {/* Cosmic Charlie portrait */}
+      <CosmicCharlieAvatar size={28} glow={false} className="ring-1 ring-primary/40" />
 
       {/* Blinking label */}
       <motion.span
