@@ -344,12 +344,20 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
     }
   };
 
-  const handleAudioError = () => {
+  const handleAudioError = async () => {
     const src = tracks[currentTrack]?.src;
     audioDebug.log("player", "audio element error", { song: songTitle, src }, "error");
     audioDebug.setPlaybackState("error");
     console.warn("[AudioPlayer] audio error", { songTitle, src: track?.src });
-    // In playlist mode, advance past the broken track so the queue keeps moving.
+
+    // Try one retry before giving up. Re-resolves the track URL and reloads.
+    if (!retriedRef.current) {
+      const ok = await attemptRetry("error");
+      if (ok) return;
+    }
+
+    // Retry failed (or already used). In playlist mode, advance past the
+    // broken track so the queue keeps moving.
     if (singleTrackMode && onEnded) {
       setPlaying(false);
       onEnded();
