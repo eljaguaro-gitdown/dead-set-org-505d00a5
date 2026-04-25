@@ -139,6 +139,8 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
 
   const playSetlist = useCallback(async (slots: PlayableSlot[], setlistId?: string) => {
     if (slots.length === 0) return;
+    audioDebug.log("context", "playSetlist", { count: slots.length, setlistId });
+    audioDebug.setPlaybackState("starting");
     const sorted = [...slots].sort((a, b) => a.setNumber - b.setNumber || a.position - b.position);
 
     let startIndex = -1;
@@ -155,6 +157,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     }
 
     if (!startSlot || startIndex < 0) {
+      audioDebug.log("context", "no audio found in setlist", { setlistId }, "error");
       toast.error("Couldn't find audio for any songs in the setlist");
       return;
     }
@@ -164,6 +167,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
       supabase.rpc("increment_play_count", { _setlist_id: setlistId });
     }
 
+    audioDebug.setSlot(startSlot.id, startSlot.song.title, startSlot.version?.archive_org_url ?? null, startSlot.directTrackUrl ?? null);
     setState({
       playingSlot: startSlot,
       playlistMode: true,
@@ -175,10 +179,12 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
 
   const advancePlaylist = useCallback(async (dir: number) => {
     const { playlistIndex, playlistSlots } = stateRef.current;
+    audioDebug.log("context", "advancePlaylist", { dir, fromIndex: playlistIndex });
 
     for (let i = playlistIndex + dir; i >= 0 && i < playlistSlots.length; i += dir) {
       const resolved = await resolveSlot(playlistSlots[i]);
       if (resolved?.version?.archive_org_url) {
+        audioDebug.setSlot(resolved.id, resolved.song.title, resolved.version.archive_org_url, resolved.directTrackUrl ?? null);
         setState((prev) => ({
           ...prev,
           playlistIndex: i,
@@ -186,8 +192,10 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
         }));
         return;
       }
+      audioDebug.log("context", "skipping unresolved slot in playlist", { index: i, song: playlistSlots[i].song.title }, "warn");
     }
 
+    audioDebug.log("context", "end of setlist", {});
     stopPlayback();
     toast.info("End of setlist");
   }, [stopPlayback]);
