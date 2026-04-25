@@ -280,15 +280,8 @@ const CosmicCharlieWelcome = ({ eras, onGenerated, onSkip }: CosmicCharlieWelcom
             </motion.div>
           ) : (
             <>
-              {/* Charlie icon */}
-              <motion.div
-                animate={{ scale: [1, 1.08, 1] }}
-                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                className="relative"
-              >
-                <Star className="w-12 h-12 text-primary fill-primary/30" />
-                <div className="absolute inset-0 blur-xl bg-primary/20 rounded-full" />
-              </motion.div>
+              {/* Charlie portrait */}
+              <CosmicCharlieAvatar size={88} animate />
 
               {/* Step dots */}
               <div className="flex gap-2">
