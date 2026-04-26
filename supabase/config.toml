@@ -23,3 +23,5 @@ project_id = "dplrumaqrdnzwzqmatqr"
     verify_jwt = false
   [functions.weekly-insights-report]
     verify_jwt = false
+  [functions.send-beta-nudge]
+    verify_jwt = true

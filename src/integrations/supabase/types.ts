@@ -477,6 +477,33 @@ export type Database = {
         }
         Relationships: []
       }
+      email_sends: {
+        Row: {
+          error_message: string | null
+          id: string
+          sent_at: string
+          status: string
+          template: string
+          user_id: string
+        }
+        Insert: {
+          error_message?: string | null
+          id?: string
+          sent_at?: string
+          status: string
+          template: string
+          user_id: string
+        }
+        Update: {
+          error_message?: string | null
+          id?: string
+          sent_at?: string
+          status?: string
+          template?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       email_unsubscribe_tokens: {
         Row: {
           created_at: string
