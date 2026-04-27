@@ -31,6 +31,7 @@ const Backstage = lazy(() => import("./pages/Backstage"));
 const Unsubscribe = lazy(() => import("./pages/Unsubscribe"));
 const Updates = lazy(() => import("./pages/Updates"));
 const AdminChangelog = lazy(() => import("./pages/AdminChangelog"));
+const AdminBetaNudge = lazy(() => import("./pages/AdminBetaNudge"));
 const UserLibrary = lazy(() => import("./pages/UserLibrary"));
 
 const queryClient = new QueryClient();
