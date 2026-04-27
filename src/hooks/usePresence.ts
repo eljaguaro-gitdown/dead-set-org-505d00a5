@@ -90,7 +90,7 @@ export const usePresence = () => {
       }
       presenceRef.current = null;
     };
-  }, [user]);
+  }, [user, loading]);
 
   // Update page on every React Router navigation
   useEffect(() => {
