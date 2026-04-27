@@ -1,8 +1,11 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { BETA_NUDGE_HTML } from './template.ts'
 
+// SENDER_DOMAIN must match the verified subdomain delegated to Lovable's nameservers.
+// Sending from the root dead-set.org would be rejected ("No email domain record found").
 const SENDER_DOMAIN = 'notify.dead-set.org'
-const FROM_ADDRESS = 'Jay at Dead Set <grateful_jaguaro@dead-set.org>'
+// From address must use the verified subdomain. Reply-To routes responses to Jay's inbox.
+const FROM_ADDRESS = 'Jay at Dead Set <noreply@notify.dead-set.org>'
 const REPLY_TO = 'grateful_jaguaro@dead-set.org'
 const SUBJECT = 'You set the tone.'
 const PREHEADER = 'The features rolling out right now started as your notes.'
