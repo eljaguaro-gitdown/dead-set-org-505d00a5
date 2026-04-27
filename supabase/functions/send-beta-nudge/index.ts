@@ -49,6 +49,44 @@ function injectPreheader(html: string, preheader: string): string {
   return html.replace(/<body([^>]*)>/i, `<body$1>${hidden}`)
 }
 
+// Build a real plain-text alternative. Mailbox providers (Apple, Gmail) penalize
+// emails with a thin or missing text/plain part.
+function buildPlainText(firstName: string, unsubscribeUrl: string): string {
+  const greeting = firstName ? `Hey now, ${firstName}.` : 'Hey now.'
+  return [
+    greeting,
+    '',
+    'The features rolling out right now started as your notes.',
+    '',
+    "You've been in the app — building setlists, hitting favorites, leaving feedback. What you're doing isn't beta testing. It's co-authorship.",
+    '',
+    "Two weeks of shipping, daily. Here's what got built — a lot of it because of you.",
+    '',
+    'SET I — UNDER THE HOOD',
+    '• 100% song match rate — fuzzy matching now handles apostrophes, abbreviations, and alternate spellings.',
+    '• Signup alerts — we know the moment someone gets on the bus.',
+    '',
+    'SET II — NEW & BETTER',
+    '• Setlist Builder — drag to reorder, mark segues, pull live versions from the Song Vault.',
+    "• Liner notes that sound like Lemieux on SiriusXM — Charlie's descriptions now name the structural arc of the night.",
+    '• The Aha Moment — every Charlie setlist contains one placement that makes a veteran Deadhead say "wait — did they actually do that?"',
+    '• Vibe is now a real atmosphere — pick Dark & Heavy and party songs disappear.',
+    '• Show Score (beta) — paste any setlist and get a read on how legendary that night was.',
+    '',
+    'ENCORE',
+    "You're the first set. Everything that comes after carries your fingerprints. Keep telling me what's broken, what's missing, what would make you come back tomorrow.",
+    '',
+    'Go Backstage: https://dead-set.org/backstage',
+    '',
+    'Gratefully. Always.',
+    '— Grateful Jaguaro',
+    '',
+    '---',
+    'Dead Set · The music never stops.',
+    `Unsubscribe: ${unsubscribeUrl}`,
+  ].join('\n')
+}
+
 function generateToken(): string {
   const bytes = new Uint8Array(32)
   crypto.getRandomValues(bytes)
