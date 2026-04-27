@@ -2,12 +2,13 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { Shield, Users, ArrowLeft, Loader2, Calendar, Mail, User, Trash2, ListMusic, Eye, Globe, MessageSquare, Bug, Star, Lightbulb, Send } from "lucide-react";
+import { Shield, Users, ArrowLeft, Loader2, Calendar, Mail, User, Trash2, ListMusic, Eye, Globe, MessageSquare, Bug, Star, Lightbulb, Send, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import LiveVisitorsWidget from "@/components/LiveVisitorsWidget";
 import FunnelWidget from "@/components/FunnelWidget";
 import AdminAnnouncementsPanel from "@/components/AdminAnnouncementsPanel";
 import DeliverabilityMonitor from "@/components/DeliverabilityMonitor";
+import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -78,53 +79,63 @@ const Admin = () => {
     checkAdmin();
   }, [user]);
 
-  // Fetch users from edge function
+  // Fetch users from edge function (extracted so pull-to-refresh can re-invoke)
+  const fetchUsers = async () => {
+    setLoading(true);
+    const [usersRes, wishlistRes, bugsRes, sharesRes] = await Promise.all([
+      supabase.functions.invoke("admin-users"),
+      supabase.from("insider_wishlist").select("*").order("created_at", { ascending: false }),
+      supabase.from("insider_bugs").select("*").order("created_at", { ascending: false }),
+      supabase.from("insider_shares").select("*").order("created_at", { ascending: false }),
+    ]);
+    if (usersRes.error) {
+      toast.error("Failed to load users");
+      console.error(usersRes.error);
+    } else {
+      setUsers(usersRes.data.users || []);
+      setTraffic(usersRes.data.traffic || null);
+    }
+    const bsData = {
+      wishlist: (wishlistRes.data as any[]) || [],
+      bugs: (bugsRes.data as any[]) || [],
+      shares: (sharesRes.data as any[]) || [],
+    };
+    setBackstage(bsData);
+
+    const allUserIds = [
+      ...bsData.wishlist.map((w: any) => w.user_id),
+      ...bsData.bugs.map((b: any) => b.user_id),
+      ...bsData.shares.map((s: any) => s.user_id),
+    ].filter((id): id is string => !!id);
+    const uniqueIds = [...new Set(allUserIds)];
+    if (uniqueIds.length > 0) {
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("user_id, display_name, avatar_url")
+        .in("user_id", uniqueIds);
+      if (profiles) {
+        const map: ProfileMap = {};
+        profiles.forEach((p) => { map[p.user_id] = { display_name: p.display_name, avatar_url: p.avatar_url }; });
+        setProfileMap(map);
+      }
+    }
+    setLoading(false);
+  };
+
   useEffect(() => {
     if (!isAdmin) return;
-    const fetchUsers = async () => {
-      setLoading(true);
-      const [usersRes, wishlistRes, bugsRes, sharesRes] = await Promise.all([
-        supabase.functions.invoke("admin-users"),
-        supabase.from("insider_wishlist").select("*").order("created_at", { ascending: false }),
-        supabase.from("insider_bugs").select("*").order("created_at", { ascending: false }),
-        supabase.from("insider_shares").select("*").order("created_at", { ascending: false }),
-      ]);
-      if (usersRes.error) {
-        toast.error("Failed to load users");
-        console.error(usersRes.error);
-      } else {
-        setUsers(usersRes.data.users || []);
-        setTraffic(usersRes.data.traffic || null);
-      }
-      const bsData = {
-        wishlist: (wishlistRes.data as any[]) || [],
-        bugs: (bugsRes.data as any[]) || [],
-        shares: (sharesRes.data as any[]) || [],
-      };
-      setBackstage(bsData);
-
-      // Collect unique user_ids from submissions and fetch profiles
-      const allUserIds = [
-        ...bsData.wishlist.map((w: any) => w.user_id),
-        ...bsData.bugs.map((b: any) => b.user_id),
-        ...bsData.shares.map((s: any) => s.user_id),
-      ].filter((id): id is string => !!id);
-      const uniqueIds = [...new Set(allUserIds)];
-      if (uniqueIds.length > 0) {
-        const { data: profiles } = await supabase
-          .from("profiles")
-          .select("user_id, display_name, avatar_url")
-          .in("user_id", uniqueIds);
-        if (profiles) {
-          const map: ProfileMap = {};
-          profiles.forEach((p) => { map[p.user_id] = { display_name: p.display_name, avatar_url: p.avatar_url }; });
-          setProfileMap(map);
-        }
-      }
-      setLoading(false);
-    };
     fetchUsers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAdmin]);
+
+  // Pull-to-refresh on mobile (and trackpad-overscroll on desktop)
+  const { pull, refreshing, threshold } = usePullToRefresh({
+    enabled: isAdmin,
+    onRefresh: async () => {
+      await fetchUsers();
+      toast.success("Refreshed");
+    },
+  });
 
   const [deleting, setDeleting] = useState<string | null>(null);
   const [sendingWelcome, setSendingWelcome] = useState<string | null>(null);
@@ -264,8 +275,28 @@ const Admin = () => {
     );
   }
 
+  const progress = Math.min(1, pull / threshold);
+
   return (
-    <div className="grain-overlay min-h-screen bg-background">
+    <div className="grain-overlay min-h-screen bg-background overscroll-y-contain">
+      {/* Pull-to-refresh indicator */}
+      <div
+        aria-hidden={pull === 0 && !refreshing}
+        className="fixed top-0 inset-x-0 z-50 flex justify-center pointer-events-none"
+        style={{
+          transform: `translateY(${refreshing ? threshold * 0.6 : pull * 0.6}px)`,
+          opacity: refreshing ? 1 : progress,
+          transition: pull === 0 || refreshing ? "transform 200ms ease, opacity 200ms ease" : "none",
+        }}
+      >
+        <div className="mt-2 bg-card border border-border rounded-full p-2 shadow-lg">
+          <RefreshCw
+            className={`w-4 h-4 text-primary ${refreshing ? "animate-spin" : ""}`}
+            style={{ transform: refreshing ? undefined : `rotate(${progress * 270}deg)` }}
+          />
+        </div>
+      </div>
+
       {/* Header */}
       <header className="border-b border-border px-4 py-3 flex items-center gap-3">
         <button onClick={() => navigate("/")} className="font-display text-lg text-primary">
@@ -279,8 +310,19 @@ const Admin = () => {
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => navigate("/")}
+          onClick={() => fetchUsers().then(() => toast.success("Refreshed"))}
           className="ml-auto font-body text-muted-foreground"
+          disabled={loading || refreshing}
+          aria-label="Refresh"
+        >
+          <RefreshCw className={`w-3.5 h-3.5 mr-1 ${loading || refreshing ? "animate-spin" : ""}`} />
+          Refresh
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => navigate("/")}
+          className="font-body text-muted-foreground"
         >
           <ArrowLeft className="w-3.5 h-3.5 mr-1" /> Back
         </Button>
