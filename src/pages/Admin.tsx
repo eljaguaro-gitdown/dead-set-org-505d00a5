@@ -275,8 +275,28 @@ const Admin = () => {
     );
   }
 
+  const progress = Math.min(1, pull / threshold);
+
   return (
-    <div className="grain-overlay min-h-screen bg-background">
+    <div className="grain-overlay min-h-screen bg-background overscroll-y-contain">
+      {/* Pull-to-refresh indicator */}
+      <div
+        aria-hidden={pull === 0 && !refreshing}
+        className="fixed top-0 inset-x-0 z-50 flex justify-center pointer-events-none"
+        style={{
+          transform: `translateY(${refreshing ? threshold * 0.6 : pull * 0.6}px)`,
+          opacity: refreshing ? 1 : progress,
+          transition: pull === 0 || refreshing ? "transform 200ms ease, opacity 200ms ease" : "none",
+        }}
+      >
+        <div className="mt-2 bg-card border border-border rounded-full p-2 shadow-lg">
+          <RefreshCw
+            className={`w-4 h-4 text-primary ${refreshing ? "animate-spin" : ""}`}
+            style={{ transform: refreshing ? undefined : `rotate(${progress * 270}deg)` }}
+          />
+        </div>
+      </div>
+
       {/* Header */}
       <header className="border-b border-border px-4 py-3 flex items-center gap-3">
         <button onClick={() => navigate("/")} className="font-display text-lg text-primary">
@@ -290,8 +310,19 @@ const Admin = () => {
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => navigate("/")}
+          onClick={() => fetchUsers().then(() => toast.success("Refreshed"))}
           className="ml-auto font-body text-muted-foreground"
+          disabled={loading || refreshing}
+          aria-label="Refresh"
+        >
+          <RefreshCw className={`w-3.5 h-3.5 mr-1 ${loading || refreshing ? "animate-spin" : ""}`} />
+          Refresh
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => navigate("/")}
+          className="font-body text-muted-foreground"
         >
           <ArrowLeft className="w-3.5 h-3.5 mr-1" /> Back
         </Button>
