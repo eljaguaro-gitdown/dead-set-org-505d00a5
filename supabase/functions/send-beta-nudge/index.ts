@@ -57,7 +57,7 @@ function generateToken(): string {
 
 // Reuse an unused unsubscribe token for this email, or create one. Returns null on failure.
 async function getOrCreateUnsubscribeToken(
-  supabase: ReturnType<typeof createClient>,
+  supabase: any,
   email: string,
 ): Promise<string | null> {
   const normalized = email.toLowerCase()
