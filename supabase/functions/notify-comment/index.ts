@@ -88,15 +88,13 @@ Deno.serve(async (req) => {
     })
   }
 
-  // Use direct fetch with anon key so the receiving function gets a valid
-  // user-style JWT instead of the service-role key (which it rejects).
-  const anonKey = Deno.env.get('SUPABASE_ANON_KEY')!
+  // Forward the caller's user JWT — the gateway requires a properly signed
+  // JWT (sb_publishable_/anon keys are not JWTs and fail INVALID_JWT_FORMAT).
   const sendRes = await fetch(`${supabaseUrl}/functions/v1/send-transactional-email`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${anonKey}`,
-      apikey: anonKey,
+      Authorization: authHeader,
     },
     body: JSON.stringify({
       templateName: 'comment-notification',
