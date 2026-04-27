@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import LiveVisitorsWidget from "@/components/LiveVisitorsWidget";
 import FunnelWidget from "@/components/FunnelWidget";
 import AdminAnnouncementsPanel from "@/components/AdminAnnouncementsPanel";
+import DeliverabilityMonitor from "@/components/DeliverabilityMonitor";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -328,6 +329,9 @@ const Admin = () => {
 
         {/* Broadcast Announcements */}
         <AdminAnnouncementsPanel />
+
+        {/* Email Deliverability Monitoring */}
+        <DeliverabilityMonitor />
 
         {/* Traffic Stats */}
         <div className="bg-card border border-border rounded-lg overflow-hidden">
