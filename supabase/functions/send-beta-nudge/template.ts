@@ -136,6 +136,7 @@ background-color: #0d0d0d;
   <div class="header">
     <div class="header-rule-top"></div>
     <div class="logo-lockup">
+      <img src="https://dplrumaqrdnzwzqmatqr.supabase.co/storage/v1/object/public/email-assets/cosmic-charlie-email.jpg" alt="Cosmic Charlie" width="36" height="36" class="charlie-mark" />
       <span class="site-name">Dead Set</span>
     </div>
     <div class="header-meta">Dispatch from the Lot &nbsp;·&nbsp; Beta Crew &nbsp;·&nbsp; Apr 2026</div>
