@@ -49,6 +49,40 @@ function injectPreheader(html: string, preheader: string): string {
   return html.replace(/<body([^>]*)>/i, `<body$1>${hidden}`)
 }
 
+function generateToken(): string {
+  const bytes = new Uint8Array(32)
+  crypto.getRandomValues(bytes)
+  return Array.from(bytes).map((b) => b.toString(16).padStart(2, '0')).join('')
+}
+
+// Reuse an unused unsubscribe token for this email, or create one. Returns null on failure.
+async function getOrCreateUnsubscribeToken(
+  supabase: ReturnType<typeof createClient>,
+  email: string,
+): Promise<string | null> {
+  const normalized = email.toLowerCase()
+  const { data: existing } = await supabase
+    .from('email_unsubscribe_tokens')
+    .select('token, used_at')
+    .eq('email', normalized)
+    .maybeSingle()
+
+  if (existing && !existing.used_at) return existing.token as string
+  if (existing && existing.used_at) return null // already used = effectively suppressed
+
+  const token = generateToken()
+  await supabase
+    .from('email_unsubscribe_tokens')
+    .upsert({ token, email: normalized }, { onConflict: 'email', ignoreDuplicates: true })
+
+  const { data: stored } = await supabase
+    .from('email_unsubscribe_tokens')
+    .select('token')
+    .eq('email', normalized)
+    .maybeSingle()
+  return (stored?.token as string) ?? null
+}
+
 interface RequestBody {
   recipient_ids?: string[]
   dry_run?: boolean
@@ -162,6 +196,37 @@ Deno.serve(async (req) => {
     }
 
     try {
+      // Suppression check (fail-closed)
+      const { data: suppressed } = await supabase
+        .from('suppressed_emails')
+        .select('id')
+        .eq('email', email.toLowerCase())
+        .maybeSingle()
+      if (suppressed) {
+        await supabase.from('email_sends').insert({
+          user_id: userId,
+          template: TEMPLATE_NAME,
+          status: 'skipped',
+          error_message: 'suppressed',
+        })
+        results.push({ user_id: userId, email, status: 'skipped', error_message: 'suppressed' })
+        await new Promise((r) => setTimeout(r, SEND_DELAY_MS))
+        continue
+      }
+
+      const unsubscribeToken = await getOrCreateUnsubscribeToken(supabase, email)
+      if (!unsubscribeToken) {
+        await supabase.from('email_sends').insert({
+          user_id: userId,
+          template: TEMPLATE_NAME,
+          status: 'skipped',
+          error_message: 'unsubscribe token unavailable (already unsubscribed?)',
+        })
+        results.push({ user_id: userId, email, status: 'skipped', error_message: 'no_unsub_token' })
+        await new Promise((r) => setTimeout(r, SEND_DELAY_MS))
+        continue
+      }
+
       const personalized = personalize(BETA_NUDGE_HTML, firstName)
       const html = injectPreheader(personalized, PREHEADER)
       const messageId = crypto.randomUUID()
@@ -189,6 +254,7 @@ Deno.serve(async (req) => {
           purpose: 'transactional',
           label: TEMPLATE_NAME,
           idempotency_key: idempotencyKey,
+          unsubscribe_token: unsubscribeToken,
           queued_at: new Date().toISOString(),
         },
       })
