@@ -5,10 +5,10 @@ import { BETA_NUDGE_HTML } from './template.ts'
 // Sending from the root dead-set.org would be rejected ("No email domain record found").
 const SENDER_DOMAIN = 'notify.dead-set.org'
 // From address must use the verified subdomain. Reply-To routes responses to Jay's inbox.
-const FROM_ADDRESS = 'Jay at Dead Set <noreply@notify.dead-set.org>'
+const FROM_ADDRESS = 'Grateful Jaguaro at Dead Set <noreply@notify.dead-set.org>'
 const REPLY_TO = 'grateful_jaguaro@dead-set.org'
-const SUBJECT = 'You set the tone.'
-const PREHEADER = 'The features rolling out right now started as your notes.'
+const SUBJECT = 'Build notes from the lab — what shipped this week'
+const PREHEADER = 'Two weeks of shipping. Here is what got built.'
 const TEMPLATE_NAME = 'beta_nudge'
 const SEND_DELAY_MS = 200
 
