@@ -62,6 +62,7 @@ const App = () => (
               <Route path="/unsubscribe" element={<Unsubscribe />} />
               <Route path="/updates" element={<Updates />} />
               <Route path="/admin/changelog" element={<AdminChangelog />} />
+              <Route path="/admin/email/beta-nudge" element={<AdminBetaNudge />} />
               <Route path="/user/:userId" element={<UserLibrary />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
