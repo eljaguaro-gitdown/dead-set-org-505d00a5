@@ -88,8 +88,17 @@ Deno.serve(async (req) => {
     })
   }
 
-  const { error: invokeError } = await supabase.functions.invoke('send-transactional-email', {
-    body: {
+  // Use direct fetch with anon key so the receiving function gets a valid
+  // user-style JWT instead of the service-role key (which it rejects).
+  const anonKey = Deno.env.get('SUPABASE_ANON_KEY')!
+  const sendRes = await fetch(`${supabaseUrl}/functions/v1/send-transactional-email`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${anonKey}`,
+      apikey: anonKey,
+    },
+    body: JSON.stringify({
       templateName: 'comment-notification',
       recipientEmail: recipient.email,
       idempotencyKey: `comment-notify-${commentId}`,
@@ -99,11 +108,12 @@ Deno.serve(async (req) => {
         preview: (preview || '').slice(0, 200),
         setlistId,
       },
-    },
+    }),
   })
 
-  if (invokeError) {
-    console.error('Failed to send comment notification', invokeError)
+  if (!sendRes.ok) {
+    const errText = await sendRes.text()
+    console.error('Failed to send comment notification', sendRes.status, errText)
     return new Response(JSON.stringify({ error: 'Failed to send notification' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
