@@ -72,17 +72,15 @@ Deno.serve(async (req) => {
     })
   }
 
-  // Invoke the transactional email sender via direct fetch so we can
-  // explicitly send the anon key as the Authorization JWT (the supabase-js
-  // client would otherwise forward the service-role key, which the receiving
-  // function rejects as INVALID_JWT_FORMAT).
-  const anonKey = Deno.env.get('SUPABASE_ANON_KEY')!
+  // Forward the caller's user JWT — Supabase's gateway requires a properly
+  // signed JWT (the new sb_publishable_/anon keys are not JWTs and get
+  // rejected as INVALID_JWT_FORMAT). The caller is already authenticated
+  // (verified above), so their JWT is valid for the downstream call.
   const sendRes = await fetch(`${supabaseUrl}/functions/v1/send-transactional-email`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${anonKey}`,
-      apikey: anonKey,
+      Authorization: authHeader,
     },
     body: JSON.stringify({
       templateName: 'dm-notification',
