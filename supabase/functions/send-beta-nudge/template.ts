@@ -37,6 +37,10 @@ background-color: #0d0d0d;
 .header-rule-top { width: 100%; height: 1px; background: linear-gradient(90deg, transparent, #c9a84c 30%, #c9a84c 70%, transparent); margin-bottom: 20px; }
 .logo-lockup { display: inline-block; text-align: center; }
 .logo-reel { display: inline-block; width: 30px; height: 30px; opacity: 0.6; vertical-align: middle; margin-right: 8px; }
+.charlie-mark { display: inline-block; width: 36px; height: 36px; border-radius: 50%; vertical-align: middle; margin-right: 12px; border: 1px solid #c9a84c; }
+.charlie-portrait-wrap { text-align: center; margin-bottom: 18px; }
+.charlie-portrait { width: 96px; height: 96px; border-radius: 50%; border: 2px solid #c9a84c; display: inline-block; }
+.charlie-caption { display: block; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.22em; color: #b09e78; text-transform: uppercase; margin-top: 10px; }
 .site-name { font-family: 'Playfair Display', Georgia, serif; font-size: 22px; font-weight: 700; color: #c9a84c; letter-spacing: 0.08em; text-transform: uppercase; vertical-align: middle; }
 .header-meta { display: block; font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.18em; color: #b09e78; text-transform: uppercase; margin-top: 8px; }
 .header-rule-bottom { width: 100%; height: 1px; background: linear-gradient(90deg, transparent, #2a2410 30%, #2a2410 70%, transparent); margin-top: 20px; }
