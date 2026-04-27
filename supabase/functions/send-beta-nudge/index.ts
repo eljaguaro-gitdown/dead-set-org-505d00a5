@@ -267,6 +267,8 @@ Deno.serve(async (req) => {
 
       const personalized = personalize(BETA_NUDGE_HTML, firstName)
       const html = injectPreheader(personalized, PREHEADER)
+      const unsubscribeUrl = `https://dead-set.org/unsubscribe?token=${unsubscribeToken}`
+      const text = buildPlainText(firstName, unsubscribeUrl)
       const messageId = crypto.randomUUID()
       const idempotencyKey = `beta-nudge-${userId}`
 
@@ -288,11 +290,17 @@ Deno.serve(async (req) => {
           sender_domain: SENDER_DOMAIN,
           subject: SUBJECT,
           html,
-          text: PREHEADER,
+          text,
           purpose: 'transactional',
           label: TEMPLATE_NAME,
           idempotency_key: idempotencyKey,
           unsubscribe_token: unsubscribeToken,
+          // RFC 8058 one-click unsubscribe headers — Apple/Gmail give a measurable
+          // deliverability boost when these are present.
+          headers: {
+            'List-Unsubscribe': `<${unsubscribeUrl}>, <mailto:unsubscribe@notify.dead-set.org?subject=unsubscribe-${unsubscribeToken}>`,
+            'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+          },
           queued_at: new Date().toISOString(),
         },
       })
