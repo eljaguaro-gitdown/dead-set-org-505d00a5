@@ -160,6 +160,10 @@ background-color: #0d0d0d;
 
   <!-- LETTER -->
   <div class="letter-block">
+    <div class="charlie-portrait-wrap">
+      <img src="https://dplrumaqrdnzwzqmatqr.supabase.co/storage/v1/object/public/email-assets/cosmic-charlie-email.jpg" alt="Cosmic Charlie portrait" width="96" height="96" class="charlie-portrait" />
+      <span class="charlie-caption">From Charlie's Desk</span>
+    </div>
     <div class="letter-inner">
       <div class="letter-eyebrow">Hey Now, {{first_name}}</div>
       <div class="letter-headline">The features rolling out right now started as your notes.</div>
