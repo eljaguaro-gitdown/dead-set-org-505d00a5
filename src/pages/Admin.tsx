@@ -2,12 +2,13 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { Shield, Users, ArrowLeft, Loader2, Calendar, Mail, User, Trash2, ListMusic, Eye, Globe, MessageSquare, Bug, Star, Lightbulb, Send } from "lucide-react";
+import { Shield, Users, ArrowLeft, Loader2, Calendar, Mail, User, Trash2, ListMusic, Eye, Globe, MessageSquare, Bug, Star, Lightbulb, Send, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import LiveVisitorsWidget from "@/components/LiveVisitorsWidget";
 import FunnelWidget from "@/components/FunnelWidget";
 import AdminAnnouncementsPanel from "@/components/AdminAnnouncementsPanel";
 import DeliverabilityMonitor from "@/components/DeliverabilityMonitor";
+import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import {
   AlertDialog,
   AlertDialogAction,
