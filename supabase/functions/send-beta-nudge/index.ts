@@ -5,10 +5,10 @@ import { BETA_NUDGE_HTML } from './template.ts'
 // Sending from the root dead-set.org would be rejected ("No email domain record found").
 const SENDER_DOMAIN = 'notify.dead-set.org'
 // From address must use the verified subdomain. Reply-To routes responses to Jay's inbox.
-const FROM_ADDRESS = 'Jay at Dead Set <noreply@notify.dead-set.org>'
+const FROM_ADDRESS = 'Grateful Jaguaro at Dead Set <noreply@notify.dead-set.org>'
 const REPLY_TO = 'grateful_jaguaro@dead-set.org'
-const SUBJECT = 'You set the tone.'
-const PREHEADER = 'The features rolling out right now started as your notes.'
+const SUBJECT = 'Build notes from the lab — what shipped this week'
+const PREHEADER = 'Two weeks of shipping. Here is what got built.'
 const TEMPLATE_NAME = 'beta_nudge'
 const SEND_DELAY_MS = 200
 
@@ -47,6 +47,44 @@ function deriveFirstName(displayName: string | null | undefined): string {
 function injectPreheader(html: string, preheader: string): string {
   const hidden = `<div style="display:none!important;visibility:hidden;opacity:0;color:transparent;height:0;width:0;overflow:hidden;mso-hide:all;font-size:1px;line-height:1px;max-height:0;max-width:0;">${preheader}</div>`
   return html.replace(/<body([^>]*)>/i, `<body$1>${hidden}`)
+}
+
+// Build a real plain-text alternative. Mailbox providers (Apple, Gmail) penalize
+// emails with a thin or missing text/plain part.
+function buildPlainText(firstName: string, unsubscribeUrl: string): string {
+  const greeting = firstName ? `Hey now, ${firstName}.` : 'Hey now.'
+  return [
+    greeting,
+    '',
+    'The features rolling out right now started as your notes.',
+    '',
+    "You've been in the app — building setlists, hitting favorites, leaving feedback. What you're doing isn't beta testing. It's co-authorship.",
+    '',
+    "Two weeks of shipping, daily. Here's what got built — a lot of it because of you.",
+    '',
+    'SET I — UNDER THE HOOD',
+    '• 100% song match rate — fuzzy matching now handles apostrophes, abbreviations, and alternate spellings.',
+    '• Signup alerts — we know the moment someone gets on the bus.',
+    '',
+    'SET II — NEW & BETTER',
+    '• Setlist Builder — drag to reorder, mark segues, pull live versions from the Song Vault.',
+    "• Liner notes that sound like Lemieux on SiriusXM — Charlie's descriptions now name the structural arc of the night.",
+    '• The Aha Moment — every Charlie setlist contains one placement that makes a veteran Deadhead say "wait — did they actually do that?"',
+    '• Vibe is now a real atmosphere — pick Dark & Heavy and party songs disappear.',
+    '• Show Score (beta) — paste any setlist and get a read on how legendary that night was.',
+    '',
+    'ENCORE',
+    "You're the first set. Everything that comes after carries your fingerprints. Keep telling me what's broken, what's missing, what would make you come back tomorrow.",
+    '',
+    'Go Backstage: https://dead-set.org/backstage',
+    '',
+    'Gratefully. Always.',
+    '— Grateful Jaguaro',
+    '',
+    '---',
+    'Dead Set · The music never stops.',
+    `Unsubscribe: ${unsubscribeUrl}`,
+  ].join('\n')
 }
 
 function generateToken(): string {
@@ -229,6 +267,8 @@ Deno.serve(async (req) => {
 
       const personalized = personalize(BETA_NUDGE_HTML, firstName)
       const html = injectPreheader(personalized, PREHEADER)
+      const unsubscribeUrl = `https://dead-set.org/unsubscribe?token=${unsubscribeToken}`
+      const text = buildPlainText(firstName, unsubscribeUrl)
       const messageId = crypto.randomUUID()
       const idempotencyKey = `beta-nudge-${userId}`
 
@@ -250,11 +290,17 @@ Deno.serve(async (req) => {
           sender_domain: SENDER_DOMAIN,
           subject: SUBJECT,
           html,
-          text: PREHEADER,
+          text,
           purpose: 'transactional',
           label: TEMPLATE_NAME,
           idempotency_key: idempotencyKey,
           unsubscribe_token: unsubscribeToken,
+          // RFC 8058 one-click unsubscribe headers — Apple/Gmail give a measurable
+          // deliverability boost when these are present.
+          headers: {
+            'List-Unsubscribe': `<${unsubscribeUrl}>, <mailto:unsubscribe@notify.dead-set.org?subject=unsubscribe-${unsubscribeToken}>`,
+            'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+          },
           queued_at: new Date().toISOString(),
         },
       })
