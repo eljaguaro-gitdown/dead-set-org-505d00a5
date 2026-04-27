@@ -12,11 +12,13 @@ const HEARTBEAT_INTERVAL = 30_000; // 30s heartbeat to keep presence fresh
 export const usePresence = () => {
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const presenceRef = useRef<Record<string, unknown> | null>(null);
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const location = useLocation();
 
-  // Initialize channel once when user changes
+  // Initialize channel once when user changes — wait until auth has resolved
+  // so we don't broadcast an anonymous presence before the session hydrates.
   useEffect(() => {
+    if (loading) return;
     const visitorId = localStorage.getItem("ds_visitor_id") || crypto.randomUUID();
     if (!localStorage.getItem("ds_visitor_id")) {
       localStorage.setItem("ds_visitor_id", visitorId);
@@ -88,7 +90,7 @@ export const usePresence = () => {
       }
       presenceRef.current = null;
     };
-  }, [user]);
+  }, [user, loading]);
 
   // Update page on every React Router navigation
   useEffect(() => {
