@@ -110,6 +110,45 @@ const SendToFriendDialog = ({
       .update({ last_message_at: new Date().toISOString() })
       .eq("id", friend.conversationId);
 
+    // Fire-and-forget: notify recipient via email if offline
+    try {
+      const onlineUserIds = new Set<string>();
+      const existingChannel = supabase.getChannels().find(
+        (ch) => ch.topic === "realtime:online_visitors"
+      );
+      if (existingChannel) {
+        const state = existingChannel.presenceState();
+        for (const key of Object.keys(state)) {
+          const presences = state[key] as any[];
+          if (presences?.[0]?.user_id) {
+            onlineUserIds.add(presences[0].user_id);
+          }
+        }
+      }
+
+      if (!onlineUserIds.has(friend.userId)) {
+        const senderProfile = await supabase
+          .from("profiles")
+          .select("display_name")
+          .eq("user_id", user.id)
+          .maybeSingle();
+        const senderName =
+          senderProfile.data?.display_name ||
+          user.email?.split("@")[0] ||
+          "A Deadhead";
+
+        supabase.functions
+          .invoke("notify-dm", {
+            body: {
+              recipientUserId: friend.userId,
+              senderName,
+              messagePreview: message.slice(0, 200),
+            },
+          })
+          .catch(() => {});
+      }
+    } catch {}
+
     setSentTo((prev) => new Set(prev).add(friend.userId));
     trackShare({ shareType: "setlist", channel: "sms", setlistId, metadata: { via: "in_app_dm" } });
     toast.success(`Sent to ${friend.displayName}!`);
