@@ -607,15 +607,16 @@ const Builder = () => {
   );
 
   // Seed a setlist from a chosen show date — works for both guests and authed users.
+  // Uses the real historical setlist (sets, order, segues) parsed from archive.org.
   const handleShowDateSeed = useCallback(
     async (seed: ShowSeed) => {
-      const newSlots: SetlistSlotData[] = seed.versions.map((pair, idx) => ({
+      const newSlots: SetlistSlotData[] = seed.slots.map((s) => ({
         id: crypto.randomUUID(),
-        song: pair.song,
-        version: pair.version,
-        setNumber: 1,
-        position: idx,
-        segueToNext: false,
+        song: s.song,
+        version: null,
+        setNumber: s.setNumber,
+        position: s.position,
+        segueToNext: s.segueToNext,
         notes: "",
       }));
 
