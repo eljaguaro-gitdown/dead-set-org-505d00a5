@@ -50,14 +50,18 @@ async function findBestRecordingForDate(date: string): Promise<string | null> {
   return (sbd || docs[0]).identifier;
 }
 
-// Strip leading track-number / disc prefix and trailing file ext.
+// Strip leading track-number / disc / set prefix, trailing file ext, and decoration.
 function cleanTitle(raw: string): string {
   return raw
-    .replace(/\.[^.]+$/, "")
-    .replace(/^d\d+t\d+\s*[-.]?\s*/i, "")
-    .replace(/^t?\d+\s*[-.]?\s*/, "")
+    .replace(/\.[^.]+$/, "")                       // .flac, .mp3
+    .replace(/^[ds]\d+t\d+\s*[-.:]?\s*/i, "")      // d1t03 — or s2t01 -
+    .replace(/^t?\d+\s*[-.:]?\s*/, "")             // 03 - or t03.
+    .replace(/[*†‡#@~]+/g, "")                     // segue/jam asterisks anywhere
+    .replace(/^['"]+|['"]+$/g, "")                 // wrapping quotes
     .replace(/\s*->\s*$/, "")
     .replace(/\s*>\s*$/, "")
+    .replace(/\s*[!?.]+$/, "")                     // trailing punctuation
+    .replace(/\s+/g, " ")
     .trim();
 }
 
@@ -113,52 +117,83 @@ function parseNotesSetlist(notes: string): { title: string; segue: boolean; setN
 }
 
 // Fallback: derive from the audio file list.
-// Heuristic for set breaks: gaps in disc numbering (d1 → d2) usually = next set.
+// GD recordings encode set or disc + track in filename:
+//   gd77-05-08s1t03.flac  → set 1, track 3
+//   gd1990-03-29d1t04.shn → disc 1, track 4
 function parseFromFiles(files: any[]): ParsedTrack[] {
   const audio = files.filter(isAudioFile);
-  // De-dup by track title (multiple formats of same track)
-  const seen = new Set<string>();
-  const ordered: any[] = [];
-  for (const f of audio) {
-    const key = (f.title || f.name || "").toLowerCase();
-    if (seen.has(key)) continue;
-    seen.add(key);
-    ordered.push(f);
-  }
-  // Sort by track number if present
-  ordered.sort((a, b) => {
-    const ta = parseInt(a.track || a.name?.match(/t(\d+)/i)?.[1] || "0", 10);
-    const tb = parseInt(b.track || b.name?.match(/t(\d+)/i)?.[1] || "0", 10);
-    if (ta && tb) return ta - tb;
-    return (a.name || "").localeCompare(b.name || "");
-  });
 
-  // Detect disc breaks for set assignment
-  const tracks: ParsedTrack[] = [];
-  let currentSet = 1;
-  let lastDisc = 1;
-  let posInSet = 0;
-
-  ordered.forEach((f, idx) => {
-    const discMatch = (f.name || "").match(/d(\d+)t/i);
-    const disc = discMatch ? parseInt(discMatch[1], 10) : lastDisc;
-    if (disc > lastDisc) {
-      // New disc — assume set boundary
-      currentSet = Math.min(currentSet + 1, 3);
-      posInSet = 0;
-      lastDisc = disc;
+  const parseFilename = (name: string): { set: number | null; disc: number | null; track: number | null } => {
+    const lower = (name || "").toLowerCase();
+    const setMatch = lower.match(/s(\d)t(\d+)/i);
+    if (setMatch) {
+      return { set: parseInt(setMatch[1], 10), disc: null, track: parseInt(setMatch[2], 10) };
     }
-    const rawTitle = f.title || f.name || "";
-    const segue = detectSegue(rawTitle);
-    const title = cleanTitle(rawTitle);
-    if (!title) return;
-    tracks.push({
-      rawTitle: title,
-      setNumber: currentSet,
-      position: posInSet++,
-      segueToNext: segue,
-    });
+    const discMatch = lower.match(/d(\d)t(\d+)/i);
+    if (discMatch) {
+      return { set: null, disc: parseInt(discMatch[1], 10), track: parseInt(discMatch[2], 10) };
+    }
+    const tMatch = lower.match(/[^a-z]t(\d+)/i) || lower.match(/^(\d+)[\s_.-]/);
+    return { set: null, disc: null, track: tMatch ? parseInt(tMatch[1], 10) : null };
+  };
+
+  // De-dup multiple format copies of the same logical track.
+  // Key on (set/disc, track) when available, else on cleaned title.
+  // Prefer the variant whose `title` is a real song name (not the filename).
+  const byKey = new Map<string, { file: any; parsed: ReturnType<typeof parseFilename>; cleaned: string }>();
+  for (const f of audio) {
+    const parsed = parseFilename(f.name || "");
+    const cleaned = cleanTitle(f.title || f.name || "");
+    const key =
+      parsed.set !== null && parsed.track !== null
+        ? `s${parsed.set}t${parsed.track}`
+        : parsed.disc !== null && parsed.track !== null
+          ? `d${parsed.disc}t${parsed.track}`
+          : `n:${cleaned.toLowerCase()}`;
+    const existing = byKey.get(key);
+    const looksLikeFilename = (s: string) => !s || /^gd\d{2,4}/i.test(s);
+    if (!existing) {
+      byKey.set(key, { file: f, parsed, cleaned });
+    } else if (looksLikeFilename(existing.cleaned) && !looksLikeFilename(cleaned)) {
+      byKey.set(key, { file: f, parsed, cleaned });
+    }
+  }
+
+  const entries = Array.from(byKey.values());
+  const usesSetMarkers = entries.some((e) => e.parsed.set !== null);
+
+  entries.sort((a, b) => {
+    const aGroup = usesSetMarkers ? (a.parsed.set ?? 99) : (a.parsed.disc ?? 99);
+    const bGroup = usesSetMarkers ? (b.parsed.set ?? 99) : (b.parsed.disc ?? 99);
+    if (aGroup !== bGroup) return aGroup - bGroup;
+    const at = a.parsed.track ?? 999;
+    const bt = b.parsed.track ?? 999;
+    if (at !== bt) return at - bt;
+    return (a.file.name || "").localeCompare(b.file.name || "");
   });
+
+  const tracks: ParsedTrack[] = [];
+  const posCounters = new Map<number, number>();
+
+  for (const { file, parsed, cleaned } of entries) {
+    // Skip junk titles that are still just the filename
+    if (!cleaned || /^gd\d{2,4}[-_]?\d/i.test(cleaned)) continue;
+    // Skip pre-show tunings, applause, banter, drums/space (often not in songs DB)
+    if (/^(tuning|tune[\s-]?up|applause|banter|crowd[\s-]?noise|intro|outro)$/i.test(cleaned)) continue;
+
+    const setNumber = usesSetMarkers
+      ? Math.min(parsed.set ?? 1, 3)
+      : Math.min(parsed.disc ?? 1, 3);
+    const pos = posCounters.get(setNumber) || 0;
+    posCounters.set(setNumber, pos + 1);
+
+    tracks.push({
+      rawTitle: cleaned,
+      setNumber,
+      position: pos,
+      segueToNext: detectSegue(file.title || file.name || ""),
+    });
+  }
 
   return tracks;
 }
