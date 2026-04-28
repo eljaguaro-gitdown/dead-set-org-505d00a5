@@ -56,11 +56,12 @@ function cleanTitle(raw: string): string {
     .replace(/\.[^.]+$/, "")                       // .flac, .mp3
     .replace(/^[ds]\d+t\d+\s*[-.:]?\s*/i, "")      // d1t03 — or s2t01 -
     .replace(/^t?\d+\s*[-.:]?\s*/, "")             // 03 - or t03.
-    .replace(/[*†‡]+\s*$/, "")                     // trailing asterisks marking segues/notes
+    .replace(/[*†‡#@~]+/g, "")                     // segue/jam asterisks anywhere
     .replace(/^['"]+|['"]+$/g, "")                 // wrapping quotes
     .replace(/\s*->\s*$/, "")
     .replace(/\s*>\s*$/, "")
     .replace(/\s*[!?.]+$/, "")                     // trailing punctuation
+    .replace(/\s+/g, " ")
     .trim();
 }
 
