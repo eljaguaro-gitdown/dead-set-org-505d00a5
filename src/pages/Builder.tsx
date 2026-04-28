@@ -606,6 +606,58 @@ const Builder = () => {
     [songs, user]
   );
 
+  // Seed a setlist from a chosen show date — works for both guests and authed users.
+  const handleShowDateSeed = useCallback(
+    async (seed: ShowSeed) => {
+      const newSlots: SetlistSlotData[] = seed.versions.map((pair, idx) => ({
+        id: crypto.randomUUID(),
+        song: pair.song,
+        version: pair.version,
+        setNumber: 1,
+        position: idx,
+        segueToNext: false,
+        notes: "",
+      }));
+
+      setTitle(seed.title);
+      if (seed.eraId) setSelectedEra(seed.eraId);
+
+      if (isGuestMode) {
+        setGuestSlots(newSlots);
+        setMobileTab("setlist");
+        return;
+      }
+
+      // Authenticated: if a setlist already exists, append; else create one and persist.
+      if (setlist) {
+        if (seed.title !== setlist.title) updateTitle(seed.title);
+        for (const slot of newSlots) {
+          await addSlot(slot);
+        }
+      } else {
+        const created = await createSetlist(seed.title, seed.eraId);
+        if (!created || !user) return;
+        const rows = newSlots.map((slot) => ({
+          id: slot.id,
+          setlist_id: created.id,
+          set_number: slot.setNumber,
+          position: slot.position,
+          song_id: slot.song.id,
+          notable_version_id: slot.version?.id || null,
+          added_by_user_id: user.id,
+          notes: slot.notes,
+          segue_to_next: slot.segueToNext,
+        }));
+        if (rows.length > 0) {
+          await supabase.from("setlist_slots").insert(rows);
+        }
+        navigate(`/builder/${created.id}`, { replace: false });
+      }
+      setMobileTab("setlist");
+    },
+    [isGuestMode, setlist, user, addSlot, createSetlist, updateTitle, navigate],
+  );
+
   const handleGenerateDescription = useCallback(async () => {
     if (!setlist) return;
     setGeneratingDescription(true);
