@@ -629,17 +629,46 @@ const Builder = () => {
         return;
       }
 
-      // Authenticated: if a setlist already exists, REPLACE its slots with the show.
-      // (The user picked a specific historical show — they don't want it merged with prior slots.)
+      // Authenticated: REPLACE the setlist atomically so the user gets exactly the show they
+      // picked — no merge with prior slots, no race with realtime, no curation.
       if (setlist) {
-        if (seed.title !== setlist.title) updateTitle(seed.title);
-        // Clear existing slots
-        for (const old of slots) {
-          await removeSlot(old.id);
+        if (seed.title !== setlist.title) await updateTitle(seed.title);
+        if (!user) return;
+
+        // 1. Atomic wipe of existing slots in a single query
+        const { error: delErr } = await supabase
+          .from("setlist_slots")
+          .delete()
+          .eq("setlist_id", setlist.id);
+        if (delErr) {
+          console.error("Failed to clear setlist:", delErr);
+          toast.error("Couldn't replace setlist — try again");
+          return;
         }
-        for (const slot of newSlots) {
-          await addSlot(slot);
+
+        // 2. Bulk insert the historical show
+        const rows = newSlots.map((slot) => ({
+          id: slot.id,
+          setlist_id: setlist.id,
+          set_number: slot.setNumber,
+          position: slot.position,
+          song_id: slot.song.id,
+          notable_version_id: null,
+          added_by_user_id: user.id,
+          notes: slot.notes,
+          segue_to_next: slot.segueToNext,
+        }));
+        if (rows.length > 0) {
+          const { error: insErr } = await supabase.from("setlist_slots").insert(rows);
+          if (insErr) {
+            console.error("Failed to insert show slots:", insErr);
+            toast.error("Couldn't load show into setlist");
+            return;
+          }
         }
+
+        // 3. Sync local state immediately (realtime will reconcile)
+        setSlots(newSlots);
       } else {
         const created = await createSetlist(seed.title, seed.eraId);
         if (!created || !user) return;
@@ -649,7 +678,7 @@ const Builder = () => {
           set_number: slot.setNumber,
           position: slot.position,
           song_id: slot.song.id,
-          notable_version_id: slot.version?.id || null,
+          notable_version_id: null,
           added_by_user_id: user.id,
           notes: slot.notes,
           segue_to_next: slot.segueToNext,
@@ -661,7 +690,7 @@ const Builder = () => {
       }
       setMobileTab("setlist");
     },
-    [isGuestMode, setlist, slots, user, addSlot, removeSlot, createSetlist, updateTitle, navigate],
+    [isGuestMode, setlist, user, createSetlist, updateTitle, navigate, setSlots],
   );
 
   const handleGenerateDescription = useCallback(async () => {
