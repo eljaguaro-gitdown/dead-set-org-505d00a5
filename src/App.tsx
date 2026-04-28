@@ -10,6 +10,7 @@ import VisitorTracker from "@/components/VisitorTracker";
 import PresenceBroadcaster from "@/components/PresenceBroadcaster";
 import PwaInstallBanner from "@/components/PwaInstallBanner";
 import AudioDebugPanel from "@/components/AudioDebugPanel";
+import PickHandleModal from "@/components/PickHandleModal";
 
 // Eagerly load the landing page for fastest FCP/LCP
 import Index from "./pages/Index";
@@ -73,6 +74,7 @@ const App = () => (
           <PresenceBroadcaster />
           <PwaInstallBanner />
           <AudioDebugPanel />
+          <PickHandleModal />
         </AudioPlayerProvider>
       </BrowserRouter>
     </TooltipProvider>
