@@ -661,7 +661,7 @@ const Builder = () => {
       }
       setMobileTab("setlist");
     },
-    [isGuestMode, setlist, user, addSlot, createSetlist, updateTitle, navigate],
+    [isGuestMode, setlist, slots, user, addSlot, removeSlot, createSetlist, updateTitle, navigate],
   );
 
   const handleGenerateDescription = useCallback(async () => {
