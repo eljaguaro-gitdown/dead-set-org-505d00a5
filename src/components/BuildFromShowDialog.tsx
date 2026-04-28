@@ -1,37 +1,56 @@
 import { useState, useCallback } from "react";
 import { format } from "date-fns";
-import { CalendarIcon, Loader2, Sparkles } from "lucide-react";
+import { CalendarIcon, Loader2, Sparkles, ExternalLink } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { supabase } from "@/integrations/supabase/client";
+import { matchScore } from "@/lib/archiveOrg";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import type { Database } from "@/integrations/supabase/types";
 
 type Song = Database["public"]["Tables"]["songs"]["Row"];
-type NotableVersion = Database["public"]["Tables"]["notable_versions"]["Row"];
+
+export interface SeededSlot {
+  song: Song;
+  setNumber: number;
+  position: number;
+  segueToNext: boolean;
+}
 
 export interface ShowSeed {
   title: string;
   eraId: string | null;
-  versions: { song: Song; version: NotableVersion }[];
+  archiveUrl: string;
+  slots: SeededSlot[];
+  unmatchedCount: number;
 }
 
 interface BuildFromShowDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  /** Called once a date is picked and matching versions are loaded. */
   onSeed: (seed: ShowSeed) => void | Promise<void>;
 }
 
-// Dead touring window
 const MIN_DATE = new Date(1965, 7, 1);
 const MAX_DATE = new Date(1995, 6, 9); // Jerry's last show: 1995-07-09
 
 const formatNiceDate = (d: Date) =>
   d.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+
+// Pick the best song from the local catalog for a given archive.org track title.
+function fuzzyMatchSong(rawTitle: string, songs: Song[]): Song | null {
+  let best: { song: Song; score: number } | null = null;
+  for (const song of songs) {
+    const score = matchScore(rawTitle, song.title);
+    if (score >= 60 && (!best || score > best.score)) {
+      best = { song, score };
+    }
+  }
+  return best?.song ?? null;
+}
 
 const BuildFromShowDialog = ({ open, onOpenChange, onSeed }: BuildFromShowDialogProps) => {
   const [date, setDate] = useState<Date | undefined>();
@@ -43,56 +62,74 @@ const BuildFromShowDialog = ({ open, onOpenChange, onSeed }: BuildFromShowDialog
     try {
       const iso = format(date, "yyyy-MM-dd");
 
-      // Pull every notable version from this date
-      const { data: versions, error: vErr } = await supabase
-        .from("notable_versions")
-        .select("*")
-        .eq("show_date", iso);
+      // Fetch the historical setlist via our edge function (archive.org)
+      const { data: show, error: fnErr } = await supabase.functions.invoke("fetch-show-setlist", {
+        body: { date: iso },
+      });
 
-      if (vErr) throw vErr;
-
-      if (!versions || versions.length === 0) {
-        toast.error("No catalogued versions from that date yet", {
-          description: "Try a nearby date — coverage grows weekly.",
+      if (fnErr || !show || show.error) {
+        const msg = show?.error || fnErr?.message || "Couldn't find that show";
+        toast.error(msg, {
+          description: "Try a nearby date — not every night is on archive.org.",
         });
         setLoading(false);
         return;
       }
 
-      // Hydrate songs
-      const songIds = [...new Set(versions.map((v) => v.song_id))];
-      const { data: songs, error: sErr } = await supabase
-        .from("songs")
-        .select("*")
-        .in("id", songIds);
+      // Load local songs catalog for fuzzy matching
+      const { data: songs, error: sErr } = await supabase.from("songs").select("*");
       if (sErr) throw sErr;
 
-      const songMap = new Map((songs || []).map((s) => [s.id, s]));
-      const pairs = versions
-        .map((v) => {
-          const song = songMap.get(v.song_id);
-          return song ? { song, version: v } : null;
-        })
-        .filter(Boolean) as { song: Song; version: NotableVersion }[];
+      // Match each track to a local song
+      const slots: SeededSlot[] = [];
+      const positions = new Map<number, number>();
+      let unmatched = 0;
 
-      // Sort by rating desc then title — there's no true setlist order in our data
-      pairs.sort((a, b) => {
-        const ra = a.version.rating ?? 0;
-        const rb = b.version.rating ?? 0;
-        if (rb !== ra) return rb - ra;
-        return a.song.title.localeCompare(b.song.title);
+      for (const track of show.tracks as Array<{
+        rawTitle: string;
+        setNumber: number;
+        position: number;
+        segueToNext: boolean;
+      }>) {
+        const matched = fuzzyMatchSong(track.rawTitle, songs || []);
+        if (!matched) {
+          unmatched++;
+          continue;
+        }
+        const pos = positions.get(track.setNumber) || 0;
+        positions.set(track.setNumber, pos + 1);
+        slots.push({
+          song: matched,
+          setNumber: track.setNumber,
+          position: pos,
+          segueToNext: track.segueToNext,
+        });
+      }
+
+      if (slots.length === 0) {
+        toast.error("Found the show, but no songs matched our catalog");
+        setLoading(false);
+        return;
+      }
+
+      const niceDate = formatNiceDate(date);
+      const title = show.venue ? `${niceDate} — ${show.venue}` : niceDate;
+
+      await onSeed({
+        title,
+        eraId: null,
+        archiveUrl: show.archiveUrl,
+        slots,
+        unmatchedCount: unmatched,
       });
 
-      const venue = pairs.find((p) => p.version.venue)?.version.venue;
-      const niceDate = formatNiceDate(date);
-      const title = venue ? `${niceDate} — ${venue}` : niceDate;
-      const eraId = pairs.find((p) => p.version.era_id)?.version.era_id ?? null;
-
-      await onSeed({ title, eraId, versions: pairs });
       onOpenChange(false);
       setDate(undefined);
-      toast.success(`Found ${pairs.length} ${pairs.length === 1 ? "song" : "songs"} from ${niceDate}`, {
-        description: pairs.length < 6 ? "Add the rest from the Vault when you're ready." : undefined,
+      toast.success(`Loaded ${slots.length} songs from ${niceDate}`, {
+        description:
+          unmatched > 0
+            ? `${unmatched} track${unmatched === 1 ? "" : "s"} skipped (jams, tunings, or songs not in our catalog yet).`
+            : "Set order and segues match the show.",
       });
     } catch (e) {
       console.error("BuildFromShow error:", e);
@@ -111,7 +148,7 @@ const BuildFromShowDialog = ({ open, onOpenChange, onSeed }: BuildFromShowDialog
             Recreate a show
           </DialogTitle>
           <DialogDescription className="font-body text-base text-muted-foreground pt-1">
-            Pick a date and we'll pull every catalogued version from that night.
+            Pick a date and we'll pull the actual setlist from that night — sets, song order, and segues.
           </DialogDescription>
         </DialogHeader>
 
@@ -145,18 +182,16 @@ const BuildFromShowDialog = ({ open, onOpenChange, onSeed }: BuildFromShowDialog
             </PopoverContent>
           </Popover>
 
-          <p className="text-sm text-muted-foreground font-body leading-relaxed">
-            Honest note: we'll pull every version we have from that date and drop them into Set 1.
-            Order may need your touch — and we don't have every show catalogued yet.
+          <p className="text-sm text-muted-foreground font-body leading-relaxed flex items-start gap-1.5">
+            <ExternalLink className="w-4 h-4 mt-0.5 shrink-0 opacity-60" />
+            <span>
+              Setlist data sourced from <span className="text-primary">archive.org</span>.
+              Coverage is excellent for ’72 onward; a few early shows may be missing.
+            </span>
           </p>
 
           <div className="flex gap-2 justify-end pt-2">
-            <Button
-              variant="ghost"
-              onClick={() => onOpenChange(false)}
-              disabled={loading}
-              className="font-body"
-            >
+            <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={loading} className="font-body">
               Cancel
             </Button>
             <Button
@@ -165,7 +200,7 @@ const BuildFromShowDialog = ({ open, onOpenChange, onSeed }: BuildFromShowDialog
               className="bg-primary text-primary-foreground font-display gap-2"
             >
               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-              Build from this show
+              {loading ? "Loading show…" : "Build from this show"}
             </Button>
           </div>
         </div>
