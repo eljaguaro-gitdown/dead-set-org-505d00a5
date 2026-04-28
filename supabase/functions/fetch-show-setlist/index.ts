@@ -50,14 +50,17 @@ async function findBestRecordingForDate(date: string): Promise<string | null> {
   return (sbd || docs[0]).identifier;
 }
 
-// Strip leading track-number / disc prefix and trailing file ext.
+// Strip leading track-number / disc / set prefix, trailing file ext, and decoration.
 function cleanTitle(raw: string): string {
   return raw
-    .replace(/\.[^.]+$/, "")
-    .replace(/^d\d+t\d+\s*[-.]?\s*/i, "")
-    .replace(/^t?\d+\s*[-.]?\s*/, "")
+    .replace(/\.[^.]+$/, "")                       // .flac, .mp3
+    .replace(/^[ds]\d+t\d+\s*[-.:]?\s*/i, "")      // d1t03 — or s2t01 -
+    .replace(/^t?\d+\s*[-.:]?\s*/, "")             // 03 - or t03.
+    .replace(/[*†‡]+\s*$/, "")                     // trailing asterisks marking segues/notes
+    .replace(/^['"]+|['"]+$/g, "")                 // wrapping quotes
     .replace(/\s*->\s*$/, "")
     .replace(/\s*>\s*$/, "")
+    .replace(/\s*[!?.]+$/, "")                     // trailing punctuation
     .trim();
 }
 
