@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
-import { Star, Share2, Users, LogOut, MessageCircle, Globe, CheckCircle, List, Music, LayoutList, Save, FileImage, MoreHorizontal } from "lucide-react";
+import { Star, Share2, Users, LogOut, MessageCircle, Globe, CheckCircle, List, Music, LayoutList, Save, FileImage, MoreHorizontal, CalendarDays } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import PageLayout from "@/components/PageLayout";
 import { Input } from "@/components/ui/input";
@@ -14,6 +14,7 @@ import CollaboratorAvatars from "@/components/CollaboratorAvatars";
 import ChatSidebar from "@/components/ChatSidebar";
 import ShareDialog from "@/components/ShareDialog";
 import CosmicCharlieDialog from "@/components/CosmicCharlieDialog";
+import BuildFromShowDialog, { type ShowSeed } from "@/components/BuildFromShowDialog";
 import CosmicCharlieWelcome from "@/components/CosmicCharlieWelcome";
 import AuthModal from "@/components/AuthModal";
 import MiniSetlistBar from "@/components/MiniSetlistBar";
@@ -123,6 +124,7 @@ const Builder = () => {
   const [chatUnread, setChatUnread] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [charlieOpen, setCharlieOpen] = useState(false);
+  const [showDateOpen, setShowDateOpen] = useState(false);
   const [initialized, setInitialized] = useState(false);
   const { playSingle, playSetlist: globalPlaySetlist, playingSlot } = useAudioPlayer();
   const [description, setDescription] = useState<string | null>(null);
@@ -604,6 +606,58 @@ const Builder = () => {
     [songs, user]
   );
 
+  // Seed a setlist from a chosen show date — works for both guests and authed users.
+  const handleShowDateSeed = useCallback(
+    async (seed: ShowSeed) => {
+      const newSlots: SetlistSlotData[] = seed.versions.map((pair, idx) => ({
+        id: crypto.randomUUID(),
+        song: pair.song,
+        version: pair.version,
+        setNumber: 1,
+        position: idx,
+        segueToNext: false,
+        notes: "",
+      }));
+
+      setTitle(seed.title);
+      if (seed.eraId) setSelectedEra(seed.eraId);
+
+      if (isGuestMode) {
+        setGuestSlots(newSlots);
+        setMobileTab("setlist");
+        return;
+      }
+
+      // Authenticated: if a setlist already exists, append; else create one and persist.
+      if (setlist) {
+        if (seed.title !== setlist.title) updateTitle(seed.title);
+        for (const slot of newSlots) {
+          await addSlot(slot);
+        }
+      } else {
+        const created = await createSetlist(seed.title, seed.eraId);
+        if (!created || !user) return;
+        const rows = newSlots.map((slot) => ({
+          id: slot.id,
+          setlist_id: created.id,
+          set_number: slot.setNumber,
+          position: slot.position,
+          song_id: slot.song.id,
+          notable_version_id: slot.version?.id || null,
+          added_by_user_id: user.id,
+          notes: slot.notes,
+          segue_to_next: slot.segueToNext,
+        }));
+        if (rows.length > 0) {
+          await supabase.from("setlist_slots").insert(rows);
+        }
+        navigate(`/builder/${created.id}`, { replace: false });
+      }
+      setMobileTab("setlist");
+    },
+    [isGuestMode, setlist, user, addSlot, createSetlist, updateTitle, navigate],
+  );
+
   const handleGenerateDescription = useCallback(async () => {
     if (!setlist) return;
     setGeneratingDescription(true);
@@ -883,6 +937,18 @@ const Builder = () => {
             >
               <Star className="w-5 h-5" />
               <span className="hidden sm:inline">Cosmic Charlie</span>
+            </Button>
+
+            {/* From a show date */}
+            <Button
+              variant="outline"
+              size="sm"
+              className="shrink-0 h-10 px-3 gap-2 border-border text-foreground hover:bg-muted font-body text-sm"
+              onClick={() => setShowDateOpen(true)}
+              title="Recreate a show from a specific date"
+            >
+              <CalendarDays className="w-5 h-5" />
+              <span className="hidden md:inline">From a show</span>
             </Button>
 
             {/* Secondary: Share */}
@@ -1211,6 +1277,12 @@ const Builder = () => {
         }))}
         onApplySuggestion={handleApplySuggestion}
         onCreateNewSetlist={handleCreateNewFromCharlie}
+      />
+
+      <BuildFromShowDialog
+        open={showDateOpen}
+        onOpenChange={setShowDateOpen}
+        onSeed={handleShowDateSeed}
       />
 
       {/* Inline Auth Modal for guests */}
