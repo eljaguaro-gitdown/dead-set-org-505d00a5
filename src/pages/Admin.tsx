@@ -8,6 +8,7 @@ import LiveVisitorsWidget from "@/components/LiveVisitorsWidget";
 import FunnelWidget from "@/components/FunnelWidget";
 import AdminAnnouncementsPanel from "@/components/AdminAnnouncementsPanel";
 import DeliverabilityMonitor from "@/components/DeliverabilityMonitor";
+import PrivateRelayMonitor from "@/components/PrivateRelayMonitor";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import {
   AlertDialog,
@@ -374,6 +375,9 @@ const Admin = () => {
 
         {/* Email Deliverability Monitoring */}
         <DeliverabilityMonitor />
+
+        {/* Apple Private Relay welcome-email confirmation */}
+        <PrivateRelayMonitor />
 
         {/* Traffic Stats */}
         <div className="bg-card border border-border rounded-lg overflow-hidden">
