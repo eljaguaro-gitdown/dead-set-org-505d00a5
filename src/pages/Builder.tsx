@@ -607,15 +607,16 @@ const Builder = () => {
   );
 
   // Seed a setlist from a chosen show date — works for both guests and authed users.
+  // Uses the real historical setlist (sets, order, segues) parsed from archive.org.
   const handleShowDateSeed = useCallback(
     async (seed: ShowSeed) => {
-      const newSlots: SetlistSlotData[] = seed.versions.map((pair, idx) => ({
+      const newSlots: SetlistSlotData[] = seed.slots.map((s) => ({
         id: crypto.randomUUID(),
-        song: pair.song,
-        version: pair.version,
-        setNumber: 1,
-        position: idx,
-        segueToNext: false,
+        song: s.song,
+        version: null,
+        setNumber: s.setNumber,
+        position: s.position,
+        segueToNext: s.segueToNext,
         notes: "",
       }));
 
@@ -628,9 +629,14 @@ const Builder = () => {
         return;
       }
 
-      // Authenticated: if a setlist already exists, append; else create one and persist.
+      // Authenticated: if a setlist already exists, REPLACE its slots with the show.
+      // (The user picked a specific historical show — they don't want it merged with prior slots.)
       if (setlist) {
         if (seed.title !== setlist.title) updateTitle(seed.title);
+        // Clear existing slots
+        for (const old of slots) {
+          await removeSlot(old.id);
+        }
         for (const slot of newSlots) {
           await addSlot(slot);
         }
@@ -655,7 +661,7 @@ const Builder = () => {
       }
       setMobileTab("setlist");
     },
-    [isGuestMode, setlist, user, addSlot, createSetlist, updateTitle, navigate],
+    [isGuestMode, setlist, slots, user, addSlot, removeSlot, createSetlist, updateTitle, navigate],
   );
 
   const handleGenerateDescription = useCallback(async () => {
