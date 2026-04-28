@@ -1279,6 +1279,12 @@ const Builder = () => {
         onCreateNewSetlist={handleCreateNewFromCharlie}
       />
 
+      <BuildFromShowDialog
+        open={showDateOpen}
+        onOpenChange={setShowDateOpen}
+        onSeed={handleShowDateSeed}
+      />
+
       {/* Inline Auth Modal for guests */}
       <AuthModal
         open={authModalOpen}
