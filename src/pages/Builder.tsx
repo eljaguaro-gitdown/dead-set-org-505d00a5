@@ -939,6 +939,18 @@ const Builder = () => {
               <span className="hidden sm:inline">Cosmic Charlie</span>
             </Button>
 
+            {/* From a show date */}
+            <Button
+              variant="outline"
+              size="sm"
+              className="shrink-0 h-10 px-3 gap-2 border-border text-foreground hover:bg-muted font-body text-sm"
+              onClick={() => setShowDateOpen(true)}
+              title="Recreate a show from a specific date"
+            >
+              <CalendarDays className="w-5 h-5" />
+              <span className="hidden md:inline">From a show</span>
+            </Button>
+
             {/* Secondary: Share */}
             <Button
               variant="ghost"
