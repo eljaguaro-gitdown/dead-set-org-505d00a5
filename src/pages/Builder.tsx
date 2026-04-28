@@ -629,9 +629,14 @@ const Builder = () => {
         return;
       }
 
-      // Authenticated: if a setlist already exists, append; else create one and persist.
+      // Authenticated: if a setlist already exists, REPLACE its slots with the show.
+      // (The user picked a specific historical show — they don't want it merged with prior slots.)
       if (setlist) {
         if (seed.title !== setlist.title) updateTitle(seed.title);
+        // Clear existing slots
+        for (const old of slots) {
+          await removeSlot(old.id);
+        }
         for (const slot of newSlots) {
           await addSlot(slot);
         }
