@@ -124,6 +124,7 @@ const Builder = () => {
   const [chatUnread, setChatUnread] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [charlieOpen, setCharlieOpen] = useState(false);
+  const [showDateOpen, setShowDateOpen] = useState(false);
   const [initialized, setInitialized] = useState(false);
   const { playSingle, playSetlist: globalPlaySetlist, playingSlot } = useAudioPlayer();
   const [description, setDescription] = useState<string | null>(null);
