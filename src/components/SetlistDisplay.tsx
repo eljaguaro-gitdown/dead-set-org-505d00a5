@@ -43,6 +43,9 @@ interface SetlistDisplayProps {
   activeSlotId?: string | null;
   description?: string | null;
   generatingDescription?: boolean;
+  /** Era year window (inclusive) used to constrain Archive.org fallback lookups so
+   *  the "date · venue" line under each song stays inside the user's chosen era. */
+  eraYearRange?: { start: number; end: number } | null;
   onRemoveSlot: (id: string) => void;
   onToggleSegue: (id: string) => void;
   onUpdateNotes: (id: string, notes: string) => void;
@@ -57,6 +60,7 @@ const SortableSlotItem = ({
   slot,
   isLast,
   isPlaying,
+  eraYearRange,
   onRemoveSlot,
   onToggleSegue,
   onUpdateNotes,
@@ -65,6 +69,7 @@ const SortableSlotItem = ({
   slot: SetlistSlotData;
   isLast: boolean;
   isPlaying: boolean;
+  eraYearRange?: { start: number; end: number } | null;
   onRemoveSlot: (id: string) => void;
   onToggleSegue: (id: string) => void;
   onUpdateNotes: (id: string, notes: string) => void;
@@ -94,14 +99,19 @@ const SortableSlotItem = ({
     }
     let cancelled = false;
     setArchiveLoading(true);
-    findArchiveRecording(slot.song.title).then((result) => {
+    findArchiveRecording(
+      slot.song.title,
+      eraYearRange?.start ?? null,
+      eraYearRange?.end ?? null
+    ).then((result) => {
       if (!cancelled) {
         setArchiveResult(result);
         setArchiveLoading(false);
       }
     });
     return () => { cancelled = true; };
-  }, [slot.song.title, existingArchiveUrl]);
+  }, [slot.song.title, existingArchiveUrl, eraYearRange?.start, eraYearRange?.end]);
+
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -272,6 +282,7 @@ const SetSection = ({
   setNumber,
   slots,
   activeSlotId,
+  eraYearRange,
   onRemoveSlot,
   onToggleSegue,
   onUpdateNotes,
@@ -281,6 +292,7 @@ const SetSection = ({
   setNumber: number;
   slots: SetlistSlotData[];
   activeSlotId?: string | null;
+  eraYearRange?: { start: number; end: number } | null;
   onRemoveSlot: (id: string) => void;
   onToggleSegue: (id: string) => void;
   onUpdateNotes: (id: string, notes: string) => void;
@@ -312,6 +324,7 @@ const SetSection = ({
             slot={slot}
             isLast={index === setSlots.length - 1}
             isPlaying={activeSlotId === slot.id}
+            eraYearRange={eraYearRange}
             onRemoveSlot={onRemoveSlot}
             onToggleSegue={onToggleSegue}
             onUpdateNotes={onUpdateNotes}
@@ -356,6 +369,7 @@ const SetlistDisplay = ({
   activeSlotId,
   description,
   generatingDescription,
+  eraYearRange,
   onRemoveSlot,
   onToggleSegue,
   onUpdateNotes,
@@ -466,6 +480,7 @@ const SetlistDisplay = ({
             setNumber={1}
             slots={slots}
             activeSlotId={activeSlotId}
+            eraYearRange={eraYearRange}
             onRemoveSlot={onRemoveSlot}
             onToggleSegue={onToggleSegue}
             onUpdateNotes={onUpdateNotes}
@@ -476,6 +491,7 @@ const SetlistDisplay = ({
             setNumber={2}
             slots={slots}
             activeSlotId={activeSlotId}
+            eraYearRange={eraYearRange}
             onRemoveSlot={onRemoveSlot}
             onToggleSegue={onToggleSegue}
             onUpdateNotes={onUpdateNotes}
@@ -486,6 +502,7 @@ const SetlistDisplay = ({
             setNumber={3}
             slots={slots}
             activeSlotId={activeSlotId}
+            eraYearRange={eraYearRange}
             onRemoveSlot={onRemoveSlot}
             onToggleSegue={onToggleSegue}
             onUpdateNotes={onUpdateNotes}
