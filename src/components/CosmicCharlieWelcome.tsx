@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Star, ChevronDown, ChevronRight } from "lucide-react";
+import { Star, ChevronRight } from "lucide-react";
 import StealYourFace from "@/components/StealYourFace";
 import CosmicCharlieAvatar from "@/components/CosmicCharlieAvatar";
 import { Button } from "@/components/ui/button";
@@ -112,7 +112,7 @@ const CosmicCharlieWelcome = ({ eras, onGenerated, onSkip }: CosmicCharlieWelcom
   const [selectedEnergy, setSelectedEnergy] = useState<string | null>(null);
   const [selectedTextures, setSelectedTextures] = useState<string[]>([]);
   const [selectedEra, setSelectedEra] = useState<string | null>(null);
-  const [eraOpen, setEraOpen] = useState(false);
+  // (era picker is now always-visible; no open/close state needed)
 
   // Step 1
   const [selectedPriority, setSelectedPriority] = useState<string | null>(null);
@@ -448,57 +448,46 @@ const CosmicCharlieWelcome = ({ eras, onGenerated, onSkip }: CosmicCharlieWelcom
                       })}
                     </div>
 
-                    {/* Collapsible era picker */}
-                    <div className="w-full">
-                      <button
-                        onClick={() => setEraOpen((o) => !o)}
-                        className="flex items-center gap-2 w-full justify-center font-body text-xs text-muted-foreground hover:text-foreground transition-colors"
-                      >
-                        <span>
-                          {selectedEra
-                            ? `Era: ${eras.find((e) => e.id === selectedEra)?.name || "Selected"}`
-                            : "Pick an era (optional)"}
-                        </span>
-                        <motion.div
-                          animate={{ rotate: eraOpen ? 180 : 0 }}
-                          transition={{ duration: 0.2 }}
-                        >
-                          <ChevronDown className="w-3.5 h-3.5" />
-                        </motion.div>
-                      </button>
-                      <AnimatePresence>
-                        {eraOpen && (
-                          <motion.div
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: "auto", opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }}
-                            transition={{ duration: 0.2 }}
-                            className="overflow-hidden"
+                    {/* Era — peer section to Texture, equal real estate */}
+                    <p className="font-body text-xs text-muted-foreground uppercase tracking-wider">
+                      Era — pick one (optional)
+                    </p>
+
+                    <div className="grid grid-cols-3 gap-2 w-full">
+                      {eras.map((era) => {
+                        const active = selectedEra === era.id;
+                        return (
+                          <EraTooltip
+                            key={era.id}
+                            eraName={era.name}
+                            yearRange={`${era.year_start}–${era.year_end}`}
                           >
-                            <div className="flex flex-wrap gap-2 justify-center pt-3">
-                              {eras.map((era) => (
-                                <EraTooltip key={era.id} eraName={era.name} yearRange={`${era.year_start}–${era.year_end}`}>
-                                  <button
-                                    onClick={() =>
-                                      setSelectedEra(selectedEra === era.id ? null : era.id)
-                                    }
-                                    className={`px-3 py-1.5 text-xs rounded-sm border transition-all duration-200 ${
-                                      selectedEra === era.id
-                                        ? "border-primary bg-primary/15 text-primary shadow-[0_0_12px_hsl(var(--glow-gold))]"
-                                        : "border-border text-muted-foreground hover:border-primary/40 hover:text-foreground"
-                                    }`}
-                                  >
-                                    <span className="font-marker text-xs">{era.name}</span>
-                                    <span className="text-[10px] text-muted-foreground/60 ml-1.5">
-                                      {era.year_start}–{era.year_end}
-                                    </span>
-                                  </button>
-                                </EraTooltip>
-                              ))}
-                            </div>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
+                            <motion.button
+                              whileTap={{ scale: 0.93 }}
+                              whileHover={{ y: -2 }}
+                              onClick={() =>
+                                setSelectedEra(active ? null : era.id)
+                              }
+                              className={`flex flex-col items-center justify-center gap-1 px-2 py-2.5 rounded-xl border transition-all duration-200 w-full ${
+                                active
+                                  ? "border-primary bg-primary/15 shadow-[0_0_12px_hsl(var(--glow-gold))]"
+                                  : "border-border bg-card hover:border-primary/40 hover:bg-card/80"
+                              }`}
+                            >
+                              <span
+                                className={`font-marker text-sm leading-tight text-center ${
+                                  active ? "text-primary" : "text-foreground"
+                                }`}
+                              >
+                                {era.name}
+                              </span>
+                              <span className="text-[10px] font-mono text-muted-foreground/70 tracking-wide">
+                                {era.year_start}–{era.year_end}
+                              </span>
+                            </motion.button>
+                          </EraTooltip>
+                        );
+                      })}
                     </div>
 
                     <Button
