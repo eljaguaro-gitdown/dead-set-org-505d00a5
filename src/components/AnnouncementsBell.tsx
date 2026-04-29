@@ -84,7 +84,7 @@ const AnnouncementsBell = ({ variant = "desktop" }: AnnouncementsBellProps) => {
         className="w-[340px] sm:w-[380px] p-0 bg-card border-border max-h-[70vh] overflow-hidden flex flex-col"
       >
         <div className="px-4 py-3 border-b border-border flex items-center justify-between">
-          <h3 className="font-display text-sm text-foreground">From Adrian</h3>
+          <h3 className="font-display text-sm text-foreground">From Grateful Jaguaro</h3>
           {unreadCount > 0 && (
             <span className="font-mono text-[10px] text-primary tracking-wider uppercase">
               {unreadCount} new
@@ -158,7 +158,7 @@ const AnnouncementsBell = ({ variant = "desktop" }: AnnouncementsBellProps) => {
               {commentNotifs.length > 0 && (
                 <div className="px-4 py-2 bg-muted/20 border-b border-t border-border/40 flex items-center gap-2">
                   <span className="font-mono text-[10px] text-muted-foreground tracking-wider uppercase">
-                    From Adrian
+                    From Grateful Jaguaro
                   </span>
                 </div>
               )}
