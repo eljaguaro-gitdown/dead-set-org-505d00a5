@@ -522,28 +522,43 @@ const Builder = () => {
 
   const handleCreateNewFromCharlie = useCallback(
     async (suggestion: { setlist_name?: string; explanation: string; sets: { setNumber: number; songs: { songId: string; title: string; segueToNext: boolean; notes: string; position: number }[] }[] }, customTitle?: string) => {
+      // Build the slot list ONCE so guest + auth flows share the same data and we
+      // can hydrate local state immediately (avoids the post-navigate empty-render bug).
+      const builtSlots: SetlistSlotData[] = [];
+      let dropped = 0;
+      for (const set of suggestion.sets) {
+        for (const suggestedSong of set.songs) {
+          const song = songs.find((s) => s.id === suggestedSong.songId);
+          if (!song) {
+            dropped++;
+            continue;
+          }
+          builtSlots.push({
+            id: crypto.randomUUID(),
+            song,
+            version: null,
+            setNumber: set.setNumber,
+            position: suggestedSong.position,
+            segueToNext: suggestedSong.segueToNext,
+            notes: suggestedSong.notes || "",
+          });
+        }
+      }
+
+      if (builtSlots.length === 0) {
+        console.error("[Cosmic Charlie] No songs could be matched to the catalog", { suggestion, songsLoaded: songs.length });
+        toast.error("Charlie's picks didn't match the catalog. Try again.");
+        return;
+      }
+      if (dropped > 0) {
+        console.warn(`[Cosmic Charlie] Dropped ${dropped} unmatched songs from suggestion`);
+      }
+
       if (isGuestMode) {
         const newTitle = customTitle || suggestion.setlist_name?.trim() || "Untitled Setlist";
         setTitle(newTitle);
         if (suggestion.explanation) setDescription(suggestion.explanation);
-
-        const newSlots: SetlistSlotData[] = [];
-        for (const set of suggestion.sets) {
-          for (const suggestedSong of set.songs) {
-            const song = songs.find((s) => s.id === suggestedSong.songId);
-            if (!song) continue;
-            newSlots.push({
-              id: crypto.randomUUID(),
-              song,
-              version: null,
-              setNumber: set.setNumber,
-              position: suggestedSong.position,
-              segueToNext: suggestedSong.segueToNext,
-              notes: suggestedSong.notes || "",
-            });
-          }
-        }
-        setGuestSlots(newSlots);
+        setGuestSlots(builtSlots);
         setMobileTab("setlist");
         return;
       }
@@ -557,9 +572,12 @@ const Builder = () => {
       if (suggestion.explanation) {
         await supabase.from("setlists").update({ description: suggestion.explanation }).eq("id", created.id);
       }
+      // Hydrate local slots immediately so the UI shows the songs even if the
+      // post-navigate loadSetlist() races or briefly returns an empty result.
+      setSlots(builtSlots);
       navigate(`/builder/${created.id}`, { replace: false });
     },
-    [isGuestMode, songs, createSetlist, selectedEra, navigate]
+    [isGuestMode, songs, createSetlist, selectedEra, navigate, setSlots]
   );
 
   const addSongsToCurrentSetlist = useCallback(
