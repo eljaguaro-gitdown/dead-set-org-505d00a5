@@ -36,6 +36,7 @@ const Index = () => {
   const { user, loading } = useAuth();
   useAudioSignature();
   const [featured, setFeatured] = useState<FeaturedSetlist[]>([]);
+  const [topRated, setTopRated] = useState<FeaturedSetlist[]>([]);
 
   // A/B test: variant B auto-starts the wizard (first landing only)
   useEffect(() => {
