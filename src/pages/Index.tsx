@@ -1,4 +1,4 @@
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,6 +13,7 @@ import SiteHeader from "@/components/SiteHeader";
 import HeroSection from "@/components/landing/HeroSection";
 import HowItWorks from "@/components/landing/HowItWorks";
 import PersonalNote from "@/components/landing/PersonalNote";
+import { BROWSE_COMMUNITY_STORAGE_KEY, COMMUNITY_SECTION_ID } from "@/components/landing/BrowseCommunityLink";
 import ShareAppButton from "@/components/ShareAppButton";
 import LastUpdatedBadge from "@/components/LastUpdatedBadge";
 import { Button } from "@/components/ui/button";
