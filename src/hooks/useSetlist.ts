@@ -52,21 +52,23 @@ export const useSetlist = (user: User | null, setlistId?: string | null) => {
 
   // Load existing setlist
   const loadSetlist = useCallback(async (id: string) => {
-    const { data: setlistData } = await supabase
+    const { data: setlistData, error: setlistErr } = await supabase
       .from("setlists")
       .select("*")
       .eq("id", id)
       .single();
+    if (setlistErr) console.error("[useSetlist] setlist fetch error:", setlistErr);
     if (!setlistData) return;
     setSetlist(setlistData);
 
     // Load slots with song and version data
-    const { data: slotsData } = await supabase
+    const { data: slotsData, error: slotsErr } = await supabase
       .from("setlist_slots")
       .select("*")
       .eq("setlist_id", id)
       .order("set_number")
       .order("position");
+    if (slotsErr) console.error("[useSetlist] slots fetch error:", slotsErr);
 
     if (slotsData && slotsData.length > 0) {
       // Fetch all songs and versions for these slots
@@ -82,6 +84,7 @@ export const useSetlist = (user: User | null, setlistId?: string | null) => {
           : Promise.resolve({ data: [] as NotableVersion[] }),
       ]);
 
+      if (songsRes.error) console.error("[useSetlist] songs fetch error:", songsRes.error);
       const songsMap = new Map((songsRes.data || []).map((s) => [s.id, s]));
       const versionsMap = new Map((versionsRes.data || []).map((v) => [v.id, v]));
       songsMap.forEach((v, k) => songsCache.current.set(k, v));
@@ -132,7 +135,20 @@ export const useSetlist = (user: User | null, setlistId?: string | null) => {
           };
         })
         .filter(Boolean) as SetlistSlotData[];
-      setSlots(loadedSlots);
+      // Defensive: if DB has slot rows but song hydration failed for ALL of them,
+      // do NOT overwrite locally-set slots with an empty array — that strands users
+      // on an empty UI when songs/versions fetches errored mid-flight.
+      if (loadedSlots.length === 0) {
+        console.warn(
+          `[useSetlist] ${slotsData.length} slot rows present but 0 reconstructed (songs missing). Preserving existing slots.`
+        );
+      } else {
+        setSlots(loadedSlots);
+      }
+    } else if (slotsData && slotsData.length === 0) {
+      // Slot rows truly empty — clear local state so we don't show stale builtSlots
+      // from a different setlist. (Safe because the DB is the source of truth here.)
+      setSlots([]);
     }
 
     // Load collaborators
