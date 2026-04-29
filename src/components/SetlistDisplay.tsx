@@ -266,6 +266,7 @@ const SortableSlotItem = ({
                 </span>
               </div>
             )}
+            {archiveLoading && !archiveResult && (
               <span className="text-[10px] text-muted-foreground/50 font-body mt-1 block">
                 Finding on Archive.org…
               </span>
