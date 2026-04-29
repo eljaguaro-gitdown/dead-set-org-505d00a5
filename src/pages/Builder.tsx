@@ -557,26 +557,39 @@ const Builder = () => {
 
       if (isGuestMode) {
         const newTitle = customTitle || suggestion.setlist_name?.trim() || "Untitled Setlist";
+        setCharlieCreating(true);
         setTitle(newTitle);
         if (suggestion.explanation) setDescription(suggestion.explanation);
         setGuestSlots(builtSlots);
         setMobileTab("setlist");
+        // Brief skeleton so UI doesn't flash empty between dialog close and render
+        setTimeout(() => setCharlieCreating(false), 350);
         return;
       }
 
-      const newTitle = customTitle || suggestion.setlist_name?.trim() || "Untitled Setlist";
-      if (suggestion.explanation) setDescription(suggestion.explanation);
-      const created = await createSetlist(newTitle, selectedEra);
-      if (!created) return;
-      // Persist slots directly before navigating (avoids stale closure / unmount issues)
-      await addSongsToSetlist(suggestion, created.id);
-      if (suggestion.explanation) {
-        await supabase.from("setlists").update({ description: suggestion.explanation }).eq("id", created.id);
+      setCharlieCreating(true);
+      try {
+        const newTitle = customTitle || suggestion.setlist_name?.trim() || "Untitled Setlist";
+        if (suggestion.explanation) setDescription(suggestion.explanation);
+        const created = await createSetlist(newTitle, selectedEra);
+        if (!created) {
+          setCharlieCreating(false);
+          return;
+        }
+        // Persist slots directly before navigating (avoids stale closure / unmount issues)
+        await addSongsToSetlist(suggestion, created.id);
+        if (suggestion.explanation) {
+          await supabase.from("setlists").update({ description: suggestion.explanation }).eq("id", created.id);
+        }
+        // Hydrate local slots immediately so the UI shows the songs even if the
+        // post-navigate loadSetlist() races or briefly returns an empty result.
+        setSlots(builtSlots);
+        setMobileTab("setlist");
+        navigate(`/builder/${created.id}`, { replace: false });
+      } finally {
+        // Keep skeleton visible briefly after navigation so route transition can settle
+        setTimeout(() => setCharlieCreating(false), 400);
       }
-      // Hydrate local slots immediately so the UI shows the songs even if the
-      // post-navigate loadSetlist() races or briefly returns an empty result.
-      setSlots(builtSlots);
-      navigate(`/builder/${created.id}`, { replace: false });
     },
     [isGuestMode, songs, createSetlist, selectedEra, navigate, setSlots]
   );
