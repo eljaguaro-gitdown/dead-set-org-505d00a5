@@ -195,17 +195,27 @@ const Index = () => {
       {/* Personal note — the soul (humans before algorithms) */}
       <PersonalNote />
 
-      {/* Community carousel */}
+      {/* Community section — elevated and prominent */}
       {featured.length > 0 && (
-        <section className="py-12 sm:py-20 border-t border-border/30">
-          <div className="px-6 sm:px-12 mb-8">
-            <div className="flex items-center gap-4">
-              <div className="h-px flex-1 bg-border" />
-              <span className="font-mono text-[10px] tracking-[0.3em] text-primary/60 uppercase">
-                From the community
-              </span>
-              <div className="h-px flex-1 bg-border" />
+        <section id="community" className="py-16 sm:py-24 border-t border-border/30 bg-[#0d0d0d]">
+          <div className="px-6 sm:px-12 mb-10 max-w-3xl mx-auto text-center">
+            <div className="font-mono text-[10px] tracking-[0.3em] text-primary/70 uppercase mb-3">
+              From the community
             </div>
+            <h2 className="font-display italic text-3xl sm:text-5xl text-primary leading-tight">
+              What other heads are spinning
+            </h2>
+            <p className="font-body text-base sm:text-lg text-muted-foreground mt-4 max-w-xl mx-auto">
+              Real setlists built by real Deadheads — discover a night you've never heard,
+              or recreate one you'll never forget.
+            </p>
+            <Button
+              onClick={() => navigate("/browse")}
+              className="mt-6 bg-primary text-primary-foreground hover:bg-primary/90 font-display gap-2 h-12 px-6 text-base"
+            >
+              Browse all setlists
+              <ChevronRight className="w-4 h-4" />
+            </Button>
           </div>
 
           <div className="overflow-x-auto scrollbar-hide px-6 sm:px-12 snap-x snap-mandatory">
@@ -217,7 +227,7 @@ const Index = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.06, duration: 0.4 }}
                   onClick={() => navigate(`/setlist/${setlist.id}`)}
-                  className="w-[220px] sm:w-[280px] shrink-0 snap-start border border-border bg-card rounded-xl p-4 sm:p-5 text-left hover:border-border/80 hover:-translate-y-0.5 transition-all duration-200 group"
+                  className="w-[220px] sm:w-[280px] shrink-0 snap-start border border-border bg-card rounded-xl p-4 sm:p-5 text-left hover:border-primary/50 hover:-translate-y-0.5 transition-all duration-200 group"
                 >
                   <div className="flex items-start justify-between gap-2">
                     <h3 className="font-display text-base font-bold text-foreground truncate group-hover:text-primary transition-colors">
@@ -250,17 +260,6 @@ const Index = () => {
                 </motion.button>
               ))}
             </div>
-          </div>
-
-          <div className="flex justify-center mt-8">
-            <Button
-              variant="ghost"
-              onClick={() => navigate("/browse")}
-              className="font-mono text-[10px] tracking-[0.2em] text-muted-foreground hover:text-primary uppercase gap-1.5"
-            >
-              See all community setlists
-              <ChevronRight className="w-3.5 h-3.5" />
-            </Button>
           </div>
         </section>
       )}
