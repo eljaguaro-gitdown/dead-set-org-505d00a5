@@ -829,10 +829,10 @@ const CosmicCharlieDialog = ({
               className="flex flex-col items-center py-8 gap-3"
             >
               <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                animate={{ scale: [1, 1.06, 1] }}
+                transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
               >
-                <Star className="w-8 h-8 text-primary fill-primary/20" />
+                <CosmicCharlieAvatar size={48} animate={false} glow={true} />
               </motion.div>
               <p className="text-sm text-muted-foreground font-body">
                 Cosmic Charlie is digging through the tapes...
