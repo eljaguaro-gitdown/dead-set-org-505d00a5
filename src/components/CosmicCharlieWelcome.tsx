@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Star, ChevronDown, ChevronRight } from "lucide-react";
+import { Star, ChevronRight } from "lucide-react";
 import StealYourFace from "@/components/StealYourFace";
 import CosmicCharlieAvatar from "@/components/CosmicCharlieAvatar";
 import { Button } from "@/components/ui/button";
