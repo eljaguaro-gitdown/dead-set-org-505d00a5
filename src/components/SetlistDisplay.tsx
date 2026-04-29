@@ -43,6 +43,9 @@ interface SetlistDisplayProps {
   activeSlotId?: string | null;
   description?: string | null;
   generatingDescription?: boolean;
+  /** Era year window (inclusive) used to constrain Archive.org fallback lookups so
+   *  the "date · venue" line under each song stays inside the user's chosen era. */
+  eraYearRange?: { start: number; end: number } | null;
   onRemoveSlot: (id: string) => void;
   onToggleSegue: (id: string) => void;
   onUpdateNotes: (id: string, notes: string) => void;
