@@ -1,21 +1,7 @@
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import { ChevronRight } from "lucide-react";
 import { trackCtaClick } from "@/lib/trackCtaClick";
-import StealYourFace from "@/components/StealYourFace";
-import AmbientPlayer from "@/components/AmbientPlayer";
-import SocialProof from "@/components/landing/SocialProof";
-import FeaturedCards from "@/components/landing/FeaturedCards";
-import { Button } from "@/components/ui/button";
 
-const fade = (delay: number) => ({
-  initial: { opacity: 0, y: 12 },
-  animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.5, delay, ease: "easeOut" as const },
-});
-
-const isMobile = () => typeof window !== "undefined" && window.innerWidth < 640;
-
+// Props kept for backward-compat with Index.tsx — unused in the new editorial hero.
 interface FeaturedSetlist {
   id: string;
   title: string;
@@ -33,103 +19,423 @@ interface HeroSectionProps {
   featured?: FeaturedSetlist[];
 }
 
-const HeroSection = ({ showReturningSignIn = true, featured = [] }: HeroSectionProps) => {
+const BUILDER_ROUTE = "/builder?wizard=true";
+
+const HeroSection = (_props: HeroSectionProps) => {
   const navigate = useNavigate();
 
-  const handlePrimaryCta = () => {
-    trackCtaClick("hero_primary_builder_v2_above_fold", "/builder?wizard=true");
-    navigate("/builder?wizard=true");
+  const handleCta = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+    trackCtaClick("hero_meet_cosmic_charlie", BUILDER_ROUTE);
+    navigate(BUILDER_ROUTE);
   };
 
   return (
-    <main className="flex-1 flex flex-col items-center justify-start sm:justify-center px-5 sm:px-12 relative overflow-hidden">
-      {/* Gold radial glow */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-[10%] left-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-[radial-gradient(circle,hsl(var(--dead-gold)/0.08),transparent_70%)]" />
-      </div>
+    <>
+      {/* Scoped editorial-hero styles. Tokens are local on purpose so the rest of the
+          site's design system is untouched. */}
+      <style>{`
+        .ds-hero {
+          --bg-deep: #0a0a0a;
+          --bg-plaque: #0f0e08;
+          --text-primary: #e8e4d0;
+          --text-soft: #b0ac9a;
+          --text-eyebrow: #b09e78;
+          --accent-gold: #c9a84c;
+          --accent-warm: #d4b558;
+          --rule-faint: #2a2410;
+          --rule-gold-30: rgba(201, 168, 76, 0.30);
+          --rule-gold-40: rgba(201, 168, 76, 0.40);
 
-      <div className="flex flex-col items-center gap-4 sm:gap-8 relative z-10 text-center max-w-2xl w-full pt-6 pb-10 sm:py-16">
-        {/* 1. SYF Logo — smaller on mobile to free above-fold space */}
-        <div>
-          <StealYourFace size={isMobile() ? 56 : 140} />
+          position: relative;
+          width: 100%;
+          min-height: 100dvh;
+          background: var(--bg-deep);
+          color: var(--text-primary);
+          padding: 24px 24px 56px;
+          overflow: hidden;
+          isolation: isolate;
+          font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+        }
+        @media (min-width: 640px) {
+          .ds-hero { padding: 32px 40px 64px; }
+        }
+        @media (min-width: 960px) {
+          .ds-hero { padding: 36px 60px 72px; }
+        }
+
+        /* Atmosphere — radial warmth */
+        .ds-hero::before {
+          content: "";
+          position: absolute; inset: 0;
+          background: radial-gradient(ellipse 80% 50% at 50% 35%,
+            rgba(201, 168, 76, 0.04) 0%, transparent 60%);
+          pointer-events: none; z-index: 0;
+        }
+        /* Atmosphere — film grain */
+        .ds-hero::after {
+          content: "";
+          position: absolute; inset: 0;
+          background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.78  0 0 0 0 0.72  0 0 0 0 0.55  0 0 0 0.5 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+          opacity: 0.5;
+          mix-blend-mode: screen;
+          pointer-events: none; z-index: 0;
+        }
+
+        .ds-hero__logo {
+          position: relative; z-index: 2;
+          display: inline-flex; align-items: center; gap: 10px;
+        }
+        .ds-hero__logo-mark {
+          width: 22px; height: 22px;
+          animation: ds-reel-spin 60s linear infinite;
+          color: var(--accent-gold);
+        }
+        @keyframes ds-reel-spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        .ds-hero__logo-word {
+          font-family: 'Playfair Display', Georgia, serif;
+          font-weight: 700;
+          font-style: normal;
+          color: var(--accent-gold);
+          text-transform: uppercase;
+          letter-spacing: 0.10em;
+          font-size: 16px;
+          line-height: 1;
+        }
+
+        .ds-hero__content {
+          position: relative; z-index: 1;
+          margin: 0 auto;
+          max-width: 560px;
+          display: flex; flex-direction: column; align-items: center;
+          text-align: center;
+          padding-top: 28px;
+        }
+        @media (min-width: 640px) {
+          .ds-hero__content { padding-top: 40px; }
+        }
+
+        .ds-hero__content > * {
+          opacity: 0;
+          transform: translateY(10px);
+          animation: ds-rise 1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        }
+        .ds-hero__content > *:nth-child(1) { animation-delay: 0.10s; }
+        .ds-hero__content > *:nth-child(2) { animation-delay: 0.40s; }
+        .ds-hero__content > *:nth-child(3) { animation-delay: 0.70s; }
+        .ds-hero__content > *:nth-child(4) { animation-delay: 1.05s; }
+        .ds-hero__content > *:nth-child(5) { animation-delay: 1.30s; }
+        .ds-hero__content > *:nth-child(6) { animation-delay: 1.50s; }
+        .ds-hero__content > *:nth-child(7) { animation-delay: 1.70s; }
+        @keyframes ds-rise {
+          to { opacity: 1; transform: translateY(0); }
+        }
+
+        .ds-hero__headline {
+          font-family: 'Playfair Display', Georgia, serif;
+          font-style: italic;
+          font-weight: 400;
+          color: var(--accent-gold);
+          line-height: 1.18;
+          font-size: 32px;
+          margin: 0;
+          max-width: 18em;
+        }
+        @media (min-width: 640px) { .ds-hero__headline { font-size: 48px; } }
+        @media (min-width: 960px) { .ds-hero__headline { font-size: 56px; } }
+
+        .ds-hero__chase {
+          font-family: 'Playfair Display', Georgia, serif;
+          font-style: italic;
+          font-weight: 400;
+          color: var(--text-primary);
+          line-height: 1.55;
+          font-size: 18px;
+          margin: 24px 0 0;
+          max-width: 24em;
+        }
+        @media (min-width: 640px) { .ds-hero__chase { font-size: 22px; margin-top: 28px; } }
+        @media (min-width: 960px) { .ds-hero__chase { font-size: 24px; } }
+
+        .ds-hero__stage {
+          position: relative;
+          width: 100%;
+          max-width: 380px;
+          aspect-ratio: 1 / 1;
+          margin: 40px auto 0;
+        }
+        @media (min-width: 640px) {
+          .ds-hero__stage { max-width: 440px; margin-top: 48px; }
+        }
+        @media (min-width: 960px) {
+          .ds-hero__stage { max-width: 480px; }
+        }
+
+        .ds-hero__stage::before {
+          content: "";
+          position: absolute; inset: -8%;
+          background: radial-gradient(circle at 50% 50%,
+            rgba(201, 168, 76, 0.10) 0%,
+            rgba(201, 168, 76, 0.04) 35%,
+            transparent 70%);
+          pointer-events: none;
+          z-index: 0;
+        }
+
+        .ds-hero__portrait {
+          position: relative;
+          z-index: 1;
+          width: 100%; height: 100%;
+          background-image: url('/cosmic-charlie.jpg');
+          background-size: cover;
+          background-position: center 35%;
+          background-repeat: no-repeat;
+          -webkit-mask-image: radial-gradient(circle at 50% 45%,
+            #000 0%, #000 38%,
+            rgba(0,0,0,0.92) 50%,
+            rgba(0,0,0,0.6) 65%,
+            rgba(0,0,0,0.2) 80%,
+            transparent 95%);
+          mask-image: radial-gradient(circle at 50% 45%,
+            #000 0%, #000 38%,
+            rgba(0,0,0,0.92) 50%,
+            rgba(0,0,0,0.6) 65%,
+            rgba(0,0,0,0.2) 80%,
+            transparent 95%);
+          animation: ds-charlie-breathe 9s ease-in-out infinite;
+          transform-origin: 50% 45%;
+        }
+        @keyframes ds-charlie-breathe {
+          0%, 100% { transform: scale(1); }
+          50%      { transform: scale(1.018); }
+        }
+
+        .ds-hero__nameplate {
+          margin-top: 8px;
+          display: flex; flex-direction: column; align-items: center; gap: 8px;
+        }
+        .ds-hero__charlie-eyebrow {
+          font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+          font-size: 10px;
+          letter-spacing: 0.28em;
+          text-transform: uppercase;
+          color: var(--text-eyebrow);
+        }
+        @media (min-width: 640px) { .ds-hero__charlie-eyebrow { font-size: 11px; } }
+        .ds-hero__charlie-name {
+          font-family: 'Playfair Display', Georgia, serif;
+          font-style: italic;
+          font-weight: 700;
+          color: var(--accent-gold);
+          font-size: 22px;
+          line-height: 1.1;
+        }
+        @media (min-width: 640px) { .ds-hero__charlie-name { font-size: 26px; } }
+
+        .ds-hero__cta-wrap {
+          margin-top: 36px;
+          width: 100%;
+          display: flex; flex-direction: column; align-items: center; gap: 12px;
+        }
+        .ds-hero__cta-eyebrow {
+          font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+          font-size: 11px;
+          letter-spacing: 0.26em;
+          text-transform: uppercase;
+          color: var(--text-eyebrow);
+        }
+        .ds-hero__cta-button {
+          display: inline-flex; align-items: center; justify-content: center;
+          height: 56px;
+          width: 100%;
+          max-width: 320px;
+          background: var(--accent-gold);
+          color: #0a0a0a;
+          font-family: 'DM Sans', system-ui, sans-serif;
+          font-weight: 500;
+          font-size: 17px;
+          border-radius: 2px;
+          text-decoration: none;
+          transition: background-color 0.2s ease, transform 0.05s ease;
+          letter-spacing: 0.01em;
+        }
+        .ds-hero__cta-button:hover { background: var(--accent-warm); }
+        .ds-hero__cta-button:active { transform: translateY(1px); }
+        .ds-hero__cta-button:focus-visible {
+          outline: 2px solid var(--accent-warm);
+          outline-offset: 3px;
+        }
+        .ds-hero__cta-caption {
+          font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+          font-size: 12px;
+          color: var(--accent-gold);
+          opacity: 0.7;
+          margin: 0;
+          text-transform: lowercase;
+        }
+
+        .ds-hero__credit {
+          margin-top: 56px;
+          width: 100%;
+          background: var(--bg-plaque);
+          border-top: 1px solid var(--rule-gold-40);
+          border-bottom: 1px solid var(--rule-gold-40);
+          padding: 28px 20px;
+          display: flex; flex-direction: column; align-items: center; gap: 14px;
+        }
+        @media (min-width: 640px) { .ds-hero__credit { padding: 32px 28px; } }
+
+        .ds-hero__credit-eyebrow {
+          font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+          font-size: 11px;
+          letter-spacing: 0.22em;
+          text-transform: uppercase;
+          color: var(--text-eyebrow);
+        }
+        .ds-hero__credit-attribution {
+          font-family: 'Playfair Display', Georgia, serif;
+          font-style: italic;
+          font-weight: 400;
+          font-size: 18px;
+          line-height: 1.45;
+          color: var(--text-primary);
+          margin: 0;
+        }
+        @media (min-width: 640px) { .ds-hero__credit-attribution { font-size: 22px; } }
+
+        .ds-hero__archive-link {
+          color: var(--accent-gold);
+          text-decoration: none;
+          border-bottom: 1px solid var(--rule-gold-40);
+          padding-bottom: 1px;
+          transition: color 0.2s ease, border-color 0.2s ease;
+          white-space: nowrap;
+        }
+        .ds-hero__archive-link:hover { color: var(--accent-warm); border-color: var(--accent-warm); }
+        .ds-hero__arrow {
+          display: inline-block;
+          margin-left: 2px;
+          transition: transform 0.2s ease;
+        }
+        .ds-hero__archive-link:hover .ds-hero__arrow {
+          transform: translate(2px, -2px);
+        }
+        .ds-hero__credit-body {
+          font-family: 'DM Sans', system-ui, sans-serif;
+          font-weight: 300;
+          font-size: 14px;
+          line-height: 1.65;
+          color: var(--text-soft);
+          margin: 0;
+          max-width: 38em;
+        }
+        @media (min-width: 640px) { .ds-hero__credit-body { font-size: 15px; } }
+
+        .ds-hero__tagline {
+          margin-top: 36px;
+          font-family: 'Caveat', cursive;
+          font-style: italic;
+          font-size: 20px;
+          line-height: 1.2;
+          color: var(--text-primary);
+        }
+        @media (min-width: 640px) { .ds-hero__tagline { font-size: 22px; } }
+
+        @media (prefers-reduced-motion: reduce) {
+          .ds-hero__logo-mark,
+          .ds-hero__portrait { animation: none !important; }
+          .ds-hero__content > * {
+            animation: none !important;
+            opacity: 1 !important;
+            transform: none !important;
+          }
+        }
+      `}</style>
+
+      <section className="ds-hero" aria-label="Welcome to Dead Set">
+        <div className="ds-hero__logo">
+          <svg
+            className="ds-hero__logo-mark"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-hidden="true"
+          >
+            <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.25" />
+            <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.25" />
+            <circle cx="12" cy="12" r="0.9" fill="currentColor" />
+            <line x1="12" y1="2.5" x2="12" y2="5" stroke="currentColor" strokeWidth="1" />
+            <line x1="12" y1="19" x2="12" y2="21.5" stroke="currentColor" strokeWidth="1" />
+            <line x1="2.5" y1="12" x2="5" y2="12" stroke="currentColor" strokeWidth="1" />
+            <line x1="19" y1="12" x2="21.5" y2="12" stroke="currentColor" strokeWidth="1" />
+          </svg>
+          <span className="ds-hero__logo-word">Dead Set</span>
         </div>
 
-        {/* 2. Headline — tighter for mobile */}
-        <h1 className="font-display text-[26px] leading-[1.05] sm:text-4xl md:text-5xl text-primary tracking-tight">
-          Your dream Dead show,
-          <br />
-          built from real recordings.
-        </h1>
+        <div className="ds-hero__content">
+          <h1 className="ds-hero__headline">Every Deadhead knows the feeling.</h1>
 
-        {/* 3. Subhead — short on mobile, full on desktop */}
-        <p className="font-body text-sm sm:text-base text-muted-foreground leading-snug sm:leading-relaxed max-w-[480px] px-2">
-          <span className="sm:hidden">Tell Cosmic Charlie your vibe — he'll build a full concert from real Archive recordings.</span>
-          <span className="hidden sm:inline">
-            Tell Cosmic Charlie your vibe and he'll craft a full concert
-            from 2,300+ shows in the Archive — every note is real.
-          </span>
-        </p>
+          <p className="ds-hero__chase">
+            That song. That night. That version you'll never forget —
+            and the next one waiting to be found, inhaled, and passed on.
+          </p>
 
-        {/* 4. Primary CTA — promoted above the fold on mobile */}
-        <motion.div {...fade(0.12)} className="w-full sm:w-auto flex flex-col items-center gap-2 sm:gap-3">
-          <Button
-            size="lg"
-            onClick={handlePrimaryCta}
-            className="w-full sm:w-auto gap-2 text-base px-8 sm:px-12 py-5 shadow-[0_4px_40px_hsl(var(--glow-gold))] hover:shadow-[0_4px_60px_hsl(var(--glow-gold))]"
+          <div className="ds-hero__stage" aria-hidden="true">
+            <div
+              className="ds-hero__portrait"
+              role="img"
+              aria-label="Cosmic Charlie, your way in"
+            />
+          </div>
+
+          <div className="ds-hero__nameplate">
+            <div className="ds-hero__charlie-eyebrow">your way in</div>
+            <div className="ds-hero__charlie-name">Cosmic Charlie</div>
+          </div>
+
+          <div className="ds-hero__cta-wrap">
+            <div className="ds-hero__cta-eyebrow">Need a Miracle?</div>
+            <a
+              href={BUILDER_ROUTE}
+              onClick={handleCta}
+              className="ds-hero__cta-button"
+            >
+              Meet Cosmic Charlie
+            </a>
+            <p className="ds-hero__cta-caption">he's been waiting for you</p>
+          </div>
+
+          <aside
+            className="ds-hero__credit"
+            aria-label="A love letter to the Internet Archive"
           >
-            <span className="sm:hidden">Start Building My Show</span>
-            <span className="hidden sm:inline">Let Cosmic Charlie Build Your Show</span>
-            <ChevronRight className="w-4 h-4" />
-          </Button>
-          {showReturningSignIn && (
-            <span className="font-body text-xs sm:text-sm text-muted-foreground/80">
-              No account needed — sign in when you save
-            </span>
-          )}
-        </motion.div>
+            <div className="ds-hero__credit-eyebrow">A love letter to</div>
+            <p className="ds-hero__credit-attribution">
+              the tapers, the traders, and the{" "}
+              <a
+                href="https://archive.org/details/GratefulDead"
+                className="ds-hero__archive-link"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Internet Archive<span className="ds-hero__arrow">↗</span>
+              </a>
+              .
+            </p>
+            <p className="ds-hero__credit-body">
+              Without their fifty years of devotion, none of this would exist.
+              The music lives at archive.org — and the tradition lives in the sharing.
+              Dead Set is just one more way to pass it on.
+            </p>
+          </aside>
 
-        {/* 5. Social proof — moved below CTA on mobile */}
-        <SocialProof />
-
-        {/* 6. Audio Preview Strip */}
-        <motion.div {...fade(0.18)} className="flex flex-col items-center gap-2 w-full">
-          <span className="font-mono text-[11px] sm:text-[13px] tracking-[0.2em] text-muted-foreground/50 uppercase">
-            🎧 Now playing from the Archive
-          </span>
-          <AmbientPlayer />
-        </motion.div>
-
-        {/* 7. Returning user link */}
-        {showReturningSignIn && (
-          <button
-            onClick={() => {
-              trackCtaClick("hero_returning_signin", "/auth");
-              navigate("/auth");
-            }}
-            className="font-mono text-sm tracking-[0.15em] text-primary/70 hover:text-primary transition-colors underline underline-offset-4 decoration-primary/30 hover:decoration-primary/60"
-          >
-            Returning user? Sign in here
-          </button>
-        )}
-
-        {/* 8. Browse CTA with visual preview cards */}
-        <motion.div {...fade(0.24)} className="w-full flex flex-col items-center gap-3">
-          {featured.length > 0 && <FeaturedCards setlists={featured} />}
-          <Button
-            variant="outline"
-            size="lg"
-            onClick={() => {
-              trackCtaClick("hero_browse", "/browse");
-              navigate("/browse");
-            }}
-            className="w-full sm:w-auto gap-2 border-primary/40 text-primary hover:bg-primary/10 hover:border-primary/60"
-          >
-            🔍 Browse Community Setlists
-            <ChevronRight className="w-4 h-4" />
-          </Button>
-        </motion.div>
-      </div>
-    </main>
+          <p className="ds-hero__tagline">Wake. Now. Discover.</p>
+        </div>
+      </section>
+    </>
   );
 };
 
