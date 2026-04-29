@@ -1175,28 +1175,44 @@ const Builder = () => {
             </motion.div>
           )}
 
-           <SetlistDisplay
-            slots={activeSlots}
-            activeSlotId={playingSlot ? playingSlot.id : null}
-            description={description}
-            generatingDescription={generatingDescription}
-            eraYearRange={(() => {
-              const e = eras.find((x) => x.id === selectedEra);
-              return e ? { start: e.year_start, end: e.year_end } : null;
-            })()}
-            onGenerateDescription={handleGenerateDescription}
-            onRemoveSlot={handleRemoveSlot}
-            onToggleSegue={handleToggleSegue}
-            onUpdateNotes={handleUpdateNotes}
-            onReorder={handleReorder}
-            onPlayVersion={(slot) => {
-              playSingle(slot);
-            }}
-            onPlaySetlist={async () => {
-              if (activeSlots.length === 0) return;
-              await globalPlaySetlist(activeSlots, setlist?.id);
-            }}
-          />
+           {charlieCreating && activeSlots.length === 0 ? (
+            <div role="status" aria-live="polite" className="px-3 py-4 space-y-3">
+              <div className="flex items-center gap-2 text-sm font-body text-muted-foreground">
+                <span className="inline-block w-3 h-3 rounded-full bg-primary animate-pulse" />
+                Cosmic Charlie is curating your setlist…
+              </div>
+              {[0, 1, 2, 3, 4, 5].map((i) => (
+                <div
+                  key={i}
+                  className="h-14 rounded-xl border border-border bg-muted/40 animate-pulse"
+                  style={{ animationDelay: `${i * 80}ms` }}
+                />
+              ))}
+            </div>
+          ) : (
+            <SetlistDisplay
+              slots={activeSlots}
+              activeSlotId={playingSlot ? playingSlot.id : null}
+              description={description}
+              generatingDescription={generatingDescription}
+              eraYearRange={(() => {
+                const e = eras.find((x) => x.id === selectedEra);
+                return e ? { start: e.year_start, end: e.year_end } : null;
+              })()}
+              onGenerateDescription={handleGenerateDescription}
+              onRemoveSlot={handleRemoveSlot}
+              onToggleSegue={handleToggleSegue}
+              onUpdateNotes={handleUpdateNotes}
+              onReorder={handleReorder}
+              onPlayVersion={(slot) => {
+                playSingle(slot);
+              }}
+              onPlaySetlist={async () => {
+                if (activeSlots.length === 0) return;
+                await globalPlaySetlist(activeSlots, setlist?.id);
+              }}
+            />
+          )}
         </div>
 
         {/* Show Plate + Poster preview — between setlist and vault on desktop */}
