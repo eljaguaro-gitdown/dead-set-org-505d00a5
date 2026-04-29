@@ -18,7 +18,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { motion } from "framer-motion";
-import { X, GripVertical, ChevronRight, ChevronDown, ExternalLink, Headphones, Play, Sparkles, Loader2, RefreshCw, Heart } from "lucide-react";
+import { X, GripVertical, ChevronRight, ChevronDown, ExternalLink, Headphones, Play, Sparkles, Loader2, RefreshCw, Heart, AlertTriangle } from "lucide-react";
 import { useFavoriteSongs } from "@/hooks/useFavoriteSongs";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
