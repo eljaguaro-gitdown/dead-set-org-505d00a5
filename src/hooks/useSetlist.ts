@@ -135,7 +135,20 @@ export const useSetlist = (user: User | null, setlistId?: string | null) => {
           };
         })
         .filter(Boolean) as SetlistSlotData[];
-      setSlots(loadedSlots);
+      // Defensive: if DB has slot rows but song hydration failed for ALL of them,
+      // do NOT overwrite locally-set slots with an empty array — that strands users
+      // on an empty UI when songs/versions fetches errored mid-flight.
+      if (loadedSlots.length === 0) {
+        console.warn(
+          `[useSetlist] ${slotsData.length} slot rows present but 0 reconstructed (songs missing). Preserving existing slots.`
+        );
+      } else {
+        setSlots(loadedSlots);
+      }
+    } else if (slotsData && slotsData.length === 0) {
+      // Slot rows truly empty — clear local state so we don't show stale builtSlots
+      // from a different setlist. (Safe because the DB is the source of truth here.)
+      setSlots([]);
     }
 
     // Load collaborators
