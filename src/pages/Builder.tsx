@@ -137,6 +137,7 @@ const Builder = () => {
   const [showGuestPrompt, setShowGuestPrompt] = useState(false);
   const [displayName, setDisplayName] = useState<string | null>(null);
   const [showIdleNudge, setShowIdleNudge] = useState(false);
+  const [charlieCreating, setCharlieCreating] = useState(false);
 
   // Auth modal state
   const [authModalOpen, setAuthModalOpen] = useState(false);
@@ -556,26 +557,39 @@ const Builder = () => {
 
       if (isGuestMode) {
         const newTitle = customTitle || suggestion.setlist_name?.trim() || "Untitled Setlist";
+        setCharlieCreating(true);
         setTitle(newTitle);
         if (suggestion.explanation) setDescription(suggestion.explanation);
         setGuestSlots(builtSlots);
         setMobileTab("setlist");
+        // Brief skeleton so UI doesn't flash empty between dialog close and render
+        setTimeout(() => setCharlieCreating(false), 350);
         return;
       }
 
-      const newTitle = customTitle || suggestion.setlist_name?.trim() || "Untitled Setlist";
-      if (suggestion.explanation) setDescription(suggestion.explanation);
-      const created = await createSetlist(newTitle, selectedEra);
-      if (!created) return;
-      // Persist slots directly before navigating (avoids stale closure / unmount issues)
-      await addSongsToSetlist(suggestion, created.id);
-      if (suggestion.explanation) {
-        await supabase.from("setlists").update({ description: suggestion.explanation }).eq("id", created.id);
+      setCharlieCreating(true);
+      try {
+        const newTitle = customTitle || suggestion.setlist_name?.trim() || "Untitled Setlist";
+        if (suggestion.explanation) setDescription(suggestion.explanation);
+        const created = await createSetlist(newTitle, selectedEra);
+        if (!created) {
+          setCharlieCreating(false);
+          return;
+        }
+        // Persist slots directly before navigating (avoids stale closure / unmount issues)
+        await addSongsToSetlist(suggestion, created.id);
+        if (suggestion.explanation) {
+          await supabase.from("setlists").update({ description: suggestion.explanation }).eq("id", created.id);
+        }
+        // Hydrate local slots immediately so the UI shows the songs even if the
+        // post-navigate loadSetlist() races or briefly returns an empty result.
+        setSlots(builtSlots);
+        setMobileTab("setlist");
+        navigate(`/builder/${created.id}`, { replace: false });
+      } finally {
+        // Keep skeleton visible briefly after navigation so route transition can settle
+        setTimeout(() => setCharlieCreating(false), 400);
       }
-      // Hydrate local slots immediately so the UI shows the songs even if the
-      // post-navigate loadSetlist() races or briefly returns an empty result.
-      setSlots(builtSlots);
-      navigate(`/builder/${created.id}`, { replace: false });
     },
     [isGuestMode, songs, createSetlist, selectedEra, navigate, setSlots]
   );
@@ -1161,28 +1175,44 @@ const Builder = () => {
             </motion.div>
           )}
 
-           <SetlistDisplay
-            slots={activeSlots}
-            activeSlotId={playingSlot ? playingSlot.id : null}
-            description={description}
-            generatingDescription={generatingDescription}
-            eraYearRange={(() => {
-              const e = eras.find((x) => x.id === selectedEra);
-              return e ? { start: e.year_start, end: e.year_end } : null;
-            })()}
-            onGenerateDescription={handleGenerateDescription}
-            onRemoveSlot={handleRemoveSlot}
-            onToggleSegue={handleToggleSegue}
-            onUpdateNotes={handleUpdateNotes}
-            onReorder={handleReorder}
-            onPlayVersion={(slot) => {
-              playSingle(slot);
-            }}
-            onPlaySetlist={async () => {
-              if (activeSlots.length === 0) return;
-              await globalPlaySetlist(activeSlots, setlist?.id);
-            }}
-          />
+           {charlieCreating && activeSlots.length === 0 ? (
+            <div role="status" aria-live="polite" className="px-3 py-4 space-y-3">
+              <div className="flex items-center gap-2 text-sm font-body text-muted-foreground">
+                <span className="inline-block w-3 h-3 rounded-full bg-primary animate-pulse" />
+                Cosmic Charlie is curating your setlist…
+              </div>
+              {[0, 1, 2, 3, 4, 5].map((i) => (
+                <div
+                  key={i}
+                  className="h-14 rounded-xl border border-border bg-muted/40 animate-pulse"
+                  style={{ animationDelay: `${i * 80}ms` }}
+                />
+              ))}
+            </div>
+          ) : (
+            <SetlistDisplay
+              slots={activeSlots}
+              activeSlotId={playingSlot ? playingSlot.id : null}
+              description={description}
+              generatingDescription={generatingDescription}
+              eraYearRange={(() => {
+                const e = eras.find((x) => x.id === selectedEra);
+                return e ? { start: e.year_start, end: e.year_end } : null;
+              })()}
+              onGenerateDescription={handleGenerateDescription}
+              onRemoveSlot={handleRemoveSlot}
+              onToggleSegue={handleToggleSegue}
+              onUpdateNotes={handleUpdateNotes}
+              onReorder={handleReorder}
+              onPlayVersion={(slot) => {
+                playSingle(slot);
+              }}
+              onPlaySetlist={async () => {
+                if (activeSlots.length === 0) return;
+                await globalPlaySetlist(activeSlots, setlist?.id);
+              }}
+            />
+          )}
         </div>
 
         {/* Show Plate + Poster preview — between setlist and vault on desktop */}
