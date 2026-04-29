@@ -146,6 +146,51 @@ const Index = () => {
     };
   }, []);
 
+  // Top rated community setlists — sorted by upvotes, then play count
+  useEffect(() => {
+    const fetchTopRated = async () => {
+      const { data: setlists } = await supabase
+        .from("setlists")
+        .select("id, title, creator_id, era_id, upvote_count, play_count, created_at")
+        .eq("is_public", true)
+        .gt("upvote_count", 0)
+        .order("upvote_count", { ascending: false })
+        .order("play_count", { ascending: false })
+        .limit(8);
+
+      if (!setlists || setlists.length === 0) return;
+
+      const creatorIds = [...new Set(setlists.map((s) => s.creator_id))];
+      const eraIds = [...new Set(setlists.map((s) => s.era_id).filter(Boolean))] as string[];
+      const setlistIds = setlists.map((s) => s.id);
+
+      const [profilesRes, erasRes, slotsRes] = await Promise.all([
+        supabase.from("profiles").select("user_id, display_name").in("user_id", creatorIds),
+        eraIds.length > 0
+          ? supabase.from("eras").select("id, name").in("id", eraIds)
+          : Promise.resolve({ data: [] as { id: string; name: string }[] }),
+        supabase.from("setlist_slots").select("setlist_id").in("setlist_id", setlistIds),
+      ]);
+
+      const profileMap = new Map((profilesRes.data || []).map((p) => [p.user_id, p.display_name]));
+      const eraMap = new Map(((erasRes.data || []) as { id: string; name: string }[]).map((e) => [e.id, e.name]));
+      const countMap = new Map<string, number>();
+      (slotsRes.data || []).forEach((s) => {
+        countMap.set(s.setlist_id, (countMap.get(s.setlist_id) || 0) + 1);
+      });
+
+      setTopRated(
+        setlists.map((s) => ({
+          ...s,
+          creator_name: profileMap.get(s.creator_id) || "Unknown",
+          era_name: s.era_id ? eraMap.get(s.era_id) || undefined : undefined,
+          song_count: countMap.get(s.id) || 0,
+        }))
+      );
+    };
+    fetchTopRated();
+  }, []);
+
   return (
     <PageLayout>
       
