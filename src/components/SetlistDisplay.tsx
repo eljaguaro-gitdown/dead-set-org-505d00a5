@@ -112,6 +112,14 @@ const SortableSlotItem = ({
     return () => { cancelled = true; };
   }, [slot.song.title, existingArchiveUrl, eraYearRange?.start, eraYearRange?.end]);
 
+  // ── Era audit: flag if displayed archive date falls outside the chosen era window ──
+  const displayedDate = slot.version?.show_date || archiveResult?.date || null;
+  const displayedYear = displayedDate ? parseInt(String(displayedDate).slice(0, 4), 10) : NaN;
+  const eraOutOfRange =
+    !!eraYearRange &&
+    !!displayedDate &&
+    Number.isFinite(displayedYear) &&
+    (displayedYear < eraYearRange.start || displayedYear > eraYearRange.end);
 
   const style = {
     transform: CSS.Transform.toString(transform),
