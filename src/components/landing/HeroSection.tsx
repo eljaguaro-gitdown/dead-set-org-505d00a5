@@ -277,6 +277,57 @@ const HeroSection = (_props: HeroSectionProps) => {
           text-transform: lowercase;
         }
 
+        .ds-hero__cta-divider {
+          display: flex; align-items: center; gap: 12px;
+          width: 100%; max-width: 320px;
+          margin-top: 20px;
+          color: var(--text-eyebrow);
+          font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+          font-size: 10px;
+          letter-spacing: 0.3em;
+          text-transform: uppercase;
+        }
+        .ds-hero__cta-divider::before,
+        .ds-hero__cta-divider::after {
+          content: "";
+          flex: 1;
+          height: 1px;
+          background: var(--rule-gold-30);
+        }
+
+        .ds-hero__cta-secondary {
+          display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+          height: 56px;
+          width: 100%;
+          max-width: 320px;
+          background: transparent;
+          color: var(--accent-gold);
+          font-family: 'DM Sans', system-ui, sans-serif;
+          font-weight: 500;
+          font-size: 16px;
+          border: 1px solid var(--rule-gold-40);
+          border-radius: 2px;
+          text-decoration: none;
+          transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+          letter-spacing: 0.01em;
+        }
+        .ds-hero__cta-secondary:hover {
+          background: rgba(201, 168, 76, 0.08);
+          border-color: var(--accent-gold);
+          color: var(--accent-warm);
+        }
+        .ds-hero__cta-secondary:focus-visible {
+          outline: 2px solid var(--accent-warm);
+          outline-offset: 3px;
+        }
+        .ds-hero__cta-secondary-arrow {
+          display: inline-block;
+          transition: transform 0.2s ease;
+        }
+        .ds-hero__cta-secondary:hover .ds-hero__cta-secondary-arrow {
+          transform: translateX(3px);
+        }
+
         .ds-hero__credit {
           margin-top: 56px;
           width: 100%;
