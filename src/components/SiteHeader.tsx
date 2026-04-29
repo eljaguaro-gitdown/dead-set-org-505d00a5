@@ -167,7 +167,7 @@ const SiteHeader = ({ children, large = false }: SiteHeaderProps) => {
           Dead-Set.Org
         </span>
       </button>
-      {(children || adminLink || messagesLink || nowPlaying || returnToSetlistsPill) && (
+      {(children || adminLink || messagesLink || nowPlaying || returnToSetlistsPill || cosmicCharlieCta) && (
         <>
           {/* Desktop nav */}
           <div className="hidden sm:flex items-center gap-4 sm:gap-6">
