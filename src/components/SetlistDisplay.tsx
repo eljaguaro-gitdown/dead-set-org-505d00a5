@@ -282,6 +282,7 @@ const SetSection = ({
   setNumber,
   slots,
   activeSlotId,
+  eraYearRange,
   onRemoveSlot,
   onToggleSegue,
   onUpdateNotes,
@@ -291,6 +292,7 @@ const SetSection = ({
   setNumber: number;
   slots: SetlistSlotData[];
   activeSlotId?: string | null;
+  eraYearRange?: { start: number; end: number } | null;
   onRemoveSlot: (id: string) => void;
   onToggleSegue: (id: string) => void;
   onUpdateNotes: (id: string, notes: string) => void;
@@ -322,6 +324,7 @@ const SetSection = ({
             slot={slot}
             isLast={index === setSlots.length - 1}
             isPlaying={activeSlotId === slot.id}
+            eraYearRange={eraYearRange}
             onRemoveSlot={onRemoveSlot}
             onToggleSegue={onToggleSegue}
             onUpdateNotes={onUpdateNotes}
