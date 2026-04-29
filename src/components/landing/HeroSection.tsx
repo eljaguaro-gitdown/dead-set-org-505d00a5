@@ -406,6 +406,24 @@ const HeroSection = (_props: HeroSectionProps) => {
               Meet Cosmic Charlie
             </a>
             <p className="ds-hero__cta-caption">he's been waiting for you</p>
+
+            <div className="ds-hero__cta-divider" aria-hidden="true">
+              <span>or</span>
+            </div>
+
+            <a
+              href="/browse"
+              onClick={(e) => {
+                e.preventDefault();
+                trackCtaClick("hero_browse_community", "/browse");
+                navigate("/browse");
+              }}
+              className="ds-hero__cta-secondary"
+            >
+              Browse Community Setlists
+              <span className="ds-hero__cta-secondary-arrow">→</span>
+            </a>
+            <p className="ds-hero__cta-caption">what other heads are spinning</p>
           </div>
 
           <aside
