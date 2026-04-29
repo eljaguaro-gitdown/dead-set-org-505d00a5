@@ -60,6 +60,7 @@ const SortableSlotItem = ({
   slot,
   isLast,
   isPlaying,
+  eraYearRange,
   onRemoveSlot,
   onToggleSegue,
   onUpdateNotes,
@@ -68,6 +69,7 @@ const SortableSlotItem = ({
   slot: SetlistSlotData;
   isLast: boolean;
   isPlaying: boolean;
+  eraYearRange?: { start: number; end: number } | null;
   onRemoveSlot: (id: string) => void;
   onToggleSegue: (id: string) => void;
   onUpdateNotes: (id: string, notes: string) => void;
@@ -97,14 +99,19 @@ const SortableSlotItem = ({
     }
     let cancelled = false;
     setArchiveLoading(true);
-    findArchiveRecording(slot.song.title).then((result) => {
+    findArchiveRecording(
+      slot.song.title,
+      eraYearRange?.start ?? null,
+      eraYearRange?.end ?? null
+    ).then((result) => {
       if (!cancelled) {
         setArchiveResult(result);
         setArchiveLoading(false);
       }
     });
     return () => { cancelled = true; };
-  }, [slot.song.title, existingArchiveUrl]);
+  }, [slot.song.title, existingArchiveUrl, eraYearRange?.start, eraYearRange?.end]);
+
 
   const style = {
     transform: CSS.Transform.toString(transform),
