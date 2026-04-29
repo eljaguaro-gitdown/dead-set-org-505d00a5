@@ -69,8 +69,17 @@ const BuildFromShowDialog = ({ open, onOpenChange, onSeed }: BuildFromShowDialog
 
       if (fnErr || !show || show.error) {
         const msg = show?.error || fnErr?.message || "Couldn't find that show";
+        const nearby: string[] = Array.isArray(show?.nearbyDates) ? show.nearbyDates : [];
         toast.error(msg, {
-          description: "Try a nearby date — not every night is on archive.org.",
+          description: nearby.length
+            ? `Try one of these instead: ${nearby.slice(0, 3).join(" · ")}`
+            : "Try a nearby date — not every night is on archive.org.",
+          action: nearby.length
+            ? {
+                label: `Try ${nearby[0]}`,
+                onClick: () => setDate(new Date(nearby[0] + "T12:00:00")),
+              }
+            : undefined,
         });
         setLoading(false);
         return;
