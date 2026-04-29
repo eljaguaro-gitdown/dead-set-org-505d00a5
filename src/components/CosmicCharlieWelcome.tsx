@@ -250,10 +250,10 @@ const CosmicCharlieWelcome = ({ eras, onGenerated, onSkip }: CosmicCharlieWelcom
               className="flex flex-col items-center gap-5 py-12"
             >
               <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                animate={{ scale: [1, 1.06, 1] }}
+                transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
               >
-                <Star className="w-16 h-16 text-primary fill-primary/20" />
+                <CosmicCharlieAvatar size={72} animate={false} glow={true} />
               </motion.div>
               <div className="space-y-2 text-center">
                 <p className="font-display text-lg text-foreground">
