@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { Menu, Shield, MessageCircle, LogOut, User, Download, ListMusic, Home } from "lucide-react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { Menu, Shield, MessageCircle, LogOut, User, Download, ListMusic, Home, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 import StealYourFace from "@/components/StealYourFace";
 import ShareAppButton from "@/components/ShareAppButton";
@@ -26,12 +26,25 @@ interface SiteHeaderProps {
 
 const SiteHeader = ({ children, large = false }: SiteHeaderProps) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const isMobile = useIsMobile();
   const { user, signOut } = useAuth();
   const { playingSlot, playlistMode, playlistIndex, playlistSlots, activeSetlistId } = useAudioPlayer();
   const [isAdmin, setIsAdmin] = useState(false);
   const { unreadCount } = useUnreadMessages(user);
   const { shouldShowReturn } = useHomeBase();
+  const onBuilder = location.pathname.startsWith("/builder");
+  const cosmicCharlieCta = !onBuilder ? (
+    <button
+      onClick={() => navigate("/builder?wizard=true")}
+      className="flex items-center gap-1.5 font-display italic text-sm tracking-wide text-[#0D0D0D] bg-gradient-to-r from-[#C9A84C] to-[#E8D48B] hover:from-[#E8D48B] hover:to-[#C9A84C] transition-all duration-300 rounded-md px-3.5 py-2 min-h-[40px] shadow-[0_0_16px_rgba(201,168,76,0.25)] hover:shadow-[0_0_24px_rgba(201,168,76,0.45)] whitespace-nowrap"
+      title="Build a setlist with Cosmic Charlie"
+    >
+      <Sparkles className="w-3.5 h-3.5" />
+      <span className="hidden sm:inline">Build with Cosmic Charlie</span>
+      <span className="sm:hidden">Build</span>
+    </button>
+  ) : null;
   useEffect(() => {
     if (!user) { setIsAdmin(false); return; }
     supabase
@@ -154,12 +167,13 @@ const SiteHeader = ({ children, large = false }: SiteHeaderProps) => {
           Dead-Set.Org
         </span>
       </button>
-      {(children || adminLink || messagesLink || nowPlaying || returnToSetlistsPill) && (
+      {(children || adminLink || messagesLink || nowPlaying || returnToSetlistsPill || cosmicCharlieCta) && (
         <>
           {/* Desktop nav */}
           <div className="hidden sm:flex items-center gap-4 sm:gap-6">
             {nowPlaying}
             {!nowPlaying && returnToSetlistsPill}
+            {cosmicCharlieCta}
             <ShareAppButton />
             {user && <AnnouncementsBell variant="desktop" />}
             {messagesLink}
@@ -177,8 +191,9 @@ const SiteHeader = ({ children, large = false }: SiteHeaderProps) => {
             )}
           </div>
           {/* Mobile: persistent top-level actions + hamburger */}
-          <div className="sm:hidden flex items-center gap-3">
+          <div className="sm:hidden flex items-center gap-2">
             {!nowPlaying && returnToSetlistsPill}
+            {cosmicCharlieCta}
             {/* Persistent mobile: Announcements + Messages for logged-in, Sign In for repeat guests */}
             {user ? (
               <>

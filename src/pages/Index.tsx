@@ -252,12 +252,6 @@ const Index = () => {
         >
           Browse
         </button>
-        <button
-          onClick={() => navigate("/builder?wizard=true")}
-          className="font-mono text-xs sm:text-[10px] tracking-[0.2em] text-muted-foreground hover:text-primary transition-colors uppercase border border-primary/30 rounded-md px-3 py-2 hover:border-primary/60 min-h-[44px] flex items-center"
-        >
-          Build a setlist
-        </button>
         {user ? (
           <>
             <button
