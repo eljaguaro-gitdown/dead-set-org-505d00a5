@@ -240,10 +240,18 @@ Deno.serve(async (req) => {
 
     const archiveId = await findBestRecordingForDate(date);
     if (!archiveId) {
-      return new Response(JSON.stringify({ error: "No show found for that date" }), {
-        status: 404,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      const nearby = await findNearbyShowDates(date);
+      const niceList = nearby.slice(0, 3).join(", ");
+      const message = nearby.length
+        ? `No show on ${date} — the Dead were off that night. Nearby shows: ${niceList}`
+        : `No show found on ${date} (and none within a few weeks).`;
+      return new Response(
+        JSON.stringify({ error: message, nearbyDates: nearby }),
+        {
+          status: 404,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      );
     }
 
     const metaRes = await fetch(`https://archive.org/metadata/${archiveId}`);
