@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { Instagram } from "lucide-react";
+import BrowseCommunityLink from "./BrowseCommunityLink";
 
 const PersonalNote = () => (
   <motion.section
@@ -22,6 +23,11 @@ const PersonalNote = () => (
         — Kinda feels like we are on to something fun - curated setlists, parking lot vibes, endless surprise and
         delight moments. See ya backstage!
       </span>
+
+      <p className="font-body text-base text-muted-foreground">
+        Curious what other heads are spinning?{" "}
+        <BrowseCommunityLink source="personal_note" label="Browse community setlists" />
+      </p>
 
       <a
         href="https://instagram.com/grateful_jaguaro"
