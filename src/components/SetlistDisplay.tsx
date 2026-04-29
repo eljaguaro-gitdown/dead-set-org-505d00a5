@@ -18,7 +18,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { motion } from "framer-motion";
-import { X, GripVertical, ChevronRight, ChevronDown, ExternalLink, Headphones, Play, Sparkles, Loader2, RefreshCw, Heart } from "lucide-react";
+import { X, GripVertical, ChevronRight, ChevronDown, ExternalLink, Headphones, Play, Sparkles, Loader2, RefreshCw, Heart, AlertTriangle } from "lucide-react";
 import { useFavoriteSongs } from "@/hooks/useFavoriteSongs";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -112,6 +112,14 @@ const SortableSlotItem = ({
     return () => { cancelled = true; };
   }, [slot.song.title, existingArchiveUrl, eraYearRange?.start, eraYearRange?.end]);
 
+  // ── Era audit: flag if displayed archive date falls outside the chosen era window ──
+  const displayedDate = slot.version?.show_date || archiveResult?.date || null;
+  const displayedYear = displayedDate ? parseInt(String(displayedDate).slice(0, 4), 10) : NaN;
+  const eraOutOfRange =
+    !!eraYearRange &&
+    !!displayedDate &&
+    Number.isFinite(displayedYear) &&
+    (displayedYear < eraYearRange.start || displayedYear > eraYearRange.end);
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -244,6 +252,18 @@ const SortableSlotItem = ({
                     {[archiveResult.date, archiveResult.venue].filter(Boolean).join(" · ")}
                   </span>
                 )}
+              </div>
+            )}
+            {eraOutOfRange && eraYearRange && (
+              <div
+                role="alert"
+                className="mt-2 flex items-start gap-1.5 rounded-md border border-destructive/40 bg-destructive/10 px-2 py-1.5 text-xs font-body text-destructive"
+                title="Era audit: this recording is outside the selected era window."
+              >
+                <AlertTriangle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+                <span>
+                  Out of era — {displayedYear} falls outside {eraYearRange.start}–{eraYearRange.end}.
+                </span>
               </div>
             )}
             {archiveLoading && !archiveResult && (
