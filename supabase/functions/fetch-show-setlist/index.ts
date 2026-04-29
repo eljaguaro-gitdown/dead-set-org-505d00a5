@@ -50,6 +50,32 @@ async function findBestRecordingForDate(date: string): Promise<string | null> {
   return (sbd || docs[0]).identifier;
 }
 
+// Find Dead show dates within ±N days of the given date.
+async function findNearbyShowDates(date: string, windowDays = 21): Promise<string[]> {
+  const target = new Date(date + "T00:00:00Z");
+  const start = new Date(target.getTime() - windowDays * 86400000).toISOString().slice(0, 10);
+  const end = new Date(target.getTime() + windowDays * 86400000).toISOString().slice(0, 10);
+  const q = encodeURIComponent(
+    `collection:GratefulDead AND date:[${start}T00:00:00Z TO ${end}T23:59:59Z]`,
+  );
+  const url = `https://archive.org/advancedsearch.php?q=${q}&fl[]=date&rows=200&output=json&sort[]=date+asc`;
+  const res = await fetch(url);
+  if (!res.ok) return [];
+  const data = await res.json();
+  const docs: any[] = data?.response?.docs || [];
+  const dates = new Set<string>();
+  for (const d of docs) {
+    const iso = (d.date || "").slice(0, 10);
+    if (iso && iso !== date) dates.add(iso);
+  }
+  // Sort by proximity to target
+  return Array.from(dates).sort((a, b) => {
+    const da = Math.abs(new Date(a + "T00:00:00Z").getTime() - target.getTime());
+    const db = Math.abs(new Date(b + "T00:00:00Z").getTime() - target.getTime());
+    return da - db;
+  }).slice(0, 5);
+}
+
 // Strip leading track-number / disc / set prefix, trailing file ext, and decoration.
 function cleanTitle(raw: string): string {
   return raw
@@ -214,10 +240,18 @@ Deno.serve(async (req) => {
 
     const archiveId = await findBestRecordingForDate(date);
     if (!archiveId) {
-      return new Response(JSON.stringify({ error: "No show found for that date" }), {
-        status: 404,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      const nearby = await findNearbyShowDates(date);
+      const niceList = nearby.slice(0, 3).join(", ");
+      const message = nearby.length
+        ? `No show on ${date} — the Dead were off that night. Nearby shows: ${niceList}`
+        : `No show found on ${date} (and none within a few weeks).`;
+      return new Response(
+        JSON.stringify({ error: message, nearbyDates: nearby }),
+        {
+          status: 404,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      );
     }
 
     const metaRes = await fetch(`https://archive.org/metadata/${archiveId}`);
