@@ -1148,6 +1148,10 @@ const Builder = () => {
             activeSlotId={playingSlot ? playingSlot.id : null}
             description={description}
             generatingDescription={generatingDescription}
+            eraYearRange={(() => {
+              const e = eras.find((x) => x.id === selectedEra);
+              return e ? { start: e.year_start, end: e.year_end } : null;
+            })()}
             onGenerateDescription={handleGenerateDescription}
             onRemoveSlot={handleRemoveSlot}
             onToggleSegue={handleToggleSegue}
