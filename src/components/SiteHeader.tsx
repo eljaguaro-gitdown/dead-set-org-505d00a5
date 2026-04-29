@@ -173,6 +173,7 @@ const SiteHeader = ({ children, large = false }: SiteHeaderProps) => {
           <div className="hidden sm:flex items-center gap-4 sm:gap-6">
             {nowPlaying}
             {!nowPlaying && returnToSetlistsPill}
+            {cosmicCharlieCta}
             <ShareAppButton />
             {user && <AnnouncementsBell variant="desktop" />}
             {messagesLink}
@@ -190,8 +191,9 @@ const SiteHeader = ({ children, large = false }: SiteHeaderProps) => {
             )}
           </div>
           {/* Mobile: persistent top-level actions + hamburger */}
-          <div className="sm:hidden flex items-center gap-3">
+          <div className="sm:hidden flex items-center gap-2">
             {!nowPlaying && returnToSetlistsPill}
+            {cosmicCharlieCta}
             {/* Persistent mobile: Announcements + Messages for logged-in, Sign In for repeat guests */}
             {user ? (
               <>
