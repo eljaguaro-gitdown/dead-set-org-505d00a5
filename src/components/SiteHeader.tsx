@@ -26,12 +26,25 @@ interface SiteHeaderProps {
 
 const SiteHeader = ({ children, large = false }: SiteHeaderProps) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const isMobile = useIsMobile();
   const { user, signOut } = useAuth();
   const { playingSlot, playlistMode, playlistIndex, playlistSlots, activeSetlistId } = useAudioPlayer();
   const [isAdmin, setIsAdmin] = useState(false);
   const { unreadCount } = useUnreadMessages(user);
   const { shouldShowReturn } = useHomeBase();
+  const onBuilder = location.pathname.startsWith("/builder");
+  const cosmicCharlieCta = !onBuilder ? (
+    <button
+      onClick={() => navigate("/builder?wizard=true")}
+      className="flex items-center gap-1.5 font-display italic text-sm tracking-wide text-[#0D0D0D] bg-gradient-to-r from-[#C9A84C] to-[#E8D48B] hover:from-[#E8D48B] hover:to-[#C9A84C] transition-all duration-300 rounded-md px-3.5 py-2 min-h-[40px] shadow-[0_0_16px_rgba(201,168,76,0.25)] hover:shadow-[0_0_24px_rgba(201,168,76,0.45)] whitespace-nowrap"
+      title="Build a setlist with Cosmic Charlie"
+    >
+      <Sparkles className="w-3.5 h-3.5" />
+      <span className="hidden sm:inline">Build with Cosmic Charlie</span>
+      <span className="sm:hidden">Build</span>
+    </button>
+  ) : null;
   useEffect(() => {
     if (!user) { setIsAdmin(false); return; }
     supabase
