@@ -24,6 +24,11 @@ const PersonalNote = () => (
         delight moments. See ya backstage!
       </span>
 
+      <p className="font-body text-base text-muted-foreground">
+        Curious what other heads are spinning?{" "}
+        <BrowseCommunityLink source="personal_note" label="Browse community setlists" />
+      </p>
+
       <a
         href="https://instagram.com/grateful_jaguaro"
         target="_blank"
