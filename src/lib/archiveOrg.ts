@@ -155,23 +155,45 @@ export async function findTrackInRecording(
   return null;
 }
 
-export async function findArchiveRecording(songTitle: string): Promise<ArchiveResult | null> {
-  const key = songTitle.toLowerCase().trim();
+export async function findArchiveRecording(
+  songTitle: string,
+  yearStart?: number | null,
+  yearEnd?: number | null
+): Promise<ArchiveResult | null> {
+  const key = cacheKey(songTitle, yearStart, yearEnd);
   if (cache.has(key)) return cache.get(key)!;
   if (inflight.has(key)) return inflight.get(key)!;
 
+  const hasEra = !!(yearStart && yearEnd);
+  const eraDateClause = hasEra
+    ? ` AND date:[${yearStart}-01-01 TO ${yearEnd}-12-31]`
+    : "";
+
   const promise = (async () => {
     try {
-      const query = encodeURIComponent(`collection:GratefulDead "${songTitle}"`);
-      const apiUrl = `https://archive.org/advancedsearch.php?q=${query}&fl=identifier,date,avg_rating,venue&sort[]=avg_rating+desc&output=json&rows=3`;
+      const query = encodeURIComponent(
+        `collection:GratefulDead "${songTitle}"${eraDateClause}`
+      );
+      const apiUrl = `https://archive.org/advancedsearch.php?q=${query}&fl=identifier,date,avg_rating,venue&sort[]=avg_rating+desc&output=json&rows=10`;
       const res = await fetch(apiUrl);
       if (!res.ok) {
         cache.set(key, null);
         return null;
       }
       const data = await res.json();
-      const docs = data?.response?.docs;
-      if (!docs || docs.length === 0) {
+      let docs: any[] = data?.response?.docs || [];
+
+      // Belt-and-suspenders: drop any doc whose date falls outside the era window
+      // (in case archive.org's date field is malformed or the search ignores the clause).
+      if (hasEra) {
+        docs = docs.filter((d) => {
+          if (!d.date) return false;
+          const yr = parseInt(String(d.date).slice(0, 4), 10);
+          return Number.isFinite(yr) && yr >= yearStart! && yr <= yearEnd!;
+        });
+      }
+
+      if (docs.length === 0) {
         cache.set(key, null);
         return null;
       }
@@ -217,7 +239,7 @@ export async function findArchiveRecording(songTitle: string): Promise<ArchiveRe
         }
       }
 
-      // Fallback: return first result without direct track
+      // Fallback: return first (era-filtered) result without direct track
       const doc = docs[0];
       const result: ArchiveResult = {
         url: `https://archive.org/details/${doc.identifier}`,
