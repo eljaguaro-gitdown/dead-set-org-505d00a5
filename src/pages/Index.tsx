@@ -34,10 +34,60 @@ interface FeaturedSetlist {
 
 const Index = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, loading } = useAuth();
   useAudioSignature();
   const [featured, setFeatured] = useState<FeaturedSetlist[]>([]);
   const [topRated, setTopRated] = useState<FeaturedSetlist[]>([]);
+
+  // Auto-scroll to community section if (a) URL has the hash, or
+  // (b) the visitor previously clicked an inline "Browse community" link.
+  // Waits for the relevant section to render before scrolling.
+  useEffect(() => {
+    let cancelled = false;
+    const hashTarget = location.hash.replace("#", "");
+    const wantsScroll =
+      hashTarget === COMMUNITY_SECTION_ID ||
+      hashTarget === "community" ||
+      (() => {
+        try {
+          return localStorage.getItem(BROWSE_COMMUNITY_STORAGE_KEY) === "1";
+        } catch {
+          return false;
+        }
+      })();
+
+    if (!wantsScroll) return;
+
+    const targetId = hashTarget === "community" ? "community" : COMMUNITY_SECTION_ID;
+    const start = Date.now();
+    const tryScroll = () => {
+      if (cancelled) return;
+      const el =
+        document.getElementById(targetId) ||
+        document.getElementById("community"); // fallback to legacy section
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+        // Clear the one-shot flag so subsequent home visits behave normally
+        try {
+          localStorage.removeItem(BROWSE_COMMUNITY_STORAGE_KEY);
+        } catch {
+          // ignore
+        }
+        return;
+      }
+      // Section may not be rendered yet (data still fetching) — retry up to 3s
+      if (Date.now() - start < 3000) {
+        setTimeout(tryScroll, 150);
+      }
+    };
+    // Defer slightly so initial render settles
+    const t = setTimeout(tryScroll, 200);
+    return () => {
+      cancelled = true;
+      clearTimeout(t);
+    };
+  }, [location.hash, topRated.length, featured.length]);
 
   // A/B test: variant B auto-starts the wizard (first landing only)
   useEffect(() => {
