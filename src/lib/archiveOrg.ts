@@ -15,6 +15,13 @@ export interface ArchiveResult {
 const cache = new Map<string, ArchiveResult | null>();
 const inflight = new Map<string, Promise<ArchiveResult | null>>();
 
+/** Build a stable cache key that includes the era window (if any). */
+function cacheKey(songTitle: string, yearStart?: number | null, yearEnd?: number | null): string {
+  const base = songTitle.toLowerCase().trim();
+  if (yearStart && yearEnd) return `${base}::${yearStart}-${yearEnd}`;
+  return base;
+}
+
 /**
  * Normalize a string for fuzzy comparison: lowercase, remove punctuation,
  * collapse whitespace, strip common prefixes like track numbers.
