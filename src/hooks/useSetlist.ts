@@ -52,21 +52,23 @@ export const useSetlist = (user: User | null, setlistId?: string | null) => {
 
   // Load existing setlist
   const loadSetlist = useCallback(async (id: string) => {
-    const { data: setlistData } = await supabase
+    const { data: setlistData, error: setlistErr } = await supabase
       .from("setlists")
       .select("*")
       .eq("id", id)
       .single();
+    if (setlistErr) console.error("[useSetlist] setlist fetch error:", setlistErr);
     if (!setlistData) return;
     setSetlist(setlistData);
 
     // Load slots with song and version data
-    const { data: slotsData } = await supabase
+    const { data: slotsData, error: slotsErr } = await supabase
       .from("setlist_slots")
       .select("*")
       .eq("setlist_id", id)
       .order("set_number")
       .order("position");
+    if (slotsErr) console.error("[useSetlist] slots fetch error:", slotsErr);
 
     if (slotsData && slotsData.length > 0) {
       // Fetch all songs and versions for these slots
@@ -82,6 +84,7 @@ export const useSetlist = (user: User | null, setlistId?: string | null) => {
           : Promise.resolve({ data: [] as NotableVersion[] }),
       ]);
 
+      if (songsRes.error) console.error("[useSetlist] songs fetch error:", songsRes.error);
       const songsMap = new Map((songsRes.data || []).map((s) => [s.id, s]));
       const versionsMap = new Map((versionsRes.data || []).map((v) => [v.id, v]));
       songsMap.forEach((v, k) => songsCache.current.set(k, v));
