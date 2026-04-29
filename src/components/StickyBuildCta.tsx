@@ -51,7 +51,7 @@ const StickyBuildCta = () => {
         >
           <button
             onClick={() => {
-              trackCtaClick("sticky_build_mobile");
+              trackCtaClick("sticky_build_mobile", "/builder?wizard=true");
               navigate("/builder?wizard=true");
             }}
             className="pointer-events-auto w-full flex items-center justify-center gap-2 font-display italic text-base tracking-wide text-[#0D0D0D] bg-gradient-to-r from-[#C9A84C] to-[#E8D48B] hover:from-[#E8D48B] hover:to-[#C9A84C] transition-all duration-300 rounded-xl px-5 py-3.5 min-h-[52px] shadow-[0_8px_28px_rgba(201,168,76,0.45)]"

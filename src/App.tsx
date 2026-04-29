@@ -11,6 +11,7 @@ import PresenceBroadcaster from "@/components/PresenceBroadcaster";
 import PwaInstallBanner from "@/components/PwaInstallBanner";
 import AudioDebugPanel from "@/components/AudioDebugPanel";
 import PickHandleModal from "@/components/PickHandleModal";
+import StickyBuildCta from "@/components/StickyBuildCta";
 
 // Eagerly load the landing page for fastest FCP/LCP
 import Index from "./pages/Index";
@@ -75,6 +76,7 @@ const App = () => (
           <PwaInstallBanner />
           <AudioDebugPanel />
           <PickHandleModal />
+          <StickyBuildCta />
         </AudioPlayerProvider>
       </BrowserRouter>
     </TooltipProvider>
