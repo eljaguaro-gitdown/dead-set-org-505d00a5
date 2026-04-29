@@ -369,6 +369,7 @@ const SetlistDisplay = ({
   activeSlotId,
   description,
   generatingDescription,
+  eraYearRange,
   onRemoveSlot,
   onToggleSegue,
   onUpdateNotes,
