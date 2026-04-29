@@ -254,7 +254,18 @@ const SortableSlotItem = ({
                 )}
               </div>
             )}
-            {archiveLoading && !archiveResult && (
+            {eraOutOfRange && eraYearRange && (
+              <div
+                role="alert"
+                className="mt-2 flex items-start gap-1.5 rounded-md border border-destructive/40 bg-destructive/10 px-2 py-1.5 text-xs font-body text-destructive"
+                title="Era audit: this recording is outside the selected era window."
+              >
+                <AlertTriangle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+                <span>
+                  Out of era — {displayedYear} falls outside {eraYearRange.start}–{eraYearRange.end}.
+                </span>
+              </div>
+            )}
               <span className="text-[10px] text-muted-foreground/50 font-body mt-1 block">
                 Finding on Archive.org…
               </span>
