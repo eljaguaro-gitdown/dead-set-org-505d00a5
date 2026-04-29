@@ -82,7 +82,19 @@ const ShareAppButton = ({ variant = "icon", className = "" }: ShareAppButtonProp
   };
 
   // On mobile with native share, just trigger it directly
-  if (hasNativeShare && variant === "icon") {
+  if (hasNativeShare) {
+    if (variant === "full") {
+      return (
+        <Button
+          variant="outline"
+          onClick={handleNativeShare}
+          className={`gap-2 border-border text-foreground hover:bg-muted font-body ${className}`}
+        >
+          <Share2 className="w-4 h-4" />
+          Share with a Friend
+        </Button>
+      );
+    }
     return (
       <button
         onClick={handleNativeShare}
