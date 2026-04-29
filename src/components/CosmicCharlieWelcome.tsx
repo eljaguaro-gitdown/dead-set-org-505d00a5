@@ -112,7 +112,7 @@ const CosmicCharlieWelcome = ({ eras, onGenerated, onSkip }: CosmicCharlieWelcom
   const [selectedEnergy, setSelectedEnergy] = useState<string | null>(null);
   const [selectedTextures, setSelectedTextures] = useState<string[]>([]);
   const [selectedEra, setSelectedEra] = useState<string | null>(null);
-  const [eraOpen, setEraOpen] = useState(false);
+  // (era picker is now always-visible; no open/close state needed)
 
   // Step 1
   const [selectedPriority, setSelectedPriority] = useState<string | null>(null);
