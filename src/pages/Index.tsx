@@ -36,6 +36,7 @@ const Index = () => {
   const { user, loading } = useAuth();
   useAudioSignature();
   const [featured, setFeatured] = useState<FeaturedSetlist[]>([]);
+  const [topRated, setTopRated] = useState<FeaturedSetlist[]>([]);
 
   // A/B test: variant B auto-starts the wizard (first landing only)
   useEffect(() => {
@@ -145,6 +146,51 @@ const Index = () => {
     };
   }, []);
 
+  // Top rated community setlists — sorted by upvotes, then play count
+  useEffect(() => {
+    const fetchTopRated = async () => {
+      const { data: setlists } = await supabase
+        .from("setlists")
+        .select("id, title, creator_id, era_id, upvote_count, play_count, created_at")
+        .eq("is_public", true)
+        .gt("upvote_count", 0)
+        .order("upvote_count", { ascending: false })
+        .order("play_count", { ascending: false })
+        .limit(8);
+
+      if (!setlists || setlists.length === 0) return;
+
+      const creatorIds = [...new Set(setlists.map((s) => s.creator_id))];
+      const eraIds = [...new Set(setlists.map((s) => s.era_id).filter(Boolean))] as string[];
+      const setlistIds = setlists.map((s) => s.id);
+
+      const [profilesRes, erasRes, slotsRes] = await Promise.all([
+        supabase.from("profiles").select("user_id, display_name").in("user_id", creatorIds),
+        eraIds.length > 0
+          ? supabase.from("eras").select("id, name").in("id", eraIds)
+          : Promise.resolve({ data: [] as { id: string; name: string }[] }),
+        supabase.from("setlist_slots").select("setlist_id").in("setlist_id", setlistIds),
+      ]);
+
+      const profileMap = new Map((profilesRes.data || []).map((p) => [p.user_id, p.display_name]));
+      const eraMap = new Map(((erasRes.data || []) as { id: string; name: string }[]).map((e) => [e.id, e.name]));
+      const countMap = new Map<string, number>();
+      (slotsRes.data || []).forEach((s) => {
+        countMap.set(s.setlist_id, (countMap.get(s.setlist_id) || 0) + 1);
+      });
+
+      setTopRated(
+        setlists.map((s) => ({
+          ...s,
+          creator_name: profileMap.get(s.creator_id) || "Unknown",
+          era_name: s.era_id ? eraMap.get(s.era_id) || undefined : undefined,
+          song_count: countMap.get(s.id) || 0,
+        }))
+      );
+    };
+    fetchTopRated();
+  }, []);
+
   return (
     <PageLayout>
       
@@ -194,6 +240,84 @@ const Index = () => {
 
       {/* Personal note — the soul (humans before algorithms) */}
       <PersonalNote />
+
+      {/* Top Community Setlists — sorted by upvotes */}
+      {topRated.length > 0 && (
+        <section id="top-community" className="py-16 sm:py-24 border-t border-border/30">
+          <div className="px-6 sm:px-12 mb-10 max-w-3xl mx-auto text-center">
+            <div className="font-mono text-[10px] tracking-[0.3em] text-primary/70 uppercase mb-3">
+              ⚡ Most Loved
+            </div>
+            <h2 className="font-display italic text-3xl sm:text-5xl text-primary leading-tight">
+              Top Community Setlists
+            </h2>
+            <p className="font-body text-base sm:text-lg text-muted-foreground mt-4 max-w-xl mx-auto">
+              The ones other Deadheads keep coming back to. Ranked by likes and plays.
+            </p>
+          </div>
+
+          <div className="overflow-x-auto scrollbar-hide px-6 sm:px-12 snap-x snap-mandatory">
+            <div className="flex gap-4 sm:gap-5 min-w-max pb-2">
+              {topRated.map((setlist, i) => (
+                <motion.button
+                  key={setlist.id}
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.05, duration: 0.4 }}
+                  onClick={() => navigate(`/setlist/${setlist.id}`)}
+                  className="relative w-[240px] sm:w-[300px] shrink-0 snap-start border border-primary/30 bg-card rounded-xl p-4 sm:p-5 text-left hover:border-primary hover:-translate-y-0.5 transition-all duration-200 group shadow-[0_0_24px_rgba(201,168,76,0.05)] hover:shadow-[0_0_32px_rgba(201,168,76,0.15)]"
+                >
+                  {/* Rank badge */}
+                  <div className="absolute -top-2 -left-2 w-7 h-7 rounded-full bg-primary text-primary-foreground font-display font-bold text-sm flex items-center justify-center shadow-md">
+                    {i + 1}
+                  </div>
+                  <div className="flex items-start justify-between gap-2 mt-1">
+                    <h3 className="font-display text-base font-bold text-foreground truncate group-hover:text-primary transition-colors">
+                      {setlist.title}
+                    </h3>
+                  </div>
+                  <Link
+                    to={`/user/${setlist.creator_id}`}
+                    onClick={(e) => e.stopPropagation()}
+                    className="font-body text-sm text-muted-foreground mt-1 truncate block hover:text-primary transition-colors"
+                  >
+                    by {setlist.creator_name}
+                  </Link>
+                  <div className="flex items-center gap-3 mt-3 flex-wrap">
+                    <span className="inline-flex items-center gap-1 text-sm font-mono text-primary tabular-nums">
+                      ⚡ {setlist.upvote_count}
+                    </span>
+                    {setlist.play_count > 0 && (
+                      <span className="text-sm font-mono text-muted-foreground/70 tabular-nums">
+                        ▶ {setlist.play_count}
+                      </span>
+                    )}
+                    {setlist.era_name && (
+                      <span className="px-2 py-0.5 text-[10px] font-mono rounded-md border border-primary/20 text-primary/70 tracking-wider uppercase">
+                        {setlist.era_name}
+                      </span>
+                    )}
+                    <span className="text-[10px] font-mono text-muted-foreground/60 tracking-wider">
+                      {setlist.song_count} songs
+                    </span>
+                  </div>
+                </motion.button>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex justify-center mt-8">
+            <Button
+              variant="ghost"
+              onClick={() => navigate("/browse?sort=top")}
+              className="font-mono text-[10px] tracking-[0.2em] text-muted-foreground hover:text-primary uppercase gap-1.5"
+            >
+              See the full leaderboard
+              <ChevronRight className="w-3.5 h-3.5" />
+            </Button>
+          </div>
+        </section>
+      )}
 
       {/* Community section — elevated and prominent */}
       {featured.length > 0 && (
