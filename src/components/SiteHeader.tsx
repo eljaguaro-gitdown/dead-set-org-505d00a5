@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { Menu, Shield, MessageCircle, LogOut, User, Download, ListMusic, Home } from "lucide-react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { Menu, Shield, MessageCircle, LogOut, User, Download, ListMusic, Home, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 import StealYourFace from "@/components/StealYourFace";
 import ShareAppButton from "@/components/ShareAppButton";
