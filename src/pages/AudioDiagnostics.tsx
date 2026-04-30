@@ -162,10 +162,58 @@ const AudioDiagnostics = () => {
     return () => { cancelled = true; window.clearInterval(id); };
   }, []);
 
+  // Explicit user-gesture unlock: load + briefly play muted to satisfy
+  // iOS Safari's autoplay policy. Must be invoked from a tap handler.
+  const handleUnlock = async () => {
+    const el = audioRef.current;
+    if (!el) return;
+    setPlayErr(null);
+    log("info", "Unlock: load() + muted play() inside user gesture");
+    try {
+      el.muted = true;
+      el.load();
+      await el.play();
+      el.pause();
+      el.currentTime = 0;
+      el.muted = false;
+      setUnlocked(true);
+      log("ok", "Audio unlocked — autoplay policy satisfied");
+    } catch (e: any) {
+      const name = e?.name || "Error";
+      const message = e?.message || String(e);
+      log("error", "Unlock failed", { name, message });
+      setPlayErr({
+        name,
+        message,
+        hint:
+          "iOS requires a direct tap on a play button. Try again, and make sure the device isn't in Low Power Mode or muted via the hardware switch.",
+      });
+    }
+  };
+
+  const explainPlayError = (e: any) => {
+    const name: string = e?.name || "Error";
+    const message: string = e?.message || String(e);
+    let hint = "Unknown playback failure.";
+    if (name === "NotAllowedError") {
+      hint =
+        "iOS Safari blocked playback because no user gesture has unlocked audio yet. Tap 'Unlock audio' first, then Play.";
+    } else if (name === "NotSupportedError") {
+      hint =
+        "The audio source or codec isn't supported. Check the network tab for the MP3 response and CORS headers.";
+    } else if (name === "AbortError") {
+      hint = "Playback was aborted — likely a competing play()/pause() call or navigation.";
+    } else if (/gesture|user activation|interact/i.test(message)) {
+      hint = "Browser requires a fresh user gesture. Tap Play directly (don't trigger from a timer).";
+    }
+    return { name, message, hint };
+  };
+
   // Start full pipeline: tracker + audio.
   const handlePlay = async () => {
     const el = audioRef.current;
     if (!el) return;
+    setPlayErr(null);
 
     if (!trackerActive) {
       log("info", "startPlayEvent → DB insert", { song: TEST_SONG_TITLE });
@@ -186,7 +234,9 @@ const AudioDiagnostics = () => {
       log("ok", "audio.play() resolved");
       setPlaying(true);
     } catch (e: any) {
-      log("error", "audio.play() rejected (likely autoplay policy)", { error: String(e) });
+      const info = explainPlayError(e);
+      setPlayErr(info);
+      log("error", `audio.play() rejected: ${info.name}`, { message: info.message, hint: info.hint });
     }
   };
 
