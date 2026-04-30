@@ -6,7 +6,6 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AudioPlayerProvider } from "@/contexts/AudioPlayerContext";
 import GlobalAudioPlayer from "@/components/GlobalAudioPlayer";
-import NowPlayingRadioBar from "@/components/NowPlayingRadioBar";
 import ReturnToSetlistPill from "@/components/ReturnToSetlistPill";
 import VisitorTracker from "@/components/VisitorTracker";
 import PresenceBroadcaster from "@/components/PresenceBroadcaster";
@@ -73,7 +72,7 @@ const App = () => (
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
-          <NowPlayingRadioBar />
+
           <GlobalAudioPlayer />
           <ReturnToSetlistPill />
           <VisitorTracker />
