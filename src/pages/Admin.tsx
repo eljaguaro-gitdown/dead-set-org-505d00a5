@@ -8,6 +8,7 @@ import LiveVisitorsWidget from "@/components/LiveVisitorsWidget";
 import PresenceDebugPanel from "@/components/PresenceDebugPanel";
 import FunnelWidget from "@/components/FunnelWidget";
 import ListeningAnalyticsWidget from "@/components/ListeningAnalyticsWidget";
+import UserSegmentsWidget from "@/components/UserSegmentsWidget";
 import AdminAnnouncementsPanel from "@/components/AdminAnnouncementsPanel";
 import DeliverabilityMonitor from "@/components/DeliverabilityMonitor";
 import PrivateRelayMonitor from "@/components/PrivateRelayMonitor";
@@ -429,6 +430,9 @@ const Admin = () => {
 
         {/* Listening Analytics */}
         <ListeningAnalyticsWidget enabled={isAdmin} />
+
+        {/* User Segments */}
+        <UserSegmentsWidget enabled={isAdmin} />
 
         {/* Live Visitors */}
         <LiveVisitorsWidget enabled={isAdmin} />
