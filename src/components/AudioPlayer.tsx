@@ -311,11 +311,13 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
     if (playing) {
       audioRef.current.pause();
       audioDebug.setPlaybackState("paused");
+      pausePlayEvent();
     } else {
       audioRef.current.play().catch((e) => {
         audioDebug.log("player", "play() rejected", { error: String(e) }, "error");
       });
       audioDebug.setPlaybackState("playing");
+      resumePlayEvent();
     }
     setPlaying(!playing);
   };
@@ -324,7 +326,9 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
     if (!audioRef.current) return;
     lastTimeUpdateRef.current = Date.now();
     setProgress(audioRef.current.currentTime);
-    setDuration(audioRef.current.duration || 0);
+    const dur = audioRef.current.duration || 0;
+    setDuration(dur);
+    if (dur > 0) setPlayEventTrackDuration(dur * 1000);
   };
 
   const handleSeek = (value: number[]) => {
@@ -337,6 +341,7 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
     audioDebug.log("player", "track ended", { song: songTitle });
     audioDebug.setPlaybackState("ended");
     console.log("[AudioPlayer] track ended", { songTitle, singleTrackMode, hasOnEnded: !!onEnded });
+    void finalizePlayEvent("finished");
     if (singleTrackMode) {
       setPlaying(false);
       onEnded?.();
