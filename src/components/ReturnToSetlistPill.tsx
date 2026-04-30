@@ -111,6 +111,9 @@ const ReturnToSetlistPill = () => {
   // Hide when already on the setlist's own pages
   if (location.pathname.includes(`/setlist/${effectiveSetlistId}`)) return null;
   if (location.pathname.includes(`/builder/${effectiveSetlistId}`)) return null;
+  // When audio is actively playing, the GlobalAudioPlayer already exposes
+  // "tap to return to setlist" — don't double up with this card.
+  if (activeSetlistId && playingSlot) return null;
 
   // Source progress info from live state if playing, else from persisted snapshot.
   const isLive = !!activeSetlistId && !!playingSlot;
