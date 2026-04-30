@@ -93,6 +93,8 @@
     font-family: var(--font-body);
     line-height: 1.65;
     -webkit-font-smoothing: antialiased;
+    /* Reserve room for the fixed Now Playing radio bar so it never covers the site header. */
+    padding-top: var(--radio-bar-h, 0px);
   }
 
   h1, h2, h3 {

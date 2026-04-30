@@ -47,6 +47,7 @@ const readWasPlaying = (): boolean => {
 const NowPlayingRadioBar = () => {
   const { playSingle, playingSlot, stopPlayback, playlistMode, playlistSlots, playlistIndex } = useAudioPlayer();
 
+  const barRef = useRef<HTMLDivElement | null>(null);
   const [dismissed, setDismissed] = useState<boolean>(readDismissed);
   const [lastTrack, setLastTrack] = useState<RadioTrack | null>(readLastTrack);
   // True when a previous session was actively playing the radio — show "Resume" affordance.
@@ -77,6 +78,34 @@ const NowPlayingRadioBar = () => {
     if (isLive && pendingResume) setPendingResume(false);
     if (isLive && dismissed) setDismissed(false);
   }, [isLive, pendingResume, dismissed]);
+
+  /**
+   * Publish the bar's rendered height to a CSS var so the rest of the app
+   * (body padding-top in index.css) reserves room and the site header is
+   * never covered. Cleared whenever the bar is unmounted.
+   */
+  const visible = !(dismissed && !isLive);
+  useEffect(() => {
+    if (!visible) {
+      document.documentElement.style.setProperty("--radio-bar-h", "0px");
+      return;
+    }
+    const el = barRef.current;
+    if (!el) return;
+    const update = () => {
+      const h = Math.ceil(el.getBoundingClientRect().height);
+      document.documentElement.style.setProperty("--radio-bar-h", `${h}px`);
+    };
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    window.addEventListener("resize", update);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", update);
+      document.documentElement.style.setProperty("--radio-bar-h", "0px");
+    };
+  }, [visible, isLive, pendingResume]);
 
   /** Build a PlayableSlot from a RadioTrack and start playback. */
   const startTrack = (track: RadioTrack) => {
@@ -143,7 +172,8 @@ const NowPlayingRadioBar = () => {
 
   return (
     <div
-      className="fixed top-0 left-0 right-0 z-50 border-b border-primary/15 bg-background/85 backdrop-blur-md"
+      ref={barRef}
+      className="fixed top-0 left-0 right-0 z-50 border-b border-primary/15 bg-background/95 backdrop-blur-md"
       style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
       role="region"
       aria-label="Radio bar"
