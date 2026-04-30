@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useCallback, useRef, useEffect, type ReactNode } from "react";
 import { findArchiveRecording, findTrackInRecording } from "@/lib/archiveOrg";
 import { audioDebug } from "@/lib/audioDebug";
+import { startPlayEvent, finalizePlayEvent } from "@/lib/playEventTracker";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -63,10 +64,28 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
   const stateRef = useRef(state);
   useEffect(() => { stateRef.current = state; }, [state]);
 
+  // Track per-song play events for analytics.
+  // Fires whenever the playing song slot changes — start a new event,
+  // implicitly finalizing any previous one as "skipped".
+  useEffect(() => {
+    const slot = state.playingSlot;
+    if (!slot) return;
+    void startPlayEvent({
+      setlistId: state.activeSetlistId,
+      slotId: slot.id,
+      songId: slot.song.id,
+      songTitle: slot.song.title,
+      archiveUrl: slot.version?.archive_org_url ?? null,
+      showDate: slot.version?.show_date ?? null,
+      venue: slot.version?.venue ?? null,
+    });
+  }, [state.playingSlot?.id, state.activeSetlistId]);
+
   const stopPlayback = useCallback(() => {
     audioDebug.log("context", "stopPlayback");
     audioDebug.setSlot(null, null, null, null);
     audioDebug.setPlaybackState("stopped");
+    void finalizePlayEvent("skipped");
     setState({ playingSlot: null, playlistMode: false, playlistIndex: 0, playlistSlots: [], activeSetlistId: null });
   }, []);
 

@@ -832,6 +832,66 @@ export type Database = {
         }
         Relationships: []
       }
+      play_events: {
+        Row: {
+          archive_url: string | null
+          completed: boolean
+          created_at: string
+          duration_played_ms: number
+          ended_at: string | null
+          ended_reason: string
+          id: string
+          setlist_id: string | null
+          show_date: string | null
+          slot_id: string | null
+          song_id: string | null
+          song_title: string | null
+          started_at: string
+          track_duration_ms: number | null
+          user_id: string | null
+          venue: string | null
+          visitor_id: string | null
+        }
+        Insert: {
+          archive_url?: string | null
+          completed?: boolean
+          created_at?: string
+          duration_played_ms?: number
+          ended_at?: string | null
+          ended_reason?: string
+          id?: string
+          setlist_id?: string | null
+          show_date?: string | null
+          slot_id?: string | null
+          song_id?: string | null
+          song_title?: string | null
+          started_at?: string
+          track_duration_ms?: number | null
+          user_id?: string | null
+          venue?: string | null
+          visitor_id?: string | null
+        }
+        Update: {
+          archive_url?: string | null
+          completed?: boolean
+          created_at?: string
+          duration_played_ms?: number
+          ended_at?: string | null
+          ended_reason?: string
+          id?: string
+          setlist_id?: string | null
+          show_date?: string | null
+          slot_id?: string | null
+          song_id?: string | null
+          song_title?: string | null
+          started_at?: string
+          track_duration_ms?: number | null
+          user_id?: string | null
+          venue?: string | null
+          visitor_id?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null

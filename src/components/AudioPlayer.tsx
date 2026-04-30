@@ -5,6 +5,12 @@ import { Play, Pause, Volume2, VolumeX, X, Loader2, Cast, ChevronRight, GripHori
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { findTrackInRecording, matchScore } from "@/lib/archiveOrg";
 import { audioDebug } from "@/lib/audioDebug";
+import {
+  pausePlayEvent,
+  resumePlayEvent,
+  setPlayEventTrackDuration,
+  finalizePlayEvent,
+} from "@/lib/playEventTracker";
 
 interface Track {
   title: string;
@@ -305,11 +311,13 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
     if (playing) {
       audioRef.current.pause();
       audioDebug.setPlaybackState("paused");
+      pausePlayEvent();
     } else {
       audioRef.current.play().catch((e) => {
         audioDebug.log("player", "play() rejected", { error: String(e) }, "error");
       });
       audioDebug.setPlaybackState("playing");
+      resumePlayEvent();
     }
     setPlaying(!playing);
   };
@@ -318,7 +326,9 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
     if (!audioRef.current) return;
     lastTimeUpdateRef.current = Date.now();
     setProgress(audioRef.current.currentTime);
-    setDuration(audioRef.current.duration || 0);
+    const dur = audioRef.current.duration || 0;
+    setDuration(dur);
+    if (dur > 0) setPlayEventTrackDuration(dur * 1000);
   };
 
   const handleSeek = (value: number[]) => {
@@ -331,6 +341,7 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
     audioDebug.log("player", "track ended", { song: songTitle });
     audioDebug.setPlaybackState("ended");
     console.log("[AudioPlayer] track ended", { songTitle, singleTrackMode, hasOnEnded: !!onEnded });
+    void finalizePlayEvent("finished");
     if (singleTrackMode) {
       setPlaying(false);
       onEnded?.();
@@ -358,6 +369,7 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
 
     // Retry failed (or already used). In playlist mode, advance past the
     // broken track so the queue keeps moving.
+    void finalizePlayEvent("error");
     if (singleTrackMode && onEnded) {
       setPlaying(false);
       onEnded();
