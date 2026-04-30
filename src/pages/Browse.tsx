@@ -535,7 +535,7 @@ const SetlistCard = ({ setlist, index, onClick, isFav, onToggleFav }: { setlist:
           </div>
         )}
       </div>
-    </motion.button>
+    </motion.div>
   );
 };
 
