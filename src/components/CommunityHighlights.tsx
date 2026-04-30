@@ -210,19 +210,27 @@ const SetlistMiniCard = ({ setlist, index }: { setlist: SetlistCard; index: numb
   const eraColor = getEraColor(setlist.era_name);
 
   return (
-    <motion.button
+    <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05 }}
       onClick={() => navigate(`/setlist/${setlist.id}`)}
-      className="w-[200px] sm:w-[220px] shrink-0 border border-border/40 bg-card/60 backdrop-blur-sm rounded-lg p-4 text-left hover:border-primary/40 hover:shadow-[0_4px_20px_hsl(var(--primary)/0.1)] transition-all group"
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); navigate(`/setlist/${setlist.id}`); } }}
+      className="w-[200px] sm:w-[220px] shrink-0 border border-border/40 bg-card/60 backdrop-blur-sm rounded-lg p-4 text-left hover:border-primary/40 hover:shadow-[0_4px_20px_hsl(var(--primary)/0.1)] transition-all group cursor-pointer"
     >
-      <h4 className="font-display text-sm text-foreground truncate group-hover:text-primary transition-colors leading-tight">
-        {setlist.title}
-      </h4>
-      <Link to={`/user/${setlist.creator_id}`} onClick={(e) => e.stopPropagation()} className="font-body text-[11px] text-muted-foreground mt-1 truncate block hover:text-primary transition-colors">
-        by {setlist.creator_name}
-      </Link>
+      <div className="flex items-start gap-2">
+        <div className="min-w-0 flex-1">
+          <h4 className="font-display text-sm text-foreground truncate group-hover:text-primary transition-colors leading-tight">
+            {setlist.title}
+          </h4>
+          <Link to={`/user/${setlist.creator_id}`} onClick={(e) => e.stopPropagation()} className="font-body text-[11px] text-muted-foreground mt-1 truncate block hover:text-primary transition-colors">
+            by {setlist.creator_name}
+          </Link>
+        </div>
+        <PlaySetlistButton setlistId={setlist.id} size="sm" />
+      </div>
 
       {/* Song preview */}
       {setlist.preview_songs.length > 0 && (
@@ -270,7 +278,7 @@ const SetlistMiniCard = ({ setlist, index }: { setlist: SetlistCard; index: numb
           {setlist.song_count}
         </span>
       </div>
-    </motion.button>
+    </motion.div>
   );
 };
 
