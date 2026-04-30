@@ -91,6 +91,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
 
   const stopPlayback = useCallback(() => {
     audioDebug.log("context", "stopPlayback");
+    playSetlistSeqRef.current++; // invalidate any in-flight playSetlist
     audioDebug.setSlot(null, null, null, null);
     audioDebug.setPlaybackState("stopped");
     void finalizePlayEvent("skipped");
