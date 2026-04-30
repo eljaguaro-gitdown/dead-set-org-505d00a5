@@ -57,7 +57,9 @@ export const usePresence = () => {
 
       heartbeat = setInterval(() => {
         if (!presenceRef.current) return;
-        const updated = { ...presenceRef.current, page: window.location.pathname };
+        const path = window.location.pathname;
+        if (presenceRef.current.page === path) return; // no-op heartbeat — keep payload stable
+        const updated = { ...presenceRef.current, page: path };
         presenceRef.current = updated;
         trackPresence(updated);
       }, HEARTBEAT_INTERVAL);
@@ -71,9 +73,10 @@ export const usePresence = () => {
     };
   }, [user, loading]);
 
-  // Update page on every React Router navigation
+  // Update page on React Router navigation — skip if unchanged.
   useEffect(() => {
     if (!presenceRef.current) return;
+    if (presenceRef.current.page === location.pathname) return;
     const updated = { ...presenceRef.current, page: location.pathname };
     presenceRef.current = updated;
     trackPresence(updated);
