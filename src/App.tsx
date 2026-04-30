@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AudioPlayerProvider } from "@/contexts/AudioPlayerContext";
 import GlobalAudioPlayer from "@/components/GlobalAudioPlayer";
+import ReturnToSetlistPill from "@/components/ReturnToSetlistPill";
 import VisitorTracker from "@/components/VisitorTracker";
 import PresenceBroadcaster from "@/components/PresenceBroadcaster";
 import PwaInstallBanner from "@/components/PwaInstallBanner";
@@ -70,6 +71,7 @@ const App = () => (
             </Routes>
           </Suspense>
           <GlobalAudioPlayer />
+          <ReturnToSetlistPill />
           <VisitorTracker />
           <PresenceBroadcaster />
           <PwaInstallBanner />

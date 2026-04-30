@@ -495,7 +495,34 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
             onClick={() => activeSetlistId && navigate(`/setlist/${activeSetlistId}`)}
           >
             {error ? (
-              <p className="text-sm text-destructive font-body truncate">{error}</p>
+              <div className="flex items-center gap-2 min-w-0">
+                <p className="text-sm text-destructive font-body truncate">{error}</p>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    retriedRef.current = false;
+                    setError(null);
+                    setRetrying(false);
+                    attemptRetry("error");
+                  }}
+                  className="h-7 px-2 rounded-md bg-muted/60 text-foreground border border-border text-[10px] font-mono uppercase tracking-wider hover:bg-muted transition-colors shrink-0"
+                  title="Retry this track"
+                >
+                  Retry
+                </button>
+                {activeSetlistId && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(`/setlist/${activeSetlistId}`);
+                    }}
+                    className="h-7 px-2 rounded-md bg-primary/15 text-primary border border-primary/30 text-[10px] font-mono uppercase tracking-wider hover:bg-primary/25 transition-colors shrink-0 flex items-center gap-1"
+                    title="Back to setlist"
+                  >
+                    Setlist <ChevronRight className="w-3 h-3" />
+                  </button>
+                )}
+              </div>
             ) : (
               <>
                 <p className="text-base sm:text-lg text-foreground font-display truncate font-bold flex items-center gap-1.5">
