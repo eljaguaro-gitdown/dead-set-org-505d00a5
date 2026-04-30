@@ -100,6 +100,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
 
   const playSingle = useCallback(async (slot: PlayableSlot) => {
     audioDebug.log("context", "playSingle", { id: slot.id, song: slot.song.title, hasUrl: !!slot.version?.archive_org_url, hasDirect: !!slot.directTrackUrl });
+    playSetlistSeqRef.current++; // invalidate any in-flight playSetlist
     audioDebug.setSlot(slot.id, slot.song.title, slot.version?.archive_org_url ?? null, slot.directTrackUrl ?? null);
     audioDebug.setPlaybackState("starting");
     // Start playback immediately so user sees feedback
