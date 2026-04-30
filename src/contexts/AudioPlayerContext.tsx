@@ -67,6 +67,11 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
   const stateRef = useRef(state);
   useEffect(() => { stateRef.current = state; }, [state]);
 
+  // Monotonic token for playSetlist calls — protects against race conditions
+  // when the user taps "Play" on Setlist B while Setlist A is still resolving
+  // its first playable track via Archive.org. Only the LATEST call commits.
+  const playSetlistSeqRef = useRef(0);
+
   // Track per-song play events for analytics.
   // Fires whenever the playing song slot changes — start a new event,
   // implicitly finalizing any previous one as "skipped".
