@@ -546,10 +546,18 @@ const HeroSection = (_props: HeroSectionProps) => {
               }}
               className="ds-hero__cta-secondary"
             >
-              Browse Community Setlists
-              <span className="ds-hero__cta-secondary-arrow">→</span>
+              <span className="ds-hero__cta-eq" aria-hidden="true">
+                <span /><span /><span /><span />
+              </span>
+              <span>Browse Community Setlists</span>
+              <span className="ds-hero__cta-secondary-arrow" aria-hidden="true">→</span>
             </a>
-            <p className="ds-hero__cta-caption">what other heads are spinning</p>
+            <p className="ds-hero__cta-count">
+              <span className="ds-hero__cta-count-dot" aria-hidden="true" />
+              {communityCount !== null
+                ? `${communityCount.toLocaleString()} setlists spinning now`
+                : "what other heads are spinning"}
+            </p>
           </div>
 
           <aside
