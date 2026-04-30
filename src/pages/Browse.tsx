@@ -12,6 +12,7 @@ import DancingBearButton from "@/components/DancingBearButton";
 import StealYourFace from "@/components/StealYourFace";
 import EraTooltip from "@/components/EraTooltip";
 import FavoriteButton from "@/components/FavoriteButton";
+import PlaySetlistButton from "@/components/PlaySetlistButton";
 import { useFavorites } from "@/hooks/useFavorites";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
