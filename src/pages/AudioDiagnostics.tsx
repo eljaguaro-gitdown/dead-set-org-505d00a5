@@ -57,6 +57,8 @@ const AudioDiagnostics = () => {
   const [pollErr, setPollErr] = useState<string | null>(null);
   const [insertProbe, setInsertProbe] = useState<"untested" | "ok" | "fail">("untested");
   const [insertErrMsg, setInsertErrMsg] = useState<string | null>(null);
+  const [unlocked, setUnlocked] = useState(false);
+  const [playErr, setPlayErr] = useState<{ name: string; message: string; hint: string } | null>(null);
 
   // Detection
   const ua = typeof navigator !== "undefined" ? navigator.userAgent : "";
@@ -160,10 +162,58 @@ const AudioDiagnostics = () => {
     return () => { cancelled = true; window.clearInterval(id); };
   }, []);
 
+  // Explicit user-gesture unlock: load + briefly play muted to satisfy
+  // iOS Safari's autoplay policy. Must be invoked from a tap handler.
+  const handleUnlock = async () => {
+    const el = audioRef.current;
+    if (!el) return;
+    setPlayErr(null);
+    log("info", "Unlock: load() + muted play() inside user gesture");
+    try {
+      el.muted = true;
+      el.load();
+      await el.play();
+      el.pause();
+      el.currentTime = 0;
+      el.muted = false;
+      setUnlocked(true);
+      log("ok", "Audio unlocked — autoplay policy satisfied");
+    } catch (e: any) {
+      const name = e?.name || "Error";
+      const message = e?.message || String(e);
+      log("error", "Unlock failed", { name, message });
+      setPlayErr({
+        name,
+        message,
+        hint:
+          "iOS requires a direct tap on a play button. Try again, and make sure the device isn't in Low Power Mode or muted via the hardware switch.",
+      });
+    }
+  };
+
+  const explainPlayError = (e: any) => {
+    const name: string = e?.name || "Error";
+    const message: string = e?.message || String(e);
+    let hint = "Unknown playback failure.";
+    if (name === "NotAllowedError") {
+      hint =
+        "iOS Safari blocked playback because no user gesture has unlocked audio yet. Tap 'Unlock audio' first, then Play.";
+    } else if (name === "NotSupportedError") {
+      hint =
+        "The audio source or codec isn't supported. Check the network tab for the MP3 response and CORS headers.";
+    } else if (name === "AbortError") {
+      hint = "Playback was aborted — likely a competing play()/pause() call or navigation.";
+    } else if (/gesture|user activation|interact/i.test(message)) {
+      hint = "Browser requires a fresh user gesture. Tap Play directly (don't trigger from a timer).";
+    }
+    return { name, message, hint };
+  };
+
   // Start full pipeline: tracker + audio.
   const handlePlay = async () => {
     const el = audioRef.current;
     if (!el) return;
+    setPlayErr(null);
 
     if (!trackerActive) {
       log("info", "startPlayEvent → DB insert", { song: TEST_SONG_TITLE });
@@ -184,7 +234,9 @@ const AudioDiagnostics = () => {
       log("ok", "audio.play() resolved");
       setPlaying(true);
     } catch (e: any) {
-      log("error", "audio.play() rejected (likely autoplay policy)", { error: String(e) });
+      const info = explainPlayError(e);
+      setPlayErr(info);
+      log("error", `audio.play() rejected: ${info.name}`, { message: info.message, hint: info.hint });
     }
   };
 
@@ -342,6 +394,34 @@ const AudioDiagnostics = () => {
             playsInline
             crossOrigin="anonymous"
           />
+
+          {/* Step 1: explicit user-gesture unlock */}
+          <div className="mb-3 p-3 rounded-lg border border-border bg-muted/30">
+            <div className="flex items-center justify-between gap-3 mb-2">
+              <div>
+                <p className="font-body text-sm font-semibold text-foreground">
+                  Step 1 · Unlock audio (iOS gesture)
+                </p>
+                <p className="font-body text-xs text-muted-foreground mt-0.5">
+                  iOS Safari requires a direct tap to allow <code>play()</code>.
+                  Tap this once before pressing Play.
+                </p>
+              </div>
+              {unlocked ? (
+                <span className="flex items-center gap-1.5 text-accent font-body text-sm shrink-0">
+                  <CheckCircle2 className="w-4 h-4" /> Unlocked
+                </span>
+              ) : (
+                <button
+                  onClick={handleUnlock}
+                  className="px-3 py-1.5 rounded-lg bg-accent text-accent-foreground font-body text-sm hover:opacity-90 shrink-0"
+                >
+                  Unlock audio
+                </button>
+              )}
+            </div>
+          </div>
+
           <div className="flex items-center gap-2 mb-3 flex-wrap">
             {!playing ? (
               <button
@@ -379,6 +459,22 @@ const AudioDiagnostics = () => {
               <RotateCcw className="w-3.5 h-3.5" /> Reset
             </button>
           </div>
+
+          {playErr && (
+            <div className="mb-3 p-3 rounded-lg border border-destructive/40 bg-destructive/10">
+              <div className="flex items-start gap-2">
+                <XCircle className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
+                <div className="font-body text-sm">
+                  <p className="text-destructive font-semibold">
+                    Playback blocked: {playErr.name}
+                  </p>
+                  <p className="text-foreground/80 mt-1 break-words">{playErr.message}</p>
+                  <p className="text-muted-foreground mt-2">{playErr.hint}</p>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="font-body text-sm text-muted-foreground">
             {fmt(progress * 1000)} / {fmt(duration * 1000)}
             {trackerActive && <span className="ml-3 text-accent">● tracker active</span>}
