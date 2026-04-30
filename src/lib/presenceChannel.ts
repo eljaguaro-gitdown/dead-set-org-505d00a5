@@ -26,6 +26,63 @@ let channel: RealtimeChannel | null = null;
 let currentPayload: PresencePayload | null = null;
 const syncListeners = new Set<() => void>();
 
+export type PresenceStatus =
+  | "IDLE"
+  | "SUBSCRIBING"
+  | "SUBSCRIBED"
+  | "CHANNEL_ERROR"
+  | "TIMED_OUT"
+  | "CLOSED";
+
+interface DebugSnapshot {
+  status: PresenceStatus;
+  lastSyncAt: number | null;
+  lastEvent: "sync" | "join" | "leave" | null;
+  trackedCount: number;
+  subscribedAt: number | null;
+}
+
+let debug: DebugSnapshot = {
+  status: "IDLE",
+  lastSyncAt: null,
+  lastEvent: null,
+  trackedCount: 0,
+  subscribedAt: null,
+};
+
+const debugListeners = new Set<(s: DebugSnapshot) => void>();
+
+const setDebug = (patch: Partial<DebugSnapshot>) => {
+  debug = { ...debug, ...patch };
+  debugListeners.forEach((cb) => {
+    try {
+      cb(debug);
+    } catch (e) {
+      console.error("[presenceChannel] debug listener error", e);
+    }
+  });
+};
+
+export const getDebugSnapshot = (): DebugSnapshot => debug;
+
+export const subscribeToDebug = (cb: (s: DebugSnapshot) => void): (() => void) => {
+  debugListeners.add(cb);
+  cb(debug);
+  return () => {
+    debugListeners.delete(cb);
+  };
+};
+
+const recomputeTrackedCount = () => {
+  if (!channel) return 0;
+  const state = channel.presenceState();
+  let n = 0;
+  Object.values(state).forEach((arr) => {
+    n += (arr as unknown[]).length;
+  });
+  return n;
+};
+
 export const getOrCreateVisitorId = (): string => {
   let id = localStorage.getItem(VISITOR_ID_KEY);
   if (!id) {
