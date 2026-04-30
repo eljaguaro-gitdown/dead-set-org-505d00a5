@@ -79,6 +79,34 @@ const NowPlayingRadioBar = () => {
     if (isLive && dismissed) setDismissed(false);
   }, [isLive, pendingResume, dismissed]);
 
+  /**
+   * Publish the bar's rendered height to a CSS var so the rest of the app
+   * (body padding-top in index.css) reserves room and the site header is
+   * never covered. Cleared whenever the bar is unmounted.
+   */
+  const visible = !(dismissed && !isLive);
+  useEffect(() => {
+    if (!visible) {
+      document.documentElement.style.setProperty("--radio-bar-h", "0px");
+      return;
+    }
+    const el = barRef.current;
+    if (!el) return;
+    const update = () => {
+      const h = Math.ceil(el.getBoundingClientRect().height);
+      document.documentElement.style.setProperty("--radio-bar-h", `${h}px`);
+    };
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    window.addEventListener("resize", update);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", update);
+      document.documentElement.style.setProperty("--radio-bar-h", "0px");
+    };
+  }, [visible, isLive, pendingResume]);
+
   /** Build a PlayableSlot from a RadioTrack and start playback. */
   const startTrack = (track: RadioTrack) => {
     const slot: PlayableSlot = {
