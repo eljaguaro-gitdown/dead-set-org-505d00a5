@@ -47,6 +47,7 @@ const readWasPlaying = (): boolean => {
 const NowPlayingRadioBar = () => {
   const { playSingle, playingSlot, stopPlayback, playlistMode, playlistSlots, playlistIndex } = useAudioPlayer();
 
+  const barRef = useRef<HTMLDivElement | null>(null);
   const [dismissed, setDismissed] = useState<boolean>(readDismissed);
   const [lastTrack, setLastTrack] = useState<RadioTrack | null>(readLastTrack);
   // True when a previous session was actively playing the radio — show "Resume" affordance.
@@ -143,7 +144,8 @@ const NowPlayingRadioBar = () => {
 
   return (
     <div
-      className="fixed top-0 left-0 right-0 z-50 border-b border-primary/15 bg-background/85 backdrop-blur-md"
+      ref={barRef}
+      className="fixed top-0 left-0 right-0 z-50 border-b border-primary/15 bg-background/95 backdrop-blur-md"
       style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
       role="region"
       aria-label="Radio bar"
