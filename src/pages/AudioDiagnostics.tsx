@@ -394,6 +394,34 @@ const AudioDiagnostics = () => {
             playsInline
             crossOrigin="anonymous"
           />
+
+          {/* Step 1: explicit user-gesture unlock */}
+          <div className="mb-3 p-3 rounded-lg border border-border bg-muted/30">
+            <div className="flex items-center justify-between gap-3 mb-2">
+              <div>
+                <p className="font-body text-sm font-semibold text-foreground">
+                  Step 1 · Unlock audio (iOS gesture)
+                </p>
+                <p className="font-body text-xs text-muted-foreground mt-0.5">
+                  iOS Safari requires a direct tap to allow <code>play()</code>.
+                  Tap this once before pressing Play.
+                </p>
+              </div>
+              {unlocked ? (
+                <span className="flex items-center gap-1.5 text-accent font-body text-sm shrink-0">
+                  <CheckCircle2 className="w-4 h-4" /> Unlocked
+                </span>
+              ) : (
+                <button
+                  onClick={handleUnlock}
+                  className="px-3 py-1.5 rounded-lg bg-accent text-accent-foreground font-body text-sm hover:opacity-90 shrink-0"
+                >
+                  Unlock audio
+                </button>
+              )}
+            </div>
+          </div>
+
           <div className="flex items-center gap-2 mb-3 flex-wrap">
             {!playing ? (
               <button
@@ -431,6 +459,22 @@ const AudioDiagnostics = () => {
               <RotateCcw className="w-3.5 h-3.5" /> Reset
             </button>
           </div>
+
+          {playErr && (
+            <div className="mb-3 p-3 rounded-lg border border-destructive/40 bg-destructive/10">
+              <div className="flex items-start gap-2">
+                <XCircle className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
+                <div className="font-body text-sm">
+                  <p className="text-destructive font-semibold">
+                    Playback blocked: {playErr.name}
+                  </p>
+                  <p className="text-foreground/80 mt-1 break-words">{playErr.message}</p>
+                  <p className="text-muted-foreground mt-2">{playErr.hint}</p>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="font-body text-sm text-muted-foreground">
             {fmt(progress * 1000)} / {fmt(duration * 1000)}
             {trackerActive && <span className="ml-3 text-accent">● tracker active</span>}
