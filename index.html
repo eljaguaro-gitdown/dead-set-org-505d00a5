@@ -13,6 +13,10 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 
+    <!-- Preload LCP hero portrait (WebP, with JPEG fallback handled by CSS image-set) -->
+    <link rel="preload" as="image" href="/cosmic-charlie.webp" type="image/webp" fetchpriority="high" />
+    <link rel="preload" as="image" href="/cosmic-charlie.jpg" type="image/jpeg" />
+
     <!-- Non-render-blocking Google Fonts -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@400;500;600;700&family=Caveat:wght@400;700&family=JetBrains+Mono:wght@400;500&display=swap" media="print" onload="this.media='all'" />
     <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@400;500;600;700&family=Caveat:wght@400;700&family=JetBrains+Mono:wght@400;500&display=swap" /></noscript>
