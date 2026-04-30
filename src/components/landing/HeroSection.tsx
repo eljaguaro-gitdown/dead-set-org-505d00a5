@@ -25,6 +25,20 @@ const BUILDER_ROUTE = "/builder?wizard=true";
 
 const HeroSection = (_props: HeroSectionProps) => {
   const navigate = useNavigate();
+  const [communityCount, setCommunityCount] = useState<number | null>(null);
+
+  // Pull a live count of public community setlists to give the secondary CTA real pull.
+  useEffect(() => {
+    let cancelled = false;
+    supabase
+      .from("setlists")
+      .select("id", { count: "exact", head: true })
+      .eq("is_public", true)
+      .then(({ count }) => {
+        if (!cancelled && typeof count === "number") setCommunityCount(count);
+      });
+    return () => { cancelled = true; };
+  }, []);
 
   const handleCta = (e: React.MouseEvent<HTMLAnchorElement>) => {
     e.preventDefault();
