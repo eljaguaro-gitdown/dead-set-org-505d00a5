@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, useNavigate, useLocation, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Share2, Zap, Play, Heart } from "lucide-react";
 import SetlistComments from "@/components/SetlistComments";
@@ -51,6 +51,7 @@ const getEraTheme = (eraName: string | null) => {
 const SetlistPoster = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const { playSingle, playSetlist: globalPlaySetlist, playingSlot } = useAudioPlayer();
   const { isFavorite, toggleFavorite } = useFavorites();
@@ -306,8 +307,19 @@ const SetlistPoster = () => {
     <div className="grain-overlay min-h-screen bg-background">
       {/* Minimal transparent top bar */}
       <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 py-3 bg-background/60 backdrop-blur-sm">
-        <button onClick={() => navigate(-1)} className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground font-body text-sm transition-colors">
-          <ArrowLeft className="w-4 h-4" /> Back
+        <button
+          onClick={() => {
+            // If user landed here cold (shared link, new tab), location.key is "default".
+            // Otherwise they have real in-app history we can pop.
+            if (location.key && location.key !== "default") {
+              navigate(-1);
+            } else {
+              navigate("/");
+            }
+          }}
+          className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground font-body text-sm transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" /> {location.key && location.key !== "default" ? "Back" : "Home"}
         </button>
         <div className="flex items-center gap-2">
           <button
