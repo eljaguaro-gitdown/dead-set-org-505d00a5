@@ -57,6 +57,8 @@ const AudioDiagnostics = () => {
   const [pollErr, setPollErr] = useState<string | null>(null);
   const [insertProbe, setInsertProbe] = useState<"untested" | "ok" | "fail">("untested");
   const [insertErrMsg, setInsertErrMsg] = useState<string | null>(null);
+  const [unlocked, setUnlocked] = useState(false);
+  const [playErr, setPlayErr] = useState<{ name: string; message: string; hint: string } | null>(null);
 
   // Detection
   const ua = typeof navigator !== "undefined" ? navigator.userAgent : "";
