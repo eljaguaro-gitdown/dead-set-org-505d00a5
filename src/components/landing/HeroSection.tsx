@@ -1,5 +1,7 @@
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { trackCtaClick } from "@/lib/trackCtaClick";
+import { supabase } from "@/integrations/supabase/client";
 
 // Props kept for backward-compat with Index.tsx — unused in the new editorial hero.
 interface FeaturedSetlist {
