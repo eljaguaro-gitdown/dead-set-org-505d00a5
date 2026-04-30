@@ -8,6 +8,7 @@ import LiveVisitorsWidget from "@/components/LiveVisitorsWidget";
 import PresenceDebugPanel from "@/components/PresenceDebugPanel";
 import FunnelWidget from "@/components/FunnelWidget";
 import ListeningAnalyticsWidget from "@/components/ListeningAnalyticsWidget";
+import UserSegmentsWidget from "@/components/UserSegmentsWidget";
 import AdminAnnouncementsPanel from "@/components/AdminAnnouncementsPanel";
 import DeliverabilityMonitor from "@/components/DeliverabilityMonitor";
 import PrivateRelayMonitor from "@/components/PrivateRelayMonitor";
