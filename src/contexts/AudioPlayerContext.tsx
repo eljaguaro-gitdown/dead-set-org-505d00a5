@@ -30,6 +30,8 @@ interface AudioPlayerState {
 interface AudioPlayerContextValue extends AudioPlayerState {
   playSingle: (slot: PlayableSlot) => void;
   playSetlist: (slots: PlayableSlot[], setlistId?: string) => Promise<void>;
+  /** Append slots to the end of the current playlist instead of replacing it. */
+  queueSetlist: (slots: PlayableSlot[]) => Promise<void>;
   stopPlayback: () => void;
   advancePlaylist: (dir: number) => Promise<void>;
 }
@@ -42,6 +44,7 @@ const defaultAudioPlayerContext: AudioPlayerContextValue = {
   activeSetlistId: null,
   playSingle: () => undefined,
   playSetlist: async () => undefined,
+  queueSetlist: async () => undefined,
   stopPlayback: () => undefined,
   advancePlaylist: async () => undefined,
 };
@@ -219,8 +222,33 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     toast.info("End of setlist");
   }, [stopPlayback]);
 
+  /**
+   * Append slots to the end of the active playlist. If nothing is playing,
+   * falls back to playSetlist so the queue starts immediately.
+   */
+  const queueSetlist = useCallback(async (slots: PlayableSlot[]) => {
+    if (slots.length === 0) return;
+    const sorted = [...slots].sort((a, b) => a.setNumber - b.setNumber || a.position - b.position);
+    const current = stateRef.current;
+
+    if (!current.playingSlot) {
+      await playSetlist(sorted);
+      toast.success("Queued — playing now");
+      return;
+    }
+
+    audioDebug.log("context", "queueSetlist append", { count: sorted.length });
+    setState((prev) => ({
+      ...prev,
+      playlistMode: true,
+      playlistSlots: prev.playlistMode ? [...prev.playlistSlots, ...sorted] : [prev.playingSlot!, ...sorted],
+      playlistIndex: prev.playlistMode ? prev.playlistIndex : 0,
+    }));
+    toast.success(`Queued ${sorted.length} ${sorted.length === 1 ? "song" : "songs"}`);
+  }, [playSetlist]);
+
   return (
-    <AudioPlayerContext.Provider value={{ ...state, playSingle, playSetlist, stopPlayback, advancePlaylist }}>
+    <AudioPlayerContext.Provider value={{ ...state, playSingle, playSetlist, queueSetlist, stopPlayback, advancePlaylist }}>
       {children}
     </AudioPlayerContext.Provider>
   );
