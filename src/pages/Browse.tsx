@@ -395,9 +395,12 @@ const Browse = () => {
 const FeaturedCard = ({ setlist, onClick }: { setlist: SetlistWithMeta; onClick: () => void }) => {
   const eraColor = getEraColor(setlist.era_name);
   return (
-    <motion.button
+    <motion.div
       onClick={onClick}
-      className="w-[280px] sm:w-auto shrink-0 text-left rounded-xl border border-border bg-card/80 overflow-hidden group hover:shadow-xl hover:shadow-primary/5 transition-all duration-300"
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onClick(); } }}
+      className="w-[280px] sm:w-auto shrink-0 text-left rounded-xl border border-border bg-card/80 overflow-hidden group hover:shadow-xl hover:shadow-primary/5 transition-all duration-300 cursor-pointer"
       whileHover={{ y: -4 }}
     >
       <div className="h-1.5" style={{ background: `linear-gradient(to right, hsl(${eraColor}), hsl(var(--primary)))` }} />
@@ -409,6 +412,7 @@ const FeaturedCard = ({ setlist, onClick }: { setlist: SetlistWithMeta; onClick:
             <div className="w-5 h-5 rounded-full bg-muted" />
           )}
           <Link to={`/user/${setlist.creator_id}`} onClick={(e) => e.stopPropagation()} className="text-[10px] font-body text-muted-foreground hover:text-primary transition-colors">{setlist.creator_name}</Link>
+          <PlaySetlistButton setlistId={setlist.id} size="md" className="ml-auto" />
         </div>
         <h3 className="font-display text-lg text-foreground group-hover:text-primary transition-colors leading-tight line-clamp-2">
           {setlist.title}
