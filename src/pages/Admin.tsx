@@ -427,6 +427,9 @@ const Admin = () => {
           signupDates={users.map((u) => u.createdAt).filter(Boolean)}
         />
 
+        {/* Listening Analytics */}
+        <ListeningAnalyticsWidget enabled={isAdmin} />
+
         {/* Live Visitors */}
         <LiveVisitorsWidget enabled={isAdmin} />
 
