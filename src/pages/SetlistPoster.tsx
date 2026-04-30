@@ -51,6 +51,7 @@ const getEraTheme = (eraName: string | null) => {
 const SetlistPoster = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const { playSingle, playSetlist: globalPlaySetlist, playingSlot } = useAudioPlayer();
   const { isFavorite, toggleFavorite } = useFavorites();
