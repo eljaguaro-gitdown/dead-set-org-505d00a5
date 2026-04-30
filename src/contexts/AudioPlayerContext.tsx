@@ -67,6 +67,11 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
   const stateRef = useRef(state);
   useEffect(() => { stateRef.current = state; }, [state]);
 
+  // Monotonic token for playSetlist calls — protects against race conditions
+  // when the user taps "Play" on Setlist B while Setlist A is still resolving
+  // its first playable track via Archive.org. Only the LATEST call commits.
+  const playSetlistSeqRef = useRef(0);
+
   // Track per-song play events for analytics.
   // Fires whenever the playing song slot changes — start a new event,
   // implicitly finalizing any previous one as "skipped".
@@ -86,6 +91,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
 
   const stopPlayback = useCallback(() => {
     audioDebug.log("context", "stopPlayback");
+    playSetlistSeqRef.current++; // invalidate any in-flight playSetlist
     audioDebug.setSlot(null, null, null, null);
     audioDebug.setPlaybackState("stopped");
     void finalizePlayEvent("skipped");
@@ -94,6 +100,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
 
   const playSingle = useCallback(async (slot: PlayableSlot) => {
     audioDebug.log("context", "playSingle", { id: slot.id, song: slot.song.title, hasUrl: !!slot.version?.archive_org_url, hasDirect: !!slot.directTrackUrl });
+    playSetlistSeqRef.current++; // invalidate any in-flight playSetlist
     audioDebug.setSlot(slot.id, slot.song.title, slot.version?.archive_org_url ?? null, slot.directTrackUrl ?? null);
     audioDebug.setPlaybackState("starting");
     // Start playback immediately so user sees feedback
@@ -161,7 +168,8 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
 
   const playSetlist = useCallback(async (slots: PlayableSlot[], setlistId?: string) => {
     if (slots.length === 0) return;
-    audioDebug.log("context", "playSetlist", { count: slots.length, setlistId });
+    const seq = ++playSetlistSeqRef.current;
+    audioDebug.log("context", "playSetlist", { count: slots.length, setlistId, seq });
     audioDebug.setPlaybackState("starting");
     const sorted = [...slots].sort((a, b) => a.setNumber - b.setNumber || a.position - b.position);
 
@@ -170,6 +178,11 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
 
     for (let i = 0; i < sorted.length; i++) {
       const resolved = await resolveSlot(sorted[i]);
+      // Bail out if a newer playSetlist call has superseded this one.
+      if (seq !== playSetlistSeqRef.current) {
+        audioDebug.log("context", "playSetlist superseded, aborting", { seq, current: playSetlistSeqRef.current, setlistId }, "warn");
+        return;
+      }
       if (resolved?.version?.archive_org_url) {
         startIndex = i;
         startSlot = resolved;
@@ -181,6 +194,12 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     if (!startSlot || startIndex < 0) {
       audioDebug.log("context", "no audio found in setlist", { setlistId }, "error");
       toast.error("Couldn't find audio for any songs in the setlist");
+      return;
+    }
+
+    // Final guard before committing — superseded calls must not overwrite state.
+    if (seq !== playSetlistSeqRef.current) {
+      audioDebug.log("context", "playSetlist superseded before commit", { seq, current: playSetlistSeqRef.current, setlistId }, "warn");
       return;
     }
 
