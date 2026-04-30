@@ -369,6 +369,7 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
 
     // Retry failed (or already used). In playlist mode, advance past the
     // broken track so the queue keeps moving.
+    void finalizePlayEvent("error");
     if (singleTrackMode && onEnded) {
       setPlaying(false);
       onEnded();
