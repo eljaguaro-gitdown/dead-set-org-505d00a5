@@ -144,8 +144,8 @@ const ReturnToSetlistPill = () => {
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 24, opacity: 0 }}
         transition={{ type: "spring", stiffness: 300, damping: 28 }}
-        className={`fixed ${bottomClass} left-1/2 -translate-x-1/2 z-30
-                   w-[min(92vw,420px)] rounded-[14px]
+        className={`fixed ${bottomClass} left-4 right-4 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 z-30
+                   sm:w-[min(92vw,420px)] max-w-[420px] mx-auto rounded-[14px]
                    bg-card/95 backdrop-blur-md border border-primary/40
                    shadow-[0_12px_32px_-8px_hsl(var(--primary)/0.45)]
                    hover:border-primary/70 transition-all overflow-hidden`}
