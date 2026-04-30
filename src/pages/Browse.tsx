@@ -543,17 +543,25 @@ const SetlistCard = ({ setlist, index, onClick, isFav, onToggleFav }: { setlist:
 const TrendingCard = ({ setlist, onClick }: { setlist: SetlistWithMeta; onClick: () => void }) => {
   const eraColor = getEraColor(setlist.era_name);
   return (
-    <motion.button
+    <motion.div
       onClick={onClick}
-      className="w-[160px] sm:w-auto shrink-0 text-left rounded-lg border border-border bg-card/60 overflow-hidden group hover:border-accent/30 hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onClick(); } }}
+      className="w-[160px] sm:w-auto shrink-0 text-left rounded-lg border border-border bg-card/60 overflow-hidden group hover:border-accent/30 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer"
       whileHover={{ scale: 1.02 }}
     >
       <div className="h-0.5" style={{ background: `hsl(${eraColor} / 0.5)` }} />
       <div className="p-3">
-        <h3 className="font-display text-xs text-foreground group-hover:text-primary transition-colors leading-tight line-clamp-2">
-          {setlist.title}
-        </h3>
-        <Link to={`/user/${setlist.creator_id}`} onClick={(e) => e.stopPropagation()} className="text-[9px] font-body text-muted-foreground mt-1 truncate block hover:text-primary transition-colors">{setlist.creator_name}</Link>
+        <div className="flex items-start gap-2">
+          <div className="min-w-0 flex-1">
+            <h3 className="font-display text-xs text-foreground group-hover:text-primary transition-colors leading-tight line-clamp-2">
+              {setlist.title}
+            </h3>
+            <Link to={`/user/${setlist.creator_id}`} onClick={(e) => e.stopPropagation()} className="text-[9px] font-body text-muted-foreground mt-1 truncate block hover:text-primary transition-colors">{setlist.creator_name}</Link>
+          </div>
+          <PlaySetlistButton setlistId={setlist.id} size="sm" />
+        </div>
         <div className="flex items-center gap-2 mt-2">
           <span className="text-[10px] font-body text-accent flex items-center gap-0.5">
             <Play className="w-2.5 h-2.5 fill-accent" /> {setlist.play_count} plays
@@ -561,7 +569,7 @@ const TrendingCard = ({ setlist, onClick }: { setlist: SetlistWithMeta; onClick:
           <span className="text-[9px] font-body text-muted-foreground">{setlist.slot_count} songs</span>
         </div>
       </div>
-    </motion.button>
+    </motion.div>
   );
 };
 
