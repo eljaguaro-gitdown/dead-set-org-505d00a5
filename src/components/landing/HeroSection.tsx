@@ -189,7 +189,14 @@ const HeroSection = (_props: HeroSectionProps) => {
           position: relative;
           z-index: 1;
           width: 100%; height: 100%;
-          background-image: url('/cosmic-charlie.jpg');
+          background-image: image-set(
+            url('/cosmic-charlie.webp') type('image/webp'),
+            url('/cosmic-charlie.jpg') type('image/jpeg')
+          );
+          background-image: -webkit-image-set(
+            url('/cosmic-charlie.webp') type('image/webp'),
+            url('/cosmic-charlie.jpg') type('image/jpeg')
+          );
           background-size: cover;
           background-position: center 35%;
           background-repeat: no-repeat;
