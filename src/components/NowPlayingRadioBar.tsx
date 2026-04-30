@@ -1,12 +1,19 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Play, Pause, Radio, X } from "lucide-react";
+import { Play, Pause, Radio, X, RotateCcw } from "lucide-react";
 import { useAudioPlayer, type PlayableSlot } from "@/contexts/AudioPlayerContext";
+
+interface RadioTrack {
+  title: string;
+  venue: string;
+  date: string;
+  archiveUrl: string;
+}
 
 /**
  * Curated ambient pool — mirrors AmbientPlayer's archive picks so the
  * "Start the radio" CTA always lands on a verified Archive.org recording.
  */
-const RADIO_POOL: { title: string; venue: string; date: string; archiveUrl: string }[] = [
+const RADIO_POOL: RadioTrack[] = [
   { title: "Scarlet Begonias → Fire on the Mountain", venue: "Barton Hall, Cornell", date: "5/8/77", archiveUrl: "https://archive.org/details/gd1977-05-08.152379.aud.petrunis.flac2448" },
   { title: "Eyes of the World", venue: "Winterland", date: "10/18/74", archiveUrl: "https://archive.org/details/gd1974-10-18.176647.sony.ecm250.falanga.menke.miller.clugston.flac2496" },
   { title: "Dark Star", venue: "Fillmore West", date: "2/27/69", archiveUrl: "https://archive.org/details/gd1969-02-27.132573.sbd.16track.healy-latvala-wise.flac16" },
@@ -17,42 +24,71 @@ const RADIO_POOL: { title: string; venue: string; date: string; archiveUrl: stri
   { title: "Standing on the Moon", venue: "Shoreline", date: "6/21/89", archiveUrl: "https://archive.org/details/gd1989-06-21.151620.UltraMatrix.sbd.cm.miller.t.flac16" },
 ];
 
-const DISMISS_KEY = "nowPlayingBar.dismissedAt";
-const DISMISS_TTL_MS = 1000 * 60 * 60 * 6; // 6 hours
+const DISMISS_KEY = "nowPlayingBar.dismissed"; // "1" = dismissed
+const LAST_TRACK_KEY = "nowPlayingBar.lastTrack"; // JSON RadioTrack
+const WAS_PLAYING_KEY = "nowPlayingBar.wasPlaying"; // "1" if user was actively listening
+
+const readDismissed = (): boolean => {
+  try { return localStorage.getItem(DISMISS_KEY) === "1"; } catch { return false; }
+};
+const readLastTrack = (): RadioTrack | null => {
+  try {
+    const raw = localStorage.getItem(LAST_TRACK_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (parsed?.title && parsed?.archiveUrl) return parsed as RadioTrack;
+    return null;
+  } catch { return null; }
+};
+const readWasPlaying = (): boolean => {
+  try { return localStorage.getItem(WAS_PLAYING_KEY) === "1"; } catch { return false; }
+};
 
 const NowPlayingRadioBar = () => {
   const { playSingle, playingSlot, stopPlayback, playlistMode, playlistSlots, playlistIndex } = useAudioPlayer();
-  const [dismissed, setDismissed] = useState<boolean>(() => {
-    try {
-      const raw = localStorage.getItem(DISMISS_KEY);
-      if (!raw) return false;
-      return Date.now() - parseInt(raw, 10) < DISMISS_TTL_MS;
-    } catch { return false; }
-  });
 
-  // Pick a stable ambient track per session.
-  const ambient = useMemo(() => RADIO_POOL[Math.floor(Math.random() * RADIO_POOL.length)], []);
+  const [dismissed, setDismissed] = useState<boolean>(readDismissed);
+  const [lastTrack, setLastTrack] = useState<RadioTrack | null>(readLastTrack);
+  // True when a previous session was actively playing the radio — show "Resume" affordance.
+  const [pendingResume, setPendingResume] = useState<boolean>(() => readWasPlaying() && !!readLastTrack());
+
   const isLive = !!playingSlot;
 
-  // If the user starts something, clear the "dismissed" flag so the bar reappears.
-  useEffect(() => {
-    if (isLive && dismissed) setDismissed(false);
-  }, [isLive, dismissed]);
+  // Pick a fresh ambient track per session, but prefer the last one the user heard.
+  const fallbackAmbient = useMemo(() => RADIO_POOL[Math.floor(Math.random() * RADIO_POOL.length)], []);
+  const ambient = lastTrack ?? fallbackAmbient;
 
-  const handleToggle = () => {
-    if (isLive) {
-      stopPlayback();
-      return;
-    }
+  // Persist whether radio is actively playing (across reloads).
+  // We only consider it the "radio" when the playing slot id starts with "radio-".
+  const isRadioSlot = !!playingSlot && playingSlot.id.startsWith("radio-");
+  useEffect(() => {
+    try {
+      if (isRadioSlot) {
+        localStorage.setItem(WAS_PLAYING_KEY, "1");
+      } else if (!isLive) {
+        // Cleared playback (user hit stop, or finished) — forget the "wasPlaying" flag.
+        localStorage.setItem(WAS_PLAYING_KEY, "0");
+      }
+    } catch {}
+  }, [isRadioSlot, isLive]);
+
+  // Once anything starts playing, the "pending resume" prompt is no longer relevant.
+  useEffect(() => {
+    if (isLive && pendingResume) setPendingResume(false);
+    if (isLive && dismissed) setDismissed(false);
+  }, [isLive, pendingResume, dismissed]);
+
+  /** Build a PlayableSlot from a RadioTrack and start playback. */
+  const startTrack = (track: RadioTrack) => {
     const slot: PlayableSlot = {
-      id: `radio-${ambient.title}`,
-      song: { id: `radio-song`, title: ambient.title },
+      id: `radio-${track.archiveUrl}`,
+      song: { id: `radio-song`, title: track.title },
       version: {
         id: `radio-version`,
         song_id: `radio-song`,
-        show_date: ambient.date,
-        venue: ambient.venue,
-        archive_org_url: ambient.archiveUrl,
+        show_date: track.date,
+        venue: track.venue,
+        archive_org_url: track.archiveUrl,
         description: null,
         city: null,
         era_id: null,
@@ -62,16 +98,31 @@ const NowPlayingRadioBar = () => {
       position: 0,
       segueToNext: false,
     };
+    try { localStorage.setItem(LAST_TRACK_KEY, JSON.stringify(track)); } catch {}
+    setLastTrack(track);
     playSingle(slot);
+  };
+
+  const handleToggle = () => {
+    if (isLive) {
+      stopPlayback();
+      return;
+    }
+    startTrack(ambient);
   };
 
   const handleDismiss = (e: React.MouseEvent) => {
     e.stopPropagation();
-    try { localStorage.setItem(DISMISS_KEY, Date.now().toString()); } catch {}
+    try {
+      localStorage.setItem(DISMISS_KEY, "1");
+      // Dismissing the bar also implicitly cancels any pending resume.
+      localStorage.setItem(WAS_PLAYING_KEY, "0");
+    } catch {}
     setDismissed(true);
+    setPendingResume(false);
   };
 
-  // Hide entirely when dismissed AND nothing is playing.
+  // Hide entirely when dismissed AND nothing is playing AND no resume to offer.
   if (dismissed && !isLive) return null;
 
   const display = isLive
@@ -86,7 +137,9 @@ const NowPlayingRadioBar = () => {
 
   const labelPrefix = isLive
     ? (playlistMode ? `Setlist · ${playlistIndex + 1}/${playlistSlots.length}` : "Now playing")
-    : "Tap to start the radio";
+    : pendingResume
+      ? "Tap to resume the radio"
+      : "Tap to start the radio";
 
   return (
     <div
@@ -98,12 +151,14 @@ const NowPlayingRadioBar = () => {
       <button
         onClick={handleToggle}
         className="w-full flex items-center gap-3 px-3 sm:px-4 py-2 text-left group"
-        aria-label={isLive ? "Stop playback" : "Start the radio"}
+        aria-label={isLive ? "Stop playback" : pendingResume ? "Resume the radio" : "Start the radio"}
       >
-        {/* Play / Pause */}
+        {/* Play / Pause / Resume */}
         <span className="w-8 h-8 rounded-full bg-primary/15 flex items-center justify-center group-hover:bg-primary/25 transition-colors shrink-0">
           {isLive ? (
             <Pause className="w-3.5 h-3.5 text-primary fill-primary" />
+          ) : pendingResume ? (
+            <RotateCcw className="w-3.5 h-3.5 text-primary" />
           ) : (
             <Play className="w-3.5 h-3.5 text-primary fill-primary ml-0.5" />
           )}
