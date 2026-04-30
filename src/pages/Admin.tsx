@@ -431,6 +431,9 @@ const Admin = () => {
         {/* Listening Analytics */}
         <ListeningAnalyticsWidget enabled={isAdmin} />
 
+        {/* User Segments */}
+        <UserSegmentsWidget enabled={isAdmin} />
+
         {/* Live Visitors */}
         <LiveVisitorsWidget enabled={isAdmin} />
 
