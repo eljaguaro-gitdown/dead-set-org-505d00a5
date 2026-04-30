@@ -463,12 +463,15 @@ const FeaturedCard = ({ setlist, onClick }: { setlist: SetlistWithMeta; onClick:
 const SetlistCard = ({ setlist, index, onClick, isFav, onToggleFav }: { setlist: SetlistWithMeta; index: number; onClick: () => void; isFav: boolean; onToggleFav: (id: string) => void }) => {
   const eraColor = getEraColor(setlist.era_name);
   return (
-    <motion.button
+    <motion.div
       initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: Math.min(index * 0.03, 0.3) }}
       onClick={onClick}
-      className="text-left rounded-lg border border-border bg-card/60 overflow-hidden group hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-1 transition-all duration-300"
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onClick(); } }}
+      className="text-left rounded-lg border border-border bg-card/60 overflow-hidden group hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-1 transition-all duration-300 cursor-pointer"
     >
       <div className="h-0.5" style={{ background: `hsl(${eraColor} / 0.5)` }} />
       <div className="p-4">
@@ -482,6 +485,7 @@ const SetlistCard = ({ setlist, index, onClick, isFav, onToggleFav }: { setlist:
             )}
             <Link to={`/user/${setlist.creator_id}`} onClick={(e) => e.stopPropagation()} className="text-[10px] font-body text-muted-foreground truncate hover:text-primary transition-colors">{setlist.creator_name}</Link>
           </div>
+          <PlaySetlistButton setlistId={setlist.id} size="sm" />
           <FavoriteButton isFavorite={isFav} onToggle={() => onToggleFav(setlist.id)} />
         </div>
 
