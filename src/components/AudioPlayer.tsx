@@ -5,6 +5,12 @@ import { Play, Pause, Volume2, VolumeX, X, Loader2, Cast, ChevronRight, GripHori
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { findTrackInRecording, matchScore } from "@/lib/archiveOrg";
 import { audioDebug } from "@/lib/audioDebug";
+import {
+  pausePlayEvent,
+  resumePlayEvent,
+  setPlayEventTrackDuration,
+  finalizePlayEvent,
+} from "@/lib/playEventTracker";
 
 interface Track {
   title: string;
