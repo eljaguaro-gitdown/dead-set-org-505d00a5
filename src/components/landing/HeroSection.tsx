@@ -1,5 +1,7 @@
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { trackCtaClick } from "@/lib/trackCtaClick";
+import { supabase } from "@/integrations/supabase/client";
 
 // Props kept for backward-compat with Index.tsx — unused in the new editorial hero.
 interface FeaturedSetlist {
@@ -23,6 +25,20 @@ const BUILDER_ROUTE = "/builder?wizard=true";
 
 const HeroSection = (_props: HeroSectionProps) => {
   const navigate = useNavigate();
+  const [communityCount, setCommunityCount] = useState<number | null>(null);
+
+  // Pull a live count of public community setlists to give the secondary CTA real pull.
+  useEffect(() => {
+    let cancelled = false;
+    supabase
+      .from("setlists")
+      .select("id", { count: "exact", head: true })
+      .eq("is_public", true)
+      .then(({ count }) => {
+        if (!cancelled && typeof count === "number") setCommunityCount(count);
+      });
+    return () => { cancelled = true; };
+  }, []);
 
   const handleCta = (e: React.MouseEvent<HTMLAnchorElement>) => {
     e.preventDefault();
@@ -303,25 +319,42 @@ const HeroSection = (_props: HeroSectionProps) => {
         }
 
         .ds-hero__cta-secondary {
-          display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-          height: 56px;
+          position: relative;
+          display: inline-flex; align-items: center; justify-content: center; gap: 12px;
+          height: 60px;
           width: 100%;
           max-width: 320px;
-          background: transparent;
-          color: var(--accent-gold);
+          background: linear-gradient(180deg, rgba(201, 168, 76, 0.10), rgba(201, 168, 76, 0.04));
+          color: var(--accent-warm);
           font-family: 'DM Sans', system-ui, sans-serif;
-          font-weight: 500;
+          font-weight: 600;
           font-size: 16px;
-          border: 1px solid var(--rule-gold-40);
-          border-radius: 2px;
+          border: 1px solid var(--accent-gold);
+          border-radius: 4px;
           text-decoration: none;
-          transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+          transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
           letter-spacing: 0.01em;
+          box-shadow: 0 0 0 rgba(201, 168, 76, 0);
+          overflow: hidden;
+        }
+        .ds-hero__cta-secondary::before {
+          content: "";
+          position: absolute; inset: 0;
+          background: radial-gradient(120% 80% at 50% 100%, rgba(201, 168, 76, 0.18), transparent 70%);
+          opacity: 0.7;
+          pointer-events: none;
+          animation: ds-hero-pulse 3.6s ease-in-out infinite;
+        }
+        @keyframes ds-hero-pulse {
+          0%, 100% { opacity: 0.45; }
+          50% { opacity: 0.85; }
         }
         .ds-hero__cta-secondary:hover {
-          background: rgba(201, 168, 76, 0.08);
-          border-color: var(--accent-gold);
+          background: linear-gradient(180deg, rgba(201, 168, 76, 0.20), rgba(201, 168, 76, 0.08));
+          border-color: var(--accent-warm);
           color: var(--accent-warm);
+          transform: translateY(-1px);
+          box-shadow: 0 6px 24px rgba(201, 168, 76, 0.18);
         }
         .ds-hero__cta-secondary:focus-visible {
           outline: 2px solid var(--accent-warm);
@@ -333,6 +366,41 @@ const HeroSection = (_props: HeroSectionProps) => {
         }
         .ds-hero__cta-secondary:hover .ds-hero__cta-secondary-arrow {
           transform: translateX(3px);
+        }
+        .ds-hero__cta-eq {
+          display: inline-flex; align-items: flex-end; gap: 2px;
+          height: 14px;
+          position: relative; z-index: 1;
+        }
+        .ds-hero__cta-eq span {
+          width: 2px;
+          background: var(--accent-warm);
+          border-radius: 1px;
+          animation: ds-hero-eq 1.1s ease-in-out infinite;
+          transform-origin: bottom;
+        }
+        .ds-hero__cta-eq span:nth-child(1) { animation-delay: 0s; height: 6px; }
+        .ds-hero__cta-eq span:nth-child(2) { animation-delay: 0.18s; height: 12px; }
+        .ds-hero__cta-eq span:nth-child(3) { animation-delay: 0.32s; height: 8px; }
+        .ds-hero__cta-eq span:nth-child(4) { animation-delay: 0.5s; height: 14px; }
+        @keyframes ds-hero-eq {
+          0%, 100% { transform: scaleY(0.5); }
+          50% { transform: scaleY(1); }
+        }
+        .ds-hero__cta-count {
+          display: inline-flex; align-items: center; gap: 6px;
+          margin-top: 10px;
+          font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+          font-size: 11px;
+          letter-spacing: 0.18em;
+          text-transform: uppercase;
+          color: var(--accent-gold);
+        }
+        .ds-hero__cta-count-dot {
+          width: 6px; height: 6px; border-radius: 999px;
+          background: var(--accent-warm);
+          box-shadow: 0 0 8px rgba(201, 168, 76, 0.7);
+          animation: ds-hero-pulse 2s ease-in-out infinite;
         }
 
         .ds-hero__credit {
@@ -478,10 +546,18 @@ const HeroSection = (_props: HeroSectionProps) => {
               }}
               className="ds-hero__cta-secondary"
             >
-              Browse Community Setlists
-              <span className="ds-hero__cta-secondary-arrow">→</span>
+              <span className="ds-hero__cta-eq" aria-hidden="true">
+                <span /><span /><span /><span />
+              </span>
+              <span>Browse Community Setlists</span>
+              <span className="ds-hero__cta-secondary-arrow" aria-hidden="true">→</span>
             </a>
-            <p className="ds-hero__cta-caption">what other heads are spinning</p>
+            <p className="ds-hero__cta-count">
+              <span className="ds-hero__cta-count-dot" aria-hidden="true" />
+              {communityCount !== null
+                ? `${communityCount.toLocaleString()} setlists spinning now`
+                : "what other heads are spinning"}
+            </p>
           </div>
 
           <aside
