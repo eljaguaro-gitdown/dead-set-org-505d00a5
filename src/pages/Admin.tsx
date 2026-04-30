@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import LiveVisitorsWidget from "@/components/LiveVisitorsWidget";
 import PresenceDebugPanel from "@/components/PresenceDebugPanel";
 import FunnelWidget from "@/components/FunnelWidget";
+import ListeningAnalyticsWidget from "@/components/ListeningAnalyticsWidget";
 import AdminAnnouncementsPanel from "@/components/AdminAnnouncementsPanel";
 import DeliverabilityMonitor from "@/components/DeliverabilityMonitor";
 import PrivateRelayMonitor from "@/components/PrivateRelayMonitor";
