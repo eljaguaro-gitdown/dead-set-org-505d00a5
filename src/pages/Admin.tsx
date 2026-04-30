@@ -5,6 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Shield, Users, ArrowLeft, Loader2, Calendar, Mail, User, Trash2, ListMusic, Eye, Globe, MessageSquare, Bug, Star, Lightbulb, Send, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import LiveVisitorsWidget from "@/components/LiveVisitorsWidget";
+import PresenceDebugPanel from "@/components/PresenceDebugPanel";
 import FunnelWidget from "@/components/FunnelWidget";
 import AdminAnnouncementsPanel from "@/components/AdminAnnouncementsPanel";
 import DeliverabilityMonitor from "@/components/DeliverabilityMonitor";
@@ -427,6 +428,9 @@ const Admin = () => {
 
         {/* Live Visitors */}
         <LiveVisitorsWidget enabled={isAdmin} />
+
+        {/* Presence channel debug */}
+        <PresenceDebugPanel />
 
         {/* Backstage Submissions */}
         <div className="bg-card border border-border rounded-lg overflow-hidden">
