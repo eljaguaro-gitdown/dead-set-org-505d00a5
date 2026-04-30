@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { TrendingUp, Zap, Music, ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import EraTooltip from "@/components/EraTooltip";
+import PlaySetlistButton from "@/components/PlaySetlistButton";
 import type { Database } from "@/integrations/supabase/types";
 
 type Setlist = Omit<Database["public"]["Tables"]["setlists"]["Row"], "share_token">;
