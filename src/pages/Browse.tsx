@@ -455,7 +455,7 @@ const FeaturedCard = ({ setlist, onClick }: { setlist: SetlistWithMeta; onClick:
           </div>
         )}
       </div>
-    </motion.button>
+    </motion.div>
   );
 };
 
