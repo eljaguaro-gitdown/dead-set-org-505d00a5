@@ -35,6 +35,7 @@ const Updates = lazy(() => import("./pages/Updates"));
 const AdminChangelog = lazy(() => import("./pages/AdminChangelog"));
 const AdminBetaNudge = lazy(() => import("./pages/AdminBetaNudge"));
 const UserLibrary = lazy(() => import("./pages/UserLibrary"));
+const AudioDiagnostics = lazy(() => import("./pages/AudioDiagnostics"));
 
 const queryClient = new QueryClient();
 
@@ -66,6 +67,7 @@ const App = () => (
               <Route path="/admin/changelog" element={<AdminChangelog />} />
               <Route path="/admin/email/beta-nudge" element={<AdminBetaNudge />} />
               <Route path="/user/:userId" element={<UserLibrary />} />
+              <Route path="/audio-diag" element={<AudioDiagnostics />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
