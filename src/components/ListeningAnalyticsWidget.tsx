@@ -41,14 +41,12 @@ const ListeningAnalyticsWidget = ({ enabled }: Props) => {
     let cancelled = false;
     const load = async () => {
       setLoading(true);
-      // Pull recent 30d once; "All" still capped at 5k for safety
-      const since = new Date(Date.now() - 30 * 86_400_000).toISOString();
+      // Pull most recent events (capped at 5k). "All" reflects whatever's in that window.
       const { data, error } = await supabase
         .from("play_events")
         .select(
           "id,user_id,visitor_id,setlist_id,song_title,duration_played_ms,track_duration_ms,completed,ended_reason,started_at,ended_at"
         )
-        .gte("started_at", since)
         .order("started_at", { ascending: false })
         .limit(5000);
       if (cancelled) return;
