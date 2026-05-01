@@ -48,7 +48,7 @@ interface LovableStats {
   signupsTotal: number;
 }
 
-const FunnelWidget = ({ signupDates, enabled }: FunnelWidgetProps) => {
+const FunnelWidget = ({ signupDates, signupRecords, enabled }: FunnelWidgetProps) => {
   const [range, setRange] = useState<Range>(7);
   const [loading, setLoading] = useState(true);
   const [rows, setRows] = useState<DayRow[]>([]);
