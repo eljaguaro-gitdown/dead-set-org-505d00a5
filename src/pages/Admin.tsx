@@ -373,6 +373,19 @@ const Admin = () => {
           </div>
         </div>
 
+        {/* Quick links */}
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" size="sm" onClick={() => navigate("/admin/notification-clicks")} className="font-body">
+            Notification Clicks
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => navigate("/admin/changelog")} className="font-body">
+            Changelog
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => navigate("/admin/email/beta-nudge")} className="font-body">
+            Beta Nudge Email
+          </Button>
+        </div>
+
         {/* Broadcast Announcements */}
         <AdminAnnouncementsPanel />
 
