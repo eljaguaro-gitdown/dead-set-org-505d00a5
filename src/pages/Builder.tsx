@@ -1209,7 +1209,8 @@ const Builder = () => {
               onUpdateNotes={handleUpdateNotes}
               onReorder={handleReorder}
               onPlayVersion={(slot) => {
-                playSingle(slot);
+                // Auto-advance through the rest of the setlist after this song.
+                playSingle(slot, { slots: activeSlots, setlistId: setlist?.id ?? null });
               }}
               onPlaySetlist={async () => {
                 if (activeSlots.length === 0) return;

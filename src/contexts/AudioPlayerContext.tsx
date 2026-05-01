@@ -28,7 +28,16 @@ interface AudioPlayerState {
 }
 
 interface AudioPlayerContextValue extends AudioPlayerState {
-  playSingle: (slot: PlayableSlot) => void;
+  /**
+   * Play a single song. If `playlistContext` is provided, the surrounding
+   * songs are queued so the player auto-advances when this one ends — this
+   * is how clicking any song inside a setlist should behave (no "Play All"
+   * required). Without context, it plays as a true one-off.
+   */
+  playSingle: (
+    slot: PlayableSlot,
+    playlistContext?: { slots: PlayableSlot[]; setlistId?: string | null },
+  ) => void;
   playSetlist: (slots: PlayableSlot[], setlistId?: string) => Promise<void>;
   /** Append slots to the end of the current playlist instead of replacing it. */
   queueSetlist: (slots: PlayableSlot[]) => Promise<void>;
@@ -98,21 +107,52 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     setState({ playingSlot: null, playlistMode: false, playlistIndex: 0, playlistSlots: [], activeSetlistId: null });
   }, []);
 
-  const playSingle = useCallback(async (slot: PlayableSlot) => {
-    audioDebug.log("context", "playSingle", { id: slot.id, song: slot.song.title, hasUrl: !!slot.version?.archive_org_url, hasDirect: !!slot.directTrackUrl });
+  const playSingle = useCallback(async (
+    slot: PlayableSlot,
+    playlistContext?: { slots: PlayableSlot[]; setlistId?: string | null },
+  ) => {
+    audioDebug.log("context", "playSingle", { id: slot.id, song: slot.song.title, hasUrl: !!slot.version?.archive_org_url, hasDirect: !!slot.directTrackUrl, withContext: !!playlistContext });
     playSetlistSeqRef.current++; // invalidate any in-flight playSetlist
     audioDebug.setSlot(slot.id, slot.song.title, slot.version?.archive_org_url ?? null, slot.directTrackUrl ?? null);
     audioDebug.setPlaybackState("starting");
-    // Start playback immediately so user sees feedback
-    setState({ playingSlot: slot, playlistMode: false, playlistIndex: 0, playlistSlots: [], activeSetlistId: null });
-    // Then resolve direct track URL in background if missing
+
+    // Build the playlist around the clicked slot when context was provided.
+    // This makes the player auto-advance to the next song in the setlist
+    // when the current one ends — same behavior as "Play All", but starting
+    // from the song the user actually clicked.
+    let playlistMode = false;
+    let playlistSlots: PlayableSlot[] = [];
+    let playlistIndex = 0;
+    let activeSetlistId: string | null = null;
+    if (playlistContext && playlistContext.slots.length > 0) {
+      const sorted = [...playlistContext.slots].sort(
+        (a, b) => a.setNumber - b.setNumber || a.position - b.position,
+      );
+      const idx = sorted.findIndex((s) => s.id === slot.id);
+      if (idx >= 0) {
+        playlistMode = true;
+        playlistSlots = sorted;
+        playlistIndex = idx;
+        activeSetlistId = playlistContext.setlistId ?? null;
+      }
+    }
+
+    setState({ playingSlot: slot, playlistMode, playlistIndex, playlistSlots, activeSetlistId });
+
+    // Resolve direct track URL in background if missing
     if (!slot.directTrackUrl && slot.version?.archive_org_url) {
       const resolved = await resolveSlot(slot);
       if (resolved) {
         audioDebug.setDirectTrackUrl(resolved.directTrackUrl ?? null);
         audioDebug.log("context", "resolved direct track", { url: resolved.directTrackUrl });
         setState(prev => prev.playingSlot?.id === slot.id
-          ? { ...prev, playingSlot: resolved }
+          ? {
+              ...prev,
+              playingSlot: resolved,
+              playlistSlots: prev.playlistMode
+                ? prev.playlistSlots.map((s) => (s.id === resolved.id ? resolved : s))
+                : prev.playlistSlots,
+            }
           : prev
         );
       }
@@ -121,7 +161,13 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
       if (resolved?.version?.archive_org_url) {
         audioDebug.setSlot(resolved.id, resolved.song.title, resolved.version.archive_org_url, resolved.directTrackUrl ?? null);
         setState(prev => prev.playingSlot?.id === slot.id
-          ? { ...prev, playingSlot: resolved }
+          ? {
+              ...prev,
+              playingSlot: resolved,
+              playlistSlots: prev.playlistMode
+                ? prev.playlistSlots.map((s) => (s.id === resolved.id ? resolved : s))
+                : prev.playlistSlots,
+            }
           : prev
         );
       } else {

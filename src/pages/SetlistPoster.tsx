@@ -262,7 +262,10 @@ const SetlistPoster = () => {
   }, [resolvedArchives]);
 
   const handlePlaySong = (slot: EnrichedSlot) => {
-    playSingle(buildPlayableSlot(slot));
+    // Pass surrounding setlist as context so the player auto-advances to the
+    // next song when this one ends — no need to press "Play All" first.
+    const allPlayable = slots.map(buildPlayableSlot);
+    playSingle(buildPlayableSlot(slot), { slots: allPlayable, setlistId: id ?? null });
   };
 
   const handlePlayAll = async () => {
