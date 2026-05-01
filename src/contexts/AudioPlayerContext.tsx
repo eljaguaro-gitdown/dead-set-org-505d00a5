@@ -28,7 +28,16 @@ interface AudioPlayerState {
 }
 
 interface AudioPlayerContextValue extends AudioPlayerState {
-  playSingle: (slot: PlayableSlot) => void;
+  /**
+   * Play a single song. If `playlistContext` is provided, the surrounding
+   * songs are queued so the player auto-advances when this one ends — this
+   * is how clicking any song inside a setlist should behave (no "Play All"
+   * required). Without context, it plays as a true one-off.
+   */
+  playSingle: (
+    slot: PlayableSlot,
+    playlistContext?: { slots: PlayableSlot[]; setlistId?: string | null },
+  ) => void;
   playSetlist: (slots: PlayableSlot[], setlistId?: string) => Promise<void>;
   /** Append slots to the end of the current playlist instead of replacing it. */
   queueSetlist: (slots: PlayableSlot[]) => Promise<void>;
