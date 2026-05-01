@@ -166,7 +166,7 @@ const FunnelWidget = ({ signupDates, signupRecords, enabled }: FunnelWidgetProps
     return () => {
       cancelled = true;
     };
-  }, [enabled, range, signupDates]);
+  }, [enabled, range, signupDates, signupRecords]);
 
   const totals = useMemo(
     () =>
