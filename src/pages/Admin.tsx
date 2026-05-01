@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import LiveVisitorsWidget from "@/components/LiveVisitorsWidget";
 import PresenceDebugPanel from "@/components/PresenceDebugPanel";
 import FunnelWidget from "@/components/FunnelWidget";
+import AuthFunnelWidget from "@/components/AuthFunnelWidget";
 import ListeningAnalyticsWidget from "@/components/ListeningAnalyticsWidget";
 import UserSegmentsWidget from "@/components/UserSegmentsWidget";
 import AdminAnnouncementsPanel from "@/components/AdminAnnouncementsPanel";
@@ -443,6 +444,9 @@ const Admin = () => {
             .filter((u) => u.id && u.createdAt)
             .map((u) => ({ id: u.id, createdAt: u.createdAt }))}
         />
+
+        {/* Sign-up Funnel (auth_events) */}
+        <AuthFunnelWidget enabled={isAdmin} />
 
         {/* Listening Analytics */}
         <ListeningAnalyticsWidget enabled={isAdmin} />
