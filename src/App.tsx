@@ -34,6 +34,7 @@ const Unsubscribe = lazy(() => import("./pages/Unsubscribe"));
 const Updates = lazy(() => import("./pages/Updates"));
 const AdminChangelog = lazy(() => import("./pages/AdminChangelog"));
 const AdminBetaNudge = lazy(() => import("./pages/AdminBetaNudge"));
+const AdminNotificationClicks = lazy(() => import("./pages/AdminNotificationClicks"));
 const UserLibrary = lazy(() => import("./pages/UserLibrary"));
 const AudioDiagnostics = lazy(() => import("./pages/AudioDiagnostics"));
 
@@ -66,6 +67,7 @@ const App = () => (
               <Route path="/updates" element={<Updates />} />
               <Route path="/admin/changelog" element={<AdminChangelog />} />
               <Route path="/admin/email/beta-nudge" element={<AdminBetaNudge />} />
+              <Route path="/admin/notification-clicks" element={<AdminNotificationClicks />} />
               <Route path="/user/:userId" element={<UserLibrary />} />
               <Route path="/audio-diag" element={<AudioDiagnostics />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
