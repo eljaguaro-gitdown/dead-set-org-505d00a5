@@ -11,6 +11,9 @@ const Toaster = forwardRef<HTMLElement, ToasterProps>((props, _ref) => {
     <Sonner
       theme={theme as ToasterProps["theme"]}
       className="toaster group"
+      position="bottom-center"
+      duration={4000}
+      closeButton
       toastOptions={{
         classNames: {
           toast:
