@@ -10,6 +10,7 @@ import {
 import { useAnnouncements } from "@/hooks/useAnnouncements";
 import { useCommentNotifications } from "@/hooks/useCommentNotifications";
 import { useAuth } from "@/hooks/useAuth";
+import { trackCtaClick } from "@/lib/trackCtaClick";
 
 interface AnnouncementsBellProps {
   variant?: "desktop" | "mobile";
