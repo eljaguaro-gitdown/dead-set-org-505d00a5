@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { trackAuthEvent, markOAuthRedirect } from "@/lib/authFunnel";
 import {
   Sheet,
   SheetContent,
@@ -29,9 +30,17 @@ const AuthModal = ({ open, onOpenChange, onAuthenticated, onBeforeRedirect }: Au
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    if (open) void trackAuthEvent("auth_modal_opened");
+  }, [open]);
+
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    void trackAuthEvent(
+      isSignUp ? "signup_email_attempted" : "signin_email_attempted",
+      { provider: "email" },
+    );
     try {
       if (isSignUp) {
         const { error, data } = await supabase.auth.signUp({
