@@ -3,7 +3,9 @@ import { useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import {
+  getDebugSnapshot,
   getOrCreateVisitorId,
+  reconnectPresenceChannel,
   trackPresence,
   type PresencePayload,
 } from "@/lib/presenceChannel";
@@ -81,4 +83,31 @@ export const usePresence = () => {
     presenceRef.current = updated;
     trackPresence(updated);
   }, [location.pathname]);
+
+  // Auto-reconnect when the tab returns to the foreground or the network
+  // comes back. iOS Safari aggressively suspends WebSockets in the background
+  // and the channel often comes back as CLOSED / CHANNEL_ERROR / TIMED_OUT.
+  useEffect(() => {
+    const maybeReconnect = () => {
+      const { status } = getDebugSnapshot();
+      const stale =
+        status === "CLOSED" || status === "CHANNEL_ERROR" || status === "TIMED_OUT";
+      if (!stale) return;
+      reconnectPresenceChannel();
+    };
+
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") maybeReconnect();
+    };
+
+    document.addEventListener("visibilitychange", onVisibility);
+    window.addEventListener("focus", maybeReconnect);
+    window.addEventListener("online", maybeReconnect);
+
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibility);
+      window.removeEventListener("focus", maybeReconnect);
+      window.removeEventListener("online", maybeReconnect);
+    };
+  }, []);
 };

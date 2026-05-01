@@ -145,6 +145,30 @@ export const getPresenceChannel = (): RealtimeChannel => {
   return channel;
 };
 
+/**
+ * Tear down the current channel (if any) and rebuild it. Used to recover
+ * from CLOSED / CHANNEL_ERROR / TIMED_OUT states — most commonly after iOS
+ * Safari suspends the WebSocket when the tab backgrounds or the screen locks.
+ * The latest payload is re-tracked automatically once the new channel
+ * reaches SUBSCRIBED.
+ */
+export const reconnectPresenceChannel = async (): Promise<void> => {
+  if (channel) {
+    try {
+      await supabase.removeChannel(channel);
+    } catch (e) {
+      console.warn("[presenceChannel] removeChannel failed", e);
+    }
+    channel = null;
+  }
+  setDebug({ status: "IDLE", subscribedAt: null });
+  if (currentPayload) {
+    await trackPresence(currentPayload);
+  } else {
+    getPresenceChannel();
+  }
+};
+
 /** Update or set the local presence payload broadcast to others. */
 export const trackPresence = async (payload: PresencePayload): Promise<void> => {
   currentPayload = payload;
