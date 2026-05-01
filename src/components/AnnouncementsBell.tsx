@@ -10,6 +10,7 @@ import {
 import { useAnnouncements } from "@/hooks/useAnnouncements";
 import { useCommentNotifications } from "@/hooks/useCommentNotifications";
 import { useAuth } from "@/hooks/useAuth";
+import { trackCtaClick } from "@/lib/trackCtaClick";
 
 interface AnnouncementsBellProps {
   variant?: "desktop" | "mobile";
@@ -114,7 +115,10 @@ const AnnouncementsBell = ({ variant = "desktop" }: AnnouncementsBellProps) => {
                   >
                     <Link
                       to={`/setlist/${n.setlist_id}`}
-                      onClick={() => setOpen(false)}
+                      onClick={() => {
+                        trackCtaClick(`comment_notif:${n.id}`, `/setlist/${n.setlist_id}`);
+                        setOpen(false);
+                      }}
                       className="flex items-start gap-2 group"
                     >
                       {!n.read && (
@@ -190,7 +194,10 @@ const AnnouncementsBell = ({ variant = "desktop" }: AnnouncementsBellProps) => {
                               target={a.cta_url.startsWith("http") ? "_blank" : undefined}
                               rel="noopener noreferrer"
                               className="inline-flex items-center gap-1 mt-2 font-mono text-[11px] text-primary hover:text-primary/80 tracking-wider uppercase"
-                              onClick={() => setOpen(false)}
+                              onClick={() => {
+                                trackCtaClick(`announcement:${a.id}`, a.cta_url!);
+                                setOpen(false);
+                              }}
                             >
                               {a.cta_label}
                               {a.cta_url.startsWith("http") && (
