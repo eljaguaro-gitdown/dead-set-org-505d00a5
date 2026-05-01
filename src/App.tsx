@@ -34,6 +34,7 @@ const Unsubscribe = lazy(() => import("./pages/Unsubscribe"));
 const Updates = lazy(() => import("./pages/Updates"));
 const AdminChangelog = lazy(() => import("./pages/AdminChangelog"));
 const AdminBetaNudge = lazy(() => import("./pages/AdminBetaNudge"));
+const AdminNotificationClicks = lazy(() => import("./pages/AdminNotificationClicks"));
 const UserLibrary = lazy(() => import("./pages/UserLibrary"));
 const AudioDiagnostics = lazy(() => import("./pages/AudioDiagnostics"));
 
