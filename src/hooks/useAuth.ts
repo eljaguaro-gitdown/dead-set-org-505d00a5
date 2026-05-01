@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { User } from "@supabase/supabase-js";
 import { markConversion } from "@/lib/abTest";
+import { trackAuthEvent, consumePendingOAuth } from "@/lib/authFunnel";
 
 const SESSION_FLAG = "dead_set_active_session";
 
@@ -79,6 +80,31 @@ const ensureAuthInitialized = () => {
 
       if (event === "SIGNED_IN" && session?.user) {
         markConversion(session.user.id);
+
+        // Funnel instrumentation: detect what kind of sign-in this was
+        const pendingOAuth = consumePendingOAuth();
+        const createdAt = session.user.created_at
+          ? new Date(session.user.created_at).getTime()
+          : 0;
+        const confirmedAt = (session.user as any).email_confirmed_at
+          ? new Date((session.user as any).email_confirmed_at).getTime()
+          : 0;
+        const isFreshAccount = createdAt > 0 && Date.now() - createdAt < 60_000;
+
+        if (pendingOAuth) {
+          void trackAuthEvent("oauth_returned", {
+            provider: pendingOAuth,
+            userId: session.user.id,
+            metadata: { isFreshAccount },
+          });
+        }
+        if (confirmedAt > 0 && Date.now() - confirmedAt < 60_000) {
+          void trackAuthEvent("email_confirmed", {
+            provider: pendingOAuth ?? "email",
+            userId: session.user.id,
+          });
+        }
+
         // Link this signup to its visitor attribution (Lovable referral tracking, etc.)
         const visitorId = typeof window !== "undefined"
           ? localStorage.getItem("ds_visitor_id")
