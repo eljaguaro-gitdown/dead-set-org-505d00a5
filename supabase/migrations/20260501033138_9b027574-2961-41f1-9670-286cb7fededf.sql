@@ -1,0 +1,1 @@
+UPDATE public.announcements SET cta_url = 'https://dead-set.org/setlist/bd6ad031-ad9a-44d5-bc16-c45bcd9204f1' WHERE id = 'b5f6f19b-a210-4cfd-b32f-fe3ba37a1f4e';
