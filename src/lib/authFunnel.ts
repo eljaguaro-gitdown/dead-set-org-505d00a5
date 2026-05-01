@@ -30,13 +30,15 @@ export const trackAuthEvent = async (
   opts: TrackOptions = {},
 ) => {
   try {
-    await supabase.from("auth_events").insert({
-      event_name: eventName,
-      visitor_id: getVisitorId(),
-      user_id: opts.userId ?? null,
-      provider: opts.provider ?? null,
-      metadata: opts.metadata ?? null,
-    });
+    await supabase.from("auth_events").insert([
+      {
+        event_name: eventName,
+        visitor_id: getVisitorId() ?? undefined,
+        user_id: opts.userId ?? undefined,
+        provider: opts.provider ?? undefined,
+        metadata: (opts.metadata ?? undefined) as never,
+      },
+    ]);
   } catch {
     // Never let analytics break UX
   }
