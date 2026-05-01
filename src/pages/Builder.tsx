@@ -1237,7 +1237,11 @@ const Builder = () => {
             {/* J-Card Poster replica — clickable to full poster */}
             <button
               className="mx-4 mb-4 cursor-pointer hover:opacity-90 transition-opacity group relative text-left"
-              onClick={() => paramId ? navigate(`/setlist/${paramId}`) : null}
+              onClick={() => {
+                const id = paramId || setlist?.id;
+                if (id) navigate(`/setlist/${id}`);
+                else toast.info("Save your setlist first to view the full poster");
+              }}
               title="Click to view full poster"
             >
               <div className="jcard-paper jcard-lines relative border border-[hsl(28_20%_55%/0.5)] rounded overflow-hidden" style={{ background: "hsl(38 30% 90%)" }}>
