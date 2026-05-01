@@ -134,7 +134,7 @@ const FunnelWidget = ({ signupDates, signupRecords, enabled }: FunnelWidgetProps
         (lovableVisits24hRes.data ?? []).map((v) => v.visitor_id),
       );
       const signups24hCutoff = Date.now() - dayMs;
-      const recordById = new Map(
+      const recordById = new Map<string, number>(
         (signupRecords ?? []).map((s) => [s.id, new Date(s.createdAt).getTime()]),
       );
       const lovableUserIds = lovableAttr
