@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { trackAuthEvent, markOAuthRedirect } from "@/lib/authFunnel";
 import {
   Sheet,
   SheetContent,
@@ -29,9 +30,17 @@ const AuthModal = ({ open, onOpenChange, onAuthenticated, onBeforeRedirect }: Au
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    if (open) void trackAuthEvent("auth_modal_opened");
+  }, [open]);
+
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    void trackAuthEvent(
+      isSignUp ? "signup_email_attempted" : "signin_email_attempted",
+      { provider: "email" },
+    );
     try {
       if (isSignUp) {
         const { error, data } = await supabase.auth.signUp({
@@ -68,9 +77,17 @@ const AuthModal = ({ open, onOpenChange, onAuthenticated, onBeforeRedirect }: Au
         }
         if (data.session) {
           sessionStorage.setItem(SESSION_FLAG, "1");
+          void trackAuthEvent("signup_email_succeeded", {
+            provider: "email",
+            userId: data.user?.id ?? null,
+          });
           onOpenChange(false);
           onAuthenticated();
         } else {
+          void trackAuthEvent("signup_email_needs_confirmation", {
+            provider: "email",
+            userId: data.user?.id ?? null,
+          });
           toast.success("Check your email to confirm your account!");
         }
       } else {
@@ -82,10 +99,18 @@ const AuthModal = ({ open, onOpenChange, onAuthenticated, onBeforeRedirect }: Au
         if (data.session) {
           sessionStorage.setItem(SESSION_FLAG, "1");
         }
+        void trackAuthEvent("signin_email_succeeded", {
+          provider: "email",
+          userId: data.user?.id ?? null,
+        });
         onOpenChange(false);
         onAuthenticated();
       }
     } catch (err: any) {
+      void trackAuthEvent(
+        isSignUp ? "signup_email_failed" : "signin_email_failed",
+        { provider: "email", metadata: { message: err?.message } },
+      );
       toast.error(err.message);
     } finally {
       setLoading(false);
@@ -94,6 +119,7 @@ const AuthModal = ({ open, onOpenChange, onAuthenticated, onBeforeRedirect }: Au
 
   const handleGoogleLogin = async () => {
     onBeforeRedirect?.();
+    markOAuthRedirect("google");
     const { error } = await lovable.auth.signInWithOAuth("google", {
       redirect_uri: `${window.location.origin}/builder`,
     });
@@ -102,6 +128,7 @@ const AuthModal = ({ open, onOpenChange, onAuthenticated, onBeforeRedirect }: Au
 
   const handleAppleLogin = async () => {
     onBeforeRedirect?.();
+    markOAuthRedirect("apple");
     const { error } = await lovable.auth.signInWithOAuth("apple", {
       redirect_uri: `${window.location.origin}/builder`,
     });
