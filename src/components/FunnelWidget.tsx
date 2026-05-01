@@ -3,9 +3,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { Activity, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+interface SignupRecord {
+  id: string;
+  createdAt: string;
+}
+
 interface FunnelWidgetProps {
-  /** Pre-loaded signup timestamps from the admin-users edge function */
+  /** Pre-loaded signup timestamps from the admin-users edge function (auth.users source of truth) */
   signupDates: string[];
+  /** Optional: full signup records (id + createdAt) so we can cross-reference attribution */
+  signupRecords?: SignupRecord[];
   enabled: boolean;
 }
 
@@ -41,7 +48,7 @@ interface LovableStats {
   signupsTotal: number;
 }
 
-const FunnelWidget = ({ signupDates, enabled }: FunnelWidgetProps) => {
+const FunnelWidget = ({ signupDates, signupRecords, enabled }: FunnelWidgetProps) => {
   const [range, setRange] = useState<Range>(7);
   const [loading, setLoading] = useState(true);
   const [rows, setRows] = useState<DayRow[]>([]);
@@ -119,19 +126,36 @@ const FunnelWidget = ({ signupDates, enabled }: FunnelWidgetProps) => {
         if (buckets[day]) buckets[day].signups++;
       }
 
-      // Lovable attribution stats (independent of range — always cumulative + 24h)
+      // Lovable attribution stats — count signups by joining against TRUE signup records
+      // (auth.users.created_at), not visitor_attribution.signed_up_at, which fires on
+      // re-link from new devices for existing users.
       const lovableAttr = lovableAttrRes.data ?? [];
       const lovable24hVisitorIds = new Set(
         (lovableVisits24hRes.data ?? []).map((v) => v.visitor_id),
       );
       const signups24hCutoff = Date.now() - dayMs;
+      const recordById = new Map<string, number>(
+        (signupRecords ?? []).map((s) => [s.id, new Date(s.createdAt).getTime()]),
+      );
+      const lovableUserIds = lovableAttr
+        .map((a) => a.user_id)
+        .filter((uid): uid is string => !!uid);
+      const lovableSignupsTotal = signupRecords
+        ? lovableUserIds.filter((uid) => recordById.has(uid)).length
+        : lovableUserIds.length; // fallback: legacy behavior if records aren't passed yet
+      const lovableSignups24h = signupRecords
+        ? lovableUserIds.filter((uid) => {
+            const ts = recordById.get(uid);
+            return ts !== undefined && ts > signups24hCutoff;
+          }).length
+        : lovableAttr.filter(
+            (a) => a.signed_up_at && new Date(a.signed_up_at).getTime() > signups24hCutoff,
+          ).length;
       setLovable({
         visitors24h: lovable24hVisitorIds.size,
-        signups24h: lovableAttr.filter(
-          (a) => a.signed_up_at && new Date(a.signed_up_at).getTime() > signups24hCutoff,
-        ).length,
+        signups24h: lovableSignups24h,
         visitorsTotal: lovableAttr.length,
-        signupsTotal: lovableAttr.filter((a) => a.user_id).length,
+        signupsTotal: lovableSignupsTotal,
       });
 
       setRows(Object.values(buckets).reverse()); // newest first
@@ -142,7 +166,7 @@ const FunnelWidget = ({ signupDates, enabled }: FunnelWidgetProps) => {
     return () => {
       cancelled = true;
     };
-  }, [enabled, range, signupDates]);
+  }, [enabled, range, signupDates, signupRecords]);
 
   const totals = useMemo(
     () =>
