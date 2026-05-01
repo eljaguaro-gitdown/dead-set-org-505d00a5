@@ -115,7 +115,10 @@ const AnnouncementsBell = ({ variant = "desktop" }: AnnouncementsBellProps) => {
                   >
                     <Link
                       to={`/setlist/${n.setlist_id}`}
-                      onClick={() => setOpen(false)}
+                      onClick={() => {
+                        trackCtaClick(`comment_notif:${n.id}`, `/setlist/${n.setlist_id}`);
+                        setOpen(false);
+                      }}
                       className="flex items-start gap-2 group"
                     >
                       {!n.read && (
