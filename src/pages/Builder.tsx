@@ -1121,7 +1121,11 @@ const Builder = () => {
                 {/* Mini J-card poster */}
                 <button
                   className="flex-1 min-w-0 text-left relative group"
-                  onClick={() => paramId ? navigate(`/setlist/${paramId}`) : null}
+                  onClick={() => {
+                    const id = paramId || setlist?.id;
+                    if (id) navigate(`/setlist/${id}`);
+                    else toast.info("Save your setlist first to view the full poster");
+                  }}
                 >
                   <div className="jcard-paper rounded border border-[hsl(28_20%_55%/0.4)] overflow-hidden" style={{ background: "hsl(38 30% 90%)" }}>
                     <div className="px-3 pt-2 pb-1.5">
