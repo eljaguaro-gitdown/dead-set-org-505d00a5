@@ -3,9 +3,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { Activity, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+interface SignupRecord {
+  id: string;
+  createdAt: string;
+}
+
 interface FunnelWidgetProps {
-  /** Pre-loaded signup timestamps from the admin-users edge function */
+  /** Pre-loaded signup timestamps from the admin-users edge function (auth.users source of truth) */
   signupDates: string[];
+  /** Optional: full signup records (id + createdAt) so we can cross-reference attribution */
+  signupRecords?: SignupRecord[];
   enabled: boolean;
 }
 
