@@ -439,6 +439,9 @@ const Admin = () => {
         <FunnelWidget
           enabled={isAdmin}
           signupDates={users.map((u) => u.createdAt).filter(Boolean)}
+          signupRecords={users
+            .filter((u) => u.id && u.createdAt)
+            .map((u) => ({ id: u.id, createdAt: u.createdAt }))}
         />
 
         {/* Listening Analytics */}
