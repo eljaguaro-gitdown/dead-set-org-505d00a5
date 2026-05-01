@@ -4,8 +4,8 @@
   "description": "2,300 shows. 50 years of magic. Yours to explore.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0a0a0a",
-  "theme_color": "#0a0a0a",
+  "background_color": "#08080c",
+  "theme_color": "#08080c",
   "orientation": "portrait",
   "icons": [
     {
