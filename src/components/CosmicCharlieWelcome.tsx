@@ -128,7 +128,7 @@ const CosmicCharlieWelcome = ({ eras, onGenerated, onSkip }: CosmicCharlieWelcom
   const [itsFor, setItsFor] = useState("");
 
   const [loading, setLoading] = useState(false);
-  const recentSongsRef = useRef<string[]>([]);
+  const recentSongsRef = useRef<string[]>(loadRecentSongs());
 
   // ── Helpers ─────────────────────────────────────────────────────────
 
