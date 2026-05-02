@@ -49,6 +49,8 @@ const BUILDER_ROUTE = "/builder?wizard=true";
 const HeroSection = (_props: HeroSectionProps) => {
   const navigate = useNavigate();
   const [communityCount, setCommunityCount] = useState<number | null>(null);
+  const { playSingle, playingSlot, stopPlayback } = useAudioPlayer();
+  const isHeroPlaying = playingSlot?.id === HERO_TRACK.id;
 
   // Pull a live count of public community setlists to give the secondary CTA real pull.
   useEffect(() => {
@@ -67,6 +69,15 @@ const HeroSection = (_props: HeroSectionProps) => {
     e.preventDefault();
     trackCtaClick("hero_meet_cosmic_charlie", BUILDER_ROUTE);
     navigate(BUILDER_ROUTE);
+  };
+
+  const handleHeroPlay = () => {
+    if (isHeroPlaying) {
+      stopPlayback();
+      return;
+    }
+    trackCtaClick("hero_now_spinning_play", "audio");
+    playSingle(HERO_TRACK);
   };
 
   return (
