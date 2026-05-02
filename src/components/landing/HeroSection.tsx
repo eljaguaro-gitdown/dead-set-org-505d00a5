@@ -6,8 +6,8 @@ import { useAudioPlayer, type PlayableSlot } from "@/contexts/AudioPlayerContext
 
 // Canonical "first taste" — Spring '77 Terrapin Station, hard-coded with a
 // verified direct MP3 so the hero never depends on async Archive.org matching.
-// NOTE: song.id is intentionally a real notable_versions UUID — play_events
-// inserts will fail silently otherwise (text → uuid cast).
+// NOTE: song.id is the real songs UUID; slot/version uses a stable UUID so
+// play_events can store both without client-side casting failures.
 const HERO_VERSION_ID = "d5f8948f-3c97-44ca-8025-41bbf5ed13f7";
 const HERO_SONG_ID = "4870b3f0-1a22-4fc1-89ed-c745a9e860d8";
 const HERO_TRACK = {
