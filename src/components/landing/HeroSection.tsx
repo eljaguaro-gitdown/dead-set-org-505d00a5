@@ -2,6 +2,29 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { trackCtaClick } from "@/lib/trackCtaClick";
 import { supabase } from "@/integrations/supabase/client";
+import { useAudioPlayer, type PlayableSlot } from "@/contexts/AudioPlayerContext";
+
+// Canonical "first taste" — Cornell '77 Terrapin Station, the most-cited
+// gateway recording in the entire catalog. Hard-coded so the hero never
+// shows an empty cassette while we wait for a query.
+const HERO_TRACK = {
+  id: "d5f8948f-3c97-44ca-8025-41bbf5ed13f7",
+  song: { id: "hero-terrapin", title: "Terrapin Station" },
+  version: {
+    id: "d5f8948f-3c97-44ca-8025-41bbf5ed13f7",
+    song_id: "hero-terrapin",
+    show_date: "1977-05-08",
+    venue: "Barton Hall · Cornell",
+    city: "Ithaca, NY",
+    rating: 5,
+    description: null,
+    era_id: null,
+    archive_org_url: "https://archive.org/details/gd1977-05-08.sbd.miller.89164.flac16",
+  },
+  setNumber: 1,
+  position: 0,
+  segueToNext: false,
+} as unknown as PlayableSlot;
 
 // Props kept for backward-compat with Index.tsx — unused in the new editorial hero.
 interface FeaturedSetlist {
