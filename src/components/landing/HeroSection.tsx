@@ -85,8 +85,18 @@ const HeroSection = (_props: HeroSectionProps) => {
       stopPlayback();
       return;
     }
+    // Unlock iOS audio inside the gesture: synchronously create + play a
+    // silent clip. Without this, the async resolution inside playSingle
+    // breaks the user-gesture chain and Safari refuses to play later.
+    try {
+      const unlock = new Audio(SILENT_WAV);
+      unlock.volume = 0;
+      void unlock.play().catch(() => {});
+    } catch {
+      // Best effort — never block playback if this throws.
+    }
     trackCtaClick("hero_now_spinning_play", "audio");
-    playSingle(HERO_TRACK);
+    void playSingle(HERO_TRACK);
   };
 
   return (
