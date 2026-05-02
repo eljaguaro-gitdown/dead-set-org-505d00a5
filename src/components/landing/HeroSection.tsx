@@ -7,12 +7,15 @@ import { useAudioPlayer, type PlayableSlot } from "@/contexts/AudioPlayerContext
 // Canonical "first taste" — Cornell '77 Terrapin Station, the most-cited
 // gateway recording in the entire catalog. Hard-coded so the hero never
 // shows an empty cassette while we wait for a query.
+// NOTE: song.id is intentionally a real notable_versions UUID — play_events
+// inserts will fail silently otherwise (text → uuid cast).
+const HERO_VERSION_ID = "d5f8948f-3c97-44ca-8025-41bbf5ed13f7";
 const HERO_TRACK = {
-  id: "d5f8948f-3c97-44ca-8025-41bbf5ed13f7",
-  song: { id: "hero-terrapin", title: "Terrapin Station" },
+  id: HERO_VERSION_ID,
+  song: { id: HERO_VERSION_ID, title: "Terrapin Station" },
   version: {
-    id: "d5f8948f-3c97-44ca-8025-41bbf5ed13f7",
-    song_id: "hero-terrapin",
+    id: HERO_VERSION_ID,
+    song_id: HERO_VERSION_ID,
     show_date: "1977-05-08",
     venue: "Barton Hall · Cornell",
     city: "Ithaca, NY",
@@ -25,6 +28,12 @@ const HERO_TRACK = {
   position: 0,
   segueToNext: false,
 } as unknown as PlayableSlot;
+
+// Tiny silent WAV (44 bytes) used to "unlock" iOS Safari audio inside the
+// user gesture. Without this, async work in playSingle (awaiting Archive.org
+// resolution) breaks the gesture chain and iOS refuses to autoplay later.
+const SILENT_WAV =
+  "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAVFYAAFRWAAABAAgAZGF0YQAAAAA=";
 
 // Props kept for backward-compat with Index.tsx — unused in the new editorial hero.
 interface FeaturedSetlist {
