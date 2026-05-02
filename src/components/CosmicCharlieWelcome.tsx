@@ -9,6 +9,11 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import EraTooltip from "@/components/EraTooltip";
 import type { Database } from "@/integrations/supabase/types";
+import {
+  getVisitorId,
+  loadRecentSongs,
+  appendRecentSongs,
+} from "@/lib/cosmicCharlieHistory";
 
 type Era = Database["public"]["Tables"]["eras"]["Row"];
 
