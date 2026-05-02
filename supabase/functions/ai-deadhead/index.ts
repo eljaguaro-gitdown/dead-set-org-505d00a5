@@ -829,8 +829,45 @@ CRITICAL RULES:
     };
 
     const initialOverlap = computeOverlap(titlesFromSuggestion(suggestion));
-    if (mergedRecent.length >= 8 && initialOverlap > 0.4) {
-      console.log(`[ai-deadhead] Re-rolling: overlap ${(initialOverlap * 100).toFixed(0)}% > 40%`);
+
+    // ── Intra-setlist diversity scoring ──────────────────────────────────
+    const songByNorm = new Map<string, any>();
+    for (const s of songs) songByNorm.set(normalizeTitle(s.title), s);
+
+    const scoreDiversity = (s: any): { duplicates: number; topTagShare: number; uniqueTags: number } => {
+      const titles = titlesFromSuggestion(s);
+      const norms = titles.map((t) => normalizeTitle(t));
+      // duplicates (excluding structural like drums/space which we'll dedupe anyway)
+      const seen = new Map<string, number>();
+      for (const n of norms) seen.set(n, (seen.get(n) || 0) + 1);
+      let duplicates = 0;
+      for (const [, c] of seen) if (c > 1) duplicates += c - 1;
+      // tag distribution
+      const tagCounts = new Map<string, number>();
+      let tagged = 0;
+      for (const n of norms) {
+        const sn = songByNorm.get(n);
+        const tags: string[] = (sn?.tags || []) as string[];
+        if (tags.length === 0) continue;
+        tagged++;
+        for (const t of tags) tagCounts.set(t, (tagCounts.get(t) || 0) + 1);
+      }
+      let topTagShare = 0;
+      for (const [, c] of tagCounts) topTagShare = Math.max(topTagShare, c / Math.max(1, tagged));
+      return { duplicates, topTagShare, uniqueTags: tagCounts.size };
+    };
+
+    const initialDiv = scoreDiversity(suggestion);
+    const needsRoll =
+      (mergedRecent.length >= 8 && initialOverlap > 0.4) ||
+      initialDiv.duplicates > 0 ||
+      initialDiv.topTagShare > 0.45 ||
+      initialDiv.uniqueTags < 5;
+
+    if (needsRoll) {
+      console.log(
+        `[ai-deadhead] Re-rolling: overlap=${(initialOverlap * 100).toFixed(0)}% dup=${initialDiv.duplicates} topTag=${(initialDiv.topTagShare * 100).toFixed(0)}% uniqTags=${initialDiv.uniqueTags}`,
+      );
       const reRoll = await callModel(true);
       if (reRoll.ok) {
         const reRollData = await reRoll.json();
@@ -838,9 +875,15 @@ CRITICAL RULES:
         if (reRollCall) {
           const reRollSuggestion = JSON.parse(reRollCall.function.arguments);
           const reRollOverlap = computeOverlap(titlesFromSuggestion(reRollSuggestion));
-          if (reRollOverlap < initialOverlap) {
+          const reRollDiv = scoreDiversity(reRollSuggestion);
+          // Composite: lower is better
+          const score = (ov: number, d: any) =>
+            ov + d.duplicates * 0.5 + Math.max(0, d.topTagShare - 0.35) + Math.max(0, (5 - d.uniqueTags) * 0.1);
+          if (score(reRollOverlap, reRollDiv) < score(initialOverlap, initialDiv)) {
             suggestion = reRollSuggestion;
-            console.log(`[ai-deadhead] Re-roll accepted: overlap ${(reRollOverlap * 100).toFixed(0)}%`);
+            console.log(
+              `[ai-deadhead] Re-roll accepted: overlap=${(reRollOverlap * 100).toFixed(0)}% dup=${reRollDiv.duplicates} topTag=${(reRollDiv.topTagShare * 100).toFixed(0)}% uniqTags=${reRollDiv.uniqueTags}`,
+            );
           }
         }
       }
@@ -848,6 +891,9 @@ CRITICAL RULES:
 
     // ── Fuzzy match song titles back to IDs ────────────────────────────
     const songMap = new Map((songs || []).map((s: any) => [s.title, s]));
+
+    // Track titles already placed to enforce zero-duplicates as a hard guarantee.
+    const placedTitlesNorm = new Set<string>();
 
     const resolvedSets = suggestion.sets.map((set: any) => ({
       setNumber: set.setNumber,
@@ -864,7 +910,17 @@ CRITICAL RULES:
           notes: song.notes || "",
           position: i,
         };
-      }).filter((s: any) => s.matched),
+      }).filter((s: any) => {
+        if (!s.matched) return false;
+        const n = normalizeTitle(s.title);
+        // Allow Drums/Space to dedupe normally too — only one of each per show.
+        if (placedTitlesNorm.has(n)) {
+          console.log(`[ai-deadhead] Dropping in-show duplicate: "${s.title}"`);
+          return false;
+        }
+        placedTitlesNorm.add(n);
+        return true;
+      }).map((s: any, i: number) => ({ ...s, position: i })),
     }));
 
     // ── Persist this generation to history (for future variety) ──────────
