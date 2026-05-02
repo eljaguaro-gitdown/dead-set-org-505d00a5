@@ -304,6 +304,32 @@ or structural reasons (Drums/Space). Repeating a recent song without justificati
 is a failure mode.
 `;
 
+const INTRA_SETLIST_DIVERSITY = `
+INTRA-SETLIST DIVERSITY MANDATE (NON-NEGOTIABLE — applies WITHIN this single show):
+
+1. ZERO duplicate songs. No song appears more than once across all sets and the encore.
+   Drums and Space each appear at most once. Reprises are the ONLY exception and must
+   be flagged in notes as an intentional sandwich/reprise.
+
+2. TAG DIVERSITY. Every song carries tags (e.g., ballad, rocker, jam, blues, country,
+   gospel, cover, jerry, bob, brent, pigpen, psychedelic, americana). In a 12-15 song
+   show, NO single tag may dominate more than ~35% of the songs. Aim for at least
+   6 distinct tags represented across the show.
+
+3. VOCALIST ROTATION. Do not stack 4+ Jerry songs, 4+ Bob songs, etc. consecutively.
+   Rotate lead vocalists across each set so the texture keeps shifting.
+
+4. TEMPO & MOOD CONTRAST. Adjacent songs should not all share the same tempo bucket
+   (slow/mid/up). Build undulation: ballad → mid-tempo → barn-burner, not three
+   ballads in a row.
+
+5. SET-POSITION HONESTY. Respect each song's typical_set_position when given. A
+   song tagged "encore" doesn't open Set I unless that IS the deliberate aha moment.
+
+If you cannot honor all five with the windowed catalog, prefer the rarer, less-named
+song over the famous one. Diversity beats familiarity.
+`;
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -639,6 +665,7 @@ ERA-SPECIFIC GUIDANCE:
 - Final Chapter (1991-1995): Vince Welnick era. Bruce Hornsby guests.
 
 ${VARIETY_DIRECTIVE}
+${INTRA_SETLIST_DIVERSITY}
 ${VIBE_INTERPRETATION}
 ${PRIORITY_INTERPRETATION}
 ${AHA_MOMENT_REQUIREMENT}
@@ -676,6 +703,7 @@ SEGUE & PAIRING RULES:
 - Drums→Space belongs in Set II, always
 
 ${VARIETY_DIRECTIVE}
+${INTRA_SETLIST_DIVERSITY}
 ${VIBE_INTERPRETATION}
 ${PRIORITY_INTERPRETATION}
 ${AHA_MOMENT_REQUIREMENT}
@@ -801,8 +829,45 @@ CRITICAL RULES:
     };
 
     const initialOverlap = computeOverlap(titlesFromSuggestion(suggestion));
-    if (mergedRecent.length >= 8 && initialOverlap > 0.4) {
-      console.log(`[ai-deadhead] Re-rolling: overlap ${(initialOverlap * 100).toFixed(0)}% > 40%`);
+
+    // ── Intra-setlist diversity scoring ──────────────────────────────────
+    const songByNorm = new Map<string, any>();
+    for (const s of songs) songByNorm.set(normalizeTitle(s.title), s);
+
+    const scoreDiversity = (s: any): { duplicates: number; topTagShare: number; uniqueTags: number } => {
+      const titles = titlesFromSuggestion(s);
+      const norms = titles.map((t) => normalizeTitle(t));
+      // duplicates (excluding structural like drums/space which we'll dedupe anyway)
+      const seen = new Map<string, number>();
+      for (const n of norms) seen.set(n, (seen.get(n) || 0) + 1);
+      let duplicates = 0;
+      for (const [, c] of seen) if (c > 1) duplicates += c - 1;
+      // tag distribution
+      const tagCounts = new Map<string, number>();
+      let tagged = 0;
+      for (const n of norms) {
+        const sn = songByNorm.get(n);
+        const tags: string[] = (sn?.tags || []) as string[];
+        if (tags.length === 0) continue;
+        tagged++;
+        for (const t of tags) tagCounts.set(t, (tagCounts.get(t) || 0) + 1);
+      }
+      let topTagShare = 0;
+      for (const [, c] of tagCounts) topTagShare = Math.max(topTagShare, c / Math.max(1, tagged));
+      return { duplicates, topTagShare, uniqueTags: tagCounts.size };
+    };
+
+    const initialDiv = scoreDiversity(suggestion);
+    const needsRoll =
+      (mergedRecent.length >= 8 && initialOverlap > 0.4) ||
+      initialDiv.duplicates > 0 ||
+      initialDiv.topTagShare > 0.45 ||
+      initialDiv.uniqueTags < 5;
+
+    if (needsRoll) {
+      console.log(
+        `[ai-deadhead] Re-rolling: overlap=${(initialOverlap * 100).toFixed(0)}% dup=${initialDiv.duplicates} topTag=${(initialDiv.topTagShare * 100).toFixed(0)}% uniqTags=${initialDiv.uniqueTags}`,
+      );
       const reRoll = await callModel(true);
       if (reRoll.ok) {
         const reRollData = await reRoll.json();
@@ -810,9 +875,15 @@ CRITICAL RULES:
         if (reRollCall) {
           const reRollSuggestion = JSON.parse(reRollCall.function.arguments);
           const reRollOverlap = computeOverlap(titlesFromSuggestion(reRollSuggestion));
-          if (reRollOverlap < initialOverlap) {
+          const reRollDiv = scoreDiversity(reRollSuggestion);
+          // Composite: lower is better
+          const score = (ov: number, d: any) =>
+            ov + d.duplicates * 0.5 + Math.max(0, d.topTagShare - 0.35) + Math.max(0, (5 - d.uniqueTags) * 0.1);
+          if (score(reRollOverlap, reRollDiv) < score(initialOverlap, initialDiv)) {
             suggestion = reRollSuggestion;
-            console.log(`[ai-deadhead] Re-roll accepted: overlap ${(reRollOverlap * 100).toFixed(0)}%`);
+            console.log(
+              `[ai-deadhead] Re-roll accepted: overlap=${(reRollOverlap * 100).toFixed(0)}% dup=${reRollDiv.duplicates} topTag=${(reRollDiv.topTagShare * 100).toFixed(0)}% uniqTags=${reRollDiv.uniqueTags}`,
+            );
           }
         }
       }
@@ -820,6 +891,9 @@ CRITICAL RULES:
 
     // ── Fuzzy match song titles back to IDs ────────────────────────────
     const songMap = new Map((songs || []).map((s: any) => [s.title, s]));
+
+    // Track titles already placed to enforce zero-duplicates as a hard guarantee.
+    const placedTitlesNorm = new Set<string>();
 
     const resolvedSets = suggestion.sets.map((set: any) => ({
       setNumber: set.setNumber,
@@ -836,7 +910,17 @@ CRITICAL RULES:
           notes: song.notes || "",
           position: i,
         };
-      }).filter((s: any) => s.matched),
+      }).filter((s: any) => {
+        if (!s.matched) return false;
+        const n = normalizeTitle(s.title);
+        // Allow Drums/Space to dedupe normally too — only one of each per show.
+        if (placedTitlesNorm.has(n)) {
+          console.log(`[ai-deadhead] Dropping in-show duplicate: "${s.title}"`);
+          return false;
+        }
+        placedTitlesNorm.add(n);
+        return true;
+      }).map((s: any, i: number) => ({ ...s, position: i })),
     }));
 
     // ── Persist this generation to history (for future variety) ──────────
