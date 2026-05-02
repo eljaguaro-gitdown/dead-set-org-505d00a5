@@ -109,7 +109,7 @@ const CosmicCharlieDialog = ({
   const [namingNew, setNamingNew] = useState(false);
   const [newSetlistName, setNewSetlistName] = useState("");
   const nameInputRef = useRef<HTMLInputElement>(null);
-  const recentSongsRef = useRef<string[]>([]);
+  const recentSongsRef = useRef<string[]>(loadRecentSongs());
 
   // Guided build flow state
   const [buildStep, setBuildStep] = useState(0);
