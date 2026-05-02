@@ -209,6 +209,7 @@ const CosmicCharlieWelcome = ({ eras, onGenerated, onSkip }: CosmicCharlieWelcom
           eraId: selectedEra || undefined,
           preferences: preferences !== undefined ? preferences : composePreferences(),
           recentSongs: recentSongsRef.current.length > 0 ? recentSongsRef.current : undefined,
+          visitorId: getVisitorId(),
         },
       });
 
@@ -218,9 +219,7 @@ const CosmicCharlieWelcome = ({ eras, onGenerated, onSkip }: CosmicCharlieWelcom
       const generatedSongs = (data.sets || []).flatMap((s: any) =>
         s.songs.map((song: any) => song.title)
       );
-      recentSongsRef.current = [
-        ...new Set([...recentSongsRef.current, ...generatedSongs]),
-      ].slice(-30);
+      recentSongsRef.current = appendRecentSongs(generatedSongs);
 
       onGenerated(data, selectedEra);
     } catch (e: any) {
