@@ -504,6 +504,134 @@ const HeroSection = (_props: HeroSectionProps) => {
         }
         @media (min-width: 640px) { .ds-hero__tagline { font-size: 22px; } }
 
+        /* Subhead — clarifies what the site actually does. */
+        .ds-hero__subhead {
+          font-family: 'DM Sans', system-ui, sans-serif;
+          font-weight: 400;
+          font-size: 14px;
+          line-height: 1.55;
+          color: var(--text-soft);
+          margin: 18px 0 0;
+          max-width: 30em;
+          letter-spacing: 0.01em;
+        }
+        @media (min-width: 640px) { .ds-hero__subhead { font-size: 15px; } }
+        .ds-hero__subhead strong {
+          color: var(--text-primary);
+          font-weight: 500;
+        }
+
+        /* Now Spinning cassette — the proof-by-music block. */
+        .ds-hero__cassette {
+          width: 100%;
+          max-width: 420px;
+          margin: 32px auto 0;
+          background: linear-gradient(180deg, #14110a 0%, #0d0b06 100%);
+          border: 1px solid var(--rule-gold-40);
+          border-radius: 8px;
+          padding: 18px 18px 16px;
+          display: flex;
+          align-items: center;
+          gap: 16px;
+          text-align: left;
+          box-shadow: 0 12px 36px rgba(0,0,0,0.5), inset 0 1px 0 rgba(201,168,76,0.08);
+          position: relative;
+          overflow: hidden;
+        }
+        @media (min-width: 640px) {
+          .ds-hero__cassette { padding: 22px 22px 20px; gap: 20px; }
+        }
+        .ds-hero__cassette-eyebrow-row {
+          position: absolute;
+          top: 8px; left: 18px; right: 18px;
+          display: flex; justify-content: space-between; align-items: center;
+          font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+          font-size: 10px;
+          letter-spacing: 0.24em;
+          text-transform: uppercase;
+          color: var(--text-eyebrow);
+        }
+        .ds-hero__cassette-live {
+          display: inline-flex; align-items: center; gap: 6px;
+          color: var(--accent-gold);
+        }
+        .ds-hero__cassette-live-dot {
+          width: 6px; height: 6px; border-radius: 999px;
+          background: var(--accent-warm);
+          box-shadow: 0 0 8px rgba(201, 168, 76, 0.7);
+          animation: ds-hero-pulse 2s ease-in-out infinite;
+        }
+        .ds-hero__play-btn {
+          flex-shrink: 0;
+          width: 64px; height: 64px;
+          border-radius: 999px;
+          background: var(--accent-gold);
+          color: #0a0a0a;
+          border: none;
+          display: inline-flex; align-items: center; justify-content: center;
+          cursor: pointer;
+          transition: background-color 0.15s ease, transform 0.05s ease, box-shadow 0.2s ease;
+          box-shadow: 0 6px 20px rgba(201, 168, 76, 0.35);
+          margin-top: 12px;
+        }
+        @media (min-width: 640px) {
+          .ds-hero__play-btn { width: 72px; height: 72px; }
+        }
+        .ds-hero__play-btn:hover { background: var(--accent-warm); }
+        .ds-hero__play-btn:active { transform: scale(0.96); }
+        .ds-hero__play-btn:focus-visible {
+          outline: 2px solid var(--accent-warm);
+          outline-offset: 4px;
+        }
+        .ds-hero__play-btn svg { width: 26px; height: 26px; }
+        .ds-hero__cassette-meta {
+          flex: 1;
+          min-width: 0;
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+          margin-top: 14px;
+        }
+        .ds-hero__cassette-song {
+          font-family: 'Playfair Display', Georgia, serif;
+          font-style: italic;
+          font-weight: 700;
+          font-size: 18px;
+          line-height: 1.2;
+          color: var(--accent-gold);
+          margin: 0;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        @media (min-width: 640px) { .ds-hero__cassette-song { font-size: 20px; } }
+        .ds-hero__cassette-show {
+          font-family: 'DM Sans', system-ui, sans-serif;
+          font-size: 13px;
+          line-height: 1.4;
+          color: var(--text-primary);
+          margin: 0;
+        }
+        .ds-hero__cassette-venue {
+          font-family: 'DM Sans', system-ui, sans-serif;
+          font-size: 12px;
+          line-height: 1.4;
+          color: var(--text-soft);
+          margin: 0;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .ds-hero__cassette-hint {
+          margin-top: 10px;
+          font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+          font-size: 11px;
+          letter-spacing: 0.18em;
+          text-transform: uppercase;
+          color: var(--text-eyebrow);
+          text-align: center;
+        }
+
         @media (prefers-reduced-motion: reduce) {
           .ds-hero__logo-mark,
           .ds-hero__portrait { animation: none !important; }
