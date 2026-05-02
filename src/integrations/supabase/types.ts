@@ -373,6 +373,39 @@ export type Database = {
         }
         Relationships: []
       }
+      cosmic_charlie_history: {
+        Row: {
+          era_id: string | null
+          generated_at: string
+          id: string
+          song_id: string | null
+          song_title: string
+          user_id: string | null
+          vibe_signature: string | null
+          visitor_id: string | null
+        }
+        Insert: {
+          era_id?: string | null
+          generated_at?: string
+          id?: string
+          song_id?: string | null
+          song_title: string
+          user_id?: string | null
+          vibe_signature?: string | null
+          visitor_id?: string | null
+        }
+        Update: {
+          era_id?: string | null
+          generated_at?: string
+          id?: string
+          song_id?: string | null
+          song_title?: string
+          user_id?: string | null
+          vibe_signature?: string | null
+          visitor_id?: string | null
+        }
+        Relationships: []
+      }
       direct_messages: {
         Row: {
           content: string
@@ -1278,7 +1311,15 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      cosmic_charlie_song_frequency: {
+        Row: {
+          appearances: number | null
+          distinct_audiences: number | null
+          last_generated_at: string | null
+          song_title: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       cleanup_expired_drafts: { Args: never; Returns: number }

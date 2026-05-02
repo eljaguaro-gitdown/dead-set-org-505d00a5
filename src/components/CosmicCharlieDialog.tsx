@@ -10,6 +10,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
 import CosmicCharlieAvatar from "@/components/CosmicCharlieAvatar";
 import type { Database } from "@/integrations/supabase/types";
+import {
+  getVisitorId,
+  loadRecentSongs,
+  appendRecentSongs,
+} from "@/lib/cosmicCharlieHistory";
 
 type Song = Database["public"]["Tables"]["songs"]["Row"];
 type Era = Database["public"]["Tables"]["eras"]["Row"];
@@ -104,7 +109,7 @@ const CosmicCharlieDialog = ({
   const [namingNew, setNamingNew] = useState(false);
   const [newSetlistName, setNewSetlistName] = useState("");
   const nameInputRef = useRef<HTMLInputElement>(null);
-  const recentSongsRef = useRef<string[]>([]);
+  const recentSongsRef = useRef<string[]>(loadRecentSongs());
 
   // Guided build flow state
   const [buildStep, setBuildStep] = useState(0);
@@ -214,6 +219,7 @@ const CosmicCharlieDialog = ({
           currentSlots: mode === "improve" ? currentSlots : undefined,
           preferences: finalPrefs,
           recentSongs: recentSongsRef.current.length > 0 ? recentSongsRef.current : undefined,
+          visitorId: getVisitorId(),
         },
       });
 
@@ -221,7 +227,7 @@ const CosmicCharlieDialog = ({
       if (data?.error) throw new Error(data.error);
 
       const generatedSongs = (data.sets || []).flatMap((s: any) => s.songs.map((song: any) => song.title));
-      recentSongsRef.current = [...new Set([...recentSongsRef.current, ...generatedSongs])].slice(-30);
+      recentSongsRef.current = appendRecentSongs(generatedSongs);
 
       setSuggestion(data);
     } catch (e: any) {
