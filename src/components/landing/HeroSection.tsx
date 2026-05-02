@@ -9,15 +9,16 @@ import { useAudioPlayer, type PlayableSlot } from "@/contexts/AudioPlayerContext
 // NOTE: song.id is intentionally a real notable_versions UUID — play_events
 // inserts will fail silently otherwise (text → uuid cast).
 const HERO_VERSION_ID = "d5f8948f-3c97-44ca-8025-41bbf5ed13f7";
+const HERO_SONG_ID = "4870b3f0-1a22-4fc1-89ed-c745a9e860d8";
 const HERO_TRACK = {
   id: HERO_VERSION_ID,
-  song: { id: HERO_VERSION_ID, title: "Terrapin Station" },
+  song: { id: HERO_SONG_ID, title: "Terrapin Station" },
   version: {
     id: HERO_VERSION_ID,
-    song_id: HERO_VERSION_ID,
-    show_date: "1977-05-08",
-    venue: "Barton Hall · Cornell",
-    city: "Ithaca, NY",
+    song_id: HERO_SONG_ID,
+    show_date: "1977-05-28",
+    venue: "Hartford Civic Center",
+    city: "Hartford, CT",
     rating: 5,
     description: null,
     era_id: null,
