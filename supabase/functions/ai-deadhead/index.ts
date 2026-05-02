@@ -304,6 +304,32 @@ or structural reasons (Drums/Space). Repeating a recent song without justificati
 is a failure mode.
 `;
 
+const INTRA_SETLIST_DIVERSITY = `
+INTRA-SETLIST DIVERSITY MANDATE (NON-NEGOTIABLE — applies WITHIN this single show):
+
+1. ZERO duplicate songs. No song appears more than once across all sets and the encore.
+   Drums and Space each appear at most once. Reprises are the ONLY exception and must
+   be flagged in notes as an intentional sandwich/reprise.
+
+2. TAG DIVERSITY. Every song carries tags (e.g., ballad, rocker, jam, blues, country,
+   gospel, cover, jerry, bob, brent, pigpen, psychedelic, americana). In a 12-15 song
+   show, NO single tag may dominate more than ~35% of the songs. Aim for at least
+   6 distinct tags represented across the show.
+
+3. VOCALIST ROTATION. Do not stack 4+ Jerry songs, 4+ Bob songs, etc. consecutively.
+   Rotate lead vocalists across each set so the texture keeps shifting.
+
+4. TEMPO & MOOD CONTRAST. Adjacent songs should not all share the same tempo bucket
+   (slow/mid/up). Build undulation: ballad → mid-tempo → barn-burner, not three
+   ballads in a row.
+
+5. SET-POSITION HONESTY. Respect each song's typical_set_position when given. A
+   song tagged "encore" doesn't open Set I unless that IS the deliberate aha moment.
+
+If you cannot honor all five with the windowed catalog, prefer the rarer, less-named
+song over the famous one. Diversity beats familiarity.
+`;
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
