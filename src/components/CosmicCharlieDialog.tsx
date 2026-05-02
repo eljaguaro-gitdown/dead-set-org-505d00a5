@@ -10,6 +10,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
 import CosmicCharlieAvatar from "@/components/CosmicCharlieAvatar";
 import type { Database } from "@/integrations/supabase/types";
+import {
+  getVisitorId,
+  loadRecentSongs,
+  appendRecentSongs,
+} from "@/lib/cosmicCharlieHistory";
 
 type Song = Database["public"]["Tables"]["songs"]["Row"];
 type Era = Database["public"]["Tables"]["eras"]["Row"];
