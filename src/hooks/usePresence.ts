@@ -87,27 +87,58 @@ export const usePresence = () => {
   // Auto-reconnect when the tab returns to the foreground or the network
   // comes back. iOS Safari aggressively suspends WebSockets in the background
   // and the channel often comes back as CLOSED / CHANNEL_ERROR / TIMED_OUT.
+  // Also runs a periodic watchdog so a stale channel recovers even when the
+  // tab stays foregrounded (e.g. an admin staring at the debug panel).
   useEffect(() => {
-    const maybeReconnect = () => {
-      const { status } = getDebugSnapshot();
-      const stale =
-        status === "CLOSED" || status === "CHANNEL_ERROR" || status === "TIMED_OUT";
+    const STALE_STATUSES = new Set(["CLOSED", "CHANNEL_ERROR", "TIMED_OUT"]);
+    // If we've been "SUBSCRIBING" for too long without reaching SUBSCRIBED,
+    // treat that as stuck and force a reconnect.
+    const SUBSCRIBING_STUCK_MS = 15_000;
+    // If we're SUBSCRIBED but haven't seen any sync event in this long, the
+    // socket is likely dead even though status hasn't flipped yet.
+    const SYNC_STALE_MS = 90_000;
+
+    const maybeReconnect = (reason: string) => {
+      const snap = getDebugSnapshot();
+      const now = Date.now();
+      let stale = STALE_STATUSES.has(snap.status);
+
+      if (!stale && snap.status === "SUBSCRIBING") {
+        // No subscribedAt yet — use lastSyncAt or assume long-stuck.
+        const since = snap.lastSyncAt ?? 0;
+        if (now - since > SUBSCRIBING_STUCK_MS) stale = true;
+      }
+
+      if (!stale && snap.status === "SUBSCRIBED" && snap.lastSyncAt) {
+        if (now - snap.lastSyncAt > SYNC_STALE_MS) stale = true;
+      }
+
       if (!stale) return;
+      console.warn(`[presence] reconnecting (${reason}, status=${snap.status})`);
       reconnectPresenceChannel();
     };
 
     const onVisibility = () => {
-      if (document.visibilityState === "visible") maybeReconnect();
+      if (document.visibilityState === "visible") maybeReconnect("visibility");
     };
+    const onFocus = () => maybeReconnect("focus");
+    const onOnline = () => maybeReconnect("online");
 
     document.addEventListener("visibilitychange", onVisibility);
-    window.addEventListener("focus", maybeReconnect);
-    window.addEventListener("online", maybeReconnect);
+    window.addEventListener("focus", onFocus);
+    window.addEventListener("online", onOnline);
+
+    // Watchdog: poll every 20s while the tab is visible.
+    const watchdog = setInterval(() => {
+      if (document.visibilityState !== "visible") return;
+      maybeReconnect("watchdog");
+    }, 20_000);
 
     return () => {
       document.removeEventListener("visibilitychange", onVisibility);
-      window.removeEventListener("focus", maybeReconnect);
-      window.removeEventListener("online", maybeReconnect);
+      window.removeEventListener("focus", onFocus);
+      window.removeEventListener("online", onOnline);
+      clearInterval(watchdog);
     };
   }, []);
 };
