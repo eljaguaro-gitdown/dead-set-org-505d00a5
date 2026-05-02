@@ -4,29 +4,30 @@ import { trackCtaClick } from "@/lib/trackCtaClick";
 import { supabase } from "@/integrations/supabase/client";
 import { useAudioPlayer, type PlayableSlot } from "@/contexts/AudioPlayerContext";
 
-// Canonical "first taste" — Cornell '77 Terrapin Station, the most-cited
-// gateway recording in the entire catalog. Hard-coded so the hero never
-// shows an empty cassette while we wait for a query.
-// NOTE: song.id is intentionally a real notable_versions UUID — play_events
-// inserts will fail silently otherwise (text → uuid cast).
+// Canonical "first taste" — Spring '77 Terrapin Station, hard-coded with a
+// verified direct MP3 so the hero never depends on async Archive.org matching.
+// NOTE: song.id is the real songs UUID; slot/version uses a stable UUID so
+// play_events can store both without client-side casting failures.
 const HERO_VERSION_ID = "d5f8948f-3c97-44ca-8025-41bbf5ed13f7";
+const HERO_SONG_ID = "4870b3f0-1a22-4fc1-89ed-c745a9e860d8";
 const HERO_TRACK = {
   id: HERO_VERSION_ID,
-  song: { id: HERO_VERSION_ID, title: "Terrapin Station" },
+  song: { id: HERO_SONG_ID, title: "Terrapin Station" },
   version: {
     id: HERO_VERSION_ID,
-    song_id: HERO_VERSION_ID,
-    show_date: "1977-05-08",
-    venue: "Barton Hall · Cornell",
-    city: "Ithaca, NY",
+    song_id: HERO_SONG_ID,
+    show_date: "1977-05-28",
+    venue: "Hartford Civic Center",
+    city: "Hartford, CT",
     rating: 5,
     description: null,
     era_id: null,
-    archive_org_url: "https://archive.org/details/gd1977-05-08.sbd.miller.89164.flac16",
+    archive_org_url: "https://archive.org/details/gd1977-05-28.sbd.ashley-bertha.12827.sbeok.flac16",
   },
   setNumber: 1,
   position: 0,
   segueToNext: false,
+  directTrackUrl: "https://archive.org/download/gd1977-05-28.sbd.ashley-bertha.12827.sbeok.flac16/gd77-05-28d3t03.mp3",
 } as unknown as PlayableSlot;
 
 // Tiny silent WAV (44 bytes) used to "unlock" iOS Safari audio inside the
@@ -696,7 +697,7 @@ const HeroSection = (_props: HeroSectionProps) => {
           </p>
 
           {/* Now Spinning — proof-by-music. One tap, one ear, you're in. */}
-          <div className="ds-hero__cassette" role="group" aria-label="Now Spinning — Cornell '77">
+          <div className="ds-hero__cassette" role="group" aria-label="Now Spinning — Hartford '77">
             <div className="ds-hero__cassette-eyebrow-row" aria-hidden="true">
               <span className="ds-hero__cassette-live">
                 <span className="ds-hero__cassette-live-dot" />
@@ -709,7 +710,7 @@ const HeroSection = (_props: HeroSectionProps) => {
               type="button"
               onClick={handleHeroPlay}
               className="ds-hero__play-btn"
-              aria-label={isHeroPlaying ? "Pause Terrapin Station" : "Play Terrapin Station from Cornell 5/8/77"}
+              aria-label={isHeroPlaying ? "Pause Terrapin Station" : "Play Terrapin Station from Hartford 5/28/77"}
             >
               {isHeroPlaying ? (
                 <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -725,8 +726,8 @@ const HeroSection = (_props: HeroSectionProps) => {
 
             <div className="ds-hero__cassette-meta">
               <p className="ds-hero__cassette-song">Terrapin Station</p>
-              <p className="ds-hero__cassette-show">May 8, 1977</p>
-              <p className="ds-hero__cassette-venue">Barton Hall · Cornell</p>
+              <p className="ds-hero__cassette-show">May 28, 1977</p>
+              <p className="ds-hero__cassette-venue">Hartford Civic Center</p>
             </div>
           </div>
           <p className="ds-hero__cassette-hint">
