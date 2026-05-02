@@ -666,9 +666,52 @@ const HeroSection = (_props: HeroSectionProps) => {
         <div className="ds-hero__content">
           <h1 className="ds-hero__headline">Every Deadhead knows the feeling.</h1>
 
+          <p className="ds-hero__subhead">
+            Build setlists from <strong>thousands of live recordings</strong> on
+            the Internet Archive. Press play — no signup required.
+          </p>
+
           <p className="ds-hero__chase">
             That song. That night. That version you'll never forget —
             and the next one waiting to be found, inhaled, and passed on.
+          </p>
+
+          {/* Now Spinning — proof-by-music. One tap, one ear, you're in. */}
+          <div className="ds-hero__cassette" role="group" aria-label="Now Spinning — Cornell '77">
+            <div className="ds-hero__cassette-eyebrow-row" aria-hidden="true">
+              <span className="ds-hero__cassette-live">
+                <span className="ds-hero__cassette-live-dot" />
+                {isHeroPlaying ? "Now Spinning" : "Press Play"}
+              </span>
+              <span>SBD · ★★★★★</span>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleHeroPlay}
+              className="ds-hero__play-btn"
+              aria-label={isHeroPlaying ? "Pause Terrapin Station" : "Play Terrapin Station from Cornell 5/8/77"}
+            >
+              {isHeroPlaying ? (
+                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <rect x="6" y="5" width="4" height="14" rx="1" />
+                  <rect x="14" y="5" width="4" height="14" rx="1" />
+                </svg>
+              ) : (
+                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path d="M8 5.14v13.72c0 .79.87 1.27 1.54.85l10.79-6.86a1 1 0 0 0 0-1.7L9.54 4.29A1 1 0 0 0 8 5.14z" />
+                </svg>
+              )}
+            </button>
+
+            <div className="ds-hero__cassette-meta">
+              <p className="ds-hero__cassette-song">Terrapin Station</p>
+              <p className="ds-hero__cassette-show">May 8, 1977</p>
+              <p className="ds-hero__cassette-venue">Barton Hall · Cornell</p>
+            </div>
+          </div>
+          <p className="ds-hero__cassette-hint">
+            {isHeroPlaying ? "the music never stops" : "the most-cited tape ever made"}
           </p>
 
           <div className="ds-hero__stage" aria-hidden="true">
