@@ -219,6 +219,7 @@ const CosmicCharlieDialog = ({
           currentSlots: mode === "improve" ? currentSlots : undefined,
           preferences: finalPrefs,
           recentSongs: recentSongsRef.current.length > 0 ? recentSongsRef.current : undefined,
+          visitorId: getVisitorId(),
         },
       });
 
@@ -226,7 +227,7 @@ const CosmicCharlieDialog = ({
       if (data?.error) throw new Error(data.error);
 
       const generatedSongs = (data.sets || []).flatMap((s: any) => s.songs.map((song: any) => song.title));
-      recentSongsRef.current = [...new Set([...recentSongsRef.current, ...generatedSongs])].slice(-30);
+      recentSongsRef.current = appendRecentSongs(generatedSongs);
 
       setSuggestion(data);
     } catch (e: any) {
