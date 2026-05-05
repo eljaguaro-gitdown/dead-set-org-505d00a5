@@ -52,48 +52,50 @@ const Auth = () => {
         toast.success("Check your email for a reset link!");
         setIsForgot(false);
       } else if (isSignUp) {
+        void trackAuthEvent("signup_email_attempted", { provider: "email" });
         const { error, data } = await supabase.auth.signUp({
           email,
           password,
           options: { emailRedirectTo: window.location.origin },
         });
-        if (error) throw error;
-        // Send welcome email regardless of session
-        if (data.user) {
-          const displayName = data.user.user_metadata?.full_name || email.split("@")[0];
-          await supabase.functions.invoke("send-transactional-email", {
-            body: {
-              templateName: "welcome-email",
-              recipientEmail: email,
-              idempotencyKey: `welcome-${data.user.id}`,
-              templateData: { displayName },
-            },
-          }).catch(() => {});
-          // Notify admin of new signup
-          await supabase.functions.invoke("send-transactional-email", {
-            body: {
-              templateName: "new-signup-notification",
-              recipientEmail: "grateful_jaguaro@dead-set.org",
-              idempotencyKey: `new-signup-notify-${data.user.id}`,
-              templateData: {
-                userEmail: email,
-                displayName,
-                provider: "email",
-                signupTime: data.user.created_at,
-              },
-            },
-          }).catch(() => {});
+        if (error) {
+          void trackAuthEvent("signup_email_failed", {
+            provider: "email",
+            metadata: { message: error.message },
+          });
+          throw error;
         }
+        // Welcome + admin notification emails are sent server-side by the
+        // handle_new_user_emails trigger on auth.users — no client dispatch needed.
         if (data.session && data.session.user) {
+          void trackAuthEvent("signup_email_succeeded", {
+            provider: "email",
+            userId: data.session.user.id,
+          });
           sessionStorage.setItem(SESSION_FLAG, "1");
           await smartRedirect(data.session.user.id);
         } else {
+          void trackAuthEvent("signup_email_needs_confirmation", {
+            provider: "email",
+            userId: data.user?.id ?? null,
+          });
           toast.success("Check your email to confirm your account!");
         }
       } else {
+        void trackAuthEvent("signin_email_attempted", { provider: "email" });
         const { error, data } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
+        if (error) {
+          void trackAuthEvent("signin_email_failed", {
+            provider: "email",
+            metadata: { message: error.message },
+          });
+          throw error;
+        }
         if (data.session?.user) {
+          void trackAuthEvent("signin_email_succeeded", {
+            provider: "email",
+            userId: data.session.user.id,
+          });
           sessionStorage.setItem(SESSION_FLAG, "1");
           await smartRedirect(data.session.user.id);
         }
@@ -113,7 +115,23 @@ const Auth = () => {
       );
       return;
     }
+    markOAuthRedirect("google");
     const { error } = await lovable.auth.signInWithOAuth("google", {
+      redirect_uri: window.location.origin,
+    });
+    if (error) toast.error(error.message);
+  };
+
+  const handleAppleLogin = async () => {
+    if (isInApp) {
+      toast.error(
+        `Apple sign-in doesn't work inside ${appName}. Tap the ⋯ menu and choose "Open in Safari" — or use email below.`,
+        { duration: 7000 }
+      );
+      return;
+    }
+    markOAuthRedirect("apple");
+    const { error } = await lovable.auth.signInWithOAuth("apple", {
       redirect_uri: window.location.origin,
     });
     if (error) toast.error(error.message);
