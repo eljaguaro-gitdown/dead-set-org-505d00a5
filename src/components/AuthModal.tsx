@@ -127,12 +127,10 @@ const AuthModal = ({ open, onOpenChange, onAuthenticated, onBeforeRedirect }: Au
   };
 
   const handleAppleLogin = async () => {
-    onBeforeRedirect?.();
-    markOAuthRedirect("apple");
-    const { error } = await lovable.auth.signInWithOAuth("apple", {
-      redirect_uri: `${window.location.origin}/builder`,
-    });
-    if (error) toast.error(error.message);
+    toast.error(
+      "Apple sign-in is temporarily unavailable. Please use Google or email/password instead.",
+      { duration: 7000 }
+    );
   };
 
   return (
