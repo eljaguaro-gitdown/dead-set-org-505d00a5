@@ -122,18 +122,10 @@ const Auth = () => {
   };
 
   const handleAppleLogin = async () => {
-    if (isInApp) {
-      toast.error(
-        `Apple sign-in doesn't work inside ${appName}. Tap the ⋯ menu and choose "Open in Safari" — or use email below.`,
-        { duration: 7000 }
-      );
-      return;
-    }
-    markOAuthRedirect("apple");
-    const { error } = await lovable.auth.signInWithOAuth("apple", {
-      redirect_uri: window.location.origin,
-    });
-    if (error) toast.error(error.message);
+    toast.error(
+      "Apple sign-in is temporarily unavailable. Please use Google or email/password instead.",
+      { duration: 7000 }
+    );
   };
 
   return (
@@ -215,6 +207,22 @@ const Auth = () => {
             </div>
           )}
 
+          {/* Apple temporarily unavailable banner */}
+          <div
+            role="alert"
+            className="rounded-xl border-2 border-primary/60 bg-primary/10 p-4 flex gap-3 shadow-[0_0_24px_-8px_hsl(var(--primary)/0.5)]"
+          >
+            <AlertTriangle className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+            <div className="space-y-1">
+              <p className="font-body text-sm font-semibold text-foreground">
+                Apple Sign-In is temporarily unavailable
+              </p>
+              <p className="font-body text-sm text-muted-foreground">
+                We're working on a fix. In the meantime, please use <span className="text-foreground font-medium">Google</span> or <span className="text-foreground font-medium">email &amp; password</span>.
+              </p>
+            </div>
+          </div>
+
           <div className="space-y-3">
             <Button
               variant="outline"
@@ -232,17 +240,22 @@ const Auth = () => {
 
             <Button
               variant="outline"
-              className="w-full border-border text-foreground hover:bg-muted font-body gap-2"
+              className="w-full border-border/50 text-muted-foreground hover:bg-muted/40 font-body gap-2 opacity-60"
               onClick={handleAppleLogin}
+              title="Apple sign-in is temporarily unavailable — please use Google or email/password"
+              aria-label="Apple sign-in temporarily unavailable"
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
               </svg>
               Continue with Apple
+              <span className="ml-auto rounded-full border border-primary/40 bg-primary/10 px-2 py-0.5 text-[10px] font-mono uppercase tracking-wider text-primary">
+                Unavailable
+              </span>
             </Button>
 
             <p className="text-center font-body text-xs text-muted-foreground/70 pt-1">
-              Trouble with Google or Apple? <span className="text-foreground">Email signup works on every browser.</span>
+              Email signup works on every browser.
             </p>
           </div>
 
