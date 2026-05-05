@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
@@ -12,7 +12,6 @@ import StealYourFace from "@/components/StealYourFace";
 import { getPostAuthRedirect } from "@/lib/postAuthRedirect";
 import { detectInAppBrowser } from "@/lib/inAppBrowser";
 import { trackAuthEvent, markOAuthRedirect } from "@/lib/authFunnel";
-import { useEffect } from "react";
 
 const SESSION_FLAG = "dead_set_active_session";
 
