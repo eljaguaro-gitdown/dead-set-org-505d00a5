@@ -137,20 +137,6 @@ const Auth = () => {
     if (error) toast.error(error.message);
   };
 
-  const handleAppleLogin = async () => {
-    if (isInApp) {
-      toast.error(
-        `Apple sign-in doesn't work inside ${appName}. Tap the ⋯ menu and choose "Open in Safari" — or use email below.`,
-        { duration: 7000 }
-      );
-      return;
-    }
-    const { error } = await lovable.auth.signInWithOAuth("apple", {
-      redirect_uri: window.location.origin,
-    });
-    if (error) toast.error(error.message);
-  };
-
   return (
     <PageLayout>
       <div className="flex-1 flex items-center justify-center px-4">
