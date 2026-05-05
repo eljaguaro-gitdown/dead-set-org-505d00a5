@@ -122,18 +122,10 @@ const Auth = () => {
   };
 
   const handleAppleLogin = async () => {
-    if (isInApp) {
-      toast.error(
-        `Apple sign-in doesn't work inside ${appName}. Tap the ⋯ menu and choose "Open in Safari" — or use email below.`,
-        { duration: 7000 }
-      );
-      return;
-    }
-    markOAuthRedirect("apple");
-    const { error } = await lovable.auth.signInWithOAuth("apple", {
-      redirect_uri: window.location.origin,
-    });
-    if (error) toast.error(error.message);
+    toast.error(
+      "Apple sign-in is temporarily unavailable. Please use Google or email/password instead.",
+      { duration: 7000 }
+    );
   };
 
   return (
