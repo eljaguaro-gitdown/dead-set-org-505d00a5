@@ -11,6 +11,8 @@ import PageLayout from "@/components/PageLayout";
 import StealYourFace from "@/components/StealYourFace";
 import { getPostAuthRedirect } from "@/lib/postAuthRedirect";
 import { detectInAppBrowser } from "@/lib/inAppBrowser";
+import { trackAuthEvent, markOAuthRedirect } from "@/lib/authFunnel";
+import { useEffect } from "react";
 
 const SESSION_FLAG = "dead_set_active_session";
 
@@ -24,6 +26,10 @@ const Auth = () => {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const { isInApp, appName } = useMemo(() => detectInAppBrowser(), []);
+
+  useEffect(() => {
+    void trackAuthEvent("auth_modal_opened", { metadata: { surface: "auth_page" } });
+  }, []);
 
   const smartRedirect = async (userId: string) => {
     if (explicitRedirect) {
