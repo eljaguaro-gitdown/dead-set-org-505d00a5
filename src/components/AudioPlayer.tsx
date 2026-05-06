@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence, useMotionValue, useDragControls } from "framer-motion";
 import { Play, Pause, Volume2, VolumeX, X, Loader2, Cast, ChevronRight, GripHorizontal, SkipForward, SkipBack, FastForward } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import PosterModal from "@/components/PosterModal";
 import { findTrackInRecording, matchScore } from "@/lib/archiveOrg";
 import { audioDebug } from "@/lib/audioDebug";
 import {
