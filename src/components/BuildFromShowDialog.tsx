@@ -67,7 +67,7 @@ const BuildFromShowDialog = ({ open, onOpenChange, onSeed }: BuildFromShowDialog
   const [loading, setLoading] = useState(false);
 
   const runFetch = useCallback(
-    async (body: { date?: string } | { month: number; day: number }, fallbackTitle: string) => {
+    async (body: { date?: string } | { month: number; day: number; aggregate?: boolean }, fallbackTitle: string) => {
       setLoading(true);
       try {
         const { data: show, error: fnErr } = await supabase.functions.invoke("fetch-show-setlist", { body });
