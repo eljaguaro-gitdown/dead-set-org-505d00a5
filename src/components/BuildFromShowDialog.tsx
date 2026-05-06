@@ -20,6 +20,8 @@ export interface SeededSlot {
   setNumber: number;
   position: number;
   segueToNext: boolean;
+  sourceDate?: string;
+  sourceVenue?: string | null;
 }
 
 export interface ShowSeed {
@@ -93,12 +95,12 @@ const BuildFromShowDialog = ({ open, onOpenChange, onSeed }: BuildFromShowDialog
         const positions = new Map<number, number>();
         let unmatched = 0;
 
-        for (const track of show.tracks as Array<{ rawTitle: string; setNumber: number; position: number; segueToNext: boolean; }>) {
+        for (const track of show.tracks as Array<{ rawTitle: string; setNumber: number; position: number; segueToNext: boolean; sourceDate?: string; sourceVenue?: string | null }>) {
           const matched = fuzzyMatchSong(track.rawTitle, songs || []);
           if (!matched) { unmatched++; continue; }
           const pos = positions.get(track.setNumber) || 0;
           positions.set(track.setNumber, pos + 1);
-          slots.push({ song: matched, setNumber: track.setNumber, position: pos, segueToNext: track.segueToNext });
+          slots.push({ song: matched, setNumber: track.setNumber, position: pos, segueToNext: track.segueToNext, sourceDate: track.sourceDate, sourceVenue: track.sourceVenue });
         }
 
         if (slots.length === 0) {
@@ -106,10 +108,15 @@ const BuildFromShowDialog = ({ open, onOpenChange, onSeed }: BuildFromShowDialog
           return;
         }
 
-        // Use the resolved date returned by the edge function for nice titles
-        const resolvedDate = show.date ? new Date(show.date + "T12:00:00") : (date || new Date());
-        const niceDate = formatNiceDate(resolvedDate);
-        const title = show.venue ? `${niceDate} — ${show.venue}` : (fallbackTitle || niceDate);
+        // For aggregate mode the date is "MM-DD-aggregate" — use venue label as the title.
+        const isAggregate = (show.date || "").endsWith("-aggregate");
+        const resolvedDate = !isAggregate && show.date
+          ? new Date(show.date + "T12:00:00")
+          : (date || new Date());
+        const niceDate = isAggregate ? (show.venue || fallbackTitle) : formatNiceDate(resolvedDate);
+        const title = isAggregate
+          ? (show.venue || fallbackTitle)
+          : (show.venue ? `${formatNiceDate(resolvedDate)} — ${show.venue}` : (fallbackTitle || formatNiceDate(resolvedDate)));
 
         await onSeed({ title, eraId: null, archiveUrl: show.archiveUrl, slots, unmatchedCount: unmatched });
 
