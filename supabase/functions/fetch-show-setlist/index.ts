@@ -230,9 +230,44 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { date } = await req.json();
+    const body = await req.json();
+    let date: string | undefined = body.date;
+    const month: number | undefined = body.month;
+    const day: number | undefined = body.day;
+
+    // Calendar-day mode: pick a random year (1965-1995) that had a show on this MM-DD.
+    if (!date && Number.isInteger(month) && Number.isInteger(day)) {
+      const mm = String(month).padStart(2, "0");
+      const dd = String(day).padStart(2, "0");
+      const q = encodeURIComponent(
+        `collection:GratefulDead AND date:[1965-01-01T00:00:00Z TO 1995-12-31T23:59:59Z]`,
+      );
+      const searchUrl = `https://archive.org/advancedsearch.php?q=${q}&fl[]=date&rows=2000&output=json`;
+      const sRes = await fetch(searchUrl);
+      if (!sRes.ok) {
+        return new Response(JSON.stringify({ error: "Couldn't search archive.org" }), {
+          status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const sData = await sRes.json();
+      const docs: any[] = sData?.response?.docs || [];
+      const matchingDates = new Set<string>();
+      for (const d of docs) {
+        const iso = (d.date || "").slice(0, 10);
+        if (iso.length === 10 && iso.slice(5) === `${mm}-${dd}`) matchingDates.add(iso);
+      }
+      const dates = Array.from(matchingDates);
+      if (dates.length === 0) {
+        return new Response(
+          JSON.stringify({ error: `No Grateful Dead shows on ${mm}/${dd} across all years.` }),
+          { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+      date = dates[Math.floor(Math.random() * dates.length)];
+    }
+
     if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-      return new Response(JSON.stringify({ error: "Invalid date. Use YYYY-MM-DD." }), {
+      return new Response(JSON.stringify({ error: "Invalid date. Use YYYY-MM-DD or {month, day}." }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
