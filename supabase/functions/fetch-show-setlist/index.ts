@@ -324,24 +324,32 @@ Deno.serve(async (req) => {
       const total = unique.length;
       const encoreCount = Math.min(3, Math.max(1, Math.floor(total * 0.1)));
       const set1End = Math.floor((total - encoreCount) / 2);
-      const aggregatedTracks: ParsedTrack[] = unique.map((u, i) => {
+      const aggregatedTracks: Array<ParsedTrack & { sourceDate?: string; sourceVenue?: string | null }> = unique.map((u, i) => {
         let setNumber: number;
         if (i >= total - encoreCount) setNumber = 3;
         else if (i < set1End) setNumber = 1;
         else setNumber = 2;
-        return { rawTitle: u.rawTitle, setNumber, position: i, segueToNext: false };
+        return {
+          rawTitle: u.rawTitle,
+          setNumber,
+          position: i,
+          segueToNext: false,
+          sourceDate: u.date,
+          sourceVenue: u.venue,
+        };
       });
 
+      const yearsRepresented = Array.from(new Set(unique.map((u) => u.date.slice(0, 4)))).sort();
       const result = {
         archiveId: "aggregate",
         archiveUrl: `https://archive.org/search.php?query=collection%3AGratefulDead+AND+date%3A*-${mm}-${dd}`,
         date: `${mm}-${dd}-aggregate`,
-        venue: `${MONTHS[month - 1]} ${day} — across the years`,
+        venue: `${MONTHS[month - 1]} ${day} — across ${yearsRepresented.length} year${yearsRepresented.length === 1 ? "" : "s"} (${yearsRepresented.join(", ")})`,
         city: null,
         tracks: aggregatedTracks,
         aggregate: true,
         showsScanned: limited.length,
-        yearsRepresented: new Set(unique.map((u) => u.date.slice(0, 4))).size,
+        yearsRepresented: yearsRepresented.length,
       };
       return new Response(JSON.stringify(result), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
