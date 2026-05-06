@@ -19,7 +19,7 @@ const Auth = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const explicitRedirect = searchParams.get("redirect");
-  const [isSignUp, setIsSignUp] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(true);
   const [isForgot, setIsForgot] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -136,10 +136,14 @@ const Auth = () => {
             <StealYourFace size={80} />
             <h1 className="font-display text-4xl text-primary">Dead-Set.Org</h1>
             <p className="font-hand text-xl text-muted-foreground">
-              {isForgot ? "We'll get you back in." : isSignUp ? "Come on in. There's room." : "The music never stopped."}
+              {isForgot ? "We'll get you back in." : isSignUp ? "Come on in. There's room." : "Welcome back."}
             </p>
             <p className="font-body text-sm text-muted-foreground/70">
-              {isForgot ? "Enter your email to reset your password" : isSignUp ? "Create your account" : "Sign in to your setlists"}
+              {isForgot
+                ? "Enter your email to reset your password"
+                : isSignUp
+                  ? "Create your free account — start building setlists in seconds."
+                  : "Sign in to your setlists"}
             </p>
           </div>
 
@@ -174,7 +178,7 @@ const Auth = () => {
               className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-body"
               disabled={loading}
             >
-              {loading ? "..." : isForgot ? "Send Reset Link" : isSignUp ? "Sign Up" : "Sign In"}
+              {loading ? "..." : isForgot ? "Send Reset Link" : isSignUp ? "Create my account" : "Sign In"}
             </Button>
             {!isSignUp && !isForgot && (
               <button
@@ -260,26 +264,38 @@ const Auth = () => {
           </div>
 
           <div className="flex flex-col items-center gap-3">
-            <p className="text-center text-sm text-muted-foreground font-body">
-              {isForgot ? (
-                <button
-                  onClick={() => setIsForgot(false)}
-                  className="text-primary hover:underline"
+            {isForgot ? (
+              <button
+                onClick={() => setIsForgot(false)}
+                className="text-sm text-primary hover:underline font-body"
+              >
+                Back to sign in
+              </button>
+            ) : isSignUp ? (
+              <div className="w-full rounded-xl border border-border bg-card/40 p-4 flex flex-col items-center gap-2">
+                <p className="font-body text-sm text-muted-foreground">
+                  Already have an account?
+                </p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full font-body"
+                  onClick={() => setIsSignUp(false)}
                 >
-                  Back to sign in
+                  Sign in instead
+                </Button>
+              </div>
+            ) : (
+              <p className="text-center text-sm text-muted-foreground font-body">
+                New here?{" "}
+                <button
+                  onClick={() => setIsSignUp(true)}
+                  className="text-primary hover:underline font-semibold"
+                >
+                  Create a free account
                 </button>
-              ) : (
-                <>
-                  {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
-                  <button
-                    onClick={() => setIsSignUp(!isSignUp)}
-                    className="text-primary hover:underline"
-                  >
-                    {isSignUp ? "Sign in" : "Sign up"}
-                  </button>
-                </>
-              )}
-            </p>
+              </p>
+            )}
             <button
               onClick={() => navigate("/")}
               className="font-mono text-[10px] text-muted-foreground/40 hover:text-muted-foreground tracking-widest uppercase transition-colors"
