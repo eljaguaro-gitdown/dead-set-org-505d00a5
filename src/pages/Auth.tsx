@@ -178,7 +178,7 @@ const Auth = () => {
               className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-body"
               disabled={loading}
             >
-              {loading ? "..." : isForgot ? "Send Reset Link" : isSignUp ? "Sign Up" : "Sign In"}
+              {loading ? "..." : isForgot ? "Send Reset Link" : isSignUp ? "Create my account" : "Sign In"}
             </Button>
             {!isSignUp && !isForgot && (
               <button
