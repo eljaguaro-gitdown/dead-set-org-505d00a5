@@ -508,21 +508,41 @@ const SetlistPoster = () => {
                               </span>
 
                               {/* Song title — handwritten */}
-                              <div className="flex items-baseline gap-1 flex-1 min-w-0">
-                                <span
-                                  className={`font-hand text-xl sm:text-2xl leading-relaxed transition-colors ${isNowPlaying ? "font-semibold" : ""}`}
-                                  style={{ color: isNowPlaying ? `hsl(${eraTheme.accent})` : "hsl(220 40% 12%)" }}
-                                >
-                                  {slot.song.title}
-                                </span>
-                                {slot.segue_to_next && (
+                              <div className="flex flex-col flex-1 min-w-0">
+                                <div className="flex items-baseline gap-1 min-w-0">
                                   <span
-                                    className="text-xl font-bold shrink-0"
-                                    style={{ color: `hsl(${eraTheme.accent})` }}
+                                    className={`font-hand text-xl sm:text-2xl leading-relaxed transition-colors ${isNowPlaying ? "font-semibold" : ""}`}
+                                    style={{ color: isNowPlaying ? `hsl(${eraTheme.accent})` : "hsl(220 40% 12%)" }}
                                   >
-                                    →
+                                    {slot.song.title}
                                   </span>
-                                )}
+                                  {slot.segue_to_next && (
+                                    <span
+                                      className="text-xl font-bold shrink-0"
+                                      style={{ color: `hsl(${eraTheme.accent})` }}
+                                    >
+                                      →
+                                    </span>
+                                  )}
+                                </div>
+                                {(() => {
+                                  const sourceFromNotes = slot.notes?.startsWith("From ")
+                                    ? slot.notes.replace(/^From\s+/, "")
+                                    : null;
+                                  const versionLine = slot.version?.show_date || slot.version?.venue
+                                    ? [slot.version?.show_date, slot.version?.venue].filter(Boolean).join(" · ")
+                                    : null;
+                                  const line = versionLine || sourceFromNotes;
+                                  if (!line) return null;
+                                  return (
+                                    <span
+                                      className="font-hand text-xs sm:text-sm leading-tight mt-0.5"
+                                      style={{ color: "hsl(28 25% 38%)" }}
+                                    >
+                                      {line}
+                                    </span>
+                                  );
+                                })()}
                               </div>
                               <button
                                 onClick={async (e) => {
