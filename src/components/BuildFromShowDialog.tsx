@@ -93,12 +93,12 @@ const BuildFromShowDialog = ({ open, onOpenChange, onSeed }: BuildFromShowDialog
         const positions = new Map<number, number>();
         let unmatched = 0;
 
-        for (const track of show.tracks as Array<{ rawTitle: string; setNumber: number; position: number; segueToNext: boolean; }>) {
+        for (const track of show.tracks as Array<{ rawTitle: string; setNumber: number; position: number; segueToNext: boolean; sourceDate?: string; sourceVenue?: string | null }>) {
           const matched = fuzzyMatchSong(track.rawTitle, songs || []);
           if (!matched) { unmatched++; continue; }
           const pos = positions.get(track.setNumber) || 0;
           positions.set(track.setNumber, pos + 1);
-          slots.push({ song: matched, setNumber: track.setNumber, position: pos, segueToNext: track.segueToNext });
+          slots.push({ song: matched, setNumber: track.setNumber, position: pos, segueToNext: track.segueToNext, sourceDate: track.sourceDate, sourceVenue: track.sourceVenue });
         }
 
         if (slots.length === 0) {
