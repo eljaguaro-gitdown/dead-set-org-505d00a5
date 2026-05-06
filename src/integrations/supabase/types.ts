@@ -724,6 +724,32 @@ export type Database = {
           },
         ]
       }
+      hero_spotlights: {
+        Row: {
+          created_at: string
+          setlist_id: string
+          spotlight_date: string
+        }
+        Insert: {
+          created_at?: string
+          setlist_id: string
+          spotlight_date: string
+        }
+        Update: {
+          created_at?: string
+          setlist_id?: string
+          spotlight_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hero_spotlights_setlist_id_fkey"
+            columns: ["setlist_id"]
+            isOneToOne: false
+            referencedRelation: "setlists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       insider_bugs: {
         Row: {
           created_at: string
@@ -1334,6 +1360,13 @@ export type Database = {
       ensure_favorite_song_setlist: {
         Args: { _user_id: string }
         Returns: string
+      }
+      get_hero_spotlight: {
+        Args: never
+        Returns: {
+          setlist_id: string
+          spotlight_date: string
+        }[]
       }
       has_role: {
         Args: {
