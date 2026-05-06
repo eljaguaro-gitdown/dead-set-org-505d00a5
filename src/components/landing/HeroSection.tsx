@@ -69,15 +69,17 @@ const HeroSection = (_props: HeroSectionProps) => {
       const setlistId = Array.isArray(spot) && spot[0]?.setlist_id;
       if (!setlistId || cancelled) return;
 
-      // Single round-trip: setlist + creator profile + slot notes via embedded selects.
-      const { data: sl } = await supabase
+      // Fetch setlist (with embedded slot notes) and profile in parallel after we know the id.
+      const slPromise = supabase
         .from("setlists")
-        .select("id, title, creator_id, profiles!setlists_creator_id_fkey(display_name), setlist_slots(notes)")
+        .select("id, title, creator_id, setlist_slots(notes)")
         .eq("id", setlistId)
         .maybeSingle();
+      const { data: sl } = await slPromise;
       if (cancelled || !sl) return;
       const slotRows = (sl as any).setlist_slots as { notes: string | null }[] | null;
-      const profile = (sl as any).profiles as { display_name: string | null } | null;
+      const { data: profile } = await supabase
+        .from("profiles").select("display_name").eq("user_id", sl.creator_id).maybeSingle();
 
       // Extract distinct years from "From YYYY-MM-DD …" notes for the meta line.
       const years = new Set<string>();
