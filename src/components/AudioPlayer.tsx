@@ -629,7 +629,7 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
           )}
 
           {playlistInfo && (
-            <span className="text-[10px] text-muted-foreground font-body tabular-nums shrink-0" title="Position in setlist">
+            <span className="text-sm text-muted-foreground font-mono tabular-nums shrink-0 hidden sm:inline" title="Position in setlist">
               {playlistInfo.current}/{playlistInfo.total}
             </span>
           )}
