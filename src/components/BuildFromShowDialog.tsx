@@ -60,7 +60,7 @@ const MONTHS = [
 ];
 
 const BuildFromShowDialog = ({ open, onOpenChange, onSeed }: BuildFromShowDialogProps) => {
-  const [mode, setMode] = useState<"date" | "calendar-day">("date");
+  const [mode, setMode] = useState<"date" | "calendar-day" | "all-years">("date");
   const [date, setDate] = useState<Date | undefined>();
   const [month, setMonth] = useState<number>(new Date().getMonth() + 1);
   const [day, setDay] = useState<number>(new Date().getDate());
