@@ -40,10 +40,11 @@ interface HeroSectionProps {
   featured?: FeaturedSetlist[];
 }
 
-const BUILDER_ROUTE = "/builder?wizard=true";
+const BUILDER_ROUTE = "/builder";
 
 const HeroSection = (_props: HeroSectionProps) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [communityCount, setCommunityCount] = useState<number | null>(null);
   const [spotlight, setSpotlight] = useState<HeroSpotlight | null>(null);
   const [heroLoading, setHeroLoading] = useState(false);
