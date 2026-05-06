@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { trackCtaClick } from "@/lib/trackCtaClick";
 import { supabase } from "@/integrations/supabase/client";
 import { useAudioPlayer, type PlayableSlot } from "@/contexts/AudioPlayerContext";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "@/hooks/use-toast";
 
 // Daily community spotlight — server picks one public setlist per UTC day,
 // rotating fairly so every public setlist gets a turn. See get_hero_spotlight().
