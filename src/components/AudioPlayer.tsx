@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence, useMotionValue, useDragControls } from "framer-motion";
 import { Play, Pause, Volume2, VolumeX, X, Loader2, Cast, ChevronRight, GripHorizontal, SkipForward, SkipBack, FastForward } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import PosterModal from "@/components/PosterModal";
 import { findTrackInRecording, matchScore } from "@/lib/archiveOrg";
 import { audioDebug } from "@/lib/audioDebug";
 import {
@@ -57,6 +58,7 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const dragControls = useDragControls();
+  const [posterOpen, setPosterOpen] = useState(false);
   const y = useMotionValue(0);
   // Persisted vertical offset (negative = lifted up). Restored across mounts.
   const [yOffset, setYOffset] = useState<number>(() => {
@@ -558,9 +560,9 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        navigate(`/setlist/${activeSetlistId}`);
+                        setPosterOpen(true);
                       }}
-                      className="h-7 px-3 rounded-md bg-transparent text-primary border border-primary/40 text-[11px] font-mono uppercase tracking-wider hover:bg-primary/10 transition-all shrink-0 hidden sm:inline-flex items-center gap-1"
+                      className="h-7 px-3 rounded-md bg-transparent text-primary border border-primary/40 text-[11px] font-mono uppercase tracking-wider hover:bg-primary/10 transition-all shrink-0 inline-flex items-center gap-1"
                       title="View poster"
                     >
                       View Poster
@@ -632,6 +634,17 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
           </button>
         </div>
       </motion.div>
+      <PosterModal
+        open={posterOpen}
+        songTitle={songTitle}
+        showDate={showDate}
+        venue={venue}
+        setlistId={activeSetlistId ?? null}
+        playlistInfo={playlistInfo ?? null}
+        onClose={() => setPosterOpen(false)}
+        onPrev={onPrev}
+        onNext={onNext}
+      />
     </AnimatePresence>
   );
 };
