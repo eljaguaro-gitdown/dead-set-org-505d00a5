@@ -264,26 +264,38 @@ const Auth = () => {
           </div>
 
           <div className="flex flex-col items-center gap-3">
-            <p className="text-center text-sm text-muted-foreground font-body">
-              {isForgot ? (
-                <button
-                  onClick={() => setIsForgot(false)}
-                  className="text-primary hover:underline"
+            {isForgot ? (
+              <button
+                onClick={() => setIsForgot(false)}
+                className="text-sm text-primary hover:underline font-body"
+              >
+                Back to sign in
+              </button>
+            ) : isSignUp ? (
+              <div className="w-full rounded-xl border border-border bg-card/40 p-4 flex flex-col items-center gap-2">
+                <p className="font-body text-sm text-muted-foreground">
+                  Already have an account?
+                </p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full font-body"
+                  onClick={() => setIsSignUp(false)}
                 >
-                  Back to sign in
+                  Sign in instead
+                </Button>
+              </div>
+            ) : (
+              <p className="text-center text-sm text-muted-foreground font-body">
+                New here?{" "}
+                <button
+                  onClick={() => setIsSignUp(true)}
+                  className="text-primary hover:underline font-semibold"
+                >
+                  Create a free account
                 </button>
-              ) : (
-                <>
-                  {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
-                  <button
-                    onClick={() => setIsSignUp(!isSignUp)}
-                    className="text-primary hover:underline"
-                  >
-                    {isSignUp ? "Sign in" : "Sign up"}
-                  </button>
-                </>
-              )}
-            </p>
+              </p>
+            )}
             <button
               onClick={() => navigate("/")}
               className="font-mono text-[10px] text-muted-foreground/40 hover:text-muted-foreground tracking-widest uppercase transition-colors"
