@@ -41,8 +41,9 @@ const BUILDER_ROUTE = "/builder?wizard=true";
 const HeroSection = (_props: HeroSectionProps) => {
   const navigate = useNavigate();
   const [communityCount, setCommunityCount] = useState<number | null>(null);
-  const { playSingle, playingSlot, stopPlayback } = useAudioPlayer();
-  const isHeroPlaying = playingSlot?.id === HERO_TRACK.id;
+  const [heroLoading, setHeroLoading] = useState(false);
+  const { playSetlist, playingSlot, stopPlayback, activeSetlistId } = useAudioPlayer();
+  const isHeroPlaying = activeSetlistId === HERO_SETLIST_ID && !!playingSlot;
 
   // Pull a live count of public community setlists to give the secondary CTA real pull.
   useEffect(() => {
@@ -63,23 +64,49 @@ const HeroSection = (_props: HeroSectionProps) => {
     navigate(BUILDER_ROUTE);
   };
 
-  const handleHeroPlay = () => {
+  const handleHeroPlay = async () => {
     if (isHeroPlaying) {
       stopPlayback();
       return;
     }
-    // Unlock iOS audio inside the gesture: synchronously create + play a
-    // silent clip. Without this, the async resolution inside playSingle
-    // breaks the user-gesture chain and Safari refuses to play later.
+    // Unlock iOS audio inside the gesture so async work doesn't break it.
     try {
       const unlock = new Audio(SILENT_WAV);
       unlock.volume = 0;
       void unlock.play().catch(() => {});
     } catch {
-      // Best effort — never block playback if this throws.
+      // best effort
     }
     trackCtaClick("hero_now_spinning_play", "audio");
-    void playSingle(HERO_TRACK);
+    setHeroLoading(true);
+    try {
+      const { data: slots, error } = await supabase
+        .from("setlist_slots")
+        .select(
+          "id, set_number, position, segue_to_next, song_id, notable_version_id, songs(id, title), notable_versions(id, song_id, show_date, archive_org_url, venue, city, era_id, rating, description)"
+        )
+        .eq("setlist_id", HERO_SETLIST_ID)
+        .order("set_number")
+        .order("position");
+      if (error) throw error;
+      const playable: PlayableSlot[] = (slots ?? [])
+        .filter((s: any) => s.songs)
+        .map((s: any) => ({
+          id: s.id,
+          song: { id: s.songs.id, title: s.songs.title },
+          version: s.notable_versions ?? null,
+          setNumber: s.set_number,
+          position: s.position,
+          segueToNext: s.segue_to_next ?? false,
+          directTrackUrl: null,
+        }));
+      if (playable.length === 0) return;
+      await playSetlist(playable, HERO_SETLIST_ID);
+    } catch (err) {
+      console.error("[Hero] playback failed", err);
+    } finally {
+      setHeroLoading(false);
+    }
   };
 
   return (
