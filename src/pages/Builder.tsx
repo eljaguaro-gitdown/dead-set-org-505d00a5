@@ -649,7 +649,9 @@ const Builder = () => {
         setNumber: s.setNumber,
         position: s.position,
         segueToNext: s.segueToNext,
-        notes: "",
+        notes: s.sourceDate
+          ? `From ${s.sourceDate}${s.sourceVenue ? ` · ${s.sourceVenue}` : ""}`
+          : "",
       }));
 
       setTitle(seed.title);
