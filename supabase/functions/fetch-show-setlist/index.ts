@@ -234,21 +234,16 @@ Deno.serve(async (req) => {
     let date: string | undefined = body.date;
     const month: number | undefined = body.month;
     const day: number | undefined = body.day;
+    const aggregate: boolean = body.aggregate === true;
 
-    // Calendar-day mode: pick a random year (1965-1995) that had a show on this MM-DD.
-    if (!date && Number.isInteger(month) && Number.isInteger(day)) {
-      const mm = String(month).padStart(2, "0");
-      const dd = String(day).padStart(2, "0");
+    // Find all show dates matching MM-DD across 1965-1995
+    const findMatchingDates = async (mm: string, dd: string): Promise<string[]> => {
       const q = encodeURIComponent(
         `collection:GratefulDead AND date:[1965-01-01T00:00:00Z TO 1995-12-31T23:59:59Z]`,
       );
       const searchUrl = `https://archive.org/advancedsearch.php?q=${q}&fl[]=date&rows=2000&output=json`;
       const sRes = await fetch(searchUrl);
-      if (!sRes.ok) {
-        return new Response(JSON.stringify({ error: "Couldn't search archive.org" }), {
-          status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
+      if (!sRes.ok) return [];
       const sData = await sRes.json();
       const docs: any[] = sData?.response?.docs || [];
       const matchingDates = new Set<string>();
@@ -256,7 +251,98 @@ Deno.serve(async (req) => {
         const iso = (d.date || "").slice(0, 10);
         if (iso.length === 10 && iso.slice(5) === `${mm}-${dd}`) matchingDates.add(iso);
       }
-      const dates = Array.from(matchingDates);
+      return Array.from(matchingDates).sort();
+    };
+
+    // Aggregate mode: pull tracks from EVERY show on this MM-DD across all years.
+    if (aggregate && Number.isInteger(month) && Number.isInteger(day)) {
+      const mm = String(month).padStart(2, "0");
+      const dd = String(day).padStart(2, "0");
+      const dates = await findMatchingDates(mm, dd);
+      if (dates.length === 0) {
+        return new Response(
+          JSON.stringify({ error: `No Grateful Dead shows on ${mm}/${dd} across all years.` }),
+          { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+
+      // Fetch each show's tracks in parallel (cap at 30 dates to be safe)
+      const limited = dates.slice(0, 30);
+      const showResults = await Promise.all(
+        limited.map(async (d) => {
+          try {
+            const id = await findBestRecordingForDate(d);
+            if (!id) return null;
+            const mr = await fetch(`https://archive.org/metadata/${id}`);
+            if (!mr.ok) return null;
+            const meta = await mr.json();
+            const m = meta.metadata || {};
+            const venue = m.venue || m.coverage?.split(",")[0]?.trim() || null;
+            const notes: string = [m.notes, m.description].filter(Boolean).join("\n\n");
+            const parsedFromNotes = parseNotesSetlist(notes);
+            const tracks: ParsedTrack[] = parsedFromNotes
+              ? parsedFromNotes.map((t, i) => ({ rawTitle: t.title, setNumber: t.setNumber, position: i, segueToNext: t.segue }))
+              : parseFromFiles(meta.files || []);
+            return { date: d, venue, archiveId: id, tracks };
+          } catch { return null; }
+        }),
+      );
+
+      // Dedupe by normalized title; keep earliest year occurrence with venue/year context.
+      const seen = new Map<string, { rawTitle: string; date: string; venue: string | null; setNumber: number }>();
+      for (const show of showResults) {
+        if (!show) continue;
+        for (const t of show.tracks) {
+          const key = t.rawTitle.toLowerCase().replace(/[^a-z0-9]/g, "");
+          if (key.length < 2) continue;
+          if (!seen.has(key)) {
+            seen.set(key, { rawTitle: t.rawTitle, date: show.date, venue: show.venue, setNumber: t.setNumber });
+          }
+        }
+      }
+
+      const unique = Array.from(seen.values());
+      if (unique.length === 0) {
+        return new Response(
+          JSON.stringify({ error: `Found shows on ${mm}/${dd} but couldn't parse any setlists.` }),
+          { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+
+      // Sort by year then by original set; chunk into Set 1 / Set 2 / Encore
+      unique.sort((a, b) => a.date.localeCompare(b.date));
+      const total = unique.length;
+      const encoreCount = Math.min(3, Math.max(1, Math.floor(total * 0.1)));
+      const set1End = Math.floor((total - encoreCount) / 2);
+      const aggregatedTracks: ParsedTrack[] = unique.map((u, i) => {
+        let setNumber: number;
+        if (i >= total - encoreCount) setNumber = 3;
+        else if (i < set1End) setNumber = 1;
+        else setNumber = 2;
+        return { rawTitle: u.rawTitle, setNumber, position: i, segueToNext: false };
+      });
+
+      const result = {
+        archiveId: "aggregate",
+        archiveUrl: `https://archive.org/search.php?query=collection%3AGratefulDead+AND+date%3A*-${mm}-${dd}`,
+        date: `${mm}-${dd}-aggregate`,
+        venue: `${MONTHS[month - 1]} ${day} — across the years`,
+        city: null,
+        tracks: aggregatedTracks,
+        aggregate: true,
+        showsScanned: limited.length,
+        yearsRepresented: new Set(unique.map((u) => u.date.slice(0, 4))).size,
+      };
+      return new Response(JSON.stringify(result), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Random-year mode: pick one show on this MM-DD.
+    if (!date && Number.isInteger(month) && Number.isInteger(day)) {
+      const mm = String(month).padStart(2, "0");
+      const dd = String(day).padStart(2, "0");
+      const dates = await findMatchingDates(mm, dd);
       if (dates.length === 0) {
         return new Response(
           JSON.stringify({ error: `No Grateful Dead shows on ${mm}/${dd} across all years.` }),
