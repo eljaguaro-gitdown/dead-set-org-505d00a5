@@ -158,10 +158,11 @@ const BuildFromShowDialog = ({ open, onOpenChange, onSeed }: BuildFromShowDialog
           </DialogDescription>
         </DialogHeader>
 
-        <Tabs value={mode} onValueChange={(v) => setMode(v as "date" | "calendar-day")} className="pt-2">
-          <TabsList className="grid grid-cols-2 w-full">
+        <Tabs value={mode} onValueChange={(v) => setMode(v as typeof mode)} className="pt-2">
+          <TabsList className="grid grid-cols-3 w-full">
             <TabsTrigger value="date" className="font-body">Specific date</TabsTrigger>
-            <TabsTrigger value="calendar-day" className="font-body">Calendar day</TabsTrigger>
+            <TabsTrigger value="calendar-day" className="font-body">Random year</TabsTrigger>
+            <TabsTrigger value="all-years" className="font-body">All years</TabsTrigger>
           </TabsList>
 
           <TabsContent value="date" className="space-y-4 pt-4">
