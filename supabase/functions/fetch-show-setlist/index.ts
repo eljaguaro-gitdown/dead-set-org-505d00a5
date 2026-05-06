@@ -311,19 +311,34 @@ Deno.serve(async (req) => {
         }
       }
 
-      const unique = Array.from(seen.values());
-      if (unique.length === 0) {
+      const allUnique = Array.from(seen.values());
+      if (allUnique.length === 0) {
         return new Response(
           JSON.stringify({ error: `Found shows on ${mm}/${dd} but couldn't parse any setlists.` }),
           { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } },
         );
       }
 
-      // Sort by year then by original set; chunk into Set 1 / Set 2 / Encore
-      unique.sort((a, b) => a.date.localeCompare(b.date));
+      // Cap to a realistic show length: 8-10 per set, 2 sets + 1-2 encore (~20 songs).
+      // Sample evenly across years so the setlist spans eras, not just the earliest shows.
+      allUnique.sort((a, b) => a.date.localeCompare(b.date));
+      const SET_SIZE = 9;
+      const ENCORE_SIZE = 2;
+      const TARGET = SET_SIZE * 2 + ENCORE_SIZE; // 20
+      let unique: typeof allUnique;
+      if (allUnique.length <= TARGET) {
+        unique = allUnique;
+      } else {
+        const step = allUnique.length / TARGET;
+        const picked: typeof allUnique = [];
+        for (let i = 0; i < TARGET; i++) {
+          picked.push(allUnique[Math.floor(i * step)]);
+        }
+        unique = picked;
+      }
       const total = unique.length;
-      const encoreCount = Math.min(3, Math.max(1, Math.floor(total * 0.1)));
-      const set1End = Math.floor((total - encoreCount) / 2);
+      const encoreCount = Math.min(ENCORE_SIZE, Math.max(1, total - SET_SIZE * 2));
+      const set1End = Math.min(SET_SIZE, Math.floor((total - encoreCount) / 2));
       const aggregatedTracks: Array<ParsedTrack & { sourceDate?: string; sourceVenue?: string | null }> = unique.map((u, i) => {
         let setNumber: number;
         if (i >= total - encoreCount) setNumber = 3;
