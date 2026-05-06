@@ -20,6 +20,8 @@ export interface SeededSlot {
   setNumber: number;
   position: number;
   segueToNext: boolean;
+  sourceDate?: string;
+  sourceVenue?: string | null;
 }
 
 export interface ShowSeed {
