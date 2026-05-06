@@ -706,20 +706,21 @@ const HeroSection = (_props: HeroSectionProps) => {
           </p>
 
           {/* Now Spinning — proof-by-music. One tap, one ear, you're in. */}
-          <div className="ds-hero__cassette" role="group" aria-label="Now Spinning — Hartford '77">
+          <div className="ds-hero__cassette" role="group" aria-label={`Now Spinning — ${HERO_SETLIST_TITLE}`}>
             <div className="ds-hero__cassette-eyebrow-row" aria-hidden="true">
               <span className="ds-hero__cassette-live">
                 <span className="ds-hero__cassette-live-dot" />
-                {isHeroPlaying ? "Now Spinning" : "Press Play"}
+                {isHeroPlaying ? "Now Spinning" : heroLoading ? "Cueing up…" : "Press Play"}
               </span>
-              <span>SBD · ★★★★★</span>
+              <span>18 SONGS · 7 YEARS</span>
             </div>
 
             <button
               type="button"
               onClick={handleHeroPlay}
+              disabled={heroLoading}
               className="ds-hero__play-btn"
-              aria-label={isHeroPlaying ? "Pause Terrapin Station" : "Play Terrapin Station from Hartford 5/28/77"}
+              aria-label={isHeroPlaying ? `Pause ${HERO_SETLIST_TITLE}` : `Play ${HERO_SETLIST_TITLE}`}
             >
               {isHeroPlaying ? (
                 <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -734,13 +735,13 @@ const HeroSection = (_props: HeroSectionProps) => {
             </button>
 
             <div className="ds-hero__cassette-meta">
-              <p className="ds-hero__cassette-song">Terrapin Station</p>
-              <p className="ds-hero__cassette-show">May 28, 1977</p>
-              <p className="ds-hero__cassette-venue">Hartford Civic Center</p>
+              <p className="ds-hero__cassette-song">{HERO_SETLIST_TITLE}</p>
+              <p className="ds-hero__cassette-show">{HERO_SETLIST_DATE}</p>
+              <p className="ds-hero__cassette-venue">{HERO_SETLIST_VENUE}</p>
             </div>
           </div>
           <p className="ds-hero__cassette-hint">
-            {isHeroPlaying ? "the music never stops" : "the most-cited tape ever made"}
+            {isHeroPlaying ? "the music never stops" : "one date, seven decades of Dead"}
           </p>
 
           <div className="ds-hero__stage" aria-hidden="true">
