@@ -208,6 +208,12 @@ const SortableSlotItem = ({
                 </span>
               </div>
             )}
+            {!slot.version && slot.notes?.startsWith("From ") && (
+              <div className="mt-1 inline-flex items-center gap-1.5 rounded-[6px] border border-primary/30 bg-primary/10 px-2 py-0.5 text-xs font-body text-primary">
+                <span className="opacity-70">Source:</span>
+                <span>{slot.notes.replace(/^From\s+/, "")}</span>
+              </div>
+            )}
             {/* Archive.org link — shown for all slots */}
             {archiveResult && (
               <div className="flex items-center gap-1.5 mt-1 flex-wrap">
