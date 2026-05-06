@@ -537,17 +537,35 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
               </div>
             ) : (
               <>
-                <p className="text-base sm:text-lg text-foreground font-display truncate font-bold flex items-center gap-1.5">
+                <p className="text-base sm:text-lg text-foreground font-display truncate font-bold">
                   {songTitle}
-                  {activeSetlistId && <ChevronRight className="w-4 h-4 text-primary/70 shrink-0" />}
                 </p>
                 <p className="text-sm sm:text-base text-primary/90 font-body truncate font-medium">
                   {showDate} {venue ? `· ${venue}` : ""}
                 </p>
                 {activeSetlistId && (
-                  <p className="text-[10px] text-muted-foreground font-mono tracking-wider mt-0.5 hidden sm:block">
-                    <span className="text-primary/60 animate-[pulse_2s_cubic-bezier(0.4,0,0.6,1)_infinite]">View Poster ↗</span>
-                  </p>
+                  <div className="flex items-center gap-2 mt-1.5">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/setlist/${activeSetlistId}`);
+                      }}
+                      className="h-7 px-3 rounded-md bg-primary text-primary-foreground border border-primary text-[11px] font-mono uppercase tracking-wider hover:brightness-110 transition-all flex items-center gap-1 shrink-0"
+                      title="Go to setlist"
+                    >
+                      Go to Setlist <ChevronRight className="w-3 h-3" />
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/setlist/${activeSetlistId}`);
+                      }}
+                      className="h-7 px-3 rounded-md bg-transparent text-primary border border-primary/40 text-[11px] font-mono uppercase tracking-wider hover:bg-primary/10 transition-all shrink-0 hidden sm:inline-flex items-center gap-1"
+                      title="View poster"
+                    >
+                      View Poster
+                    </button>
+                  </div>
                 )}
               </>
             )}
