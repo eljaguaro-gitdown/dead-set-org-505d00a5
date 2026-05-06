@@ -813,7 +813,7 @@ const HeroSection = (_props: HeroSectionProps) => {
               onClick={handleCta}
               className="ds-hero__cta-button"
             >
-              Meet Cosmic Charlie
+              Build your Setlist
             </a>
             <p className="ds-hero__cta-caption">he's been waiting for you</p>
 
