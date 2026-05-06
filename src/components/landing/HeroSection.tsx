@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { trackCtaClick } from "@/lib/trackCtaClick";
 import { supabase } from "@/integrations/supabase/client";
 import { useAudioPlayer, type PlayableSlot } from "@/contexts/AudioPlayerContext";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "@/hooks/use-toast";
 
 // Daily community spotlight — server picks one public setlist per UTC day,
 // rotating fairly so every public setlist gets a turn. See get_hero_spotlight().
@@ -38,10 +40,11 @@ interface HeroSectionProps {
   featured?: FeaturedSetlist[];
 }
 
-const BUILDER_ROUTE = "/builder?wizard=true";
+const BUILDER_ROUTE = "/builder";
 
 const HeroSection = (_props: HeroSectionProps) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [communityCount, setCommunityCount] = useState<number | null>(null);
   const [spotlight, setSpotlight] = useState<HeroSpotlight | null>(null);
   const [heroLoading, setHeroLoading] = useState(false);
@@ -105,7 +108,16 @@ const HeroSection = (_props: HeroSectionProps) => {
 
   const handleCta = (e: React.MouseEvent<HTMLAnchorElement>) => {
     e.preventDefault();
-    trackCtaClick("hero_meet_cosmic_charlie", BUILDER_ROUTE);
+    if (!user) {
+      trackCtaClick("hero_build_setlist_guest", "/auth");
+      toast({
+        title: "Sign in to build your setlist",
+        description: "Create a free account to start building.",
+      });
+      navigate("/auth?redirect=/builder");
+      return;
+    }
+    trackCtaClick("hero_build_setlist", BUILDER_ROUTE);
     navigate(BUILDER_ROUTE);
   };
 
