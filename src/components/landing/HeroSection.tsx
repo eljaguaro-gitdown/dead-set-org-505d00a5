@@ -4,13 +4,15 @@ import { trackCtaClick } from "@/lib/trackCtaClick";
 import { supabase } from "@/integrations/supabase/client";
 import { useAudioPlayer, type PlayableSlot } from "@/contexts/AudioPlayerContext";
 
-// Featured setlist for the hero "Now Spinning" card. Tapping play loads its
-// slots and hands them to the global player, which falls back to Archive.org
-// search for slots without a notable_version_id.
-const HERO_SETLIST_ID = "dbf4448d-ecd4-4fa8-a75d-93ef0bcf5666";
-const HERO_SETLIST_TITLE = "May 6 — across 7 years";
-const HERO_SETLIST_VENUE = "1970 · 1978 · 1980 · 1981 · 1984 · 1989 · 1990";
-const HERO_SETLIST_DATE = "A May 6th time-warp";
+// Daily community spotlight — server picks one public setlist per UTC day,
+// rotating fairly so every public setlist gets a turn. See get_hero_spotlight().
+interface HeroSpotlight {
+  id: string;
+  title: string;
+  creatorName: string;
+  songCount: number;
+  yearsLabel: string | null;
+}
 
 // Tiny silent WAV (44 bytes) used to "unlock" iOS Safari audio inside the
 // user gesture. Without this, async work in playSingle (awaiting Archive.org
@@ -41,9 +43,10 @@ const BUILDER_ROUTE = "/builder?wizard=true";
 const HeroSection = (_props: HeroSectionProps) => {
   const navigate = useNavigate();
   const [communityCount, setCommunityCount] = useState<number | null>(null);
+  const [spotlight, setSpotlight] = useState<HeroSpotlight | null>(null);
   const [heroLoading, setHeroLoading] = useState(false);
   const { playSetlist, playingSlot, stopPlayback, activeSetlistId } = useAudioPlayer();
-  const isHeroPlaying = activeSetlistId === HERO_SETLIST_ID && !!playingSlot;
+  const isHeroPlaying = !!spotlight && activeSetlistId === spotlight.id && !!playingSlot;
 
   // Pull a live count of public community setlists to give the secondary CTA real pull.
   useEffect(() => {
@@ -58,6 +61,45 @@ const HeroSection = (_props: HeroSectionProps) => {
     return () => { cancelled = true; };
   }, []);
 
+  // Daily rotating community spotlight.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data: spot } = await supabase.rpc("get_hero_spotlight");
+      const setlistId = Array.isArray(spot) && spot[0]?.setlist_id;
+      if (!setlistId) return;
+
+      const [{ data: sl }, { data: slotRows }] = await Promise.all([
+        supabase.from("setlists").select("id, title, creator_id").eq("id", setlistId).maybeSingle(),
+        supabase.from("setlist_slots").select("notes").eq("setlist_id", setlistId),
+      ]);
+      if (cancelled || !sl) return;
+
+      const { data: profile } = await supabase
+        .from("profiles").select("display_name").eq("user_id", sl.creator_id).maybeSingle();
+
+      // Extract distinct years from "From YYYY-MM-DD …" notes for the meta line.
+      const years = new Set<string>();
+      (slotRows ?? []).forEach((r: { notes: string | null }) => {
+        const m = r.notes?.match(/From\s+(\d{4})-/);
+        if (m) years.add(m[1]);
+      });
+      const yearsLabel = years.size >= 2
+        ? Array.from(years).sort().join(" · ")
+        : years.size === 1 ? Array.from(years)[0] : null;
+
+      if (cancelled) return;
+      setSpotlight({
+        id: sl.id,
+        title: sl.title,
+        creatorName: profile?.display_name ?? "A Deadhead",
+        songCount: slotRows?.length ?? 0,
+        yearsLabel,
+      });
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
   const handleCta = (e: React.MouseEvent<HTMLAnchorElement>) => {
     e.preventDefault();
     trackCtaClick("hero_meet_cosmic_charlie", BUILDER_ROUTE);
@@ -65,11 +107,11 @@ const HeroSection = (_props: HeroSectionProps) => {
   };
 
   const handleHeroPlay = async () => {
+    if (!spotlight) return;
     if (isHeroPlaying) {
       stopPlayback();
       return;
     }
-    // Unlock iOS audio inside the gesture so async work doesn't break it.
     try {
       const unlock = new Audio(SILENT_WAV);
       unlock.volume = 0;
@@ -85,7 +127,7 @@ const HeroSection = (_props: HeroSectionProps) => {
         .select(
           "id, set_number, position, segue_to_next, song_id, notable_version_id, songs(id, title), notable_versions(id, song_id, show_date, archive_org_url, venue, city, era_id, rating, description)"
         )
-        .eq("setlist_id", HERO_SETLIST_ID)
+        .eq("setlist_id", spotlight.id)
         .order("set_number")
         .order("position");
       if (error) throw error;
@@ -101,7 +143,7 @@ const HeroSection = (_props: HeroSectionProps) => {
           directTrackUrl: null,
         }));
       if (playable.length === 0) return;
-      await playSetlist(playable, HERO_SETLIST_ID);
+      await playSetlist(playable, spotlight.id);
     } catch (err) {
       console.error("[Hero] playback failed", err);
     } finally {
@@ -706,21 +748,23 @@ const HeroSection = (_props: HeroSectionProps) => {
           </p>
 
           {/* Now Spinning — proof-by-music. One tap, one ear, you're in. */}
-          <div className="ds-hero__cassette" role="group" aria-label={`Now Spinning — ${HERO_SETLIST_TITLE}`}>
+          <div className="ds-hero__cassette" role="group" aria-label={`Today's Spotlight — ${spotlight?.title ?? "community setlist"}`}>
             <div className="ds-hero__cassette-eyebrow-row" aria-hidden="true">
               <span className="ds-hero__cassette-live">
                 <span className="ds-hero__cassette-live-dot" />
-                {isHeroPlaying ? "Now Spinning" : heroLoading ? "Cueing up…" : "Press Play"}
+                {isHeroPlaying ? "Now Spinning" : heroLoading ? "Cueing up…" : "Today's Spotlight"}
               </span>
-              <span>18 SONGS · 7 YEARS</span>
+              <span>
+                {spotlight ? `${spotlight.songCount} SONG${spotlight.songCount === 1 ? "" : "S"}` : "COMMUNITY"}
+              </span>
             </div>
 
             <button
               type="button"
               onClick={handleHeroPlay}
-              disabled={heroLoading}
+              disabled={heroLoading || !spotlight}
               className="ds-hero__play-btn"
-              aria-label={isHeroPlaying ? `Pause ${HERO_SETLIST_TITLE}` : `Play ${HERO_SETLIST_TITLE}`}
+              aria-label={isHeroPlaying ? `Pause ${spotlight?.title ?? "spotlight"}` : `Play ${spotlight?.title ?? "spotlight"}`}
             >
               {isHeroPlaying ? (
                 <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -735,13 +779,15 @@ const HeroSection = (_props: HeroSectionProps) => {
             </button>
 
             <div className="ds-hero__cassette-meta">
-              <p className="ds-hero__cassette-song">{HERO_SETLIST_TITLE}</p>
-              <p className="ds-hero__cassette-show">{HERO_SETLIST_DATE}</p>
-              <p className="ds-hero__cassette-venue">{HERO_SETLIST_VENUE}</p>
+              <p className="ds-hero__cassette-song">{spotlight?.title ?? "Loading spotlight…"}</p>
+              <p className="ds-hero__cassette-show">by {spotlight?.creatorName ?? "—"}</p>
+              {spotlight?.yearsLabel && (
+                <p className="ds-hero__cassette-venue">{spotlight.yearsLabel}</p>
+              )}
             </div>
           </div>
           <p className="ds-hero__cassette-hint">
-            {isHeroPlaying ? "the music never stops" : "one date, seven decades of Dead"}
+            {isHeroPlaying ? "the music never stops" : "a new community setlist every day"}
           </p>
 
           <div className="ds-hero__stage" aria-hidden="true">
