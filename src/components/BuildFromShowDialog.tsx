@@ -106,10 +106,15 @@ const BuildFromShowDialog = ({ open, onOpenChange, onSeed }: BuildFromShowDialog
           return;
         }
 
-        // Use the resolved date returned by the edge function for nice titles
-        const resolvedDate = show.date ? new Date(show.date + "T12:00:00") : (date || new Date());
-        const niceDate = formatNiceDate(resolvedDate);
-        const title = show.venue ? `${niceDate} — ${show.venue}` : (fallbackTitle || niceDate);
+        // For aggregate mode the date is "MM-DD-aggregate" — use venue label as the title.
+        const isAggregate = (show.date || "").endsWith("-aggregate");
+        const resolvedDate = !isAggregate && show.date
+          ? new Date(show.date + "T12:00:00")
+          : (date || new Date());
+        const niceDate = isAggregate ? (show.venue || fallbackTitle) : formatNiceDate(resolvedDate);
+        const title = isAggregate
+          ? (show.venue || fallbackTitle)
+          : (show.venue ? `${formatNiceDate(resolvedDate)} — ${show.venue}` : (fallbackTitle || formatNiceDate(resolvedDate)));
 
         await onSeed({ title, eraId: null, archiveUrl: show.archiveUrl, slots, unmatchedCount: unmatched });
 
