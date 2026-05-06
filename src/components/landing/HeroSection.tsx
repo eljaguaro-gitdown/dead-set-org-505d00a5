@@ -67,16 +67,17 @@ const HeroSection = (_props: HeroSectionProps) => {
     (async () => {
       const { data: spot } = await supabase.rpc("get_hero_spotlight");
       const setlistId = Array.isArray(spot) && spot[0]?.setlist_id;
-      if (!setlistId) return;
+      if (!setlistId || cancelled) return;
 
-      const [{ data: sl }, { data: slotRows }] = await Promise.all([
-        supabase.from("setlists").select("id, title, creator_id").eq("id", setlistId).maybeSingle(),
-        supabase.from("setlist_slots").select("notes").eq("setlist_id", setlistId),
-      ]);
+      // Single round-trip: setlist + creator profile + slot notes via embedded selects.
+      const { data: sl } = await supabase
+        .from("setlists")
+        .select("id, title, creator_id, profiles!setlists_creator_id_fkey(display_name), setlist_slots(notes)")
+        .eq("id", setlistId)
+        .maybeSingle();
       if (cancelled || !sl) return;
-
-      const { data: profile } = await supabase
-        .from("profiles").select("display_name").eq("user_id", sl.creator_id).maybeSingle();
+      const slotRows = (sl as any).setlist_slots as { notes: string | null }[] | null;
+      const profile = (sl as any).profiles as { display_name: string | null } | null;
 
       // Extract distinct years from "From YYYY-MM-DD …" notes for the meta line.
       const years = new Set<string>();
