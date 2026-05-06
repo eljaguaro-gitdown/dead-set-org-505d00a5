@@ -139,6 +139,10 @@ const BuildFromShowDialog = ({ open, onOpenChange, onSeed }: BuildFromShowDialog
     runFetch({ month, day }, `${MONTHS[month - 1]} ${day} — across the years`);
   }, [month, day, runFetch]);
 
+  const handleBuildAllYears = useCallback(() => {
+    runFetch({ month, day, aggregate: true }, `${MONTHS[month - 1]} ${day} — every year`);
+  }, [month, day, runFetch]);
+
   const daysInMonth = new Date(2000, month, 0).getDate(); // leap-safe enough for picker
 
   return (
