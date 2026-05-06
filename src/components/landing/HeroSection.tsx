@@ -4,13 +4,15 @@ import { trackCtaClick } from "@/lib/trackCtaClick";
 import { supabase } from "@/integrations/supabase/client";
 import { useAudioPlayer, type PlayableSlot } from "@/contexts/AudioPlayerContext";
 
-// Featured setlist for the hero "Now Spinning" card. Tapping play loads its
-// slots and hands them to the global player, which falls back to Archive.org
-// search for slots without a notable_version_id.
-const HERO_SETLIST_ID = "dbf4448d-ecd4-4fa8-a75d-93ef0bcf5666";
-const HERO_SETLIST_TITLE = "May 6 — across 7 years";
-const HERO_SETLIST_VENUE = "1970 · 1978 · 1980 · 1981 · 1984 · 1989 · 1990";
-const HERO_SETLIST_DATE = "A May 6th time-warp";
+// Daily community spotlight — server picks one public setlist per UTC day,
+// rotating fairly so every public setlist gets a turn. See get_hero_spotlight().
+interface HeroSpotlight {
+  id: string;
+  title: string;
+  creatorName: string;
+  songCount: number;
+  yearsLabel: string | null;
+}
 
 // Tiny silent WAV (44 bytes) used to "unlock" iOS Safari audio inside the
 // user gesture. Without this, async work in playSingle (awaiting Archive.org
