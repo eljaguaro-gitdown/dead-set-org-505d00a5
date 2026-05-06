@@ -539,6 +539,11 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
               </div>
             ) : (
               <>
+                {playlistInfo && (
+                  <p className="font-mono uppercase tracking-[0.18em] text-primary/70 text-[11px] sm:text-sm tabular-nums leading-none mb-1">
+                    Song {playlistInfo.current} of {playlistInfo.total}
+                  </p>
+                )}
                 <p className="text-base sm:text-lg text-foreground font-display truncate font-bold">
                   {songTitle}
                 </p>
