@@ -136,10 +136,14 @@ const Auth = () => {
             <StealYourFace size={80} />
             <h1 className="font-display text-4xl text-primary">Dead-Set.Org</h1>
             <p className="font-hand text-xl text-muted-foreground">
-              {isForgot ? "We'll get you back in." : isSignUp ? "Come on in. There's room." : "The music never stopped."}
+              {isForgot ? "We'll get you back in." : isSignUp ? "Come on in. There's room." : "Welcome back."}
             </p>
             <p className="font-body text-sm text-muted-foreground/70">
-              {isForgot ? "Enter your email to reset your password" : isSignUp ? "Create your account" : "Sign in to your setlists"}
+              {isForgot
+                ? "Enter your email to reset your password"
+                : isSignUp
+                  ? "Create your free account — start building setlists in seconds."
+                  : "Sign in to your setlists"}
             </p>
           </div>
 
