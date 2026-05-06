@@ -4,31 +4,13 @@ import { trackCtaClick } from "@/lib/trackCtaClick";
 import { supabase } from "@/integrations/supabase/client";
 import { useAudioPlayer, type PlayableSlot } from "@/contexts/AudioPlayerContext";
 
-// Canonical "first taste" — Spring '77 Terrapin Station, hard-coded with a
-// verified direct MP3 so the hero never depends on async Archive.org matching.
-// NOTE: song.id is the real songs UUID; slot/version uses a stable UUID so
-// play_events can store both without client-side casting failures.
-const HERO_VERSION_ID = "d5f8948f-3c97-44ca-8025-41bbf5ed13f7";
-const HERO_SONG_ID = "4870b3f0-1a22-4fc1-89ed-c745a9e860d8";
-const HERO_TRACK = {
-  id: HERO_VERSION_ID,
-  song: { id: HERO_SONG_ID, title: "Terrapin Station" },
-  version: {
-    id: HERO_VERSION_ID,
-    song_id: HERO_SONG_ID,
-    show_date: "1977-05-28",
-    venue: "Hartford Civic Center",
-    city: "Hartford, CT",
-    rating: 5,
-    description: null,
-    era_id: null,
-    archive_org_url: "https://archive.org/details/gd1977-05-28.sbd.ashley-bertha.12827.sbeok.flac16",
-  },
-  setNumber: 1,
-  position: 0,
-  segueToNext: false,
-  directTrackUrl: "https://archive.org/download/gd1977-05-28.sbd.ashley-bertha.12827.sbeok.flac16/gd77-05-28d3t03.mp3",
-} as unknown as PlayableSlot;
+// Featured setlist for the hero "Now Spinning" card. Tapping play loads its
+// slots and hands them to the global player, which falls back to Archive.org
+// search for slots without a notable_version_id.
+const HERO_SETLIST_ID = "dbf4448d-ecd4-4fa8-a75d-93ef0bcf5666";
+const HERO_SETLIST_TITLE = "May 6 — across 7 years";
+const HERO_SETLIST_VENUE = "1970 · 1978 · 1980 · 1981 · 1984 · 1989 · 1990";
+const HERO_SETLIST_DATE = "A May 6th time-warp";
 
 // Tiny silent WAV (44 bytes) used to "unlock" iOS Safari audio inside the
 // user gesture. Without this, async work in playSingle (awaiting Archive.org
