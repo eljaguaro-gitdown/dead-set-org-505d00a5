@@ -634,6 +634,17 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
           </button>
         </div>
       </motion.div>
+      <PosterModal
+        open={posterOpen}
+        songTitle={songTitle}
+        showDate={showDate}
+        venue={venue}
+        setlistId={activeSetlistId ?? null}
+        playlistInfo={playlistInfo ?? null}
+        onClose={() => setPosterOpen(false)}
+        onPrev={onPrev}
+        onNext={onNext}
+      />
     </AnimatePresence>
   );
 };
