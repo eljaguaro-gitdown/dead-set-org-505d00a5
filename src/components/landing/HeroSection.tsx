@@ -108,7 +108,16 @@ const HeroSection = (_props: HeroSectionProps) => {
 
   const handleCta = (e: React.MouseEvent<HTMLAnchorElement>) => {
     e.preventDefault();
-    trackCtaClick("hero_meet_cosmic_charlie", BUILDER_ROUTE);
+    if (!user) {
+      trackCtaClick("hero_build_setlist_guest", "/auth");
+      toast({
+        title: "Sign in to build your setlist",
+        description: "Create a free account to start building.",
+      });
+      navigate("/auth?redirect=/builder");
+      return;
+    }
+    trackCtaClick("hero_build_setlist", BUILDER_ROUTE);
     navigate(BUILDER_ROUTE);
   };
 
