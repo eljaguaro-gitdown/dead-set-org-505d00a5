@@ -43,9 +43,10 @@ const BUILDER_ROUTE = "/builder?wizard=true";
 const HeroSection = (_props: HeroSectionProps) => {
   const navigate = useNavigate();
   const [communityCount, setCommunityCount] = useState<number | null>(null);
+  const [spotlight, setSpotlight] = useState<HeroSpotlight | null>(null);
   const [heroLoading, setHeroLoading] = useState(false);
   const { playSetlist, playingSlot, stopPlayback, activeSetlistId } = useAudioPlayer();
-  const isHeroPlaying = activeSetlistId === HERO_SETLIST_ID && !!playingSlot;
+  const isHeroPlaying = !!spotlight && activeSetlistId === spotlight.id && !!playingSlot;
 
   // Pull a live count of public community setlists to give the secondary CTA real pull.
   useEffect(() => {
@@ -60,6 +61,45 @@ const HeroSection = (_props: HeroSectionProps) => {
     return () => { cancelled = true; };
   }, []);
 
+  // Daily rotating community spotlight.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data: spot } = await supabase.rpc("get_hero_spotlight");
+      const setlistId = Array.isArray(spot) && spot[0]?.setlist_id;
+      if (!setlistId) return;
+
+      const [{ data: sl }, { data: slotRows }] = await Promise.all([
+        supabase.from("setlists").select("id, title, creator_id").eq("id", setlistId).maybeSingle(),
+        supabase.from("setlist_slots").select("notes").eq("setlist_id", setlistId),
+      ]);
+      if (cancelled || !sl) return;
+
+      const { data: profile } = await supabase
+        .from("profiles").select("display_name").eq("user_id", sl.creator_id).maybeSingle();
+
+      // Extract distinct years from "From YYYY-MM-DD …" notes for the meta line.
+      const years = new Set<string>();
+      (slotRows ?? []).forEach((r: { notes: string | null }) => {
+        const m = r.notes?.match(/From\s+(\d{4})-/);
+        if (m) years.add(m[1]);
+      });
+      const yearsLabel = years.size >= 2
+        ? Array.from(years).sort().join(" · ")
+        : years.size === 1 ? Array.from(years)[0] : null;
+
+      if (cancelled) return;
+      setSpotlight({
+        id: sl.id,
+        title: sl.title,
+        creatorName: profile?.display_name ?? "A Deadhead",
+        songCount: slotRows?.length ?? 0,
+        yearsLabel,
+      });
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
   const handleCta = (e: React.MouseEvent<HTMLAnchorElement>) => {
     e.preventDefault();
     trackCtaClick("hero_meet_cosmic_charlie", BUILDER_ROUTE);
@@ -67,11 +107,11 @@ const HeroSection = (_props: HeroSectionProps) => {
   };
 
   const handleHeroPlay = async () => {
+    if (!spotlight) return;
     if (isHeroPlaying) {
       stopPlayback();
       return;
     }
-    // Unlock iOS audio inside the gesture so async work doesn't break it.
     try {
       const unlock = new Audio(SILENT_WAV);
       unlock.volume = 0;
@@ -87,7 +127,7 @@ const HeroSection = (_props: HeroSectionProps) => {
         .select(
           "id, set_number, position, segue_to_next, song_id, notable_version_id, songs(id, title), notable_versions(id, song_id, show_date, archive_org_url, venue, city, era_id, rating, description)"
         )
-        .eq("setlist_id", HERO_SETLIST_ID)
+        .eq("setlist_id", spotlight.id)
         .order("set_number")
         .order("position");
       if (error) throw error;
@@ -103,7 +143,7 @@ const HeroSection = (_props: HeroSectionProps) => {
           directTrackUrl: null,
         }));
       if (playable.length === 0) return;
-      await playSetlist(playable, HERO_SETLIST_ID);
+      await playSetlist(playable, spotlight.id);
     } catch (err) {
       console.error("[Hero] playback failed", err);
     } finally {
