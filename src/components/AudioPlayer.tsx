@@ -58,6 +58,7 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const dragControls = useDragControls();
+  const [posterOpen, setPosterOpen] = useState(false);
   const y = useMotionValue(0);
   // Persisted vertical offset (negative = lifted up). Restored across mounts.
   const [yOffset, setYOffset] = useState<number>(() => {
