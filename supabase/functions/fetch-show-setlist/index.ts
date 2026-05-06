@@ -4,6 +4,11 @@
 
 import { corsHeaders } from "https://esm.sh/@supabase/supabase-js@2.95.0/cors";
 
+const MONTHS = [
+  "January","February","March","April","May","June",
+  "July","August","September","October","November","December",
+];
+
 interface ParsedTrack {
   rawTitle: string;
   setNumber: number; // 1, 2, or 3 (encore)
