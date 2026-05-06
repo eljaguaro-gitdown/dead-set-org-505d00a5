@@ -748,21 +748,23 @@ const HeroSection = (_props: HeroSectionProps) => {
           </p>
 
           {/* Now Spinning — proof-by-music. One tap, one ear, you're in. */}
-          <div className="ds-hero__cassette" role="group" aria-label={`Now Spinning — ${HERO_SETLIST_TITLE}`}>
+          <div className="ds-hero__cassette" role="group" aria-label={`Today's Spotlight — ${spotlight?.title ?? "community setlist"}`}>
             <div className="ds-hero__cassette-eyebrow-row" aria-hidden="true">
               <span className="ds-hero__cassette-live">
                 <span className="ds-hero__cassette-live-dot" />
-                {isHeroPlaying ? "Now Spinning" : heroLoading ? "Cueing up…" : "Press Play"}
+                {isHeroPlaying ? "Now Spinning" : heroLoading ? "Cueing up…" : "Today's Spotlight"}
               </span>
-              <span>18 SONGS · 7 YEARS</span>
+              <span>
+                {spotlight ? `${spotlight.songCount} SONG${spotlight.songCount === 1 ? "" : "S"}` : "COMMUNITY"}
+              </span>
             </div>
 
             <button
               type="button"
               onClick={handleHeroPlay}
-              disabled={heroLoading}
+              disabled={heroLoading || !spotlight}
               className="ds-hero__play-btn"
-              aria-label={isHeroPlaying ? `Pause ${HERO_SETLIST_TITLE}` : `Play ${HERO_SETLIST_TITLE}`}
+              aria-label={isHeroPlaying ? `Pause ${spotlight?.title ?? "spotlight"}` : `Play ${spotlight?.title ?? "spotlight"}`}
             >
               {isHeroPlaying ? (
                 <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -777,13 +779,15 @@ const HeroSection = (_props: HeroSectionProps) => {
             </button>
 
             <div className="ds-hero__cassette-meta">
-              <p className="ds-hero__cassette-song">{HERO_SETLIST_TITLE}</p>
-              <p className="ds-hero__cassette-show">{HERO_SETLIST_DATE}</p>
-              <p className="ds-hero__cassette-venue">{HERO_SETLIST_VENUE}</p>
+              <p className="ds-hero__cassette-song">{spotlight?.title ?? "Loading spotlight…"}</p>
+              <p className="ds-hero__cassette-show">by {spotlight?.creatorName ?? "—"}</p>
+              {spotlight?.yearsLabel && (
+                <p className="ds-hero__cassette-venue">{spotlight.yearsLabel}</p>
+              )}
             </div>
           </div>
           <p className="ds-hero__cassette-hint">
-            {isHeroPlaying ? "the music never stops" : "one date, seven decades of Dead"}
+            {isHeroPlaying ? "the music never stops" : "a new community setlist every day"}
           </p>
 
           <div className="ds-hero__stage" aria-hidden="true">
