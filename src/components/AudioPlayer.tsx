@@ -560,9 +560,9 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        navigate(`/setlist/${activeSetlistId}`);
+                        setPosterOpen(true);
                       }}
-                      className="h-7 px-3 rounded-md bg-transparent text-primary border border-primary/40 text-[11px] font-mono uppercase tracking-wider hover:bg-primary/10 transition-all shrink-0 hidden sm:inline-flex items-center gap-1"
+                      className="h-7 px-3 rounded-md bg-transparent text-primary border border-primary/40 text-[11px] font-mono uppercase tracking-wider hover:bg-primary/10 transition-all shrink-0 inline-flex items-center gap-1"
                       title="View poster"
                     >
                       View Poster
