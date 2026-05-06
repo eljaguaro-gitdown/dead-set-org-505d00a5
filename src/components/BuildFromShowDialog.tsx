@@ -250,6 +250,50 @@ const BuildFromShowDialog = ({ open, onOpenChange, onSeed }: BuildFromShowDialog
               </Button>
             </div>
           </TabsContent>
+
+          <TabsContent value="all-years" className="space-y-4 pt-4">
+            <p className="text-sm text-muted-foreground font-body leading-relaxed">
+              Pick a month and day — we'll scan every show the Dead played that calendar day across all years and assemble a setlist with one of each unique song.
+            </p>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <label className="text-sm font-body text-muted-foreground">Month</label>
+                <Select value={String(month)} onValueChange={(v) => setMonth(Number(v))}>
+                  <SelectTrigger className="h-12 font-body text-base"><SelectValue /></SelectTrigger>
+                  <SelectContent className="bg-card border-border max-h-72">
+                    {MONTHS.map((m, i) => (
+                      <SelectItem key={m} value={String(i + 1)} className="font-body">{m}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-sm font-body text-muted-foreground">Day</label>
+                <Select value={String(Math.min(day, daysInMonth))} onValueChange={(v) => setDay(Number(v))}>
+                  <SelectTrigger className="h-12 font-body text-base"><SelectValue /></SelectTrigger>
+                  <SelectContent className="bg-card border-border max-h-72">
+                    {Array.from({ length: daysInMonth }, (_, i) => i + 1).map((d) => (
+                      <SelectItem key={d} value={String(d)} className="font-body">{d}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="flex gap-2 justify-end pt-2">
+              <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={loading} className="font-body">
+                Cancel
+              </Button>
+              <Button
+                onClick={handleBuildAllYears}
+                disabled={loading}
+                className="bg-primary text-primary-foreground font-display gap-2"
+              >
+                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Layers className="w-4 h-4" />}
+                {loading ? "Scanning shows…" : `Pull ${MONTHS[month - 1]} ${day} from every year`}
+              </Button>
+            </div>
+          </TabsContent>
         </Tabs>
 
         <p className="text-sm text-muted-foreground font-body leading-relaxed flex items-start gap-1.5 pt-2">
