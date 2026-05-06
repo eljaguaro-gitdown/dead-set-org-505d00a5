@@ -67,14 +67,17 @@ const HeroSection = (_props: HeroSectionProps) => {
     (async () => {
       const { data: spot } = await supabase.rpc("get_hero_spotlight");
       const setlistId = Array.isArray(spot) && spot[0]?.setlist_id;
-      if (!setlistId) return;
+      if (!setlistId || cancelled) return;
 
-      const [{ data: sl }, { data: slotRows }] = await Promise.all([
-        supabase.from("setlists").select("id, title, creator_id").eq("id", setlistId).maybeSingle(),
-        supabase.from("setlist_slots").select("notes").eq("setlist_id", setlistId),
-      ]);
+      // Fetch setlist (with embedded slot notes) and profile in parallel after we know the id.
+      const slPromise = supabase
+        .from("setlists")
+        .select("id, title, creator_id, setlist_slots(notes)")
+        .eq("id", setlistId)
+        .maybeSingle();
+      const { data: sl } = await slPromise;
       if (cancelled || !sl) return;
-
+      const slotRows = (sl as any).setlist_slots as { notes: string | null }[] | null;
       const { data: profile } = await supabase
         .from("profiles").select("display_name").eq("user_id", sl.creator_id).maybeSingle();
 
