@@ -298,12 +298,30 @@ Deno.serve(async (req) => {
         }),
       );
 
-      // Dedupe by normalized title; keep earliest year occurrence with venue/year context.
+      // Aggressive normalization to collapse near-duplicates:
+      // strip parenthetical/bracket asides ("(reprise)", "[jam]"), version markers
+      // ("part 2", "pt. ii", "version 3"), "feat./featuring/with X", segue arrows,
+      // leading articles, then punctuation + whitespace.
+      const ROMAN: Record<string, string> = { i: "1", ii: "2", iii: "3", iv: "4", v: "5" };
+      const normalizeTitle = (raw: string): string => {
+        let s = " " + raw.toLowerCase() + " ";
+        s = s.replace(/[\(\[][^)\]]*[\)\]]/g, " ");                    // (reprise), [jam]
+        s = s.replace(/\s(feat\.?|ft\.?|featuring|with|w\/)\s.+$/g, " "); // feat. X
+        s = s.replace(/\s(jam|reprise|tease|tuning|intro|outro|finale|coda)\b/g, " ");
+        s = s.replace(/\s(pt\.?|part)\s*([ivx]+|\d+)\b/g, (_m, _p, n) => " " + (ROMAN[n] || n));
+        s = s.replace(/\sv(ersion|er)?\.?\s*\d+\b/g, " ");
+        s = s.replace(/\s(take|tk)\s*\d+\b/g, " ");
+        s = s.replace(/->|>/g, " ");
+        s = s.replace(/^\s*(the|a|an)\s+/g, " ");
+        s = s.replace(/[^a-z0-9]+/g, "");
+        return s;
+      };
+
       const seen = new Map<string, { rawTitle: string; date: string; venue: string | null; setNumber: number }>();
       for (const show of showResults) {
         if (!show) continue;
         for (const t of show.tracks) {
-          const key = t.rawTitle.toLowerCase().replace(/[^a-z0-9]/g, "");
+          const key = normalizeTitle(t.rawTitle);
           if (key.length < 2) continue;
           if (!seen.has(key)) {
             seen.set(key, { rawTitle: t.rawTitle, date: show.date, venue: show.venue, setNumber: t.setNumber });
