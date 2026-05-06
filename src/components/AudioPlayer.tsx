@@ -539,6 +539,11 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
               </div>
             ) : (
               <>
+                {playlistInfo && (
+                  <p className="font-mono uppercase tracking-[0.18em] text-primary/70 text-[11px] sm:text-sm tabular-nums leading-none mb-1">
+                    Song {playlistInfo.current} of {playlistInfo.total}
+                  </p>
+                )}
                 <p className="text-base sm:text-lg text-foreground font-display truncate font-bold">
                   {songTitle}
                 </p>
@@ -624,7 +629,7 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
           )}
 
           {playlistInfo && (
-            <span className="text-[10px] text-muted-foreground font-body tabular-nums shrink-0" title="Position in setlist">
+            <span className="text-sm text-muted-foreground font-mono tabular-nums shrink-0 hidden sm:inline" title="Position in setlist">
               {playlistInfo.current}/{playlistInfo.total}
             </span>
           )}
