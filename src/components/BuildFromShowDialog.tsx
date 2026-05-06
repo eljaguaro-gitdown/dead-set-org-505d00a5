@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { format } from "date-fns";
-import { CalendarIcon, Loader2, Sparkles, ExternalLink, Dice5 } from "lucide-react";
+import { CalendarIcon, Loader2, Sparkles, ExternalLink, Dice5, Layers } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -60,14 +60,14 @@ const MONTHS = [
 ];
 
 const BuildFromShowDialog = ({ open, onOpenChange, onSeed }: BuildFromShowDialogProps) => {
-  const [mode, setMode] = useState<"date" | "calendar-day">("date");
+  const [mode, setMode] = useState<"date" | "calendar-day" | "all-years">("date");
   const [date, setDate] = useState<Date | undefined>();
   const [month, setMonth] = useState<number>(new Date().getMonth() + 1);
   const [day, setDay] = useState<number>(new Date().getDate());
   const [loading, setLoading] = useState(false);
 
   const runFetch = useCallback(
-    async (body: { date?: string } | { month: number; day: number }, fallbackTitle: string) => {
+    async (body: { date?: string } | { month: number; day: number; aggregate?: boolean }, fallbackTitle: string) => {
       setLoading(true);
       try {
         const { data: show, error: fnErr } = await supabase.functions.invoke("fetch-show-setlist", { body });
@@ -139,6 +139,10 @@ const BuildFromShowDialog = ({ open, onOpenChange, onSeed }: BuildFromShowDialog
     runFetch({ month, day }, `${MONTHS[month - 1]} ${day} — across the years`);
   }, [month, day, runFetch]);
 
+  const handleBuildAllYears = useCallback(() => {
+    runFetch({ month, day, aggregate: true }, `${MONTHS[month - 1]} ${day} — every year`);
+  }, [month, day, runFetch]);
+
   const daysInMonth = new Date(2000, month, 0).getDate(); // leap-safe enough for picker
 
   return (
@@ -154,10 +158,11 @@ const BuildFromShowDialog = ({ open, onOpenChange, onSeed }: BuildFromShowDialog
           </DialogDescription>
         </DialogHeader>
 
-        <Tabs value={mode} onValueChange={(v) => setMode(v as "date" | "calendar-day")} className="pt-2">
-          <TabsList className="grid grid-cols-2 w-full">
+        <Tabs value={mode} onValueChange={(v) => setMode(v as typeof mode)} className="pt-2">
+          <TabsList className="grid grid-cols-3 w-full">
             <TabsTrigger value="date" className="font-body">Specific date</TabsTrigger>
-            <TabsTrigger value="calendar-day" className="font-body">Calendar day</TabsTrigger>
+            <TabsTrigger value="calendar-day" className="font-body">Random year</TabsTrigger>
+            <TabsTrigger value="all-years" className="font-body">All years</TabsTrigger>
           </TabsList>
 
           <TabsContent value="date" className="space-y-4 pt-4">
@@ -242,6 +247,50 @@ const BuildFromShowDialog = ({ open, onOpenChange, onSeed }: BuildFromShowDialog
               >
                 {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Dice5 className="w-4 h-4" />}
                 {loading ? "Finding a show…" : `Roll the dice on ${MONTHS[month - 1]} ${day}`}
+              </Button>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="all-years" className="space-y-4 pt-4">
+            <p className="text-sm text-muted-foreground font-body leading-relaxed">
+              Pick a month and day — we'll scan every show the Dead played that calendar day across all years and assemble a setlist with one of each unique song.
+            </p>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <label className="text-sm font-body text-muted-foreground">Month</label>
+                <Select value={String(month)} onValueChange={(v) => setMonth(Number(v))}>
+                  <SelectTrigger className="h-12 font-body text-base"><SelectValue /></SelectTrigger>
+                  <SelectContent className="bg-card border-border max-h-72">
+                    {MONTHS.map((m, i) => (
+                      <SelectItem key={m} value={String(i + 1)} className="font-body">{m}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-sm font-body text-muted-foreground">Day</label>
+                <Select value={String(Math.min(day, daysInMonth))} onValueChange={(v) => setDay(Number(v))}>
+                  <SelectTrigger className="h-12 font-body text-base"><SelectValue /></SelectTrigger>
+                  <SelectContent className="bg-card border-border max-h-72">
+                    {Array.from({ length: daysInMonth }, (_, i) => i + 1).map((d) => (
+                      <SelectItem key={d} value={String(d)} className="font-body">{d}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="flex gap-2 justify-end pt-2">
+              <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={loading} className="font-body">
+                Cancel
+              </Button>
+              <Button
+                onClick={handleBuildAllYears}
+                disabled={loading}
+                className="bg-primary text-primary-foreground font-display gap-2"
+              >
+                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Layers className="w-4 h-4" />}
+                {loading ? "Scanning shows…" : `Pull ${MONTHS[month - 1]} ${day} from every year`}
               </Button>
             </div>
           </TabsContent>
