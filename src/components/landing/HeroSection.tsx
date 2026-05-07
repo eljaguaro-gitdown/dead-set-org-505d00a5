@@ -802,7 +802,7 @@ const HeroSection = (_props: HeroSectionProps) => {
             </div>
           </div>
           <p className="ds-hero__cassette-hint">
-            {isHeroPlaying ? "the music never stops" : "a new community setlist every day"}
+            {isHeroPlaying ? "the music never stops" : "today's featured setlist — built by a fellow head"}
           </p>
 
           <div className="ds-hero__stage" aria-hidden="true">
