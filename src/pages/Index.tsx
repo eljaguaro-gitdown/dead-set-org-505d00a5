@@ -11,6 +11,7 @@ import PageLayout from "@/components/PageLayout";
 import SiteHeader from "@/components/SiteHeader";
 
 import HeroSection from "@/components/landing/HeroSection";
+import SetlistOfTheDay from "@/components/landing/SetlistOfTheDay";
 import HowItWorks from "@/components/landing/HowItWorks";
 import PersonalNote from "@/components/landing/PersonalNote";
 import { BROWSE_COMMUNITY_STORAGE_KEY, COMMUNITY_SECTION_ID } from "@/components/landing/BrowseCommunityLink";
@@ -279,6 +280,9 @@ const Index = () => {
 
       {/* Hero — headline, subhead, audio strip, CTAs */}
       <HeroSection showReturningSignIn={!user} featured={featured} />
+
+      {/* Setlist of the Day — featured community pick */}
+      <SetlistOfTheDay />
 
       {/* How It Works — 3 steps */}
       <HowItWorks />
