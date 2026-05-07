@@ -281,6 +281,9 @@ const Index = () => {
       {/* Hero — headline, subhead, audio strip, CTAs */}
       <HeroSection showReturningSignIn={!user} featured={featured} />
 
+      {/* Setlist of the Day — featured community pick */}
+      <SetlistOfTheDay />
+
       {/* How It Works — 3 steps */}
       <HowItWorks />
 
