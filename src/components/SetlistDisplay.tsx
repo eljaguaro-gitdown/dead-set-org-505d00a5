@@ -329,36 +329,43 @@ const SetSection = ({
     .filter((s) => s.setNumber === setNumber)
     .sort((a, b) => a.position - b.position);
   const ids = setSlots.map((s) => s.id);
+  const droppableId = `set-${setNumber}`;
+  const { setNodeRef, isOver } = useDroppable({ id: droppableId });
 
   return (
     <div className="space-y-1">
       <h3 className="font-display text-sm text-muted-foreground uppercase tracking-wider px-2 py-2">
         {title}
       </h3>
-      {setSlots.length === 0 && (
-        <div className="border border-dashed border-border rounded-lg p-6 text-center">
-          <p className="text-sm text-muted-foreground font-body">
-            {setNumber === 1
-              ? "Every great show starts with the first note."
-              : "Drop songs here"}
-          </p>
-        </div>
-      )}
-      <SortableContext items={ids} strategy={verticalListSortingStrategy}>
-        {setSlots.map((slot, index) => (
-          <SortableSlotItem
-            key={slot.id}
-            slot={slot}
-            isLast={index === setSlots.length - 1}
-            isPlaying={activeSlotId === slot.id}
-            eraYearRange={eraYearRange}
-            onRemoveSlot={onRemoveSlot}
-            onToggleSegue={onToggleSegue}
-            onUpdateNotes={onUpdateNotes}
-            onPlayVersion={onPlayVersion}
-          />
-        ))}
-      </SortableContext>
+      <div
+        ref={setNodeRef}
+        className={`space-y-1 rounded-lg transition-colors ${isOver ? "bg-primary/5 ring-1 ring-primary/30" : ""}`}
+      >
+        {setSlots.length === 0 && (
+          <div className="border border-dashed border-border rounded-lg p-6 text-center">
+            <p className="text-sm text-muted-foreground font-body">
+              {setNumber === 1
+                ? "Every great show starts with the first note."
+                : "Drop songs here"}
+            </p>
+          </div>
+        )}
+        <SortableContext items={ids} strategy={verticalListSortingStrategy}>
+          {setSlots.map((slot, index) => (
+            <SortableSlotItem
+              key={slot.id}
+              slot={slot}
+              isLast={index === setSlots.length - 1}
+              isPlaying={activeSlotId === slot.id}
+              eraYearRange={eraYearRange}
+              onRemoveSlot={onRemoveSlot}
+              onToggleSegue={onToggleSegue}
+              onUpdateNotes={onUpdateNotes}
+              onPlayVersion={onPlayVersion}
+            />
+          ))}
+        </SortableContext>
+      </div>
     </div>
   );
 };
