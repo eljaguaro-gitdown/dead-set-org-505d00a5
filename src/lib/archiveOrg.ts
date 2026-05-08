@@ -171,8 +171,9 @@ export async function findArchiveRecording(
 
   const promise = (async () => {
     try {
+      const cleanTitle = songTitle.replace(/["!?.,;:()\[\]]/g, "").trim();
       const query = encodeURIComponent(
-        `collection:GratefulDead "${songTitle}"${eraDateClause}`
+        `collection:GratefulDead "${cleanTitle}"${eraDateClause}`
       );
       const apiUrl = `https://archive.org/advancedsearch.php?q=${query}&fl=identifier,date,avg_rating,venue&sort[]=avg_rating+desc&output=json&rows=10`;
       const res = await fetch(apiUrl);
