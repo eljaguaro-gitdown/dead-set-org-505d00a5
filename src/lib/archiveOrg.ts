@@ -171,8 +171,9 @@ export async function findArchiveRecording(
 
   const promise = (async () => {
     try {
+      const cleanTitle = songTitle.replace(/["!?.,;:()\[\]]/g, "").trim();
       const query = encodeURIComponent(
-        `collection:GratefulDead "${songTitle}"${eraDateClause}`
+        `collection:GratefulDead "${cleanTitle}"${eraDateClause}`
       );
       const apiUrl = `https://archive.org/advancedsearch.php?q=${query}&fl=identifier,date,avg_rating,venue&sort[]=avg_rating+desc&output=json&rows=10`;
       const res = await fetch(apiUrl);
@@ -284,7 +285,9 @@ export async function findManyArchiveRecordings(
   if (multiCache.has(key)) return multiCache.get(key)!;
 
   try {
-    const query = encodeURIComponent(`collection:GratefulDead "${songTitle}"`);
+    // Strip punctuation that can break archive.org's quoted phrase search (e.g. "Slipknot!")
+    const cleanTitle = songTitle.replace(/["!?.,;:()\[\]]/g, "").trim();
+    const query = encodeURIComponent(`collection:GratefulDead "${cleanTitle}"`);
     const apiUrl = `https://archive.org/advancedsearch.php?q=${query}&fl=identifier,date,avg_rating,venue&sort[]=avg_rating+desc&output=json&rows=${maxResults}`;
     const res = await fetch(apiUrl);
     if (!res.ok) return [];
