@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import SongVersionBrowser from "@/components/SongVersionBrowser";
 import { toast } from "sonner";
 import { useFavoriteSongs } from "@/hooks/useFavoriteSongs";
+import { matchesSongQuery } from "@/lib/songSearch";
 import type { Database } from "@/integrations/supabase/types";
 
 type Song = Database["public"]["Tables"]["songs"]["Row"];
