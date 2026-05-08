@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { Zap, ExternalLink, Headphones, Star, Loader2, ArrowUpDown, Calendar, TrendingUp, Heart } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { findManyArchiveRecordings, type ArchiveVersion } from "@/lib/archiveOrg";
