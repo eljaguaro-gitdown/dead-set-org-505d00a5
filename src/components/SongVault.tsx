@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import SongVersionBrowser from "@/components/SongVersionBrowser";
 import { toast } from "sonner";
 import { useFavoriteSongs } from "@/hooks/useFavoriteSongs";
+import { matchesSongQuery } from "@/lib/songSearch";
 import type { Database } from "@/integrations/supabase/types";
 
 type Song = Database["public"]["Tables"]["songs"]["Row"];
@@ -37,22 +38,8 @@ const SongVault = ({ songs, eraId, onSelectSong, getNotableVersions, onPlayArchi
   const { isFavoriteSong, isFavoriteVersion, toggleFavoriteSong } = useFavoriteSongs();
 
   const filteredSongs = useMemo(() => {
-    const STOP = new Set(["a", "an", "and", "the", "of", "my", "you", "to", "in", "on"]);
-    const normalize = (s: string) => s.toLowerCase().replace(/[^a-z0-9\s]/g, " ").replace(/\s+/g, " ").trim();
-    const rawQuery = normalize(search);
-    const queryTokens = rawQuery.split(" ").filter((t) => t && !STOP.has(t));
     return songs.filter((s) => {
-      const normTitle = normalize(s.title);
-      let matchesSearch = true;
-      if (rawQuery) {
-        if (normTitle.includes(rawQuery)) {
-          matchesSearch = true;
-        } else if (queryTokens.length > 0) {
-          matchesSearch = queryTokens.every((t) => normTitle.includes(t));
-        } else {
-          matchesSearch = normTitle.includes(rawQuery);
-        }
-      }
+      const matchesSearch = matchesSongQuery(s.title, search);
       const matchesTag = !tagFilter || (s.tags && s.tags.includes(tagFilter));
       const matchesPosition = !positionFilter || s.typical_set_position === positionFilter;
       return matchesSearch && matchesTag && matchesPosition;
