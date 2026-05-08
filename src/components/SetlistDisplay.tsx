@@ -424,12 +424,19 @@ const SetlistDisplay = ({
       if (!over || active.id === over.id) return;
 
       const activeSlot = slots.find((s) => s.id === active.id);
+      if (!activeSlot) return;
+
+      // Target set: another slot's set, or an empty droppable zone "set-N"
+      let targetSetNumber: number | null = null;
       const overSlot = slots.find((s) => s.id === over.id);
-      if (!activeSlot || !overSlot) return;
+      if (overSlot) {
+        targetSetNumber = overSlot.setNumber;
+      } else if (typeof over.id === "string" && over.id.startsWith("set-")) {
+        targetSetNumber = parseInt(over.id.replace("set-", ""), 10);
+      }
+      if (targetSetNumber == null) return;
 
-      const targetSetNumber = overSlot.setNumber;
-
-      if (activeSlot.setNumber === targetSetNumber) {
+      if (activeSlot.setNumber === targetSetNumber && overSlot) {
         // Same set: reorder within the set
         const setSlots = slots.filter((s) => s.setNumber === targetSetNumber);
         const otherSlots = slots.filter((s) => s.setNumber !== targetSetNumber);
@@ -441,11 +448,10 @@ const SetlistDisplay = ({
         }));
         onReorder([...otherSlots, ...reordered]);
       } else {
-        // Cross-set move: change the set number first
+        // Cross-set move: reassign and append to end of target set
         const updated = slots.map((s) =>
-          s.id === active.id ? { ...s, setNumber: targetSetNumber } : s
+          s.id === active.id ? { ...s, setNumber: targetSetNumber!, position: Number.MAX_SAFE_INTEGER } : s
         );
-        // Recalculate positions per set and rebuild the array
         const bySet = new Map<number, SetlistSlotData[]>();
         for (const s of updated) {
           const arr = bySet.get(s.setNumber) || [];
