@@ -111,8 +111,19 @@ const SongVersionBrowser = ({ song, curatedVersions, onSelectSong, onPlayArchive
     onSelectSong(song, syntheticVersion);
   };
 
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    // On expand, scroll into view so users see results immediately on mobile.
+    requestAnimationFrame(() => {
+      containerRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    });
+  }, []);
+
   return (
-    <div className="p-3 ml-2 border-l-2 border-primary/30 space-y-2 max-h-[400px] overflow-y-auto">
+    <div
+      ref={containerRef}
+      className="p-3 ml-2 border-l-2 border-primary/30 space-y-2 md:max-h-[400px] md:overflow-y-auto"
+    >
       <button
         onClick={() => onSelectSong(song)}
         className="w-full text-left p-2 rounded bg-muted/50 hover:bg-muted text-sm font-body text-foreground transition-colors"
