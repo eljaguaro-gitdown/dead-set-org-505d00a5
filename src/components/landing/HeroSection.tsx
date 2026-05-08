@@ -114,7 +114,7 @@ const HeroSection = (_props: HeroSectionProps) => {
         title: "Sign in to build your setlist",
         description: "Create a free account to start building.",
       });
-      navigate("/auth?redirect=/builder?wizard=true");
+      navigate(`/auth?redirect=${encodeURIComponent("/builder?wizard=true")}`);
       return;
     }
     trackCtaClick("hero_build_setlist", BUILDER_ROUTE);
