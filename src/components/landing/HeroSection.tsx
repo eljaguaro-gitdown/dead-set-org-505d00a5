@@ -40,7 +40,7 @@ interface HeroSectionProps {
   featured?: FeaturedSetlist[];
 }
 
-const BUILDER_ROUTE = "/builder";
+const BUILDER_ROUTE = "/builder?wizard=true";
 
 const HeroSection = (_props: HeroSectionProps) => {
   const navigate = useNavigate();
@@ -114,7 +114,7 @@ const HeroSection = (_props: HeroSectionProps) => {
         title: "Sign in to build your setlist",
         description: "Create a free account to start building.",
       });
-      navigate("/auth?redirect=/builder");
+      navigate(`/auth?redirect=${encodeURIComponent("/builder?wizard=true")}`);
       return;
     }
     trackCtaClick("hero_build_setlist", BUILDER_ROUTE);
