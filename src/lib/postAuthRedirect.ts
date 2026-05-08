@@ -11,5 +11,5 @@ export const getPostAuthRedirect = async (userId: string): Promise<string> => {
     .select("id", { count: "exact", head: true })
     .eq("creator_id", userId);
 
-  return (count && count > 0) ? "/my-setlists" : "/builder";
+  return (count && count > 0) ? "/my-setlists" : "/builder?wizard=true";
 };
