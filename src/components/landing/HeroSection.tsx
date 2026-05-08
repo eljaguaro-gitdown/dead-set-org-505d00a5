@@ -40,7 +40,7 @@ interface HeroSectionProps {
   featured?: FeaturedSetlist[];
 }
 
-const BUILDER_ROUTE = "/builder";
+const BUILDER_ROUTE = "/builder?wizard=true";
 
 const HeroSection = (_props: HeroSectionProps) => {
   const navigate = useNavigate();
