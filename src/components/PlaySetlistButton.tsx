@@ -32,6 +32,27 @@ const sizeMap = {
 
 type PlayMode = "all" | "openers" | "queue";
 
+const decodeArchiveVersion = (slotId: string, songId: string, notes?: string | null) => {
+  if (!notes?.startsWith("{\"__archive\":true")) return null;
+  try {
+    const meta = JSON.parse(notes.slice(0, notes.indexOf("\n") > -1 ? notes.indexOf("\n") : undefined));
+    if (!meta.__archive) return null;
+    return {
+      id: `archive-reconstructed-${slotId}`,
+      song_id: songId,
+      show_date: meta.show_date || "",
+      archive_org_url: meta.archive_org_url || null,
+      venue: meta.venue || null,
+      city: null,
+      era_id: null,
+      rating: meta.rating || null,
+      description: null,
+    };
+  } catch {
+    return null;
+  }
+};
+
 /**
  * One-tap play button for a setlist card. Fetches the setlist's slots on
  * demand, builds PlayableSlot[], and hands off to the global audio player.
@@ -63,7 +84,7 @@ const PlaySetlistButton = ({
       const { data: slots, error } = await supabase
         .from("setlist_slots")
         .select(
-          "id, set_number, position, segue_to_next, song_id, notable_version_id, songs(id, title), notable_versions(id, song_id, show_date, archive_org_url, venue, city, era_id, rating, description)"
+          "id, set_number, position, segue_to_next, song_id, notable_version_id, notes, songs(id, title), notable_versions(id, song_id, show_date, archive_org_url, venue, city, era_id, rating, description)"
         )
         .eq("setlist_id", setlistId)
         .order("set_number")
@@ -80,7 +101,7 @@ const PlaySetlistButton = ({
         .map((s: any) => ({
           id: s.id,
           song: { id: s.songs.id, title: s.songs.title },
-          version: s.notable_versions ?? null,
+          version: s.notable_versions ?? decodeArchiveVersion(s.id, s.song_id, s.notes),
           setNumber: s.set_number,
           position: s.position,
           segueToNext: s.segue_to_next ?? false,
