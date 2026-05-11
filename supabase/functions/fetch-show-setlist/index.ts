@@ -57,6 +57,13 @@ interface ParsedTrack {
   segueToNext: boolean;
 }
 
+const TITLE_ALIASES: Record<string, string> = {
+  "Memphis Blues": "Stuck Inside Of Mobile With The Memphis Blues Again",
+  "Playin' In The Band Jam": "Playing In The Band Reprise",
+  "Playin' In The Band": "Playing In The Band",
+  "We Bid You Good Night": "And We Bid You Goodnight",
+};
+
 interface AudioTrackEntry {
   file: any;
   parsed: { set: number | null; disc: number | null; track: number | null };
@@ -158,6 +165,10 @@ function cleanTitle(raw: string): string {
     .replace(/\s*[!?.]+$/, "")                     // trailing punctuation
     .replace(/\s+/g, " ")
     .trim();
+}
+
+function canonicalTitle(title: string): string {
+  return TITLE_ALIASES[title] || title;
 }
 
 // Detect segue indicators in the original title or trailing notes.
