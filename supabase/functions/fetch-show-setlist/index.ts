@@ -215,7 +215,7 @@ function splitInlineSetLine(
     const cleaned = cleanTitle(tok);
     if (cleaned.length < 2) continue;
     if (/^(disc|tape|source|lineage|recorded|taper|transferred|set\s*[123])$/i.test(cleaned)) continue;
-    items.push({ title: cleaned, segue, setNumber: curSet });
+    items.push({ title: canonicalTitle(cleaned), segue, setNumber: curSet });
   }
   // Pack the items + the resulting current set onto a wrapper.
   (out as any).items = items;
@@ -283,7 +283,7 @@ function parseNotesSetlist(notes: string): { title: string; segue: boolean; setN
     if (/^(disc|d\d|tape|reel|comments?|notes?|source|lineage|recorded|taper|transferred)/i.test(cleanedLine)) continue;
 
     const segue = detectSegue(line);
-    const title = cleanTitle(cleanedLine).replace(/\s*->?\s*$/, "").trim();
+    const title = canonicalTitle(cleanTitle(cleanedLine).replace(/\s*->?\s*$/, "").trim());
     if (title.length < 2) continue;
     out.push({ title, segue, setNumber: currentSet });
   }
