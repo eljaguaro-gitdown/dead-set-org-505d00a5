@@ -1421,6 +1421,7 @@ export type Database = {
           read_ct: number
         }[]
       }
+      send_featured_setlist_email_today: { Args: never; Returns: undefined }
       setlist_has_share_token: {
         Args: { _setlist_id: string }
         Returns: boolean
