@@ -114,9 +114,22 @@ const SetlistPoster = () => {
         return;
       }
 
+      const trackSongIds = Array.from(
+        new Set(
+          ((show.tracks || []) as Array<{ songId?: string | null }>)
+            .map((track) => track.songId)
+            .filter((songId): songId is string => !!songId),
+        ),
+      );
       const { data: songs, error: sErr } = await supabase.from("songs").select("*");
       if (sErr || !songs) { toast.error("Couldn't load song catalog"); return; }
-      const songsById = new Map(songs.map((s) => [s.id, s]));
+      const missingSongIds = trackSongIds.filter((songId) => !songs.some((song) => song.id === songId));
+      const { data: resolvedInsertedSongs, error: insertedErr } = missingSongIds.length
+        ? await supabase.from("songs").select("*").in("id", missingSongIds)
+        : { data: [], error: null };
+      if (insertedErr) { toast.error("Couldn't refresh the song catalog"); return; }
+      const songCatalog = [...songs, ...(resolvedInsertedSongs || [])];
+      const songsById = new Map(songCatalog.map((s) => [s.id, s]));
 
       const positions = new Map<number, number>();
       const rows: Database["public"]["Tables"]["setlist_slots"]["Insert"][] = [];
@@ -125,7 +138,7 @@ const SetlistPoster = () => {
         let chosen: Song | null = (t.songId && songsById.get(t.songId)) || null;
         if (!chosen) {
           let best: { song: Song; score: number } | null = null;
-          for (const song of songs) {
+          for (const song of songCatalog) {
             const score = matchScore(t.rawTitle, song.title);
             if (score >= 60 && (!best || score > best.score)) best = { song, score };
           }

@@ -89,9 +89,22 @@ const BuildFromShowDialog = ({ open, onOpenChange, onSeed }: BuildFromShowDialog
           return;
         }
 
+        const songIds = Array.from(
+          new Set(
+            ((show.tracks || []) as Array<{ songId?: string | null }>)
+              .map((track) => track.songId)
+              .filter((songId): songId is string => !!songId),
+          ),
+        );
         const { data: songs, error: sErr } = await supabase.from("songs").select("*");
         if (sErr) throw sErr;
-        const songsById = new Map((songs || []).map((s) => [s.id, s]));
+        const missingSongIds = songIds.filter((songId) => !(songs || []).some((song) => song.id === songId));
+        const { data: resolvedInsertedSongs, error: insertedErr } = missingSongIds.length
+          ? await supabase.from("songs").select("*").in("id", missingSongIds)
+          : { data: [], error: null };
+        if (insertedErr) throw insertedErr;
+        const songCatalog = [...(songs || []), ...(resolvedInsertedSongs || [])];
+        const songsById = new Map(songCatalog.map((s) => [s.id, s]));
 
         const slots: SeededSlot[] = [];
         const positions = new Map<number, number>();
@@ -100,7 +113,7 @@ const BuildFromShowDialog = ({ open, onOpenChange, onSeed }: BuildFromShowDialog
         for (const track of show.tracks as Array<{ rawTitle: string; setNumber: number; position: number; segueToNext: boolean; songId?: string | null; sourceDate?: string; sourceVenue?: string | null }>) {
           // Prefer the server-resolved song_id (which auto-inserts missing songs
           // so we keep the exact show). Fallback to local fuzzy match.
-          const matched = (track.songId && songsById.get(track.songId)) || fuzzyMatchSong(track.rawTitle, songs || []);
+          const matched = (track.songId && songsById.get(track.songId)) || fuzzyMatchSong(track.rawTitle, songCatalog);
           if (!matched) { unmatched++; continue; }
           const pos = positions.get(track.setNumber) || 0;
           positions.set(track.setNumber, pos + 1);

@@ -642,9 +642,24 @@ const Builder = () => {
   // Uses the real historical setlist (sets, order, segues) parsed from archive.org.
   const handleShowDateSeed = useCallback(
     async (seed: ShowSeed) => {
+      const seededSongIds = Array.from(new Set(seed.slots.map((slot) => slot.song.id)));
+      const missingSeededIds = seededSongIds.filter((songId) => !songs.some((song) => song.id === songId));
+      let refreshedSongsById = new Map(songs.map((song) => [song.id, song]));
+      if (missingSeededIds.length > 0) {
+        const { data: freshlyInsertedSongs, error: refreshErr } = await supabase
+          .from("songs")
+          .select("*")
+          .in("id", missingSeededIds);
+        if (refreshErr) {
+          toast.error("Couldn't refresh the song catalog");
+          return;
+        }
+        refreshedSongsById = new Map([...songs, ...(freshlyInsertedSongs || [])].map((song) => [song.id, song]));
+      }
+
       const newSlots: SetlistSlotData[] = seed.slots.map((s) => ({
         id: crypto.randomUUID(),
-        song: s.song,
+        song: refreshedSongsById.get(s.song.id) || s.song,
         version: null,
         setNumber: s.setNumber,
         position: s.position,
@@ -730,7 +745,7 @@ const Builder = () => {
       }
       setMobileTab("setlist");
     },
-    [isGuestMode, setlist, user, createSetlist, updateTitle, navigate, setSlots],
+    [isGuestMode, setlist, user, createSetlist, updateTitle, navigate, setSlots, songs],
   );
 
   const handleGenerateDescription = useCallback(async () => {

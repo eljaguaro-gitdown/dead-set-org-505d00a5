@@ -57,6 +57,13 @@ interface ParsedTrack {
   segueToNext: boolean;
 }
 
+const TITLE_ALIASES: Record<string, string> = {
+  "Memphis Blues": "Stuck Inside Of Mobile With The Memphis Blues Again",
+  "Playin' In The Band Jam": "Playing In The Band Reprise",
+  "Playin' In The Band": "Playing In The Band",
+  "We Bid You Good Night": "And We Bid You Goodnight",
+};
+
 interface AudioTrackEntry {
   file: any;
   parsed: { set: number | null; disc: number | null; track: number | null };
@@ -89,6 +96,22 @@ const isAudioFile = (f: any): boolean => {
 // Pick the best recording identifier for the date.
 // Prefer SBD, then highest avg_rating, then most-downloaded.
 async function findBestRecordingForDate(date: string): Promise<string | null> {
+  // Relisten's show endpoint mirrors the user-facing "Source #1" ordering and
+  // points each source back to its Archive.org identifier. Exact-date rebuilds
+  // should use that first source, not a separate Archive search ranking.
+  try {
+    const sourceOneRes = await fetch(`https://api.relisten.net/api/v2/artists/grateful-dead/shows/${date}`);
+    if (sourceOneRes.ok) {
+      const show = await sourceOneRes.json();
+      const sourceOneId = show?.sources?.[0]?.upstream_identifier;
+      if (typeof sourceOneId === "string" && sourceOneId.trim().length > 0) {
+        return sourceOneId.trim();
+      }
+    }
+  } catch {
+    // Fall back to Archive.org advanced search below.
+  }
+
   const q = encodeURIComponent(`collection:GratefulDead AND date:${date}`);
   const url = `https://archive.org/advancedsearch.php?q=${q}&fl[]=identifier&fl[]=avg_rating&fl[]=downloads&fl[]=source&sort[]=downloads+desc&sort[]=avg_rating+desc&rows=25&output=json`;
   const res = await fetch(url);
@@ -160,6 +183,10 @@ function cleanTitle(raw: string): string {
     .trim();
 }
 
+function canonicalTitle(title: string): string {
+  return TITLE_ALIASES[title] || title;
+}
+
 // Detect segue indicators in the original title or trailing notes.
 function detectSegue(raw: string): boolean {
   return /->|>\s*$|\s>\s|segue/i.test(raw);
@@ -204,7 +231,7 @@ function splitInlineSetLine(
     const cleaned = cleanTitle(tok);
     if (cleaned.length < 2) continue;
     if (/^(disc|tape|source|lineage|recorded|taper|transferred|set\s*[123])$/i.test(cleaned)) continue;
-    items.push({ title: cleaned, segue, setNumber: curSet });
+    items.push({ title: canonicalTitle(cleaned), segue, setNumber: curSet });
   }
   // Pack the items + the resulting current set onto a wrapper.
   (out as any).items = items;
@@ -214,7 +241,12 @@ function splitInlineSetLine(
 
 function parseNotesSetlist(notes: string): { title: string; segue: boolean; setNumber: number }[] | null {
   if (!notes) return null;
-  const text = stripHtml(notes);
+  const text = stripHtml(notes)
+    // Source #1 Archive descriptions often have no explicit set labels and join
+    // set one to set two with only a sentence-like boundary, e.g.
+    // "..., Let It Grow, Deal Dark Star-> ...". Preserve the exact written
+    // setlist by inserting the missing boundary before the post-Drums suite.
+    .replace(/\bDeal\s+(Dark Star\s*(?:->|>))/i, "Deal\nSet 2: $1");
   const lines = text
     .replace(/\b(Set\s*(?:1|2|3|One|Two|Three)|Encore|E)\s*[:.\-]?\s*/gi, "\n$&")
     .split(/\r?\n/);
@@ -267,7 +299,7 @@ function parseNotesSetlist(notes: string): { title: string; segue: boolean; setN
     if (/^(disc|d\d|tape|reel|comments?|notes?|source|lineage|recorded|taper|transferred)/i.test(cleanedLine)) continue;
 
     const segue = detectSegue(line);
-    const title = cleanTitle(cleanedLine).replace(/\s*->?\s*$/, "").trim();
+    const title = canonicalTitle(cleanTitle(cleanedLine).replace(/\s*->?\s*$/, "").trim());
     if (title.length < 2) continue;
     out.push({ title, segue, setNumber: currentSet });
   }
@@ -390,6 +422,9 @@ function applyFileSetBreaks(notesTracks: ParsedTrack[], files: any[]): ParsedTra
   const hasSetMarkers = entries.some((e) => e.parsed.set !== null);
   const hasThreeDiscs = new Set(entries.map((e) => e.parsed.disc).filter((d) => d !== null)).size >= 3;
   if (!hasSetMarkers && !hasThreeDiscs) return notesTracks;
+  if (!hasSetMarkers && new Set(notesTracks.map((track) => track.setNumber)).size > 1) {
+    return notesTracks;
+  }
 
   const counts = new Map<number, number>();
   return notesTracks.map((track, index) => {
@@ -408,8 +443,17 @@ function notesLookMisalignedWithFiles(notesTracks: ParsedTrack[], files: any[]):
     e.cleaned && !/^(tuning|tune[\s-]?up|applause|banter|crowd[\s-]?noise|intro|outro)$/i.test(e.cleaned)
   );
   if (entries.length === 0) return false;
-  if (notesTracks.length !== entries.length) return true;
-  return notesTracks.some((track, index) => matchScore(entries[index].cleaned, track.rawTitle) === 0);
+  // Archive.org often tracks "Space" in files while the written setlist calls it
+  // "Jam", or writes "Playing in the Band Jam" while files use a reprise title.
+  // For exact show recreation, the human-written Archive setlist is authoritative
+  // unless it is obviously unrelated to the files.
+  const comparable = Math.min(notesTracks.length, entries.length);
+  if (comparable < 4) return false;
+  let aligned = 0;
+  for (let index = 0; index < comparable; index++) {
+    if (matchScore(entries[index].cleaned, notesTracks[index].rawTitle) > 0) aligned++;
+  }
+  return aligned / comparable < 0.65;
 }
 
 Deno.serve(async (req) => {
