@@ -379,6 +379,28 @@ function parseFromFiles(files: any[]): ParsedTrack[] {
   return tracks;
 }
 
+function applyFileSetBreaks(notesTracks: ParsedTrack[], files: any[]): ParsedTrack[] {
+  const entries = getAudioTrackEntries(files).filter((e) =>
+    e.cleaned && !/^(tuning|tune[\s-]?up|applause|banter|crowd[\s-]?noise|intro|outro)$/i.test(e.cleaned)
+  );
+  if (entries.length !== notesTracks.length) return notesTracks;
+
+  const hasSetMarkers = entries.some((e) => e.parsed.set !== null);
+  const hasThreeDiscs = new Set(entries.map((e) => e.parsed.disc).filter((d) => d !== null)).size >= 3;
+  if (!hasSetMarkers && !hasThreeDiscs) return notesTracks;
+
+  const counts = new Map<number, number>();
+  return notesTracks.map((track, index) => {
+    const parsed = entries[index].parsed;
+    const setNumber = hasSetMarkers
+      ? Math.min(parsed.set ?? track.setNumber, 3)
+      : Math.min(parsed.disc ?? track.setNumber, 3);
+    const position = counts.get(setNumber) || 0;
+    counts.set(setNumber, position + 1);
+    return { ...track, setNumber, position };
+  });
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
