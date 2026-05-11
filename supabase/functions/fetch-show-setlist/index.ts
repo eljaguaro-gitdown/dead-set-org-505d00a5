@@ -688,13 +688,13 @@ Deno.serve(async (req) => {
       }
     }
 
-    const result: ShowResult & { tracks: Array<ParsedTrack & { songId: string | null; matched: boolean }> } = {
+    const result: ShowResult & { tracks: Array<ParsedTrack & { songId: string | null; matched: boolean; sourceDate: string; sourceVenue: string | null }> } = {
       archiveId,
       archiveUrl: `https://archive.org/details/${archiveId}`,
       date,
       venue,
       city,
-      tracks: tracksWithIds,
+      tracks: tracksWithIds.map((track) => ({ ...track, sourceDate: date, sourceVenue: venue })),
     };
 
     return new Response(JSON.stringify(result), {
