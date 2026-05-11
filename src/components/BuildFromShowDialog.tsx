@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { format } from "date-fns";
-import { CalendarIcon, Loader2, Sparkles, ExternalLink, Dice5, Layers } from "lucide-react";
+import { CalendarIcon, Loader2, Sparkles, ExternalLink, Dice5, Layers, CheckCircle2, ArrowLeft } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
