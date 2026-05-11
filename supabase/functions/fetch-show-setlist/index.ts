@@ -629,6 +629,7 @@ Deno.serve(async (req) => {
           segueToNext: t.segue,
         };
       });
+      tracks = applyFileSetBreaks(tracks, meta.files || []);
     } else {
       tracks = parseFromFiles(meta.files || []);
     }
