@@ -430,6 +430,20 @@ const SetlistPoster = () => {
           >
             <Play className="w-3 h-3 fill-current" /> Play All
           </button>
+          {isOwner && sourceShow && (
+            <button
+              onClick={handleRebuildFromShow}
+              disabled={rebuilding}
+              title={`Overwrite with the exact ${sourceShow.date}${sourceShow.venue ? ` · ${sourceShow.venue}` : ""} setlist from archive.org`}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-body bg-card/80 border border-border text-foreground hover:border-primary/40 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {rebuilding
+                ? <Loader2 className="w-3 h-3 animate-spin" />
+                : <RefreshCw className="w-3 h-3" />}
+              <span className="hidden sm:inline">{rebuilding ? "Rebuilding…" : `Rebuild from ${sourceShow.date}`}</span>
+              <span className="sm:hidden">{rebuilding ? "…" : "Rebuild"}</span>
+            </button>
+          )}
           <ShareDropdown url={shareUrl} ogUrl={ogShareUrl} title={shareTitle} description={shareDescription} />
         </div>
       </header>
