@@ -208,18 +208,7 @@ export const useSetlist = (user: User | null, setlistId?: string | null) => {
     const isSyntheticVersion = slot.version?.id?.startsWith("archive-");
     const notableVersionId = isSyntheticVersion ? null : (slot.version?.id || null);
 
-    let notes = slot.notes || "";
-    if (isSyntheticVersion && slot.version) {
-      const archiveMeta = JSON.stringify({
-        __archive: true,
-        show_date: slot.version.show_date,
-        venue: slot.version.venue,
-        archive_org_url: slot.version.archive_org_url,
-        rating: slot.version.rating,
-      });
-      // Prepend metadata as a hidden JSON line, keep user notes after
-      notes = archiveMeta + (notes ? "\n" + notes : "");
-    }
+    const notes = isSyntheticVersion ? encodeArchiveNotes(slot) : slot.notes || "";
 
     const { error } = await supabase.from("setlist_slots").upsert({
       id: slot.id,
@@ -263,19 +252,7 @@ export const useSetlist = (user: User | null, setlistId?: string | null) => {
         if (!slot) return;
         const merged = { ...slot, ...updates };
 
-        // Preserve archive metadata prefix in notes for synthetic versions
-        let notesToSave = merged.notes || "";
-        const isSyntheticVersion = merged.version?.id?.startsWith("archive-");
-        if (isSyntheticVersion && merged.version) {
-          const archiveMeta = JSON.stringify({
-            __archive: true,
-            show_date: merged.version.show_date,
-            venue: merged.version.venue,
-            archive_org_url: merged.version.archive_org_url,
-            rating: merged.version.rating,
-          });
-          notesToSave = archiveMeta + (notesToSave ? "\n" + notesToSave : "");
-        }
+        const notesToSave = encodeArchiveNotes(merged);
 
         await supabase.from("setlist_slots").update({
           notes: notesToSave,
