@@ -3,6 +3,46 @@
 // No songs DB lookup here — the client fuzzy-matches against its songs table.
 
 import { corsHeaders } from "https://esm.sh/@supabase/supabase-js@2.95.0/cors";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.95.0";
+
+// ---- Song matching (kept in sync with src/lib/archiveOrg.ts) ----
+const STOP_WORDS = new Set([
+  "the","a","an","of","in","on","to","and","is","it","be",
+  "at","for","with","my","i","you","your","as","or","by",
+]);
+function normalize(s: string): string {
+  return s.toLowerCase()
+    .replace(/\.[^.]+$/, "")
+    .replace(/^d\d+t\d+\s*[-.]?\s*/i, "")
+    .replace(/^t?\d+\s*[-.]?\s*/, "")
+    .replace(/[''`]/g, "")
+    .replace(/[^a-z0-9]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+function compact(s: string): string { return normalize(s).replace(/\s+/g, ""); }
+function tokens(s: string): string[] {
+  return normalize(s).split(" ").filter(Boolean)
+    .map((t) => (t === "in" ? t : t.replace(/in$/, "ing")));
+}
+function matchScore(trackTitle: string, songTitle: string): number {
+  const ct = compact(trackTitle), cs = compact(songTitle);
+  if (!ct || !cs) return 0;
+  if (ct === cs) return 100;
+  if (cs.length >= 4 && ct.includes(cs)) return 90;
+  if (ct.length >= 4 && cs.includes(ct)) return 85;
+  const trackSig = new Set(tokens(trackTitle).filter((t) => t.length > 1 && !STOP_WORDS.has(t)));
+  const songSig = new Set(tokens(songTitle).filter((t) => t.length > 1 && !STOP_WORDS.has(t)));
+  if (trackSig.size === 0 || songSig.size === 0) return 0;
+  const overlap = [...songSig].filter((t) => trackSig.has(t)).length;
+  if (overlap === songSig.size && overlap === trackSig.size) return 95;
+  if (overlap === songSig.size) return 80;
+  if (overlap === trackSig.size && overlap >= 2) return 70;
+  return 0;
+}
+
+// Tracks we never want to seed as songs (jams, tunings, crowd noise, etc.).
+const SKIP_TITLES = /^(tuning|crowd|intro|outro|applause|encore break|set break|banter|silence|stage announcement)$/i;
 
 const MONTHS = [
   "January","February","March","April","May","June",
@@ -534,13 +574,60 @@ Deno.serve(async (req) => {
       });
     }
 
-    const result: ShowResult = {
+    // ---- Resolve each track to a song_id, inserting missing songs as needed.
+    // This guarantees the saved setlist matches the actual show order/contents
+    // even when our local catalog is missing songs like "I Will Take You Home".
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    );
+    const { data: songRows } = await supabase.from("songs").select("id,title");
+    const songs: Array<{ id: string; title: string }> = songRows || [];
+
+    const yr = parseInt(date.slice(0, 4), 10);
+    const tracksWithIds: Array<ParsedTrack & { songId: string | null; matched: boolean }> = [];
+    for (const t of tracks) {
+      if (SKIP_TITLES.test(t.rawTitle.trim())) {
+        tracksWithIds.push({ ...t, songId: null, matched: false });
+        continue;
+      }
+      let best: { id: string; score: number } | null = null;
+      for (const s of songs) {
+        const sc = matchScore(t.rawTitle, s.title);
+        if (sc >= 60 && (!best || sc > best.score)) best = { id: s.id, score: sc };
+      }
+      if (best) {
+        tracksWithIds.push({ ...t, songId: best.id, matched: true });
+      } else {
+        // Insert the missing song so we can preserve the exact show.
+        const cleanTitle = t.rawTitle.replace(/\s+/g, " ").trim();
+        const { data: inserted, error: insErr } = await supabase
+          .from("songs")
+          .insert({
+            title: cleanTitle,
+            first_played: String(yr),
+            last_played: String(yr),
+            times_played: 1,
+          })
+          .select("id,title")
+          .single();
+        if (inserted) {
+          songs.push({ id: inserted.id, title: inserted.title });
+          tracksWithIds.push({ ...t, songId: inserted.id, matched: true });
+        } else {
+          console.warn("Could not insert missing song", cleanTitle, insErr?.message);
+          tracksWithIds.push({ ...t, songId: null, matched: false });
+        }
+      }
+    }
+
+    const result: ShowResult & { tracks: Array<ParsedTrack & { songId: string | null; matched: boolean }> } = {
       archiveId,
       archiveUrl: `https://archive.org/details/${archiveId}`,
       date,
       venue,
       city,
-      tracks,
+      tracks: tracksWithIds,
     };
 
     return new Response(JSON.stringify(result), {

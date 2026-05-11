@@ -116,17 +116,22 @@ const SetlistPoster = () => {
 
       const { data: songs, error: sErr } = await supabase.from("songs").select("*");
       if (sErr || !songs) { toast.error("Couldn't load song catalog"); return; }
+      const songsById = new Map(songs.map((s) => [s.id, s]));
 
       const positions = new Map<number, number>();
       const rows: Database["public"]["Tables"]["setlist_slots"]["Insert"][] = [];
       let unmatched = 0;
-      for (const t of show.tracks as Array<{ rawTitle: string; setNumber: number; segueToNext: boolean; sourceDate?: string; sourceVenue?: string | null }>) {
-        let best: { song: Song; score: number } | null = null;
-        for (const song of songs) {
-          const score = matchScore(t.rawTitle, song.title);
-          if (score >= 60 && (!best || score > best.score)) best = { song, score };
+      for (const t of show.tracks as Array<{ rawTitle: string; setNumber: number; segueToNext: boolean; songId?: string | null; sourceDate?: string; sourceVenue?: string | null }>) {
+        let chosen: Song | null = (t.songId && songsById.get(t.songId)) || null;
+        if (!chosen) {
+          let best: { song: Song; score: number } | null = null;
+          for (const song of songs) {
+            const score = matchScore(t.rawTitle, song.title);
+            if (score >= 60 && (!best || score > best.score)) best = { song, score };
+          }
+          chosen = best?.song ?? null;
         }
-        if (!best) { unmatched++; continue; }
+        if (!chosen) { unmatched++; continue; }
         const pos = positions.get(t.setNumber) || 0;
         positions.set(t.setNumber, pos + 1);
         rows.push({
@@ -134,7 +139,7 @@ const SetlistPoster = () => {
           setlist_id: id,
           set_number: t.setNumber,
           position: pos,
-          song_id: best.song.id,
+          song_id: chosen.id,
           notable_version_id: null,
           added_by_user_id: user.id,
           notes: t.sourceDate ? `From ${t.sourceDate}${t.sourceVenue ? ` · ${t.sourceVenue}` : ""}` : "",
