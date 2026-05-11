@@ -3,6 +3,46 @@
 // No songs DB lookup here — the client fuzzy-matches against its songs table.
 
 import { corsHeaders } from "https://esm.sh/@supabase/supabase-js@2.95.0/cors";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.95.0";
+
+// ---- Song matching (kept in sync with src/lib/archiveOrg.ts) ----
+const STOP_WORDS = new Set([
+  "the","a","an","of","in","on","to","and","is","it","be",
+  "at","for","with","my","i","you","your","as","or","by",
+]);
+function normalize(s: string): string {
+  return s.toLowerCase()
+    .replace(/\.[^.]+$/, "")
+    .replace(/^d\d+t\d+\s*[-.]?\s*/i, "")
+    .replace(/^t?\d+\s*[-.]?\s*/, "")
+    .replace(/[''`]/g, "")
+    .replace(/[^a-z0-9]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+function compact(s: string): string { return normalize(s).replace(/\s+/g, ""); }
+function tokens(s: string): string[] {
+  return normalize(s).split(" ").filter(Boolean)
+    .map((t) => (t === "in" ? t : t.replace(/in$/, "ing")));
+}
+function matchScore(trackTitle: string, songTitle: string): number {
+  const ct = compact(trackTitle), cs = compact(songTitle);
+  if (!ct || !cs) return 0;
+  if (ct === cs) return 100;
+  if (cs.length >= 4 && ct.includes(cs)) return 90;
+  if (ct.length >= 4 && cs.includes(ct)) return 85;
+  const trackSig = new Set(tokens(trackTitle).filter((t) => t.length > 1 && !STOP_WORDS.has(t)));
+  const songSig = new Set(tokens(songTitle).filter((t) => t.length > 1 && !STOP_WORDS.has(t)));
+  if (trackSig.size === 0 || songSig.size === 0) return 0;
+  const overlap = [...songSig].filter((t) => trackSig.has(t)).length;
+  if (overlap === songSig.size && overlap === trackSig.size) return 95;
+  if (overlap === songSig.size) return 80;
+  if (overlap === trackSig.size && overlap >= 2) return 70;
+  return 0;
+}
+
+// Tracks we never want to seed as songs (jams, tunings, crowd noise, etc.).
+const SKIP_TITLES = /^(tuning|crowd|intro|outro|applause|encore break|set break|banter|silence|stage announcement)$/i;
 
 const MONTHS = [
   "January","February","March","April","May","June",
