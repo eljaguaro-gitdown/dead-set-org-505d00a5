@@ -574,13 +574,60 @@ Deno.serve(async (req) => {
       });
     }
 
-    const result: ShowResult = {
+    // ---- Resolve each track to a song_id, inserting missing songs as needed.
+    // This guarantees the saved setlist matches the actual show order/contents
+    // even when our local catalog is missing songs like "I Will Take You Home".
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    );
+    const { data: songRows } = await supabase.from("songs").select("id,title");
+    const songs: Array<{ id: string; title: string }> = songRows || [];
+
+    const yr = parseInt(date.slice(0, 4), 10);
+    const tracksWithIds: Array<ParsedTrack & { songId: string | null; matched: boolean }> = [];
+    for (const t of tracks) {
+      if (SKIP_TITLES.test(t.rawTitle.trim())) {
+        tracksWithIds.push({ ...t, songId: null, matched: false });
+        continue;
+      }
+      let best: { id: string; score: number } | null = null;
+      for (const s of songs) {
+        const sc = matchScore(t.rawTitle, s.title);
+        if (sc >= 60 && (!best || sc > best.score)) best = { id: s.id, score: sc };
+      }
+      if (best) {
+        tracksWithIds.push({ ...t, songId: best.id, matched: true });
+      } else {
+        // Insert the missing song so we can preserve the exact show.
+        const cleanTitle = t.rawTitle.replace(/\s+/g, " ").trim();
+        const { data: inserted, error: insErr } = await supabase
+          .from("songs")
+          .insert({
+            title: cleanTitle,
+            first_played: String(yr),
+            last_played: String(yr),
+            times_played: 1,
+          })
+          .select("id,title")
+          .single();
+        if (inserted) {
+          songs.push({ id: inserted.id, title: inserted.title });
+          tracksWithIds.push({ ...t, songId: inserted.id, matched: true });
+        } else {
+          console.warn("Could not insert missing song", cleanTitle, insErr?.message);
+          tracksWithIds.push({ ...t, songId: null, matched: false });
+        }
+      }
+    }
+
+    const result: ShowResult & { tracks: Array<ParsedTrack & { songId: string | null; matched: boolean }> } = {
       archiveId,
       archiveUrl: `https://archive.org/details/${archiveId}`,
       date,
       venue,
       city,
-      tracks,
+      tracks: tracksWithIds,
     };
 
     return new Response(JSON.stringify(result), {
