@@ -9,6 +9,50 @@ type SetlistRow = Database["public"]["Tables"]["setlists"]["Row"];
 type Song = Database["public"]["Tables"]["songs"]["Row"];
 type NotableVersion = Database["public"]["Tables"]["notable_versions"]["Row"];
 
+const decodeArchiveNotes = (slotId: string, songId: string, rawNotes: string | null) => {
+  let notes = rawNotes || "";
+  let version: NotableVersion | null = null;
+
+  if (!notes.startsWith("{\"__archive\":true")) return { notes, version };
+
+  try {
+    const nlIndex = notes.indexOf("\n");
+    const metaStr = nlIndex > -1 ? notes.substring(0, nlIndex) : notes;
+    const meta = JSON.parse(metaStr);
+    if (meta.__archive) {
+      version = {
+        id: `archive-reconstructed-${slotId}`,
+        song_id: songId,
+        show_date: meta.show_date || "",
+        archive_org_url: meta.archive_org_url || null,
+        venue: meta.venue || null,
+        city: null,
+        era_id: null,
+        rating: meta.rating || null,
+        description: null,
+      };
+      notes = nlIndex > -1 ? notes.substring(nlIndex + 1) : "";
+    }
+  } catch {
+    // Not valid JSON; leave user notes untouched.
+  }
+
+  return { notes, version };
+};
+
+const encodeArchiveNotes = (slot: SetlistSlotData) => {
+  const userNotes = slot.notes || "";
+  if (!slot.version?.id?.startsWith("archive-")) return userNotes;
+  const archiveMeta = JSON.stringify({
+    __archive: true,
+    show_date: slot.version.show_date,
+    venue: slot.version.venue,
+    archive_org_url: slot.version.archive_org_url,
+    rating: slot.version.rating,
+  });
+  return archiveMeta + (userNotes ? `\n${userNotes}` : "");
+};
+
 interface CollaboratorInfo {
   userId: string;
   displayName: string;
