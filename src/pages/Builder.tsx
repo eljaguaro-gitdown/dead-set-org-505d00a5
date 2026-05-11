@@ -33,6 +33,39 @@ import type { Database } from "@/integrations/supabase/types";
 type Song = Database["public"]["Tables"]["songs"]["Row"];
 type NotableVersion = Database["public"]["Tables"]["notable_versions"]["Row"];
 
+const buildArchiveVersion = (
+  slotId: string,
+  songId: string,
+  sourceDate?: string,
+  sourceVenue?: string | null,
+  sourceArchiveUrl?: string | null,
+): NotableVersion | null => {
+  if (!sourceDate || !sourceArchiveUrl) return null;
+  return {
+    id: `archive-show-${slotId}`,
+    song_id: songId,
+    show_date: sourceDate,
+    archive_org_url: sourceArchiveUrl,
+    venue: sourceVenue || null,
+    city: null,
+    era_id: null,
+    rating: null,
+    description: null,
+  };
+};
+
+const encodeArchiveNotes = (slot: SetlistSlotData) => {
+  if (!slot.version?.id?.startsWith("archive-")) return slot.notes;
+  const archiveMeta = JSON.stringify({
+    __archive: true,
+    show_date: slot.version.show_date,
+    venue: slot.version.venue,
+    archive_org_url: slot.version.archive_org_url,
+    rating: slot.version.rating,
+  });
+  return archiveMeta + (slot.notes ? `\n${slot.notes}` : "");
+};
+
 /* Overflow menu sub-component */
 const OverflowMenu = ({
   user,
@@ -458,9 +491,9 @@ const Builder = () => {
         set_number: slot.setNumber,
         position: slot.position,
         song_id: slot.song.id,
-        notable_version_id: slot.version?.id || null,
+        notable_version_id: slot.version?.id?.startsWith("archive-") ? null : slot.version?.id || null,
         added_by_user_id: user.id,
-        notes: slot.notes,
+        notes: encodeArchiveNotes(slot),
         segue_to_next: slot.segueToNext,
       }));
 
@@ -657,23 +690,19 @@ const Builder = () => {
         refreshedSongsById = new Map([...songs, ...(freshlyInsertedSongs || [])].map((song) => [song.id, song]));
       }
 
-      const newSlots: SetlistSlotData[] = seed.slots.map((s) => ({
-        id: crypto.randomUUID(),
-        song: refreshedSongsById.get(s.song.id) || s.song,
-        version: null,
-        setNumber: s.setNumber,
-        position: s.position,
-        segueToNext: s.segueToNext,
-        notes: s.sourceDate
-          ? `${JSON.stringify({
-              __archive: true,
-              show_date: s.sourceDate,
-              venue: s.sourceVenue || null,
-              archive_org_url: s.sourceArchiveUrl || seed.archiveUrl,
-              rating: null,
-            })}\nFrom ${s.sourceDate}${s.sourceVenue ? ` · ${s.sourceVenue}` : ""}`
-          : "",
-      }));
+      const newSlots: SetlistSlotData[] = seed.slots.map((s) => {
+        const slotId = crypto.randomUUID();
+        const song = refreshedSongsById.get(s.song.id) || s.song;
+        return {
+          id: slotId,
+          song,
+          version: buildArchiveVersion(slotId, song.id, s.sourceDate, s.sourceVenue, s.sourceArchiveUrl || seed.archiveUrl),
+          setNumber: s.setNumber,
+          position: s.position,
+          segueToNext: s.segueToNext,
+          notes: s.sourceDate ? `From ${s.sourceDate}${s.sourceVenue ? ` · ${s.sourceVenue}` : ""}` : "",
+        };
+      });
 
       setTitle(seed.title);
       if (seed.eraId) setSelectedEra(seed.eraId);
@@ -710,7 +739,7 @@ const Builder = () => {
           song_id: slot.song.id,
           notable_version_id: null,
           added_by_user_id: user.id,
-          notes: slot.notes,
+          notes: encodeArchiveNotes(slot),
           segue_to_next: slot.segueToNext,
         }));
         if (rows.length > 0) {
@@ -735,7 +764,7 @@ const Builder = () => {
           song_id: slot.song.id,
           notable_version_id: null,
           added_by_user_id: user.id,
-          notes: slot.notes,
+          notes: encodeArchiveNotes(slot),
           segue_to_next: slot.segueToNext,
         }));
         if (rows.length > 0) {

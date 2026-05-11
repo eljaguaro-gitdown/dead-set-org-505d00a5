@@ -9,6 +9,50 @@ type SetlistRow = Database["public"]["Tables"]["setlists"]["Row"];
 type Song = Database["public"]["Tables"]["songs"]["Row"];
 type NotableVersion = Database["public"]["Tables"]["notable_versions"]["Row"];
 
+const decodeArchiveNotes = (slotId: string, songId: string, rawNotes: string | null) => {
+  let notes = rawNotes || "";
+  let version: NotableVersion | null = null;
+
+  if (!notes.startsWith("{\"__archive\":true")) return { notes, version };
+
+  try {
+    const nlIndex = notes.indexOf("\n");
+    const metaStr = nlIndex > -1 ? notes.substring(0, nlIndex) : notes;
+    const meta = JSON.parse(metaStr);
+    if (meta.__archive) {
+      version = {
+        id: `archive-reconstructed-${slotId}`,
+        song_id: songId,
+        show_date: meta.show_date || "",
+        archive_org_url: meta.archive_org_url || null,
+        venue: meta.venue || null,
+        city: null,
+        era_id: null,
+        rating: meta.rating || null,
+        description: null,
+      };
+      notes = nlIndex > -1 ? notes.substring(nlIndex + 1) : "";
+    }
+  } catch {
+    // Not valid JSON; leave user notes untouched.
+  }
+
+  return { notes, version };
+};
+
+const encodeArchiveNotes = (slot: SetlistSlotData) => {
+  const userNotes = slot.notes || "";
+  if (!slot.version?.id?.startsWith("archive-")) return userNotes;
+  const archiveMeta = JSON.stringify({
+    __archive: true,
+    show_date: slot.version.show_date,
+    venue: slot.version.venue,
+    archive_org_url: slot.version.archive_org_url,
+    rating: slot.version.rating,
+  });
+  return archiveMeta + (userNotes ? `\n${userNotes}` : "");
+};
+
 interface CollaboratorInfo {
   userId: string;
   displayName: string;
@@ -95,34 +139,8 @@ export const useSetlist = (user: User | null, setlistId?: string | null) => {
           const song = songsMap.get(slot.song_id);
           if (!song) return null;
 
-          let version = slot.notable_version_id ? versionsMap.get(slot.notable_version_id) || null : null;
-          let notes = slot.notes || "";
-
-          // Reconstruct synthetic archive version from stored metadata
-          if (!version && notes.startsWith("{\"__archive\":true")) {
-            try {
-              const nlIndex = notes.indexOf("\n");
-              const metaStr = nlIndex > -1 ? notes.substring(0, nlIndex) : notes;
-              const meta = JSON.parse(metaStr);
-              if (meta.__archive) {
-                version = {
-                  id: `archive-reconstructed-${slot.id}`,
-                  song_id: slot.song_id,
-                  show_date: meta.show_date || "",
-                  archive_org_url: meta.archive_org_url || null,
-                  venue: meta.venue || null,
-                  city: null,
-                  era_id: null,
-                  rating: meta.rating || null,
-                  description: null,
-                };
-                // Strip the metadata line from user-visible notes
-                notes = nlIndex > -1 ? notes.substring(nlIndex + 1) : "";
-              }
-            } catch {
-              // Not valid JSON, leave as-is
-            }
-          }
+          const decoded = decodeArchiveNotes(slot.id, slot.song_id, slot.notes);
+          const version = slot.notable_version_id ? versionsMap.get(slot.notable_version_id) || decoded.version : decoded.version;
 
           return {
             id: slot.id,
@@ -131,7 +149,7 @@ export const useSetlist = (user: User | null, setlistId?: string | null) => {
             setNumber: slot.set_number,
             position: slot.position,
             segueToNext: slot.segue_to_next || false,
-            notes,
+            notes: decoded.notes,
           };
         })
         .filter(Boolean) as SetlistSlotData[];
@@ -190,18 +208,7 @@ export const useSetlist = (user: User | null, setlistId?: string | null) => {
     const isSyntheticVersion = slot.version?.id?.startsWith("archive-");
     const notableVersionId = isSyntheticVersion ? null : (slot.version?.id || null);
 
-    let notes = slot.notes || "";
-    if (isSyntheticVersion && slot.version) {
-      const archiveMeta = JSON.stringify({
-        __archive: true,
-        show_date: slot.version.show_date,
-        venue: slot.version.venue,
-        archive_org_url: slot.version.archive_org_url,
-        rating: slot.version.rating,
-      });
-      // Prepend metadata as a hidden JSON line, keep user notes after
-      notes = archiveMeta + (notes ? "\n" + notes : "");
-    }
+    const notes = isSyntheticVersion ? encodeArchiveNotes(slot) : slot.notes || "";
 
     const { error } = await supabase.from("setlist_slots").upsert({
       id: slot.id,
@@ -245,19 +252,7 @@ export const useSetlist = (user: User | null, setlistId?: string | null) => {
         if (!slot) return;
         const merged = { ...slot, ...updates };
 
-        // Preserve archive metadata prefix in notes for synthetic versions
-        let notesToSave = merged.notes || "";
-        const isSyntheticVersion = merged.version?.id?.startsWith("archive-");
-        if (isSyntheticVersion && merged.version) {
-          const archiveMeta = JSON.stringify({
-            __archive: true,
-            show_date: merged.version.show_date,
-            venue: merged.version.venue,
-            archive_org_url: merged.version.archive_org_url,
-            rating: merged.version.rating,
-          });
-          notesToSave = archiveMeta + (notesToSave ? "\n" + notesToSave : "");
-        }
+        const notesToSave = encodeArchiveNotes(merged);
 
         await supabase.from("setlist_slots").update({
           notes: notesToSave,
@@ -328,16 +323,17 @@ export const useSetlist = (user: User | null, setlistId?: string | null) => {
                     : Promise.resolve({ data: null });
                   versionPromise.then(({ data: vData }) => {
                     if (vData) versionsCache.current.set(vData.id, vData);
+                    const decoded = decodeArchiveNotes(newRow.id, newRow.song_id, newRow.notes);
                     setSlots((p) => {
                       if (p.some((s) => s.id === newRow.id)) return p;
                       return [...p, {
                         id: newRow.id,
                         song: data,
-                        version: vData || null,
+                        version: vData || decoded.version,
                         setNumber: newRow.set_number,
                         position: newRow.position,
                         segueToNext: newRow.segue_to_next || false,
-                        notes: newRow.notes || "",
+                        notes: decoded.notes,
                       }];
                     });
                   });
@@ -345,7 +341,8 @@ export const useSetlist = (user: User | null, setlistId?: string | null) => {
               });
               return prev;
             }
-            const version = newRow.notable_version_id ? versionsCache.current.get(newRow.notable_version_id) || null : null;
+            const decoded = decodeArchiveNotes(newRow.id, newRow.song_id, newRow.notes);
+            const version = newRow.notable_version_id ? versionsCache.current.get(newRow.notable_version_id) || decoded.version : decoded.version;
             return [...prev, {
               id: newRow.id,
               song,
@@ -353,7 +350,7 @@ export const useSetlist = (user: User | null, setlistId?: string | null) => {
               setNumber: newRow.set_number,
               position: newRow.position,
               segueToNext: newRow.segue_to_next || false,
-              notes: newRow.notes || "",
+              notes: decoded.notes,
             }];
           });
         }
@@ -381,10 +378,18 @@ export const useSetlist = (user: User | null, setlistId?: string | null) => {
         },
         (payload) => {
           const updated = payload.new as Database["public"]["Tables"]["setlist_slots"]["Row"];
+          const decoded = decodeArchiveNotes(updated.id, updated.song_id, updated.notes);
           setSlots((prev) =>
             prev.map((s) =>
               s.id === updated.id
-                ? { ...s, notes: updated.notes || "", segueToNext: updated.segue_to_next || false, position: updated.position, setNumber: updated.set_number }
+                ? {
+                    ...s,
+                    version: decoded.version || s.version,
+                    notes: decoded.notes,
+                    segueToNext: updated.segue_to_next || false,
+                    position: updated.position,
+                    setNumber: updated.set_number,
+                  }
                 : s
             )
           );
