@@ -395,6 +395,9 @@ function applyFileSetBreaks(notesTracks: ParsedTrack[], files: any[]): ParsedTra
   const hasSetMarkers = entries.some((e) => e.parsed.set !== null);
   const hasThreeDiscs = new Set(entries.map((e) => e.parsed.disc).filter((d) => d !== null)).size >= 3;
   if (!hasSetMarkers && !hasThreeDiscs) return notesTracks;
+  if (!hasSetMarkers && new Set(notesTracks.map((track) => track.setNumber)).size > 1) {
+    return notesTracks;
+  }
 
   const counts = new Map<number, number>();
   return notesTracks.map((track, index) => {
