@@ -266,14 +266,31 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
   }, [error, singleTrackMode, onEnded, songTitle]);
 
   useEffect(() => {
-    if (tracks.length > 0 && audioRef.current) {
-      audioRef.current.load();
-      if (playing || autoPlay) {
-        setPlaying(true);
-        audioRef.current.play().catch(() => {});
-      }
-    }
-  }, [currentTrack, tracks]);
+    const el = audioRef.current;
+    if (tracks.length === 0 || !el) return;
+    el.load();
+    if (!(playing || autoPlay)) return;
+    setPlaying(true);
+
+    // First attempt: try immediately. May reject if the source isn't yet
+    // buffered enough — that's expected after a remount when auto-advancing
+    // to the next song in a setlist.
+    const tryPlay = () => el.play().catch(() => {});
+    tryPlay();
+
+    // Fallback: when the browser signals it CAN play, retry if still paused.
+    // Without this, the next song in a setlist often loads but never starts
+    // because the immediate play() after the AudioPlayer remount lost the race.
+    const onCanPlay = () => {
+      if (el.paused) tryPlay();
+    };
+    el.addEventListener("canplay", onCanPlay);
+    el.addEventListener("loadeddata", onCanPlay);
+    return () => {
+      el.removeEventListener("canplay", onCanPlay);
+      el.removeEventListener("loadeddata", onCanPlay);
+    };
+  }, [currentTrack, tracks, autoPlay]);
 
   // iOS / Android lock-screen "Now Playing" metadata.
   // Without this, the OS falls back to the page title + favicon (which is why
