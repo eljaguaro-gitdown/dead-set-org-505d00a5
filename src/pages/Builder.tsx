@@ -690,23 +690,19 @@ const Builder = () => {
         refreshedSongsById = new Map([...songs, ...(freshlyInsertedSongs || [])].map((song) => [song.id, song]));
       }
 
-      const newSlots: SetlistSlotData[] = seed.slots.map((s) => ({
-        id: crypto.randomUUID(),
-        song: refreshedSongsById.get(s.song.id) || s.song,
-        version: null,
-        setNumber: s.setNumber,
-        position: s.position,
-        segueToNext: s.segueToNext,
-        notes: s.sourceDate
-          ? `${JSON.stringify({
-              __archive: true,
-              show_date: s.sourceDate,
-              venue: s.sourceVenue || null,
-              archive_org_url: s.sourceArchiveUrl || seed.archiveUrl,
-              rating: null,
-            })}\nFrom ${s.sourceDate}${s.sourceVenue ? ` · ${s.sourceVenue}` : ""}`
-          : "",
-      }));
+      const newSlots: SetlistSlotData[] = seed.slots.map((s) => {
+        const slotId = crypto.randomUUID();
+        const song = refreshedSongsById.get(s.song.id) || s.song;
+        return {
+          id: slotId,
+          song,
+          version: buildArchiveVersion(slotId, song.id, s.sourceDate, s.sourceVenue, s.sourceArchiveUrl || seed.archiveUrl),
+          setNumber: s.setNumber,
+          position: s.position,
+          segueToNext: s.segueToNext,
+          notes: s.sourceDate ? `From ${s.sourceDate}${s.sourceVenue ? ` · ${s.sourceVenue}` : ""}` : "",
+        };
+      });
 
       setTitle(seed.title);
       if (seed.eraId) setSelectedEra(seed.eraId);
@@ -743,7 +739,7 @@ const Builder = () => {
           song_id: slot.song.id,
           notable_version_id: null,
           added_by_user_id: user.id,
-          notes: slot.notes,
+          notes: encodeArchiveNotes(slot),
           segue_to_next: slot.segueToNext,
         }));
         if (rows.length > 0) {
@@ -768,7 +764,7 @@ const Builder = () => {
           song_id: slot.song.id,
           notable_version_id: null,
           added_by_user_id: user.id,
-          notes: slot.notes,
+          notes: encodeArchiveNotes(slot),
           segue_to_next: slot.segueToNext,
         }));
         if (rows.length > 0) {
