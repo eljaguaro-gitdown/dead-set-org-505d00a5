@@ -139,34 +139,8 @@ export const useSetlist = (user: User | null, setlistId?: string | null) => {
           const song = songsMap.get(slot.song_id);
           if (!song) return null;
 
-          let version = slot.notable_version_id ? versionsMap.get(slot.notable_version_id) || null : null;
-          let notes = slot.notes || "";
-
-          // Reconstruct synthetic archive version from stored metadata
-          if (!version && notes.startsWith("{\"__archive\":true")) {
-            try {
-              const nlIndex = notes.indexOf("\n");
-              const metaStr = nlIndex > -1 ? notes.substring(0, nlIndex) : notes;
-              const meta = JSON.parse(metaStr);
-              if (meta.__archive) {
-                version = {
-                  id: `archive-reconstructed-${slot.id}`,
-                  song_id: slot.song_id,
-                  show_date: meta.show_date || "",
-                  archive_org_url: meta.archive_org_url || null,
-                  venue: meta.venue || null,
-                  city: null,
-                  era_id: null,
-                  rating: meta.rating || null,
-                  description: null,
-                };
-                // Strip the metadata line from user-visible notes
-                notes = nlIndex > -1 ? notes.substring(nlIndex + 1) : "";
-              }
-            } catch {
-              // Not valid JSON, leave as-is
-            }
-          }
+          const decoded = decodeArchiveNotes(slot.id, slot.song_id, slot.notes);
+          const version = slot.notable_version_id ? versionsMap.get(slot.notable_version_id) || decoded.version : decoded.version;
 
           return {
             id: slot.id,
@@ -175,7 +149,7 @@ export const useSetlist = (user: User | null, setlistId?: string | null) => {
             setNumber: slot.set_number,
             position: slot.position,
             segueToNext: slot.segue_to_next || false,
-            notes,
+            notes: decoded.notes,
           };
         })
         .filter(Boolean) as SetlistSlotData[];
