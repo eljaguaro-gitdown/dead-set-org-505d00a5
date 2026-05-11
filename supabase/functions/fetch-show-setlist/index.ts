@@ -101,50 +101,90 @@ function detectSegue(raw: string): boolean {
   return /->|>\s*$|\s>\s|segue/i.test(raw);
 }
 
-// Try to parse `notes` text for set boundaries.
-// Many archive uploads use:
-//   Set 1:
-//   1. Promised Land
-//   2. Sugaree ->
-//   ...
-//   Set 2:
-//   ...
-//   Encore:
+// Try to parse `notes`/`description` text for set boundaries.
+// Handles BOTH line-per-song format AND comma/arrow-separated inline format
+// (very common in archive.org Dead descriptions, e.g.
+//   "Set 1\n\nPicasso Moon, Half Step, Stranger, ...\n\nSet 2\n\nDark Star-> Playin'-> ...").
+function stripHtml(s: string): string {
+  return s.replace(/<[^>]+>/g, " ").replace(/&[a-z]+;/gi, " ");
+}
+
+function splitInlineSetLine(line: string): { title: string; segue: boolean }[] {
+  // Normalize segue arrows to a sentinel, split on commas + arrows, preserve segue info.
+  const SEGUE = "\u0001";
+  const tokens = line
+    .replace(/\s*->\s*/g, SEGUE + ",")     // -> means segue then split
+    .replace(/\s*>\s*/g, SEGUE + ",")      // bare > means segue then split
+    .split(/\s*,\s*/);
+  const out: { title: string; segue: boolean }[] = [];
+  for (const tokRaw of tokens) {
+    let tok = tokRaw.trim();
+    if (!tok) continue;
+    // Strip leading "E:" / "Encore:" prefix on inline encore item
+    tok = tok.replace(/^(?:e|encore)\s*[:\-.]\s*/i, "");
+    const segue = tok.endsWith(SEGUE);
+    tok = tok.replace(new RegExp(SEGUE, "g"), "").trim();
+    const cleaned = cleanTitle(tok);
+    if (cleaned.length < 2) continue;
+    if (/^(disc|tape|source|lineage|recorded|taper|transferred|set\s*[123])$/i.test(cleaned)) continue;
+    out.push({ title: cleaned, segue });
+  }
+  return out;
+}
+
 function parseNotesSetlist(notes: string): { title: string; segue: boolean; setNumber: number }[] | null {
   if (!notes) return null;
-  const lines = notes.split(/\r?\n/);
+  const text = stripHtml(notes);
+  const lines = text.split(/\r?\n/);
   let currentSet = 0;
   const out: { title: string; segue: boolean; setNumber: number }[] = [];
 
   for (const lineRaw of lines) {
-    const line = lineRaw.trim();
+    let line = lineRaw.trim();
     if (!line) continue;
-    const setMatch = line.match(/^(?:set\s*(one|two|three|1|2|3)|first\s*set|second\s*set|third\s*set|encore)\s*[:.\-]?/i);
-    if (setMatch) {
-      if (/encore/i.test(line)) currentSet = 3;
-      else if (/one|first|1/i.test(setMatch[1] || line)) currentSet = 1;
-      else if (/two|second|2/i.test(setMatch[1] || line)) currentSet = 2;
-      else if (/three|third|3/i.test(setMatch[1] || line)) currentSet = 3;
-      continue;
+
+    // Section header line. May appear as "Set 1", "Set 1:", "First Set", "Encore:"
+    // either alone OR as a prefix to inline song list (e.g. "Set 1: Picasso Moon, ...").
+    const headerRe = /^(set\s*(?:one|two|three|1|2|3)|first\s*set|second\s*set|third\s*set|encore|e)\s*[:.\-]?\s*/i;
+    const headerMatch = line.match(headerRe);
+    if (headerMatch) {
+      const tag = headerMatch[0].toLowerCase();
+      if (/encore|^e\s*[:.\-]/.test(tag)) currentSet = 3;
+      else if (/one|first|1/.test(tag)) currentSet = 1;
+      else if (/two|second|2/.test(tag)) currentSet = 2;
+      else if (/three|third|3/.test(tag)) currentSet = 3;
+      // Strip the header so any inline songs on the same line still get parsed.
+      line = line.slice(headerMatch[0].length).trim();
+      if (!line) continue;
     }
     if (currentSet === 0) continue;
 
-    // Strip leading track numbers / bullets
-    const cleaned = line
+    // Inline format: songs separated by commas and/or arrows on a single line.
+    if (/[,>]|->/.test(line)) {
+      for (const t of splitInlineSetLine(line)) {
+        out.push({ title: t.title, segue: t.segue, setNumber: currentSet });
+      }
+      continue;
+    }
+
+    // Line-per-song format: strip leading numbers/bullets.
+    const cleanedLine = line
       .replace(/^[\s\d.\-)>]+/, "")
       .replace(/\s*\[[^\]]*\]\s*$/, "")
       .trim();
-    if (!cleaned || cleaned.length < 2) continue;
-    // Skip obvious non-song lines
-    if (/^(disc|d\d|tape|reel|comments?|notes?|source|lineage|recorded|taper|transferred)/i.test(cleaned)) continue;
+    if (!cleanedLine || cleanedLine.length < 2) continue;
+    if (/^(disc|d\d|tape|reel|comments?|notes?|source|lineage|recorded|taper|transferred)/i.test(cleanedLine)) continue;
 
     const segue = detectSegue(line);
-    const title = cleanTitle(cleaned).replace(/\s*->?\s*$/, "").trim();
+    const title = cleanTitle(cleanedLine).replace(/\s*->?\s*$/, "").trim();
     if (title.length < 2) continue;
     out.push({ title, segue, setNumber: currentSet });
   }
 
-  return out.length >= 5 ? out : null;
+  // Filter out junk entries (tunings, drums/space are kept as they're real setlist entries
+  // but won't fuzzy-match unless the songs DB has them).
+  const filtered = out.filter((t) => !/^(tuning|tune[\s-]?up|applause|banter|crowd|intro|outro|encore\s*break)$/i.test(t.title));
+  return filtered.length >= 4 ? filtered : null;
 }
 
 // Fallback: derive from the audio file list.
