@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useParams, useNavigate, useLocation, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Share2, Zap, Play, Heart } from "lucide-react";
+import { ArrowLeft, Share2, Zap, Play, Heart, RefreshCw, Loader2 } from "lucide-react";
 import SetlistComments from "@/components/SetlistComments";
 import { useFavorites } from "@/hooks/useFavorites";
 import EraTooltip from "@/components/EraTooltip";
