@@ -62,12 +62,28 @@ const MONTHS = [
   "July","August","September","October","November","December",
 ];
 
+interface PreviewData {
+  seed: ShowSeed;
+  niceDate: string;
+  venue: string | null;
+  trackTitles: string[];
+  totalTracks: number;
+  setBreakdown: Array<{ setNumber: number; count: number }>;
+}
+
 const BuildFromShowDialog = ({ open, onOpenChange, onSeed }: BuildFromShowDialogProps) => {
   const [mode, setMode] = useState<"date" | "calendar-day" | "all-years">("date");
   const [date, setDate] = useState<Date | undefined>();
   const [month, setMonth] = useState<number>(new Date().getMonth() + 1);
   const [day, setDay] = useState<number>(new Date().getDate());
   const [loading, setLoading] = useState(false);
+  const [confirming, setConfirming] = useState(false);
+  const [preview, setPreview] = useState<PreviewData | null>(null);
+
+  const resetAll = useCallback(() => {
+    setPreview(null);
+    setDate(undefined);
+  }, []);
 
   const runFetch = useCallback(
     async (body: { date?: string } | { month: number; day: number; aggregate?: boolean }, fallbackTitle: string) => {
@@ -107,17 +123,17 @@ const BuildFromShowDialog = ({ open, onOpenChange, onSeed }: BuildFromShowDialog
         const songsById = new Map(songCatalog.map((s) => [s.id, s]));
 
         const slots: SeededSlot[] = [];
+        const trackTitles: string[] = [];
         const positions = new Map<number, number>();
         let unmatched = 0;
 
         for (const track of show.tracks as Array<{ rawTitle: string; setNumber: number; position: number; segueToNext: boolean; songId?: string | null; sourceDate?: string; sourceVenue?: string | null }>) {
-          // Prefer the server-resolved song_id (which auto-inserts missing songs
-          // so we keep the exact show). Fallback to local fuzzy match.
           const matched = (track.songId && songsById.get(track.songId)) || fuzzyMatchSong(track.rawTitle, songCatalog);
           if (!matched) { unmatched++; continue; }
           const pos = positions.get(track.setNumber) || 0;
           positions.set(track.setNumber, pos + 1);
           slots.push({ song: matched, setNumber: track.setNumber, position: pos, segueToNext: track.segueToNext, sourceDate: track.sourceDate, sourceVenue: track.sourceVenue, sourceArchiveUrl: show.archiveUrl });
+          trackTitles.push(matched.title);
         }
 
         if (slots.length === 0) {
@@ -125,7 +141,6 @@ const BuildFromShowDialog = ({ open, onOpenChange, onSeed }: BuildFromShowDialog
           return;
         }
 
-        // For aggregate mode the date is "MM-DD-aggregate" — use venue label as the title.
         const isAggregate = (show.date || "").endsWith("-aggregate");
         const resolvedDate = !isAggregate && show.date
           ? new Date(show.date + "T12:00:00")
@@ -135,14 +150,19 @@ const BuildFromShowDialog = ({ open, onOpenChange, onSeed }: BuildFromShowDialog
           ? (show.venue || fallbackTitle)
           : (show.venue ? `${formatNiceDate(resolvedDate)} — ${show.venue}` : (fallbackTitle || formatNiceDate(resolvedDate)));
 
-        await onSeed({ title, eraId: null, archiveUrl: show.archiveUrl, slots, unmatchedCount: unmatched });
+        const setCounts = new Map<number, number>();
+        for (const s of slots) setCounts.set(s.setNumber, (setCounts.get(s.setNumber) || 0) + 1);
+        const setBreakdown = Array.from(setCounts.entries())
+          .sort((a, b) => a[0] - b[0])
+          .map(([setNumber, count]) => ({ setNumber, count }));
 
-        onOpenChange(false);
-        setDate(undefined);
-        toast.success(`Loaded ${slots.length} songs from ${niceDate}`, {
-          description: unmatched > 0
-            ? `${unmatched} track${unmatched === 1 ? "" : "s"} skipped (jams, tunings, or songs not in our catalog yet).`
-            : "Set order and segues match the show.",
+        setPreview({
+          seed: { title, eraId: null, archiveUrl: show.archiveUrl, slots, unmatchedCount: unmatched },
+          niceDate,
+          venue: show.venue || null,
+          trackTitles,
+          totalTracks: slots.length,
+          setBreakdown,
         });
       } catch (e) {
         console.error("BuildFromShow error:", e);
@@ -151,8 +171,28 @@ const BuildFromShowDialog = ({ open, onOpenChange, onSeed }: BuildFromShowDialog
         setLoading(false);
       }
     },
-    [date, onSeed, onOpenChange],
+    [date],
   );
+
+  const handleConfirm = useCallback(async () => {
+    if (!preview) return;
+    setConfirming(true);
+    try {
+      await onSeed(preview.seed);
+      onOpenChange(false);
+      resetAll();
+      toast.success(`Loaded ${preview.totalTracks} songs from ${preview.niceDate}`, {
+        description: preview.seed.unmatchedCount > 0
+          ? `${preview.seed.unmatchedCount} track${preview.seed.unmatchedCount === 1 ? "" : "s"} skipped (jams, tunings, or songs not in our catalog yet).`
+          : "Set order and segues match the show.",
+      });
+    } catch (e) {
+      console.error("BuildFromShow confirm error:", e);
+      toast.error("Couldn't save that setlist — try again");
+    } finally {
+      setConfirming(false);
+    }
+  }, [preview, onSeed, onOpenChange, resetAll]);
 
   const handleBuildDate = useCallback(() => {
     if (!date) return;
@@ -166,6 +206,7 @@ const BuildFromShowDialog = ({ open, onOpenChange, onSeed }: BuildFromShowDialog
   const handleBuildAllYears = useCallback(() => {
     runFetch({ month, day, aggregate: true }, `${MONTHS[month - 1]} ${day} — every year`);
   }, [month, day, runFetch]);
+
 
   const daysInMonth = new Date(2000, month, 0).getDate(); // leap-safe enough for picker
 
