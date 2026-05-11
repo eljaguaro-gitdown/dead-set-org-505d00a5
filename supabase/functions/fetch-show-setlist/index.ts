@@ -204,7 +204,10 @@ function parseFromFiles(files: any[]): ParsedTrack[] {
     if (discMatch) {
       return { set: null, disc: parseInt(discMatch[1], 10), track: parseInt(discMatch[2], 10) };
     }
-    const tMatch = lower.match(/[^a-z]t(\d+)/i) || lower.match(/^(\d+)[\s_.-]/);
+    const tMatch =
+      lower.match(/[^a-z]t(\d+)/i) ||
+      lower.match(/^(\d+)[\s_.-]/) ||
+      lower.match(/^(\d{1,3})[a-z]/i); // e.g. "02PicassoMoon.flac"
     return { set: null, disc: null, track: tMatch ? parseInt(tMatch[1], 10) : null };
   };
 
