@@ -32,16 +32,14 @@ const ShareDropdown = ({ url, ogUrl, title, description }: ShareDropdownProps) =
   // Always show our menu so users can pick in-app DM, copy, socials, or native share.
   const handleToggle = () => setOpen((o) => !o);
 
-  // For copy/native share, prefer the OG-enabled URL so link previews
-  // (iMessage, WhatsApp, Slack, Discord, etc.) unfurl with the setlist title.
-  const shareableUrl = ogUrl || url;
-
+  // Always share the canonical dead-set.org URL — clean, branded, memorable.
+  // Crawler unfurls are handled by dynamic OG tags on the page itself.
   const copyLink = async () => {
     try {
-      await navigator.clipboard.writeText(shareableUrl);
+      await navigator.clipboard.writeText(url);
     } catch {
       const ta = document.createElement("textarea");
-      ta.value = shareableUrl;
+      ta.value = url;
       document.body.appendChild(ta);
       ta.select();
       document.execCommand("copy");
@@ -53,6 +51,8 @@ const ShareDropdown = ({ url, ogUrl, title, description }: ShareDropdownProps) =
     setTimeout(() => { setCopied(false); setOpen(false); }, 1500);
   };
 
+  // Social crawlers (X, Facebook) get the OG-enabled function URL so the
+  // unfurl card always shows the setlist title + poster.
   const socialUrl = ogUrl || url;
 
   const shareTwitter = () => {
@@ -72,7 +72,7 @@ const ShareDropdown = ({ url, ogUrl, title, description }: ShareDropdownProps) =
   const shareNative = async () => {
     if (!navigator.share) return;
     try {
-      await navigator.share({ title, text: description || title, url: shareableUrl });
+      await navigator.share({ title, text: description || title, url });
       trackShare({ shareType: "setlist", channel: "native_share" });
     } catch {
       // user cancelled — keep menu open so they can pick another option
