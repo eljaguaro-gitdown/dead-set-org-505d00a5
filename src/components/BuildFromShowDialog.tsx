@@ -22,6 +22,7 @@ export interface SeededSlot {
   segueToNext: boolean;
   sourceDate?: string;
   sourceVenue?: string | null;
+  sourceArchiveUrl?: string | null;
 }
 
 export interface ShowSeed {
@@ -103,7 +104,7 @@ const BuildFromShowDialog = ({ open, onOpenChange, onSeed }: BuildFromShowDialog
           if (!matched) { unmatched++; continue; }
           const pos = positions.get(track.setNumber) || 0;
           positions.set(track.setNumber, pos + 1);
-          slots.push({ song: matched, setNumber: track.setNumber, position: pos, segueToNext: track.segueToNext, sourceDate: track.sourceDate, sourceVenue: track.sourceVenue });
+          slots.push({ song: matched, setNumber: track.setNumber, position: pos, segueToNext: track.segueToNext, sourceDate: track.sourceDate, sourceVenue: track.sourceVenue, sourceArchiveUrl: show.archiveUrl });
         }
 
         if (slots.length === 0) {
