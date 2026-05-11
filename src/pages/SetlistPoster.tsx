@@ -14,7 +14,7 @@ import ShareDropdown from "@/components/ShareDropdown";
 import ShareFlow from "@/components/ShareFlow";
 import ShowPlate from "@/components/ShowPlate";
 import { toast } from "sonner";
-import { findArchiveRecordings, type ArchiveResult } from "@/lib/archiveOrg";
+import { findArchiveRecordings, matchScore, type ArchiveResult } from "@/lib/archiveOrg";
 import { useFavoriteSongs } from "@/hooks/useFavoriteSongs";
 import type { Database } from "@/integrations/supabase/types";
 
