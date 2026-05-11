@@ -1,6 +1,20 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
-import { waitFor } from "@testing-library/dom";
+
+const waitFor = async (fn: () => void | Promise<void>, timeoutMs = 1500) => {
+  const start = Date.now();
+  let lastErr: unknown;
+  while (Date.now() - start < timeoutMs) {
+    try {
+      await fn();
+      return;
+    } catch (e) {
+      lastErr = e;
+      await new Promise((r) => setTimeout(r, 20));
+    }
+  }
+  throw lastErr;
+};
 import type { ReactNode } from "react";
 
 // Mock archive.org resolution — the context calls findTrackInRecording when a
