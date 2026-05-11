@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { format } from "date-fns";
-import { CalendarIcon, Loader2, Sparkles, ExternalLink, Dice5, Layers } from "lucide-react";
+import { CalendarIcon, Loader2, Sparkles, ExternalLink, Dice5, Layers, CheckCircle2, ArrowLeft } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -62,12 +62,28 @@ const MONTHS = [
   "July","August","September","October","November","December",
 ];
 
+interface PreviewData {
+  seed: ShowSeed;
+  niceDate: string;
+  venue: string | null;
+  trackTitles: string[];
+  totalTracks: number;
+  setBreakdown: Array<{ setNumber: number; count: number }>;
+}
+
 const BuildFromShowDialog = ({ open, onOpenChange, onSeed }: BuildFromShowDialogProps) => {
   const [mode, setMode] = useState<"date" | "calendar-day" | "all-years">("date");
   const [date, setDate] = useState<Date | undefined>();
   const [month, setMonth] = useState<number>(new Date().getMonth() + 1);
   const [day, setDay] = useState<number>(new Date().getDate());
   const [loading, setLoading] = useState(false);
+  const [confirming, setConfirming] = useState(false);
+  const [preview, setPreview] = useState<PreviewData | null>(null);
+
+  const resetAll = useCallback(() => {
+    setPreview(null);
+    setDate(undefined);
+  }, []);
 
   const runFetch = useCallback(
     async (body: { date?: string } | { month: number; day: number; aggregate?: boolean }, fallbackTitle: string) => {
@@ -107,17 +123,17 @@ const BuildFromShowDialog = ({ open, onOpenChange, onSeed }: BuildFromShowDialog
         const songsById = new Map(songCatalog.map((s) => [s.id, s]));
 
         const slots: SeededSlot[] = [];
+        const trackTitles: string[] = [];
         const positions = new Map<number, number>();
         let unmatched = 0;
 
         for (const track of show.tracks as Array<{ rawTitle: string; setNumber: number; position: number; segueToNext: boolean; songId?: string | null; sourceDate?: string; sourceVenue?: string | null }>) {
-          // Prefer the server-resolved song_id (which auto-inserts missing songs
-          // so we keep the exact show). Fallback to local fuzzy match.
           const matched = (track.songId && songsById.get(track.songId)) || fuzzyMatchSong(track.rawTitle, songCatalog);
           if (!matched) { unmatched++; continue; }
           const pos = positions.get(track.setNumber) || 0;
           positions.set(track.setNumber, pos + 1);
           slots.push({ song: matched, setNumber: track.setNumber, position: pos, segueToNext: track.segueToNext, sourceDate: track.sourceDate, sourceVenue: track.sourceVenue, sourceArchiveUrl: show.archiveUrl });
+          trackTitles.push(matched.title);
         }
 
         if (slots.length === 0) {
@@ -125,7 +141,6 @@ const BuildFromShowDialog = ({ open, onOpenChange, onSeed }: BuildFromShowDialog
           return;
         }
 
-        // For aggregate mode the date is "MM-DD-aggregate" — use venue label as the title.
         const isAggregate = (show.date || "").endsWith("-aggregate");
         const resolvedDate = !isAggregate && show.date
           ? new Date(show.date + "T12:00:00")
@@ -135,14 +150,19 @@ const BuildFromShowDialog = ({ open, onOpenChange, onSeed }: BuildFromShowDialog
           ? (show.venue || fallbackTitle)
           : (show.venue ? `${formatNiceDate(resolvedDate)} — ${show.venue}` : (fallbackTitle || formatNiceDate(resolvedDate)));
 
-        await onSeed({ title, eraId: null, archiveUrl: show.archiveUrl, slots, unmatchedCount: unmatched });
+        const setCounts = new Map<number, number>();
+        for (const s of slots) setCounts.set(s.setNumber, (setCounts.get(s.setNumber) || 0) + 1);
+        const setBreakdown = Array.from(setCounts.entries())
+          .sort((a, b) => a[0] - b[0])
+          .map(([setNumber, count]) => ({ setNumber, count }));
 
-        onOpenChange(false);
-        setDate(undefined);
-        toast.success(`Loaded ${slots.length} songs from ${niceDate}`, {
-          description: unmatched > 0
-            ? `${unmatched} track${unmatched === 1 ? "" : "s"} skipped (jams, tunings, or songs not in our catalog yet).`
-            : "Set order and segues match the show.",
+        setPreview({
+          seed: { title, eraId: null, archiveUrl: show.archiveUrl, slots, unmatchedCount: unmatched },
+          niceDate,
+          venue: show.venue || null,
+          trackTitles,
+          totalTracks: slots.length,
+          setBreakdown,
         });
       } catch (e) {
         console.error("BuildFromShow error:", e);
@@ -151,8 +171,28 @@ const BuildFromShowDialog = ({ open, onOpenChange, onSeed }: BuildFromShowDialog
         setLoading(false);
       }
     },
-    [date, onSeed, onOpenChange],
+    [date],
   );
+
+  const handleConfirm = useCallback(async () => {
+    if (!preview) return;
+    setConfirming(true);
+    try {
+      await onSeed(preview.seed);
+      onOpenChange(false);
+      resetAll();
+      toast.success(`Loaded ${preview.totalTracks} songs from ${preview.niceDate}`, {
+        description: preview.seed.unmatchedCount > 0
+          ? `${preview.seed.unmatchedCount} track${preview.seed.unmatchedCount === 1 ? "" : "s"} skipped (jams, tunings, or songs not in our catalog yet).`
+          : "Set order and segues match the show.",
+      });
+    } catch (e) {
+      console.error("BuildFromShow confirm error:", e);
+      toast.error("Couldn't save that setlist — try again");
+    } finally {
+      setConfirming(false);
+    }
+  }, [preview, onSeed, onOpenChange, resetAll]);
 
   const handleBuildDate = useCallback(() => {
     if (!date) return;
@@ -167,21 +207,90 @@ const BuildFromShowDialog = ({ open, onOpenChange, onSeed }: BuildFromShowDialog
     runFetch({ month, day, aggregate: true }, `${MONTHS[month - 1]} ${day} — every year`);
   }, [month, day, runFetch]);
 
+
   const daysInMonth = new Date(2000, month, 0).getDate(); // leap-safe enough for picker
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(o) => { if (!o) resetAll(); onOpenChange(o); }}>
       <DialogContent className="bg-card border-border max-w-md">
         <DialogHeader>
           <DialogTitle className="font-display text-3xl text-foreground flex items-center gap-2">
             <Sparkles className="w-6 h-6 text-primary" />
-            Recreate a show
+            {preview ? "Confirm this show" : "Recreate a show"}
           </DialogTitle>
           <DialogDescription className="font-body text-base text-muted-foreground pt-1">
-            Pull the actual setlist from a specific night — or roll the dice on a calendar day across all years.
+            {preview
+              ? "Charlie found Source #1 on archive.org. Review the setlist below, then confirm to build it."
+              : "Pull the actual setlist from a specific night — or roll the dice on a calendar day across all years."}
           </DialogDescription>
         </DialogHeader>
 
+        {preview ? (
+          <div className="space-y-4 pt-2">
+            <div className="rounded-xl border border-border bg-background/40 p-4 space-y-2">
+              <div className="font-display text-xl text-foreground">{preview.niceDate}</div>
+              {preview.venue && (
+                <div className="font-body text-sm text-muted-foreground">{preview.venue}</div>
+              )}
+              <div className="flex flex-wrap gap-2 pt-1">
+                <span className="text-xs font-body px-2 py-1 rounded-md bg-primary/10 text-primary">
+                  {preview.totalTracks} song{preview.totalTracks === 1 ? "" : "s"}
+                </span>
+                {preview.setBreakdown.map(({ setNumber, count }) => (
+                  <span key={setNumber} className="text-xs font-body px-2 py-1 rounded-md bg-muted text-muted-foreground">
+                    {setNumber === 0 ? "Encore" : `Set ${setNumber}`}: {count}
+                  </span>
+                ))}
+                {preview.seed.unmatchedCount > 0 && (
+                  <span className="text-xs font-body px-2 py-1 rounded-md bg-muted text-muted-foreground">
+                    {preview.seed.unmatchedCount} skipped
+                  </span>
+                )}
+              </div>
+              {preview.seed.archiveUrl && (
+                <a
+                  href={preview.seed.archiveUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-sm font-body text-primary hover:underline pt-1"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  Source #1 on archive.org
+                </a>
+              )}
+            </div>
+
+            <div className="rounded-xl border border-border bg-background/20 max-h-64 overflow-y-auto">
+              <ol className="divide-y divide-border">
+                {preview.trackTitles.map((t, i) => (
+                  <li key={i} className="flex items-baseline gap-3 px-4 py-2 font-body text-sm text-foreground">
+                    <span className="text-muted-foreground w-6 shrink-0 text-right">{i + 1}.</span>
+                    <span className="truncate">{t}</span>
+                  </li>
+                ))}
+              </ol>
+            </div>
+
+            <div className="flex gap-2 justify-between pt-2">
+              <Button
+                variant="ghost"
+                onClick={() => setPreview(null)}
+                disabled={confirming}
+                className="font-body gap-2"
+              >
+                <ArrowLeft className="w-4 h-4" /> Back
+              </Button>
+              <Button
+                onClick={handleConfirm}
+                disabled={confirming}
+                className="bg-primary text-primary-foreground font-display gap-2"
+              >
+                {confirming ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+                {confirming ? "Building…" : "Build this setlist"}
+              </Button>
+            </div>
+          </div>
+        ) : (
         <Tabs value={mode} onValueChange={(v) => setMode(v as typeof mode)} className="pt-2">
           <TabsList className="grid grid-cols-3 w-full">
             <TabsTrigger value="date" className="font-body">Specific date</TabsTrigger>
@@ -319,14 +428,17 @@ const BuildFromShowDialog = ({ open, onOpenChange, onSeed }: BuildFromShowDialog
             </div>
           </TabsContent>
         </Tabs>
+        )}
 
-        <p className="text-sm text-muted-foreground font-body leading-relaxed flex items-start gap-1.5 pt-2">
-          <ExternalLink className="w-4 h-4 mt-0.5 shrink-0 opacity-60" />
-          <span>
-            Setlist data sourced from <span className="text-primary">archive.org</span>.
-            Coverage is excellent for ’72 onward; a few early shows may be missing.
-          </span>
-        </p>
+        {!preview && (
+          <p className="text-sm text-muted-foreground font-body leading-relaxed flex items-start gap-1.5 pt-2">
+            <ExternalLink className="w-4 h-4 mt-0.5 shrink-0 opacity-60" />
+            <span>
+              Setlist data sourced from <span className="text-primary">archive.org</span>.
+              Coverage is excellent for ’72 onward; a few early shows may be missing.
+            </span>
+          </p>
+        )}
       </DialogContent>
     </Dialog>
   );
