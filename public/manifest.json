@@ -7,6 +7,11 @@
   "background_color": "#08080c",
   "theme_color": "#08080c",
   "orientation": "portrait",
+  "scope": "/",
+  "id": "/",
+  "handle_links": "preferred",
+  "capture_links": "existing-client-navigate",
+  "launch_handler": { "client_mode": "navigate-existing" },
   "icons": [
     {
       "src": "/icons/icon-192.png",
