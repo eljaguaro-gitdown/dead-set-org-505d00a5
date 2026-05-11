@@ -142,7 +142,15 @@ const SetlistPoster = () => {
           song_id: chosen.id,
           notable_version_id: null,
           added_by_user_id: user.id,
-          notes: t.sourceDate ? `From ${t.sourceDate}${t.sourceVenue ? ` · ${t.sourceVenue}` : ""}` : "",
+          notes: t.sourceDate
+            ? `${JSON.stringify({
+                __archive: true,
+                show_date: t.sourceDate,
+                venue: t.sourceVenue || null,
+                archive_org_url: show.archiveUrl,
+                rating: null,
+              })}\nFrom ${t.sourceDate}${t.sourceVenue ? ` · ${t.sourceVenue}` : ""}`
+            : "",
           segue_to_next: t.segueToNext,
         });
       }
