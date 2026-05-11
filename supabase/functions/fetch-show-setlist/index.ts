@@ -214,7 +214,12 @@ function splitInlineSetLine(
 
 function parseNotesSetlist(notes: string): { title: string; segue: boolean; setNumber: number }[] | null {
   if (!notes) return null;
-  const text = stripHtml(notes);
+  const text = stripHtml(notes)
+    // Source #1 Archive descriptions often have no explicit set labels and join
+    // set one to set two with only a sentence-like boundary, e.g.
+    // "..., Let It Grow, Deal Dark Star-> ...". Preserve the exact written
+    // setlist by inserting the missing boundary before the post-Drums suite.
+    .replace(/\bDeal\s+(Dark Star\s*(?:->|>))/i, "Deal\nSet 2: $1");
   const lines = text
     .replace(/\b(Set\s*(?:1|2|3|One|Two|Three)|Encore|E)\s*[:.\-]?\s*/gi, "\n$&")
     .split(/\r?\n/);
@@ -408,8 +413,17 @@ function notesLookMisalignedWithFiles(notesTracks: ParsedTrack[], files: any[]):
     e.cleaned && !/^(tuning|tune[\s-]?up|applause|banter|crowd[\s-]?noise|intro|outro)$/i.test(e.cleaned)
   );
   if (entries.length === 0) return false;
-  if (notesTracks.length !== entries.length) return true;
-  return notesTracks.some((track, index) => matchScore(entries[index].cleaned, track.rawTitle) === 0);
+  // Archive.org often tracks "Space" in files while the written setlist calls it
+  // "Jam", or writes "Playing in the Band Jam" while files use a reprise title.
+  // For exact show recreation, the human-written Archive setlist is authoritative
+  // unless it is obviously unrelated to the files.
+  const comparable = Math.min(notesTracks.length, entries.length);
+  if (comparable < 4) return false;
+  let aligned = 0;
+  for (let index = 0; index < comparable; index++) {
+    if (matchScore(entries[index].cleaned, notesTracks[index].rawTitle) > 0) aligned++;
+  }
+  return aligned / comparable < 0.65;
 }
 
 Deno.serve(async (req) => {
