@@ -101,50 +101,108 @@ function detectSegue(raw: string): boolean {
   return /->|>\s*$|\s>\s|segue/i.test(raw);
 }
 
-// Try to parse `notes` text for set boundaries.
-// Many archive uploads use:
-//   Set 1:
-//   1. Promised Land
-//   2. Sugaree ->
-//   ...
-//   Set 2:
-//   ...
-//   Encore:
+// Try to parse `notes`/`description` text for set boundaries.
+// Handles BOTH line-per-song format AND comma/arrow-separated inline format
+// (very common in archive.org Dead descriptions, e.g.
+//   "Set 1\n\nPicasso Moon, Half Step, Stranger, ...\n\nSet 2\n\nDark Star-> Playin'-> ...").
+function stripHtml(s: string): string {
+  return s.replace(/<[^>]+>/g, " ").replace(/&[a-z]+;/gi, " ");
+}
+
+// Splits an inline list of songs by commas + segue arrows, and detects encore
+// markers ("E:", "Encore:") inside the list so they bump subsequent items into set 3.
+function splitInlineSetLine(
+  line: string,
+  startSet: number,
+): { title: string; segue: boolean; setNumber: number; nextSet: number } {
+  const SEGUE = "\u0001";
+  const tokens = line
+    .replace(/\s*->\s*/g, SEGUE + ",")
+    .replace(/\s*>\s*/g, SEGUE + ",")
+    .split(/\s*,\s*/);
+  const out: { title: string; segue: boolean; setNumber: number; nextSet: number } = {
+    title: "", segue: false, setNumber: startSet, nextSet: startSet,
+  } as any;
+  const items: { title: string; segue: boolean; setNumber: number }[] = [];
+  let curSet = startSet;
+  for (const tokRaw of tokens) {
+    let tok = tokRaw.trim();
+    if (!tok) continue;
+    // Encore marker inside an inline list — switch to set 3 from this token onward.
+    if (/^(?:e|encore)\s*[:\-.]\s*/i.test(tok)) {
+      curSet = 3;
+      tok = tok.replace(/^(?:e|encore)\s*[:\-.]\s*/i, "");
+    }
+    const segue = tok.endsWith(SEGUE);
+    tok = tok.replace(new RegExp(SEGUE, "g"), "").trim();
+    // Strip footnote markers like trailing "*" or "(reprise)"
+    tok = tok.replace(/\*+$/g, "").trim();
+    const cleaned = cleanTitle(tok);
+    if (cleaned.length < 2) continue;
+    if (/^(disc|tape|source|lineage|recorded|taper|transferred|set\s*[123])$/i.test(cleaned)) continue;
+    items.push({ title: cleaned, segue, setNumber: curSet });
+  }
+  // Pack the items + the resulting current set onto a wrapper.
+  (out as any).items = items;
+  out.nextSet = curSet;
+  return out;
+}
+
 function parseNotesSetlist(notes: string): { title: string; segue: boolean; setNumber: number }[] | null {
   if (!notes) return null;
-  const lines = notes.split(/\r?\n/);
+  const text = stripHtml(notes);
+  const lines = text.split(/\r?\n/);
   let currentSet = 0;
   const out: { title: string; segue: boolean; setNumber: number }[] = [];
 
   for (const lineRaw of lines) {
-    const line = lineRaw.trim();
+    let line = lineRaw.trim();
     if (!line) continue;
-    const setMatch = line.match(/^(?:set\s*(one|two|three|1|2|3)|first\s*set|second\s*set|third\s*set|encore)\s*[:.\-]?/i);
-    if (setMatch) {
-      if (/encore/i.test(line)) currentSet = 3;
-      else if (/one|first|1/i.test(setMatch[1] || line)) currentSet = 1;
-      else if (/two|second|2/i.test(setMatch[1] || line)) currentSet = 2;
-      else if (/three|third|3/i.test(setMatch[1] || line)) currentSet = 3;
-      continue;
+
+    // Footnote / annotation lines that follow the actual setlist — skip.
+    // e.g. "*2nd verse Only. This show has been released..."
+    if (/^[*†‡]/.test(line)) continue;
+    if (/(released by|nightfall of diamonds|^seeded to etree|^source\s*:|^lineage\s*:|^transferred|^recorded by|^taper\s*:)/i.test(line)) continue;
+
+    const headerRe = /^(set\s*(?:one|two|three|1|2|3)|first\s*set|second\s*set|third\s*set|encore|e)\s*[:.\-]?\s*/i;
+    const headerMatch = line.match(headerRe);
+    if (headerMatch) {
+      const tag = headerMatch[0].toLowerCase();
+      if (/encore|^e\s*[:.\-]/.test(tag)) currentSet = 3;
+      else if (/one|first|1/.test(tag)) currentSet = 1;
+      else if (/two|second|2/.test(tag)) currentSet = 2;
+      else if (/three|third|3/.test(tag)) currentSet = 3;
+      line = line.slice(headerMatch[0].length).trim();
+      if (!line) continue;
     }
     if (currentSet === 0) continue;
 
-    // Strip leading track numbers / bullets
-    const cleaned = line
+    if (/[,>]|->/.test(line)) {
+      const wrapper = splitInlineSetLine(line, currentSet) as any;
+      for (const t of wrapper.items) out.push(t);
+      currentSet = wrapper.nextSet;
+      continue;
+    }
+
+    // Line-per-song format. Sentences (long lines with no list separators) are
+    // almost certainly prose — skip.
+    if (line.length > 60 && /[.!?]\s/.test(line)) continue;
+
+    const cleanedLine = line
       .replace(/^[\s\d.\-)>]+/, "")
       .replace(/\s*\[[^\]]*\]\s*$/, "")
       .trim();
-    if (!cleaned || cleaned.length < 2) continue;
-    // Skip obvious non-song lines
-    if (/^(disc|d\d|tape|reel|comments?|notes?|source|lineage|recorded|taper|transferred)/i.test(cleaned)) continue;
+    if (!cleanedLine || cleanedLine.length < 2) continue;
+    if (/^(disc|d\d|tape|reel|comments?|notes?|source|lineage|recorded|taper|transferred)/i.test(cleanedLine)) continue;
 
     const segue = detectSegue(line);
-    const title = cleanTitle(cleaned).replace(/\s*->?\s*$/, "").trim();
+    const title = cleanTitle(cleanedLine).replace(/\s*->?\s*$/, "").trim();
     if (title.length < 2) continue;
     out.push({ title, segue, setNumber: currentSet });
   }
 
-  return out.length >= 5 ? out : null;
+  const filtered = out.filter((t) => !/^(tuning|tune[\s-]?up|applause|banter|crowd|intro|outro|encore\s*break)$/i.test(t.title));
+  return filtered.length >= 4 ? filtered : null;
 }
 
 // Fallback: derive from the audio file list.
@@ -164,25 +222,33 @@ function parseFromFiles(files: any[]): ParsedTrack[] {
     if (discMatch) {
       return { set: null, disc: parseInt(discMatch[1], 10), track: parseInt(discMatch[2], 10) };
     }
-    const tMatch = lower.match(/[^a-z]t(\d+)/i) || lower.match(/^(\d+)[\s_.-]/);
+    const tMatch =
+      lower.match(/[^a-z]t(\d+)/i) ||
+      lower.match(/^(\d+)[\s_.-]/) ||
+      lower.match(/^(\d{1,3})[a-z]/i); // e.g. "02PicassoMoon.flac"
     return { set: null, disc: null, track: tMatch ? parseInt(tMatch[1], 10) : null };
   };
 
   // De-dup multiple format copies of the same logical track.
-  // Key on (set/disc, track) when available, else on cleaned title.
-  // Prefer the variant whose `title` is a real song name (not the filename).
+  // Key on (set/disc, track) when available, else on a normalized title
+  // (alphanumerics only, lowercased) so "Picasso Moon" and "PicassoMoon"
+  // collapse to a single entry.
+  const normForKey = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "");
   const byKey = new Map<string, { file: any; parsed: ReturnType<typeof parseFilename>; cleaned: string }>();
   for (const f of audio) {
     const parsed = parseFilename(f.name || "");
+    // Prefer the human-written title when present; the filename often loses spaces.
     const cleaned = cleanTitle(f.title || f.name || "");
     const key =
       parsed.set !== null && parsed.track !== null
         ? `s${parsed.set}t${parsed.track}`
         : parsed.disc !== null && parsed.track !== null
           ? `d${parsed.disc}t${parsed.track}`
-          : `n:${cleaned.toLowerCase()}`;
+          : parsed.track !== null
+            ? `t${parsed.track}`
+            : `n:${normForKey(cleaned)}`;
     const existing = byKey.get(key);
-    const looksLikeFilename = (s: string) => !s || /^gd\d{2,4}/i.test(s);
+    const looksLikeFilename = (s: string) => !s || /^gd\d{2,4}/i.test(s) || /[a-z][A-Z]/.test(s);
     if (!existing) {
       byKey.set(key, { file: f, parsed, cleaned });
     } else if (looksLikeFilename(existing.cleaned) && !looksLikeFilename(cleaned)) {
