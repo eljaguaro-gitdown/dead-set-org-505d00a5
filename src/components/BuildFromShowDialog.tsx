@@ -90,13 +90,16 @@ const BuildFromShowDialog = ({ open, onOpenChange, onSeed }: BuildFromShowDialog
 
         const { data: songs, error: sErr } = await supabase.from("songs").select("*");
         if (sErr) throw sErr;
+        const songsById = new Map((songs || []).map((s) => [s.id, s]));
 
         const slots: SeededSlot[] = [];
         const positions = new Map<number, number>();
         let unmatched = 0;
 
-        for (const track of show.tracks as Array<{ rawTitle: string; setNumber: number; position: number; segueToNext: boolean; sourceDate?: string; sourceVenue?: string | null }>) {
-          const matched = fuzzyMatchSong(track.rawTitle, songs || []);
+        for (const track of show.tracks as Array<{ rawTitle: string; setNumber: number; position: number; segueToNext: boolean; songId?: string | null; sourceDate?: string; sourceVenue?: string | null }>) {
+          // Prefer the server-resolved song_id (which auto-inserts missing songs
+          // so we keep the exact show). Fallback to local fuzzy match.
+          const matched = (track.songId && songsById.get(track.songId)) || fuzzyMatchSong(track.rawTitle, songs || []);
           if (!matched) { unmatched++; continue; }
           const pos = positions.get(track.setNumber) || 0;
           positions.set(track.setNumber, pos + 1);
