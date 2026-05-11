@@ -364,7 +364,9 @@ function parseFromFiles(files: any[]): ParsedTrack[] {
 
     const setNumber = usesSetMarkers
       ? Math.min(parsed.set ?? 1, 3)
-      : Math.min(parsed.disc ?? 1, 3);
+      : /^(and\s+)?we\s+bid\s+you\s+good\s*night|encore/i.test(cleaned)
+        ? 3
+        : (parsed.disc ?? 1) <= 1 ? 1 : 2;
     const pos = posCounters.get(setNumber) || 0;
     posCounters.set(setNumber, pos + 1);
 
