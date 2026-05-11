@@ -215,7 +215,9 @@ function splitInlineSetLine(
 function parseNotesSetlist(notes: string): { title: string; segue: boolean; setNumber: number }[] | null {
   if (!notes) return null;
   const text = stripHtml(notes);
-  const lines = text.split(/\r?\n/);
+  const lines = text
+    .replace(/\b(Set\s*(?:1|2|3|One|Two|Three)|Encore|E)\s*[:.\-]?\s*/gi, "\n$&")
+    .split(/\r?\n/);
   let currentSet = 0;
   const out: { title: string; segue: boolean; setNumber: number }[] = [];
 
@@ -226,18 +228,23 @@ function parseNotesSetlist(notes: string): { title: string; segue: boolean; setN
     // Footnote / annotation lines that follow the actual setlist — skip.
     // e.g. "*2nd verse Only. This show has been released..."
     if (/^[*†‡]/.test(line)) continue;
-    if (/(released by|nightfall of diamonds|^seeded to etree|^source\s*:|^lineage\s*:|^transferred|^recorded by|^taper\s*:)/i.test(line)) continue;
+    if (/(released by|nightfall of diamonds|^seeded to etree|^source\s*:|^source update\s*:|^lineage\s*:|^transferred|^recorded by|^taper\s*:)/i.test(line)) continue;
 
     const headerRe = /^(set\s*(?:one|two|three|1|2|3)|first\s*set|second\s*set|third\s*set|encore|e)\s*[:.\-]?\s*/i;
     const headerMatch = line.match(headerRe);
     if (headerMatch) {
       const tag = headerMatch[0].toLowerCase();
-      if (/encore|^e\s*[:.\-]/.test(tag)) currentSet = 3;
+      if (/encore|^e\b/.test(tag)) currentSet = 3;
       else if (/one|first|1/.test(tag)) currentSet = 1;
       else if (/two|second|2/.test(tag)) currentSet = 2;
       else if (/three|third|3/.test(tag)) currentSet = 3;
       line = line.slice(headerMatch[0].length).trim();
       if (!line) continue;
+    } else if (currentSet === 0 && out.length === 0 && /[,>]|->/.test(line)) {
+      // Some older Archive items put the whole show in description with no
+      // explicit "Set 1" header. Treat that as set 1 rather than falling back
+      // to file parsing with guessed disc breaks.
+      currentSet = 1;
     }
     if (currentSet === 0) continue;
 
