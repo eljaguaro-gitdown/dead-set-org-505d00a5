@@ -32,12 +32,16 @@ const ShareDropdown = ({ url, ogUrl, title, description }: ShareDropdownProps) =
   // Always show our menu so users can pick in-app DM, copy, socials, or native share.
   const handleToggle = () => setOpen((o) => !o);
 
+  // For copy/native share, prefer the OG-enabled URL so link previews
+  // (iMessage, WhatsApp, Slack, Discord, etc.) unfurl with the setlist title.
+  const shareableUrl = ogUrl || url;
+
   const copyLink = async () => {
     try {
-      await navigator.clipboard.writeText(url);
+      await navigator.clipboard.writeText(shareableUrl);
     } catch {
       const ta = document.createElement("textarea");
-      ta.value = url;
+      ta.value = shareableUrl;
       document.body.appendChild(ta);
       ta.select();
       document.execCommand("copy");
