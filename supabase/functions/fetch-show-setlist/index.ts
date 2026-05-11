@@ -12,6 +12,7 @@ const STOP_WORDS = new Set([
 ]);
 function normalize(s: string): string {
   return s.toLowerCase()
+    .replace(/\bgood\s+times\s+blues\b/g, "good time blues")
     .replace(/\.[^.]+$/, "")
     .replace(/^d\d+t\d+\s*[-.]?\s*/i, "")
     .replace(/^t?\d+\s*[-.]?\s*/, "")
@@ -56,6 +57,12 @@ interface ParsedTrack {
   segueToNext: boolean;
 }
 
+interface AudioTrackEntry {
+  file: any;
+  parsed: { set: number | null; disc: number | null; track: number | null };
+  cleaned: string;
+}
+
 interface ShowResult {
   archiveId: string;
   archiveUrl: string;
@@ -83,16 +90,33 @@ const isAudioFile = (f: any): boolean => {
 // Prefer SBD, then highest avg_rating, then most-downloaded.
 async function findBestRecordingForDate(date: string): Promise<string | null> {
   const q = encodeURIComponent(`collection:GratefulDead AND date:${date}`);
-  const url = `https://archive.org/advancedsearch.php?q=${q}&fl[]=identifier&fl[]=avg_rating&fl[]=downloads&fl[]=source&sort[]=avg_rating+desc&sort[]=downloads+desc&rows=15&output=json`;
+  const url = `https://archive.org/advancedsearch.php?q=${q}&fl[]=identifier&fl[]=avg_rating&fl[]=downloads&fl[]=source&sort[]=downloads+desc&sort[]=avg_rating+desc&rows=25&output=json`;
   const res = await fetch(url);
   if (!res.ok) return null;
   const data = await res.json();
   const docs: any[] = data?.response?.docs || [];
   if (docs.length === 0) return null;
 
-  // Prefer soundboards
-  const sbd = docs.find((d) => /sbd|soundboard|matrix/i.test(d.source || d.identifier || ""));
-  return (sbd || docs[0]).identifier;
+  // Prefer true soundboard recordings for exact-show seeding, then popularity.
+  // Ratings alone favored some newer AUD/Matrix uploads over the canonical SBD
+  // source users expect when they pick a date like 1989-10-16.
+  const ranked = docs
+    .map((d) => {
+      const haystack = `${d.source || ""} ${d.identifier || ""}`.toLowerCase();
+      const sourceScore = /\bdsbd\b|\bsoundboard\b/.test(haystack)
+        ? 500
+        : /\bsbd\b/.test(haystack)
+          ? 420
+          : /matrix|ultramatrix|ultra matrix/.test(haystack)
+            ? 300
+            : 0;
+      return {
+        identifier: d.identifier,
+        score: sourceScore + (Number(d.downloads) || 0) / 100 + (Number(d.avg_rating) || 0) * 10,
+      };
+    })
+    .sort((a, b) => b.score - a.score);
+  return ranked[0]?.identifier || null;
 }
 
 // Find Dead show dates within ±N days of the given date.
