@@ -33,6 +33,39 @@ import type { Database } from "@/integrations/supabase/types";
 type Song = Database["public"]["Tables"]["songs"]["Row"];
 type NotableVersion = Database["public"]["Tables"]["notable_versions"]["Row"];
 
+const buildArchiveVersion = (
+  slotId: string,
+  songId: string,
+  sourceDate?: string,
+  sourceVenue?: string | null,
+  sourceArchiveUrl?: string | null,
+): NotableVersion | null => {
+  if (!sourceDate || !sourceArchiveUrl) return null;
+  return {
+    id: `archive-show-${slotId}`,
+    song_id: songId,
+    show_date: sourceDate,
+    archive_org_url: sourceArchiveUrl,
+    venue: sourceVenue || null,
+    city: null,
+    era_id: null,
+    rating: null,
+    description: null,
+  };
+};
+
+const encodeArchiveNotes = (slot: SetlistSlotData) => {
+  if (!slot.version?.id?.startsWith("archive-")) return slot.notes;
+  const archiveMeta = JSON.stringify({
+    __archive: true,
+    show_date: slot.version.show_date,
+    venue: slot.version.venue,
+    archive_org_url: slot.version.archive_org_url,
+    rating: slot.version.rating,
+  });
+  return archiveMeta + (slot.notes ? `\n${slot.notes}` : "");
+};
+
 /* Overflow menu sub-component */
 const OverflowMenu = ({
   user,
