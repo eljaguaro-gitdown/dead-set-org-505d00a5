@@ -650,7 +650,13 @@ const Builder = () => {
         position: s.position,
         segueToNext: s.segueToNext,
         notes: s.sourceDate
-          ? `From ${s.sourceDate}${s.sourceVenue ? ` · ${s.sourceVenue}` : ""}`
+          ? `${JSON.stringify({
+              __archive: true,
+              show_date: s.sourceDate,
+              venue: s.sourceVenue || null,
+              archive_org_url: s.sourceArchiveUrl || seed.archiveUrl,
+              rating: null,
+            })}\nFrom ${s.sourceDate}${s.sourceVenue ? ` · ${s.sourceVenue}` : ""}`
           : "",
       }));
 

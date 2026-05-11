@@ -12,6 +12,7 @@ const STOP_WORDS = new Set([
 ]);
 function normalize(s: string): string {
   return s.toLowerCase()
+    .replace(/\bgood\s+times\s+blues\b/g, "good time blues")
     .replace(/\.[^.]+$/, "")
     .replace(/^d\d+t\d+\s*[-.]?\s*/i, "")
     .replace(/^t?\d+\s*[-.]?\s*/, "")
@@ -56,6 +57,12 @@ interface ParsedTrack {
   segueToNext: boolean;
 }
 
+interface AudioTrackEntry {
+  file: any;
+  parsed: { set: number | null; disc: number | null; track: number | null };
+  cleaned: string;
+}
+
 interface ShowResult {
   archiveId: string;
   archiveUrl: string;
@@ -83,16 +90,33 @@ const isAudioFile = (f: any): boolean => {
 // Prefer SBD, then highest avg_rating, then most-downloaded.
 async function findBestRecordingForDate(date: string): Promise<string | null> {
   const q = encodeURIComponent(`collection:GratefulDead AND date:${date}`);
-  const url = `https://archive.org/advancedsearch.php?q=${q}&fl[]=identifier&fl[]=avg_rating&fl[]=downloads&fl[]=source&sort[]=avg_rating+desc&sort[]=downloads+desc&rows=15&output=json`;
+  const url = `https://archive.org/advancedsearch.php?q=${q}&fl[]=identifier&fl[]=avg_rating&fl[]=downloads&fl[]=source&sort[]=downloads+desc&sort[]=avg_rating+desc&rows=25&output=json`;
   const res = await fetch(url);
   if (!res.ok) return null;
   const data = await res.json();
   const docs: any[] = data?.response?.docs || [];
   if (docs.length === 0) return null;
 
-  // Prefer soundboards
-  const sbd = docs.find((d) => /sbd|soundboard|matrix/i.test(d.source || d.identifier || ""));
-  return (sbd || docs[0]).identifier;
+  // Prefer true soundboard recordings for exact-show seeding, then popularity.
+  // Ratings alone favored some newer AUD/Matrix uploads over the canonical SBD
+  // source users expect when they pick a date like 1989-10-16.
+  const ranked = docs
+    .map((d) => {
+      const haystack = `${d.source || ""} ${d.identifier || ""}`.toLowerCase();
+      const sourceScore = /\bdsbd\b|\bsoundboard\b/.test(haystack)
+        ? 500
+        : /\bsbd\b/.test(haystack)
+          ? 420
+          : /matrix|ultramatrix|ultra matrix/.test(haystack)
+            ? 300
+            : 0;
+      return {
+        identifier: d.identifier,
+        score: sourceScore + (Number(d.downloads) || 0) / 100 + (Number(d.avg_rating) || 0) * 10,
+      };
+    })
+    .sort((a, b) => b.score - a.score);
+  return ranked[0]?.identifier || null;
 }
 
 // Find Dead show dates within ±N days of the given date.
@@ -191,7 +215,9 @@ function splitInlineSetLine(
 function parseNotesSetlist(notes: string): { title: string; segue: boolean; setNumber: number }[] | null {
   if (!notes) return null;
   const text = stripHtml(notes);
-  const lines = text.split(/\r?\n/);
+  const lines = text
+    .replace(/\b(Set\s*(?:1|2|3|One|Two|Three)|Encore|E)\s*[:.\-]?\s*/gi, "\n$&")
+    .split(/\r?\n/);
   let currentSet = 0;
   const out: { title: string; segue: boolean; setNumber: number }[] = [];
 
@@ -202,18 +228,23 @@ function parseNotesSetlist(notes: string): { title: string; segue: boolean; setN
     // Footnote / annotation lines that follow the actual setlist — skip.
     // e.g. "*2nd verse Only. This show has been released..."
     if (/^[*†‡]/.test(line)) continue;
-    if (/(released by|nightfall of diamonds|^seeded to etree|^source\s*:|^lineage\s*:|^transferred|^recorded by|^taper\s*:)/i.test(line)) continue;
+    if (/(released by|nightfall of diamonds|^seeded to etree|^source\s*:|^source update\s*:|^lineage\s*:|^transferred|^recorded by|^taper\s*:)/i.test(line)) continue;
 
     const headerRe = /^(set\s*(?:one|two|three|1|2|3)|first\s*set|second\s*set|third\s*set|encore|e)\s*[:.\-]?\s*/i;
     const headerMatch = line.match(headerRe);
     if (headerMatch) {
       const tag = headerMatch[0].toLowerCase();
-      if (/encore|^e\s*[:.\-]/.test(tag)) currentSet = 3;
+      if (/encore|^e\b/.test(tag)) currentSet = 3;
       else if (/one|first|1/.test(tag)) currentSet = 1;
       else if (/two|second|2/.test(tag)) currentSet = 2;
       else if (/three|third|3/.test(tag)) currentSet = 3;
       line = line.slice(headerMatch[0].length).trim();
       if (!line) continue;
+    } else if (currentSet === 0 && out.length === 0 && /[,>]|->/.test(line)) {
+      // Some older Archive items put the whole show in description with no
+      // explicit "Set 1" header. Treat that as set 1 rather than falling back
+      // to file parsing with guessed disc breaks.
+      currentSet = 1;
     }
     if (currentSet === 0) continue;
 
@@ -249,7 +280,7 @@ function parseNotesSetlist(notes: string): { title: string; segue: boolean; setN
 // GD recordings encode set or disc + track in filename:
 //   gd77-05-08s1t03.flac  → set 1, track 3
 //   gd1990-03-29d1t04.shn → disc 1, track 4
-function parseFromFiles(files: any[]): ParsedTrack[] {
+function getAudioTrackEntries(files: any[]): AudioTrackEntry[] {
   const audio = files.filter(isAudioFile);
 
   const parseFilename = (name: string): { set: number | null; disc: number | null; track: number | null } => {
@@ -297,6 +328,19 @@ function parseFromFiles(files: any[]): ParsedTrack[] {
   }
 
   const entries = Array.from(byKey.values());
+  return entries.sort((a, b) => {
+    const aGroup = a.parsed.set ?? a.parsed.disc ?? 99;
+    const bGroup = b.parsed.set ?? b.parsed.disc ?? 99;
+    if (aGroup !== bGroup) return aGroup - bGroup;
+    const at = a.parsed.track ?? 999;
+    const bt = b.parsed.track ?? 999;
+    if (at !== bt) return at - bt;
+    return (a.file.name || "").localeCompare(b.file.name || "");
+  });
+}
+
+function parseFromFiles(files: any[]): ParsedTrack[] {
+  const entries = getAudioTrackEntries(files);
   const usesSetMarkers = entries.some((e) => e.parsed.set !== null);
 
   entries.sort((a, b) => {
@@ -320,7 +364,9 @@ function parseFromFiles(files: any[]): ParsedTrack[] {
 
     const setNumber = usesSetMarkers
       ? Math.min(parsed.set ?? 1, 3)
-      : Math.min(parsed.disc ?? 1, 3);
+      : /^(and\s+)?we\s+bid\s+you\s+good\s*night|encore/i.test(cleaned)
+        ? 3
+        : (parsed.disc ?? 1) <= 1 ? 1 : 2;
     const pos = posCounters.get(setNumber) || 0;
     posCounters.set(setNumber, pos + 1);
 
@@ -333,6 +379,37 @@ function parseFromFiles(files: any[]): ParsedTrack[] {
   }
 
   return tracks;
+}
+
+function applyFileSetBreaks(notesTracks: ParsedTrack[], files: any[]): ParsedTrack[] {
+  const entries = getAudioTrackEntries(files).filter((e) =>
+    e.cleaned && !/^(tuning|tune[\s-]?up|applause|banter|crowd[\s-]?noise|intro|outro)$/i.test(e.cleaned)
+  );
+  if (entries.length !== notesTracks.length) return notesTracks;
+
+  const hasSetMarkers = entries.some((e) => e.parsed.set !== null);
+  const hasThreeDiscs = new Set(entries.map((e) => e.parsed.disc).filter((d) => d !== null)).size >= 3;
+  if (!hasSetMarkers && !hasThreeDiscs) return notesTracks;
+
+  const counts = new Map<number, number>();
+  return notesTracks.map((track, index) => {
+    const parsed = entries[index].parsed;
+    const setNumber = hasSetMarkers
+      ? Math.min(parsed.set ?? track.setNumber, 3)
+      : Math.min(parsed.disc ?? track.setNumber, 3);
+    const position = counts.get(setNumber) || 0;
+    counts.set(setNumber, position + 1);
+    return { ...track, setNumber, position };
+  });
+}
+
+function notesLookMisalignedWithFiles(notesTracks: ParsedTrack[], files: any[]): boolean {
+  const entries = getAudioTrackEntries(files).filter((e) =>
+    e.cleaned && !/^(tuning|tune[\s-]?up|applause|banter|crowd[\s-]?noise|intro|outro)$/i.test(e.cleaned)
+  );
+  if (entries.length === 0) return false;
+  if (notesTracks.length !== entries.length) return true;
+  return notesTracks.some((track, index) => matchScore(entries[index].cleaned, track.rawTitle) === 0);
 }
 
 Deno.serve(async (req) => {
@@ -550,7 +627,10 @@ Deno.serve(async (req) => {
     const parsedFromNotes = parseNotesSetlist(notes);
     let tracks: ParsedTrack[];
 
-    if (parsedFromNotes) {
+    if (parsedFromNotes && !notesLookMisalignedWithFiles(
+      parsedFromNotes.map((t, i) => ({ rawTitle: t.title, setNumber: t.setNumber, position: i, segueToNext: t.segue })),
+      meta.files || [],
+    )) {
       // Re-number positions per set
       const counts = new Map<number, number>();
       tracks = parsedFromNotes.map((t) => {
@@ -563,6 +643,7 @@ Deno.serve(async (req) => {
           segueToNext: t.segue,
         };
       });
+      tracks = applyFileSetBreaks(tracks, meta.files || []);
     } else {
       tracks = parseFromFiles(meta.files || []);
     }
@@ -621,13 +702,13 @@ Deno.serve(async (req) => {
       }
     }
 
-    const result: ShowResult & { tracks: Array<ParsedTrack & { songId: string | null; matched: boolean }> } = {
+    const result: ShowResult & { tracks: Array<ParsedTrack & { songId: string | null; matched: boolean; sourceDate: string; sourceVenue: string | null }> } = {
       archiveId,
       archiveUrl: `https://archive.org/details/${archiveId}`,
       date,
       venue,
       city,
-      tracks: tracksWithIds,
+      tracks: tracksWithIds.map((track) => ({ ...track, sourceDate: date, sourceVenue: venue })),
     };
 
     return new Response(JSON.stringify(result), {

@@ -30,6 +30,7 @@ function cacheKey(songTitle: string, yearStart?: number | null, yearEnd?: number
 function normalize(s: string): string {
   return s
     .toLowerCase()
+    .replace(/\bgood\s+times\s+blues\b/g, "good time blues")
     .replace(/\.[^.]+$/, "")              // strip file extension
     .replace(/^d\d+t\d+\s*[-.]?\s*/i, "") // strip "d1t03 - " prefix
     .replace(/^t?\d+\s*[-.]?\s*/, "")     // strip "03 - " or "t03." prefix
