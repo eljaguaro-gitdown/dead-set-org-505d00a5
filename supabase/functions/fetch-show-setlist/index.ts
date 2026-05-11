@@ -109,26 +109,42 @@ function stripHtml(s: string): string {
   return s.replace(/<[^>]+>/g, " ").replace(/&[a-z]+;/gi, " ");
 }
 
-function splitInlineSetLine(line: string): { title: string; segue: boolean }[] {
-  // Normalize segue arrows to a sentinel, split on commas + arrows, preserve segue info.
+// Splits an inline list of songs by commas + segue arrows, and detects encore
+// markers ("E:", "Encore:") inside the list so they bump subsequent items into set 3.
+function splitInlineSetLine(
+  line: string,
+  startSet: number,
+): { title: string; segue: boolean; setNumber: number; nextSet: number } {
   const SEGUE = "\u0001";
   const tokens = line
-    .replace(/\s*->\s*/g, SEGUE + ",")     // -> means segue then split
-    .replace(/\s*>\s*/g, SEGUE + ",")      // bare > means segue then split
+    .replace(/\s*->\s*/g, SEGUE + ",")
+    .replace(/\s*>\s*/g, SEGUE + ",")
     .split(/\s*,\s*/);
-  const out: { title: string; segue: boolean }[] = [];
+  const out: { title: string; segue: boolean; setNumber: number; nextSet: number } = {
+    title: "", segue: false, setNumber: startSet, nextSet: startSet,
+  } as any;
+  const items: { title: string; segue: boolean; setNumber: number }[] = [];
+  let curSet = startSet;
   for (const tokRaw of tokens) {
     let tok = tokRaw.trim();
     if (!tok) continue;
-    // Strip leading "E:" / "Encore:" prefix on inline encore item
-    tok = tok.replace(/^(?:e|encore)\s*[:\-.]\s*/i, "");
+    // Encore marker inside an inline list — switch to set 3 from this token onward.
+    if (/^(?:e|encore)\s*[:\-.]\s*/i.test(tok)) {
+      curSet = 3;
+      tok = tok.replace(/^(?:e|encore)\s*[:\-.]\s*/i, "");
+    }
     const segue = tok.endsWith(SEGUE);
     tok = tok.replace(new RegExp(SEGUE, "g"), "").trim();
+    // Strip footnote markers like trailing "*" or "(reprise)"
+    tok = tok.replace(/\*+$/g, "").trim();
     const cleaned = cleanTitle(tok);
     if (cleaned.length < 2) continue;
     if (/^(disc|tape|source|lineage|recorded|taper|transferred|set\s*[123])$/i.test(cleaned)) continue;
-    out.push({ title: cleaned, segue });
+    items.push({ title: cleaned, segue, setNumber: curSet });
   }
+  // Pack the items + the resulting current set onto a wrapper.
+  (out as any).items = items;
+  out.nextSet = curSet;
   return out;
 }
 
@@ -143,8 +159,11 @@ function parseNotesSetlist(notes: string): { title: string; segue: boolean; setN
     let line = lineRaw.trim();
     if (!line) continue;
 
-    // Section header line. May appear as "Set 1", "Set 1:", "First Set", "Encore:"
-    // either alone OR as a prefix to inline song list (e.g. "Set 1: Picasso Moon, ...").
+    // Footnote / annotation lines that follow the actual setlist — skip.
+    // e.g. "*2nd verse Only. This show has been released..."
+    if (/^[*†‡]/.test(line)) continue;
+    if (/(released by|nightfall of diamonds|^seeded to etree|^source\s*:|^lineage\s*:|^transferred|^recorded by|^taper\s*:)/i.test(line)) continue;
+
     const headerRe = /^(set\s*(?:one|two|three|1|2|3)|first\s*set|second\s*set|third\s*set|encore|e)\s*[:.\-]?\s*/i;
     const headerMatch = line.match(headerRe);
     if (headerMatch) {
@@ -153,21 +172,22 @@ function parseNotesSetlist(notes: string): { title: string; segue: boolean; setN
       else if (/one|first|1/.test(tag)) currentSet = 1;
       else if (/two|second|2/.test(tag)) currentSet = 2;
       else if (/three|third|3/.test(tag)) currentSet = 3;
-      // Strip the header so any inline songs on the same line still get parsed.
       line = line.slice(headerMatch[0].length).trim();
       if (!line) continue;
     }
     if (currentSet === 0) continue;
 
-    // Inline format: songs separated by commas and/or arrows on a single line.
     if (/[,>]|->/.test(line)) {
-      for (const t of splitInlineSetLine(line)) {
-        out.push({ title: t.title, segue: t.segue, setNumber: currentSet });
-      }
+      const wrapper = splitInlineSetLine(line, currentSet) as any;
+      for (const t of wrapper.items) out.push(t);
+      currentSet = wrapper.nextSet;
       continue;
     }
 
-    // Line-per-song format: strip leading numbers/bullets.
+    // Line-per-song format. Sentences (long lines with no list separators) are
+    // almost certainly prose — skip.
+    if (line.length > 60 && /[.!?]\s/.test(line)) continue;
+
     const cleanedLine = line
       .replace(/^[\s\d.\-)>]+/, "")
       .replace(/\s*\[[^\]]*\]\s*$/, "")
@@ -181,8 +201,6 @@ function parseNotesSetlist(notes: string): { title: string; segue: boolean; setN
     out.push({ title, segue, setNumber: currentSet });
   }
 
-  // Filter out junk entries (tunings, drums/space are kept as they're real setlist entries
-  // but won't fuzzy-match unless the songs DB has them).
   const filtered = out.filter((t) => !/^(tuning|tune[\s-]?up|applause|banter|crowd|intro|outro|encore\s*break)$/i.test(t.title));
   return filtered.length >= 4 ? filtered : null;
 }
