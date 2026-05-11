@@ -280,7 +280,7 @@ function parseNotesSetlist(notes: string): { title: string; segue: boolean; setN
 // GD recordings encode set or disc + track in filename:
 //   gd77-05-08s1t03.flac  → set 1, track 3
 //   gd1990-03-29d1t04.shn → disc 1, track 4
-function parseFromFiles(files: any[]): ParsedTrack[] {
+function getAudioTrackEntries(files: any[]): AudioTrackEntry[] {
   const audio = files.filter(isAudioFile);
 
   const parseFilename = (name: string): { set: number | null; disc: number | null; track: number | null } => {
@@ -328,6 +328,19 @@ function parseFromFiles(files: any[]): ParsedTrack[] {
   }
 
   const entries = Array.from(byKey.values());
+  return entries.sort((a, b) => {
+    const aGroup = a.parsed.set ?? a.parsed.disc ?? 99;
+    const bGroup = b.parsed.set ?? b.parsed.disc ?? 99;
+    if (aGroup !== bGroup) return aGroup - bGroup;
+    const at = a.parsed.track ?? 999;
+    const bt = b.parsed.track ?? 999;
+    if (at !== bt) return at - bt;
+    return (a.file.name || "").localeCompare(b.file.name || "");
+  });
+}
+
+function parseFromFiles(files: any[]): ParsedTrack[] {
+  const entries = getAudioTrackEntries(files);
   const usesSetMarkers = entries.some((e) => e.parsed.set !== null);
 
   entries.sort((a, b) => {
