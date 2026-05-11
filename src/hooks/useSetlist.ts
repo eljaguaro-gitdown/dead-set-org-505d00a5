@@ -378,10 +378,18 @@ export const useSetlist = (user: User | null, setlistId?: string | null) => {
         },
         (payload) => {
           const updated = payload.new as Database["public"]["Tables"]["setlist_slots"]["Row"];
+          const decoded = decodeArchiveNotes(updated.id, updated.song_id, updated.notes);
           setSlots((prev) =>
             prev.map((s) =>
               s.id === updated.id
-                ? { ...s, notes: updated.notes || "", segueToNext: updated.segue_to_next || false, position: updated.position, setNumber: updated.set_number }
+                ? {
+                    ...s,
+                    version: decoded.version || s.version,
+                    notes: decoded.notes,
+                    segueToNext: updated.segue_to_next || false,
+                    position: updated.position,
+                    setNumber: updated.set_number,
+                  }
                 : s
             )
           );
