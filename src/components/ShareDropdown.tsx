@@ -53,7 +53,8 @@ const ShareDropdown = ({ url, ogUrl, title, description }: ShareDropdownProps) =
 
   // Social crawlers (X, Facebook) get the OG-enabled function URL so the
   // unfurl card always shows the setlist title + poster.
-  const socialUrl = ogUrl || url;
+  // Always use the canonical dead-set.org URL for every share channel.
+  const socialUrl = url;
 
   const shareTwitter = () => {
     const tweetUrl = `https://x.com/intent/tweet?text=${encodeURIComponent(title)}&url=${encodeURIComponent(socialUrl)}`;
