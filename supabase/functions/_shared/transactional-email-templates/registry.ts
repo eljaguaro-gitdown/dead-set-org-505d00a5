@@ -17,6 +17,7 @@ import { template as dmNotification } from './dm-notification.tsx'
 import { template as commentNotification } from './comment-notification.tsx'
 import { template as dailyUserReport } from './daily-user-report.tsx'
 import { template as weeklyInsights } from './weekly-insights.tsx'
+import { template as featuredSetlist } from './featured-setlist.tsx'
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'welcome-email': welcomeEmail,
@@ -27,4 +28,5 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'comment-notification': commentNotification,
   'daily-user-report': dailyUserReport,
   'weekly-insights': weeklyInsights,
+  'featured-setlist': featuredSetlist,
 }
