@@ -323,16 +323,17 @@ export const useSetlist = (user: User | null, setlistId?: string | null) => {
                     : Promise.resolve({ data: null });
                   versionPromise.then(({ data: vData }) => {
                     if (vData) versionsCache.current.set(vData.id, vData);
+                    const decoded = decodeArchiveNotes(newRow.id, newRow.song_id, newRow.notes);
                     setSlots((p) => {
                       if (p.some((s) => s.id === newRow.id)) return p;
                       return [...p, {
                         id: newRow.id,
                         song: data,
-                        version: vData || null,
+                        version: vData || decoded.version,
                         setNumber: newRow.set_number,
                         position: newRow.position,
                         segueToNext: newRow.segue_to_next || false,
-                        notes: newRow.notes || "",
+                        notes: decoded.notes,
                       }];
                     });
                   });
@@ -340,7 +341,8 @@ export const useSetlist = (user: User | null, setlistId?: string | null) => {
               });
               return prev;
             }
-            const version = newRow.notable_version_id ? versionsCache.current.get(newRow.notable_version_id) || null : null;
+            const decoded = decodeArchiveNotes(newRow.id, newRow.song_id, newRow.notes);
+            const version = newRow.notable_version_id ? versionsCache.current.get(newRow.notable_version_id) || decoded.version : decoded.version;
             return [...prev, {
               id: newRow.id,
               song,
@@ -348,7 +350,7 @@ export const useSetlist = (user: User | null, setlistId?: string | null) => {
               setNumber: newRow.set_number,
               position: newRow.position,
               segueToNext: newRow.segue_to_next || false,
-              notes: newRow.notes || "",
+              notes: decoded.notes,
             }];
           });
         }
