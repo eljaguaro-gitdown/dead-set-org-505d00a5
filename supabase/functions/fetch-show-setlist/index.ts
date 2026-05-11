@@ -209,20 +209,25 @@ function parseFromFiles(files: any[]): ParsedTrack[] {
   };
 
   // De-dup multiple format copies of the same logical track.
-  // Key on (set/disc, track) when available, else on cleaned title.
-  // Prefer the variant whose `title` is a real song name (not the filename).
+  // Key on (set/disc, track) when available, else on a normalized title
+  // (alphanumerics only, lowercased) so "Picasso Moon" and "PicassoMoon"
+  // collapse to a single entry.
+  const normForKey = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "");
   const byKey = new Map<string, { file: any; parsed: ReturnType<typeof parseFilename>; cleaned: string }>();
   for (const f of audio) {
     const parsed = parseFilename(f.name || "");
+    // Prefer the human-written title when present; the filename often loses spaces.
     const cleaned = cleanTitle(f.title || f.name || "");
     const key =
       parsed.set !== null && parsed.track !== null
         ? `s${parsed.set}t${parsed.track}`
         : parsed.disc !== null && parsed.track !== null
           ? `d${parsed.disc}t${parsed.track}`
-          : `n:${cleaned.toLowerCase()}`;
+          : parsed.track !== null
+            ? `t${parsed.track}`
+            : `n:${normForKey(cleaned)}`;
     const existing = byKey.get(key);
-    const looksLikeFilename = (s: string) => !s || /^gd\d{2,4}/i.test(s);
+    const looksLikeFilename = (s: string) => !s || /^gd\d{2,4}/i.test(s) || /[a-z][A-Z]/.test(s);
     if (!existing) {
       byKey.set(key, { file: f, parsed, cleaned });
     } else if (looksLikeFilename(existing.cleaned) && !looksLikeFilename(cleaned)) {
