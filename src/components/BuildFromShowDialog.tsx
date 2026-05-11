@@ -428,14 +428,17 @@ const BuildFromShowDialog = ({ open, onOpenChange, onSeed }: BuildFromShowDialog
             </div>
           </TabsContent>
         </Tabs>
+        )}
 
-        <p className="text-sm text-muted-foreground font-body leading-relaxed flex items-start gap-1.5 pt-2">
-          <ExternalLink className="w-4 h-4 mt-0.5 shrink-0 opacity-60" />
-          <span>
-            Setlist data sourced from <span className="text-primary">archive.org</span>.
-            Coverage is excellent for ’72 onward; a few early shows may be missing.
-          </span>
-        </p>
+        {!preview && (
+          <p className="text-sm text-muted-foreground font-body leading-relaxed flex items-start gap-1.5 pt-2">
+            <ExternalLink className="w-4 h-4 mt-0.5 shrink-0 opacity-60" />
+            <span>
+              Setlist data sourced from <span className="text-primary">archive.org</span>.
+              Coverage is excellent for ’72 onward; a few early shows may be missing.
+            </span>
+          </p>
+        )}
       </DialogContent>
     </Dialog>
   );
