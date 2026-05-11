@@ -625,7 +625,10 @@ Deno.serve(async (req) => {
     const parsedFromNotes = parseNotesSetlist(notes);
     let tracks: ParsedTrack[];
 
-    if (parsedFromNotes) {
+    if (parsedFromNotes && !notesLookMisalignedWithFiles(
+      parsedFromNotes.map((t, i) => ({ rawTitle: t.title, setNumber: t.setNumber, position: i, segueToNext: t.segue })),
+      meta.files || [],
+    )) {
       // Re-number positions per set
       const counts = new Map<number, number>();
       tracks = parsedFromNotes.map((t) => {
