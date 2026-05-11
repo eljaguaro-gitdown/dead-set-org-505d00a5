@@ -72,7 +72,7 @@ const ShareDropdown = ({ url, ogUrl, title, description }: ShareDropdownProps) =
   const shareNative = async () => {
     if (!navigator.share) return;
     try {
-      await navigator.share({ title, text: description || title, url });
+      await navigator.share({ title, text: description || title, url: shareableUrl });
       trackShare({ shareType: "setlist", channel: "native_share" });
     } catch {
       // user cancelled — keep menu open so they can pick another option
