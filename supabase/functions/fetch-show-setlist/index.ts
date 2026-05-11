@@ -401,6 +401,15 @@ function applyFileSetBreaks(notesTracks: ParsedTrack[], files: any[]): ParsedTra
   });
 }
 
+function notesLookMisalignedWithFiles(notesTracks: ParsedTrack[], files: any[]): boolean {
+  const entries = getAudioTrackEntries(files).filter((e) =>
+    e.cleaned && !/^(tuning|tune[\s-]?up|applause|banter|crowd[\s-]?noise|intro|outro)$/i.test(e.cleaned)
+  );
+  if (entries.length === 0) return false;
+  if (notesTracks.length !== entries.length) return true;
+  return notesTracks.some((track, index) => matchScore(entries[index].cleaned, track.rawTitle) === 0);
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
