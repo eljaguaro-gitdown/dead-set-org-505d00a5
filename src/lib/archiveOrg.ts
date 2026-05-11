@@ -23,8 +23,9 @@ function cacheKey(songTitle: string, yearStart?: number | null, yearEnd?: number
 }
 
 /**
- * Normalize a string for fuzzy comparison: lowercase, remove punctuation,
- * collapse whitespace, strip common prefixes like track numbers.
+ * Normalize a string for fuzzy comparison: lowercase, drop apostrophes, then
+ * everything non-alphanumeric becomes a space. Strip file extensions and the
+ * common "d1t03 - " / "03 - " track-number prefixes that come from archive.org.
  */
 function normalize(s: string): string {
   return s
@@ -32,29 +33,64 @@ function normalize(s: string): string {
     .replace(/\.[^.]+$/, "")              // strip file extension
     .replace(/^d\d+t\d+\s*[-.]?\s*/i, "") // strip "d1t03 - " prefix
     .replace(/^t?\d+\s*[-.]?\s*/, "")     // strip "03 - " or "t03." prefix
-    .replace(/[^a-z0-9\s]/g, "")          // remove punctuation
+    .replace(/[''`]/g, "")                // drop apostrophes (truckin' = truckin)
+    .replace(/[^a-z0-9]+/g, " ")          // any other non-alnum → space
     .replace(/\s+/g, " ")
     .trim();
 }
 
+/** Collapse all whitespace — used for whole-string comparisons that should
+ * ignore spacing/hyphenation differences ("Half-Step" vs "Half Step"). */
+function compact(s: string): string {
+  return normalize(s).replace(/\s+/g, "");
+}
+
+const STOP_WORDS = new Set([
+  "the", "a", "an", "of", "in", "on", "to", "and", "is", "it", "be",
+  "at", "for", "with", "my", "i", "you", "your", "as", "or", "by",
+]);
+
+/** Tokenize + stem common Dead-isms. "playin" → "playing", "darkstar" stays. */
+function tokens(s: string): string[] {
+  return normalize(s)
+    .split(" ")
+    .filter(Boolean)
+    .map((t) => (t === "in" ? t : t.replace(/in$/, "ing")));
+}
+
 /**
  * Score how well a track title matches the desired song title.
- * Returns 0 for no match, higher is better.
+ * Returns 0 for no match, higher is better. Threshold for a real match is 60.
+ *
+ * Strict by design: short substring overlaps that previously caused
+ * "Mississippi Half Step" → "St. Stephen" (because "step" ⊂ "stephen") now
+ * score 0. We only credit *whole-token* equality for the word-overlap path.
  */
 function matchScore(trackTitle: string, songTitle: string): number {
-  const normTrack = normalize(trackTitle);
-  const normSong = normalize(songTitle);
+  const ct = compact(trackTitle);
+  const cs = compact(songTitle);
+  if (!ct || !cs) return 0;
 
-  if (!normTrack || !normSong) return 0;
-  if (normTrack === normSong) return 100;
-  if (normTrack.includes(normSong)) return 80;
-  if (normSong.includes(normTrack) && normTrack.length > 3) return 60;
+  // Whole-string matches (ignoring spacing/punctuation).
+  if (ct === cs) return 100;
+  if (cs.length >= 4 && ct.includes(cs)) return 90;
+  if (ct.length >= 4 && cs.includes(ct)) return 85;
 
-  const songWords = normSong.split(" ").filter((w) => w.length > 2);
-  const trackWords = normTrack.split(" ");
-  const matchedWords = songWords.filter((w) => trackWords.some((tw) => tw.includes(w) || w.includes(tw)));
-  if (songWords.length > 0 && matchedWords.length === songWords.length) return 70;
-  if (songWords.length > 1 && matchedWords.length >= songWords.length * 0.7) return 40;
+  // Significant-word overlap with strict equality (no substring fuzz).
+  const trackTok = tokens(trackTitle).filter((t) => t.length > 1);
+  const songTok = tokens(songTitle).filter((t) => t.length > 1);
+  const trackSig = new Set(trackTok.filter((t) => !STOP_WORDS.has(t)));
+  const songSig = new Set(songTok.filter((t) => !STOP_WORDS.has(t)));
+  if (trackSig.size === 0 || songSig.size === 0) return 0;
+
+  const overlap = [...songSig].filter((t) => trackSig.has(t)).length;
+
+  // Same significant-word set — different ordering / fillers.
+  if (overlap === songSig.size && overlap === trackSig.size) return 95;
+  // Track contains every significant word of the song (song is a prefix/short form).
+  if (overlap === songSig.size) return 80;
+  // Song contains every significant word of the track (e.g. archive used short title).
+  if (overlap === trackSig.size && overlap >= 2) return 70;
 
   return 0;
 }
