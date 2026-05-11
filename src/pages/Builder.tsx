@@ -491,9 +491,9 @@ const Builder = () => {
         set_number: slot.setNumber,
         position: slot.position,
         song_id: slot.song.id,
-        notable_version_id: slot.version?.id || null,
+        notable_version_id: slot.version?.id?.startsWith("archive-") ? null : slot.version?.id || null,
         added_by_user_id: user.id,
-        notes: slot.notes,
+        notes: encodeArchiveNotes(slot),
         segue_to_next: slot.segueToNext,
       }));
 
