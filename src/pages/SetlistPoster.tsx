@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useParams, useNavigate, useLocation, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Share2, Zap, Play, Heart } from "lucide-react";
+import { ArrowLeft, Share2, Zap, Play, Heart, RefreshCw, Loader2 } from "lucide-react";
 import SetlistComments from "@/components/SetlistComments";
 import { useFavorites } from "@/hooks/useFavorites";
 import EraTooltip from "@/components/EraTooltip";
@@ -14,7 +14,7 @@ import ShareDropdown from "@/components/ShareDropdown";
 import ShareFlow from "@/components/ShareFlow";
 import ShowPlate from "@/components/ShowPlate";
 import { toast } from "sonner";
-import { findArchiveRecordings, type ArchiveResult } from "@/lib/archiveOrg";
+import { findArchiveRecordings, matchScore, type ArchiveResult } from "@/lib/archiveOrg";
 import { useFavoriteSongs } from "@/hooks/useFavoriteSongs";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -67,8 +67,107 @@ const SetlistPoster = () => {
   const [hoveredSlot, setHoveredSlot] = useState<string | null>(null);
   const [shareFlowOpen, setShareFlowOpen] = useState(false);
   const [resolvedArchives, setResolvedArchives] = useState<Record<string, ArchiveResult | null>>({});
+  const [rebuilding, setRebuilding] = useState(false);
 
   const eraTheme = useMemo(() => getEraTheme(eraName), [eraName]);
+
+  const isOwner = !!user && !!setlist && setlist.creator_id === user.id;
+
+  // Derive the source show date from slot notes ("From YYYY-MM-DD · Venue").
+  // If most slots came from the same archive.org show, surface a one-click rebuild.
+  const sourceShow = useMemo(() => {
+    const counts = new Map<string, { count: number; venue: string | null }>();
+    for (const s of slots) {
+      const m = s.notes?.match(/^From\s+(\d{4}-\d{2}-\d{2})(?:\s*·\s*(.+))?/);
+      if (!m) continue;
+      const key = m[1];
+      const prev = counts.get(key);
+      counts.set(key, { count: (prev?.count || 0) + 1, venue: prev?.venue ?? (m[2]?.trim() || null) });
+    }
+    let best: { date: string; count: number; venue: string | null } | null = null;
+    for (const [date, v] of counts) {
+      if (!best || v.count > best.count) best = { date, count: v.count, venue: v.venue };
+    }
+    // Require at least 3 slots to share a source date — avoids false positives from
+    // a stray manually-added archive note on an otherwise hand-built setlist.
+    if (!best || best.count < 3) return null;
+    return best;
+  }, [slots]);
+
+  const handleRebuildFromShow = useCallback(async () => {
+    if (!sourceShow || !id || !user) return;
+    const niceDate = new Date(sourceShow.date + "T12:00:00").toLocaleDateString("en-US", {
+      year: "numeric", month: "long", day: "numeric",
+    });
+    const ok = window.confirm(
+      `Rebuild this setlist exactly as the Grateful Dead played it on ${niceDate}${sourceShow.venue ? ` at ${sourceShow.venue}` : ""}?\n\nThis will overwrite the current songs.`
+    );
+    if (!ok) return;
+
+    setRebuilding(true);
+    try {
+      const { data: show, error: fnErr } = await supabase.functions.invoke("fetch-show-setlist", {
+        body: { date: sourceShow.date },
+      });
+      if (fnErr || !show || show.error) {
+        toast.error(show?.error || fnErr?.message || "Couldn't load that show from archive.org");
+        return;
+      }
+
+      const { data: songs, error: sErr } = await supabase.from("songs").select("*");
+      if (sErr || !songs) { toast.error("Couldn't load song catalog"); return; }
+
+      const positions = new Map<number, number>();
+      const rows: Database["public"]["Tables"]["setlist_slots"]["Insert"][] = [];
+      let unmatched = 0;
+      for (const t of show.tracks as Array<{ rawTitle: string; setNumber: number; segueToNext: boolean; sourceDate?: string; sourceVenue?: string | null }>) {
+        let best: { song: Song; score: number } | null = null;
+        for (const song of songs) {
+          const score = matchScore(t.rawTitle, song.title);
+          if (score >= 60 && (!best || score > best.score)) best = { song, score };
+        }
+        if (!best) { unmatched++; continue; }
+        const pos = positions.get(t.setNumber) || 0;
+        positions.set(t.setNumber, pos + 1);
+        rows.push({
+          id: crypto.randomUUID(),
+          setlist_id: id,
+          set_number: t.setNumber,
+          position: pos,
+          song_id: best.song.id,
+          notable_version_id: null,
+          added_by_user_id: user.id,
+          notes: t.sourceDate ? `From ${t.sourceDate}${t.sourceVenue ? ` · ${t.sourceVenue}` : ""}` : "",
+          segue_to_next: t.segueToNext,
+        });
+      }
+
+      if (rows.length === 0) {
+        toast.error("Found the show, but no songs matched our catalog");
+        return;
+      }
+
+      const { error: delErr } = await supabase.from("setlist_slots").delete().eq("setlist_id", id);
+      if (delErr) { toast.error("Couldn't clear the existing setlist"); return; }
+
+      const { error: insErr } = await supabase.from("setlist_slots").insert(rows);
+      if (insErr) { toast.error("Couldn't write the rebuilt show"); return; }
+
+      toast.success(`Rebuilt from ${niceDate}`, {
+        description: unmatched > 0
+          ? `${unmatched} track${unmatched === 1 ? "" : "s"} skipped (jams, tunings, or songs not in our catalog).`
+          : "Set order and segues match the show exactly.",
+      });
+
+      // Reload to re-fetch enriched slots cleanly.
+      window.location.reload();
+    } catch (e) {
+      console.error("Rebuild from show failed:", e);
+      toast.error("Couldn't rebuild — try again");
+    } finally {
+      setRebuilding(false);
+    }
+  }, [sourceShow, id, user]);
 
   useEffect(() => {
     if (!id) return;
@@ -331,6 +430,20 @@ const SetlistPoster = () => {
           >
             <Play className="w-3 h-3 fill-current" /> Play All
           </button>
+          {isOwner && sourceShow && (
+            <button
+              onClick={handleRebuildFromShow}
+              disabled={rebuilding}
+              title={`Overwrite with the exact ${sourceShow.date}${sourceShow.venue ? ` · ${sourceShow.venue}` : ""} setlist from archive.org`}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-body bg-card/80 border border-border text-foreground hover:border-primary/40 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {rebuilding
+                ? <Loader2 className="w-3 h-3 animate-spin" />
+                : <RefreshCw className="w-3 h-3" />}
+              <span className="hidden sm:inline">{rebuilding ? "Rebuilding…" : `Rebuild from ${sourceShow.date}`}</span>
+              <span className="sm:hidden">{rebuilding ? "…" : "Rebuild"}</span>
+            </button>
+          )}
           <ShareDropdown url={shareUrl} ogUrl={ogShareUrl} title={shareTitle} description={shareDescription} />
         </div>
       </header>
