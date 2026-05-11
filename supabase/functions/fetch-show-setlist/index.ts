@@ -96,6 +96,22 @@ const isAudioFile = (f: any): boolean => {
 // Pick the best recording identifier for the date.
 // Prefer SBD, then highest avg_rating, then most-downloaded.
 async function findBestRecordingForDate(date: string): Promise<string | null> {
+  // Relisten's show endpoint mirrors the user-facing "Source #1" ordering and
+  // points each source back to its Archive.org identifier. Exact-date rebuilds
+  // should use that first source, not a separate Archive search ranking.
+  try {
+    const sourceOneRes = await fetch(`https://api.relisten.net/api/v2/artists/grateful-dead/shows/${date}`);
+    if (sourceOneRes.ok) {
+      const show = await sourceOneRes.json();
+      const sourceOneId = show?.sources?.[0]?.upstream_identifier;
+      if (typeof sourceOneId === "string" && sourceOneId.trim().length > 0) {
+        return sourceOneId.trim();
+      }
+    }
+  } catch {
+    // Fall back to Archive.org advanced search below.
+  }
+
   const q = encodeURIComponent(`collection:GratefulDead AND date:${date}`);
   const url = `https://archive.org/advancedsearch.php?q=${q}&fl[]=identifier&fl[]=avg_rating&fl[]=downloads&fl[]=source&sort[]=downloads+desc&sort[]=avg_rating+desc&rows=25&output=json`;
   const res = await fetch(url);
