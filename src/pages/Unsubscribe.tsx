@@ -97,9 +97,13 @@ const Unsubscribe = () => {
           )}
           {status === "success" && (
             <>
-              <h1 className="font-display text-2xl text-foreground">You're unsubscribed</h1>
+              <h1 className="font-display text-2xl text-foreground">
+                {kind === "dispatch" ? "Off the list." : "You're unsubscribed"}
+              </h1>
               <p className="font-body text-muted-foreground">
-                We won't send you any more app emails. The music never stopped — but the emails did. ⚡
+                {kind === "dispatch"
+                  ? "Off the list. The tapes are still here whenever you want them. Come back anytime."
+                  : "We won't send you any more app emails. The music never stopped — but the emails did. ⚡"}
               </p>
             </>
           )}
