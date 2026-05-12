@@ -44,6 +44,36 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_traffic_stats_cache: {
+        Row: {
+          id: number
+          refreshed_at: string
+          total_page_views: number
+          total_unique: number
+          unique_24h: number
+          unique_30d: number
+          unique_7d: number
+        }
+        Insert: {
+          id?: number
+          refreshed_at?: string
+          total_page_views?: number
+          total_unique?: number
+          unique_24h?: number
+          unique_30d?: number
+          unique_7d?: number
+        }
+        Update: {
+          id?: number
+          refreshed_at?: string
+          total_page_views?: number
+          total_unique?: number
+          unique_24h?: number
+          unique_30d?: number
+          unique_7d?: number
+        }
+        Relationships: []
+      }
       announcement_reads: {
         Row: {
           announcement_id: string
@@ -1523,6 +1553,7 @@ export type Database = {
           read_ct: number
         }[]
       }
+      refresh_admin_traffic_stats: { Args: never; Returns: undefined }
       send_featured_setlist_email_today: { Args: never; Returns: undefined }
       setlist_has_share_token: {
         Args: { _setlist_id: string }
