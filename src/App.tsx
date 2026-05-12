@@ -85,6 +85,7 @@ const App = () => (
           <PwaInstallBanner />
           <AudioDebugPanel />
           <PickHandleModal />
+          <NewVersionBanner />
         </AudioPlayerProvider>
       </BrowserRouter>
     </TooltipProvider>
