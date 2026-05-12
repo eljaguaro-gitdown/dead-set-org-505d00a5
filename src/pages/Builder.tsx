@@ -1212,7 +1212,17 @@ const Builder = () => {
             </div>
           )}
 
-          {/* Idle nudge — no songs after 10s */}
+          {/* Starter doors — visible while the set is empty */}
+          {activeSlots.length === 0 && !charlieCreating && (
+            <ScoreShowByDate
+              onPullSetlist={(d) => {
+                setShowDateInitial(d);
+                setShowDateOpen(true);
+              }}
+              onSurpriseMe={() => setCharlieOpen(true)}
+            />
+          )}
+
           {showIdleNudge && activeSlots.length === 0 && !showWelcome && (
             <motion.div
               initial={{ opacity: 0, y: -8 }}
