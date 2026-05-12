@@ -78,6 +78,21 @@ interface Recipient {
   dispatch_unsubscribe_token: string;
 }
 
+function parseJwtClaims(token: string): Record<string, unknown> | null {
+  const parts = token.split(".");
+  if (parts.length < 2) return null;
+
+  try {
+    const payload = parts[1]
+      .replaceAll("-", "+")
+      .replaceAll("_", "/")
+      .padEnd(Math.ceil(parts[1].length / 4) * 4, "=");
+    return JSON.parse(atob(payload)) as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+}
+
 async function enqueueDispatchEmail(args: {
   supabase: ReturnType<typeof createClient>;
   to: string;
@@ -143,7 +158,8 @@ Deno.serve(async (req) => {
   // admin user. verify_jwt=true ensures an Authorization header is present.
   const authHeader = req.headers.get("Authorization") ?? "";
   const presentedToken = authHeader.replace(/^Bearer\s+/i, "");
-  const isServiceRole = presentedToken === SERVICE_KEY;
+  const isServiceRole =
+    presentedToken === SERVICE_KEY || parseJwtClaims(presentedToken)?.role === "service_role";
 
   if (!isServiceRole) {
     const userClient = createClient(SUPABASE_URL, Deno.env.get("SUPABASE_ANON_KEY")!, {
