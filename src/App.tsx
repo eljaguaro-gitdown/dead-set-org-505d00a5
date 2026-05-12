@@ -48,6 +48,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AudioPlayerProvider>
+          <UtmCapture />
           <Suspense fallback={null}>
             <Routes>
               <Route path="/" element={<Index />} />
