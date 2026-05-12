@@ -158,6 +158,7 @@ const Builder = () => {
   const [shareOpen, setShareOpen] = useState(false);
   const [charlieOpen, setCharlieOpen] = useState(false);
   const [showDateOpen, setShowDateOpen] = useState(false);
+  const [showDateInitial, setShowDateInitial] = useState<Date | null>(null);
   const [initialized, setInitialized] = useState(false);
   const { playSingle, playSetlist: globalPlaySetlist, playingSlot } = useAudioPlayer();
   const [description, setDescription] = useState<string | null>(null);
