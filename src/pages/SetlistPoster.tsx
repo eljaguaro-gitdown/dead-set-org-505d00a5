@@ -338,6 +338,22 @@ const SetlistPoster = () => {
     };
   }, [slots]);
 
+  // PostHog tracking — fire once per setlist load.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const ph = (typeof window !== "undefined" ? (window as any).posthog : null);
+  const trackedLoadRef = React.useRef<string | null>(null);
+  useEffect(() => {
+    if (!setlist || !id) return;
+    if (trackedLoadRef.current === id) return;
+    trackedLoadRef.current = id;
+    ph?.capture?.("setlist_viewer_loaded", {
+      auth_state: user ? "authenticated" : "anonymous",
+      setlist_id: id,
+      referrer: typeof document !== "undefined" ? document.referrer || null : null,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [setlist, id, user]);
+
   const handleUpvote = async () => {
     if (!user) { toast.error("Sign in to upvote"); navigate("/auth"); return; }
     if (!id || hasUpvoted || upvoting) return;
@@ -417,11 +433,38 @@ const SetlistPoster = () => {
 
   if (!setlist) {
     return (
-      <div className="grain-overlay min-h-screen bg-background flex flex-col items-center justify-center gap-4">
+      <div className="grain-overlay min-h-screen bg-background flex flex-col items-center justify-center gap-4 px-6 text-center">
         <StealYourFace size={60} />
-        <p className="font-display text-xl text-muted-foreground">Setlist not found</p>
-        <button onClick={() => navigate("/browse")} className="font-body text-sm text-primary underline underline-offset-2">
-          Browse Setlists
+        <p className="font-display text-2xl text-foreground">Charlie can't find that tape.</p>
+        <p className="font-body text-sm text-muted-foreground max-w-sm">
+          The link may be broken, or the setlist was taken down. Build your own — every night gets a fresh chance.
+        </p>
+        <button
+          onClick={() => navigate("/builder")}
+          className="mt-2 inline-flex items-center gap-2 px-5 h-11 rounded-[10px] font-display"
+          style={{ background: "hsl(var(--primary))", color: "hsl(var(--primary-foreground))" }}
+        >
+          Open the Builder ↗
+        </button>
+      </div>
+    );
+  }
+
+  // Private setlist guard — only the owner (or collaborator, who hits a different code path) can view.
+  if (setlist.is_public === false && !isOwner) {
+    return (
+      <div className="grain-overlay min-h-screen bg-background flex flex-col items-center justify-center gap-4 px-6 text-center">
+        <StealYourFace size={60} />
+        <p className="font-display text-2xl text-foreground">This tape is private.</p>
+        <p className="font-body text-sm text-muted-foreground max-w-sm">
+          The taper kept this one for themselves. Build your own setlist — Cosmic Charlie's got plenty more reels in the vault.
+        </p>
+        <button
+          onClick={() => navigate("/builder")}
+          className="mt-2 inline-flex items-center gap-2 px-5 h-11 rounded-[10px] font-display"
+          style={{ background: "hsl(var(--primary))", color: "hsl(var(--primary-foreground))" }}
+        >
+          Open the Builder ↗
         </button>
       </div>
     );
@@ -474,8 +517,205 @@ const SetlistPoster = () => {
         </div>
       </header>
 
+      {/* === Public viewer hero — primary CTAs above the poster === */}
+      {(() => {
+        // Pick the best Internet Archive show URL we can find: prefer source-show, then any slot version, then resolved.
+        const archiveShowUrl =
+          (slots.find((s) => s.version?.archive_org_url)?.version?.archive_org_url) ||
+          (Object.values(resolvedArchives).find((r) => r?.url)?.url) ||
+          null;
+        const aboutBlurb =
+          (setlist.description && setlist.description.trim().length > 0)
+            ? setlist.description
+            : "One night, one tape, one set of choices that won't happen the same way twice.";
+        const venueLine = sourceShow?.venue || null;
+        const dateLine = sourceShow?.date
+          ? new Date(sourceShow.date + "T12:00:00").toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })
+          : null;
+
+        const fireCta = (event: string, props?: Record<string, unknown>) => ph?.capture?.(event, props);
+
+        const handleBuilderCta = () => {
+          fireCta("setlist_viewer_cta_builder_clicked", { setlist_id: id, auth_state: user ? "authenticated" : "anonymous" });
+          navigate("/builder");
+        };
+        const handleArchiveCta = () => {
+          if (!archiveShowUrl) return;
+          fireCta("setlist_viewer_cta_archive_clicked", { setlist_id: id, url: archiveShowUrl });
+          window.open(archiveShowUrl, "_blank", "noopener,noreferrer");
+        };
+        const handleSaveCta = async () => {
+          if (!user) { toast.error("Sign in to save this tape"); navigate("/auth"); return; }
+          fireCta("setlist_viewer_save_clicked", { setlist_id: id });
+          if (id) await toggleFavorite(id);
+        };
+        const handleRecreateCta = async () => {
+          if (!user || !id) { navigate("/auth"); return; }
+          fireCta("setlist_viewer_cta_builder_clicked", { setlist_id: id, action: "recreate", auth_state: "authenticated" });
+          try {
+            const { data: newSetlist, error: insErr } = await supabase
+              .from("setlists")
+              .insert({
+                creator_id: user.id,
+                title: `${setlist.title} (recreated)`,
+                era_id: setlist.era_id,
+                is_public: true,
+              })
+              .select("id")
+              .single();
+            if (insErr || !newSetlist) throw insErr || new Error("no setlist");
+            if (slots.length > 0) {
+              const { error: slotErr } = await supabase.from("setlist_slots").insert(
+                slots.map((s) => ({
+                  setlist_id: newSetlist.id,
+                  song_id: s.song_id,
+                  notable_version_id: s.notable_version_id,
+                  set_number: s.set_number,
+                  position: s.position,
+                  segue_to_next: s.segue_to_next,
+                  notes: s.notes || "",
+                  added_by_user_id: user.id,
+                }))
+              );
+              if (slotErr) throw slotErr;
+            }
+            toast.success("Pulled into your Builder");
+            navigate(`/builder/${newSetlist.id}`);
+          } catch (e) {
+            console.error("Recreate failed:", e);
+            toast.error("Couldn't recreate this tape — try again");
+          }
+        };
+        const handleShareInit = (channel: string) => {
+          fireCta("setlist_viewer_share_initiated", { channel, setlist_id: id });
+        };
+
+        return (
+          <section className="max-w-[640px] mx-auto px-4 sm:px-6 pt-20 pb-2">
+            <div className="rounded-2xl border border-[hsl(var(--border))] bg-[#0F0E0C] p-5 sm:p-7 shadow-[0_10px_40px_rgba(0,0,0,0.3)]">
+              {/* Metadata strip */}
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 mb-3">
+                {dateLine && (
+                  <span className="font-mono text-sm tracking-wide text-foreground">{dateLine}</span>
+                )}
+                {venueLine && (
+                  <span className="font-body text-sm text-muted-foreground">· {venueLine}</span>
+                )}
+                {eraName && (
+                  <span
+                    className="px-2 py-0.5 rounded-[6px] border font-marker text-[11px] tracking-[0.15em] uppercase"
+                    style={{
+                      borderColor: `hsl(${eraTheme.accent} / 0.5)`,
+                      color: `hsl(${eraTheme.accent})`,
+                      backgroundColor: `hsl(${eraTheme.accent} / 0.08)`,
+                    }}
+                  >
+                    {eraName}
+                  </span>
+                )}
+              </div>
+
+              {/* About this show */}
+              <div className="mb-5">
+                <p className="font-marker text-[11px] tracking-[0.2em] uppercase text-muted-foreground/70 mb-1.5">
+                  About this show
+                </p>
+                <p className="font-body text-base sm:text-lg leading-relaxed text-foreground/90">
+                  {aboutBlurb}
+                </p>
+                <p className="font-body text-xs text-muted-foreground mt-2">
+                  Cosmic Charlie's pick, curated by{" "}
+                  <Link to={`/user/${setlist.creator_id}`} className="text-primary hover:underline">{creatorName}</Link>.
+                </p>
+              </div>
+
+              {/* CTAs */}
+              <div className="flex flex-col sm:flex-row gap-2.5">
+                {!user ? (
+                  <button
+                    onClick={handleBuilderCta}
+                    className="flex-1 h-12 rounded-[10px] font-display text-base inline-flex items-center justify-center gap-2 transition-transform hover:scale-[1.01]"
+                    style={{ background: "#c9a84c", color: "#15130F" }}
+                  >
+                    Build Your Own Setlist
+                    <span aria-hidden>↗</span>
+                  </button>
+                ) : (
+                  <>
+                    <button
+                      onClick={handleSaveCta}
+                      className="flex-1 h-12 rounded-[10px] font-display text-base inline-flex items-center justify-center gap-2 transition-transform hover:scale-[1.01]"
+                      style={{ background: "#c9a84c", color: "#15130F" }}
+                    >
+                      <Heart className={`w-5 h-5 ${isFavorite(id || "") ? "fill-current" : ""}`} />
+                      {isFavorite(id || "") ? "Saved to My Setlists" : "Add to My Setlists"}
+                    </button>
+                    <button
+                      onClick={handleRecreateCta}
+                      className="flex-1 h-12 rounded-[10px] font-display text-base inline-flex items-center justify-center gap-2 border border-[#c9a84c]/60 text-[#c9a84c] hover:bg-[#c9a84c]/10 transition-colors"
+                    >
+                      <RefreshCw className="w-5 h-5" />
+                      Recreate This Show
+                    </button>
+                  </>
+                )}
+                <button
+                  onClick={handleArchiveCta}
+                  disabled={!archiveShowUrl}
+                  title={archiveShowUrl ? "Open this show on archive.org" : "No archive.org show link available"}
+                  className="sm:flex-none h-12 px-5 rounded-[10px] font-body text-sm inline-flex items-center justify-center gap-2 border border-border text-foreground hover:border-primary/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Listen on Internet Archive
+                  <span aria-hidden>↗</span>
+                </button>
+              </div>
+
+              {/* Share row */}
+              <div className="flex items-center gap-2 mt-4 pt-4 border-t border-border/60">
+                <span className="font-body text-xs text-muted-foreground mr-1">Share:</span>
+                <button
+                  onClick={async () => {
+                    handleShareInit("copy_link");
+                    try {
+                      await navigator.clipboard.writeText(shareUrl);
+                      toast.success("Link copied — paste it anywhere");
+                    } catch { toast.error("Couldn't copy — try again"); }
+                  }}
+                  className="px-3 h-9 rounded-[10px] border border-border text-foreground/90 hover:border-primary/50 font-body text-xs transition-colors"
+                >
+                  Copy link
+                </button>
+                <button
+                  onClick={() => {
+                    handleShareInit("twitter");
+                    const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareTitle)}&url=${encodeURIComponent(shareUrl)}`;
+                    window.open(url, "_blank", "noopener,noreferrer");
+                  }}
+                  className="px-3 h-9 rounded-[10px] border border-border text-foreground/90 hover:border-primary/50 font-body text-xs transition-colors"
+                >
+                  Open in X
+                </button>
+                <button
+                  onClick={() => {
+                    handleShareInit("email");
+                    const body = `${shareDescription || "A dream Dead show on Dead-Set.Org"}\n\n${shareUrl}`;
+                    window.location.href = `mailto:?subject=${encodeURIComponent(shareTitle)}&body=${encodeURIComponent(body)}`;
+                  }}
+                  className="px-3 h-9 rounded-[10px] border border-border text-foreground/90 hover:border-primary/50 font-body text-xs transition-colors"
+                >
+                  Email
+                </button>
+                <div className="ml-auto">
+                  <ShareDropdown url={shareUrl} ogUrl={ogShareUrl} title={shareTitle} description={shareDescription} />
+                </div>
+              </div>
+            </div>
+          </section>
+        );
+      })()}
+
       {/* J-Card Canvas */}
-      <div className="max-w-[640px] mx-auto px-3 sm:px-6 pt-20 pb-16">
+      <div className="max-w-[640px] mx-auto px-3 sm:px-6 pt-6 pb-16">
         <motion.article
           initial={{ opacity: 0, y: 40, rotate: -0.5 }}
           animate={{ opacity: 1, y: 0, rotate: 0 }}
@@ -920,6 +1160,20 @@ const SetlistPoster = () => {
               {setlist.title} · {eraName || "Dead-Set.Org"} · {slots.length} songs
             </span>
           </div>
+
+          {/* Stewardship line — credit the source */}
+          <p className="font-body text-xs text-muted-foreground/70 text-center mt-6 px-4 leading-relaxed">
+            Built on the shoulders of the tapers, traders, and the{" "}
+            <a
+              href="https://archive.org/details/GratefulDead"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:underline"
+            >
+              Internet Archive
+            </a>
+            .
+          </p>
         </motion.article>
       </div>
 
