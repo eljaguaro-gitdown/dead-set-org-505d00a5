@@ -338,6 +338,22 @@ const SetlistPoster = () => {
     };
   }, [slots]);
 
+  // PostHog tracking — fire once per setlist load.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const ph = (typeof window !== "undefined" ? (window as any).posthog : null);
+  const trackedLoadRef = React.useRef<string | null>(null);
+  useEffect(() => {
+    if (!setlist || !id) return;
+    if (trackedLoadRef.current === id) return;
+    trackedLoadRef.current = id;
+    ph?.capture?.("setlist_viewer_loaded", {
+      auth_state: user ? "authenticated" : "anonymous",
+      setlist_id: id,
+      referrer: typeof document !== "undefined" ? document.referrer || null : null,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [setlist, id, user]);
+
   const handleUpvote = async () => {
     if (!user) { toast.error("Sign in to upvote"); navigate("/auth"); return; }
     if (!id || hasUpvoted || upvoting) return;
