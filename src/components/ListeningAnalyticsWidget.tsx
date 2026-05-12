@@ -63,9 +63,28 @@ const ListeningAnalyticsWidget = ({ enabled }: Props) => {
     if (!rows) return null;
     const cutoff = WINDOWS.find((w) => w.key === windowKey)?.ms ?? null;
     const now = Date.now();
+    const STALE_IN_PROGRESS_MS = 30 * 60 * 1000; // 30 min — older "in_progress" rows are abandoned
+    const MIN_PLAY_MS = 3000; // <3s = accidental click, not a real play
+
+    const cleaned = rows.filter((r) => {
+      // Drop orphaned in_progress rows (tab closed, never finalized)
+      if (r.ended_reason === "in_progress") {
+        const age = now - new Date(r.started_at).getTime();
+        if (age > STALE_IN_PROGRESS_MS) return false;
+      }
+      // Drop sub-3-second blips from skipped/errored events with no real listen time
+      if (
+        (r.ended_reason === "skipped" || r.ended_reason === "error" || r.ended_reason === "navigated_away") &&
+        (r.duration_played_ms || 0) < MIN_PLAY_MS
+      ) {
+        return false;
+      }
+      return true;
+    });
+
     const filtered = cutoff
-      ? rows.filter((r) => now - new Date(r.started_at).getTime() <= cutoff)
-      : rows;
+      ? cleaned.filter((r) => now - new Date(r.started_at).getTime() <= cutoff)
+      : cleaned;
 
     const totalEvents = filtered.length;
     if (totalEvents === 0) {
@@ -82,14 +101,13 @@ const ListeningAnalyticsWidget = ({ enabled }: Props) => {
       };
     }
 
-    // Completion uses only events with a known track duration
-    const withDuration = filtered.filter(
-      (r) => r.track_duration_ms && r.track_duration_ms > 0
-    );
-    const finishedRate =
-      withDuration.length > 0
-        ? withDuration.filter((r) => r.completed).length / withDuration.length
-        : 0;
+    // "% finished" = events that reached the end of the track. Prefer the
+    // explicit ended_reason='finished' signal (always reliable), and fall back
+    // to the `completed` flag (only set when track_duration_ms was captured).
+    const finishedCount = filtered.filter(
+      (r) => r.ended_reason === "finished" || r.completed
+    ).length;
+    const finishedRate = totalEvents > 0 ? finishedCount / totalEvents : 0;
 
     const totalMs = filtered.reduce(
       (sum, r) => sum + (r.duration_played_ms || 0),
