@@ -208,6 +208,18 @@ const BuildFromShowDialog = ({ open, onOpenChange, onSeed, initialDate }: BuildF
     runFetch({ month, day, aggregate: true }, `${MONTHS[month - 1]} ${day} — every year`);
   }, [month, day, runFetch]);
 
+  // Auto-fetch when opened with a pre-selected date (e.g. from the Builder "Score a Show by Date" door).
+  const lastAutoDateRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!open || !initialDate) return;
+    const key = format(initialDate, "yyyy-MM-dd");
+    if (lastAutoDateRef.current === key) return;
+    lastAutoDateRef.current = key;
+    setMode("date");
+    setDate(initialDate);
+    runFetch({ date: key }, formatNiceDate(initialDate));
+  }, [open, initialDate, runFetch]);
+  useEffect(() => { if (!open) lastAutoDateRef.current = null; }, [open]);
 
   const daysInMonth = new Date(2000, month, 0).getDate(); // leap-safe enough for picker
 
