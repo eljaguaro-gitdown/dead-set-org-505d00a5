@@ -963,20 +963,6 @@ const SetlistPoster = () => {
               {setlist.title} · {eraName || "Dead-Set.Org"} · {slots.length} songs
             </span>
           </div>
-
-          {/* Stewardship line — credit the source */}
-          <p className="font-body text-xs text-muted-foreground/70 text-center mt-6 px-4 leading-relaxed">
-            Built on the shoulders of the tapers, traders, and the{" "}
-            <a
-              href="https://archive.org/details/GratefulDead"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-primary hover:underline"
-            >
-              Internet Archive
-            </a>
-            .
-          </p>
         </motion.article>
       </div>
 
