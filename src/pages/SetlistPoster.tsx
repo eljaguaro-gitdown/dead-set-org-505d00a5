@@ -537,7 +537,7 @@ const SetlistPoster = () => {
 
         const handleBuilderCta = () => {
           fireCta("setlist_viewer_cta_builder_clicked", { setlist_id: id, auth_state: user ? "authenticated" : "anonymous" });
-          navigate(user ? "/builder" : "/hello");
+          navigate("/builder");
         };
         const handleArchiveCta = () => {
           if (!archiveShowUrl) return;
