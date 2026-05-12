@@ -267,7 +267,8 @@ Deno.serve(async (req) => {
       unsubscribeToken: r.dispatch_unsubscribe_token,
     });
 
-    const { id, error } = await sendViaResend({
+    const { id, error } = await enqueueDispatchEmail({
+      supabase,
       to: r.email,
       subject,
       html,
@@ -292,11 +293,11 @@ Deno.serve(async (req) => {
         user_id: r.user_id,
         email: r.email,
         resend_message_id: id ?? null,
-        status: "sent",
+        status: "queued",
       });
     }
 
-    // 200ms throttle between sends to stay under Resend rate limits.
+    // Keep enqueue bursts gentle so the dispatcher can drain smoothly.
     if (recipients.length > 1) {
       await new Promise((r) => setTimeout(r, 200));
     }
