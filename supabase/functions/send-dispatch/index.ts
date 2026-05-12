@@ -93,6 +93,46 @@ function parseJwtClaims(token: string): Record<string, unknown> | null {
   }
 }
 
+function generateToken(): string {
+  const bytes = new Uint8Array(32);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes)
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+async function getTransactionalUnsubscribeToken(
+  supabase: ReturnType<typeof createClient>,
+  email: string,
+): Promise<{ token?: string; error?: string }> {
+  const normalizedEmail = email.toLowerCase();
+  const { data: existingToken, error: lookupError } = await supabase
+    .from("email_unsubscribe_tokens")
+    .select("token")
+    .eq("email", normalizedEmail)
+    .maybeSingle();
+
+  if (lookupError) return { error: `Unsubscribe lookup failed: ${lookupError.message}` };
+  if (existingToken?.token) return { token: existingToken.token };
+
+  const token = generateToken();
+  const { error: tokenError } = await supabase
+    .from("email_unsubscribe_tokens")
+    .upsert({ token, email: normalizedEmail }, { onConflict: "email", ignoreDuplicates: true });
+  if (tokenError) return { error: `Unsubscribe token failed: ${tokenError.message}` };
+
+  const { data: storedToken, error: rereadError } = await supabase
+    .from("email_unsubscribe_tokens")
+    .select("token")
+    .eq("email", normalizedEmail)
+    .maybeSingle();
+  if (rereadError || !storedToken?.token) {
+    return { error: "Unsubscribe token could not be confirmed" };
+  }
+
+  return { token: storedToken.token };
+}
+
 async function enqueueDispatchEmail(args: {
   supabase: ReturnType<typeof createClient>;
   to: string;
@@ -101,6 +141,9 @@ async function enqueueDispatchEmail(args: {
   dispatchId: string;
 }): Promise<{ id?: string; error?: string }> {
   const messageId = crypto.randomUUID();
+  const { token: unsubscribeToken, error: tokenError } =
+    await getTransactionalUnsubscribeToken(args.supabase, args.to);
+  if (tokenError || !unsubscribeToken) return { error: tokenError ?? "Missing unsubscribe token" };
 
   const { error: logError } = await args.supabase.from("email_send_log").insert({
     message_id: messageId,
@@ -124,7 +167,7 @@ async function enqueueDispatchEmail(args: {
       purpose: "transactional",
       label: `dispatch-${args.dispatchId}`,
       idempotency_key: `dispatch-${args.dispatchId}-${args.to}-${messageId}`,
-      unsubscribe_token: null,
+      unsubscribe_token: unsubscribeToken,
       queued_at: new Date().toISOString(),
     },
   });
