@@ -417,11 +417,38 @@ const SetlistPoster = () => {
 
   if (!setlist) {
     return (
-      <div className="grain-overlay min-h-screen bg-background flex flex-col items-center justify-center gap-4">
+      <div className="grain-overlay min-h-screen bg-background flex flex-col items-center justify-center gap-4 px-6 text-center">
         <StealYourFace size={60} />
-        <p className="font-display text-xl text-muted-foreground">Setlist not found</p>
-        <button onClick={() => navigate("/browse")} className="font-body text-sm text-primary underline underline-offset-2">
-          Browse Setlists
+        <p className="font-display text-2xl text-foreground">Charlie can't find that tape.</p>
+        <p className="font-body text-sm text-muted-foreground max-w-sm">
+          The link may be broken, or the setlist was taken down. Build your own — every night gets a fresh chance.
+        </p>
+        <button
+          onClick={() => navigate("/builder")}
+          className="mt-2 inline-flex items-center gap-2 px-5 h-11 rounded-[10px] font-display"
+          style={{ background: "hsl(var(--primary))", color: "hsl(var(--primary-foreground))" }}
+        >
+          Open the Builder ↗
+        </button>
+      </div>
+    );
+  }
+
+  // Private setlist guard — only the owner (or collaborator, who hits a different code path) can view.
+  if (setlist.is_public === false && !isOwner) {
+    return (
+      <div className="grain-overlay min-h-screen bg-background flex flex-col items-center justify-center gap-4 px-6 text-center">
+        <StealYourFace size={60} />
+        <p className="font-display text-2xl text-foreground">This tape is private.</p>
+        <p className="font-body text-sm text-muted-foreground max-w-sm">
+          The taper kept this one for themselves. Build your own setlist — Cosmic Charlie's got plenty more reels in the vault.
+        </p>
+        <button
+          onClick={() => navigate("/builder")}
+          className="mt-2 inline-flex items-center gap-2 px-5 h-11 rounded-[10px] font-display"
+          style={{ background: "hsl(var(--primary))", color: "hsl(var(--primary-foreground))" }}
+        >
+          Open the Builder ↗
         </button>
       </div>
     );
