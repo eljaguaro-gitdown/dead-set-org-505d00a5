@@ -37,6 +37,7 @@ interface BuildFromShowDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSeed: (seed: ShowSeed) => void | Promise<void>;
+  initialDate?: Date | null;
 }
 
 const MIN_DATE = new Date(1965, 7, 1);
