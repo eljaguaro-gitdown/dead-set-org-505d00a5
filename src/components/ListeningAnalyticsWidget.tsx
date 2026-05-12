@@ -101,14 +101,13 @@ const ListeningAnalyticsWidget = ({ enabled }: Props) => {
       };
     }
 
-    // Completion uses only events with a known track duration
-    const withDuration = filtered.filter(
-      (r) => r.track_duration_ms && r.track_duration_ms > 0
-    );
-    const finishedRate =
-      withDuration.length > 0
-        ? withDuration.filter((r) => r.completed).length / withDuration.length
-        : 0;
+    // "% finished" = events that reached the end of the track. Prefer the
+    // explicit ended_reason='finished' signal (always reliable), and fall back
+    // to the `completed` flag (only set when track_duration_ms was captured).
+    const finishedCount = filtered.filter(
+      (r) => r.ended_reason === "finished" || r.completed
+    ).length;
+    const finishedRate = totalEvents > 0 ? finishedCount / totalEvents : 0;
 
     const totalMs = filtered.reduce(
       (sum, r) => sum + (r.duration_played_ms || 0),
