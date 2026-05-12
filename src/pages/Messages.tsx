@@ -441,13 +441,7 @@ const Messages = () => {
                     <span className="text-[10px] text-muted-foreground font-body mb-0.5">
                       {msg.senderName} · {formatTime(msg.createdAt)}
                     </span>
-                    <div
-                      className={`px-3 py-1.5 rounded-lg text-sm font-body max-w-[85%] ${
-                        isMe ? "bg-primary text-primary-foreground" : "bg-muted text-foreground"
-                      }`}
-                    >
-                      <Linkify>{msg.content}</Linkify>
-                    </div>
+                    <MessageBody content={msg.content} isMe={isMe} />
                   </div>
                 );
               })}
