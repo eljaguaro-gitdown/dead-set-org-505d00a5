@@ -162,8 +162,6 @@ Deno.serve(async (req) => {
       };
     });
 
-    const totalPageViewsOut = totalPageViews;
-
     return new Response(JSON.stringify({
       users: result,
       traffic: {
