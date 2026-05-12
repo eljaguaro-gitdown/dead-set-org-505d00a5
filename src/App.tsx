@@ -13,6 +13,7 @@ import PwaInstallBanner from "@/components/PwaInstallBanner";
 import AudioDebugPanel from "@/components/AudioDebugPanel";
 import PickHandleModal from "@/components/PickHandleModal";
 import UtmCapture from "@/components/UtmCapture";
+import NewVersionBanner from "@/components/NewVersionBanner";
 
 // Eagerly load the landing page for fastest FCP/LCP
 import Index from "./pages/Index";
@@ -84,6 +85,7 @@ const App = () => (
           <PwaInstallBanner />
           <AudioDebugPanel />
           <PickHandleModal />
+          <NewVersionBanner />
         </AudioPlayerProvider>
       </BrowserRouter>
     </TooltipProvider>
