@@ -109,9 +109,11 @@ const Unsubscribe = () => {
           )}
           {status === "already" && (
             <>
-              <h1 className="font-display text-2xl text-foreground">Already unsubscribed</h1>
+              <h1 className="font-display text-2xl text-foreground">Already off the list</h1>
               <p className="font-body text-muted-foreground">
-                You've already unsubscribed from app emails.
+                {kind === "dispatch"
+                  ? "You're already off the dispatch list. The tapes are still here whenever you want them."
+                  : "You've already unsubscribed from app emails."}
               </p>
             </>
           )}
