@@ -10,6 +10,9 @@ type Status = "loading" | "valid" | "already" | "invalid" | "success" | "error";
 const Unsubscribe = () => {
   const [searchParams] = useSearchParams();
   const token = searchParams.get("token");
+  const kind = searchParams.get("kind") === "dispatch" ? "dispatch" : "email";
+  const fnName =
+    kind === "dispatch" ? "handle-dispatch-unsubscribe" : "handle-email-unsubscribe";
   const [status, setStatus] = useState<Status>("loading");
   const [processing, setProcessing] = useState(false);
 
@@ -20,7 +23,7 @@ const Unsubscribe = () => {
     }
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
     const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-    fetch(`${supabaseUrl}/functions/v1/handle-email-unsubscribe?token=${token}`, {
+    fetch(`${supabaseUrl}/functions/v1/${fnName}?token=${token}`, {
       headers: { apikey: anonKey },
     })
       .then((r) => r.json())
@@ -34,16 +37,28 @@ const Unsubscribe = () => {
         }
       })
       .catch(() => setStatus("error"));
-  }, [token]);
+  }, [token, fnName]);
 
   const handleUnsubscribe = async () => {
     if (!token) return;
     setProcessing(true);
     try {
-      const { data } = await supabase.functions.invoke("handle-email-unsubscribe", {
+      const { data } = await supabase.functions.invoke(fnName, {
         body: { token },
       });
       if (data?.success) {
+        // Fire PostHog dispatch_unsubscribed only for dispatch flow.
+        if (kind === "dispatch" && typeof window !== "undefined") {
+          const ph = (window as any).posthog;
+          try {
+            ph?.capture?.("dispatch_unsubscribed", {
+              dispatch_id: searchParams.get("dispatch_id") ?? null,
+              user_id: data?.user_id ?? null,
+            });
+          } catch {
+            /* ignore */
+          }
+        }
         setStatus("success");
       } else if (data?.reason === "already_unsubscribed") {
         setStatus("already");
