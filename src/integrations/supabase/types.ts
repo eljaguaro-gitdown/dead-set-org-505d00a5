@@ -1453,6 +1453,16 @@ export type Database = {
         Args: { _user_id: string }
         Returns: string
       }
+      get_admin_traffic_stats: {
+        Args: never
+        Returns: {
+          total_page_views: number
+          total_unique: number
+          unique_24h: number
+          unique_30d: number
+          unique_7d: number
+        }[]
+      }
       get_hero_spotlight: {
         Args: never
         Returns: {
