@@ -82,9 +82,13 @@ const Unsubscribe = () => {
           )}
           {status === "valid" && (
             <>
-              <h1 className="font-display text-2xl text-foreground">Unsubscribe</h1>
+              <h1 className="font-display text-2xl text-foreground">
+                {kind === "dispatch" ? "Off the list?" : "Unsubscribe"}
+              </h1>
               <p className="font-body text-muted-foreground">
-                You'll stop receiving app emails from Dead-Set.Org. Auth emails (password resets, etc.) are not affected.
+                {kind === "dispatch"
+                  ? "You'll stop receiving dispatches from the lab. Auth and account emails are not affected."
+                  : "You'll stop receiving app emails from Dead-Set.Org. Auth emails (password resets, etc.) are not affected."}
               </p>
               <Button onClick={handleUnsubscribe} disabled={processing} className="w-full">
                 {processing ? "Processing…" : "Confirm Unsubscribe"}
