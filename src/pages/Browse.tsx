@@ -166,7 +166,7 @@ const Browse = () => {
     // Get song titles for preview
     const allSongIds = [...new Set((slotsRes.data || []).map((s) => s.song_id))];
     const { data: songsData } = allSongIds.length > 0
-      ? await supabase.from("songs").select("id, title").in("id", allSongIds)
+      ? await supabase.from("songs").select("id, title").in("id", allSongIds).limit(20000)
       : { data: [] as any[] };
     const songMap = new Map((songsData || []).map((s) => [s.id, s.title]));
 
