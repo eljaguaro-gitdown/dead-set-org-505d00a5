@@ -84,7 +84,7 @@ export default function DispatchSenderPanel() {
         <h2 className="font-display text-sm text-foreground">Editorial Dispatch 002</h2>
       </div>
       <p className="text-sm text-muted-foreground font-body">
-        "We are finding each other" — sends from grateful_jaguaro@dead-set.org.
+        "We are finding each other" — sends from noreply@notify.dead-set.org (replies go to grateful_jaguaro@dead-set.org).
       </p>
       <div className="space-y-2">
         <label className="text-sm text-muted-foreground font-body block">
