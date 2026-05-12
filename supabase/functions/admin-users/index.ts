@@ -118,63 +118,35 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Default: list users
-    const {
-      data: { users },
-      error: listError,
-    } = await adminClient.auth.admin.listUsers({ perPage: 200 });
+    // Default: list users — fetch users, profiles, setlist counts, and
+    // traffic stats in parallel. Traffic stats are computed in a single
+    // SQL function instead of pulling the full page_visits table client-side
+    // (which was causing 60-130s response times and mobile timeouts).
+    const [usersRes, profilesRes, setlistCountsRes, trafficRes] = await Promise.all([
+      adminClient.auth.admin.listUsers({ perPage: 200 }),
+      adminClient.from("profiles").select("user_id, display_name, avatar_url"),
+      adminClient.from("setlists").select("creator_id").limit(20000),
+      adminClient.rpc("get_admin_traffic_stats"),
+    ]);
 
-    if (listError) throw listError;
-
-    const { data: profiles } = await adminClient
-      .from("profiles")
-      .select("user_id, display_name, avatar_url");
+    if (usersRes.error) throw usersRes.error;
+    const users = usersRes.data.users;
 
     const profileMap = new Map(
-      (profiles || []).map((p: any) => [p.user_id, p])
+      (profilesRes.data || []).map((p: any) => [p.user_id, p])
     );
 
-    const { data: setlistCounts } = await adminClient
-      .from("setlists")
-      .select("creator_id");
-
     const countMap = new Map<string, number>();
-    (setlistCounts || []).forEach((s: any) => {
+    (setlistCountsRes.data || []).forEach((s: any) => {
       countMap.set(s.creator_id, (countMap.get(s.creator_id) || 0) + 1);
     });
 
-    // Traffic stats
-    const now = new Date();
-    const oneDayAgo = new Date(now.getTime() - 86400000).toISOString();
-    const sevenDaysAgo = new Date(now.getTime() - 604800000).toISOString();
-    const thirtyDaysAgo = new Date(now.getTime() - 2592000000).toISOString();
-
-    const { count: totalPageViews } = await adminClient
-      .from("page_visits")
-      .select("*", { count: "exact", head: true });
-
-    const { data: visitors24h } = await adminClient
-      .from("page_visits")
-      .select("visitor_id")
-      .gte("created_at", oneDayAgo);
-    const unique24h = new Set((visitors24h || []).map((v: any) => v.visitor_id)).size;
-
-    const { data: visitors7d } = await adminClient
-      .from("page_visits")
-      .select("visitor_id")
-      .gte("created_at", sevenDaysAgo);
-    const unique7d = new Set((visitors7d || []).map((v: any) => v.visitor_id)).size;
-
-    const { data: visitors30d } = await adminClient
-      .from("page_visits")
-      .select("visitor_id")
-      .gte("created_at", thirtyDaysAgo);
-    const unique30d = new Set((visitors30d || []).map((v: any) => v.visitor_id)).size;
-
-    const { data: allVisitors } = await adminClient
-      .from("page_visits")
-      .select("visitor_id");
-    const totalUnique = new Set((allVisitors || []).map((v: any) => v.visitor_id)).size;
+    const trafficRow = Array.isArray(trafficRes.data) ? trafficRes.data[0] : null;
+    const totalPageViews = Number(trafficRow?.total_page_views ?? 0);
+    const totalUnique = Number(trafficRow?.total_unique ?? 0);
+    const unique24h = Number(trafficRow?.unique_24h ?? 0);
+    const unique7d = Number(trafficRow?.unique_7d ?? 0);
+    const unique30d = Number(trafficRow?.unique_30d ?? 0);
 
     const result = (users || []).map((u: any) => {
       const profile = profileMap.get(u.id);
