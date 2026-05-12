@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { format } from "date-fns";
 import { CalendarIcon, Loader2, Sparkles, ExternalLink, Dice5, Layers, CheckCircle2, ArrowLeft } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -37,6 +37,7 @@ interface BuildFromShowDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSeed: (seed: ShowSeed) => void | Promise<void>;
+  initialDate?: Date | null;
 }
 
 const MIN_DATE = new Date(1965, 7, 1);
@@ -71,7 +72,7 @@ interface PreviewData {
   setBreakdown: Array<{ setNumber: number; count: number }>;
 }
 
-const BuildFromShowDialog = ({ open, onOpenChange, onSeed }: BuildFromShowDialogProps) => {
+const BuildFromShowDialog = ({ open, onOpenChange, onSeed, initialDate }: BuildFromShowDialogProps) => {
   const [mode, setMode] = useState<"date" | "calendar-day" | "all-years">("date");
   const [date, setDate] = useState<Date | undefined>();
   const [month, setMonth] = useState<number>(new Date().getMonth() + 1);
@@ -207,6 +208,18 @@ const BuildFromShowDialog = ({ open, onOpenChange, onSeed }: BuildFromShowDialog
     runFetch({ month, day, aggregate: true }, `${MONTHS[month - 1]} ${day} — every year`);
   }, [month, day, runFetch]);
 
+  // Auto-fetch when opened with a pre-selected date (e.g. from the Builder "Score a Show by Date" door).
+  const lastAutoDateRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!open || !initialDate) return;
+    const key = format(initialDate, "yyyy-MM-dd");
+    if (lastAutoDateRef.current === key) return;
+    lastAutoDateRef.current = key;
+    setMode("date");
+    setDate(initialDate);
+    runFetch({ date: key }, formatNiceDate(initialDate));
+  }, [open, initialDate, runFetch]);
+  useEffect(() => { if (!open) lastAutoDateRef.current = null; }, [open]);
 
   const daysInMonth = new Date(2000, month, 0).getDate(); // leap-safe enough for picker
 

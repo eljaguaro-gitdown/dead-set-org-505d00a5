@@ -15,6 +15,7 @@ import ChatSidebar from "@/components/ChatSidebar";
 import ShareDialog from "@/components/ShareDialog";
 import CosmicCharlieDialog from "@/components/CosmicCharlieDialog";
 import BuildFromShowDialog, { type ShowSeed } from "@/components/BuildFromShowDialog";
+import ScoreShowByDate from "@/components/builder/ScoreShowByDate";
 import CosmicCharlieWelcome from "@/components/CosmicCharlieWelcome";
 import AuthModal from "@/components/AuthModal";
 import MiniSetlistBar from "@/components/MiniSetlistBar";
@@ -158,6 +159,7 @@ const Builder = () => {
   const [shareOpen, setShareOpen] = useState(false);
   const [charlieOpen, setCharlieOpen] = useState(false);
   const [showDateOpen, setShowDateOpen] = useState(false);
+  const [showDateInitial, setShowDateInitial] = useState<Date | null>(null);
   const [initialized, setInitialized] = useState(false);
   const { playSingle, playSetlist: globalPlaySetlist, playingSlot } = useAudioPlayer();
   const [description, setDescription] = useState<string | null>(null);
@@ -1210,7 +1212,17 @@ const Builder = () => {
             </div>
           )}
 
-          {/* Idle nudge — no songs after 10s */}
+          {/* Starter doors — visible while the set is empty */}
+          {activeSlots.length === 0 && !charlieCreating && (
+            <ScoreShowByDate
+              onPullSetlist={(d) => {
+                setShowDateInitial(d);
+                setShowDateOpen(true);
+              }}
+              onSurpriseMe={() => setCharlieOpen(true)}
+            />
+          )}
+
           {showIdleNudge && activeSlots.length === 0 && !showWelcome && (
             <motion.div
               initial={{ opacity: 0, y: -8 }}
@@ -1429,8 +1441,26 @@ const Builder = () => {
 
       <BuildFromShowDialog
         open={showDateOpen}
-        onOpenChange={setShowDateOpen}
-        onSeed={handleShowDateSeed}
+        onOpenChange={(o) => { setShowDateOpen(o); if (!o) setShowDateInitial(null); }}
+        initialDate={showDateInitial}
+        onSeed={async (seed) => {
+          // Analytics: detect fallback (returned source date != requested) + completion
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const ph = (typeof window !== "undefined" ? (window as any).posthog : null);
+          try {
+            const requested = showDateInitial ? showDateInitial.toISOString().slice(0, 10) : null;
+            const sourceDates = Array.from(new Set(seed.slots.map((s) => s.sourceDate).filter(Boolean))) as string[];
+            const matched = !requested || sourceDates.some((d) => d === requested);
+            if (requested && !matched) {
+              ph?.capture?.("builder_date_no_show_found", { requested, fallback: sourceDates[0] || null });
+            }
+          } catch { /* ignore */ }
+          await handleShowDateSeed(seed);
+          ph?.capture?.("builder_date_mode_completed", {
+            slots: seed.slots.length,
+            unmatched: seed.unmatchedCount,
+          });
+        }}
       />
 
       {/* Inline Auth Modal for guests */}
