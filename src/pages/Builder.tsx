@@ -15,6 +15,7 @@ import ChatSidebar from "@/components/ChatSidebar";
 import ShareDialog from "@/components/ShareDialog";
 import CosmicCharlieDialog from "@/components/CosmicCharlieDialog";
 import BuildFromShowDialog, { type ShowSeed } from "@/components/BuildFromShowDialog";
+import ScoreShowByDate from "@/components/builder/ScoreShowByDate";
 import CosmicCharlieWelcome from "@/components/CosmicCharlieWelcome";
 import AuthModal from "@/components/AuthModal";
 import MiniSetlistBar from "@/components/MiniSetlistBar";
