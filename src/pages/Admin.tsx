@@ -391,6 +391,9 @@ const Admin = () => {
         {/* Broadcast Announcements */}
         <AdminAnnouncementsPanel />
 
+        {/* Editorial Dispatch sender */}
+        <DispatchSenderPanel />
+
         {/* Email Deliverability Monitoring */}
         <DeliverabilityMonitor />
 
