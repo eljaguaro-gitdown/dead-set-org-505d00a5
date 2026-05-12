@@ -10,6 +10,9 @@ type Status = "loading" | "valid" | "already" | "invalid" | "success" | "error";
 const Unsubscribe = () => {
   const [searchParams] = useSearchParams();
   const token = searchParams.get("token");
+  const kind = searchParams.get("kind") === "dispatch" ? "dispatch" : "email";
+  const fnName =
+    kind === "dispatch" ? "handle-dispatch-unsubscribe" : "handle-email-unsubscribe";
   const [status, setStatus] = useState<Status>("loading");
   const [processing, setProcessing] = useState(false);
 
@@ -20,7 +23,7 @@ const Unsubscribe = () => {
     }
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
     const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-    fetch(`${supabaseUrl}/functions/v1/handle-email-unsubscribe?token=${token}`, {
+    fetch(`${supabaseUrl}/functions/v1/${fnName}?token=${token}`, {
       headers: { apikey: anonKey },
     })
       .then((r) => r.json())
@@ -34,16 +37,28 @@ const Unsubscribe = () => {
         }
       })
       .catch(() => setStatus("error"));
-  }, [token]);
+  }, [token, fnName]);
 
   const handleUnsubscribe = async () => {
     if (!token) return;
     setProcessing(true);
     try {
-      const { data } = await supabase.functions.invoke("handle-email-unsubscribe", {
+      const { data } = await supabase.functions.invoke(fnName, {
         body: { token },
       });
       if (data?.success) {
+        // Fire PostHog dispatch_unsubscribed only for dispatch flow.
+        if (kind === "dispatch" && typeof window !== "undefined") {
+          const ph = (window as any).posthog;
+          try {
+            ph?.capture?.("dispatch_unsubscribed", {
+              dispatch_id: searchParams.get("dispatch_id") ?? null,
+              user_id: data?.user_id ?? null,
+            });
+          } catch {
+            /* ignore */
+          }
+        }
         setStatus("success");
       } else if (data?.reason === "already_unsubscribed") {
         setStatus("already");
@@ -67,9 +82,13 @@ const Unsubscribe = () => {
           )}
           {status === "valid" && (
             <>
-              <h1 className="font-display text-2xl text-foreground">Unsubscribe</h1>
+              <h1 className="font-display text-2xl text-foreground">
+                {kind === "dispatch" ? "Off the list?" : "Unsubscribe"}
+              </h1>
               <p className="font-body text-muted-foreground">
-                You'll stop receiving app emails from Dead-Set.Org. Auth emails (password resets, etc.) are not affected.
+                {kind === "dispatch"
+                  ? "You'll stop receiving dispatches from the lab. Auth and account emails are not affected."
+                  : "You'll stop receiving app emails from Dead-Set.Org. Auth emails (password resets, etc.) are not affected."}
               </p>
               <Button onClick={handleUnsubscribe} disabled={processing} className="w-full">
                 {processing ? "Processing…" : "Confirm Unsubscribe"}
@@ -78,17 +97,23 @@ const Unsubscribe = () => {
           )}
           {status === "success" && (
             <>
-              <h1 className="font-display text-2xl text-foreground">You're unsubscribed</h1>
+              <h1 className="font-display text-2xl text-foreground">
+                {kind === "dispatch" ? "Off the list." : "You're unsubscribed"}
+              </h1>
               <p className="font-body text-muted-foreground">
-                We won't send you any more app emails. The music never stopped — but the emails did. ⚡
+                {kind === "dispatch"
+                  ? "Off the list. The tapes are still here whenever you want them. Come back anytime."
+                  : "We won't send you any more app emails. The music never stopped — but the emails did. ⚡"}
               </p>
             </>
           )}
           {status === "already" && (
             <>
-              <h1 className="font-display text-2xl text-foreground">Already unsubscribed</h1>
+              <h1 className="font-display text-2xl text-foreground">Already off the list</h1>
               <p className="font-body text-muted-foreground">
-                You've already unsubscribed from app emails.
+                {kind === "dispatch"
+                  ? "You're already off the dispatch list. The tapes are still here whenever you want them."
+                  : "You've already unsubscribed from app emails."}
               </p>
             </>
           )}
