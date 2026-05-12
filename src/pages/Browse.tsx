@@ -145,9 +145,17 @@ const Browse = () => {
     const creatorIds = [...new Set(data.map((s) => s.creator_id))];
     const eraIds = [...new Set(data.map((s) => s.era_id).filter(Boolean))] as string[];
 
-    // Parallel fetches
+    // Parallel fetches — raise slot limit well above PostgREST default (1000)
+    // to avoid truncating slots across many setlists, which would zero out
+    // slot_count and hide setlists from the grid.
     const [slotsRes, profilesRes, erasRes] = await Promise.all([
-      supabase.from("setlist_slots").select("setlist_id, song_id, set_number, position").in("setlist_id", ids).order("set_number").order("position"),
+      supabase
+        .from("setlist_slots")
+        .select("setlist_id, song_id, set_number, position")
+        .in("setlist_id", ids)
+        .order("set_number")
+        .order("position")
+        .limit(20000),
       supabase.from("profiles").select("user_id, display_name, avatar_url").in("user_id", creatorIds),
       eraIds.length > 0 ? supabase.from("eras").select("id, name").in("id", eraIds) : Promise.resolve({ data: [] as any[] }),
     ]);
