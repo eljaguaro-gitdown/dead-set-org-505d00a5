@@ -1,4 +1,4 @@
-// send-dispatch — Resend-powered editorial dispatch sender.
+// send-dispatch — editorial dispatch sender using the project email queue.
 // POST { dispatch_id, subject, html_path, test_mode, test_recipient }
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
@@ -7,16 +7,16 @@ import { DISPATCH_002_HTML_B64 } from "./dispatch_002.ts";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY")!;
 
 const FROM = "Dead Set <noreply@notify.dead-set.org>";
 const REPLY_TO = "grateful_jaguaro@dead-set.org";
+const SENDER_DOMAIN = "notify.dead-set.org";
 const SITE_ORIGIN = "https://dead-set.org";
 
 // Decode base64 HTML payload (Latin-1 safe).
@@ -78,32 +78,44 @@ interface Recipient {
   dispatch_unsubscribe_token: string;
 }
 
-async function sendViaResend(args: {
+async function enqueueDispatchEmail(args: {
+  supabase: ReturnType<typeof createClient>;
   to: string;
   subject: string;
   html: string;
   dispatchId: string;
 }): Promise<{ id?: string; error?: string }> {
-  const resp = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${RESEND_API_KEY}`,
-    },
-    body: JSON.stringify({
+  const messageId = crypto.randomUUID();
+
+  const { error: logError } = await args.supabase.from("email_send_log").insert({
+    message_id: messageId,
+    template_name: `dispatch-${args.dispatchId}`,
+    recipient_email: args.to,
+    status: "pending",
+  });
+  if (logError) return { error: `Send log failed: ${logError.message}` };
+
+  const { error: enqueueError } = await args.supabase.rpc("enqueue_email", {
+    queue_name: "transactional_emails",
+    payload: {
+      message_id: messageId,
+      to: args.to,
       from: FROM,
-      to: [args.to],
       reply_to: REPLY_TO,
+      sender_domain: SENDER_DOMAIN,
       subject: args.subject,
       html: args.html,
-      tags: [{ name: "dispatch_id", value: args.dispatchId }],
-    }),
+      text: "Dead-Set.Org Editorial Dispatch",
+      purpose: "transactional",
+      label: `dispatch-${args.dispatchId}`,
+      idempotency_key: `dispatch-${args.dispatchId}-${args.to}-${messageId}`,
+      unsubscribe_token: null,
+      queued_at: new Date().toISOString(),
+    },
   });
-  const json = await resp.json().catch(() => ({}));
-  if (!resp.ok) {
-    return { error: json?.message || `HTTP ${resp.status}` };
-  }
-  return { id: json?.id };
+  if (enqueueError) return { error: `Queue failed: ${enqueueError.message}` };
+
+  return { id: messageId };
 }
 
 Deno.serve(async (req) => {
