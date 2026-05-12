@@ -226,6 +226,13 @@ export type Database = {
             referencedRelation: "setlists"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "chat_messages_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "dispatch_recipients"
+            referencedColumns: ["user_id"]
+          },
         ]
       }
       collaborators: {
@@ -257,6 +264,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "setlists"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "collaborators_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "dispatch_recipients"
+            referencedColumns: ["user_id"]
           },
         ]
       }
@@ -440,6 +454,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      dispatch_sends: {
+        Row: {
+          dispatch_id: string
+          email: string
+          error_message: string | null
+          id: string
+          resend_message_id: string | null
+          sent_at: string
+          status: string
+          user_id: string | null
+        }
+        Insert: {
+          dispatch_id: string
+          email: string
+          error_message?: string | null
+          id?: string
+          resend_message_id?: string | null
+          sent_at?: string
+          status: string
+          user_id?: string | null
+        }
+        Update: {
+          dispatch_id?: string
+          email?: string
+          error_message?: string | null
+          id?: string
+          resend_message_id?: string | null
+          sent_at?: string
+          status?: string
+          user_id?: string | null
+        }
+        Relationships: []
       }
       draft_setlists: {
         Row: {
@@ -985,6 +1032,8 @@ export type Database = {
         Row: {
           avatar_url: string | null
           created_at: string
+          dispatch_opt_in: boolean
+          dispatch_unsubscribe_token: string
           display_name: string | null
           home_state: string | null
           id: string
@@ -993,6 +1042,8 @@ export type Database = {
         Insert: {
           avatar_url?: string | null
           created_at?: string
+          dispatch_opt_in?: boolean
+          dispatch_unsubscribe_token?: string
           display_name?: string | null
           home_state?: string | null
           id?: string
@@ -1001,12 +1052,22 @@ export type Database = {
         Update: {
           avatar_url?: string | null
           created_at?: string
+          dispatch_opt_in?: boolean
+          dispatch_unsubscribe_token?: string
           display_name?: string | null
           home_state?: string | null
           id?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "dispatch_recipients"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       setlist_comments: {
         Row: {
@@ -1078,6 +1139,13 @@ export type Database = {
           song_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "setlist_slots_added_by_user_id_fkey"
+            columns: ["added_by_user_id"]
+            isOneToOne: false
+            referencedRelation: "dispatch_recipients"
+            referencedColumns: ["user_id"]
+          },
           {
             foreignKeyName: "setlist_slots_notable_version_id_fkey"
             columns: ["notable_version_id"]
@@ -1174,6 +1242,13 @@ export type Database = {
           upvote_count?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "setlists_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "dispatch_recipients"
+            referencedColumns: ["user_id"]
+          },
           {
             foreignKeyName: "setlists_era_id_fkey"
             columns: ["era_id"]
@@ -1303,7 +1378,15 @@ export type Database = {
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "user_roles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "dispatch_recipients"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       visitor_attribution: {
         Row: {
@@ -1343,6 +1426,15 @@ export type Database = {
           distinct_audiences: number | null
           last_generated_at: string | null
           song_title: string | null
+        }
+        Relationships: []
+      }
+      dispatch_recipients: {
+        Row: {
+          dispatch_unsubscribe_token: string | null
+          display_name: string | null
+          email: string | null
+          user_id: string | null
         }
         Relationships: []
       }
