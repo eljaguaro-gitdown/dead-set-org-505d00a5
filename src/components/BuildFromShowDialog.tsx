@@ -72,7 +72,7 @@ interface PreviewData {
   setBreakdown: Array<{ setNumber: number; count: number }>;
 }
 
-const BuildFromShowDialog = ({ open, onOpenChange, onSeed }: BuildFromShowDialogProps) => {
+const BuildFromShowDialog = ({ open, onOpenChange, onSeed, initialDate }: BuildFromShowDialogProps) => {
   const [mode, setMode] = useState<"date" | "calendar-day" | "all-years">("date");
   const [date, setDate] = useState<Date | undefined>();
   const [month, setMonth] = useState<number>(new Date().getMonth() + 1);
