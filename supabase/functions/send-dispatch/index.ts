@@ -127,6 +127,42 @@ Deno.serve(async (req) => {
     });
   }
 
+  // Authorization: must be either the service-role key, or an authenticated
+  // admin user. verify_jwt=true ensures an Authorization header is present.
+  const authHeader = req.headers.get("Authorization") ?? "";
+  const presentedToken = authHeader.replace(/^Bearer\s+/i, "");
+  const isServiceRole = presentedToken === SERVICE_KEY;
+
+  if (!isServiceRole) {
+    const userClient = createClient(SUPABASE_URL, Deno.env.get("SUPABASE_ANON_KEY")!, {
+      global: { headers: { Authorization: authHeader } },
+      auth: { persistSession: false },
+    });
+    const { data: userRes } = await userClient.auth.getUser();
+    const uid = userRes?.user?.id;
+    if (!uid) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const adminClient = createClient(SUPABASE_URL, SERVICE_KEY, {
+      auth: { persistSession: false },
+    });
+    const { data: roleRow } = await adminClient
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", uid)
+      .eq("role", "admin")
+      .maybeSingle();
+    if (!roleRow) {
+      return new Response(JSON.stringify({ error: "Forbidden" }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+  }
+
   const dispatchId = String(body.dispatch_id ?? "").trim();
   const subject = String(body.subject ?? "").trim();
   const htmlPath = String(body.html_path ?? "").trim();
