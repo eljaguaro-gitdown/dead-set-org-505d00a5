@@ -1,4 +1,4 @@
-// send-dispatch — Resend-powered editorial dispatch sender.
+// send-dispatch — editorial dispatch sender using the project email queue.
 // POST { dispatch_id, subject, html_path, test_mode, test_recipient }
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
@@ -7,16 +7,16 @@ import { DISPATCH_002_HTML_B64 } from "./dispatch_002.ts";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY")!;
 
 const FROM = "Dead Set <noreply@notify.dead-set.org>";
 const REPLY_TO = "grateful_jaguaro@dead-set.org";
+const SENDER_DOMAIN = "notify.dead-set.org";
 const SITE_ORIGIN = "https://dead-set.org";
 
 // Decode base64 HTML payload (Latin-1 safe).
@@ -78,32 +78,102 @@ interface Recipient {
   dispatch_unsubscribe_token: string;
 }
 
-async function sendViaResend(args: {
+function parseJwtClaims(token: string): Record<string, unknown> | null {
+  const parts = token.split(".");
+  if (parts.length < 2) return null;
+
+  try {
+    const payload = parts[1]
+      .replaceAll("-", "+")
+      .replaceAll("_", "/")
+      .padEnd(Math.ceil(parts[1].length / 4) * 4, "=");
+    return JSON.parse(atob(payload)) as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+}
+
+function generateToken(): string {
+  const bytes = new Uint8Array(32);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes)
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+async function getTransactionalUnsubscribeToken(
+  supabase: ReturnType<typeof createClient>,
+  email: string,
+): Promise<{ token?: string; error?: string }> {
+  const normalizedEmail = email.toLowerCase();
+  const { data: existingToken, error: lookupError } = await supabase
+    .from("email_unsubscribe_tokens")
+    .select("token")
+    .eq("email", normalizedEmail)
+    .maybeSingle();
+
+  if (lookupError) return { error: `Unsubscribe lookup failed: ${lookupError.message}` };
+  if (existingToken?.token) return { token: existingToken.token };
+
+  const token = generateToken();
+  const { error: tokenError } = await supabase
+    .from("email_unsubscribe_tokens")
+    .upsert({ token, email: normalizedEmail }, { onConflict: "email", ignoreDuplicates: true });
+  if (tokenError) return { error: `Unsubscribe token failed: ${tokenError.message}` };
+
+  const { data: storedToken, error: rereadError } = await supabase
+    .from("email_unsubscribe_tokens")
+    .select("token")
+    .eq("email", normalizedEmail)
+    .maybeSingle();
+  if (rereadError || !storedToken?.token) {
+    return { error: "Unsubscribe token could not be confirmed" };
+  }
+
+  return { token: storedToken.token };
+}
+
+async function enqueueDispatchEmail(args: {
+  supabase: ReturnType<typeof createClient>;
   to: string;
   subject: string;
   html: string;
   dispatchId: string;
 }): Promise<{ id?: string; error?: string }> {
-  const resp = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${RESEND_API_KEY}`,
-    },
-    body: JSON.stringify({
+  const messageId = crypto.randomUUID();
+  const { token: unsubscribeToken, error: tokenError } =
+    await getTransactionalUnsubscribeToken(args.supabase, args.to);
+  if (tokenError || !unsubscribeToken) return { error: tokenError ?? "Missing unsubscribe token" };
+
+  const { error: logError } = await args.supabase.from("email_send_log").insert({
+    message_id: messageId,
+    template_name: `dispatch-${args.dispatchId}`,
+    recipient_email: args.to,
+    status: "pending",
+  });
+  if (logError) return { error: `Send log failed: ${logError.message}` };
+
+  const { error: enqueueError } = await args.supabase.rpc("enqueue_email", {
+    queue_name: "transactional_emails",
+    payload: {
+      message_id: messageId,
+      to: args.to,
       from: FROM,
-      to: [args.to],
       reply_to: REPLY_TO,
+      sender_domain: SENDER_DOMAIN,
       subject: args.subject,
       html: args.html,
-      tags: [{ name: "dispatch_id", value: args.dispatchId }],
-    }),
+      text: "Dead-Set.Org Editorial Dispatch",
+      purpose: "transactional",
+      label: `dispatch-${args.dispatchId}`,
+      idempotency_key: `dispatch-${args.dispatchId}-${args.to}-${messageId}`,
+      unsubscribe_token: unsubscribeToken,
+      queued_at: new Date().toISOString(),
+    },
   });
-  const json = await resp.json().catch(() => ({}));
-  if (!resp.ok) {
-    return { error: json?.message || `HTTP ${resp.status}` };
-  }
-  return { id: json?.id };
+  if (enqueueError) return { error: `Queue failed: ${enqueueError.message}` };
+
+  return { id: messageId };
 }
 
 Deno.serve(async (req) => {
@@ -131,7 +201,8 @@ Deno.serve(async (req) => {
   // admin user. verify_jwt=true ensures an Authorization header is present.
   const authHeader = req.headers.get("Authorization") ?? "";
   const presentedToken = authHeader.replace(/^Bearer\s+/i, "");
-  const isServiceRole = presentedToken === SERVICE_KEY;
+  const isServiceRole =
+    presentedToken === SERVICE_KEY || parseJwtClaims(presentedToken)?.role === "service_role";
 
   if (!isServiceRole) {
     const userClient = createClient(SUPABASE_URL, Deno.env.get("SUPABASE_ANON_KEY")!, {
@@ -255,7 +326,8 @@ Deno.serve(async (req) => {
       unsubscribeToken: r.dispatch_unsubscribe_token,
     });
 
-    const { id, error } = await sendViaResend({
+    const { id, error } = await enqueueDispatchEmail({
+      supabase,
       to: r.email,
       subject,
       html,
@@ -280,11 +352,11 @@ Deno.serve(async (req) => {
         user_id: r.user_id,
         email: r.email,
         resend_message_id: id ?? null,
-        status: "sent",
+        status: "queued",
       });
     }
 
-    // 200ms throttle between sends to stay under Resend rate limits.
+    // Keep enqueue bursts gentle so the dispatcher can drain smoothly.
     if (recipients.length > 1) {
       await new Promise((r) => setTimeout(r, 200));
     }
