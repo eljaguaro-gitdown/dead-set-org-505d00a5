@@ -11,8 +11,16 @@ import { useAuth } from "@/hooks/useAuth";
 import { useDirectMessages } from "@/hooks/useDirectMessages";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useOnlineUserIds } from "@/hooks/useOnlineUserIds";
+import SetlistMessageCard from "@/components/SetlistMessageCard";
 
 const URL_REGEX = /(https?:\/\/[^\s]+)/g;
+const SETLIST_URL_REGEX = /\/setlist\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i;
+
+const extractSetlistId = (text: string): string | null => {
+  const match = text.match(SETLIST_URL_REGEX);
+  return match ? match[1] : null;
+};
+
 const Linkify = ({ children }: { children: string }) => {
   const parts = children.split(URL_REGEX);
   return (
@@ -27,6 +35,44 @@ const Linkify = ({ children }: { children: string }) => {
         )
       )}
     </>
+  );
+};
+
+/**
+ * Renders a chat message bubble. If the content references a setlist URL,
+ * shows a rich inline preview card alongside any free-text the sender added.
+ */
+const MessageBody = ({ content, isMe }: { content: string; isMe: boolean }) => {
+  const setlistId = extractSetlistId(content);
+  if (!setlistId) {
+    return (
+      <div
+        className={`px-3 py-1.5 rounded-lg text-sm font-body max-w-[85%] ${
+          isMe ? "bg-primary text-primary-foreground" : "bg-muted text-foreground"
+        }`}
+      >
+        <Linkify>{content}</Linkify>
+      </div>
+    );
+  }
+
+  // Strip the URL from the displayed text so the card replaces it cleanly,
+  // but keep any surrounding note the sender wrote.
+  const note = content.replace(URL_REGEX, "").trim();
+
+  return (
+    <div className="flex flex-col gap-1.5 max-w-[85%]">
+      {note && (
+        <div
+          className={`px-3 py-1.5 rounded-lg text-sm font-body ${
+            isMe ? "bg-primary text-primary-foreground" : "bg-muted text-foreground"
+          }`}
+        >
+          {note}
+        </div>
+      )}
+      <SetlistMessageCard setlistId={setlistId} />
+    </div>
   );
 };
 
