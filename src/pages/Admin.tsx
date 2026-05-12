@@ -13,6 +13,7 @@ import UserSegmentsWidget from "@/components/UserSegmentsWidget";
 import AdminAnnouncementsPanel from "@/components/AdminAnnouncementsPanel";
 import DeliverabilityMonitor from "@/components/DeliverabilityMonitor";
 import PrivateRelayMonitor from "@/components/PrivateRelayMonitor";
+import DispatchSenderPanel from "@/components/DispatchSenderPanel";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import {
   AlertDialog,
