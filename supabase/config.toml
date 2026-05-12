@@ -25,3 +25,7 @@ project_id = "dplrumaqrdnzwzqmatqr"
     verify_jwt = false
   [functions.send-beta-nudge]
     verify_jwt = true
+  [functions.send-dispatch]
+    verify_jwt = true
+  [functions.handle-dispatch-unsubscribe]
+    verify_jwt = false
