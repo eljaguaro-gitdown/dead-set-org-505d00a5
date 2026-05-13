@@ -199,12 +199,12 @@ const ShareFlow = ({
               <Button variant="outline" size="sm" className="flex-1 font-body text-xs" onClick={handleTikTok}>
                 TikTok ↓
               </Button>
-              <Button variant="outline" size="sm" className="flex-1 font-body text-xs" onClick={handleDownload}>
-                Instagram ↓
+              <Button variant="outline" size="sm" className="flex-1 font-body text-xs gap-1" onClick={handleInstagram}>
+                Instagram
               </Button>
             </div>
             <p className="text-[10px] text-muted-foreground/50 font-body text-center mt-2">
-              For TikTok & Instagram: save the plate and share to your story
+              For TikTok: save the plate and upload. For Instagram: caption copied + image ready to share.
             </p>
           </div>
 
