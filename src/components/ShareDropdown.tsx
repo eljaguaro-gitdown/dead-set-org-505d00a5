@@ -83,6 +83,15 @@ const ShareDropdown = ({ url, ogUrl, title, description }: ShareDropdownProps) =
     setOpen(false);
   };
 
+  const shareInstagram = async () => {
+    await shareToInstagram({
+      context: "setlist",
+      setlistName: title,
+      posterUrl: url,
+    });
+    setOpen(false);
+  };
+
   return (
     <div ref={ref} className="relative">
       <button
