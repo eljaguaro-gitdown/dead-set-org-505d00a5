@@ -105,6 +105,16 @@ const ShareFlow = ({
     toast.success("Plate saved — upload it to TikTok!");
   };
 
+  const handleInstagram = async () => {
+    await shareToInstagram({
+      context: "setlist",
+      imageDataUrl: plateDataUrl || undefined,
+      setlistName,
+      setlistId,
+      posterUrl: shareUrl,
+    });
+  };
+
   if (!open) return null;
 
   return (
