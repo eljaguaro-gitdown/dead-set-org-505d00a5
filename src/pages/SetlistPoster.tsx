@@ -202,7 +202,7 @@ const SetlistPoster = () => {
 
       const { data: setlistData } = await supabase
         .from("setlists")
-        .select("id, title, creator_id, description, era_id, is_public, is_collaborative, play_count, upvote_count, created_at, updated_at")
+        .select("id, title, creator_id, description, era_id, is_public, is_collaborative, play_count, upvote_count, created_at, updated_at, playable_slot_count")
         .eq("id", id)
         .single();
 
