@@ -140,7 +140,7 @@ const HeroSection = (_props: HeroSectionProps) => {
       const { data: slots, error } = await supabase
         .from("setlist_slots")
         .select(
-          "id, set_number, position, segue_to_next, song_id, notable_version_id, songs(id, title), notable_versions(id, song_id, show_date, archive_org_url, venue, city, era_id, rating, description), setlist_slot_playability(status, direct_track_url)"
+          "id, set_number, position, segue_to_next, song_id, notable_version_id, notes, songs(id, title), notable_versions(id, song_id, show_date, archive_org_url, venue, city, era_id, rating, description), setlist_slot_playability(status, direct_track_url)"
         )
         .eq("setlist_id", spotlight.id)
         .order("set_number")
@@ -151,19 +151,41 @@ const HeroSection = (_props: HeroSectionProps) => {
       const playable: PlayableSlot[] = (slots ?? [])
         .filter((s: any) =>
           s.songs && (
-            s.setlist_slot_playability?.status === "playable" ||
+            (s.setlist_slot_playability?.status === "playable" && s.setlist_slot_playability?.direct_track_url) ||
             (!s.setlist_slot_playability && s.notable_versions?.archive_org_url)
           )
         )
-        .map((s: any) => ({
-          id: s.id,
-          song: { id: s.songs.id, title: s.songs.title },
-          version: s.notable_versions ?? null,
-          setNumber: s.set_number,
-          position: s.position,
-          segueToNext: s.segue_to_next ?? false,
-          directTrackUrl: s.setlist_slot_playability?.direct_track_url ?? null,
-        }));
+        .map((s: any) => {
+          let version = s.notable_versions ?? null;
+          if (!version && typeof s.notes === "string" && s.notes.startsWith("{\"__archive\":true")) {
+            try {
+              const meta = JSON.parse(s.notes.split("\n")[0]);
+              if (meta.__archive && meta.archive_org_url) {
+                version = {
+                  id: `archive-reconstructed-${s.id}`,
+                  song_id: s.songs.id,
+                  show_date: meta.show_date || "",
+                  archive_org_url: meta.archive_org_url,
+                  venue: meta.venue || null,
+                  city: null,
+                  era_id: null,
+                  rating: meta.rating || null,
+                  description: null,
+                };
+              }
+            } catch { /* ignore malformed archive notes */ }
+          }
+
+          return {
+            id: s.id,
+            song: { id: s.songs.id, title: s.songs.title },
+            version,
+            setNumber: s.set_number,
+            position: s.position,
+            segueToNext: s.segue_to_next ?? false,
+            directTrackUrl: s.setlist_slot_playability?.direct_track_url ?? null,
+          };
+        });
       if (playable.length === 0) {
         toast({
           title: "This spotlight isn't playable yet",
