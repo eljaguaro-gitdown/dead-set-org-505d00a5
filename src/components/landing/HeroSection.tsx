@@ -146,8 +146,12 @@ const HeroSection = (_props: HeroSectionProps) => {
         .order("set_number")
         .order("position");
       if (error) throw error;
+      // Only queue slots that already have a resolvable archive recording.
+      // Without this, the player iterates dozens of unplayable songs doing
+      // generic archive.org searches and either stalls or fails outright,
+      // even though one song in the setlist would have played.
       const playable: PlayableSlot[] = (slots ?? [])
-        .filter((s: any) => s.songs)
+        .filter((s: any) => s.songs && s.notable_versions?.archive_org_url)
         .map((s: any) => ({
           id: s.id,
           song: { id: s.songs.id, title: s.songs.title },
@@ -157,7 +161,13 @@ const HeroSection = (_props: HeroSectionProps) => {
           segueToNext: s.segue_to_next ?? false,
           directTrackUrl: null,
         }));
-      if (playable.length === 0) return;
+      if (playable.length === 0) {
+        toast({
+          title: "This spotlight isn't playable yet",
+          description: "Try again in a moment — we're rotating to another setlist.",
+        });
+        return;
+      }
       await playSetlist(playable, spotlight.id);
     } catch (err) {
       console.error("[Hero] playback failed", err);
