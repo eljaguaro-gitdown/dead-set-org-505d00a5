@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import ShowPlate from "./ShowPlate";
 import { trackShare } from "@/lib/trackShare";
+import { shareToInstagram } from "@/lib/instagramShare";
 import SendToFriendDialog from "./SendToFriendDialog";
 import { useAuth } from "@/hooks/useAuth";
 
