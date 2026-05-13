@@ -133,6 +133,13 @@ const ShareDropdown = ({ url, ogUrl, title, description }: ShareDropdownProps) =
             <Facebook className="w-4 h-4 text-muted-foreground" />
             Share on Facebook
           </button>
+          <button
+            onClick={shareInstagram}
+            className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm font-body text-foreground hover:bg-muted/50 transition-colors"
+          >
+            <Instagram className="w-4 h-4 text-muted-foreground" />
+            Share to Instagram
+          </button>
           {hasNativeShare && (
             <button
               onClick={shareNative}
