@@ -1479,6 +1479,10 @@ export type Database = {
         Args: { payload: Json; queue_name: string }
         Returns: number
       }
+      ensure_dm_conversation: {
+        Args: { _user_a: string; _user_b: string }
+        Returns: string
+      }
       ensure_favorite_song_setlist: {
         Args: { _user_id: string }
         Returns: string
