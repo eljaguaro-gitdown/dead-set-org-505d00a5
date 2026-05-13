@@ -82,6 +82,11 @@ const ShareAppButton = ({ variant = "icon", className = "" }: ShareAppButtonProp
     setOpen(false);
   };
 
+  const handleInstagram = async () => {
+    await shareToInstagram({ context: "app" });
+    setOpen(false);
+  };
+
   // On mobile with native share, just trigger it directly
   if (hasNativeShare) {
     if (variant === "full") {
