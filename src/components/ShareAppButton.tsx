@@ -204,6 +204,15 @@ const ShareAppButton = ({ variant = "icon", className = "" }: ShareAppButtonProp
           Twitter / X
         </button>
 
+        {/* Instagram */}
+        <button
+          onClick={handleInstagram}
+          className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-body text-foreground hover:bg-muted transition-colors"
+        >
+          <Instagram className="w-4 h-4 text-muted-foreground" />
+          Instagram
+        </button>
+
         {/* Native share fallback for desktop if available */}
         {hasNativeShare && (
           <>
