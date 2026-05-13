@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from "react";
-import { Share2, Copy, Check, Twitter, Facebook, MessageCircle, Smartphone } from "lucide-react";
+import { Share2, Copy, Check, Twitter, Facebook, MessageCircle, Smartphone, Instagram } from "lucide-react";
 import { toast } from "sonner";
 import { trackShare } from "@/lib/trackShare";
+import { shareToInstagram } from "@/lib/instagramShare";
 import { useAuth } from "@/hooks/useAuth";
 import SendToFriendDialog from "./SendToFriendDialog";
 
