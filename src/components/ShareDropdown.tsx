@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from "react";
-import { Share2, Copy, Check, Twitter, Facebook, MessageCircle, Smartphone } from "lucide-react";
+import { Share2, Copy, Check, Twitter, Facebook, MessageCircle, Smartphone, Instagram } from "lucide-react";
 import { toast } from "sonner";
 import { trackShare } from "@/lib/trackShare";
+import { shareToInstagram } from "@/lib/instagramShare";
 import { useAuth } from "@/hooks/useAuth";
 import SendToFriendDialog from "./SendToFriendDialog";
 
@@ -82,6 +83,15 @@ const ShareDropdown = ({ url, ogUrl, title, description }: ShareDropdownProps) =
     setOpen(false);
   };
 
+  const shareInstagram = async () => {
+    await shareToInstagram({
+      context: "setlist",
+      setlistName: title,
+      posterUrl: url,
+    });
+    setOpen(false);
+  };
+
   return (
     <div ref={ref} className="relative">
       <button
@@ -122,6 +132,13 @@ const ShareDropdown = ({ url, ogUrl, title, description }: ShareDropdownProps) =
           >
             <Facebook className="w-4 h-4 text-muted-foreground" />
             Share on Facebook
+          </button>
+          <button
+            onClick={shareInstagram}
+            className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm font-body text-foreground hover:bg-muted/50 transition-colors"
+          >
+            <Instagram className="w-4 h-4 text-muted-foreground" />
+            Share to Instagram
           </button>
           {hasNativeShare && (
             <button

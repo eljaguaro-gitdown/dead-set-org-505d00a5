@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Share2, Check, Copy, MessageCircle } from "lucide-react";
+import { Share2, Check, Copy, MessageCircle, Instagram } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import {
@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/popover";
 import { toast } from "sonner";
 import { trackShare } from "@/lib/trackShare";
+import { shareToInstagram } from "@/lib/instagramShare";
 
 const SHARE_URL = "https://dead-set.org";
 const SHARE_TITLE = "Dead-Set.Org — The Music Never Stops";
@@ -78,6 +79,11 @@ const ShareAppButton = ({ variant = "icon", className = "" }: ShareAppButtonProp
     const text = encodeURIComponent(`${SHARE_TEXT}\n${SHARE_URL}`);
     window.open(`https://twitter.com/intent/tweet?text=${text}`, "_blank");
     trackShare({ shareType: "app_link", channel: "twitter" });
+    setOpen(false);
+  };
+
+  const handleInstagram = async () => {
+    await shareToInstagram({ context: "app" });
     setOpen(false);
   };
 
@@ -196,6 +202,15 @@ const ShareAppButton = ({ variant = "icon", className = "" }: ShareAppButtonProp
             <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
           </svg>
           Twitter / X
+        </button>
+
+        {/* Instagram */}
+        <button
+          onClick={handleInstagram}
+          className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-body text-foreground hover:bg-muted transition-colors"
+        >
+          <Instagram className="w-4 h-4 text-muted-foreground" />
+          Instagram
         </button>
 
         {/* Native share fallback for desktop if available */}
