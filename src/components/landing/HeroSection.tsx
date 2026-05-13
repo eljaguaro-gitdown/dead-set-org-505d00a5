@@ -140,18 +140,21 @@ const HeroSection = (_props: HeroSectionProps) => {
       const { data: slots, error } = await supabase
         .from("setlist_slots")
         .select(
-          "id, set_number, position, segue_to_next, song_id, notable_version_id, songs(id, title), notable_versions(id, song_id, show_date, archive_org_url, venue, city, era_id, rating, description)"
+          "id, set_number, position, segue_to_next, song_id, notable_version_id, songs(id, title), notable_versions(id, song_id, show_date, archive_org_url, venue, city, era_id, rating, description), setlist_slot_playability(status, direct_track_url)"
         )
         .eq("setlist_id", spotlight.id)
         .order("set_number")
         .order("position");
       if (error) throw error;
-      // Only queue slots that already have a resolvable archive recording.
-      // Without this, the player iterates dozens of unplayable songs doing
-      // generic archive.org searches and either stalls or fails outright,
-      // even though one song in the setlist would have played.
+      // Prefer slots already confirmed playable by the precompute job. Fall back
+      // to any slot with an archive_org_url so newly added slots still play.
       const playable: PlayableSlot[] = (slots ?? [])
-        .filter((s: any) => s.songs && s.notable_versions?.archive_org_url)
+        .filter((s: any) =>
+          s.songs && (
+            s.setlist_slot_playability?.status === "playable" ||
+            (!s.setlist_slot_playability && s.notable_versions?.archive_org_url)
+          )
+        )
         .map((s: any) => ({
           id: s.id,
           song: { id: s.songs.id, title: s.songs.title },
@@ -159,7 +162,7 @@ const HeroSection = (_props: HeroSectionProps) => {
           setNumber: s.set_number,
           position: s.position,
           segueToNext: s.segue_to_next ?? false,
-          directTrackUrl: null,
+          directTrackUrl: s.setlist_slot_playability?.direct_track_url ?? null,
         }));
       if (playable.length === 0) {
         toast({

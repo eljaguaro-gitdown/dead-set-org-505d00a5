@@ -1131,6 +1131,41 @@ export type Database = {
           },
         ]
       }
+      setlist_slot_playability: {
+        Row: {
+          checked_at: string
+          direct_track_url: string | null
+          error_message: string | null
+          match_score: number | null
+          slot_id: string
+          status: string
+        }
+        Insert: {
+          checked_at?: string
+          direct_track_url?: string | null
+          error_message?: string | null
+          match_score?: number | null
+          slot_id: string
+          status: string
+        }
+        Update: {
+          checked_at?: string
+          direct_track_url?: string | null
+          error_message?: string | null
+          match_score?: number | null
+          slot_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "setlist_slot_playability_slot_id_fkey"
+            columns: ["slot_id"]
+            isOneToOne: true
+            referencedRelation: "setlist_slots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       setlist_slots: {
         Row: {
           added_by_user_id: string | null
@@ -1238,6 +1273,7 @@ export type Database = {
           is_collaborative: boolean | null
           is_public: boolean | null
           play_count: number
+          playable_slot_count: number
           share_token: string | null
           title: string
           updated_at: string
@@ -1252,6 +1288,7 @@ export type Database = {
           is_collaborative?: boolean | null
           is_public?: boolean | null
           play_count?: number
+          playable_slot_count?: number
           share_token?: string | null
           title?: string
           updated_at?: string
@@ -1266,6 +1303,7 @@ export type Database = {
           is_collaborative?: boolean | null
           is_public?: boolean | null
           play_count?: number
+          playable_slot_count?: number
           share_token?: string | null
           title?: string
           updated_at?: string
@@ -1549,6 +1587,14 @@ export type Database = {
         }
         Returns: number
       }
+      next_slots_to_check: {
+        Args: { _limit?: number; _stale_days?: number }
+        Returns: {
+          archive_org_url: string
+          slot_id: string
+          song_title: string
+        }[]
+      }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }
         Returns: {
@@ -1556,6 +1602,10 @@ export type Database = {
           msg_id: number
           read_ct: number
         }[]
+      }
+      recompute_setlist_playable_count: {
+        Args: { _setlist_id: string }
+        Returns: undefined
       }
       refresh_admin_traffic_stats: { Args: never; Returns: undefined }
       send_featured_setlist_email_today: { Args: never; Returns: undefined }
