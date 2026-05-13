@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Share2, Check, Copy, MessageCircle } from "lucide-react";
+import { Share2, Check, Copy, MessageCircle, Instagram } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import {
@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/popover";
 import { toast } from "sonner";
 import { trackShare } from "@/lib/trackShare";
+import { shareToInstagram } from "@/lib/instagramShare";
 
 const SHARE_URL = "https://dead-set.org";
 const SHARE_TITLE = "Dead-Set.Org — The Music Never Stops";
