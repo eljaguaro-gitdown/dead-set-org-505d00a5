@@ -148,14 +148,18 @@ const HeroSection = (_props: HeroSectionProps) => {
       if (error) throw error;
       // Prefer slots already confirmed playable by the precompute job. Fall back
       // to any slot with an archive_org_url so newly added slots still play.
+      const getPlayability = (slot: any) => Array.isArray(slot.setlist_slot_playability)
+        ? slot.setlist_slot_playability[0]
+        : slot.setlist_slot_playability;
       const playable: PlayableSlot[] = (slots ?? [])
         .filter((s: any) =>
           s.songs && (
-            (s.setlist_slot_playability?.status === "playable" && s.setlist_slot_playability?.direct_track_url) ||
+            (getPlayability(s)?.status === "playable" && getPlayability(s)?.direct_track_url) ||
             (!s.setlist_slot_playability && s.notable_versions?.archive_org_url)
           )
         )
         .map((s: any) => {
+          const playability = getPlayability(s);
           let version = s.notable_versions ?? null;
           if (!version && typeof s.notes === "string" && s.notes.startsWith("{\"__archive\":true")) {
             try {
@@ -183,7 +187,7 @@ const HeroSection = (_props: HeroSectionProps) => {
             setNumber: s.set_number,
             position: s.position,
             segueToNext: s.segue_to_next ?? false,
-            directTrackUrl: s.setlist_slot_playability?.direct_track_url ?? null,
+            directTrackUrl: playability?.direct_track_url ?? null,
           };
         });
       if (playable.length === 0) {
