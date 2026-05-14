@@ -217,6 +217,15 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     const seq = ++playSetlistSeqRef.current;
     audioDebug.log("context", "playSetlist", { count: slots.length, setlistId, seq });
     audioDebug.setPlaybackState("starting");
+
+    // CRITICAL: stop any current playback IMMEDIATELY so two streams can never overlap
+    // while we asynchronously resolve the first playable track in the new setlist.
+    if (stateRef.current.playingSlot) {
+      void finalizePlayEvent("skipped");
+      audioDebug.setSlot(null, null, null, null);
+      setState({ playingSlot: null, playlistMode: false, playlistIndex: 0, playlistSlots: [], activeSetlistId: null });
+    }
+
     const sorted = [...slots].sort((a, b) => a.setNumber - b.setNumber || a.position - b.position);
 
     let startIndex = -1;

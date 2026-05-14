@@ -292,6 +292,21 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
     };
   }, [currentTrack, tracks, autoPlay]);
 
+  // Defense in depth: when this player unmounts (slot change or close), forcibly
+  // pause + detach the audio element so a previously-buffered stream can never
+  // continue playing while a new player instance is starting.
+  useEffect(() => {
+    return () => {
+      const el = audioRef.current;
+      if (!el) return;
+      try {
+        el.pause();
+        el.removeAttribute("src");
+        el.load();
+      } catch { /* noop */ }
+    };
+  }, []);
+
   // iOS / Android lock-screen "Now Playing" metadata.
   // Without this, the OS falls back to the page title + favicon (which is why
   // the Lovable graphic was appearing). Sets Steal Your Face as artwork and
