@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 interface ShareSongInput {
   songId?: string | null;
+  notableVersionId?: string | null;
   songTitle: string;
   showDate?: string | null;
   venue?: string | null;
@@ -17,19 +18,17 @@ interface ShareSongInput {
  * link to the dead-set.org home page.
  */
 export async function shareSong(input: ShareSongInput): Promise<void> {
-  const { songId, songTitle } = input;
+  const { songId, notableVersionId, songTitle } = input;
   let { showDate, venue, archiveOrgUrl } = input;
 
-  // Resolve a real recording link if we don't already have one.
-  if (!archiveOrgUrl && songId) {
+  // Resolve the exact saved version first; only use a song-level fallback when no date/version was saved.
+  if (!archiveOrgUrl && notableVersionId) {
     try {
       const { data } = await supabase
         .from("notable_versions")
         .select("archive_org_url, show_date, venue")
-        .eq("song_id", songId)
+        .eq("id", notableVersionId)
         .not("archive_org_url", "is", null)
-        .order("show_date", { ascending: false })
-        .limit(1)
         .maybeSingle();
       if (data?.archive_org_url) {
         archiveOrgUrl = data.archive_org_url;
@@ -41,11 +40,66 @@ export async function shareSong(input: ShareSongInput): Promise<void> {
     }
   }
 
+  if (!archiveOrgUrl && songId && showDate) {
+    try {
+      let query = supabase
+        .from("notable_versions")
+        .select("archive_org_url, show_date, venue")
+        .eq("song_id", songId)
+        .eq("show_date", showDate)
+        .not("archive_org_url", "is", null)
+        .limit(5);
+
+      if (venue) query = query.ilike("venue", `%${venue}%`);
+
+      const { data } = await query;
+      const exact = data?.[0];
+      if (exact?.archive_org_url) {
+        archiveOrgUrl = exact.archive_org_url;
+        venue = venue ?? exact.venue ?? null;
+      }
+    } catch {
+      // ignore — fall through to song-level fallback
+    }
+  }
+
+  if (!archiveOrgUrl && songId && !showDate && !notableVersionId) {
+    try {
+      const { data } = await supabase
+        .from("notable_versions")
+        .select("archive_org_url, show_date, venue")
+        .eq("song_id", songId)
+        .not("archive_org_url", "is", null)
+        .order("show_date", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (data?.archive_org_url) {
+        archiveOrgUrl = data.archive_org_url;
+        showDate = data.show_date ?? null;
+        venue = data.venue ?? null;
+      }
+    } catch {
+      // ignore — fall through to home link
+    }
+  }
+
+  let trackUrl: string | null = null;
+  if (archiveOrgUrl) {
+    try {
+      const { data } = await supabase.functions.invoke("resolve-song-share", {
+        body: { archiveOrgUrl, songTitle, showDate, venue },
+      });
+      trackUrl = typeof data?.directTrackUrl === "string" ? data.directTrackUrl : null;
+    } catch {
+      trackUrl = null;
+    }
+  }
+
   const versionLine = showDate
     ? `${showDate}${venue ? ` · ${venue}` : ""}`
     : null;
 
-  const link = archiveOrgUrl || "https://dead-set.org";
+  const link = trackUrl || archiveOrgUrl || "https://dead-set.org";
 
   const title = versionLine
     ? `${songTitle} — ${versionLine}`
