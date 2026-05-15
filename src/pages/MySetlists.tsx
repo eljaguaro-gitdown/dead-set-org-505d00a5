@@ -38,6 +38,7 @@ interface SavedSetlist {
 
 interface FavoriteSongCard {
   id: string;
+  favorite_song_id: string;
   title: string;
   times_played: number | null;
   tags: string[] | null;
@@ -109,6 +110,7 @@ const MySetlists = () => {
             const version = favorite.notable_version_id ? versionMap.get(favorite.notable_version_id) : null;
             return {
               id: song.id,
+              favorite_song_id: favorite.id,
               title: song.title,
               times_played: song.times_played,
               tags: song.tags,
@@ -913,6 +915,7 @@ const MySetlists = () => {
                     <button
                       onClick={() => {
                         void shareSong({
+                          favoriteSongId: song.favorite_song_id,
                           songId: song.id,
                           notableVersionId: song.notable_version_id,
                           songTitle: song.title,
