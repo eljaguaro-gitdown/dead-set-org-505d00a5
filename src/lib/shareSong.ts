@@ -127,15 +127,13 @@ export async function shareSong(input: ShareSongInput): Promise<void> {
   }
 
   let trackUrl: string | null = null;
-  if (archiveOrgUrl) {
-    try {
-      const { data } = await supabase.functions.invoke("resolve-song-share", {
-        body: { archiveOrgUrl, songTitle, showDate, venue },
-      });
-      trackUrl = typeof data?.directTrackUrl === "string" ? data.directTrackUrl : null;
-    } catch {
-      trackUrl = null;
-    }
+  try {
+    const { data } = await supabase.functions.invoke("resolve-song-share", {
+      body: { archiveOrgUrl: archiveOrgUrl ?? null, songTitle, showDate, venue },
+    });
+    trackUrl = typeof data?.directTrackUrl === "string" ? data.directTrackUrl : null;
+  } catch {
+    trackUrl = null;
   }
 
   // Verify: must be a specific archive.org track download URL — never the app/home URL.

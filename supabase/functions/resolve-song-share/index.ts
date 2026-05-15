@@ -127,11 +127,23 @@ async function resolveTrack(identifier: string, songTitle: string) {
 }
 
 const BodySchema = z.object({
-  archiveOrgUrl: z.string().url().refine((url) => url.includes("archive.org/"), "Must be an archive.org URL"),
+  archiveOrgUrl: z.string().url().refine((url) => url.includes("archive.org/"), "Must be an archive.org URL").nullable().optional(),
   songTitle: z.string().min(1).max(200),
   showDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
   venue: z.string().max(255).nullable().optional(),
 });
+
+async function findRecordingsForTitle(songTitle: string): Promise<string[]> {
+  const cleanTitle = songTitle.replace(/["!?.,;:()\[\]]/g, "").trim();
+  const query = encodeURIComponent(`collection:GratefulDead "${cleanTitle}"`);
+  const url = `https://archive.org/advancedsearch.php?q=${query}&fl[]=identifier&fl[]=avg_rating&fl[]=downloads&sort[]=downloads+desc&sort[]=avg_rating+desc&rows=15&output=json`;
+  const res = await fetch(url);
+  if (!res.ok) return [];
+  const data = await res.json();
+  return (data?.response?.docs || [])
+    .map((d: any) => d.identifier)
+    .filter((id: unknown): id is string => typeof id === "string" && id.length > 0);
+}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -146,27 +158,42 @@ Deno.serve(async (req) => {
     }
     const { archiveOrgUrl, songTitle, showDate, venue } = parsed.data;
 
-    const downloadMatch = archiveOrgUrl.match(/archive\.org\/download\/([^/?#]+)\/([^?#]+)/);
-    if (downloadMatch?.[1] && downloadMatch?.[2]) {
-      return new Response(JSON.stringify({ directTrackUrl: archiveOrgUrl, matchScore: 100 }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    let directTrackUrl: string | null = null;
+    let matchScore = 0;
+    let identifier: string | null = null;
 
-    const detailsMatch = archiveOrgUrl.match(/archive\.org\/details\/([^/?#]+)/);
-    const identifier = detailsMatch?.[1];
-    if (!identifier) {
-      return new Response(JSON.stringify({ directTrackUrl: null, error: "Invalid archive.org URL" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    if (archiveOrgUrl) {
+      const downloadMatch = archiveOrgUrl.match(/archive\.org\/download\/([^/?#]+)\/([^?#]+)/);
+      if (downloadMatch?.[1] && downloadMatch?.[2]) {
+        return new Response(JSON.stringify({ directTrackUrl: archiveOrgUrl, matchScore: 100 }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const detailsMatch = archiveOrgUrl.match(/archive\.org\/details\/([^/?#]+)/);
+      identifier = detailsMatch?.[1] ?? null;
+      if (identifier) {
+        const r = await resolveTrack(identifier, songTitle);
+        directTrackUrl = r.directTrackUrl;
+        matchScore = r.matchScore;
+      }
     }
-
-    let { directTrackUrl, matchScore } = await resolveTrack(identifier, songTitle);
 
     if (!directTrackUrl && typeof showDate === "string" && /^\d{4}-\d{2}-\d{2}$/.test(showDate)) {
       const alternatives = (await findRecordingsForDate(showDate, venue)).filter((id) => id !== identifier);
       for (const alternateId of alternatives) {
+        const resolved = await resolveTrack(alternateId, songTitle);
+        matchScore = Math.max(matchScore, resolved.matchScore);
+        if (resolved.directTrackUrl) {
+          directTrackUrl = resolved.directTrackUrl;
+          break;
+        }
+      }
+    }
+
+    // Last-resort: generic title search across the GD collection
+    if (!directTrackUrl) {
+      const titleAlts = (await findRecordingsForTitle(songTitle)).filter((id) => id !== identifier);
+      for (const alternateId of titleAlts) {
         const resolved = await resolveTrack(alternateId, songTitle);
         matchScore = Math.max(matchScore, resolved.matchScore);
         if (resolved.directTrackUrl) {
