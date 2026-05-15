@@ -88,11 +88,44 @@ async function fetchMetadata(identifier: string): Promise<{ files: any[]; resolv
   return null;
 }
 
+async function findRecordingsForDate(showDate: string): Promise<string[]> {
+  const query = encodeURIComponent(`collection:GratefulDead AND date:${showDate}`);
+  const url = `https://archive.org/advancedsearch.php?q=${query}&fl[]=identifier&fl[]=avg_rating&fl[]=downloads&sort[]=downloads+desc&sort[]=avg_rating+desc&rows=25&output=json`;
+  const res = await fetch(url);
+  if (!res.ok) return [];
+  const data = await res.json();
+  return (data?.response?.docs || [])
+    .map((doc: any) => doc.identifier)
+    .filter((identifier: unknown): identifier is string => typeof identifier === "string" && identifier.length > 0);
+}
+
+async function resolveTrack(identifier: string, songTitle: string) {
+  const meta = await fetchMetadata(identifier);
+  if (!meta) return { directTrackUrl: null, matchScore: 0 };
+
+  let bestScore = 0;
+  let bestFile: any = null;
+  for (const file of meta.files.filter(isAudioFile)) {
+    const score = matchScore(file.title || file.name || "", songTitle);
+    if (score > bestScore) {
+      bestScore = score;
+      bestFile = file;
+    }
+  }
+
+  return {
+    directTrackUrl: bestFile && bestScore >= 60
+      ? `https://archive.org/download/${meta.resolvedId}/${encodeURIComponent(bestFile.name)}`
+      : null,
+    matchScore: bestScore,
+  };
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
-    const { archiveOrgUrl, songTitle } = await req.json();
+    const { archiveOrgUrl, songTitle, showDate } = await req.json();
     if (typeof archiveOrgUrl !== "string" || typeof songTitle !== "string") {
       return new Response(JSON.stringify({ error: "archiveOrgUrl and songTitle are required" }), {
         status: 400,
@@ -116,26 +149,19 @@ Deno.serve(async (req) => {
       });
     }
 
-    const meta = await fetchMetadata(identifier);
-    if (!meta) {
-      return new Response(JSON.stringify({ directTrackUrl: null, error: "Metadata unavailable" }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    let { directTrackUrl, matchScore } = await resolveTrack(identifier, songTitle);
 
-    let bestScore = 0;
-    let bestFile: any = null;
-    for (const file of meta.files.filter(isAudioFile)) {
-      const score = matchScore(file.title || file.name || "", songTitle);
-      if (score > bestScore) {
-        bestScore = score;
-        bestFile = file;
+    if (!directTrackUrl && typeof showDate === "string" && /^\d{4}-\d{2}-\d{2}$/.test(showDate)) {
+      const alternatives = (await findRecordingsForDate(showDate)).filter((id) => id !== identifier);
+      for (const alternateId of alternatives) {
+        const resolved = await resolveTrack(alternateId, songTitle);
+        matchScore = Math.max(matchScore, resolved.matchScore);
+        if (resolved.directTrackUrl) {
+          directTrackUrl = resolved.directTrackUrl;
+          break;
+        }
       }
     }
-
-    const directTrackUrl = bestFile && bestScore >= 60
-      ? `https://archive.org/download/${meta.resolvedId}/${encodeURIComponent(bestFile.name)}`
-      : null;
 
     return new Response(JSON.stringify({ directTrackUrl, matchScore: bestScore }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
