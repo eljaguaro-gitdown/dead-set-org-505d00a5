@@ -349,6 +349,21 @@ function ArchiveVersionCard({
           <button
             onClick={(e) => {
               e.stopPropagation();
+              void shareSong({
+                songTitle,
+                showDate: av.date || null,
+                venue: av.venue,
+                archiveOrgUrl: av.url,
+              });
+            }}
+            className="ml-1"
+            title={`Share ${songTitle}`}
+          >
+            <Share2 className="w-3 h-3 text-muted-foreground hover:text-primary transition-colors" />
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
               onPlayArchive?.(av.url, songTitle, av.date || "", av.venue);
             }}
             className="ml-1"
