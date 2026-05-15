@@ -55,6 +55,7 @@ const MySetlists = () => {
   const { user, loading: authLoading, signOut } = useAuth();
   const { favoriteIds, toggleFavorite } = useFavorites();
   const { favoriteSongs, favoriteSetlistId, toggleFavoriteSong } = useFavoriteSongs();
+  const { playSingle } = useAudioPlayer();
   const [setlists, setSetlists] = useState<SetlistWithMeta[]>([]);
   const [savedSetlists, setSavedSetlists] = useState<SavedSetlist[]>([]);
   const [favoriteSongsList, setFavoriteSongsList] = useState<FavoriteSongCard[]>([]);
