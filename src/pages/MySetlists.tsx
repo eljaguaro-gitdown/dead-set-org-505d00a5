@@ -866,6 +866,7 @@ const MySetlists = () => {
               )}
             </div>
 
+            <ShareSongHint />
             <div className="grid gap-2">
               {favoriteSongsList.map((song, i) => (
                 <motion.div
