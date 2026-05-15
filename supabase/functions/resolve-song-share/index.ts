@@ -88,13 +88,20 @@ async function fetchMetadata(identifier: string): Promise<{ files: any[]; resolv
   return null;
 }
 
-async function findRecordingsForDate(showDate: string): Promise<string[]> {
+async function findRecordingsForDate(showDate: string, venue?: string | null): Promise<string[]> {
   const query = encodeURIComponent(`collection:GratefulDead AND date:${showDate}`);
-  const url = `https://archive.org/advancedsearch.php?q=${query}&fl[]=identifier&fl[]=avg_rating&fl[]=downloads&sort[]=downloads+desc&sort[]=avg_rating+desc&rows=25&output=json`;
+  const url = `https://archive.org/advancedsearch.php?q=${query}&fl[]=identifier&fl[]=venue&fl[]=avg_rating&fl[]=downloads&sort[]=downloads+desc&sort[]=avg_rating+desc&rows=25&output=json`;
   const res = await fetch(url);
   if (!res.ok) return [];
   const data = await res.json();
+  const venueNeedle = typeof venue === "string" ? normalize(venue) : "";
   return (data?.response?.docs || [])
+    .sort((a: any, b: any) => {
+      if (!venueNeedle) return 0;
+      const aMatch = normalize(a.venue || "").includes(venueNeedle) ? 1 : 0;
+      const bMatch = normalize(b.venue || "").includes(venueNeedle) ? 1 : 0;
+      return bMatch - aMatch;
+    })
     .map((doc: any) => doc.identifier)
     .filter((identifier: unknown): identifier is string => typeof identifier === "string" && identifier.length > 0);
 }
@@ -125,7 +132,7 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
-    const { archiveOrgUrl, songTitle, showDate } = await req.json();
+    const { archiveOrgUrl, songTitle, showDate, venue } = await req.json();
     if (typeof archiveOrgUrl !== "string" || typeof songTitle !== "string") {
       return new Response(JSON.stringify({ error: "archiveOrgUrl and songTitle are required" }), {
         status: 400,
@@ -152,7 +159,7 @@ Deno.serve(async (req) => {
     let { directTrackUrl, matchScore } = await resolveTrack(identifier, songTitle);
 
     if (!directTrackUrl && typeof showDate === "string" && /^\d{4}-\d{2}-\d{2}$/.test(showDate)) {
-      const alternatives = (await findRecordingsForDate(showDate)).filter((id) => id !== identifier);
+      const alternatives = (await findRecordingsForDate(showDate, venue)).filter((id) => id !== identifier);
       for (const alternateId of alternatives) {
         const resolved = await resolveTrack(alternateId, songTitle);
         matchScore = Math.max(matchScore, resolved.matchScore);
@@ -163,7 +170,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    return new Response(JSON.stringify({ directTrackUrl, matchScore: bestScore }), {
+    return new Response(JSON.stringify({ directTrackUrl, matchScore }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
