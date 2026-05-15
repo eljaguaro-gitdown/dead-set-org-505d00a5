@@ -899,6 +899,7 @@ const MySetlists = () => {
                     <button
                       onClick={() => {
                         void shareSong({
+                          songId: song.id,
                           songTitle: song.title,
                           showDate: song.version_show_date,
                           venue: song.version_venue,
