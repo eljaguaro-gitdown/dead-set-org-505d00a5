@@ -1,7 +1,9 @@
 import { toast } from "sonner";
 import { trackShare } from "./trackShare";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ShareSongInput {
+  songId?: string | null;
   songTitle: string;
   showDate?: string | null;
   venue?: string | null;
@@ -9,12 +11,35 @@ interface ShareSongInput {
 }
 
 /**
- * Share a favorite song (optionally tied to a specific live version).
- * Uses the native share sheet when available, otherwise copies a
- * pre-formatted message to the clipboard.
+ * Share a favorite song. Always resolves a deep link to a specific
+ * recording on archive.org — falling back to the song's top notable
+ * version if no version was supplied. Only as a last resort do we
+ * link to the dead-set.org home page.
  */
 export async function shareSong(input: ShareSongInput): Promise<void> {
-  const { songTitle, showDate, venue, archiveOrgUrl } = input;
+  const { songId, songTitle } = input;
+  let { showDate, venue, archiveOrgUrl } = input;
+
+  // Resolve a real recording link if we don't already have one.
+  if (!archiveOrgUrl && songId) {
+    try {
+      const { data } = await supabase
+        .from("notable_versions")
+        .select("archive_org_url, show_date, venue")
+        .eq("song_id", songId)
+        .not("archive_org_url", "is", null)
+        .order("show_date", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (data?.archive_org_url) {
+        archiveOrgUrl = data.archive_org_url;
+        showDate = showDate ?? data.show_date ?? null;
+        venue = venue ?? data.venue ?? null;
+      }
+    } catch {
+      // ignore — fall through to home link
+    }
+  }
 
   const versionLine = showDate
     ? `${showDate}${venue ? ` · ${venue}` : ""}`
@@ -26,8 +51,10 @@ export async function shareSong(input: ShareSongInput): Promise<void> {
     ? `${songTitle} — ${versionLine}`
     : `${songTitle} on Dead-Set.Org`;
 
-  const text = versionLine
-    ? `🌹 ${songTitle} — ${versionLine}\n\nFound this gem on Dead-Set.Org. The music never stops ⚡\n\n${link}`
+  const text = archiveOrgUrl
+    ? versionLine
+      ? `🌹 ${songTitle} — ${versionLine}\n\nListen to this version on archive.org. Found via Dead-Set.Org ⚡\n\n${link}`
+      : `🌹 ${songTitle}\n\nListen to this recording on archive.org. Found via Dead-Set.Org ⚡\n\n${link}`
     : `🌹 ${songTitle} — one of my favorite Dead songs.\n\nBuild your dream show on Dead-Set.Org ⚡\n\n${link}`;
 
   // Try native share first (mobile)
@@ -63,5 +90,5 @@ export async function shareSong(input: ShareSongInput): Promise<void> {
     metadata: { kind: "favorite_song", song: songTitle, archiveOrgUrl: archiveOrgUrl ?? null },
   });
 
-  toast.success("Copied! Paste anywhere to share 🌹");
+  toast.success(archiveOrgUrl ? "Link copied! Paste anywhere to share 🌹" : "Copied! Paste anywhere to share 🌹");
 }
