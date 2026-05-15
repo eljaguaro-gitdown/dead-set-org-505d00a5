@@ -894,9 +894,33 @@ const MySetlists = () => {
                   transition={{ delay: i * 0.03 }}
                   className="rounded-xl border border-border bg-card/80 p-4 flex items-start justify-between gap-3"
                 >
-                  <div className="min-w-0 flex-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      playSingle({
+                        id: song.favorite_song_id,
+                        song: { id: song.id, title: song.title },
+                        version: song.notable_version_id || song.version_archive_org_url
+                          ? {
+                              id: song.notable_version_id ?? "",
+                              song_id: song.id,
+                              show_date: song.version_show_date ?? "",
+                              venue: song.version_venue ?? null,
+                              archive_org_url: song.version_archive_org_url ?? null,
+                              city: null, era_id: null, rating: null, description: null,
+                            }
+                          : null,
+                        setNumber: 1,
+                        position: 0,
+                        segueToNext: false,
+                      });
+                    }}
+                    className="min-w-0 flex-1 text-left group"
+                    aria-label={`Play ${song.title}`}
+                  >
                     <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="font-display text-base text-foreground">{song.title}</h3>
+                      <Play className="w-3.5 h-3.5 text-primary opacity-70 group-hover:opacity-100 shrink-0" />
+                      <h3 className="font-display text-base text-foreground group-hover:text-primary transition-colors">{song.title}</h3>
                       {song.tags?.slice(0, 3).map((tag) => (
                         <span key={tag} className="px-2 py-0.5 text-[10px] font-body rounded-full border border-primary/20 text-primary/70">
                           {tag}
@@ -912,10 +936,11 @@ const MySetlists = () => {
                         ) : null}
                       {song.times_played ? <span>{song.times_played} plays</span> : null}
                     </div>
-                  </div>
+                  </button>
                   <div className="flex items-center gap-2 md:gap-1 shrink-0">
                     <button
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.stopPropagation();
                         void shareSong({
                           favoriteSongId: song.favorite_song_id,
                           songId: song.id,
@@ -933,7 +958,8 @@ const MySetlists = () => {
                       <Share2 className="w-6 h-6 md:w-4 md:h-4 text-primary md:text-muted-foreground" />
                     </button>
                     <button
-                      onClick={async () => {
+                      onClick={async (e) => {
+                        e.stopPropagation();
                          const result = await toggleFavoriteSong({
                            songId: song.id,
                            notableVersionId: song.notable_version_id,
