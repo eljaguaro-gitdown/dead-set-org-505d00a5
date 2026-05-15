@@ -82,17 +82,31 @@ const MySetlists = () => {
 
     const fetchFavoriteSongs = async () => {
       const songIds = favoriteSongs.map((song) => song.song_id);
-      const { data } = await supabase
-        .from("songs")
-        .select("id, title, times_played, tags")
-        .in("id", songIds);
+      const versionIds = favoriteSongs
+        .map((song) => song.notable_version_id)
+        .filter(Boolean) as string[];
 
-      const songMap = new Map((data || []).map((song) => [song.id, song]));
+      const [songsRes, versionsRes] = await Promise.all([
+        supabase
+          .from("songs")
+          .select("id, title, times_played, tags")
+          .in("id", songIds),
+        versionIds.length > 0
+          ? supabase
+              .from("notable_versions")
+              .select("id, show_date, venue, archive_org_url")
+              .in("id", versionIds)
+          : Promise.resolve({ data: [] }),
+      ]);
+
+      const songMap = new Map((songsRes.data || []).map((song) => [song.id, song]));
+      const versionMap = new Map(((versionsRes.data || []) as Array<{ id: string; show_date: string; venue: string | null; archive_org_url: string | null }>).map((version) => [version.id, version]));
       setFavoriteSongsList(
         favoriteSongs
           .map((favorite) => {
             const song = songMap.get(favorite.song_id);
             if (!song) return null;
+            const version = favorite.notable_version_id ? versionMap.get(favorite.notable_version_id) : null;
             return {
               id: song.id,
               title: song.title,
@@ -100,9 +114,9 @@ const MySetlists = () => {
               tags: song.tags,
               added_at: favorite.created_at,
               notable_version_id: favorite.notable_version_id,
-              version_show_date: favorite.version_show_date,
-              version_venue: favorite.version_venue,
-              version_archive_org_url: favorite.version_archive_org_url,
+              version_show_date: favorite.version_show_date ?? version?.show_date ?? null,
+              version_venue: favorite.version_venue ?? version?.venue ?? null,
+              version_archive_org_url: favorite.version_archive_org_url ?? version?.archive_org_url ?? null,
             };
           })
           .filter(Boolean) as FavoriteSongCard[]
@@ -900,6 +914,7 @@ const MySetlists = () => {
                       onClick={() => {
                         void shareSong({
                           songId: song.id,
+                          notableVersionId: song.notable_version_id,
                           songTitle: song.title,
                           showDate: song.version_show_date,
                           venue: song.version_venue,
