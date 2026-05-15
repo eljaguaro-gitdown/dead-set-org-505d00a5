@@ -258,6 +258,21 @@ function CuratedVersionCard({
           >
             <Heart className={`w-3 h-3 transition-colors ${isFavorite ? "text-primary fill-primary" : "text-muted-foreground hover:text-primary"}`} />
           </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              void shareSong({
+                songTitle,
+                showDate: v.show_date,
+                venue: v.venue,
+                archiveOrgUrl: v.archive_org_url,
+              });
+            }}
+            className="ml-1"
+            title={`Share ${songTitle}`}
+          >
+            <Share2 className="w-3 h-3 text-muted-foreground hover:text-primary transition-colors" />
+          </button>
           {v.archive_org_url && (
             <>
               <button
