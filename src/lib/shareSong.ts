@@ -87,7 +87,7 @@ export async function shareSong(input: ShareSongInput): Promise<void> {
   if (archiveOrgUrl) {
     try {
       const { data } = await supabase.functions.invoke("resolve-song-share", {
-        body: { archiveOrgUrl, songTitle },
+        body: { archiveOrgUrl, songTitle, showDate, venue },
       });
       trackUrl = typeof data?.directTrackUrl === "string" ? data.directTrackUrl : null;
     } catch {
