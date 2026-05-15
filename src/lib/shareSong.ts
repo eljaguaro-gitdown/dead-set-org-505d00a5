@@ -26,8 +26,8 @@ const readArchiveMeta = (notes?: string | null) => {
 /**
  * Share a favorite song. Always resolves a deep link to a specific
  * recording on archive.org — falling back to the song's top notable
- * version if no version was supplied. Only as a last resort do we
- * link to the dead-set.org home page.
+ * version if no version was supplied. If no exact recording exists,
+ * the share is blocked instead of falling back to the app home page.
  */
 export async function shareSong(input: ShareSongInput): Promise<void> {
   const { favoriteSongId, songId, notableVersionId, songTitle } = input;
