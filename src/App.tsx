@@ -74,6 +74,7 @@ const App = () => (
               <Route path="/admin/notification-clicks" element={<AdminNotificationClicks />} />
               <Route path="/user/:userId" element={<UserLibrary />} />
               <Route path="/audio-diag" element={<AudioDiagnostics />} />
+              <Route path="/song/:songId" element={<SongPage />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
