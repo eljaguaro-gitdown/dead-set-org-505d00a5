@@ -1,7 +1,5 @@
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
+import { z } from "npm:zod@3.25.76";
 
 const STOP_WORDS = new Set([
   "the", "a", "an", "of", "in", "on", "to", "and", "is", "it", "be",
@@ -128,17 +126,25 @@ async function resolveTrack(identifier: string, songTitle: string) {
   };
 }
 
+const BodySchema = z.object({
+  archiveOrgUrl: z.string().url().refine((url) => url.includes("archive.org/"), "Must be an archive.org URL"),
+  songTitle: z.string().min(1).max(200),
+  showDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
+  venue: z.string().max(255).nullable().optional(),
+});
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
-    const { archiveOrgUrl, songTitle, showDate, venue } = await req.json();
-    if (typeof archiveOrgUrl !== "string" || typeof songTitle !== "string") {
-      return new Response(JSON.stringify({ error: "archiveOrgUrl and songTitle are required" }), {
+    const parsed = BodySchema.safeParse(await req.json().catch(() => null));
+    if (!parsed.success) {
+      return new Response(JSON.stringify({ error: parsed.error.flatten().fieldErrors }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    const { archiveOrgUrl, songTitle, showDate, venue } = parsed.data;
 
     const downloadMatch = archiveOrgUrl.match(/archive\.org\/download\/([^/?#]+)\/([^?#]+)/);
     if (downloadMatch?.[1] && downloadMatch?.[2]) {
