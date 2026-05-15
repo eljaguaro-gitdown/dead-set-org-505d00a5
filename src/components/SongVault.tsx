@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Zap, ChevronDown, ChevronUp, Heart } from "lucide-react";
+import { Search, Zap, ChevronDown, ChevronUp, Heart, Share2 } from "lucide-react";
+import { shareSong } from "@/lib/shareSong";
 import { Input } from "@/components/ui/input";
 import SongVersionBrowser from "@/components/SongVersionBrowser";
 import { toast } from "sonner";
@@ -143,6 +144,16 @@ const SongVault = ({ songs, eraId, onSelectSong, getNotableVersions, onPlayArchi
                     title={isFavoriteSong(song.id) ? "Remove from favorite songs" : "Add to favorite songs"}
                   >
                     <Heart className={`w-4 h-4 ${isFavoriteSong(song.id) ? "fill-primary text-primary" : ""}`} />
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      void shareSong({ songTitle: song.title });
+                    }}
+                    className="p-1.5 rounded-md text-muted-foreground hover:text-primary transition-colors"
+                    title={`Share ${song.title}`}
+                  >
+                    <Share2 className="w-4 h-4" />
                   </button>
                   <span className="text-xs text-muted-foreground font-body">{song.times_played}x</span>
                   {expandedSong === song.id ? (

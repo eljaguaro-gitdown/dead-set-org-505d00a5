@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from "react";
-import { Zap, ExternalLink, Headphones, Star, Loader2, ArrowUpDown, Calendar, TrendingUp, Heart } from "lucide-react";
+import { Zap, ExternalLink, Headphones, Star, Loader2, ArrowUpDown, Calendar, TrendingUp, Heart, Share2 } from "lucide-react";
+import { shareSong } from "@/lib/shareSong";
 import { Badge } from "@/components/ui/badge";
 import { findManyArchiveRecordings, type ArchiveVersion } from "@/lib/archiveOrg";
 import { supabase } from "@/integrations/supabase/client";
@@ -257,6 +258,21 @@ function CuratedVersionCard({
           >
             <Heart className={`w-3 h-3 transition-colors ${isFavorite ? "text-primary fill-primary" : "text-muted-foreground hover:text-primary"}`} />
           </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              void shareSong({
+                songTitle,
+                showDate: v.show_date,
+                venue: v.venue,
+                archiveOrgUrl: v.archive_org_url,
+              });
+            }}
+            className="ml-1"
+            title={`Share ${songTitle}`}
+          >
+            <Share2 className="w-3 h-3 text-muted-foreground hover:text-primary transition-colors" />
+          </button>
           {v.archive_org_url && (
             <>
               <button
@@ -329,6 +345,21 @@ function ArchiveVersionCard({
             title={isFavorite ? "Remove version from favorites" : "Add version to favorites"}
           >
             <Heart className={`w-3 h-3 transition-colors ${isFavorite ? "text-primary fill-primary" : "text-muted-foreground hover:text-primary"}`} />
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              void shareSong({
+                songTitle,
+                showDate: av.date || null,
+                venue: av.venue,
+                archiveOrgUrl: av.url,
+              });
+            }}
+            className="ml-1"
+            title={`Share ${songTitle}`}
+          >
+            <Share2 className="w-3 h-3 text-muted-foreground hover:text-primary transition-colors" />
           </button>
           <button
             onClick={(e) => {
