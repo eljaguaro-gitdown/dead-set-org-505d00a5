@@ -895,7 +895,7 @@ const MySetlists = () => {
                       {song.times_played ? <span>{song.times_played} plays</span> : null}
                     </div>
                   </div>
-                  <div className="flex items-center gap-1 shrink-0">
+                  <div className="flex items-center gap-2 md:gap-1 shrink-0">
                     <button
                       onClick={() => {
                         void shareSong({
@@ -905,10 +905,11 @@ const MySetlists = () => {
                           archiveOrgUrl: song.version_archive_org_url,
                         });
                       }}
-                      className="p-2 rounded-lg hover:bg-muted transition-colors"
+                      className="p-3 md:p-2 rounded-lg border border-primary/30 bg-primary/5 md:border-transparent md:bg-transparent hover:bg-muted transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
                       title={`Share ${song.title}`}
+                      aria-label={`Share ${song.title}`}
                     >
-                      <Share2 className="w-4 h-4 text-muted-foreground" />
+                      <Share2 className="w-6 h-6 md:w-4 md:h-4 text-primary md:text-muted-foreground" />
                     </button>
                     <button
                       onClick={async () => {
@@ -925,10 +926,11 @@ const MySetlists = () => {
                         }
                         toast.success(result.favorited ? `${song.title} added to favorite songs` : `${song.title} removed from favorite songs`);
                       }}
-                      className="p-2 rounded-lg hover:bg-muted transition-colors"
+                      className="p-3 md:p-2 rounded-lg hover:bg-muted transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
                       title="Remove from favorite songs"
+                      aria-label="Remove from favorite songs"
                     >
-                      <Heart className="w-4 h-4 text-primary fill-primary" />
+                      <Heart className="w-6 h-6 md:w-4 md:h-4 text-primary fill-primary" />
                     </button>
                   </div>
                 </motion.div>
