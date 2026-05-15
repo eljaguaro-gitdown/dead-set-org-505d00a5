@@ -1,4 +1,5 @@
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import { trackShare } from "./trackShare";
 
 interface ShareSongInput {
@@ -13,6 +14,21 @@ interface ShareSongInput {
 
 const SITE_ORIGIN = "https://dead-set.org";
 
+async function getSenderName(): Promise<string | null> {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return null;
+    const { data } = await supabase
+      .from("profiles")
+      .select("display_name")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    return (data as { display_name?: string | null } | null)?.display_name?.trim() || null;
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Share a song as a Dead-Set.Org deep link. The /song/:songId route auto-plays
  * the version and gives the recipient a landing page on our site (not archive.org).
@@ -25,18 +41,22 @@ export async function shareSong(input: ShareSongInput): Promise<void> {
     return;
   }
 
+  const senderName = await getSenderName();
+
   const params = new URLSearchParams();
   if (notableVersionId) params.set("v", notableVersionId);
   if (showDate) params.set("d", showDate);
   if (venue) params.set("venue", venue);
+  if (senderName) params.set("from", senderName);
 
   const link = `${SITE_ORIGIN}/song/${songId}${params.toString() ? `?${params.toString()}` : ""}`;
 
   const versionLine = showDate ? `${showDate}${venue ? ` · ${venue}` : ""}` : null;
+  const fromLine = senderName ? `${senderName} sent you ` : "";
   const title = versionLine ? `${songTitle} — ${versionLine}` : `${songTitle} on Dead-Set.Org`;
   const text = versionLine
-    ? `🌹 ${songTitle} — ${versionLine}\n\nListen on Dead-Set.Org ⚡\n\n${link}`
-    : `🌹 ${songTitle}\n\nListen on Dead-Set.Org ⚡\n\n${link}`;
+    ? `🌹 ${fromLine}${songTitle} — ${versionLine}\n\nListen on Dead-Set.Org ⚡\n\n${link}`
+    : `🌹 ${fromLine}${songTitle}\n\nListen on Dead-Set.Org ⚡\n\n${link}`;
 
   // Native share (mobile)
   if (typeof navigator !== "undefined" && navigator.share) {
