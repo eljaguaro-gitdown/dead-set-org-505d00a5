@@ -39,6 +39,7 @@ const AdminBetaNudge = lazy(() => import("./pages/AdminBetaNudge"));
 const AdminNotificationClicks = lazy(() => import("./pages/AdminNotificationClicks"));
 const UserLibrary = lazy(() => import("./pages/UserLibrary"));
 const AudioDiagnostics = lazy(() => import("./pages/AudioDiagnostics"));
+const SongPage = lazy(() => import("./pages/Song"));
 
 const queryClient = new QueryClient();
 
