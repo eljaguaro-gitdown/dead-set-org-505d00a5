@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Zap, ChevronDown, ChevronUp, Heart } from "lucide-react";
+import { Search, Zap, ChevronDown, ChevronUp, Heart, Share2 } from "lucide-react";
+import { shareSong } from "@/lib/shareSong";
 import { Input } from "@/components/ui/input";
 import SongVersionBrowser from "@/components/SongVersionBrowser";
 import { toast } from "sonner";
