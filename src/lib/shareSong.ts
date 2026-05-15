@@ -138,8 +138,22 @@ export async function shareSong(input: ShareSongInput): Promise<void> {
     }
   }
 
-  if (!archiveOrgUrl) {
-    toast.error("No exact recording link found for this saved song yet.");
+  // Verify: must be a specific archive.org track download URL — never the app/home URL.
+  const isArchiveTrackUrl = (u: string | null | undefined): u is string => {
+    if (!u) return false;
+    try {
+      const parsed = new URL(u);
+      if (!/(^|\.)archive\.org$/i.test(parsed.hostname)) return false;
+      // /download/<identifier>/<file.ext> is a specific track
+      const m = parsed.pathname.match(/^\/download\/[^/]+\/[^/]+\.[a-z0-9]+$/i);
+      return !!m;
+    } catch {
+      return false;
+    }
+  };
+
+  if (!isArchiveTrackUrl(trackUrl)) {
+    toast.error("Couldn't resolve a direct archive.org track for this song yet.");
     return;
   }
 
