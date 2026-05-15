@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from "react";
-import { Zap, ExternalLink, Headphones, Star, Loader2, ArrowUpDown, Calendar, TrendingUp, Heart } from "lucide-react";
+import { Zap, ExternalLink, Headphones, Star, Loader2, ArrowUpDown, Calendar, TrendingUp, Heart, Share2 } from "lucide-react";
+import { shareSong } from "@/lib/shareSong";
 import { Badge } from "@/components/ui/badge";
 import { findManyArchiveRecordings, type ArchiveVersion } from "@/lib/archiveOrg";
 import { supabase } from "@/integrations/supabase/client";
