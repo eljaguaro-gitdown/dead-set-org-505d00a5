@@ -29,3 +29,5 @@ project_id = "dplrumaqrdnzwzqmatqr"
     verify_jwt = true
   [functions.handle-dispatch-unsubscribe]
     verify_jwt = false
+  [functions.resolve-song-share]
+    verify_jwt = false
