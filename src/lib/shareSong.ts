@@ -3,6 +3,7 @@ import { trackShare } from "./trackShare";
 import { supabase } from "@/integrations/supabase/client";
 
 interface ShareSongInput {
+  favoriteSongId?: string | null;
   songId?: string | null;
   notableVersionId?: string | null;
   songTitle: string;
@@ -11,6 +12,17 @@ interface ShareSongInput {
   archiveOrgUrl?: string | null;
 }
 
+const readArchiveMeta = (notes?: string | null) => {
+  if (!notes?.trim().startsWith("{")) return null;
+  try {
+    const firstLine = notes.split("\n")[0];
+    const meta = JSON.parse(firstLine);
+    return meta?.__archive ? meta as { show_date?: string; venue?: string; archive_org_url?: string } : null;
+  } catch {
+    return null;
+  }
+};
+
 /**
  * Share a favorite song. Always resolves a deep link to a specific
  * recording on archive.org — falling back to the song's top notable
@@ -18,8 +30,39 @@ interface ShareSongInput {
  * link to the dead-set.org home page.
  */
 export async function shareSong(input: ShareSongInput): Promise<void> {
-  const { songId, notableVersionId, songTitle } = input;
+  const { favoriteSongId, songId, notableVersionId, songTitle } = input;
   let { showDate, venue, archiveOrgUrl } = input;
+
+  if ((!archiveOrgUrl || !showDate) && favoriteSongId) {
+    try {
+      const { data: slot } = await (supabase as any)
+        .from("setlist_slots")
+        .select("notes, notable_version_id")
+        .eq("favorite_song_id", favoriteSongId)
+        .maybeSingle();
+
+      const meta = readArchiveMeta(slot?.notes);
+      if (meta?.archive_org_url) {
+        archiveOrgUrl = archiveOrgUrl ?? meta.archive_org_url;
+        showDate = showDate ?? meta.show_date ?? null;
+        venue = venue ?? meta.venue ?? null;
+      } else if (!archiveOrgUrl && slot?.notable_version_id) {
+        const { data: version } = await supabase
+          .from("notable_versions")
+          .select("archive_org_url, show_date, venue")
+          .eq("id", slot.notable_version_id)
+          .not("archive_org_url", "is", null)
+          .maybeSingle();
+        if (version?.archive_org_url) {
+          archiveOrgUrl = version.archive_org_url;
+          showDate = showDate ?? version.show_date ?? null;
+          venue = venue ?? version.venue ?? null;
+        }
+      }
+    } catch {
+      // continue to the explicit saved version data below
+    }
+  }
 
   // Resolve the exact saved version first; only use a song-level fallback when no date/version was saved.
   if (!archiveOrgUrl && notableVersionId) {
@@ -95,11 +138,16 @@ export async function shareSong(input: ShareSongInput): Promise<void> {
     }
   }
 
+  if (!archiveOrgUrl) {
+    toast.error("No exact recording link found for this saved song yet.");
+    return;
+  }
+
   const versionLine = showDate
     ? `${showDate}${venue ? ` · ${venue}` : ""}`
     : null;
 
-  const link = trackUrl || archiveOrgUrl || "https://dead-set.org";
+  const link = trackUrl || archiveOrgUrl;
 
   const title = versionLine
     ? `${songTitle} — ${versionLine}`
@@ -109,7 +157,7 @@ export async function shareSong(input: ShareSongInput): Promise<void> {
     ? versionLine
       ? `🌹 ${songTitle} — ${versionLine}\n\nListen to this version on archive.org. Found via Dead-Set.Org ⚡\n\n${link}`
       : `🌹 ${songTitle}\n\nListen to this recording on archive.org. Found via Dead-Set.Org ⚡\n\n${link}`
-    : `🌹 ${songTitle} — one of my favorite Dead songs.\n\nBuild your dream show on Dead-Set.Org ⚡\n\n${link}`;
+    : `🌹 ${songTitle}\n\nListen to this recording on archive.org. Found via Dead-Set.Org ⚡\n\n${link}`;
 
   // Try native share first (mobile)
   if (typeof navigator !== "undefined" && navigator.share) {
