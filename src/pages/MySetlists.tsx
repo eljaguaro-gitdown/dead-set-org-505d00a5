@@ -894,26 +894,42 @@ const MySetlists = () => {
                       {song.times_played ? <span>{song.times_played} plays</span> : null}
                     </div>
                   </div>
-                  <button
-                    onClick={async () => {
-                       const result = await toggleFavoriteSong({
-                         songId: song.id,
-                         notableVersionId: song.notable_version_id,
-                         versionShowDate: song.version_show_date,
-                         versionVenue: song.version_venue,
-                         versionArchiveOrgUrl: song.version_archive_org_url,
-                       });
-                      if (!result.ok) {
-                        toast.error(result.requiresAuth ? "Sign in to save favorite songs" : "Could not update favorite songs");
-                        return;
-                      }
-                      toast.success(result.favorited ? `${song.title} added to favorite songs` : `${song.title} removed from favorite songs`);
-                    }}
-                    className="shrink-0 p-2 rounded-lg hover:bg-muted transition-colors"
-                    title="Remove from favorite songs"
-                  >
-                    <Heart className="w-4 h-4 text-primary fill-primary" />
-                  </button>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button
+                      onClick={() => {
+                        void shareSong({
+                          songTitle: song.title,
+                          showDate: song.version_show_date,
+                          venue: song.version_venue,
+                          archiveOrgUrl: song.version_archive_org_url,
+                        });
+                      }}
+                      className="p-2 rounded-lg hover:bg-muted transition-colors"
+                      title={`Share ${song.title}`}
+                    >
+                      <Share2 className="w-4 h-4 text-muted-foreground" />
+                    </button>
+                    <button
+                      onClick={async () => {
+                         const result = await toggleFavoriteSong({
+                           songId: song.id,
+                           notableVersionId: song.notable_version_id,
+                           versionShowDate: song.version_show_date,
+                           versionVenue: song.version_venue,
+                           versionArchiveOrgUrl: song.version_archive_org_url,
+                         });
+                        if (!result.ok) {
+                          toast.error(result.requiresAuth ? "Sign in to save favorite songs" : "Could not update favorite songs");
+                          return;
+                        }
+                        toast.success(result.favorited ? `${song.title} added to favorite songs` : `${song.title} removed from favorite songs`);
+                      }}
+                      className="p-2 rounded-lg hover:bg-muted transition-colors"
+                      title="Remove from favorite songs"
+                    >
+                      <Heart className="w-4 h-4 text-primary fill-primary" />
+                    </button>
+                  </div>
                 </motion.div>
               ))}
             </div>
