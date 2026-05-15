@@ -161,7 +161,7 @@ export async function shareSong(input: ShareSongInput): Promise<void> {
     ? `${showDate}${venue ? ` · ${venue}` : ""}`
     : null;
 
-  const link = trackUrl || archiveOrgUrl;
+  const link = trackUrl;
 
   const title = versionLine
     ? `${songTitle} — ${versionLine}`
