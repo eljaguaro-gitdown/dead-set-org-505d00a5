@@ -148,7 +148,7 @@ const SongVault = ({ songs, eraId, onSelectSong, getNotableVersions, onPlayArchi
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      void shareSong({ songTitle: song.title });
+                      void shareSong({ songId: song.id, songTitle: song.title });
                     }}
                     className="p-1.5 rounded-md text-muted-foreground hover:text-primary transition-colors"
                     title={`Share ${song.title}`}
