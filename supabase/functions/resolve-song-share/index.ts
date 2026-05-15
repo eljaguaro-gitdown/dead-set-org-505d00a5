@@ -127,11 +127,23 @@ async function resolveTrack(identifier: string, songTitle: string) {
 }
 
 const BodySchema = z.object({
-  archiveOrgUrl: z.string().url().refine((url) => url.includes("archive.org/"), "Must be an archive.org URL"),
+  archiveOrgUrl: z.string().url().refine((url) => url.includes("archive.org/"), "Must be an archive.org URL").nullable().optional(),
   songTitle: z.string().min(1).max(200),
   showDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
   venue: z.string().max(255).nullable().optional(),
 });
+
+async function findRecordingsForTitle(songTitle: string): Promise<string[]> {
+  const cleanTitle = songTitle.replace(/["!?.,;:()\[\]]/g, "").trim();
+  const query = encodeURIComponent(`collection:GratefulDead "${cleanTitle}"`);
+  const url = `https://archive.org/advancedsearch.php?q=${query}&fl[]=identifier&fl[]=avg_rating&fl[]=downloads&sort[]=downloads+desc&sort[]=avg_rating+desc&rows=15&output=json`;
+  const res = await fetch(url);
+  if (!res.ok) return [];
+  const data = await res.json();
+  return (data?.response?.docs || [])
+    .map((d: any) => d.identifier)
+    .filter((id: unknown): id is string => typeof id === "string" && id.length > 0);
+}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
