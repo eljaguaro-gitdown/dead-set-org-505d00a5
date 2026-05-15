@@ -941,4 +941,32 @@ const MySetlists = () => {
   );
 };
 
+const SHARE_HINT_KEY = "ds.hint.shareFavoriteSong.dismissed";
+
+function ShareSongHint() {
+  const [dismissed, setDismissed] = useState(() => {
+    if (typeof window === "undefined") return true;
+    return window.localStorage.getItem(SHARE_HINT_KEY) === "1";
+  });
+  if (dismissed) return null;
+  return (
+    <div className="md:hidden flex items-center gap-2 rounded-lg border border-primary/30 bg-primary/5 px-3 py-2 text-sm font-body text-foreground">
+      <Share2 className="w-4 h-4 text-primary shrink-0" />
+      <span className="flex-1">
+        Tap the <Share2 className="inline w-3.5 h-3.5 align-text-bottom mx-0.5 text-primary" /> on any song to share it with a friend.
+      </span>
+      <button
+        onClick={() => {
+          window.localStorage.setItem(SHARE_HINT_KEY, "1");
+          setDismissed(true);
+        }}
+        className="text-muted-foreground hover:text-foreground px-1"
+        aria-label="Dismiss hint"
+      >
+        ✕
+      </button>
+    </div>
+  );
+}
+
 export default MySetlists;
