@@ -158,27 +158,42 @@ Deno.serve(async (req) => {
     }
     const { archiveOrgUrl, songTitle, showDate, venue } = parsed.data;
 
-    const downloadMatch = archiveOrgUrl.match(/archive\.org\/download\/([^/?#]+)\/([^?#]+)/);
-    if (downloadMatch?.[1] && downloadMatch?.[2]) {
-      return new Response(JSON.stringify({ directTrackUrl: archiveOrgUrl, matchScore: 100 }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    let directTrackUrl: string | null = null;
+    let matchScore = 0;
+    let identifier: string | null = null;
 
-    const detailsMatch = archiveOrgUrl.match(/archive\.org\/details\/([^/?#]+)/);
-    const identifier = detailsMatch?.[1];
-    if (!identifier) {
-      return new Response(JSON.stringify({ directTrackUrl: null, error: "Invalid archive.org URL" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    if (archiveOrgUrl) {
+      const downloadMatch = archiveOrgUrl.match(/archive\.org\/download\/([^/?#]+)\/([^?#]+)/);
+      if (downloadMatch?.[1] && downloadMatch?.[2]) {
+        return new Response(JSON.stringify({ directTrackUrl: archiveOrgUrl, matchScore: 100 }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const detailsMatch = archiveOrgUrl.match(/archive\.org\/details\/([^/?#]+)/);
+      identifier = detailsMatch?.[1] ?? null;
+      if (identifier) {
+        const r = await resolveTrack(identifier, songTitle);
+        directTrackUrl = r.directTrackUrl;
+        matchScore = r.matchScore;
+      }
     }
-
-    let { directTrackUrl, matchScore } = await resolveTrack(identifier, songTitle);
 
     if (!directTrackUrl && typeof showDate === "string" && /^\d{4}-\d{2}-\d{2}$/.test(showDate)) {
       const alternatives = (await findRecordingsForDate(showDate, venue)).filter((id) => id !== identifier);
       for (const alternateId of alternatives) {
+        const resolved = await resolveTrack(alternateId, songTitle);
+        matchScore = Math.max(matchScore, resolved.matchScore);
+        if (resolved.directTrackUrl) {
+          directTrackUrl = resolved.directTrackUrl;
+          break;
+        }
+      }
+    }
+
+    // Last-resort: generic title search across the GD collection
+    if (!directTrackUrl) {
+      const titleAlts = (await findRecordingsForTitle(songTitle)).filter((id) => id !== identifier);
+      for (const alternateId of titleAlts) {
         const resolved = await resolveTrack(alternateId, songTitle);
         matchScore = Math.max(matchScore, resolved.matchScore);
         if (resolved.directTrackUrl) {
