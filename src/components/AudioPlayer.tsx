@@ -613,6 +613,9 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
         <audio
           ref={audioRef}
           src={track?.src}
+          preload="auto"
+          playsInline
+          crossOrigin="anonymous"
           onTimeUpdate={handleTimeUpdate}
           onEnded={handleEnded}
           onError={handleAudioError}
