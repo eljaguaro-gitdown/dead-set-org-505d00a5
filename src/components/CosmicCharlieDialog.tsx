@@ -435,7 +435,7 @@ const CosmicCharlieDialog = ({
             >
               {/* Step indicator */}
               <div className="flex items-center justify-center gap-2">
-                {[0, 1, 2].map((s) => (
+                {[0, 1, 2, 3].map((s) => (
                   <div
                     key={s}
                     className={`w-2 h-2 rounded-full transition-all duration-300 ${
@@ -447,6 +447,76 @@ const CosmicCharlieDialog = ({
 
               <AnimatePresence mode="wait" custom={buildDirection}>
                 {buildStep === 0 && (
+                  <motion.div
+                    key="mood"
+                    custom={buildDirection}
+                    variants={slideVariants}
+                    initial="enter"
+                    animate="center"
+                    exit="exit"
+                    transition={{ duration: 0.2 }}
+                    className="space-y-4"
+                  >
+                    <div className="text-center space-y-1">
+                      <h3 className="font-display text-lg text-primary">What kind of night?</h3>
+                      <p className="font-body text-xs text-muted-foreground">
+                        Tell Charlie in your own words — a long fiery Dark Star, a silky smooth Eyes, a brain-melt Set II. Or skip it.
+                      </p>
+                    </div>
+                    <textarea
+                      value={moodText}
+                      onChange={(e) => setMoodText(e.target.value)}
+                      placeholder='e.g. "a long stretched-out exploratory ’77 night with a sick segue"'
+                      className="w-full min-h-[88px] p-3 rounded-md border border-border bg-background text-sm font-body focus:border-primary focus:ring-1 focus:ring-primary/40 outline-none resize-none"
+                      maxLength={500}
+                    />
+
+                    {moodMatches.matchedPhrases.length > 0 && (
+                      <div className="space-y-2 text-xs font-body text-muted-foreground">
+                        <div>
+                          Charlie heard:{" "}
+                          {moodMatches.matchedPhrases.slice(0, 6).map((p, i) => (
+                            <span key={p} className="inline-block">
+                              <span className="text-primary">{p}</span>
+                              {i < Math.min(moodMatches.matchedPhrases.length, 6) - 1 ? ", " : ""}
+                            </span>
+                          ))}
+                          {moodMatches.matchedPhrases.length > 6 && "..."}
+                        </div>
+                        <div className="text-muted-foreground/70">
+                          He'll bias toward{" "}
+                          {moodMatches.vibes.length > 0 && (
+                            <>{moodMatches.vibes.length} vibe{moodMatches.vibes.length > 1 ? "s" : ""}</>
+                          )}
+                          {moodMatches.vibes.length > 0 && moodMatches.priorities.length > 0 && " · "}
+                          {moodMatches.priorities.length > 0 && (
+                            <>{moodMatches.priorities.length} priorit{moodMatches.priorities.length > 1 ? "ies" : "y"}</>
+                          )}
+                          {moodMatches.length && ` · ${moodMatches.length} pacing`}
+                          . You'll see the chips light up on the next screens.
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={() => setMode(null)}
+                        className="font-body text-xs text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        ← Back
+                      </button>
+                      <Button
+                        size="sm"
+                        onClick={goNextBuild}
+                        className="flex-1 bg-primary text-primary-foreground font-body"
+                      >
+                        {moodText.trim() ? "Continue" : "Skip"} →
+                      </Button>
+                    </div>
+                  </motion.div>
+                )}
+
+                {buildStep === 1 && (
                   <motion.div
                     key="vibe"
                     custom={buildDirection}
@@ -464,6 +534,7 @@ const CosmicCharlieDialog = ({
                     <div className="grid grid-cols-2 gap-2">
                       {VIBES.map((vibe) => {
                         const selected = selectedVibes.some((v) => v.id === vibe.id);
+                        const suggested = !selected && moodMatches.vibes.includes(vibe.id);
                         return (
                           <motion.button
                             key={vibe.id}
@@ -472,6 +543,8 @@ const CosmicCharlieDialog = ({
                             className={`flex items-center gap-2 px-3 py-2.5 rounded-lg border text-left transition-all duration-200 text-sm ${
                               selected
                                 ? "border-primary bg-primary/15 shadow-[0_0_10px_hsl(var(--glow-gold))]"
+                                : suggested
+                                ? "border-primary/60 bg-primary/5 ring-1 ring-primary/30"
                                 : "border-border bg-background hover:border-primary/40"
                             }`}
                           >
@@ -485,7 +558,7 @@ const CosmicCharlieDialog = ({
                     </div>
                     <div className="flex items-center gap-3">
                       <button
-                        onClick={() => setMode(null)}
+                        onClick={goBackBuild}
                         className="font-body text-xs text-muted-foreground hover:text-foreground transition-colors"
                       >
                         ← Back
@@ -508,7 +581,7 @@ const CosmicCharlieDialog = ({
                   </motion.div>
                 )}
 
-                {buildStep === 1 && (
+                {buildStep === 2 && (
                   <motion.div
                     key="priorities"
                     custom={buildDirection}
@@ -526,6 +599,7 @@ const CosmicCharlieDialog = ({
                     <div className="flex flex-col gap-2">
                       {PRIORITIES.map((priority) => {
                         const selected = selectedPriorities.some((p) => p.id === priority.id);
+                        const suggested = !selected && moodMatches.priorities.includes(priority.id);
                         return (
                           <motion.button
                             key={priority.id}
@@ -534,6 +608,8 @@ const CosmicCharlieDialog = ({
                             className={`flex items-center gap-3 px-3 py-2.5 rounded-lg border text-left transition-all duration-200 ${
                               selected
                                 ? "border-primary bg-primary/15 shadow-[0_0_10px_hsl(var(--glow-gold))]"
+                                : suggested
+                                ? "border-primary/60 bg-primary/5 ring-1 ring-primary/30"
                                 : "border-border bg-background hover:border-primary/40"
                             }`}
                           >
@@ -564,7 +640,7 @@ const CosmicCharlieDialog = ({
                   </motion.div>
                 )}
 
-                {buildStep === 2 && (
+                {buildStep === 3 && (
                   <motion.div
                     key="specifics"
                     custom={buildDirection}
