@@ -534,7 +534,7 @@ const CosmicCharlieDialog = ({
                     <div className="grid grid-cols-2 gap-2">
                       {VIBES.map((vibe) => {
                         const selected = selectedVibes.some((v) => v.id === vibe.id);
-                        const suggested = !selected && moodMatches.vibes.includes(vibe.id);
+                        const suggested = !selected && (moodMatches.vibes as string[]).includes(vibe.id);
                         return (
                           <motion.button
                             key={vibe.id}
