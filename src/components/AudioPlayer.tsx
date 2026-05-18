@@ -676,6 +676,19 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
           muted={muted}
         />
 
+        {/* iOS interruption fallback — appears only when auto-resume fails */}
+        {needsResume && (
+          <button
+            type="button"
+            onClick={handleManualResume}
+            className="absolute inset-x-0 -top-10 mx-auto w-fit px-4 py-2 rounded-[10px] bg-background/95 border border-primary/40 text-primary font-mono uppercase tracking-[0.18em] text-sm shadow-lg hover:bg-background hover:border-primary transition-colors flex items-center gap-2"
+            aria-label="Tap to resume playback"
+          >
+            <Play className="w-3.5 h-3.5" />
+            Tap to resume
+          </button>
+        )}
+
         {/* Progress bar */}
         <div className="w-full h-1 bg-muted cursor-pointer" onClick={(e) => {
           if (!duration) return;
