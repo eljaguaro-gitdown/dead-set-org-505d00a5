@@ -492,6 +492,59 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
     };
   }, [userWantsToPlay]);
 
+  // Fallback recovery: when auto-resume fails (iOS sometimes refuses
+  // .play() until a fresh user gesture), surface a "Tap to resume" overlay
+  // after 2s of divergence between intent and reality.
+  const [needsResume, setNeedsResume] = useState(false);
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    let timeoutId: number | null = null;
+
+    const evaluate = () => {
+      if (timeoutId) { window.clearTimeout(timeoutId); timeoutId = null; }
+      if (!userWantsToPlay || !audio.paused || document.visibilityState !== "visible") {
+        setNeedsResume(false);
+        return;
+      }
+      timeoutId = window.setTimeout(() => {
+        if (userWantsToPlay && audio.paused && document.visibilityState === "visible") {
+          setNeedsResume(true);
+        }
+      }, 2000);
+    };
+
+    const clear = () => {
+      if (timeoutId) { window.clearTimeout(timeoutId); timeoutId = null; }
+      setNeedsResume(false);
+    };
+
+    evaluate();
+    audio.addEventListener("pause", evaluate);
+    audio.addEventListener("play", clear);
+    audio.addEventListener("playing", clear);
+    document.addEventListener("visibilitychange", evaluate);
+
+    return () => {
+      if (timeoutId) window.clearTimeout(timeoutId);
+      audio.removeEventListener("pause", evaluate);
+      audio.removeEventListener("play", clear);
+      audio.removeEventListener("playing", clear);
+      document.removeEventListener("visibilitychange", evaluate);
+    };
+  }, [userWantsToPlay]);
+
+  const handleManualResume = async () => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    try {
+      await audio.play();
+      setNeedsResume(false);
+    } catch (err) {
+      console.warn("Manual resume failed:", err);
+    }
+  };
+
   const togglePlay = () => {
     if (!audioRef.current) return;
     if (playing) {
