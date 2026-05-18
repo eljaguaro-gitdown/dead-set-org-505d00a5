@@ -117,6 +117,7 @@ const CosmicCharlieDialog = ({
   const [buildDirection, setBuildDirection] = useState(1);
   const [selectedVibes, setSelectedVibes] = useState<typeof VIBES>([]);
   const [selectedPriorities, setSelectedPriorities] = useState<typeof PRIORITIES>([]);
+  const [moodText, setMoodText] = useState("");
   const [mustInclude, setMustInclude] = useState("");
   const [pleaseAvoid, setPleaseAvoid] = useState("");
   const [itsFor, setItsFor] = useState("");
