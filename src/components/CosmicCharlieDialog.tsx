@@ -15,6 +15,7 @@ import {
   loadRecentSongs,
   appendRecentSongs,
 } from "@/lib/cosmicCharlieHistory";
+import { extractTasteMatches, type LengthHint } from "@/lib/charlie/tasteLexicon";
 
 type Song = Database["public"]["Tables"]["songs"]["Row"];
 type Era = Database["public"]["Tables"]["eras"]["Row"];
