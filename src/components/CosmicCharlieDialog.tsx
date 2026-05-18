@@ -463,13 +463,25 @@ const CosmicCharlieDialog = ({
                         Tell Charlie in your own words — a long fiery Dark Star, a silky smooth Eyes, a brain-melt Set II. Or skip it.
                       </p>
                     </div>
-                    <textarea
-                      value={moodText}
-                      onChange={(e) => setMoodText(e.target.value)}
-                      placeholder='e.g. "a long stretched-out exploratory ’77 night with a sick segue"'
-                      className="w-full min-h-[88px] p-3 rounded-md border border-border bg-background text-sm font-body focus:border-primary focus:ring-1 focus:ring-primary/40 outline-none resize-none"
-                      maxLength={500}
-                    />
+                    <div className="relative">
+                      <textarea
+                        value={moodText}
+                        onChange={(e) => setMoodText(e.target.value)}
+                        placeholder='e.g. "a long stretched-out exploratory ’77 night with a sick segue"'
+                        className="w-full min-h-[88px] p-3 pr-9 rounded-md border border-border bg-background text-sm font-body focus:border-primary focus:ring-1 focus:ring-primary/40 outline-none resize-none"
+                        maxLength={500}
+                      />
+                      {moodText.length > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => setMoodText("")}
+                          aria-label="Clear description"
+                          className="absolute top-2 right-2 h-6 w-6 inline-flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </button>
+                      )}
+                    </div>
 
                     {moodMatches.matchedPhrases.length > 0 && (
                       <div className="space-y-2 text-xs font-body text-muted-foreground">
