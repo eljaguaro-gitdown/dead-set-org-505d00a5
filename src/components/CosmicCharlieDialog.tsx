@@ -338,6 +338,7 @@ const CosmicCharlieDialog = ({
       setMustInclude("");
       setPleaseAvoid("");
       setItsFor("");
+      setMoodText("");
       resetExploreState();
     }
     onOpenChange(open);
