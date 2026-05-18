@@ -439,6 +439,59 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
     };
   }, []);
 
+  // iOS interruption recovery: resume playback once the OS lets us back in.
+  // Listens for the events iOS fires around phone calls, Siri, route changes,
+  // and tab visibility flips. Only acts if `userWantsToPlay` is still true —
+  // a user-initiated pause is left alone.
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    const handleVisibilityChange = async () => {
+      if (document.visibilityState === "visible" && userWantsToPlay && audio.paused) {
+        try {
+          await audio.play();
+        } catch (err) {
+          console.warn("Resume failed after visibility change:", err);
+        }
+      }
+    };
+
+    const handleAudioPause = () => {
+      // Audio paused but intent is still "play" — treat as an OS interruption.
+      // Don't mutate userWantsToPlay; the visibility/stalled handlers will
+      // attempt recovery when the OS hands us back.
+      if (userWantsToPlay) {
+        console.log("Playback interrupted (likely iOS audio session)");
+      }
+    };
+
+    const handleStalled = async () => {
+      if (userWantsToPlay && audio.paused) {
+        const currentTime = audio.currentTime;
+        audio.load();
+        audio.currentTime = currentTime;
+        try {
+          await audio.play();
+        } catch (err) {
+          console.warn("Stalled recovery failed:", err);
+        }
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    audio.addEventListener("pause", handleAudioPause);
+    audio.addEventListener("stalled", handleStalled);
+    audio.addEventListener("suspend", handleStalled);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      audio.removeEventListener("pause", handleAudioPause);
+      audio.removeEventListener("stalled", handleStalled);
+      audio.removeEventListener("suspend", handleStalled);
+    };
+  }, [userWantsToPlay]);
+
   const togglePlay = () => {
     if (!audioRef.current) return;
     if (playing) {
