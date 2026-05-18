@@ -492,6 +492,59 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
     };
   }, [userWantsToPlay]);
 
+  // Fallback recovery: when auto-resume fails (iOS sometimes refuses
+  // .play() until a fresh user gesture), surface a "Tap to resume" overlay
+  // after 2s of divergence between intent and reality.
+  const [needsResume, setNeedsResume] = useState(false);
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    let timeoutId: number | null = null;
+
+    const evaluate = () => {
+      if (timeoutId) { window.clearTimeout(timeoutId); timeoutId = null; }
+      if (!userWantsToPlay || !audio.paused || document.visibilityState !== "visible") {
+        setNeedsResume(false);
+        return;
+      }
+      timeoutId = window.setTimeout(() => {
+        if (userWantsToPlay && audio.paused && document.visibilityState === "visible") {
+          setNeedsResume(true);
+        }
+      }, 2000);
+    };
+
+    const clear = () => {
+      if (timeoutId) { window.clearTimeout(timeoutId); timeoutId = null; }
+      setNeedsResume(false);
+    };
+
+    evaluate();
+    audio.addEventListener("pause", evaluate);
+    audio.addEventListener("play", clear);
+    audio.addEventListener("playing", clear);
+    document.addEventListener("visibilitychange", evaluate);
+
+    return () => {
+      if (timeoutId) window.clearTimeout(timeoutId);
+      audio.removeEventListener("pause", evaluate);
+      audio.removeEventListener("play", clear);
+      audio.removeEventListener("playing", clear);
+      document.removeEventListener("visibilitychange", evaluate);
+    };
+  }, [userWantsToPlay]);
+
+  const handleManualResume = async () => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    try {
+      await audio.play();
+      setNeedsResume(false);
+    } catch (err) {
+      console.warn("Manual resume failed:", err);
+    }
+  };
+
   const togglePlay = () => {
     if (!audioRef.current) return;
     if (playing) {
@@ -622,6 +675,19 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
           onLoadedMetadata={handleTimeUpdate}
           muted={muted}
         />
+
+        {/* iOS interruption fallback — appears only when auto-resume fails */}
+        {needsResume && (
+          <button
+            type="button"
+            onClick={handleManualResume}
+            className="absolute inset-x-0 -top-10 mx-auto w-fit px-4 py-2 rounded-[10px] bg-background/95 border border-primary/40 text-primary font-mono uppercase tracking-[0.18em] text-sm shadow-lg hover:bg-background hover:border-primary transition-colors flex items-center gap-2"
+            aria-label="Tap to resume playback"
+          >
+            <Play className="w-3.5 h-3.5" />
+            Tap to resume
+          </button>
+        )}
 
         {/* Progress bar */}
         <div className="w-full h-1 bg-muted cursor-pointer" onClick={(e) => {
