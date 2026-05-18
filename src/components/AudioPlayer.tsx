@@ -307,12 +307,16 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
     };
   }, []);
 
-  // iOS / Android lock-screen "Now Playing" metadata.
-  // Without this, the OS falls back to the page title + favicon (which is why
-  // the Lovable graphic was appearing). Sets Steal Your Face as artwork and
-  // Dead-Set.Org as the artist line.
+  // iOS / Android lock-screen "Now Playing" metadata + interruption recovery.
+  // Critical for iOS: when a phone call interrupts playback, iOS pauses the
+  // audio element. Without Media Session action handlers, the OS has no way
+  // to resume us after the call ends — the lock-screen play button stays
+  // greyed out and tapping our in-app play button hits a stale state.
   useEffect(() => {
     if (typeof window === "undefined" || !("mediaSession" in navigator)) return;
+    const setHandler = (action: MediaSessionAction, handler: MediaSessionActionHandler | null) => {
+      try { navigator.mediaSession.setActionHandler(action, handler); } catch { /* unsupported action */ }
+    };
     try {
       navigator.mediaSession.metadata = new window.MediaMetadata({
         title: songTitle || "Dead-Set.Org",
@@ -323,22 +327,109 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
           { src: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
         ],
       });
-      navigator.mediaSession.setActionHandler?.("play", () => audioRef.current?.play().catch(() => {}));
-      navigator.mediaSession.setActionHandler?.("pause", () => audioRef.current?.pause());
-      navigator.mediaSession.setActionHandler?.("nexttrack", onNext ? () => onNext() : null);
-      navigator.mediaSession.setActionHandler?.("previoustrack", onPrev ? () => onPrev() : null);
-    } catch {
-      // MediaSession not fully supported — silently ignore
-    }
+    } catch { /* metadata unsupported */ }
+
+    setHandler("play", () => {
+      const el = audioRef.current;
+      if (!el) return;
+      el.play().then(() => {
+        setPlaying(true);
+        audioDebug.setPlaybackState("playing");
+        resumePlayEvent();
+        try { navigator.mediaSession.playbackState = "playing"; } catch {}
+      }).catch((e) => {
+        audioDebug.log("player", "mediaSession play rejected", { error: String(e) }, "error");
+      });
+    });
+    setHandler("pause", () => {
+      const el = audioRef.current;
+      if (!el) return;
+      el.pause();
+      setPlaying(false);
+      audioDebug.setPlaybackState("paused");
+      pausePlayEvent();
+      try { navigator.mediaSession.playbackState = "paused"; } catch {}
+    });
+    setHandler("stop", () => {
+      audioRef.current?.pause();
+      setPlaying(false);
+      try { navigator.mediaSession.playbackState = "paused"; } catch {}
+    });
+    setHandler("nexttrack", onNext ? () => onNext() : null);
+    setHandler("previoustrack", onPrev ? () => onPrev() : null);
+    setHandler("seekbackward", (details) => {
+      const el = audioRef.current;
+      if (!el) return;
+      el.currentTime = Math.max(0, el.currentTime - (details.seekOffset ?? 10));
+    });
+    setHandler("seekforward", (details) => {
+      const el = audioRef.current;
+      if (!el) return;
+      el.currentTime = Math.min(el.duration || 0, el.currentTime + (details.seekOffset ?? 10));
+    });
+    setHandler("seekto", (details) => {
+      const el = audioRef.current;
+      if (!el || details.seekTime == null) return;
+      if (details.fastSeek && "fastSeek" in el) {
+        (el as HTMLAudioElement & { fastSeek: (t: number) => void }).fastSeek(details.seekTime);
+      } else {
+        el.currentTime = details.seekTime;
+      }
+    });
+
+    return () => {
+      (["play","pause","stop","nexttrack","previoustrack","seekbackward","seekforward","seekto"] as MediaSessionAction[])
+        .forEach((a) => setHandler(a, null));
+    };
   }, [songTitle, venue, showDate, onNext, onPrev]);
 
-  // Keep playback state in sync with the OS widget
+  // Keep playback state + scrubbable position in sync with the OS widget.
+  // setPositionState gives iOS the data it needs to draw the lock-screen
+  // scrubber AND to correctly restore playback after an interruption.
   useEffect(() => {
     if (typeof window === "undefined" || !("mediaSession" in navigator)) return;
     try {
       navigator.mediaSession.playbackState = playing ? "playing" : "paused";
     } catch { /* noop */ }
-  }, [playing]);
+    try {
+      if (duration > 0 && Number.isFinite(duration) && navigator.mediaSession.setPositionState) {
+        navigator.mediaSession.setPositionState({
+          duration,
+          position: Math.min(progress, duration),
+          playbackRate: audioRef.current?.playbackRate ?? 1,
+        });
+      }
+    } catch { /* noop */ }
+  }, [playing, progress, duration]);
+
+  // CRITICAL iOS FIX: mirror the audio element's own play/pause events into
+  // our React state. When iOS interrupts for a phone call it pauses the
+  // <audio> directly — without this listener our `playing` state drifts out
+  // of sync, the in-app button shows the wrong icon, and Media Session's
+  // "play" action can't resume cleanly. Syncing here lets the lock-screen
+  // Play button (handled above) bring playback back to life after the call.
+  useEffect(() => {
+    const el = audioRef.current;
+    if (!el) return;
+    const onPlay = () => {
+      setPlaying(true);
+      audioDebug.setPlaybackState("playing");
+      try { navigator.mediaSession.playbackState = "playing"; } catch {}
+    };
+    const onPause = () => {
+      // Ignore pause events fired during end-of-track teardown.
+      if (el.ended) return;
+      setPlaying(false);
+      audioDebug.setPlaybackState("paused");
+      try { navigator.mediaSession.playbackState = "paused"; } catch {}
+    };
+    el.addEventListener("play", onPlay);
+    el.addEventListener("pause", onPause);
+    return () => {
+      el.removeEventListener("play", onPlay);
+      el.removeEventListener("pause", onPause);
+    };
+  }, []);
 
   const togglePlay = () => {
     if (!audioRef.current) return;
