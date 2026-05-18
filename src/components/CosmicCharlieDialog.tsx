@@ -599,7 +599,7 @@ const CosmicCharlieDialog = ({
                     <div className="flex flex-col gap-2">
                       {PRIORITIES.map((priority) => {
                         const selected = selectedPriorities.some((p) => p.id === priority.id);
-                        const suggested = !selected && moodMatches.priorities.includes(priority.id);
+                        const suggested = !selected && (moodMatches.priorities as string[]).includes(priority.id);
                         return (
                           <motion.button
                             key={priority.id}
