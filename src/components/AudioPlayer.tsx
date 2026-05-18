@@ -337,6 +337,7 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
     setHandler("play", () => {
       const el = audioRef.current;
       if (!el) return;
+      setUserWantsToPlay(true);
       el.play().then(() => {
         setPlaying(true);
         audioDebug.setPlaybackState("playing");
@@ -349,6 +350,7 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
     setHandler("pause", () => {
       const el = audioRef.current;
       if (!el) return;
+      setUserWantsToPlay(false);
       el.pause();
       setPlaying(false);
       audioDebug.setPlaybackState("paused");
@@ -356,6 +358,7 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
       try { navigator.mediaSession.playbackState = "paused"; } catch {}
     });
     setHandler("stop", () => {
+      setUserWantsToPlay(false);
       audioRef.current?.pause();
       setPlaying(false);
       try { navigator.mediaSession.playbackState = "paused"; } catch {}
