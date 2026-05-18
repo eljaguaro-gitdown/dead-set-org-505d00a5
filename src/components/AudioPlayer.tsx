@@ -52,6 +52,11 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
   const [tracks, setTracks] = useState<Track[]>([]);
   const [currentTrack, setCurrentTrack] = useState(0);
   const [playing, setPlaying] = useState(autoPlay);
+  // Intent state — what the USER wants, independent of what the <audio>
+  // element is actually doing. During an iOS phone-call interruption the
+  // element's `paused` flips to true, but `userWantsToPlay` stays true so
+  // we know to resume once the interruption ends.
+  const [userWantsToPlay, setUserWantsToPlay] = useState(autoPlay);
   const [muted, setMuted] = useState(false);
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
