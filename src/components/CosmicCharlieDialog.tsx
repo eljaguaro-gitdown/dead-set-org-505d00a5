@@ -181,6 +181,11 @@ const CosmicCharlieDialog = ({
     });
   };
 
+  const moodMatches = useMemo(
+    () => extractTasteMatches(moodText),
+    [moodText]
+  );
+
   const composePreferences = (): string | undefined => {
     const parts: string[] = [];
     if (selectedVibes.length > 0) {
@@ -192,6 +197,17 @@ const CosmicCharlieDialog = ({
     if (mustInclude.trim()) parts.push(`Must include: ${mustInclude.trim()}.`);
     if (pleaseAvoid.trim()) parts.push(`Please avoid: ${pleaseAvoid.trim()}.`);
     if (itsFor.trim()) parts.push(`This setlist is for: ${itsFor.trim()}.`);
+    if (moodText.trim()) {
+      parts.push(`Mood: ${moodText.trim()}.`);
+    }
+    if (moodMatches.length) {
+      const lengthCopy: Record<LengthHint, string> = {
+        tight: "Keep songs tight — minimize extended jams.",
+        stretched: "Let the jam vehicles stretch out.",
+        marathon: "At least one Set II song should be a true marathon (30+ minutes if the era supports it).",
+      };
+      parts.push(lengthCopy[moodMatches.length]);
+    }
     return parts.length > 0 ? parts.join(" ") : undefined;
   };
 
