@@ -52,6 +52,11 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
   const [tracks, setTracks] = useState<Track[]>([]);
   const [currentTrack, setCurrentTrack] = useState(0);
   const [playing, setPlaying] = useState(autoPlay);
+  // Intent state — what the USER wants, independent of what the <audio>
+  // element is actually doing. During an iOS phone-call interruption the
+  // element's `paused` flips to true, but `userWantsToPlay` stays true so
+  // we know to resume once the interruption ends.
+  const [userWantsToPlay, setUserWantsToPlay] = useState(autoPlay);
   const [muted, setMuted] = useState(false);
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -332,6 +337,7 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
     setHandler("play", () => {
       const el = audioRef.current;
       if (!el) return;
+      setUserWantsToPlay(true);
       el.play().then(() => {
         setPlaying(true);
         audioDebug.setPlaybackState("playing");
@@ -344,6 +350,7 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
     setHandler("pause", () => {
       const el = audioRef.current;
       if (!el) return;
+      setUserWantsToPlay(false);
       el.pause();
       setPlaying(false);
       audioDebug.setPlaybackState("paused");
@@ -351,6 +358,7 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
       try { navigator.mediaSession.playbackState = "paused"; } catch {}
     });
     setHandler("stop", () => {
+      setUserWantsToPlay(false);
       audioRef.current?.pause();
       setPlaying(false);
       try { navigator.mediaSession.playbackState = "paused"; } catch {}
@@ -434,10 +442,12 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
   const togglePlay = () => {
     if (!audioRef.current) return;
     if (playing) {
+      setUserWantsToPlay(false);
       audioRef.current.pause();
       audioDebug.setPlaybackState("paused");
       pausePlayEvent();
     } else {
+      setUserWantsToPlay(true);
       audioRef.current.play().catch((e) => {
         audioDebug.log("player", "play() rejected", { error: String(e) }, "error");
       });
