@@ -439,10 +439,12 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
   const togglePlay = () => {
     if (!audioRef.current) return;
     if (playing) {
+      setUserWantsToPlay(false);
       audioRef.current.pause();
       audioDebug.setPlaybackState("paused");
       pausePlayEvent();
     } else {
+      setUserWantsToPlay(true);
       audioRef.current.play().catch((e) => {
         audioDebug.log("player", "play() rejected", { error: String(e) }, "error");
       });
