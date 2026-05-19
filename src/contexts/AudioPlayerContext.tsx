@@ -297,6 +297,79 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
   }, [stopPlayback]);
 
   /**
+   * Prefetch the next slot in the playlist so it starts instantly when the
+   * current song ends. Two-stage warm-up:
+   *   1. Resolve directTrackUrl via archive.org (if not already known) so
+   *      advancePlaylist doesn't pay that round-trip on transition.
+   *   2. Point a hidden <audio preload="auto"> at the resolved URL so the
+   *      browser starts buffering bytes into HTTP cache. When AudioPlayer
+   *      remounts with the new src, the file is already partially cached and
+   *      playback begins with no audible gap.
+   */
+  const prefetchAudioRef = useRef<HTMLAudioElement | null>(null);
+  useEffect(() => {
+    if (!state.playlistMode) return;
+    const next = state.playlistSlots[state.playlistIndex + 1];
+    if (!next) return;
+
+    let cancelled = false;
+    (async () => {
+      let resolved = next;
+      if (!next.directTrackUrl || !next.version?.archive_org_url) {
+        const r = await resolveSlot(next);
+        if (r) resolved = r;
+      }
+      if (cancelled) return;
+
+      // Persist any newly-resolved metadata so advancePlaylist skips re-resolution.
+      if (resolved !== next) {
+        setState((prev) => {
+          if (!prev.playlistMode) return prev;
+          const idx = prev.playlistSlots.findIndex((s) => s.id === resolved.id);
+          if (idx === -1) return prev;
+          const copy = [...prev.playlistSlots];
+          copy[idx] = resolved;
+          return { ...prev, playlistSlots: copy };
+        });
+      }
+
+      const url = resolved.directTrackUrl;
+      if (!url || typeof window === "undefined") return;
+      try {
+        if (!prefetchAudioRef.current) {
+          const a = new Audio();
+          a.preload = "auto";
+          a.muted = true;
+          // Never let this element actually play out loud.
+          a.autoplay = false;
+          prefetchAudioRef.current = a;
+        }
+        const el = prefetchAudioRef.current;
+        if (el.src !== url) {
+          audioDebug.log("context", "prefetching next track", { song: resolved.song.title });
+          el.src = url;
+          el.load();
+        }
+      } catch (e) {
+        audioDebug.log("context", "prefetch failed", { error: String(e) }, "warn");
+      }
+    })();
+
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.playingSlot?.id, state.playlistMode, state.playlistIndex, state.playlistSlots.length]);
+
+  // Tear down the prefetch element when playback stops entirely.
+  useEffect(() => {
+    if (state.playingSlot) return;
+    const el = prefetchAudioRef.current;
+    if (!el) return;
+    try { el.pause(); el.removeAttribute("src"); el.load(); } catch { /* noop */ }
+  }, [state.playingSlot]);
+
+
+
+  /**
    * Append slots to the end of the active playlist. If nothing is playing,
    * falls back to playSetlist so the queue starts immediately.
    */
