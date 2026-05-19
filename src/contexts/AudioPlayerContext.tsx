@@ -297,61 +297,85 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
   }, [stopPlayback]);
 
   /**
-   * Prefetch the next slot in the playlist so it starts instantly when the
-   * current song ends. Two-stage warm-up:
+   * Prefetch the next few slots in the playlist so even longer transitions
+   * (with track-resolution round-trips) are gap-free. Two-stage warm-up per
+   * slot:
    *   1. Resolve directTrackUrl via archive.org (if not already known) so
    *      advancePlaylist doesn't pay that round-trip on transition.
    *   2. Point a hidden <audio preload="auto"> at the resolved URL so the
-   *      browser starts buffering bytes into HTTP cache. When AudioPlayer
-   *      remounts with the new src, the file is already partially cached and
-   *      playback begins with no audible gap.
+   *      browser starts buffering bytes into HTTP cache.
+   *
+   * We keep a small pool of hidden audio elements — one per lookahead slot —
+   * keyed by slot id, so buffering on slot N+1 isn't thrown away when we
+   * start prefetching N+2 and N+3.
    */
-  const prefetchAudioRef = useRef<HTMLAudioElement | null>(null);
+  const PREFETCH_LOOKAHEAD = 3;
+  const prefetchPoolRef = useRef<Map<string, HTMLAudioElement>>(new Map());
   useEffect(() => {
     if (!state.playlistMode) return;
-    const next = state.playlistSlots[state.playlistIndex + 1];
-    if (!next) return;
+    const upcoming = state.playlistSlots.slice(
+      state.playlistIndex + 1,
+      state.playlistIndex + 1 + PREFETCH_LOOKAHEAD,
+    );
+    if (upcoming.length === 0) return;
 
     let cancelled = false;
+
+    // Evict any pooled elements whose slot is no longer in the lookahead
+    // window (already played, or user jumped). Frees memory + bandwidth.
+    const keepIds = new Set(upcoming.map((s) => s.id));
+    for (const [id, el] of prefetchPoolRef.current.entries()) {
+      if (!keepIds.has(id)) {
+        try { el.pause(); el.removeAttribute("src"); el.load(); } catch { /* noop */ }
+        prefetchPoolRef.current.delete(id);
+      }
+    }
+
     (async () => {
-      let resolved = next;
-      if (!next.directTrackUrl || !next.version?.archive_org_url) {
-        const r = await resolveSlot(next);
-        if (r) resolved = r;
-      }
-      if (cancelled) return;
+      // Resolve + warm each upcoming slot sequentially. Sequential keeps us
+      // from hammering archive.org with parallel metadata requests, and the
+      // browser will continue buffering already-warmed slots in the background.
+      for (const slot of upcoming) {
+        if (cancelled) return;
 
-      // Persist any newly-resolved metadata so advancePlaylist skips re-resolution.
-      if (resolved !== next) {
-        setState((prev) => {
-          if (!prev.playlistMode) return prev;
-          const idx = prev.playlistSlots.findIndex((s) => s.id === resolved.id);
-          if (idx === -1) return prev;
-          const copy = [...prev.playlistSlots];
-          copy[idx] = resolved;
-          return { ...prev, playlistSlots: copy };
-        });
-      }
+        let resolved = slot;
+        if (!slot.directTrackUrl || !slot.version?.archive_org_url) {
+          const r = await resolveSlot(slot);
+          if (r) resolved = r;
+        }
+        if (cancelled) return;
 
-      const url = resolved.directTrackUrl;
-      if (!url || typeof window === "undefined") return;
-      try {
-        if (!prefetchAudioRef.current) {
-          const a = new Audio();
-          a.preload = "auto";
-          a.muted = true;
-          // Never let this element actually play out loud.
-          a.autoplay = false;
-          prefetchAudioRef.current = a;
+        // Persist newly-resolved metadata so advancePlaylist skips re-resolution.
+        if (resolved !== slot) {
+          setState((prev) => {
+            if (!prev.playlistMode) return prev;
+            const idx = prev.playlistSlots.findIndex((s) => s.id === resolved.id);
+            if (idx === -1) return prev;
+            const copy = [...prev.playlistSlots];
+            copy[idx] = resolved;
+            return { ...prev, playlistSlots: copy };
+          });
         }
-        const el = prefetchAudioRef.current;
-        if (el.src !== url) {
-          audioDebug.log("context", "prefetching next track", { song: resolved.song.title });
-          el.src = url;
-          el.load();
+
+        const url = resolved.directTrackUrl;
+        if (!url || typeof window === "undefined") continue;
+        try {
+          let el = prefetchPoolRef.current.get(resolved.id);
+          if (!el) {
+            el = new Audio();
+            el.preload = "auto";
+            el.muted = true;
+            el.autoplay = false;
+            prefetchPoolRef.current.set(resolved.id, el);
+          }
+          if (el.src !== url) {
+            audioDebug.log("context", "prefetching upcoming track", { song: resolved.song.title });
+            el.src = url;
+            el.load();
+          }
+        } catch (e) {
+          audioDebug.log("context", "prefetch failed", { error: String(e) }, "warn");
         }
-      } catch (e) {
-        audioDebug.log("context", "prefetch failed", { error: String(e) }, "warn");
       }
     })();
 
@@ -359,13 +383,16 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.playingSlot?.id, state.playlistMode, state.playlistIndex, state.playlistSlots.length]);
 
-  // Tear down the prefetch element when playback stops entirely.
+  // Tear down the prefetch pool entirely when playback stops.
   useEffect(() => {
     if (state.playingSlot) return;
-    const el = prefetchAudioRef.current;
-    if (!el) return;
-    try { el.pause(); el.removeAttribute("src"); el.load(); } catch { /* noop */ }
+    for (const el of prefetchPoolRef.current.values()) {
+      try { el.pause(); el.removeAttribute("src"); el.load(); } catch { /* noop */ }
+    }
+    prefetchPoolRef.current.clear();
   }, [state.playingSlot]);
+
+
 
 
 
