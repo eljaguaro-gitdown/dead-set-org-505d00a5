@@ -33,14 +33,18 @@ const ShareDropdown = ({ url, ogUrl, title, description }: ShareDropdownProps) =
   // Always show our menu so users can pick in-app DM, copy, socials, or native share.
   const handleToggle = () => setOpen((o) => !o);
 
-  // Always share the canonical dead-set.org URL — clean, branded, memorable.
-  // Crawler unfurls are handled by dynamic OG tags on the page itself.
+  // Prefer the OG-enabled function URL when available so SMS/iMessage/X/FB
+  // crawlers unfurl a per-setlist card (title + sender + custom thumbnail)
+  // instead of the static index.html defaults. Humans visiting the link are
+  // auto-redirected to the canonical /setlist/:id page by that function.
+  const linkToShare = ogUrl || url;
+
   const copyLink = async () => {
     try {
-      await navigator.clipboard.writeText(url);
+      await navigator.clipboard.writeText(linkToShare);
     } catch {
       const ta = document.createElement("textarea");
-      ta.value = url;
+      ta.value = linkToShare;
       document.body.appendChild(ta);
       ta.select();
       document.execCommand("copy");
@@ -52,10 +56,7 @@ const ShareDropdown = ({ url, ogUrl, title, description }: ShareDropdownProps) =
     setTimeout(() => { setCopied(false); setOpen(false); }, 1500);
   };
 
-  // Social crawlers (X, Facebook) get the OG-enabled function URL so the
-  // unfurl card always shows the setlist title + poster.
-  // Always use the canonical dead-set.org URL for every share channel.
-  const socialUrl = url;
+  const socialUrl = linkToShare;
 
   const shareTwitter = () => {
     const tweetUrl = `https://x.com/intent/tweet?text=${encodeURIComponent(title)}&url=${encodeURIComponent(socialUrl)}`;
@@ -74,7 +75,7 @@ const ShareDropdown = ({ url, ogUrl, title, description }: ShareDropdownProps) =
   const shareNative = async () => {
     if (!navigator.share) return;
     try {
-      await navigator.share({ title, text: description || title, url });
+      await navigator.share({ title, text: description || title, url: linkToShare });
       trackShare({ shareType: "setlist", channel: "native_share" });
     } catch {
       // user cancelled — keep menu open so they can pick another option
