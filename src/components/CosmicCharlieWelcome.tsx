@@ -15,6 +15,40 @@ import {
   appendRecentSongs,
 } from "@/lib/cosmicCharlieHistory";
 
+// Short-lived cache for the "Surprise Me" path so back-nav within 30s replays
+// the same suggestion instead of regenerating a different (and surprising-in-
+// the-wrong-way) show. Only applies to pure no-preference / no-era calls.
+const SURPRISE_ME_CACHE_KEY = "ds_surprise_me_cache";
+const SURPRISE_ME_CACHE_TTL_MS = 30_000;
+
+const readSurpriseMeCache = (): unknown | null => {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = sessionStorage.getItem(SURPRISE_ME_CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as { suggestion: unknown; ts: number };
+    if (Date.now() - parsed.ts > SURPRISE_ME_CACHE_TTL_MS) {
+      sessionStorage.removeItem(SURPRISE_ME_CACHE_KEY);
+      return null;
+    }
+    return parsed.suggestion;
+  } catch {
+    return null;
+  }
+};
+
+const writeSurpriseMeCache = (suggestion: unknown): void => {
+  if (typeof window === "undefined") return;
+  try {
+    sessionStorage.setItem(
+      SURPRISE_ME_CACHE_KEY,
+      JSON.stringify({ suggestion, ts: Date.now() }),
+    );
+  } catch {
+    /* sessionStorage full or unavailable — ignore */
+  }
+};
+
 type Era = Database["public"]["Tables"]["eras"]["Row"];
 
 interface AISuggestionSet {
@@ -201,6 +235,19 @@ const CosmicCharlieWelcome = ({ eras, onGenerated, onSkip }: CosmicCharlieWelcom
   // ── Generate ────────────────────────────────────────────────────────
 
   const handleGenerate = async (preferences?: string) => {
+    // Pure "Surprise Me" path: no explicit preferences AND no era picked.
+    // If we generated one in the last 30s, replay it so back-nav doesn't
+    // produce a different show.
+    const isPureSurpriseMe = preferences === undefined && !selectedEra;
+
+    if (isPureSurpriseMe) {
+      const cached = readSurpriseMeCache();
+      if (cached) {
+        onGenerated(cached as AISuggestion, null);
+        return;
+      }
+    }
+
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("ai-deadhead", {
@@ -220,6 +267,10 @@ const CosmicCharlieWelcome = ({ eras, onGenerated, onSkip }: CosmicCharlieWelcom
         s.songs.map((song: any) => song.title)
       );
       recentSongsRef.current = appendRecentSongs(generatedSongs);
+
+      if (isPureSurpriseMe) {
+        writeSurpriseMeCache(data);
+      }
 
       onGenerated(data, selectedEra);
     } catch (e: any) {
@@ -282,6 +333,9 @@ const CosmicCharlieWelcome = ({ eras, onGenerated, onSkip }: CosmicCharlieWelcom
                   />
                 ))}
               </div>
+              <p className="font-mono text-[10px] tracking-[0.22em] text-muted-foreground/60 uppercase">
+                Usually about 5 seconds
+              </p>
             </motion.div>
           ) : (
             <>
@@ -331,15 +385,8 @@ const CosmicCharlieWelcome = ({ eras, onGenerated, onSkip }: CosmicCharlieWelcom
                       </p>
                     </div>
 
-                    <p className="font-body text-sm sm:text-base text-muted-foreground leading-relaxed text-center max-w-md px-2">
-                      The Grateful Dead played over 2,300 shows across 30 years — and thanks to the Internet Archive,
-                      nearly all of them are preserved in full. Dead-Set.Org helps you explore that legacy.
-                    </p>
-
-                    <p className="font-body text-sm text-muted-foreground/80 leading-relaxed text-center max-w-md px-2">
-                      You're about to meet <span className="text-primary font-medium">Cosmic Charlie</span> — your personal guide
-                      who knows every show the Dead ever played. Tell him what kind of night you're in the mood for,
-                      and he'll build you a full concert from real live recordings. Every note is real.
+                    <p className="font-body text-base text-muted-foreground leading-relaxed text-center max-w-md px-2">
+                      <span className="text-primary font-medium">Charlie</span> knows every show the Dead ever played. Tell him your vibe, or hit Surprise Me and let him cook.
                     </p>
 
                     <div className="w-full flex flex-col sm:flex-row gap-2.5">
