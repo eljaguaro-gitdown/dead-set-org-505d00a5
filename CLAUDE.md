@@ -22,7 +22,7 @@ src/
   App.tsx                 Route table + global providers (QueryClient, Tooltip, AudioPlayer, Toasters)
   main.tsx                React root
   index.css               Tailwind layers + design tokens (HSL CSS vars consumed by tailwind.config.ts)
-  pages/                  Route-level components (Index, Auth, Builder, MySetlists, Browse, Admin*, …)
+  pages/                  Route-level components (Index, Auth, Builder, MySetlists, Browse, Song, Admin*, …)
   components/             Feature components
     ui/                   shadcn/ui primitives — generated, edit with care
     builder/              Setlist builder pieces (e.g. ScoreShowByDate)
@@ -33,7 +33,8 @@ src/
     supabase/client.ts    Singleton Supabase client; reads VITE_ env vars
     supabase/types.ts     AUTO-GENERATED Database types — do not edit by hand
     lovable/index.ts      AUTO-GENERATED Lovable OAuth wrapper — do not edit by hand
-  lib/                    Pure utilities (abTest, anonSession, songSearch, trackShare, presenceChannel, …)
+  lib/                    Pure utilities (abTest, anonSession, songSearch, trackShare, presenceChannel, shareSong, instagramShare, …)
+    charlie/              Cosmic Charlie helpers (e.g. tasteLexicon); has a __tests__/ subdir
   test/setup.ts           Vitest setup (jest-dom + matchMedia shim)
   assets/                 Imported static assets
 
@@ -86,7 +87,7 @@ Source of truth lives in `supabase/migrations/`; mirrored as TS types in [`src/i
 
 **Enums:** `app_role`, `changelog_tag`, `collaborator_role`, `set_position`.
 
-Edge functions worth knowing about: `og-image` (renders share-card OG images, called directly from the client by URL), `track-visit` (anonymous visit logging, JWT-free), `join-setlist` (token redemption), `ai-deadhead` (Cosmic Charlie chat), the email/dispatch family, and the admin-only `admin-users` / `daily-user-report` / `weekly-insights-report`.
+Edge functions worth knowing about: `og-image` (renders share-card OG images, called directly from the client by URL), `track-visit` (anonymous visit logging, JWT-free), `join-setlist` (token redemption), `ai-deadhead` (Cosmic Charlie chat), `resolve-song-share` (fuzzy-matches an Archive.org track title back to a `songs` row for the song-share deep-link flow), the email/dispatch family, and the admin-only `admin-users` / `daily-user-report` / `weekly-insights-report`.
 
 ## Environment variables (names only)
 
@@ -156,6 +157,6 @@ iOS privacy manifest lives at [`ios/App/App/PrivacyInfo.xcprivacy`](ios/App/App/
 - **Edge functions:** per-function `verify_jwt` is configured in [`supabase/config.toml`](supabase/config.toml). Public endpoints (`track-visit`, `og-image`, unsubscribe handlers, `ai-deadhead`, `admin-users`) set `verify_jwt = false` and must validate auth themselves. Authenticated endpoints (`process-email-queue`, `send-transactional-email`, `send-beta-nudge`, `send-dispatch`) rely on Supabase to enforce JWT.
 - **Anonymous users:** the app supports anonymous setlist drafts — see [`src/lib/anonSession.ts`](src/lib/anonSession.ts) and the `draft_setlists` table. Don't assume `auth.uid()` is non-null on the client.
 - **ESLint:** `@typescript-eslint/no-unused-vars` is intentionally OFF; `react-refresh/only-export-components` is a warning. Don't reintroduce unused-vars as an error without a reason.
-- **Test files:** colocated with source as `*.test.ts(x)` / `*.spec.ts(x)` under `src/`. The Vitest config does not pick up tests outside `src/`.
+- **Test files:** colocated with source as `*.test.ts(x)` / `*.spec.ts(x)` under `src/`, or grouped in a `__tests__/` subdirectory next to the code under test (see `src/lib/charlie/__tests__/`). Either pattern is accepted — the Vitest glob `src/**/*.{test,spec}.{ts,tsx}` picks both up. The Vitest config does not pick up tests outside `src/`.
 - **TypeScript:** `strict` mode per the standard Vite React template; project references split into `tsconfig.app.json` (app) and `tsconfig.node.json` (build tooling).
 - **PWA:** service worker at [`public/sw.js`](public/sw.js), manifest at [`public/manifest.json`](public/manifest.json), install prompt handled by [`src/components/PwaInstallBanner.tsx`](src/components/PwaInstallBanner.tsx).
