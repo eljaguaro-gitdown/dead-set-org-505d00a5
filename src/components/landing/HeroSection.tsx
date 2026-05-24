@@ -108,16 +108,7 @@ const HeroSection = (_props: HeroSectionProps) => {
 
   const handleCta = (e: React.MouseEvent<HTMLAnchorElement>) => {
     e.preventDefault();
-    if (!user) {
-      trackCtaClick("hero_build_setlist_guest", "/auth");
-      toast({
-        title: "Sign in to build your setlist",
-        description: "Create a free account to start building.",
-      });
-      navigate(`/auth?redirect=${encodeURIComponent("/builder?wizard=true")}`);
-      return;
-    }
-    trackCtaClick("hero_build_setlist", BUILDER_ROUTE);
+    trackCtaClick(user ? "hero_build_setlist" : "hero_build_setlist_guest", BUILDER_ROUTE);
     navigate(BUILDER_ROUTE);
   };
 
