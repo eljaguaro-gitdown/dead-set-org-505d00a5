@@ -288,21 +288,23 @@ const CosmicCharlieWelcome = ({ eras, onGenerated, onSkip }: CosmicCharlieWelcom
               {/* Charlie portrait */}
               <CosmicCharlieAvatar size={88} animate />
 
-              {/* Step dots */}
-              <div className="flex gap-2">
-                {Array.from({ length: TOTAL_STEPS }).map((_, s) => (
-                  <div
-                    key={s}
-                    className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                      s === step
-                        ? "bg-primary scale-125"
-                        : s < step
-                        ? "bg-primary/50"
-                        : "bg-muted-foreground/30"
-                    }`}
-                  />
-                ))}
-              </div>
+              {/* Step dots — hidden on the welcome screen; only shown once the user enters the wizard */}
+              {step > 0 && (
+                <div className="flex gap-2">
+                  {Array.from({ length: TOTAL_STEPS - 1 }).map((_, s) => (
+                    <div
+                      key={s}
+                      className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                        s === step - 1
+                          ? "bg-primary scale-125"
+                          : s < step - 1
+                          ? "bg-primary/50"
+                          : "bg-muted-foreground/30"
+                      }`}
+                    />
+                  ))}
+                </div>
+              )}
 
               {/* Steps */}
               <AnimatePresence mode="wait" custom={direction}>
@@ -340,18 +342,28 @@ const CosmicCharlieWelcome = ({ eras, onGenerated, onSkip }: CosmicCharlieWelcom
                       and he'll build you a full concert from real live recordings. Every note is real.
                     </p>
 
-                    <Button
-                      size="lg"
-                      onClick={goNext}
-                      className="w-full sm:w-auto gap-2 text-base px-8 py-5 shadow-[0_4px_40px_hsl(var(--glow-gold))]"
-                    >
-                      Let's Go
-                      <ChevronRight className="w-4 h-4" />
-                    </Button>
+                    <div className="w-full flex flex-col sm:flex-row gap-2.5">
+                      <Button
+                        size="lg"
+                        onClick={() => handleGenerate(undefined)}
+                        className="flex-1 gap-2 text-base px-6 py-5 shadow-[0_4px_40px_hsl(var(--glow-gold))]"
+                      >
+                        🎲 Surprise me — build now
+                      </Button>
+                      <Button
+                        size="lg"
+                        variant="outline"
+                        onClick={goNext}
+                        className="flex-1 gap-2 text-base px-6 py-5 border-primary/50 text-primary hover:bg-primary/10"
+                      >
+                        Customize my show
+                        <ChevronRight className="w-4 h-4" />
+                      </Button>
+                    </div>
 
                     <button
                       onClick={onSkip}
-                      className="font-body text-lg text-muted-foreground hover:text-primary transition-colors underline underline-offset-4 decoration-muted-foreground/40 hover:decoration-primary/60"
+                      className="font-body text-sm text-muted-foreground/70 hover:text-muted-foreground transition-colors underline underline-offset-4 decoration-muted-foreground/30 hover:decoration-muted-foreground/60"
                     >
                       I'll build my own setlist instead
                     </button>
@@ -503,12 +515,14 @@ const CosmicCharlieWelcome = ({ eras, onGenerated, onSkip }: CosmicCharlieWelcom
                       Next
                     </Button>
 
-                    <button
+                    <Button
+                      variant="outline"
+                      size="lg"
                       onClick={() => handleGenerate(undefined)}
-                      className="font-body text-xs text-muted-foreground/60 hover:text-muted-foreground transition-colors"
+                      className="w-full gap-2 text-base border-primary/40 text-primary hover:bg-primary/10"
                     >
-                      🎲 Surprise me — skip all this
-                    </button>
+                      🎲 Surprise me — build now
+                    </Button>
                   </motion.div>
                 )}
 
@@ -603,6 +617,15 @@ const CosmicCharlieWelcome = ({ eras, onGenerated, onSkip }: CosmicCharlieWelcom
                         Next
                       </Button>
                     </div>
+
+                    <Button
+                      variant="outline"
+                      size="lg"
+                      onClick={() => handleGenerate(undefined)}
+                      className="w-full gap-2 text-base border-primary/40 text-primary hover:bg-primary/10"
+                    >
+                      🎲 Surprise me — build now
+                    </Button>
                   </motion.div>
                 )}
 
