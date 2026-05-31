@@ -64,7 +64,7 @@ const ShareDialog = ({ open, onOpenChange, shareLink, creatorName, setlistTitle,
     if (navigator.share) {
       try {
         await navigator.share({
-          title: `${setlistTitle || "Dream Setlist"} — Dead-Set.Org`,
+          title: setlistTitle || "Dream Setlist",
           text: shareText,
           url: shareLink,
         });
