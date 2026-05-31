@@ -46,7 +46,7 @@ const ShareFlow = ({
     return setlistName;
   };
 
-  const shareUrl = `${window.location.origin}/setlist/${setlistId}`;
+  const shareUrl = `https://dead-set.org/setlist/${setlistId}`;
   const shareTitle = setlistName;
   const oneLiner = getShowOneLiner();
   const shareText = oneLiner && oneLiner !== setlistName

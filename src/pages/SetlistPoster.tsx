@@ -273,7 +273,7 @@ const SetlistPoster = () => {
     const songNames = slots.slice(0, 3).map((s) => s.song.title).join(", ");
     const desc = `A${eraName ? ` ${eraName}` : ""} dream setlist by ${creatorName}. ${slots.length} songs including ${songNames}...`;
     const ogTitle = `${setlist.title} — Dead-Set.Org`;
-    const canonicalUrl = `${window.location.origin}/setlist/${id}`;
+    const canonicalUrl = `https://dead-set.org/setlist/${id}`;
     const ogImageUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/og-image?id=${id}`;
 
     document.title = ogTitle;
@@ -370,7 +370,7 @@ const SetlistPoster = () => {
     setUpvoting(false);
   };
 
-  const shareUrl = `${window.location.origin}/setlist/${id}`;
+  const shareUrl = `https://dead-set.org/setlist/${id}`;
   const ogShareUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/og-image?id=${id}`;
   const shareTitle = `${setlist?.title || "Dream Setlist"} — Dead-Set.Org`;
   const shareDescription = setlist && slots.length > 0
