@@ -33,11 +33,15 @@ const ShareDropdown = ({ url, ogUrl, title, description }: ShareDropdownProps) =
   // Always show our menu so users can pick in-app DM, copy, socials, or native share.
   const handleToggle = () => setOpen((o) => !o);
 
-  // Prefer the OG-enabled function URL when available so SMS/iMessage/X/FB
-  // crawlers unfurl a per-setlist card (title + sender + custom thumbnail)
-  // instead of the static index.html defaults. Humans visiting the link are
-  // auto-redirected to the canonical /setlist/:id page by that function.
-  const linkToShare = ogUrl || url;
+  // Always share the canonical app URL (e.g. https://dead-set.org/setlist/:id).
+  // Previously we shared the Supabase og-image function URL hoping for richer
+  // unfurls, but iMessage treats that domain as a generic file download and
+  // attaches it as "og-image · Text Document" instead of rendering a preview.
+  // The canonical URL unfurls cleanly with sitewide OG tags (brand + logo).
+  // `ogUrl` is kept in the props for backward compatibility but intentionally
+  // unused — it belongs in <meta property="og:image">, not as the shared link.
+  void ogUrl;
+  const linkToShare = url;
 
   const copyLink = async () => {
     try {
