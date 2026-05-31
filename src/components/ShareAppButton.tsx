@@ -12,9 +12,9 @@ import { trackShare } from "@/lib/trackShare";
 import { shareToInstagram } from "@/lib/instagramShare";
 
 const SHARE_URL = "https://dead-set.org";
-const SHARE_TITLE = "Dead-Set.Org — The Music Never Stops";
+const SHARE_TITLE = "Dead Set — Every Deadhead knows the feeling";
 const SHARE_TEXT =
-  "Check out Dead-Set.Org — built by Deadheads, for Deadheads. Discover rare gems, build your dream show, and explore 50 years of live recordings from the Archive. ⚡🌹";
+  "Every Deadhead knows the feeling. Build dream setlists, discover rare gems, and explore 50 years of live recordings on Dead-Set.Org. ⚡🌹";
 
 interface ShareAppButtonProps {
   variant?: "icon" | "full";

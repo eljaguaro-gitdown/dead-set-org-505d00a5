@@ -46,10 +46,12 @@ const ShareFlow = ({
     return setlistName;
   };
 
-  const shareUrl = `${window.location.origin}/setlist/${setlistId}`;
-  const shareTitle = `${setlistName} — Dead-Set.Org`;
+  const shareUrl = `https://dead-set.org/setlist/${setlistId}`;
+  const shareTitle = setlistName;
   const oneLiner = getShowOneLiner();
-  const shareText = `${oneLiner} ⚡ ${setlistName} on Dead-Set.Org`;
+  const shareText = oneLiner && oneLiner !== setlistName
+    ? `${oneLiner} ⚡ ${setlistName} on Dead-Set.Org`
+    : `${setlistName} on Dead-Set.Org`;
 
   const handleImageReady = useCallback((dataUrl: string) => {
     setPlateDataUrl(dataUrl);

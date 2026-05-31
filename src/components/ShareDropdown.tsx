@@ -42,6 +42,10 @@ const ShareDropdown = ({ url, ogUrl, title, description }: ShareDropdownProps) =
   // unused — it belongs in <meta property="og:image">, not as the shared link.
   void ogUrl;
   const linkToShare = url;
+  const setlistTitle = title.replace(/\s+—\s+Dead-Set\.Org$/i, "").trim() || title;
+  const setlistShareText = description
+    ? `${description}\n\n${setlistTitle} on Dead-Set.Org`
+    : `${setlistTitle} on Dead-Set.Org`;
 
   const copyLink = async () => {
     try {
@@ -63,7 +67,7 @@ const ShareDropdown = ({ url, ogUrl, title, description }: ShareDropdownProps) =
   const socialUrl = linkToShare;
 
   const shareTwitter = () => {
-    const tweetUrl = `https://x.com/intent/tweet?text=${encodeURIComponent(title)}&url=${encodeURIComponent(socialUrl)}`;
+    const tweetUrl = `https://x.com/intent/tweet?text=${encodeURIComponent(`${setlistTitle} on Dead-Set.Org`)}&url=${encodeURIComponent(socialUrl)}`;
     window.open(tweetUrl, "_blank", "noopener,noreferrer,width=550,height=420");
     trackShare({ shareType: "setlist", channel: "twitter" });
     setOpen(false);
@@ -79,7 +83,7 @@ const ShareDropdown = ({ url, ogUrl, title, description }: ShareDropdownProps) =
   const shareNative = async () => {
     if (!navigator.share) return;
     try {
-      await navigator.share({ title, text: description || title, url: linkToShare });
+      await navigator.share({ title: setlistTitle, text: setlistShareText, url: linkToShare });
       trackShare({ shareType: "setlist", channel: "native_share" });
     } catch {
       // user cancelled — keep menu open so they can pick another option
@@ -162,7 +166,7 @@ const ShareDropdown = ({ url, ogUrl, title, description }: ShareDropdownProps) =
           open={dmOpen}
           onOpenChange={setDmOpen}
           shareUrl={url}
-          shareText={title}
+          shareText={setlistShareText}
         />
       )}
     </div>

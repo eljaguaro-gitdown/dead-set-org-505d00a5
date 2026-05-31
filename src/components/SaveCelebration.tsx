@@ -12,7 +12,7 @@ interface SaveCelebrationProps {
 
 const SaveCelebration = ({ setlistId, setlistTitle, onDismiss }: SaveCelebrationProps) => {
   const navigate = useNavigate();
-  const posterUrl = `${window.location.origin}/setlist/${setlistId}`;
+  const posterUrl = `https://dead-set.org/setlist/${setlistId}`;
   const ogUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/og-image?id=${setlistId}`;
 
   return (
