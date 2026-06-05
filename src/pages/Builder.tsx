@@ -1128,7 +1128,7 @@ const Builder = () => {
                 <SlidersHorizontal className="w-4 h-4" />
               </SelectTrigger>
               <SelectContent className="bg-card border-border">
-                <SelectItem value="" className="font-body text-sm">All eras</SelectItem>
+                
                 {eras.map((era) => (
                   <SelectItem key={era.id} value={era.id} className="font-body text-sm">
                     {era.name} ({era.year_start}–{era.year_end})
