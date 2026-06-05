@@ -750,7 +750,7 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
             <button
               onClick={onNext}
               disabled={playlistInfo.current >= playlistInfo.total}
-              className="h-9 px-2.5 rounded-md bg-destructive/15 text-destructive border border-destructive/30 flex items-center gap-1 shrink-0 disabled:opacity-30 hover:bg-destructive/25 transition-colors text-xs font-mono uppercase tracking-wider"
+              className="h-9 px-2.5 rounded-md bg-destructive/15 text-destructive border border-destructive/30 flex items-center gap-1 shrink-0 disabled:opacity-30 hover:bg-destructive/25 transition-colors text-xs font-mono uppercase tracking-wider max-sm:order-4"
               title="Skip this track"
               aria-label="Skip this track"
             >
