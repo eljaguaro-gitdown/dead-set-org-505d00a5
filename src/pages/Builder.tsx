@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
-import { Star, Share2, Users, LogOut, MessageCircle, Globe, CheckCircle, List, Music, LayoutList, Save, FileImage, MoreHorizontal, CalendarDays, Pencil } from "lucide-react";
+import { Star, Share2, Users, LogOut, MessageCircle, Globe, CheckCircle, List, Music, LayoutList, Save, FileImage, MoreHorizontal, CalendarDays, Pencil, SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import PageLayout from "@/components/PageLayout";
 import { Input } from "@/components/ui/input";
@@ -77,6 +77,11 @@ const OverflowMenu = ({
   onSignOut,
   onMySetlists,
   chatUnread,
+  onFromShow,
+  onViewPoster,
+  onGuestSave,
+  hasSaved,
+  showGuestSave,
 }: {
   user: any;
   isMobile: boolean;
@@ -86,6 +91,11 @@ const OverflowMenu = ({
   onSignOut: () => void;
   onMySetlists: () => void;
   chatUnread: boolean;
+  onFromShow?: () => void;
+  onViewPoster?: () => void;
+  onGuestSave?: () => void;
+  hasSaved?: boolean;
+  showGuestSave?: boolean;
 }) => {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -116,7 +126,28 @@ const OverflowMenu = ({
         )}
       </Button>
       {open && (
-        <div className="absolute right-0 top-full mt-1 z-50 bg-card border border-border rounded-xl shadow-md p-1 min-w-[180px]">
+        <div className="absolute right-0 top-full mt-1 z-50 bg-card border border-border rounded-xl shadow-md p-1 min-w-[200px]">
+          {/* Mobile-only: guest Save (when not signed in but has slots) */}
+          {isMobile && showGuestSave && onGuestSave && (
+            <button className={itemClass} onClick={() => { onGuestSave(); setOpen(false); }}>
+              <Save className="w-4 h-4" />
+              Save setlist
+            </button>
+          )}
+          {/* Mobile-only: From a show */}
+          {isMobile && onFromShow && (
+            <button className={itemClass} onClick={() => { onFromShow(); setOpen(false); }}>
+              <CalendarDays className="w-4 h-4" />
+              From a show
+            </button>
+          )}
+          {/* Mobile-only: View Poster (only when saved) */}
+          {isMobile && hasSaved && onViewPoster && (
+            <button className={itemClass} onClick={() => { onViewPoster(); setOpen(false); }}>
+              <FileImage className="w-4 h-4" />
+              View Poster
+            </button>
+          )}
           <button className={itemClass} onClick={() => { onTogglePublic(); setOpen(false); }}>
             <Globe className="w-4 h-4" />
             {isPublic ? "Make private" : "Make public"}
@@ -998,7 +1029,7 @@ const Builder = () => {
             <Button
               variant="default"
               size="sm"
-              className="shrink-0 h-9 px-3 gap-1.5 bg-primary text-primary-foreground font-body text-xs"
+              className="shrink-0 h-9 px-3 gap-1.5 bg-primary text-primary-foreground font-body text-xs hidden sm:flex"
               onClick={handleSave}
             >
               <Save className="w-4 h-4" />
@@ -1010,12 +1041,50 @@ const Builder = () => {
               <CollaboratorAvatars collaborators={collaborators} />
             </div>
           )}
+
+          {/* Mobile-only action cluster: Charlie + Share + Overflow (inline on Row 1) */}
+          <div className="flex sm:hidden items-center gap-1 shrink-0">
+            <Button
+              variant="default"
+              size="sm"
+              className="shrink-0 h-9 px-2.5 gap-1.5 bg-gradient-to-r from-primary to-accent text-primary-foreground font-display text-xs shadow-md animate-[fadeInScale_0.4s_ease-out_forwards]"
+              onClick={() => setCharlieOpen(true)}
+              title="Cosmic Charlie — Your Deadhead Guide"
+            >
+              <Star className="w-4 h-4" />
+              Charlie
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9 shrink-0 text-foreground"
+              onClick={handleShare}
+              title="Share"
+            >
+              <Share2 className="w-5 h-5" />
+            </Button>
+            <OverflowMenu
+              user={user}
+              isMobile={true}
+              isPublic={!!setlist?.is_public}
+              onTogglePublic={handleTogglePublic}
+              onCollaborate={handleCollaborate}
+              onSignOut={async () => { await signOut(); navigate("/"); }}
+              onMySetlists={() => navigate("/my-setlists")}
+              chatUnread={chatUnread}
+              onFromShow={() => setShowDateOpen(true)}
+              onViewPoster={paramId ? () => navigate(`/setlist/${paramId}`) : undefined}
+              onGuestSave={handleSave}
+              hasSaved={!!paramId}
+              showGuestSave={isGuestMode && guestSlots.length > 0}
+            />
+          </div>
         </div>
 
         {/* Row 2: Toolbar — 2 rows on mobile, single row on desktop */}
         <div className="px-2 sm:px-4 py-2 border-t border-border/50 flex flex-col sm:flex-row sm:items-center gap-2">
-          {/* Row 2a: Set selector + Era filter */}
-          <div className="flex items-center gap-2 flex-wrap">
+          {/* Row 2a: Set selector + Era filter + (mobile) Set/Vault toggle */}
+          <div className="flex items-center gap-1.5 sm:gap-2 sm:flex-wrap w-full sm:w-auto">
             <div className="flex items-center gap-1.5 shrink-0">
               <span className="text-sm text-muted-foreground font-body hidden sm:inline">Add to:</span>
               {[1, 2, 3].map((n) => (
@@ -1035,9 +1104,9 @@ const Builder = () => {
 
             <div className="w-px h-7 bg-border shrink-0 hidden sm:block" />
 
-            {/* Era filter */}
+            {/* Era filter — desktop (full select with label) */}
             <Select value={selectedEra || ""} onValueChange={(v) => setSelectedEra(v || null)}>
-              <SelectTrigger className="w-auto min-w-[100px] max-w-[160px] bg-card border-border text-foreground font-body text-sm h-10 shrink-0">
+              <SelectTrigger className="w-auto min-w-[100px] max-w-[160px] bg-card border-border text-foreground font-body text-sm h-10 shrink-0 hidden sm:flex">
                 <SelectValue placeholder="All eras" />
               </SelectTrigger>
               <SelectContent className="bg-card border-border">
@@ -1048,10 +1117,65 @@ const Builder = () => {
                 ))}
               </SelectContent>
             </Select>
+
+            {/* Era filter — mobile (icon-only trigger to save width at 360px) */}
+            <Select value={selectedEra || ""} onValueChange={(v) => setSelectedEra(v || null)}>
+              <SelectTrigger
+                className={`sm:hidden shrink-0 h-11 w-11 p-0 justify-center bg-card border-border ${selectedEra ? "text-primary border-primary/50" : "text-muted-foreground"}`}
+                aria-label="Filter by era"
+                title="Filter by era"
+              >
+                <SlidersHorizontal className="w-4 h-4" />
+              </SelectTrigger>
+              <SelectContent className="bg-card border-border">
+                
+                {eras.map((era) => (
+                  <SelectItem key={era.id} value={era.id} className="font-body text-sm">
+                    {era.name} ({era.year_start}–{era.year_end})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {/* Mobile-only Set/Vault toggle — replaces the separate tab band */}
+            {isMobile && (
+              <div className="ml-auto flex items-center rounded-[10px] border border-border bg-card overflow-hidden shrink-0">
+                <button
+                  onClick={() => setMobileTab("setlist")}
+                  className={`flex items-center gap-1 h-11 px-2 text-sm font-body transition-colors ${
+                    mobileTab === "setlist"
+                      ? "bg-primary/10 text-primary"
+                      : "text-muted-foreground"
+                  }`}
+                  aria-pressed={mobileTab === "setlist"}
+                >
+                  <LayoutList className="w-4 h-4" />
+                  Set
+                  {activeSlots.length > 0 && (
+                    <span className="bg-primary text-primary-foreground text-[11px] font-bold rounded-full min-w-[18px] h-[18px] px-1 flex items-center justify-center">
+                      {activeSlots.length}
+                    </span>
+                  )}
+                </button>
+                <div className="w-px h-6 bg-border" />
+                <button
+                  onClick={() => setMobileTab("songs")}
+                  className={`flex items-center gap-1 h-11 px-2 text-sm font-body transition-colors ${
+                    mobileTab === "songs"
+                      ? "bg-primary/10 text-primary"
+                      : "text-muted-foreground"
+                  }`}
+                  aria-pressed={mobileTab === "songs"}
+                >
+                  <Music className="w-4 h-4" />
+                  Vault
+                </button>
+              </div>
+            )}
           </div>
 
-          {/* Row 2b: Action buttons — collapsed toolbar */}
-          <div className="flex items-center gap-1.5 ml-auto">
+          {/* Row 2b: Action buttons — desktop only (mobile actions live on Row 1) */}
+          <div className="hidden sm:flex items-center gap-1.5 ml-auto">
             {/* Primary: Cosmic Charlie */}
             <Button
               variant="default"
@@ -1103,59 +1227,21 @@ const Builder = () => {
             )}
 
             {/* Overflow menu */}
-            {(() => {
-              const hasOverflowItems = true; // Globe toggle is always available
-              const showOverflow = isMobile || hasOverflowItems;
-              if (!showOverflow) return null;
-              return (
-                <OverflowMenu
-                  user={user}
-                  isMobile={isMobile}
-                  isPublic={!!setlist?.is_public}
-                  onTogglePublic={handleTogglePublic}
-                  onCollaborate={handleCollaborate}
-                  onSignOut={async () => { await signOut(); navigate("/"); }}
-                  onMySetlists={() => navigate("/my-setlists")}
-                  chatUnread={chatUnread}
-                />
-              );
-            })()}
+            <OverflowMenu
+              user={user}
+              isMobile={false}
+              isPublic={!!setlist?.is_public}
+              onTogglePublic={handleTogglePublic}
+              onCollaborate={handleCollaborate}
+              onSignOut={async () => { await signOut(); navigate("/"); }}
+              onMySetlists={() => navigate("/my-setlists")}
+              chatUnread={chatUnread}
+            />
           </div>
         </div>
       </header>
 
-      {/* Mobile Tab Switcher — The Set first, Song Vault second */}
-      {isMobile && (
-        <div className="flex border-b border-border bg-card/50">
-          <button
-            onClick={() => setMobileTab("setlist")}
-            className={`flex-1 flex items-center justify-center gap-2 py-3.5 text-sm font-body transition-colors relative ${
-              mobileTab === "setlist"
-                ? "text-primary border-b-2 border-primary bg-primary/5"
-                : "text-muted-foreground"
-            }`}
-          >
-            <LayoutList className="w-4 h-4" />
-            The Set
-            {activeSlots.length > 0 && (
-              <span className="bg-primary text-primary-foreground text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center">
-                {activeSlots.length}
-              </span>
-            )}
-          </button>
-          <button
-            onClick={() => setMobileTab("songs")}
-            className={`flex-1 flex items-center justify-center gap-2 py-3.5 text-sm font-body transition-colors ${
-              mobileTab === "songs"
-                ? "text-primary border-b-2 border-primary bg-primary/5"
-                : "text-muted-foreground"
-            }`}
-          >
-            <Music className="w-4 h-4" />
-            Song Vault
-          </button>
-        </div>
-      )}
+
 
       {/* Main Content — Setlist first, Song Vault second */}
       <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
