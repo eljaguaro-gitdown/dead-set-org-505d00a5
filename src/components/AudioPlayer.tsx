@@ -873,7 +873,7 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
                 setCurrentTrack(Number(e.target.value));
                 setPlaying(true);
               }}
-              className="bg-muted border border-border rounded text-[10px] text-foreground font-body px-1 py-0.5 max-w-[100px] shrink-0"
+              className="bg-muted border border-border rounded text-[10px] text-foreground font-body px-1 py-0.5 max-w-[100px] shrink-0 max-sm:order-11 max-sm:max-w-[88px] max-sm:text-[11px] max-sm:opacity-70"
             >
               {tracks.map((t, i) => (
                 <option key={i} value={i}>
