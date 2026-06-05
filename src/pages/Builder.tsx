@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
-import { Star, Share2, Users, LogOut, MessageCircle, Globe, CheckCircle, List, Music, LayoutList, Save, FileImage, MoreHorizontal, CalendarDays } from "lucide-react";
+import { Star, Share2, Users, LogOut, MessageCircle, Globe, CheckCircle, List, Music, LayoutList, Save, FileImage, MoreHorizontal, CalendarDays, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import PageLayout from "@/components/PageLayout";
 import { Input } from "@/components/ui/input";
@@ -979,12 +979,16 @@ const Builder = () => {
               <List className="w-8 h-8" /> My Setlists
             </button>
           )}
-          <Input
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            onBlur={handleTitleBlur}
-            className="bg-transparent border-none text-foreground font-display text-lg sm:text-4xl md:text-5xl p-0 h-auto focus-visible:ring-0 min-w-0 flex-1"
-          />
+          <div className="flex items-center gap-1.5 flex-1 min-w-0">
+            <Input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              onBlur={handleTitleBlur}
+              placeholder="Untitled Setlist"
+              className={`bg-transparent border-0 border-b border-dotted border-border/40 rounded-none font-display text-lg sm:text-4xl md:text-5xl p-0 pb-1 h-auto focus-visible:ring-0 focus-visible:border-b-2 focus-visible:border-solid focus-visible:border-primary min-w-0 flex-1 transition-colors ${title === "Untitled Setlist" ? "text-muted-foreground/50 placeholder:text-muted-foreground/40" : "text-foreground"}`}
+            />
+            <Pencil className="w-3.5 h-3.5 text-muted-foreground/30 shrink-0" />
+          </div>
           {setlist && (
             <span className="flex items-center gap-1 text-xs text-accent font-body shrink-0" title="All changes are saved automatically">
               <CheckCircle className="w-3.5 h-3.5" />
@@ -1057,6 +1061,7 @@ const Builder = () => {
               title="Cosmic Charlie — Your Deadhead Guide"
             >
               <Star className="w-5 h-5" />
+              <span className="sm:hidden">Charlie</span>
               <span className="hidden sm:inline">Cosmic Charlie</span>
             </Button>
 
