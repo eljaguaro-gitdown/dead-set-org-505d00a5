@@ -833,11 +833,11 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
             )}
           </div>
 
-          <span className="text-[11px] text-muted-foreground font-mono tabular-nums shrink-0">
+          <span className="text-[11px] text-muted-foreground font-mono tabular-nums shrink-0 max-sm:order-8 max-sm:text-muted-foreground/60">
             {formatTime(progress)} / {formatTime(duration)}
           </span>
 
-          <a href="https://archive.org" target="_blank" rel="noopener noreferrer" className="text-[11px] text-muted-foreground/50 hover:text-muted-foreground font-body shrink-0 hidden sm:inline transition-colors">
+          <a href="https://archive.org" target="_blank" rel="noopener noreferrer" className="text-[11px] text-muted-foreground/50 hover:text-muted-foreground font-body shrink-0 inline max-sm:order-13 max-sm:ml-auto transition-colors">
             via archive.org
           </a>
 
