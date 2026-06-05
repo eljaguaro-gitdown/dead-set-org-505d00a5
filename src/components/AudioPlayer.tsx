@@ -702,13 +702,13 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
           />
         </div>
 
-        <div className="px-4 py-3 flex items-center gap-3">
+        <div className="px-4 py-3 flex items-center gap-3 max-sm:flex-wrap max-sm:gap-x-2 max-sm:gap-y-1.5">
           {/* Prominent Prev button — playlist mode only. Always enabled if there's a previous track. */}
           {playlistInfo && (
             <button
               onClick={onPrev}
               disabled={playlistInfo.current <= 1}
-              className="w-9 h-9 rounded-full bg-muted/60 text-foreground flex items-center justify-center shrink-0 disabled:opacity-30 hover:bg-muted transition-colors"
+              className="w-9 h-9 rounded-full bg-muted/60 text-foreground flex items-center justify-center shrink-0 disabled:opacity-30 hover:bg-muted transition-colors max-sm:order-1"
               title="Previous song"
               aria-label="Previous song"
             >
@@ -719,7 +719,7 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
           <button
             onClick={togglePlay}
             disabled={loading || !!error}
-            className="w-12 h-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center shrink-0 disabled:opacity-50 transition-all hover:brightness-110"
+            className="w-12 h-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center shrink-0 disabled:opacity-50 transition-all hover:brightness-110 max-sm:order-2"
             aria-label={playing ? "Pause" : "Play"}
           >
             {loading ? (
@@ -736,7 +736,7 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
             <button
               onClick={onNext}
               disabled={playlistInfo.current >= playlistInfo.total}
-              className="w-9 h-9 rounded-full bg-muted/60 text-foreground flex items-center justify-center shrink-0 disabled:opacity-30 hover:bg-muted transition-colors"
+              className="w-9 h-9 rounded-full bg-muted/60 text-foreground flex items-center justify-center shrink-0 disabled:opacity-30 hover:bg-muted transition-colors max-sm:order-3"
               title="Next song"
               aria-label="Next song"
             >
@@ -750,7 +750,7 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
             <button
               onClick={onNext}
               disabled={playlistInfo.current >= playlistInfo.total}
-              className="h-9 px-2.5 rounded-md bg-destructive/15 text-destructive border border-destructive/30 flex items-center gap-1 shrink-0 disabled:opacity-30 hover:bg-destructive/25 transition-colors text-xs font-mono uppercase tracking-wider"
+              className="h-9 px-2.5 rounded-md bg-destructive/15 text-destructive border border-destructive/30 flex items-center gap-1 shrink-0 disabled:opacity-30 hover:bg-destructive/25 transition-colors text-xs font-mono uppercase tracking-wider max-sm:order-4"
               title="Skip this track"
               aria-label="Skip this track"
             >
@@ -760,7 +760,7 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
           )}
 
           <div
-            className={`flex-1 min-w-0 ${activeSetlistId ? 'cursor-pointer' : ''}`}
+            className={`flex-1 min-w-0 max-sm:order-5 max-sm:basis-0 ${activeSetlistId ? 'cursor-pointer' : ''}`}
             onClick={() => activeSetlistId && navigate(`/setlist/${activeSetlistId}`)}
           >
             {error ? (
@@ -833,17 +833,17 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
             )}
           </div>
 
-          <span className="text-[11px] text-muted-foreground font-mono tabular-nums shrink-0">
+          <span className="text-[11px] text-muted-foreground font-mono tabular-nums shrink-0 max-sm:order-8 max-sm:text-muted-foreground/60">
             {formatTime(progress)} / {formatTime(duration)}
           </span>
 
-          <a href="https://archive.org" target="_blank" rel="noopener noreferrer" className="text-[11px] text-muted-foreground/50 hover:text-muted-foreground font-body shrink-0 hidden sm:inline transition-colors">
+          <a href="https://archive.org" target="_blank" rel="noopener noreferrer" className="text-[11px] text-muted-foreground/50 hover:text-muted-foreground font-body shrink-0 inline max-sm:order-last max-sm:ml-auto transition-colors">
             via archive.org
           </a>
 
           <Popover>
             <PopoverTrigger asChild>
-              <button className="h-10 w-10 flex items-center justify-center text-muted-foreground hover:text-primary shrink-0 transition-colors rounded-full" title="Cast to speakers">
+              <button className="h-10 w-10 flex items-center justify-center text-muted-foreground hover:text-primary shrink-0 transition-colors rounded-full max-sm:h-8 max-sm:w-8 max-sm:order-9 max-sm:text-muted-foreground/60" title="Cast to speakers">
                 <Cast className="w-3.5 h-3.5" />
               </button>
             </PopoverTrigger>
@@ -861,7 +861,7 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
             </PopoverContent>
           </Popover>
 
-          <button onClick={() => setMuted(!muted)} className="h-10 w-10 flex items-center justify-center text-muted-foreground hover:text-foreground shrink-0 rounded-full transition-colors" title={muted ? "Unmute" : "Mute"}>
+          <button onClick={() => setMuted(!muted)} className="h-10 w-10 flex items-center justify-center text-muted-foreground hover:text-foreground shrink-0 rounded-full transition-colors max-sm:h-8 max-sm:w-8 max-sm:order-10 max-sm:text-muted-foreground/60" title={muted ? "Unmute" : "Mute"}>
             {muted ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
           </button>
 
@@ -873,7 +873,7 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
                 setCurrentTrack(Number(e.target.value));
                 setPlaying(true);
               }}
-              className="bg-muted border border-border rounded text-[10px] text-foreground font-body px-1 py-0.5 max-w-[100px] shrink-0"
+              className="bg-muted border border-border rounded text-[10px] text-foreground font-body px-1 py-0.5 max-w-[100px] shrink-0 max-sm:order-11 max-sm:max-w-[88px] max-sm:text-[11px] max-sm:opacity-70"
             >
               {tracks.map((t, i) => (
                 <option key={i} value={i}>
@@ -889,9 +889,12 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
             </span>
           )}
 
-          <button onClick={onClose} className="h-10 w-10 flex items-center justify-center text-muted-foreground hover:text-foreground shrink-0 rounded-full transition-colors" title="Close player">
+          <button onClick={onClose} className="h-10 w-10 flex items-center justify-center text-muted-foreground hover:text-foreground shrink-0 rounded-full transition-colors max-sm:order-6" title="Close player">
             <X className="w-4 h-4" />
           </button>
+
+          {/* Mobile-only row break: forces utility controls onto a slim second row */}
+          <div aria-hidden className="hidden max-sm:block basis-full h-0 max-sm:order-7" />
         </div>
       </motion.div>
       <PosterModal
