@@ -77,6 +77,11 @@ const OverflowMenu = ({
   onSignOut,
   onMySetlists,
   chatUnread,
+  onFromShow,
+  onViewPoster,
+  onGuestSave,
+  hasSaved,
+  showGuestSave,
 }: {
   user: any;
   isMobile: boolean;
@@ -86,6 +91,11 @@ const OverflowMenu = ({
   onSignOut: () => void;
   onMySetlists: () => void;
   chatUnread: boolean;
+  onFromShow?: () => void;
+  onViewPoster?: () => void;
+  onGuestSave?: () => void;
+  hasSaved?: boolean;
+  showGuestSave?: boolean;
 }) => {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -116,7 +126,28 @@ const OverflowMenu = ({
         )}
       </Button>
       {open && (
-        <div className="absolute right-0 top-full mt-1 z-50 bg-card border border-border rounded-xl shadow-md p-1 min-w-[180px]">
+        <div className="absolute right-0 top-full mt-1 z-50 bg-card border border-border rounded-xl shadow-md p-1 min-w-[200px]">
+          {/* Mobile-only: guest Save (when not signed in but has slots) */}
+          {isMobile && showGuestSave && onGuestSave && (
+            <button className={itemClass} onClick={() => { onGuestSave(); setOpen(false); }}>
+              <Save className="w-4 h-4" />
+              Save setlist
+            </button>
+          )}
+          {/* Mobile-only: From a show */}
+          {isMobile && onFromShow && (
+            <button className={itemClass} onClick={() => { onFromShow(); setOpen(false); }}>
+              <CalendarDays className="w-4 h-4" />
+              From a show
+            </button>
+          )}
+          {/* Mobile-only: View Poster (only when saved) */}
+          {isMobile && hasSaved && onViewPoster && (
+            <button className={itemClass} onClick={() => { onViewPoster(); setOpen(false); }}>
+              <FileImage className="w-4 h-4" />
+              View Poster
+            </button>
+          )}
           <button className={itemClass} onClick={() => { onTogglePublic(); setOpen(false); }}>
             <Globe className="w-4 h-4" />
             {isPublic ? "Make private" : "Make public"}
