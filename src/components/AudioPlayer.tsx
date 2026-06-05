@@ -833,17 +833,17 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
             )}
           </div>
 
-          <span className="text-[10px] text-muted-foreground font-mono tabular-nums shrink-0">
+          <span className="text-[11px] text-muted-foreground font-mono tabular-nums shrink-0">
             {formatTime(progress)} / {formatTime(duration)}
           </span>
 
-          <a href="https://archive.org" target="_blank" rel="noopener noreferrer" className="text-[9px] text-muted-foreground/50 hover:text-muted-foreground font-body shrink-0 hidden sm:inline transition-colors">
+          <a href="https://archive.org" target="_blank" rel="noopener noreferrer" className="text-[11px] text-muted-foreground/50 hover:text-muted-foreground font-body shrink-0 hidden sm:inline transition-colors">
             via archive.org
           </a>
 
           <Popover>
             <PopoverTrigger asChild>
-              <button className="text-muted-foreground hover:text-primary shrink-0 transition-colors" title="Cast to speakers">
+              <button className="h-10 w-10 flex items-center justify-center text-muted-foreground hover:text-primary shrink-0 transition-colors rounded-full" title="Cast to speakers">
                 <Cast className="w-3.5 h-3.5" />
               </button>
             </PopoverTrigger>
@@ -861,7 +861,7 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
             </PopoverContent>
           </Popover>
 
-          <button onClick={() => setMuted(!muted)} className="text-muted-foreground hover:text-foreground shrink-0">
+          <button onClick={() => setMuted(!muted)} className="h-10 w-10 flex items-center justify-center text-muted-foreground hover:text-foreground shrink-0 rounded-full transition-colors" title={muted ? "Unmute" : "Mute"}>
             {muted ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
           </button>
 
@@ -889,7 +889,7 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
             </span>
           )}
 
-          <button onClick={onClose} className="text-muted-foreground hover:text-foreground shrink-0">
+          <button onClick={onClose} className="h-10 w-10 flex items-center justify-center text-muted-foreground hover:text-foreground shrink-0 rounded-full transition-colors" title="Close player">
             <X className="w-4 h-4" />
           </button>
         </div>
