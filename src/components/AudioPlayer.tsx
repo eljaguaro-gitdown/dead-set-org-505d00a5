@@ -889,9 +889,12 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
             </span>
           )}
 
-          <button onClick={onClose} className="h-10 w-10 flex items-center justify-center text-muted-foreground hover:text-foreground shrink-0 rounded-full transition-colors" title="Close player">
+          <button onClick={onClose} className="h-10 w-10 flex items-center justify-center text-muted-foreground hover:text-foreground shrink-0 rounded-full transition-colors max-sm:order-6" title="Close player">
             <X className="w-4 h-4" />
           </button>
+
+          {/* Mobile-only row break: forces utility controls onto a slim second row */}
+          <div aria-hidden className="hidden max-sm:block basis-full h-0 max-sm:order-7" />
         </div>
       </motion.div>
       <PosterModal
