@@ -1142,7 +1142,7 @@ const Builder = () => {
               <div className="ml-auto flex items-center rounded-[10px] border border-border bg-card overflow-hidden shrink-0">
                 <button
                   onClick={() => setMobileTab("setlist")}
-                  className={`flex items-center gap-1.5 h-11 px-2.5 text-sm font-body transition-colors ${
+                  className={`flex items-center gap-1 h-11 px-2 text-sm font-body transition-colors ${
                     mobileTab === "setlist"
                       ? "bg-primary/10 text-primary"
                       : "text-muted-foreground"
@@ -1160,7 +1160,7 @@ const Builder = () => {
                 <div className="w-px h-6 bg-border" />
                 <button
                   onClick={() => setMobileTab("songs")}
-                  className={`flex items-center gap-1.5 h-11 px-2.5 text-sm font-body transition-colors ${
+                  className={`flex items-center gap-1 h-11 px-2 text-sm font-body transition-colors ${
                     mobileTab === "songs"
                       ? "bg-primary/10 text-primary"
                       : "text-muted-foreground"
