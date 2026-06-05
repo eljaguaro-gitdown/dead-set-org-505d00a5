@@ -719,7 +719,7 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
           <button
             onClick={togglePlay}
             disabled={loading || !!error}
-            className="w-12 h-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center shrink-0 disabled:opacity-50 transition-all hover:brightness-110"
+            className="w-12 h-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center shrink-0 disabled:opacity-50 transition-all hover:brightness-110 max-sm:order-2"
             aria-label={playing ? "Pause" : "Play"}
           >
             {loading ? (
