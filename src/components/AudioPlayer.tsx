@@ -760,7 +760,7 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
           )}
 
           <div
-            className={`flex-1 min-w-0 ${activeSetlistId ? 'cursor-pointer' : ''}`}
+            className={`flex-1 min-w-0 max-sm:order-5 max-sm:basis-0 ${activeSetlistId ? 'cursor-pointer' : ''}`}
             onClick={() => activeSetlistId && navigate(`/setlist/${activeSetlistId}`)}
           >
             {error ? (
