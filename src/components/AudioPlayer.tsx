@@ -702,7 +702,7 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
           />
         </div>
 
-        <div className="px-4 py-3 flex items-center gap-3">
+        <div className="px-4 py-3 flex items-center gap-3 max-sm:flex-wrap max-sm:gap-x-2 max-sm:gap-y-1.5">
           {/* Prominent Prev button — playlist mode only. Always enabled if there's a previous track. */}
           {playlistInfo && (
             <button
