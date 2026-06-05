@@ -843,7 +843,7 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
 
           <Popover>
             <PopoverTrigger asChild>
-              <button className="h-10 w-10 flex items-center justify-center text-muted-foreground hover:text-primary shrink-0 transition-colors rounded-full max-sm:h-8 max-sm:w-8 max-sm:order-9 max-sm:text-muted-foreground/60" title="Cast to speakers">
+              <button className="h-10 w-10 flex items-center justify-center text-muted-foreground hover:text-primary shrink-0 transition-colors rounded-full max-sm:order-9 max-sm:text-muted-foreground/60" title="Cast to speakers">
                 <Cast className="w-3.5 h-3.5" />
               </button>
             </PopoverTrigger>
