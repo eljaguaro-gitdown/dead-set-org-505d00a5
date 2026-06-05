@@ -736,7 +736,7 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
             <button
               onClick={onNext}
               disabled={playlistInfo.current >= playlistInfo.total}
-              className="w-9 h-9 rounded-full bg-muted/60 text-foreground flex items-center justify-center shrink-0 disabled:opacity-30 hover:bg-muted transition-colors"
+              className="w-9 h-9 rounded-full bg-muted/60 text-foreground flex items-center justify-center shrink-0 disabled:opacity-30 hover:bg-muted transition-colors max-sm:order-3"
               title="Next song"
               aria-label="Next song"
             >
