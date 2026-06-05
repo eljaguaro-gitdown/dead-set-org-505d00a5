@@ -1084,7 +1084,7 @@ const Builder = () => {
         {/* Row 2: Toolbar — 2 rows on mobile, single row on desktop */}
         <div className="px-2 sm:px-4 py-2 border-t border-border/50 flex flex-col sm:flex-row sm:items-center gap-2">
           {/* Row 2a: Set selector + Era filter + (mobile) Set/Vault toggle */}
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-1.5 sm:gap-2 sm:flex-wrap w-full sm:w-auto">
             <div className="flex items-center gap-1.5 shrink-0">
               <span className="text-sm text-muted-foreground font-body hidden sm:inline">Add to:</span>
               {[1, 2, 3].map((n) => (
