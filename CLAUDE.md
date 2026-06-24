@@ -2,6 +2,21 @@
 
 A web + iOS app for building, sharing, and browsing Grateful Dead setlists. Originally scaffolded by [Lovable](https://lovable.dev/) (`vite_react_shadcn_ts`), backed by Supabase, wrapped for iOS via Capacitor.
 
+## Product & voice grounding — read before writing ANY user-facing copy
+
+The canonical internal grounding document is [`dead-set-field-guide.md`](dead-set-field-guide.md) ("The Tape Box"). Read it before touching landing copy, the share/viewer surfaces, dispatch email, changelog entries, or anything Cosmic Charlie "says." It covers the mission, Charlie's voice model, the recommendation engine, conversion strategy, beta learnings, and the brand system. **The guide is internal** — it describes the technical machinery freely *because it's for builders*; that language must not leak into user-facing surfaces.
+
+**Non-negotiable rules (from the guide — internalize these):**
+
+- **The word "AI" never appears in any user-facing surface.** Cosmic Charlie is a *fan character* — never a "tool," "algorithm," "model," "AI," or "feature." Deep crates and strong opinions, not a pipeline.
+- **Internal machinery stays internal.** Gemini, the function-calling pipeline, Lovable, PostHog, "recommendation engine" — none of that language reaches the room where fans are.
+- **Voice is taper culture, not media-player generic.** Describe music structurally/energetically (jamminess, length, intensity, transitions, era, lineup) — never genre adjectives. Recordings "circulate" / are "on tape" (this is why [`/setlist/:id`](src/pages/SetlistPoster.tsx) says "on tape," not "have audio").
+- **Community is the hero** — not the app, not the founder. Lead with feeling, not feature: "We are finding each other," never "our matching engine."
+- **Fixed signals:** tagline **"Wake. Now. Discover."** (W-A-K-E, never "Wait"); salutation **"Hey Now"**; handle **`grateful_jaguaro`** (lowercase); dispatches structured **Set I / Set II / Encore**; subject lines carry no emojis; the **Internet Archive / tapers / traders credit is prominent, never buried**.
+- **Stewardship posture:** Dead Set is **additive** to the fan ecosystem (headyversion, Relisten, the Archive itself) — never competitive. Point back to them with respect.
+
+A setlist is a *reconstructed night with an arc*, not a song playlist — and every reconstruction carries at least one rare-placement "aha moment." See §2 and §4 of the guide.
+
 ## Stack
 
 - **Frontend:** React 18 + TypeScript, Vite 5 (SWC), React Router 6, TanStack Query 5

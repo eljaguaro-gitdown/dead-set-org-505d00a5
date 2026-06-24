@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useParams, useNavigate, useLocation, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Share2, Zap, Play, Heart, RefreshCw, Loader2 } from "lucide-react";
+import { ArrowLeft, Share2, Zap, Play, Heart, RefreshCw, Loader2, Headphones, VolumeX } from "lucide-react";
 import SetlistComments from "@/components/SetlistComments";
 import { useFavorites } from "@/hooks/useFavorites";
 import EraTooltip from "@/components/EraTooltip";
@@ -68,6 +68,10 @@ const SetlistPoster = () => {
   const [shareFlowOpen, setShareFlowOpen] = useState(false);
   const [resolvedArchives, setResolvedArchives] = useState<Record<string, ArchiveResult | null>>({});
   const [rebuilding, setRebuilding] = useState(false);
+  // Per-slot server-precomputed Archive.org playability (setlist_slot_playability).
+  // Keyed by slot id; absent = "not yet crawled / unknown", which we treat as
+  // optimistic (don't grey out), only flagging explicit 'unresolved' / 'error'.
+  const [playability, setPlayability] = useState<Record<string, "playable" | "unresolved" | "error">>({});
 
   const eraTheme = useMemo(() => getEraTheme(eraName), [eraName]);
 
@@ -338,6 +342,42 @@ const SetlistPoster = () => {
     };
   }, [slots]);
 
+  // Pull the server-precomputed playability for these slots in one query.
+  // RLS lets us read rows for any setlist we can already view (public/owned/
+  // collaborated), so this is safe to call directly from the client.
+  useEffect(() => {
+    if (slots.length === 0) return;
+    let cancelled = false;
+    const slotIds = slots.map((s) => s.id);
+    supabase
+      .from("setlist_slot_playability")
+      .select("slot_id, status")
+      .in("slot_id", slotIds)
+      .then(({ data }) => {
+        if (cancelled || !data) return;
+        const map: Record<string, "playable" | "unresolved" | "error"> = {};
+        for (const row of data) {
+          map[row.slot_id] = row.status as "playable" | "unresolved" | "error";
+        }
+        setPlayability(map);
+      });
+    return () => { cancelled = true; };
+  }, [slots]);
+
+  // "X of Y have audio" — computed from the same per-slot statuses that drive the
+  // greyed-out rows so the count and the visuals never disagree. Only slots we
+  // KNOW are unplayable subtract from the total; uncrawled (absent) slots stay
+  // optimistic. Returns null until we have any playability data to show.
+  const playabilityStats = useMemo(() => {
+    if (Object.keys(playability).length === 0) return null;
+    let unplayable = 0;
+    for (const s of slots) {
+      const st = playability[s.id];
+      if (st === "unresolved" || st === "error") unplayable++;
+    }
+    return { total: slots.length, withAudio: slots.length - unplayable, unplayable };
+  }, [playability, slots]);
+
   // PostHog tracking — fire once per setlist load.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const ph = (typeof window !== "undefined" ? (window as any).posthog : null);
@@ -499,6 +539,15 @@ const SetlistPoster = () => {
           >
             <Play className="w-3 h-3 fill-current" /> Play All
           </button>
+          {playabilityStats && playabilityStats.unplayable > 0 && (
+            <span
+              className="hidden sm:inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[11px] font-body bg-card/60 border border-border text-muted-foreground"
+              title={`${playabilityStats.withAudio} of ${playabilityStats.total} tracks circulate on Archive.org · ${playabilityStats.unplayable} not on tape`}
+            >
+              <Headphones className="w-3 h-3" />
+              {playabilityStats.withAudio}/{playabilityStats.total} on tape
+            </span>
+          )}
           {isOwner && sourceShow && (
             <button
               onClick={handleRebuildFromShow}
@@ -640,6 +689,11 @@ const SetlistPoster = () => {
                         {setSlots.map((slot, idx) => {
                           const isHovered = hoveredSlot === slot.id;
                           const isNowPlaying = playingSlot?.id === slot.id;
+                          const slotStatus = playability[slot.id];
+                          // Only flag slots the precompute job KNOWS have no audio —
+                          // absent rows stay optimistic (may resolve live on play).
+                          const isUnplayable =
+                            (slotStatus === "unresolved" || slotStatus === "error") && !isNowPlaying;
                           const charSum = slot.id.split("").reduce((a, c) => a + c.charCodeAt(0), 0);
                           const rotation = isNowPlaying ? 0 : ((charSum % 7) - 3) * 0.3;
                           const xShift = isNowPlaying ? 0 : ((charSum % 5) - 2) * 0.5;
@@ -662,7 +716,7 @@ const SetlistPoster = () => {
                               
                               className={`group flex items-center gap-2 py-[5px] transition-colors cursor-pointer hover:bg-[hsl(38_50%_80%/0.3)] ${
                                 isNowPlaying ? "now-playing-row" : ""
-                              }`}
+                              } ${isUnplayable ? "opacity-50" : ""}`}
                               style={{ minHeight: "28px", transform: `rotate(${rotation}deg) translateX(${xShift}px)` }}
                               onClick={() => handlePlaySong(slot)}
                               onMouseEnter={() => setHoveredSlot(slot.id)}
@@ -704,6 +758,15 @@ const SetlistPoster = () => {
                                       style={{ color: `hsl(${eraTheme.accent})` }}
                                     >
                                       →
+                                    </span>
+                                  )}
+                                  {isUnplayable && (
+                                    <span
+                                      className="inline-flex items-center gap-0.5 text-[9px] font-mono uppercase tracking-wider shrink-0"
+                                      style={{ color: "hsl(28 15% 55%)" }}
+                                      title="No circulating Archive.org recording captures this track"
+                                    >
+                                      <VolumeX className="w-3 h-3" /> no tape
                                     </span>
                                   )}
                                 </div>

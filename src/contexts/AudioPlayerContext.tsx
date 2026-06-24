@@ -2,11 +2,65 @@ import { createContext, useContext, useState, useCallback, useRef, useEffect, ty
 import { findArchiveRecording, findTrackInRecording } from "@/lib/archiveOrg";
 import { audioDebug } from "@/lib/audioDebug";
 import { startPlayEvent, finalizePlayEvent } from "@/lib/playEventTracker";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 
 type NotableVersion = Database["public"]["Tables"]["notable_versions"]["Row"];
 type Song = Database["public"]["Tables"]["songs"]["Row"];
+
+// --- Server-precomputed playability ----------------------------------------
+// The `setlist_slot_playability` table (written by the precompute-slot-playability
+// edge function) stores an already-resolved Archive.org direct track URL per
+// setlist slot. Reading it lets us skip a live archive.org round-trip on play —
+// faster starts, and the cache is shared across all users instead of per-tab.
+// Only real setlist slots (UUID ids) on public/owned/collaborated setlists are
+// ever in the table; synthetic slots (shared songs, ad-hoc archive picks) and
+// rows that aren't there yet fall through to live resolution.
+type Precomputed = { directTrackUrl: string; detailsUrl: string | null };
+
+const precomputeCache = new Map<string, Precomputed | null>();
+
+const SLOT_UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** Reconstruct the archive.org details URL from a /download/<id>/<file> URL. */
+function detailsUrlFromDownload(downloadUrl: string): string | null {
+  const m = downloadUrl.match(/archive\.org\/download\/([^/?#]+)\//);
+  return m?.[1] ? `https://archive.org/details/${m[1]}` : null;
+}
+
+/**
+ * Look up a server-precomputed direct track URL for a real setlist slot.
+ * Returns null for synthetic slot ids, DB misses, or any non-"playable" status —
+ * callers then fall back to live archive.org resolution. Results (including
+ * misses) are cached for the session so prefetch + play + advance don't each
+ * re-query; a miss simply means we keep using the existing live path.
+ */
+async function lookupPrecomputedPlayability(slotId: string): Promise<Precomputed | null> {
+  if (!SLOT_UUID_RE.test(slotId)) return null;
+  const cached = precomputeCache.get(slotId);
+  if (cached !== undefined) return cached;
+
+  let result: Precomputed | null = null;
+  try {
+    const { data, error } = await supabase
+      .from("setlist_slot_playability")
+      .select("status, direct_track_url")
+      .eq("slot_id", slotId)
+      .maybeSingle();
+    if (!error && data?.status === "playable" && data.direct_track_url) {
+      result = {
+        directTrackUrl: data.direct_track_url,
+        detailsUrl: detailsUrlFromDownload(data.direct_track_url),
+      };
+    }
+  } catch {
+    result = null;
+  }
+  precomputeCache.set(slotId, result);
+  return result;
+}
 
 export interface PlayableSlot {
   id: string;
@@ -182,6 +236,22 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
   const resolveSlot = async (slot: PlayableSlot): Promise<PlayableSlot | null> => {
     if (slot.version?.archive_org_url && slot.directTrackUrl) return slot;
 
+    // Prefer a server-precomputed direct track URL over a live archive.org
+    // round-trip. Misses (private/uncrawled slots, synthetic ids) fall through
+    // to the live resolution paths below — same behavior as before this change.
+    const precomputed = await lookupPrecomputedPlayability(slot.id);
+    if (precomputed) {
+      audioDebug.log("resolve", "precomputed playability hit", { slot: slot.id, song: slot.song.title });
+      const version: NotableVersion = slot.version
+        ? { ...slot.version, archive_org_url: slot.version.archive_org_url ?? precomputed.detailsUrl }
+        : {
+            id: "", song_id: slot.song.id, show_date: "",
+            archive_org_url: precomputed.detailsUrl, venue: null,
+            city: null, era_id: null, rating: null, description: null,
+          };
+      return { ...slot, version, directTrackUrl: precomputed.directTrackUrl };
+    }
+
     if (slot.version?.archive_org_url && !slot.directTrackUrl) {
       // Has a specific show URL — find the track WITHIN that recording
       audioDebug.log("resolve", "findTrackInRecording", { url: slot.version.archive_org_url, song: slot.song.title });
@@ -259,7 +329,6 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     }
 
     if (setlistId) {
-      const { supabase } = await import("@/integrations/supabase/client");
       supabase.rpc("increment_play_count", { _setlist_id: setlistId });
     }
 
