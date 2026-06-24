@@ -142,9 +142,13 @@ const ScoreShowByDate = ({ onPullSetlist, onSurpriseMe }: ScoreShowByDateProps) 
               )}
             </Tooltip>
 
-            {date && (
+            {date ? (
               <p className="text-xs font-body text-muted-foreground -mt-1">
                 {formatNice(date)} — Cosmic Charlie's pick from the tape.
+              </p>
+            ) : (
+              <p className="text-xs font-body text-muted-foreground/70 -mt-1">
+                Pick a date between 1965 and 1995 to pull that night's setlist.
               </p>
             )}
           </div>
