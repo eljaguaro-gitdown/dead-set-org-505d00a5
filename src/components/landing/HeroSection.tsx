@@ -202,16 +202,16 @@ const HeroSection = (_props: HeroSectionProps) => {
           site's design system is untouched. */}
       <style>{`
         .ds-hero {
-          --bg-deep: #0a0a0a;
-          --bg-plaque: #0f0e08;
-          --text-primary: #e8e4d0;
-          --text-soft: #b0ac9a;
-          --text-eyebrow: #b09e78;
-          --accent-gold: #c9a84c;
-          --accent-warm: #d4b558;
-          --rule-faint: #2a2410;
-          --rule-gold-30: rgba(201, 168, 76, 0.30);
-          --rule-gold-40: rgba(201, 168, 76, 0.40);
+          --bg-deep: #f1ebdf;
+          --bg-plaque: #ece3d2;
+          --text-primary: #23221f;
+          --text-soft: #6b665c;
+          --text-eyebrow: #9a8f78;
+          --accent-gold: #c24a33;
+          --accent-warm: #d2593f;
+          --rule-faint: #ddd3c0;
+          --rule-gold-30: rgba(194, 74, 51, 0.28);
+          --rule-gold-40: rgba(194, 74, 51, 0.40);
 
           position: relative;
           width: 100%;
@@ -235,7 +235,7 @@ const HeroSection = (_props: HeroSectionProps) => {
           content: "";
           position: absolute; inset: 0;
           background: radial-gradient(ellipse 80% 50% at 50% 35%,
-            rgba(201, 168, 76, 0.04) 0%, transparent 60%);
+            rgba(194, 74, 51, 0.04) 0%, transparent 60%);
           pointer-events: none; z-index: 0;
         }
         /* Atmosphere — film grain */
@@ -243,8 +243,8 @@ const HeroSection = (_props: HeroSectionProps) => {
           content: "";
           position: absolute; inset: 0;
           background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.78  0 0 0 0 0.72  0 0 0 0 0.55  0 0 0 0.5 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
-          opacity: 0.5;
-          mix-blend-mode: screen;
+          opacity: 0.06;
+          mix-blend-mode: multiply;
           pointer-events: none; z-index: 0;
         }
 
@@ -304,7 +304,7 @@ const HeroSection = (_props: HeroSectionProps) => {
           font-family: 'Playfair Display', Georgia, serif;
           font-style: italic;
           font-weight: 400;
-          color: var(--accent-gold);
+          color: var(--text-primary);
           line-height: 1.18;
           font-size: 32px;
           margin: 0;
@@ -344,8 +344,8 @@ const HeroSection = (_props: HeroSectionProps) => {
           content: "";
           position: absolute; inset: -8%;
           background: radial-gradient(circle at 50% 50%,
-            rgba(201, 168, 76, 0.10) 0%,
-            rgba(201, 168, 76, 0.04) 35%,
+            rgba(194, 74, 51, 0.10) 0%,
+            rgba(194, 74, 51, 0.04) 35%,
             transparent 70%);
           pointer-events: none;
           z-index: 0;
@@ -426,7 +426,7 @@ const HeroSection = (_props: HeroSectionProps) => {
           width: 100%;
           max-width: 320px;
           background: var(--accent-gold);
-          color: #0a0a0a;
+          color: #f1ebdf;
           font-family: 'DM Sans', system-ui, sans-serif;
           font-weight: 500;
           font-size: 17px;
@@ -474,23 +474,23 @@ const HeroSection = (_props: HeroSectionProps) => {
           height: 60px;
           width: 100%;
           max-width: 320px;
-          background: linear-gradient(180deg, rgba(201, 168, 76, 0.10), rgba(201, 168, 76, 0.04));
-          color: var(--accent-warm);
+          background: transparent;
+          color: var(--text-primary);
           font-family: 'DM Sans', system-ui, sans-serif;
           font-weight: 600;
           font-size: 16px;
-          border: 1px solid var(--accent-gold);
+          border: 1px solid var(--rule-faint);
           border-radius: 4px;
           text-decoration: none;
           transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
           letter-spacing: 0.01em;
-          box-shadow: 0 0 0 rgba(201, 168, 76, 0);
+          box-shadow: 0 0 0 rgba(194, 74, 51, 0);
           overflow: hidden;
         }
         .ds-hero__cta-secondary::before {
           content: "";
           position: absolute; inset: 0;
-          background: radial-gradient(120% 80% at 50% 100%, rgba(201, 168, 76, 0.10), transparent 70%);
+          background: radial-gradient(120% 80% at 50% 100%, rgba(194, 74, 51, 0.10), transparent 70%);
           opacity: 0.5;
           pointer-events: none;
         }
@@ -499,11 +499,11 @@ const HeroSection = (_props: HeroSectionProps) => {
           50% { opacity: 0.85; }
         }
         .ds-hero__cta-secondary:hover {
-          background: linear-gradient(180deg, rgba(201, 168, 76, 0.20), rgba(201, 168, 76, 0.08));
+          background: linear-gradient(180deg, rgba(194, 74, 51, 0.20), rgba(194, 74, 51, 0.08));
           border-color: var(--accent-warm);
           color: var(--accent-warm);
           transform: translateY(-1px);
-          box-shadow: 0 6px 24px rgba(201, 168, 76, 0.18);
+          box-shadow: 0 6px 24px rgba(194, 74, 51, 0.18);
         }
         .ds-hero__cta-secondary:focus-visible {
           outline: 2px solid var(--accent-warm);
@@ -548,7 +548,7 @@ const HeroSection = (_props: HeroSectionProps) => {
         .ds-hero__cta-count-dot {
           width: 6px; height: 6px; border-radius: 999px;
           background: var(--accent-warm);
-          box-shadow: 0 0 8px rgba(201, 168, 76, 0.7);
+          box-shadow: 0 0 8px rgba(194, 74, 51, 0.7);
           animation: ds-hero-pulse 2s ease-in-out infinite;
         }
 
@@ -615,7 +615,7 @@ const HeroSection = (_props: HeroSectionProps) => {
           font-style: italic;
           font-size: 20px;
           line-height: 1.2;
-          color: var(--text-primary);
+          color: var(--accent-gold);
         }
         @media (min-width: 640px) { .ds-hero__tagline { font-size: 22px; } }
 
@@ -641,15 +641,15 @@ const HeroSection = (_props: HeroSectionProps) => {
           width: 100%;
           max-width: 420px;
           margin: 32px auto 0;
-          background: linear-gradient(180deg, #14110a 0%, #0d0b06 100%);
-          border: 1px solid var(--rule-gold-40);
+          background: #f8f2e7;
+          border: 1px solid var(--rule-faint);
           border-radius: 8px;
           padding: 18px 18px 16px;
           display: flex;
           align-items: center;
           gap: 16px;
           text-align: left;
-          box-shadow: 0 12px 36px rgba(0,0,0,0.5), inset 0 1px 0 rgba(201,168,76,0.08);
+          box-shadow: 0 1px 2px rgba(35,34,31,0.05);
           position: relative;
           overflow: hidden;
         }
@@ -673,7 +673,7 @@ const HeroSection = (_props: HeroSectionProps) => {
         .ds-hero__cassette-live-dot {
           width: 6px; height: 6px; border-radius: 999px;
           background: var(--accent-warm);
-          box-shadow: 0 0 8px rgba(201, 168, 76, 0.7);
+          box-shadow: 0 0 8px rgba(194, 74, 51, 0.7);
           animation: ds-hero-pulse 2s ease-in-out infinite;
         }
         .ds-hero__play-btn {
@@ -681,12 +681,12 @@ const HeroSection = (_props: HeroSectionProps) => {
           width: 64px; height: 64px;
           border-radius: 999px;
           background: var(--accent-gold);
-          color: #0a0a0a;
+          color: #f1ebdf;
           border: none;
           display: inline-flex; align-items: center; justify-content: center;
           cursor: pointer;
           transition: background-color 0.15s ease, transform 0.05s ease, box-shadow 0.2s ease;
-          box-shadow: 0 6px 20px rgba(201, 168, 76, 0.35);
+          box-shadow: 0 4px 14px rgba(194, 74, 51, 0.25);
           margin-top: 12px;
         }
         @media (min-width: 640px) {
