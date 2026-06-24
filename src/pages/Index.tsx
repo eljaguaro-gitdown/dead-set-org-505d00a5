@@ -281,8 +281,13 @@ const Index = () => {
       {/* Hero — headline, subhead, audio strip, CTAs */}
       <HeroSection showReturningSignIn={!user} featured={featured} />
 
-      {/* Setlist of the Day — featured community pick */}
-      <SetlistOfTheDay />
+      {/* Setlist of the Day — featured community pick.
+          Hidden on mobile: the hero cassette already surfaces this same daily
+          get_hero_spotlight() pick, so showing it again is redundant scroll on a
+          phone. Desktop keeps the dedicated section. */}
+      <div className="hidden sm:block">
+        <SetlistOfTheDay />
+      </div>
 
       {/* How It Works — 3 steps */}
       <HowItWorks />

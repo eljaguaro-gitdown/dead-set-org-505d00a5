@@ -1097,7 +1097,7 @@ const Builder = () => {
                       : "bg-muted text-muted-foreground hover:text-foreground"
                   }`}
                 >
-                  {n === 3 ? "E" : `S${n}`}
+                  {n === 3 ? "Enc" : `S${n}`}
                 </button>
               ))}
             </div>
@@ -1249,8 +1249,10 @@ const Builder = () => {
         <div className={`flex-1 overflow-hidden flex flex-col ${
           isMobile ? (mobileTab === "setlist" ? "flex-1" : "hidden") : "lg:max-h-[calc(100vh-85px)]"
         }`}>
-          {/* Mobile: Plate + Poster strip at top */}
-          {isMobile && activeSlots.length > 0 && (
+          {/* Mobile: Plate + Poster strip at top.
+              Only once a real set is forming (>=3 songs) so the early build gets
+              full vertical room instead of a half-screen share preview. */}
+          {isMobile && activeSlots.length >= 3 && (
             <div className="border-b border-border bg-[#0F0E0C] px-3 py-3">
               <div className="flex gap-3 items-start">
                 {/* Plate thumbnail */}
