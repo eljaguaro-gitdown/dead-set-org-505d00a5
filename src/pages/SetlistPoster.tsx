@@ -542,10 +542,10 @@ const SetlistPoster = () => {
           {playabilityStats && playabilityStats.unplayable > 0 && (
             <span
               className="hidden sm:inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[11px] font-body bg-card/60 border border-border text-muted-foreground"
-              title={`${playabilityStats.withAudio} of ${playabilityStats.total} tracks have audio on Archive.org · ${playabilityStats.unplayable} unavailable`}
+              title={`${playabilityStats.withAudio} of ${playabilityStats.total} tracks circulate on Archive.org · ${playabilityStats.unplayable} not on tape`}
             >
               <Headphones className="w-3 h-3" />
-              {playabilityStats.withAudio}/{playabilityStats.total} have audio
+              {playabilityStats.withAudio}/{playabilityStats.total} on tape
             </span>
           )}
           {isOwner && sourceShow && (
@@ -764,9 +764,9 @@ const SetlistPoster = () => {
                                     <span
                                       className="inline-flex items-center gap-0.5 text-[9px] font-mono uppercase tracking-wider shrink-0"
                                       style={{ color: "hsl(28 15% 55%)" }}
-                                      title="No Archive.org audio found for this track"
+                                      title="No circulating Archive.org recording captures this track"
                                     >
-                                      <VolumeX className="w-3 h-3" /> no audio
+                                      <VolumeX className="w-3 h-3" /> no tape
                                     </span>
                                   )}
                                 </div>
