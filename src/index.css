@@ -6,68 +6,70 @@
 
 @layer base {
   :root {
-    /* Surface stack — dark to light */
-    --background: 240 20% 4%;
-    --foreground: 35 20% 88%;
+    /* Surface stack — warm bone paper, ink text. "Liner Notes" light theme. */
+    --background: 40 33% 91%;
+    --foreground: 45 8% 13%;
 
-    --card: 240 16% 8%;
-    --card-foreground: 35 20% 88%;
+    --card: 40 44% 95%;
+    --card-foreground: 45 8% 13%;
 
-    --popover: 240 16% 8%;
-    --popover-foreground: 35 20% 88%;
+    --popover: 40 44% 95%;
+    --popover-foreground: 45 8% 13%;
 
-    /* Gold system — primary emphasis */
-    --primary: 40 65% 52%;
-    --primary-foreground: 240 20% 4%;
+    /* Clay — primary emphasis (the single accent; tie-dye carries the rainbow) */
+    --primary: 10 58% 48%;
+    --primary-foreground: 40 33% 94%;
 
-    --secondary: 0 55% 50%;
-    --secondary-foreground: 35 20% 92%;
+    --secondary: 40 18% 87%;
+    --secondary-foreground: 45 8% 16%;
 
-    --muted: 240 12% 14%;
-    --muted-foreground: 33 15% 65%;
+    --muted: 40 24% 88%;
+    --muted-foreground: 40 9% 40%;
 
-    --accent: 40 55% 48%;
-    --accent-foreground: 240 20% 4%;
+    /* Soft clay tint — used for hover/active surface states */
+    --accent: 12 50% 92%;
+    --accent-foreground: 10 55% 30%;
 
-    --destructive: 0 65% 48%;
-    --destructive-foreground: 35 20% 92%;
+    --destructive: 0 62% 45%;
+    --destructive-foreground: 40 33% 95%;
 
-    --border: 245 16% 20%;
-    --input: 245 16% 20%;
-    --ring: 40 65% 52%;
+    --border: 40 18% 80%;
+    --input: 40 18% 80%;
+    --ring: 10 58% 48%;
 
     --radius: 0.625rem;
 
-    --sidebar-background: 240 16% 7%;
-    --sidebar-foreground: 35 20% 88%;
-    --sidebar-primary: 40 65% 52%;
-    --sidebar-primary-foreground: 240 20% 4%;
-    --sidebar-accent: 240 12% 14%;
-    --sidebar-accent-foreground: 35 20% 88%;
-    --sidebar-border: 245 16% 20%;
-    --sidebar-ring: 40 65% 52%;
+    --sidebar-background: 40 38% 93%;
+    --sidebar-foreground: 45 8% 13%;
+    --sidebar-primary: 10 58% 48%;
+    --sidebar-primary-foreground: 40 33% 94%;
+    --sidebar-accent: 40 24% 88%;
+    --sidebar-accent-foreground: 45 8% 13%;
+    --sidebar-border: 40 18% 80%;
+    --sidebar-ring: 10 58% 48%;
 
-    /* Deadhead / era accent palette — content only, never structure */
-    --dead-red: 0 55% 50%;
-    --dead-blue: 212 40% 46%;
-    --dead-gold: 40 65% 52%;
-    --dead-dark: 240 20% 6%;
-    --dead-surface: 240 16% 8%;
-    --dead-surface-hover: 240 14% 14%;
-    --dead-orange: 28 65% 48%;
-    --dead-cream: 35 25% 80%;
-    --dead-pink: 345 35% 55%;
-    --dead-green: 148 35% 38%;
-    --dead-purple: 265 35% 46%;
-    --dead-rose: 350 35% 50%;
-    --glow-red: 0 55% 50% / 0.3;
-    --glow-gold: 40 65% 52% / 0.3;
+    /* Deadhead / era accent palette — content only, never structure.
+       Deepened so each era color reads on warm paper. */
+    --dead-red: 8 58% 46%;
+    --dead-blue: 212 45% 40%;
+    --dead-gold: 36 60% 42%;
+    --dead-dark: 45 8% 13%;
+    --dead-surface: 40 44% 95%;
+    --dead-surface-hover: 40 28% 90%;
+    --dead-orange: 22 70% 44%;
+    --dead-cream: 40 30% 92%;
+    --dead-pink: 345 45% 50%;
+    --dead-green: 158 42% 30%;
+    --dead-purple: 265 38% 46%;
+    --dead-rose: 350 45% 48%;
+    --glow-red: 8 58% 46% / 0.25;
+    --glow-gold: 10 58% 48% / 0.22;
 
-    /* Text hierarchy */
-    --text-bright: 35 25% 95%;
-    --text-mid: 30 12% 68%;
-    --text-dim: 30 10% 50%;
-    --text-ghost: 30 8% 32%;
+    /* Text hierarchy — ink scale (dark to light) */
+    --text-bright: 45 9% 11%;
+    --text-mid: 40 9% 34%;
+    --text-dim: 40 8% 50%;
+    --text-ghost: 40 12% 66%;
 
     /* Typography */
     --font-display: 'Playfair Display', serif;
@@ -75,7 +77,7 @@
     --font-body: 'DM Sans', -apple-system, sans-serif;
     --font-mono: 'JetBrains Mono', monospace;
 
-    --grain-opacity: 0.035;
+    --grain-opacity: 0.02;
   }
 }
 
@@ -255,8 +257,8 @@
 .now-playing-bars span:nth-child(3) { animation: eq-bar-3 0.7s ease-in-out infinite; }
 
 @keyframes now-playing-glow {
-  0%, 100% { background-color: hsl(40 65% 52% / 0.08); }
-  50% { background-color: hsl(40 65% 52% / 0.18); }
+  0%, 100% { background-color: hsl(10 58% 48% / 0.08); }
+  50% { background-color: hsl(10 58% 48% / 0.16); }
 }
 
 .now-playing-row {
