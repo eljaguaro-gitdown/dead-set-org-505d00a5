@@ -8,49 +8,49 @@
   :root {
     /* Surface stack — dark to light */
     --background: 240 20% 4%;
-    --foreground: 35 20% 88%;
+    --foreground: 38 22% 93%;
 
     --card: 240 16% 8%;
-    --card-foreground: 35 20% 88%;
+    --card-foreground: 38 22% 93%;
 
     --popover: 240 16% 8%;
-    --popover-foreground: 35 20% 88%;
+    --popover-foreground: 38 22% 93%;
 
     /* Gold system — primary emphasis */
-    --primary: 40 65% 52%;
+    --primary: 40 72% 60%;
     --primary-foreground: 240 20% 4%;
 
     --secondary: 0 55% 50%;
     --secondary-foreground: 35 20% 92%;
 
     --muted: 240 12% 14%;
-    --muted-foreground: 33 15% 65%;
+    --muted-foreground: 36 14% 74%;
 
-    --accent: 40 55% 48%;
+    --accent: 40 64% 57%;
     --accent-foreground: 240 20% 4%;
 
     --destructive: 0 65% 48%;
     --destructive-foreground: 35 20% 92%;
 
-    --border: 245 16% 20%;
-    --input: 245 16% 20%;
-    --ring: 40 65% 52%;
+    --border: 245 15% 27%;
+    --input: 245 15% 27%;
+    --ring: 40 72% 60%;
 
     --radius: 0.625rem;
 
     --sidebar-background: 240 16% 7%;
-    --sidebar-foreground: 35 20% 88%;
-    --sidebar-primary: 40 65% 52%;
+    --sidebar-foreground: 38 22% 93%;
+    --sidebar-primary: 40 72% 60%;
     --sidebar-primary-foreground: 240 20% 4%;
     --sidebar-accent: 240 12% 14%;
-    --sidebar-accent-foreground: 35 20% 88%;
-    --sidebar-border: 245 16% 20%;
-    --sidebar-ring: 40 65% 52%;
+    --sidebar-accent-foreground: 38 22% 93%;
+    --sidebar-border: 245 15% 27%;
+    --sidebar-ring: 40 72% 60%;
 
     /* Deadhead / era accent palette — content only, never structure */
     --dead-red: 0 55% 50%;
     --dead-blue: 212 40% 46%;
-    --dead-gold: 40 65% 52%;
+    --dead-gold: 40 72% 60%;
     --dead-dark: 240 20% 6%;
     --dead-surface: 240 16% 8%;
     --dead-surface-hover: 240 14% 14%;
@@ -61,13 +61,13 @@
     --dead-purple: 265 35% 46%;
     --dead-rose: 350 35% 50%;
     --glow-red: 0 55% 50% / 0.3;
-    --glow-gold: 40 65% 52% / 0.3;
+    --glow-gold: 40 72% 60% / 0.3;
 
     /* Text hierarchy */
-    --text-bright: 35 25% 95%;
-    --text-mid: 30 12% 68%;
-    --text-dim: 30 10% 50%;
-    --text-ghost: 30 8% 32%;
+    --text-bright: 38 25% 96%;
+    --text-mid: 34 12% 76%;
+    --text-dim: 32 11% 62%;
+    --text-ghost: 30 9% 46%;
 
     /* Typography */
     --font-display: 'Playfair Display', serif;
@@ -255,8 +255,8 @@
 .now-playing-bars span:nth-child(3) { animation: eq-bar-3 0.7s ease-in-out infinite; }
 
 @keyframes now-playing-glow {
-  0%, 100% { background-color: hsl(40 65% 52% / 0.08); }
-  50% { background-color: hsl(40 65% 52% / 0.18); }
+  0%, 100% { background-color: hsl(40 72% 60% / 0.08); }
+  50% { background-color: hsl(40 72% 60% / 0.18); }
 }
 
 .now-playing-row {
@@ -273,7 +273,7 @@
    ═══════════════════════════════════════════════ */
 .label-mono {
   font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: 4px;
+  font-size: 11px;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
 }
