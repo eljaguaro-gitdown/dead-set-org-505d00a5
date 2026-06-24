@@ -133,12 +133,12 @@ const ShareFlow = ({
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
           transition={{ duration: 0.2 }}
-          className="w-full max-w-lg bg-card border border-border rounded-2xl overflow-hidden shadow-2xl"
+          className="w-full max-w-lg bg-card border border-border rounded-2xl max-h-[90vh] overflow-y-auto shadow-2xl"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-            <h2 className="font-display text-lg text-foreground">Your Show Plate</h2>
+            <h2 className="font-display text-lg text-foreground">Pass the tape</h2>
             <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors">
               <X className="w-5 h-5" />
             </button>
@@ -166,17 +166,19 @@ const ShareFlow = ({
             )}
           </div>
 
-          {/* Actions */}
-          <div className="px-6 py-4 flex gap-2">
-            <Button variant="outline" className="flex-1 gap-2 font-body" onClick={handleDownload}>
-              <Download className="w-4 h-4" /> Save Plate
+          {/* Actions — native share (the iMessage path) leads, full-width */}
+          <div className="px-6 py-4 space-y-2">
+            <Button className="w-full h-12 gap-2 font-body text-base" onClick={handleNativeShare}>
+              <Share2 className="w-4 h-4" /> Send to a friend
             </Button>
-            <Button variant="outline" className="flex-1 gap-2 font-body" onClick={handleCopyLink}>
-              <Link2 className="w-4 h-4" /> Copy Link
-            </Button>
-            <Button className="flex-1 gap-2 font-body" onClick={handleNativeShare}>
-              <Share2 className="w-4 h-4" /> Share
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" className="flex-1 h-11 gap-2 font-body" onClick={handleDownload}>
+                <Download className="w-4 h-4" /> Save Plate
+              </Button>
+              <Button variant="outline" className="flex-1 h-11 gap-2 font-body" onClick={handleCopyLink}>
+                <Link2 className="w-4 h-4" /> Copy Link
+              </Button>
+            </div>
           </div>
 
           {/* Social */}
@@ -186,9 +188,9 @@ const ShareFlow = ({
               <span className="font-mono text-[10px] text-muted-foreground/50 tracking-widest uppercase">or share to</span>
               <div className="h-px flex-1 bg-border" />
             </div>
-            <div className="flex flex-wrap gap-2">
+            <div className="grid grid-cols-2 gap-2">
               {user && (
-                <Button variant="outline" size="sm" className="flex-1 font-body text-xs gap-1.5" onClick={() => setDmOpen(true)}>
+                <Button variant="outline" size="sm" className="w-full h-10 font-body text-xs gap-1.5" onClick={() => setDmOpen(true)}>
                   <MessageCircle className="w-3.5 h-3.5" /> Message
                 </Button>
               )}

@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Zap, ChevronDown, ChevronUp, Heart, Share2 } from "lucide-react";
+import { Search, Zap, ChevronDown, ChevronUp, Heart, Share2, Plus } from "lucide-react";
 import { shareSong } from "@/lib/shareSong";
 import { Input } from "@/components/ui/input";
 import SongVersionBrowser from "@/components/SongVersionBrowser";
@@ -126,6 +126,18 @@ const SongVault = ({ songs, eraId, onSelectSong, getNotableVersions, onPlayArchi
                   <span className="font-body text-sm text-foreground truncate">{song.title}</span>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onSelectSong(song);
+                    }}
+                    className="flex items-center gap-1 rounded-md bg-primary/15 text-primary border border-primary/30 px-2.5 min-h-[36px] hover:bg-primary/25 active:scale-95 transition-all"
+                    title={`Add ${song.title} to your set`}
+                    aria-label={`Add ${song.title} to your set`}
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span className="text-xs font-body">Add</span>
+                  </button>
                   <button
                     onClick={async (e) => {
                       e.stopPropagation();

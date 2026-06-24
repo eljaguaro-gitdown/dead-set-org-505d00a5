@@ -202,9 +202,11 @@ const Messages = () => {
               <h2 className="font-display text-lg text-foreground">Messages</h2>
               <button
                 onClick={() => { setShowSearch(!showSearch); setGroupMode(false); setSelectedUsers([]); }}
-                className="p-2 rounded-md hover:bg-muted transition-colors"
+                aria-label="Start a conversation"
+                className="flex items-center gap-1 px-2.5 min-h-[44px] rounded-md hover:bg-muted transition-colors text-muted-foreground"
               >
-                <Plus className="w-4 h-4 text-muted-foreground" />
+                <Plus className="w-4 h-4" />
+                <span className="text-xs font-body">New</span>
               </button>
             </div>
 
@@ -389,7 +391,7 @@ const Messages = () => {
             {/* Chat header */}
             <div className="flex items-center gap-3 p-4 border-b border-border bg-card">
               {isMobile && (
-                <button onClick={() => setActiveConversationId(null)} className="p-1">
+                <button onClick={() => setActiveConversationId(null)} className="p-2 -ml-1 min-h-[44px] min-w-[44px] flex items-center justify-center" aria-label="Back to conversations">
                   <ArrowLeft className="w-5 h-5 text-muted-foreground" />
                 </button>
               )}

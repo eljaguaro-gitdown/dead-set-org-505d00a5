@@ -580,7 +580,7 @@ const SetlistPoster = () => {
             <div className="jcard-margin relative">
 
               {/* ===== TOP FLAP — Band + Title ===== */}
-              <div className="relative px-12 sm:px-14 pt-8 pb-6">
+              <div className="relative px-6 sm:px-14 pt-8 pb-6">
                 {/* Hand-drawn SYF in corner */}
                 <motion.div
                   className="absolute top-3 right-3 sm:top-4 sm:right-4 opacity-70"
@@ -661,7 +661,7 @@ const SetlistPoster = () => {
               </div>
 
               {/* ===== SETLIST BODY — handwritten song list ===== */}
-              <div className="px-12 sm:px-14 py-5 space-y-6">
+              <div className="px-6 sm:px-14 py-5 space-y-6">
                 {setGroups.map(({ label, number }) => {
                   const setSlots = slots.filter((s) => s.set_number === number);
                   if (setSlots.length === 0) return null;
@@ -717,7 +717,7 @@ const SetlistPoster = () => {
                               className={`group flex items-center gap-2 py-[5px] transition-colors cursor-pointer hover:bg-[hsl(38_50%_80%/0.3)] ${
                                 isNowPlaying ? "now-playing-row" : ""
                               } ${isUnplayable ? "opacity-50" : ""}`}
-                              style={{ minHeight: "28px", transform: `rotate(${rotation}deg) translateX(${xShift}px)` }}
+                              style={{ minHeight: "40px", transform: `rotate(${rotation}deg) translateX(${xShift}px)` }}
                               onClick={() => handlePlaySong(slot)}
                               onMouseEnter={() => setHoveredSlot(slot.id)}
                               onMouseLeave={() => setHoveredSlot(null)}
@@ -807,7 +807,7 @@ const SetlistPoster = () => {
                                       : `${slot.song.title} removed from favorite songs`
                                   );
                                 }}
-                                className="shrink-0 p-1 rounded-sm hover:bg-[hsl(38_50%_80%/0.35)] transition-colors"
+                                className="shrink-0 p-2 -m-1 rounded-sm hover:bg-[hsl(38_50%_80%/0.35)] transition-colors"
                                 title={isSongFavorited ? "Remove from favorite songs" : "Add to favorite songs"}
                               >
                                 <Heart className={`w-3.5 h-3.5 ${isSongFavorited ? "fill-current" : ""}`} style={{ color: isSongFavorited ? `hsl(${eraTheme.accent})` : "hsl(28 15% 45%)" }} />
@@ -912,7 +912,7 @@ const SetlistPoster = () => {
               )}
 
               {/* ===== BOTTOM FLAP ===== */}
-              <div className="px-12 sm:px-14 pb-6 pt-2">
+              <div className="px-6 sm:px-14 pb-6 pt-2">
                 {/* Dashed cut line */}
                 <div
                   className="h-px mb-5"
@@ -965,6 +965,17 @@ const SetlistPoster = () => {
                       <span className="text-sm opacity-70">{isFavorite(id || "") ? "Saved" : "Save"}</span>
                     </motion.button>
                   </div>
+
+                  {/* Signed-out conversion CTA — the friend who arrived from a shared
+                      link gets an invitation to build, not just upvote/save dead-ends. */}
+                  {!user && (
+                    <button
+                      onClick={() => navigate("/builder")}
+                      className="w-full max-w-xs h-12 rounded-xl bg-primary text-primary-foreground font-display text-base shadow-md hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+                    >
+                      Build your own dream show →
+                    </button>
+                  )}
 
                   {/* Play count */}
                   {setlist.play_count > 0 && (

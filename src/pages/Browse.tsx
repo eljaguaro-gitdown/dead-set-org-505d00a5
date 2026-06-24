@@ -491,7 +491,7 @@ const SetlistCard = ({ setlist, index, onClick, isFav, onToggleFav }: { setlist:
             ) : (
               <div className="w-4 h-4 rounded-full bg-muted" />
             )}
-            <Link to={`/user/${setlist.creator_id}`} onClick={(e) => e.stopPropagation()} className="text-[10px] font-body text-muted-foreground truncate hover:text-primary transition-colors">{setlist.creator_name}</Link>
+            <Link to={`/user/${setlist.creator_id}`} onClick={(e) => e.stopPropagation()} className="text-[11px] font-body text-muted-foreground truncate hover:text-primary transition-colors py-1 -my-1 inline-block">{setlist.creator_name}</Link>
           </div>
           <PlaySetlistButton setlistId={setlist.id} size="sm" />
           <FavoriteButton isFavorite={isFav} onToggle={() => onToggleFav(setlist.id)} />
