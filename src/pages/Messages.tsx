@@ -272,7 +272,7 @@ const Messages = () => {
                       <Input
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="Search users..."
+                        placeholder="Find a head by name..."
                         className="pl-9 bg-background border-border text-foreground font-body text-sm"
                         autoFocus
                       />
@@ -451,7 +451,7 @@ const Messages = () => {
             </div>
 
             {/* Input */}
-            <div className="p-3 border-t border-border bg-card">
+            <div className="p-3 border-t border-border bg-card pb-[max(0.75rem,env(safe-area-inset-bottom))]">
               <form
                 onSubmit={(e) => {
                   e.preventDefault();

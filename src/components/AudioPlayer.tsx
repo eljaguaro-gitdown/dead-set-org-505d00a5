@@ -657,7 +657,7 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
             setYOffset(0);
             try { window.localStorage.setItem("audioPlayerYOffset", "0"); } catch {}
           }}
-          className="absolute -top-3 left-1/2 -translate-x-1/2 z-10 h-6 px-3 flex items-center justify-center rounded-full border border-border bg-card/95 backdrop-blur-lg text-muted-foreground hover:text-foreground cursor-grab active:cursor-grabbing touch-none shadow-md"
+          className="absolute -top-3 left-1/2 -translate-x-1/2 z-10 h-7 px-4 flex items-center justify-center rounded-full border border-border bg-card/95 backdrop-blur-lg text-muted-foreground hover:text-foreground cursor-grab active:cursor-grabbing touch-none shadow-md"
           title="Drag to move · double-click to reset"
         >
           <GripHorizontal className="w-3.5 h-3.5" />
@@ -837,7 +837,7 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
             {formatTime(progress)} / {formatTime(duration)}
           </span>
 
-          <a href="https://archive.org" target="_blank" rel="noopener noreferrer" className="text-[11px] text-muted-foreground/50 hover:text-muted-foreground font-body shrink-0 inline max-sm:order-last max-sm:ml-auto transition-colors">
+          <a href="https://archive.org" target="_blank" rel="noopener noreferrer" className="text-[11px] text-muted-foreground/70 hover:text-muted-foreground font-body shrink-0 inline max-sm:order-last max-sm:ml-auto max-sm:text-muted-foreground/90 transition-colors">
             via archive.org
           </a>
 
@@ -861,7 +861,7 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
             </PopoverContent>
           </Popover>
 
-          <button onClick={() => setMuted(!muted)} className="h-10 w-10 flex items-center justify-center text-muted-foreground hover:text-foreground shrink-0 rounded-full transition-colors max-sm:order-10 max-sm:text-muted-foreground/60" title={muted ? "Unmute" : "Mute"}>
+          <button onClick={() => setMuted(!muted)} className="h-10 w-10 flex items-center justify-center text-muted-foreground hover:text-foreground shrink-0 rounded-full transition-colors max-sm:order-10" title={muted ? "Unmute" : "Mute"}>
             {muted ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
           </button>
 

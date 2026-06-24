@@ -173,20 +173,20 @@ const UserLibrary = () => {
           Back
         </button>
 
-        {/* Profile header */}
-        <div className="flex items-center gap-4 mb-8">
-          <Avatar className="w-14 h-14">
+        {/* Profile header — centered "person" hero on mobile, row on desktop */}
+        <div className="flex flex-col items-center text-center gap-3 sm:flex-row sm:items-center sm:text-left sm:gap-4 mb-8">
+          <Avatar className="w-20 h-20 sm:w-14 sm:h-14">
             {profile?.avatar_url && <AvatarImage src={profile.avatar_url} alt={displayName} />}
-            <AvatarFallback className="bg-muted text-muted-foreground font-display text-lg">
+            <AvatarFallback className="bg-muted text-muted-foreground font-display text-2xl sm:text-lg">
               {displayName.charAt(0).toUpperCase()}
             </AvatarFallback>
           </Avatar>
           <div>
-            <h1 className="font-display text-2xl text-foreground">{displayName}</h1>
+            <h1 className="font-display text-3xl sm:text-2xl text-foreground">{displayName}</h1>
             <p className="font-body text-sm text-muted-foreground">
               {loading ? "Loading..." : isAdmin
                 ? `${setlists.length} setlist${setlists.length !== 1 ? "s" : ""} (${setlists.filter(s => !s.is_public).length} private)`
-                : `${setlists.length} public setlist${setlists.length !== 1 ? "s" : ""}`
+                : `${setlists.length} set${setlists.length !== 1 ? "s" : ""} shared with the lot`
               }
             </p>
           </div>

@@ -131,6 +131,7 @@ const PickHandleModal = () => {
             onChange={(e) => setValue(e.target.value)}
             placeholder="e.g. Jerry from Jersey"
             maxLength={40}
+            className="h-12 text-base"
             onKeyDown={(e) => {
               if (e.key === "Enter") handleSave();
             }}
@@ -141,10 +142,10 @@ const PickHandleModal = () => {
         </div>
 
         <DialogFooter className="gap-2 sm:gap-2">
-          <Button variant="ghost" onClick={dismiss} disabled={saving}>
+          <Button variant="ghost" className="w-full sm:w-auto" onClick={dismiss} disabled={saving}>
             Maybe later
           </Button>
-          <Button onClick={handleSave} disabled={saving || value.trim().length < 2}>
+          <Button className="w-full sm:w-auto h-11" onClick={handleSave} disabled={saving || value.trim().length < 2}>
             {saving ? "Saving…" : "Save handle"}
           </Button>
         </DialogFooter>
