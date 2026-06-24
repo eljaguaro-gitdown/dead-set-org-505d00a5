@@ -204,11 +204,11 @@ const HeroSection = (_props: HeroSectionProps) => {
         .ds-hero {
           --bg-deep: #0a0a0a;
           --bg-plaque: #0f0e08;
-          --text-primary: #e8e4d0;
-          --text-soft: #b0ac9a;
-          --text-eyebrow: #b09e78;
-          --accent-gold: #c9a84c;
-          --accent-warm: #d4b558;
+          --text-primary: #efeada;
+          --text-soft: #c6c1ad;
+          --text-eyebrow: #d2bd8a;
+          --accent-gold: #e3b24e;
+          --accent-warm: #efc468;
           --rule-faint: #2a2410;
           --rule-gold-30: rgba(201, 168, 76, 0.30);
           --rule-gold-40: rgba(201, 168, 76, 0.40);
