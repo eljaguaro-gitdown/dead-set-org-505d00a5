@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Plus, Globe, Lock, Music, Trash2, Calendar, Search, User, ArrowDownUp, Star, FileImage, Heart, Sparkles, Share2, Play } from "lucide-react";
+import { Plus, Globe, Lock, Music, Trash2, Calendar, Search, User, ArrowDownUp, Star, FileImage, Heart, Sparkles, Share2, Play, MessageCircle } from "lucide-react";
 import { shareSong } from "@/lib/shareSong";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 import { Button } from "@/components/ui/button";
@@ -326,6 +326,15 @@ const MySetlists = () => {
           onClick={() => navigate("/browse")}
         >
           <Search className="w-3.5 h-3.5" /> Browse
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="text-muted-foreground hover:text-foreground"
+          onClick={() => navigate("/messages")}
+          title="Messages"
+        >
+          <MessageCircle className="w-4 h-4" />
         </Button>
         <Button
           variant="ghost"

@@ -200,7 +200,7 @@ const SiteHeader = ({ children, large = false }: SiteHeaderProps) => {
                 <AnnouncementsBell variant="mobile" />
                 <button
                   onClick={() => navigate("/messages")}
-                  className="relative p-2 text-muted-foreground hover:text-foreground transition-colors"
+                  className="relative p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
                   title="Messages"
                 >
                   <MessageCircle className="w-5 h-5" />
@@ -214,17 +214,17 @@ const SiteHeader = ({ children, large = false }: SiteHeaderProps) => {
                   )}
                 </button>
               </>
-            ) : isRepeatVisitor ? (
+            ) : (
               <button
                 onClick={() => navigate("/auth")}
-                className="font-mono text-[10px] tracking-[0.15em] text-primary border border-primary/40 rounded-md px-3 py-1.5 hover:bg-primary/10 transition-colors uppercase"
+                className="font-mono text-[10px] tracking-[0.15em] text-primary border border-primary/40 rounded-md px-3 py-2.5 min-h-[44px] hover:bg-primary/10 transition-colors uppercase"
               >
                 Sign In
               </button>
-            ) : null}
+            )}
             <Sheet>
               <SheetTrigger asChild>
-                <button className="p-2 text-foreground" aria-label="Open menu">
+                <button className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-foreground" aria-label="Open menu">
                   <Menu className="w-5 h-5" />
                 </button>
               </SheetTrigger>

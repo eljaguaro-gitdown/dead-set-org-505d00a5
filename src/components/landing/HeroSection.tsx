@@ -490,10 +490,9 @@ const HeroSection = (_props: HeroSectionProps) => {
         .ds-hero__cta-secondary::before {
           content: "";
           position: absolute; inset: 0;
-          background: radial-gradient(120% 80% at 50% 100%, rgba(201, 168, 76, 0.18), transparent 70%);
-          opacity: 0.7;
+          background: radial-gradient(120% 80% at 50% 100%, rgba(201, 168, 76, 0.10), transparent 70%);
+          opacity: 0.5;
           pointer-events: none;
-          animation: ds-hero-pulse 3.6s ease-in-out infinite;
         }
         @keyframes ds-hero-pulse {
           0%, 100% { opacity: 0.45; }
@@ -835,19 +834,9 @@ const HeroSection = (_props: HeroSectionProps) => {
             {isHeroPlaying ? "the music never stops" : "today's featured setlist — built by a fellow head"}
           </p>
 
-          <div className="ds-hero__stage" aria-hidden="true">
-            <div
-              className="ds-hero__portrait"
-              role="img"
-              aria-label="Cosmic Charlie, your way in"
-            />
-          </div>
-
-          <div className="ds-hero__nameplate">
-            <div className="ds-hero__charlie-eyebrow">your way in</div>
-            <div className="ds-hero__charlie-name">Cosmic Charlie</div>
-          </div>
-
+          {/* Primary CTA sits directly under the Now Spinning cassette so
+              "Build your Setlist" lands in the first viewport on a phone,
+              before the large Charlie portrait. */}
           <div className="ds-hero__cta-wrap">
             <div className="ds-hero__cta-eyebrow">Need a Miracle?</div>
             <a
@@ -884,6 +873,19 @@ const HeroSection = (_props: HeroSectionProps) => {
                 ? `${communityCount.toLocaleString()} setlists spinning now`
                 : "what other heads are spinning"}
             </p>
+          </div>
+
+          <div className="ds-hero__stage" aria-hidden="true">
+            <div
+              className="ds-hero__portrait"
+              role="img"
+              aria-label="Cosmic Charlie, your way in"
+            />
+          </div>
+
+          <div className="ds-hero__nameplate">
+            <div className="ds-hero__charlie-eyebrow">your way in</div>
+            <div className="ds-hero__charlie-name">Cosmic Charlie</div>
           </div>
 
           <aside

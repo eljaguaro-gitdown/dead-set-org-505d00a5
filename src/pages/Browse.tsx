@@ -271,7 +271,7 @@ const Browse = () => {
 
       <div className="border-b border-border/30 px-4 sm:px-6 py-4">
         <div className="max-w-6xl mx-auto space-y-3">
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             {isAuthenticated && (
               <button
                 onClick={() => setShowFavoritesOnly((p) => !p)}
@@ -286,7 +286,7 @@ const Browse = () => {
                 <span className="font-body text-xs hidden sm:inline">Favorites</span>
               </button>
             )}
-            <div className="relative flex-1">
+            <div className="relative flex-1 basis-full sm:basis-0">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
                 placeholder="Search setlists or creators..."
@@ -296,7 +296,7 @@ const Browse = () => {
               />
             </div>
             <Select value={sortBy} onValueChange={(v) => setSortBy(v as any)}>
-              <SelectTrigger className="w-[140px] sm:w-[160px] bg-card/60 border-border text-foreground font-body text-xs h-9">
+              <SelectTrigger className="flex-1 sm:flex-none sm:w-[160px] bg-card/60 border-border text-foreground font-body text-xs h-9">
                 <SortAsc className="w-3 h-3 mr-1 text-muted-foreground" />
                 <SelectValue />
               </SelectTrigger>
@@ -491,7 +491,7 @@ const SetlistCard = ({ setlist, index, onClick, isFav, onToggleFav }: { setlist:
             ) : (
               <div className="w-4 h-4 rounded-full bg-muted" />
             )}
-            <Link to={`/user/${setlist.creator_id}`} onClick={(e) => e.stopPropagation()} className="text-[10px] font-body text-muted-foreground truncate hover:text-primary transition-colors">{setlist.creator_name}</Link>
+            <Link to={`/user/${setlist.creator_id}`} onClick={(e) => e.stopPropagation()} className="text-[11px] font-body text-muted-foreground truncate hover:text-primary transition-colors py-1 -my-1 inline-block">{setlist.creator_name}</Link>
           </div>
           <PlaySetlistButton setlistId={setlist.id} size="sm" />
           <FavoriteButton isFavorite={isFav} onToggle={() => onToggleFav(setlist.id)} />

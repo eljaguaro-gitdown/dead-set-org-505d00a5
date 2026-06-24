@@ -185,18 +185,21 @@ const SortableSlotItem = ({
                   <Play className="w-3.5 h-3.5 text-primary opacity-0 group-hover:opacity-70 transition-opacity fill-current shrink-0" />
                 )}
               </span>
-              <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                 <button
                   onClick={async (e) => {
                     e.stopPropagation();
                     await toggleFavoriteSong(favoritePayload);
                   }}
+                  className="p-2 -m-0.5 min-h-[40px] min-w-[40px] flex items-center justify-center"
                   title={isFavorited ? "Remove from favorite songs" : "Add to favorite songs"}
                 >
                   <Heart className={`w-4 h-4 transition-colors ${isFavorited ? "text-primary fill-primary" : "text-muted-foreground hover:text-primary"}`} />
                 </button>
                 <button
                   onClick={() => onRemoveSlot(slot.id)}
+                  className="p-2 -m-0.5 min-h-[40px] min-w-[40px] flex items-center justify-center"
+                  aria-label="Remove song"
                 >
                   <X className="w-4 h-4 text-muted-foreground hover:text-primary" />
                 </button>

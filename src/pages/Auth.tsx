@@ -147,56 +147,6 @@ const Auth = () => {
             </p>
           </div>
 
-          <form onSubmit={handleAuth} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email" className="font-body text-foreground">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="bg-card/80 backdrop-blur-sm border-border text-foreground"
-              />
-            </div>
-            {!isForgot && (
-              <div className="space-y-2">
-                <Label htmlFor="password" className="font-body text-foreground">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  minLength={6}
-                  className="bg-card/80 backdrop-blur-sm border-border text-foreground"
-                />
-              </div>
-            )}
-            <Button
-              type="submit"
-              className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-body"
-              disabled={loading}
-            >
-              {loading ? "..." : isForgot ? "Send Reset Link" : isSignUp ? "Create my account" : "Sign In"}
-            </Button>
-            {!isSignUp && !isForgot && (
-              <button
-                type="button"
-                onClick={() => setIsForgot(true)}
-                className="w-full text-center text-sm text-muted-foreground hover:text-primary font-body transition-colors"
-              >
-                Forgot your password?
-              </button>
-            )}
-          </form>
-
-          <div className="flex items-center gap-3">
-            <div className="h-px flex-1 bg-border" />
-            <span className="font-mono text-[10px] text-muted-foreground/50 tracking-widest uppercase">or</span>
-            <div className="h-px flex-1 bg-border" />
-          </div>
-
           {isInApp && (
             <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 flex gap-3">
               <AlertTriangle className="w-5 h-5 text-primary shrink-0 mt-0.5" />
@@ -211,26 +161,11 @@ const Auth = () => {
             </div>
           )}
 
-          {/* Apple temporarily unavailable banner */}
-          <div
-            role="alert"
-            className="rounded-xl border-2 border-primary/60 bg-primary/10 p-4 flex gap-3 shadow-[0_0_24px_-8px_hsl(var(--primary)/0.5)]"
-          >
-            <AlertTriangle className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-            <div className="space-y-1">
-              <p className="font-body text-sm font-semibold text-foreground">
-                Apple Sign-In is temporarily unavailable
-              </p>
-              <p className="font-body text-sm text-muted-foreground">
-                We're working on a fix. In the meantime, please use <span className="text-foreground font-medium">Google</span> or <span className="text-foreground font-medium">email &amp; password</span>.
-              </p>
-            </div>
-          </div>
-
+          {/* OAuth — one-tap, kept above the email form so the fastest path is first */}
           <div className="space-y-3">
             <Button
               variant="outline"
-              className="w-full border-border text-foreground hover:bg-muted font-body gap-2 disabled:opacity-50"
+              className="w-full h-12 text-base border-border text-foreground hover:bg-muted font-body gap-2 disabled:opacity-50"
               onClick={handleGoogleLogin}
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24">
@@ -244,7 +179,7 @@ const Auth = () => {
 
             <Button
               variant="outline"
-              className="w-full border-border/50 text-muted-foreground hover:bg-muted/40 font-body gap-2 opacity-60"
+              className="w-full h-12 text-base border-border/50 text-muted-foreground hover:bg-muted/40 font-body gap-2 opacity-60"
               onClick={handleAppleLogin}
               title="Apple sign-in is temporarily unavailable — please use Google or email/password"
               aria-label="Apple sign-in temporarily unavailable"
@@ -259,9 +194,59 @@ const Auth = () => {
             </Button>
 
             <p className="text-center font-body text-xs text-muted-foreground/70 pt-1">
-              Email signup works on every browser.
+              Apple sign-in is resting — Google and email are wide open.
             </p>
           </div>
+
+          <div className="flex items-center gap-3">
+            <div className="h-px flex-1 bg-border" />
+            <span className="font-mono text-[10px] text-muted-foreground/50 tracking-widest uppercase">or use your email</span>
+            <div className="h-px flex-1 bg-border" />
+          </div>
+
+          <form onSubmit={handleAuth} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email" className="font-body text-foreground">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="h-12 text-base bg-card/80 backdrop-blur-sm border-border text-foreground"
+              />
+            </div>
+            {!isForgot && (
+              <div className="space-y-2">
+                <Label htmlFor="password" className="font-body text-foreground">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  minLength={6}
+                  className="h-12 text-base bg-card/80 backdrop-blur-sm border-border text-foreground"
+                />
+              </div>
+            )}
+            <Button
+              type="submit"
+              className="w-full h-12 text-base bg-primary text-primary-foreground hover:bg-primary/90 font-body"
+              disabled={loading}
+            >
+              {loading ? "..." : isForgot ? "Send Reset Link" : isSignUp ? "Create my account" : "Sign In"}
+            </Button>
+            {!isSignUp && !isForgot && (
+              <button
+                type="button"
+                onClick={() => setIsForgot(true)}
+                className="w-full text-center text-sm text-muted-foreground hover:text-primary font-body transition-colors"
+              >
+                Forgot your password?
+              </button>
+            )}
+          </form>
 
           <div className="flex flex-col items-center gap-3">
             {isForgot ? (

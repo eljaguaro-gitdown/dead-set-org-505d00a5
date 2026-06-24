@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageCircle, Send, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -217,9 +218,12 @@ const SetlistComments = ({ setlistId, isPublic }: SetlistCommentsProps) => {
 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="font-display text-xs text-foreground/80 truncate">
+                    <Link
+                      to={`/user/${comment.user_id}`}
+                      className="font-display text-xs text-foreground/80 truncate hover:text-primary transition-colors"
+                    >
                       {comment.profile?.display_name || "Unknown Head"}
-                    </span>
+                    </Link>
                     <span className="text-[10px] font-mono text-muted-foreground/40">
                       {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
                     </span>
@@ -233,7 +237,7 @@ const SetlistComments = ({ setlistId, isPublic }: SetlistCommentsProps) => {
                 {user && (user.id === comment.user_id || isAdmin) && (
                   <button
                     onClick={() => handleDelete(comment.id)}
-                    className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity p-1 text-muted-foreground/40 hover:text-destructive"
+                    className="shrink-0 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity p-2 -m-1 min-h-[40px] min-w-[40px] flex items-center justify-center text-muted-foreground/40 hover:text-destructive"
                     title="Delete comment"
                   >
                     <Trash2 className="w-3.5 h-3.5" />

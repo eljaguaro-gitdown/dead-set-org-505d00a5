@@ -62,7 +62,7 @@ const PosterModal = ({
           <button
             onClick={onClose}
             aria-label="Close poster"
-            className="absolute top-4 right-4 w-10 h-10 rounded-lg border border-border bg-card/80 text-foreground hover:bg-card flex items-center justify-center transition-colors"
+            className="absolute top-4 right-4 w-11 h-11 rounded-lg border border-border bg-card/80 text-foreground hover:bg-card flex items-center justify-center transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -131,7 +131,8 @@ const PosterModal = ({
               )}
             </div>
             <p className="font-mono text-muted-foreground/60 text-center mt-4 text-sm">
-              Swipe or use ← → to browse
+              <span className="sm:hidden">Swipe to browse</span>
+              <span className="hidden sm:inline">Swipe or use ← → to browse</span>
             </p>
           </motion.div>
         </motion.div>
