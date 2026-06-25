@@ -49,7 +49,7 @@ const GuestSignInPrompt = ({ open, onSignIn, onDismiss }: GuestSignInPromptProps
             >
               ⚡
             </motion.div>
-            <h3 className="font-display text-lg text-foreground mb-1">
+            <h3 className="font-display text-xl text-primary mb-1">
               Nice setlist! Ready to keep it?
             </h3>
             <p className="font-body text-sm text-muted-foreground">
@@ -63,7 +63,7 @@ const GuestSignInPrompt = ({ open, onSignIn, onDismiss }: GuestSignInPromptProps
                 <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
                   <Icon className="w-4 h-4 text-primary" />
                 </div>
-                <span className="font-body text-sm text-foreground/80">{label}</span>
+                <span className="font-body text-sm text-card-foreground">{label}</span>
               </li>
             ))}
           </ul>
