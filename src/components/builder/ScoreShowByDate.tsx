@@ -52,25 +52,25 @@ const ScoreShowByDate = ({ onPullSetlist, onSurpriseMe }: ScoreShowByDateProps) 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
           {/* Door 1: Score a Show by Date */}
           <div
-            className="rounded-2xl border border-[hsl(var(--border))] bg-[#0F0E0C] p-5 sm:p-6 flex flex-col gap-4 shadow-sm"
+            className="rounded-2xl border border-[hsl(var(--border))] bg-card paper-grain p-5 sm:p-6 flex flex-col gap-4 shadow-sm"
             style={{ borderColor: "hsl(45 50% 54% / 0.25)" }}
           >
             <div className="space-y-1.5">
               <h2
                 className="font-display italic text-foreground"
-                style={{ fontSize: "28px", lineHeight: 1.15, color: "#c9a84c" }}
+                style={{ fontSize: "28px", lineHeight: 1.15, color: "#c24a33" }}
               >
                 Score a Show by Date
               </h2>
               <p
                 className="font-body"
-                style={{ fontSize: "15px", fontWeight: 300, color: "#b0ac9a" }}
+                style={{ fontSize: "15px", fontWeight: 300, color: "#6b665c" }}
               >
                 Every day has a tape. Pick yours.
               </p>
               <p
                 className="font-body leading-relaxed pt-1"
-                style={{ fontSize: "14px", fontWeight: 300, color: "#8a8270" }}
+                style={{ fontSize: "14px", fontWeight: 300, color: "#5a5448" }}
               >
                 Your first show. Your anniversary. The day you met someone who mattered.
                 Cosmic Charlie pulls the setlist from the tape.
@@ -83,12 +83,12 @@ const ScoreShowByDate = ({ onPullSetlist, onSurpriseMe }: ScoreShowByDateProps) 
                   type="button"
                   className={cn(
                     "w-full h-12 px-4 rounded-[10px] flex items-center gap-3 text-left",
-                    "bg-[#15130F] border border-[hsl(45_30%_30%/0.6)]",
-                    "focus:outline-none focus:ring-2 focus:ring-[#c9a84c] focus:border-[#c9a84c]",
-                    "transition-colors hover:border-[#c9a84c]/70",
+                    "bg-[#f1e6ca] border border-[hsl(45_30%_30%/0.6)]",
+                    "focus:outline-none focus:ring-2 focus:ring-[#c24a33] focus:border-[#c24a33]",
+                    "transition-colors hover:border-[#c24a33]/70",
                   )}
                 >
-                  <CalendarIcon className="w-5 h-5 shrink-0" style={{ color: "#c9a84c" }} />
+                  <CalendarIcon className="w-5 h-5 shrink-0" style={{ color: "#c24a33" }} />
                   {date ? (
                     <span
                       className="text-base text-foreground"
@@ -127,7 +127,7 @@ const ScoreShowByDate = ({ onPullSetlist, onSurpriseMe }: ScoreShowByDateProps) 
                     onClick={handlePull}
                     disabled={!date}
                     className="w-full h-12 rounded-[10px] font-display gap-2 text-base"
-                    style={{ background: "#c9a84c", color: "#15130F" }}
+                    style={{ background: "#c24a33", color: "#f1e6ca" }}
                   >
                     Pull the Setlist
                     <ArrowUpRight className="w-5 h-5" />
@@ -157,32 +157,32 @@ const ScoreShowByDate = ({ onPullSetlist, onSurpriseMe }: ScoreShowByDateProps) 
           <button
             type="button"
             onClick={onSurpriseMe}
-            className="text-left rounded-2xl border border-[hsl(var(--border))] bg-[#0F0E0C] p-5 sm:p-6 flex flex-col gap-4 shadow-sm hover:border-primary/60 transition-colors group"
+            className="text-left rounded-2xl border border-[hsl(var(--border))] bg-card paper-grain p-5 sm:p-6 flex flex-col gap-4 shadow-sm hover:border-primary/60 transition-colors group"
           >
             <div className="space-y-1.5 flex-1">
               <h2
                 className="font-display italic text-foreground"
-                style={{ fontSize: "28px", lineHeight: 1.15, color: "#c9a84c" }}
+                style={{ fontSize: "28px", lineHeight: 1.15, color: "#c24a33" }}
               >
                 Let Cosmic Charlie Pick
               </h2>
               <p
                 className="font-body"
-                style={{ fontSize: "15px", fontWeight: 300, color: "#b0ac9a" }}
+                style={{ fontSize: "15px", fontWeight: 300, color: "#6b665c" }}
               >
                 No date in mind? Roll the dice.
               </p>
               <p
                 className="font-body leading-relaxed pt-1"
-                style={{ fontSize: "14px", fontWeight: 300, color: "#8a8270" }}
+                style={{ fontSize: "14px", fontWeight: 300, color: "#5a5448" }}
               >
                 Tell Charlie a mood, an era, or just say surprise me — and he'll pull
                 a setlist from the tape that fits the night.
               </p>
             </div>
             <div
-              className="w-full h-12 rounded-[10px] font-display gap-2 text-base flex items-center justify-center border border-[#c9a84c]/60 group-hover:bg-[#c9a84c]/10 transition-colors"
-              style={{ color: "#c9a84c" }}
+              className="w-full h-12 rounded-[10px] font-display gap-2 text-base flex items-center justify-center border border-[#c24a33]/60 group-hover:bg-[#c24a33]/10 transition-colors"
+              style={{ color: "#c24a33" }}
             >
               <Star className="w-5 h-5" />
               Open Cosmic Charlie

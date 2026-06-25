@@ -1106,7 +1106,7 @@ const Builder = () => {
 
             {/* Era filter — desktop (full select with label) */}
             <Select value={selectedEra || ""} onValueChange={(v) => setSelectedEra(v || null)}>
-              <SelectTrigger className="w-auto min-w-[100px] max-w-[160px] bg-card border-border text-foreground font-body text-sm h-10 shrink-0 hidden sm:flex">
+              <SelectTrigger className="w-auto min-w-[100px] max-w-[160px] bg-card border-border text-card-foreground font-body text-sm h-10 shrink-0 hidden sm:flex">
                 <SelectValue placeholder="All eras" />
               </SelectTrigger>
               <SelectContent className="bg-card border-border">

@@ -179,7 +179,7 @@ const SortableSlotItem = ({
           </button>
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between">
-              <span className="font-body text-base lg:text-xl text-foreground font-medium flex items-center gap-2">
+              <span className="font-body text-base lg:text-xl text-card-foreground font-medium flex items-center gap-2">
                 {slot.song.title}
                 {onPlayVersion && (
                   <Play className="w-3.5 h-3.5 text-primary opacity-0 group-hover:opacity-70 transition-opacity fill-current shrink-0" />
@@ -285,7 +285,7 @@ const SortableSlotItem = ({
               placeholder="Notes..."
               value={slot.notes}
               onChange={(e) => onUpdateNotes(slot.id, e.target.value)}
-              className="mt-2 min-h-[28px] h-7 text-xs bg-transparent border-border resize-none font-body text-muted-foreground focus:text-foreground"
+              className="mt-2 min-h-[28px] h-7 text-xs bg-transparent border-border resize-none font-mono text-muted-foreground focus:text-card-foreground"
             />
           </div>
         </div>

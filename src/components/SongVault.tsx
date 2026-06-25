@@ -95,7 +95,7 @@ const SongVault = ({ songs, eraId, onSelectSong, getNotableVersions, onPlayArchi
               onClick={() => setPositionFilter(positionFilter === pos ? null : pos)}
               className={`px-2 py-0.5 text-xs rounded-full border font-body transition-colors ${
                 positionFilter === pos
-                  ? "bg-muted text-foreground border-foreground/30"
+                  ? "bg-muted text-card-foreground border-card-foreground/30"
                   : "border-border text-muted-foreground hover:text-foreground"
               }`}
             >
@@ -123,7 +123,7 @@ const SongVault = ({ songs, eraId, onSelectSong, getNotableVersions, onPlayArchi
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 min-w-0">
                   {song.is_jam_vehicle && <Zap className="w-3.5 h-3.5 text-accent shrink-0" />}
-                  <span className="font-body text-sm text-foreground truncate">{song.title}</span>
+                  <span className="font-mono text-sm text-card-foreground truncate">{song.title}</span>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   <button
