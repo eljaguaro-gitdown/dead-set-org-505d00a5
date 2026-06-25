@@ -351,7 +351,7 @@ const CosmicCharlieDialog = ({
           <div className="flex items-center gap-3">
             <CosmicCharlieAvatar size={48} animate />
             <div>
-              <DialogTitle className="font-display text-xl text-foreground">
+              <DialogTitle className="font-display text-2xl text-primary">
                 Cosmic Charlie
               </DialogTitle>
               <p className="text-xs text-muted-foreground font-body">Your Deadhead Guide</p>
@@ -554,7 +554,7 @@ const CosmicCharlieDialog = ({
                             onClick={() => toggleVibe(vibe)}
                             className={`flex items-center gap-2 px-3 py-2.5 rounded-lg border text-left transition-all duration-200 text-sm ${
                               selected
-                                ? "border-primary bg-primary/15 shadow-[0_0_10px_hsl(var(--glow-gold))]"
+                                ? "border-primary bg-primary/20 ring-1 ring-primary/40"
                                 : suggested
                                 ? "border-primary/60 bg-primary/5 ring-1 ring-primary/30"
                                 : "border-border bg-background hover:border-primary/40"
@@ -619,7 +619,7 @@ const CosmicCharlieDialog = ({
                             onClick={() => togglePriority(priority)}
                             className={`flex items-center gap-3 px-3 py-2.5 rounded-lg border text-left transition-all duration-200 ${
                               selected
-                                ? "border-primary bg-primary/15 shadow-[0_0_10px_hsl(var(--glow-gold))]"
+                                ? "border-primary bg-primary/20 ring-1 ring-primary/40"
                                 : suggested
                                 ? "border-primary/60 bg-primary/5 ring-1 ring-primary/30"
                                 : "border-border bg-background hover:border-primary/40"
@@ -750,7 +750,7 @@ const CosmicCharlieDialog = ({
                 <Button
                   size="sm"
                   onClick={() => handleGenerate()}
-                  className="bg-primary text-primary-foreground font-body gap-1.5 flex-1"
+                  className="foil font-body gap-1.5 flex-1"
                 >
                   <Star className="w-3.5 h-3.5" />
                   Charlie, Fix This
@@ -810,7 +810,7 @@ const CosmicCharlieDialog = ({
                       <h3 className="font-display text-lg text-primary">Which eras?</h3>
                       <p className="font-body text-xs text-muted-foreground">Pick one or more, or let Charlie surprise you</p>
                     </div>
-                    <motion.button whileTap={{ scale: 0.97 }} onClick={() => { setSurpriseMe(true); setSelectedEraIds([]); }} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg border text-left transition-all duration-200 ${surpriseMe ? "border-primary bg-primary/15 shadow-[0_0_10px_hsl(var(--glow-gold))]" : "border-border bg-background hover:border-primary/40"}`}>
+                    <motion.button whileTap={{ scale: 0.97 }} onClick={() => { setSurpriseMe(true); setSelectedEraIds([]); }} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg border text-left transition-all duration-200 ${surpriseMe ? "border-primary bg-primary/20 ring-1 ring-primary/40" : "border-border bg-background hover:border-primary/40"}`}>
                       <span className="text-base">🎲</span>
                       <span className={`font-body text-xs ${surpriseMe ? "text-primary" : "text-foreground"}`}>Surprise me — all eras</span>
                     </motion.button>
@@ -818,7 +818,7 @@ const CosmicCharlieDialog = ({
                       {allEras.map((era) => {
                         const selected = selectedEraIds.includes(era.id);
                         return (
-                          <motion.button key={era.id} whileTap={{ scale: 0.95 }} onClick={() => toggleEra(era.id)} className={`flex flex-col px-3 py-2 rounded-lg border text-left transition-all duration-200 text-xs ${selected ? "border-primary bg-primary/15 shadow-[0_0_10px_hsl(var(--glow-gold))]" : "border-border bg-background hover:border-primary/40"}`}>
+                          <motion.button key={era.id} whileTap={{ scale: 0.95 }} onClick={() => toggleEra(era.id)} className={`flex flex-col px-3 py-2 rounded-lg border text-left transition-all duration-200 text-xs ${selected ? "border-primary bg-primary/20 ring-1 ring-primary/40" : "border-border bg-background hover:border-primary/40"}`}>
                             <span className={`font-body ${selected ? "text-primary" : "text-foreground"}`}>{era.name}</span>
                             <span className="text-[10px] text-muted-foreground">{era.year_start}–{era.year_end}</span>
                           </motion.button>
@@ -1012,7 +1012,7 @@ const CosmicCharlieDialog = ({
                   <Button
                     size="sm"
                     onClick={handleApply}
-                    className="bg-primary text-primary-foreground font-body gap-1.5 flex-1"
+                    className="foil font-body gap-1.5 flex-1"
                   >
                     Charlie's got it — Apply
                   </Button>
@@ -1058,7 +1058,7 @@ const CosmicCharlieDialog = ({
                       <Button
                         size="sm"
                         onClick={handleCreateNew}
-                        className="bg-primary text-primary-foreground font-body gap-1.5 flex-1"
+                        className="foil font-body gap-1.5 flex-1"
                       >
                         <Wand2 className="w-3.5 h-3.5" /> Create Setlist
                       </Button>

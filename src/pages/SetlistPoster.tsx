@@ -5,6 +5,7 @@ import { ArrowLeft, Share2, Zap, Play, Heart, RefreshCw, Loader2, Headphones, Vo
 import SetlistComments from "@/components/SetlistComments";
 import { useFavorites } from "@/hooks/useFavorites";
 import EraTooltip from "@/components/EraTooltip";
+import { EraBorder } from "@/components/EraArt";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
@@ -659,6 +660,9 @@ const SetlistPoster = () => {
                   }}
                 />
               </div>
+
+              {/* Era-specific motif border — changes with the touring era */}
+              <EraBorder era={eraName} className="mt-3" />
 
               {/* ===== SETLIST BODY — handwritten song list ===== */}
               <div className="px-6 sm:px-14 py-5 space-y-6">
