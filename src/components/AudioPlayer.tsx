@@ -646,7 +646,7 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
           setYOffset(next);
           try { window.localStorage.setItem("audioPlayerYOffset", String(next)); } catch {}
         }}
-        className="fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-card/95 backdrop-blur-lg shadow-2xl"
+        className="fixed bottom-0 left-0 right-0 z-40 border-t-2 border-dashed border-border bg-card paper-grain"
       >
         {/* Drag handle — lift the player up to reveal content beneath */}
         <button
@@ -657,7 +657,7 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
             setYOffset(0);
             try { window.localStorage.setItem("audioPlayerYOffset", "0"); } catch {}
           }}
-          className="absolute -top-3 left-1/2 -translate-x-1/2 z-10 h-7 px-4 flex items-center justify-center rounded-full border border-border bg-card/95 backdrop-blur-lg text-muted-foreground hover:text-foreground cursor-grab active:cursor-grabbing touch-none shadow-md"
+          className="absolute -top-3 left-1/2 -translate-x-1/2 z-10 h-7 px-4 flex items-center justify-center rounded-full border border-border bg-card text-muted-foreground hover:text-card-foreground cursor-grab active:cursor-grabbing touch-none"
           title="Drag to move · double-click to reset"
         >
           <GripHorizontal className="w-3.5 h-3.5" />
@@ -719,7 +719,7 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
           <button
             onClick={togglePlay}
             disabled={loading || !!error}
-            className="w-12 h-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center shrink-0 disabled:opacity-50 transition-all hover:brightness-110 max-sm:order-2"
+            className="w-12 h-12 rounded-full foil flex items-center justify-center shrink-0 disabled:opacity-50 transition-all hover:brightness-105 max-sm:order-2"
             aria-label={playing ? "Pause" : "Play"}
           >
             {loading ? (
@@ -736,7 +736,7 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
             <button
               onClick={onNext}
               disabled={playlistInfo.current >= playlistInfo.total}
-              className="w-9 h-9 rounded-full bg-muted/60 text-foreground flex items-center justify-center shrink-0 disabled:opacity-30 hover:bg-muted transition-colors max-sm:order-3"
+              className="w-9 h-9 rounded-full bg-secondary text-card-foreground flex items-center justify-center shrink-0 disabled:opacity-30 hover:bg-muted transition-colors max-sm:order-3"
               title="Next song"
               aria-label="Next song"
             >
@@ -774,7 +774,7 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
                     setRetrying(false);
                     attemptRetry("error");
                   }}
-                  className="h-7 px-2 rounded-md bg-muted/60 text-foreground border border-border text-[10px] font-mono uppercase tracking-wider hover:bg-muted transition-colors shrink-0"
+                  className="h-7 px-2 rounded-md bg-muted text-card-foreground border border-border text-[10px] font-mono uppercase tracking-wider hover:bg-muted transition-colors shrink-0"
                   title="Retry this track"
                 >
                   Retry
@@ -799,10 +799,10 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
                     Song {playlistInfo.current} of {playlistInfo.total}
                   </p>
                 )}
-                <p className="text-base sm:text-lg text-foreground font-display truncate font-bold">
+                <p className="text-base sm:text-lg text-card-foreground font-display truncate">
                   {songTitle}
                 </p>
-                <p className="text-sm sm:text-base text-primary/90 font-body truncate font-medium">
+                <p className="text-xs sm:text-sm text-card-foreground/70 font-ticket uppercase tracking-wide truncate">
                   {showDate} {venue ? `· ${venue}` : ""}
                 </p>
                 {activeSetlistId && (
@@ -837,7 +837,7 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
             {formatTime(progress)} / {formatTime(duration)}
           </span>
 
-          <a href="https://archive.org" target="_blank" rel="noopener noreferrer" className="text-[11px] text-muted-foreground/70 hover:text-muted-foreground font-body shrink-0 inline max-sm:order-last max-sm:ml-auto max-sm:text-muted-foreground/90 transition-colors">
+          <a href="https://archive.org" target="_blank" rel="noopener noreferrer" className="text-[11px] text-muted-foreground/80 hover:text-muted-foreground font-mono shrink-0 inline max-sm:order-last max-sm:ml-auto transition-colors">
             via archive.org
           </a>
 
