@@ -417,13 +417,13 @@ const MySetlists = () => {
         >
           <button
             onClick={() => navigate("/backstage")}
-            className="w-full group rounded-xl border border-border/60 hover:border-primary/40 bg-card/40 hover:bg-card/70 transition-all p-4 text-left flex items-center gap-3"
+            className="w-full group rounded-sm border border-border hover:border-primary/50 bg-card paper-grain transition-all p-4 text-left flex items-center gap-3"
           >
             <div className="w-9 h-9 rounded-lg bg-muted/40 group-hover:bg-primary/10 flex items-center justify-center transition-colors shrink-0">
               <Sparkles className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
             </div>
             <div className="min-w-0 flex-1">
-              <h3 className="font-display text-sm text-foreground">
+              <h3 className="font-display text-sm text-card-foreground">
                 Backstage — shape the next set
               </h3>
               <p className="font-body text-xs text-muted-foreground mt-0.5">
@@ -808,11 +808,11 @@ const MySetlists = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.04 }}
                   onClick={() => navigate(`/setlist/${s.id}`)}
-                  className="w-full text-left rounded-xl border border-border bg-card/80 p-4 group hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all duration-200"
+                  className="w-full text-left rounded-sm border border-border bg-card paper-grain p-4 group hover:border-primary/50 transition-all duration-200"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
-                      <h3 className="font-display text-base text-foreground group-hover:text-primary transition-colors truncate">
+                      <h3 className="font-display text-base text-card-foreground group-hover:text-primary transition-colors truncate">
                         {s.title}
                       </h3>
                       <div className="flex items-center gap-2 mt-1">
@@ -901,7 +901,7 @@ const MySetlists = () => {
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.03 }}
-                  className="rounded-xl border border-border bg-card/80 p-4 flex items-start justify-between gap-3"
+                  className="rounded-sm border border-border bg-card paper-grain p-4 flex items-start justify-between gap-3"
                 >
                   <button
                     type="button"
@@ -929,7 +929,7 @@ const MySetlists = () => {
                   >
                     <div className="flex items-center gap-2 flex-wrap">
                       <Play className="w-3.5 h-3.5 text-primary opacity-70 group-hover:opacity-100 shrink-0" />
-                      <h3 className="font-display text-base text-foreground group-hover:text-primary transition-colors">{song.title}</h3>
+                      <h3 className="font-display text-base text-card-foreground group-hover:text-primary transition-colors">{song.title}</h3>
                       {song.tags?.slice(0, 3).map((tag) => (
                         <span key={tag} className="px-2 py-0.5 text-[10px] font-body rounded-full border border-primary/20 text-primary/70">
                           {tag}

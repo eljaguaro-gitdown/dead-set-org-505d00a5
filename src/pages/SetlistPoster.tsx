@@ -1012,7 +1012,7 @@ const SetlistPoster = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.8, duration: 0.5 }}
-            className="mt-8 p-6 bg-[#0F0E0C] rounded-xl"
+            className="mt-8 p-6 bg-[#3a0303] rounded-sm"
           >
             <p className="font-mono text-[10px] tracking-[0.2em] uppercase text-muted-foreground/40 text-center mb-4">
               your show plate
