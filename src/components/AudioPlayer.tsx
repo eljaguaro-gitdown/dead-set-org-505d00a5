@@ -4,6 +4,7 @@ import { motion, AnimatePresence, useMotionValue, useDragControls } from "framer
 import { Play, Pause, Volume2, VolumeX, X, Loader2, Cast, ChevronRight, GripHorizontal, SkipForward, SkipBack, FastForward } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import PosterModal from "@/components/PosterModal";
+import { EraMotif, eraNameFromDate } from "@/components/EraArt";
 import { findTrackInRecording, matchScore } from "@/lib/archiveOrg";
 import { audioDebug } from "@/lib/audioDebug";
 import {
@@ -802,8 +803,9 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
                 <p className="text-base sm:text-lg text-card-foreground font-display truncate">
                   {songTitle}
                 </p>
-                <p className="text-xs sm:text-sm text-card-foreground/70 font-ticket uppercase tracking-wide truncate">
-                  {showDate} {venue ? `· ${venue}` : ""}
+                <p className="text-xs sm:text-sm text-card-foreground/70 font-ticket uppercase tracking-wide flex items-center gap-1.5">
+                  <EraMotif era={eraNameFromDate(showDate)} size={13} className="shrink-0" />
+                  <span className="truncate">{showDate} {venue ? `· ${venue}` : ""}</span>
                 </p>
                 {activeSetlistId && (
                   <div className="flex items-center gap-2 mt-1.5">

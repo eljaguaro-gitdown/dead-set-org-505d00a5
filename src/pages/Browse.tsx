@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import PageLayout from "@/components/PageLayout";
+import { EraMotif } from "@/components/EraArt";
 import SiteHeader from "@/components/SiteHeader";
 import AdSenseLoader from "@/components/AdSenseLoader";
 import DancingBearButton from "@/components/DancingBearButton";
@@ -429,9 +430,10 @@ const FeaturedCard = ({ setlist, onClick }: { setlist: SetlistWithMeta; onClick:
           {setlist.era_name && (
             <EraTooltip eraName={setlist.era_name}>
               <span
-                className="px-2 py-0.5 text-[10px] font-mono uppercase tracking-wide rounded-sm border cursor-help"
+                className="inline-flex items-center gap-1.5 px-2 py-0.5 text-[10px] font-mono uppercase tracking-wide rounded-sm border cursor-help"
                 style={{ borderColor: `hsl(${eraColor})`, color: `hsl(${eraColor})` }}
               >
+                <EraMotif era={setlist.era_name} size={13} />
                 {setlist.era_name}
               </span>
             </EraTooltip>
@@ -507,9 +509,10 @@ const SetlistCard = ({ setlist, index, onClick, isFav, onToggleFav }: { setlist:
           {setlist.era_name && (
             <EraTooltip eraName={setlist.era_name}>
               <span
-                className="px-2 py-0.5 text-[10px] font-mono uppercase tracking-wide rounded-sm border cursor-help"
+                className="inline-flex items-center gap-1.5 px-2 py-0.5 text-[10px] font-mono uppercase tracking-wide rounded-sm border cursor-help"
                 style={{ borderColor: `hsl(${eraColor} / 0.35)`, color: `hsl(${eraColor})` }}
               >
+                <EraMotif era={setlist.era_name} size={13} />
                 {setlist.era_name}
               </span>
             </EraTooltip>

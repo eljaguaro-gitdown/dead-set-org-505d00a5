@@ -37,6 +37,20 @@ const matchEra = <T,>(era: string | null | undefined, table: Record<string, T>, 
 const motifFor = (era?: string | null): Motif => matchEra(era, ERA_MOTIF, "syf");
 const colorVarFor = (era?: string | null): string => matchEra(era, ERA_COLOR_VAR, "--primary");
 
+/** Maps a show date (YYYY-MM-DD...) to its touring-era name, for surfaces that
+ *  carry a date but no era label (e.g. the audio player). */
+export const eraNameFromDate = (date?: string | null): string | null => {
+  if (!date) return null;
+  const year = parseInt(String(date).slice(0, 4), 10);
+  if (!Number.isFinite(year)) return null;
+  if (year <= 1970) return "Primal Dead";
+  if (year <= 1972) return "'72 Europe";
+  if (year <= 1974) return "Wall of Sound";
+  if (year <= 1978) return "Terrapin Era";
+  if (year <= 1989) return "'80s Dead";
+  return "Vince Era";
+};
+
 const SHAPES: Record<Motif, JSX.Element> = {
   bolt: <path d="M13.2 2 L6 13 H11 L9.5 22 L18 9.5 H12.6 Z" fill="currentColor" />,
   rose: (
