@@ -408,10 +408,10 @@ const FeaturedCard = ({ setlist, onClick }: { setlist: SetlistWithMeta; onClick:
       role="button"
       tabIndex={0}
       onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onClick(); } }}
-      className="w-[280px] sm:w-auto shrink-0 text-left rounded-xl border border-border bg-card/80 overflow-hidden group hover:shadow-xl hover:shadow-primary/5 transition-all duration-300 cursor-pointer"
+      className="w-[280px] sm:w-auto shrink-0 text-left rounded-sm border border-border bg-card paper-grain overflow-hidden group hover:border-primary/60 transition-all duration-200 cursor-pointer"
       whileHover={{ y: -4 }}
     >
-      <div className="h-1.5" style={{ background: `linear-gradient(to right, hsl(${eraColor}), hsl(var(--primary)))` }} />
+      <div className="h-1.5" style={{ background: `hsl(${eraColor})` }} />
       <div className="p-5 sm:p-6">
         <div className="flex items-center gap-2 mb-3">
           {setlist.creator_avatar ? (
@@ -419,18 +419,18 @@ const FeaturedCard = ({ setlist, onClick }: { setlist: SetlistWithMeta; onClick:
           ) : (
             <div className="w-5 h-5 rounded-full bg-muted" />
           )}
-          <Link to={`/user/${setlist.creator_id}`} onClick={(e) => e.stopPropagation()} className="text-[10px] font-body text-muted-foreground hover:text-primary transition-colors">{setlist.creator_name}</Link>
+          <Link to={`/user/${setlist.creator_id}`} onClick={(e) => e.stopPropagation()} className="text-[11px] font-mono text-muted-foreground hover:text-primary transition-colors">{setlist.creator_name}</Link>
           <PlaySetlistButton setlistId={setlist.id} size="md" className="ml-auto" />
         </div>
-        <h3 className="font-display text-lg text-foreground group-hover:text-primary transition-colors leading-tight line-clamp-2">
+        <h3 className="font-display text-lg text-card-foreground group-hover:text-primary transition-colors leading-tight line-clamp-2">
           {setlist.title}
         </h3>
         <div className="flex items-center gap-2 mt-3 flex-wrap">
           {setlist.era_name && (
             <EraTooltip eraName={setlist.era_name}>
               <span
-                className="px-2 py-0.5 text-[10px] font-body rounded-full border cursor-help"
-                style={{ borderColor: `hsl(${eraColor} / 0.4)`, color: `hsl(${eraColor})` }}
+                className="px-2 py-0.5 text-[10px] font-mono uppercase tracking-wide rounded-sm border cursor-help"
+                style={{ borderColor: `hsl(${eraColor})`, color: `hsl(${eraColor})` }}
               >
                 {setlist.era_name}
               </span>
@@ -443,20 +443,20 @@ const FeaturedCard = ({ setlist, onClick }: { setlist: SetlistWithMeta; onClick:
             </span>
           )}
           {setlist.play_count > 0 && (
-            <span className="text-[10px] font-body text-accent flex items-center gap-0.5">
-              <Play className="w-2.5 h-2.5 fill-accent" /> {setlist.play_count} plays
+            <span className="text-[11px] font-mono text-muted-foreground flex items-center gap-0.5">
+              <Play className="w-2.5 h-2.5" /> {setlist.play_count} plays
             </span>
           )}
         </div>
         {setlist.preview_songs.length > 0 && (
-          <div className="mt-3 pt-3 border-t border-border/30">
+          <div className="mt-3 pt-3 perforated">
             {setlist.preview_songs.map((name, i) => (
-              <p key={i} className="text-xs font-body text-muted-foreground/70 leading-relaxed truncate">
+              <p key={i} className="text-xs font-mono text-card-foreground/70 leading-relaxed truncate">
                 {name}
               </p>
             ))}
             {setlist.slot_count > 4 && (
-              <p className="text-xs font-body text-muted-foreground/50 mt-0.5">
+              <p className="text-xs font-mono text-card-foreground/40 mt-0.5">
                 + {setlist.slot_count - 4} more
               </p>
             )}

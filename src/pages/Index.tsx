@@ -319,21 +319,21 @@ const Index = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.05, duration: 0.4 }}
                   onClick={() => navigate(`/setlist/${setlist.id}`)}
-                  className="relative w-[240px] sm:w-[300px] shrink-0 snap-start border border-primary/30 bg-card rounded-xl p-4 sm:p-5 text-left hover:border-primary hover:-translate-y-0.5 transition-all duration-200 group shadow-[0_0_24px_rgba(201,168,76,0.05)] hover:shadow-[0_0_32px_rgba(201,168,76,0.15)]"
+                  className="relative w-[240px] sm:w-[300px] shrink-0 snap-start border border-border bg-card paper-grain rounded-sm p-4 sm:p-5 text-left hover:border-primary hover:-translate-y-0.5 transition-all duration-200 group"
                 >
                   {/* Rank badge */}
-                  <div className="absolute -top-2 -left-2 w-7 h-7 rounded-full bg-primary text-primary-foreground font-display font-bold text-sm flex items-center justify-center shadow-md">
+                  <div className="absolute -top-2 -left-2 w-7 h-7 rounded-full bg-primary text-primary-foreground font-mono text-sm flex items-center justify-center">
                     {i + 1}
                   </div>
                   <div className="flex items-start justify-between gap-2 mt-1">
-                    <h3 className="font-display text-base font-bold text-foreground truncate group-hover:text-primary transition-colors">
+                    <h3 className="font-display text-base text-card-foreground truncate group-hover:text-primary transition-colors">
                       {setlist.title}
                     </h3>
                   </div>
                   <Link
                     to={`/user/${setlist.creator_id}`}
                     onClick={(e) => e.stopPropagation()}
-                    className="font-body text-sm text-muted-foreground mt-1 truncate block hover:text-primary transition-colors"
+                    className="font-mono text-sm text-muted-foreground mt-1 truncate block hover:text-primary transition-colors"
                   >
                     by {setlist.creator_name}
                   </Link>
@@ -405,10 +405,10 @@ const Index = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.06, duration: 0.4 }}
                   onClick={() => navigate(`/setlist/${setlist.id}`)}
-                  className="w-[220px] sm:w-[280px] shrink-0 snap-start border border-border bg-card rounded-xl p-4 sm:p-5 text-left hover:border-primary/50 hover:-translate-y-0.5 transition-all duration-200 group"
+                  className="w-[220px] sm:w-[280px] shrink-0 snap-start border border-border bg-card paper-grain rounded-sm p-4 sm:p-5 text-left hover:border-primary/50 hover:-translate-y-0.5 transition-all duration-200 group"
                 >
                   <div className="flex items-start justify-between gap-2">
-                    <h3 className="font-display text-base font-bold text-foreground truncate group-hover:text-primary transition-colors">
+                    <h3 className="font-display text-base text-card-foreground truncate group-hover:text-primary transition-colors">
                       {setlist.title}
                     </h3>
                     {setlist.upvote_count > 0 && (
@@ -417,7 +417,7 @@ const Index = () => {
                       </span>
                     )}
                   </div>
-                  <Link to={`/user/${setlist.creator_id}`} onClick={(e) => e.stopPropagation()} className="font-body text-xs text-muted-foreground mt-1 truncate block hover:text-primary transition-colors">
+                  <Link to={`/user/${setlist.creator_id}`} onClick={(e) => e.stopPropagation()} className="font-mono text-xs text-muted-foreground mt-1 truncate block hover:text-primary transition-colors">
                     by {setlist.creator_name}
                   </Link>
                   <div className="flex items-center gap-2 mt-3">
