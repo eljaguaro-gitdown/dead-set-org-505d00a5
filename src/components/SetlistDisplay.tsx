@@ -146,7 +146,7 @@ const SortableSlotItem = ({
   return (
     <div ref={setNodeRef} style={style}>
         <div
-          className={`rounded-lg bg-card border p-3 group transition-all duration-300 ${isPlaying ? 'border-primary ring-2 ring-primary/30 shadow-[0_0_20px_-4px_hsl(var(--primary)/0.4)]' : 'border-border song-glow'} ${onPlayVersion ? 'cursor-pointer hover:border-primary/50' : ''}`}
+          className={`rounded-sm bg-card paper-grain border p-3 group transition-all duration-200 ${isPlaying ? 'border-primary ring-1 ring-primary/40' : 'border-border'} ${onPlayVersion ? 'cursor-pointer hover:border-primary/50' : ''}`}
           onClick={(e) => {
             const target = e.target as HTMLElement;
             if (target.closest('button') || target.closest('a') || target.closest('textarea')) return;
@@ -207,7 +207,7 @@ const SortableSlotItem = ({
             </div>
             {slot.version && (
               <div className="flex items-center gap-1.5 mt-1">
-                <span className="text-sm lg:text-base text-muted-foreground font-body">
+                <span className="text-xs lg:text-sm text-muted-foreground font-ticket uppercase tracking-wide">
                   {slot.version.show_date} — {slot.version.venue}
                 </span>
               </div>

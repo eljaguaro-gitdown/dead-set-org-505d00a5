@@ -1253,7 +1253,7 @@ const Builder = () => {
               Only once a real set is forming (>=3 songs) so the early build gets
               full vertical room instead of a half-screen share preview. */}
           {isMobile && activeSlots.length >= 3 && (
-            <div className="border-b border-border bg-[#0F0E0C] px-3 py-3">
+            <div className="border-b border-border bg-[#3a0303] px-3 py-3">
               <div className="flex gap-3 items-start">
                 {/* Plate thumbnail */}
                 <button
@@ -1379,7 +1379,7 @@ const Builder = () => {
 
         {/* Show Plate + Poster preview — between setlist and vault on desktop */}
         {!isMobile && activeSlots.length > 0 && (
-          <div className="w-[320px] border-l border-border bg-[#0F0E0C] flex flex-col shrink-0 overflow-y-auto max-h-[calc(100vh-85px)]">
+          <div className="w-[320px] border-l border-border bg-[#3a0303] flex flex-col shrink-0 overflow-y-auto max-h-[calc(100vh-85px)]">
             {/* Plate — clickable to share */}
             <button
               className="p-4 cursor-pointer hover:opacity-90 transition-opacity group relative"
