@@ -10,12 +10,12 @@
     --background: 0 89% 15%;
     --foreground: 40 48% 82%;
 
-    /* Floating objects are parchment */
-    --card: 40 50% 81%;
-    --card-foreground: 34 17% 14%;
+    /* Floating objects are parchment — bright so they lift off the maroon ground */
+    --card: 42 56% 90%;
+    --card-foreground: 34 18% 14%;
 
-    --popover: 40 50% 81%;
-    --popover-foreground: 34 17% 14%;
+    --popover: 42 56% 90%;
+    --popover-foreground: 34 18% 14%;
 
     /* Clay vermilion — action / now-playing (button foil lives in .foil) */
     --primary: 10 58% 48%;

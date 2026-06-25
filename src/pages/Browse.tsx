@@ -436,9 +436,9 @@ const FeaturedCard = ({ setlist, onClick }: { setlist: SetlistWithMeta; onClick:
               </span>
             </EraTooltip>
           )}
-          <span className="text-[10px] font-body text-muted-foreground">{setlist.slot_count} songs</span>
+          <span className="text-[11px] font-mono text-muted-foreground">{setlist.slot_count} songs</span>
           {setlist.upvote_count > 0 && (
-            <span className="text-[10px] font-body text-primary flex items-center gap-0.5">
+            <span className="text-[11px] font-mono text-primary flex items-center gap-0.5">
               <Zap className="w-2.5 h-2.5 fill-primary" /> {setlist.upvote_count}
             </span>
           )}
@@ -479,9 +479,9 @@ const SetlistCard = ({ setlist, index, onClick, isFav, onToggleFav }: { setlist:
       role="button"
       tabIndex={0}
       onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onClick(); } }}
-      className="text-left rounded-lg border border-border bg-card/60 overflow-hidden group hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-1 transition-all duration-300 cursor-pointer"
+      className="text-left rounded-sm border border-border bg-card paper-grain overflow-hidden group hover:border-primary/60 hover:-translate-y-0.5 transition-all duration-200 cursor-pointer"
     >
-      <div className="h-0.5" style={{ background: `hsl(${eraColor} / 0.5)` }} />
+      <div className="h-1" style={{ background: `hsl(${eraColor})` }} />
       <div className="p-4">
         {/* Creator row */}
         <div className="flex items-center gap-2 mb-2">
@@ -491,14 +491,14 @@ const SetlistCard = ({ setlist, index, onClick, isFav, onToggleFav }: { setlist:
             ) : (
               <div className="w-4 h-4 rounded-full bg-muted" />
             )}
-            <Link to={`/user/${setlist.creator_id}`} onClick={(e) => e.stopPropagation()} className="text-[11px] font-body text-muted-foreground truncate hover:text-primary transition-colors py-1 -my-1 inline-block">{setlist.creator_name}</Link>
+            <Link to={`/user/${setlist.creator_id}`} onClick={(e) => e.stopPropagation()} className="text-[11px] font-mono text-muted-foreground truncate hover:text-primary transition-colors py-1 -my-1 inline-block">{setlist.creator_name}</Link>
           </div>
           <PlaySetlistButton setlistId={setlist.id} size="sm" />
           <FavoriteButton isFavorite={isFav} onToggle={() => onToggleFav(setlist.id)} />
         </div>
 
         {/* Title */}
-        <h3 className="font-display text-sm text-foreground group-hover:text-primary transition-colors leading-tight line-clamp-2">
+        <h3 className="font-display text-base text-card-foreground group-hover:text-primary transition-colors leading-tight line-clamp-2">
           {setlist.title}
         </h3>
 
@@ -507,21 +507,21 @@ const SetlistCard = ({ setlist, index, onClick, isFav, onToggleFav }: { setlist:
           {setlist.era_name && (
             <EraTooltip eraName={setlist.era_name}>
               <span
-                className="px-2 py-0.5 text-[9px] font-body rounded-full border cursor-help"
+                className="px-2 py-0.5 text-[10px] font-mono uppercase tracking-wide rounded-sm border cursor-help"
                 style={{ borderColor: `hsl(${eraColor} / 0.35)`, color: `hsl(${eraColor})` }}
               >
                 {setlist.era_name}
               </span>
             </EraTooltip>
           )}
-          <span className="text-[10px] font-body text-muted-foreground">{setlist.slot_count} songs</span>
+          <span className="text-[11px] font-mono text-muted-foreground">{setlist.slot_count} songs</span>
           {setlist.upvote_count > 0 && (
-            <span className="text-[10px] font-body text-primary flex items-center gap-0.5">
+            <span className="text-[11px] font-mono text-primary flex items-center gap-0.5">
               <Zap className="w-2.5 h-2.5 fill-primary" /> {setlist.upvote_count}
             </span>
           )}
           {setlist.play_count > 0 && (
-            <span className="text-[10px] font-body text-muted-foreground flex items-center gap-0.5">
+            <span className="text-[11px] font-mono text-muted-foreground flex items-center gap-0.5">
               <Play className="w-2.5 h-2.5" /> {setlist.play_count} plays
             </span>
           )}
@@ -529,14 +529,14 @@ const SetlistCard = ({ setlist, index, onClick, isFav, onToggleFav }: { setlist:
 
         {/* Song preview */}
         {setlist.preview_songs.length > 0 && (
-          <div className="mt-3 pt-2 border-t border-border/20 space-y-0.5">
+          <div className="mt-3 pt-2 perforated space-y-0.5">
             {setlist.preview_songs.map((name, i) => (
-              <p key={i} className="text-xs font-body text-muted-foreground/70 truncate leading-relaxed">
+              <p key={i} className="text-xs font-mono text-card-foreground/70 truncate leading-relaxed">
                 {name}
               </p>
             ))}
             {setlist.slot_count > setlist.preview_songs.length && (
-              <p className="text-[9px] font-body text-muted-foreground/30">
+              <p className="text-[10px] font-mono text-card-foreground/40">
                 ...and {setlist.slot_count - setlist.preview_songs.length} more
               </p>
             )}
