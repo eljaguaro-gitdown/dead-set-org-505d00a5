@@ -14,10 +14,14 @@ export default {
     },
     extend: {
       fontFamily: {
-        display: ["'Playfair Display'", "serif"],
+        // Deadhead Archives stack (see DESIGN.md §2)
+        title: ["'UnifrakturMaguntia'", "serif"],        // hero titles, logos, playlist names
+        header: ["'Sancreek'", "serif"],                 // era / section dividers
+        ticket: ["'Special Elite'", "'Courier Prime'", "monospace"], // physical record / ticket data
+        display: ["'Sancreek'", "'Playfair Display'", "serif"],
         hand: ["'Caveat'", "cursive"],
         body: ["'DM Sans'", "-apple-system", "sans-serif"],
-        mono: ["'JetBrains Mono'", "monospace"],
+        mono: ["'IBM Plex Mono'", "monospace"],          // functional UI / nav / lists
         // Legacy aliases
         marker: ["'Caveat'", "cursive"],
       },

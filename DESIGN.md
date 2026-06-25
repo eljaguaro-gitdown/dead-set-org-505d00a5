@@ -16,14 +16,32 @@ this document disagree, this document wins.
 - **The "Imperfection" Rule.** All borders and containers should have a slight
   jitter or rough-edge path. Avoid 100% straight, pixel-perfect alignment.
 
-## 2. Typography Strategy
+## 2. Typography Strategy — the "Deadhead Archives" font stack
 
-- **Headings — the "Mouse & Griffin" spirit.** For titles and playlists, use
-  high-personality display type. Google Fonts: `UnifrakturMaguntia`,
-  `Sancreek`, or `Pirata One`.
-- **Data — the "Archival" record.** For setlists, venues, dates, durations, use
-  a typewriter / manual-stamp monospace. `IBM Plex Mono` or `Courier Prime`
-  required. Never use standard system sans-serifs for data.
+Balance psychedelic organic complexity (titles) against utilitarian archival
+clarity (data). The tension between the ornate header and the typewriter data
+*is* the brand.
+
+| Role | Font | Why |
+|---|---|---|
+| **Titles / Logos** | `UnifrakturMaguntia` | Intricate, dense, "magical" — the quasi-gothic flair of 60s concert hand-lettering. Hero titles + playlist names. |
+| **Section Headers** | `Sancreek` | Wild-west / Victorian, tactile, perfectly imperfect — early Dead promo art. Era-specific section dividers. |
+| **Setlist / Ticket Data** | `Special Elite` | The "ticket stub" workhorse — a vintage typewriter / manual press. Grounds the psychedelia in archival reality. |
+| **UI / Navigation** | `IBM Plex Mono` | Clean, technical, slightly human — long track lists and search results without looking like a sterile modern app. |
+
+**Priority rule:** Always use `Special Elite` for any element representing a
+physical record, ticket, or archive document. Use `IBM Plex Mono` for
+functional UI interactions (search, lists, nav).
+
+**Anti-flat techniques:**
+- *Special Elite (ticket data):* `letter-spacing: 0.05em`; `text-transform:
+  uppercase` for dates and venues; mimic ink bleed with `opacity: 0.85` or a
+  faint `text-shadow: 1px 1px 0 rgba(0,0,0,0.1)`.
+- *Sancreek / UnifrakturMaguntia (headers):* color them in the Deep Amber or
+  Velvet Maroon accents — never a default web color. A slight
+  `transform: skew(-5deg)` (or a `textPath` curve) gives hand-drawn instability.
+- *Hybrid pairing:* ornate header (Sancreek) over utilitarian body
+  (IBM Plex Mono) is the signature contrast.
 
 ## 3. The "Anti-Counterfeit" UI System (style tokens)
 

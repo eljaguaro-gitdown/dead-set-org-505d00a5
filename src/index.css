@@ -6,78 +6,81 @@
 
 @layer base {
   :root {
-    /* Surface stack — warm bone paper, ink text. "Liner Notes" light theme. */
-    --background: 40 33% 91%;
-    --foreground: 45 8% 13%;
+    /* Deadhead Archives — content floats on a velvet-maroon ground (DESIGN.md §4). */
+    --background: 0 89% 15%;
+    --foreground: 40 48% 82%;
 
-    --card: 40 44% 95%;
-    --card-foreground: 45 8% 13%;
+    /* Floating objects are parchment */
+    --card: 40 50% 81%;
+    --card-foreground: 34 17% 14%;
 
-    --popover: 40 44% 95%;
-    --popover-foreground: 45 8% 13%;
+    --popover: 40 50% 81%;
+    --popover-foreground: 34 17% 14%;
 
-    /* Clay — primary emphasis (the single accent; tie-dye carries the rainbow) */
+    /* Clay vermilion — action / now-playing (button foil lives in .foil) */
     --primary: 10 58% 48%;
-    --primary-foreground: 40 33% 94%;
+    --primary-foreground: 40 50% 88%;
 
-    --secondary: 40 18% 87%;
-    --secondary-foreground: 45 8% 16%;
+    --secondary: 40 34% 76%;
+    --secondary-foreground: 34 17% 16%;
 
-    --muted: 40 24% 88%;
-    --muted-foreground: 40 9% 40%;
+    --muted: 40 32% 78%;
+    --muted-foreground: 36 14% 38%;
 
-    /* Soft clay tint — used for hover/active surface states */
-    --accent: 12 50% 92%;
+    --accent: 12 44% 85%;
     --accent-foreground: 10 55% 30%;
 
-    --destructive: 0 62% 45%;
-    --destructive-foreground: 40 33% 95%;
+    --destructive: 0 62% 42%;
+    --destructive-foreground: 40 48% 88%;
 
-    --border: 40 18% 80%;
-    --input: 40 18% 80%;
+    /* Parchment-edge hairline */
+    --border: 38 28% 58%;
+    --input: 38 28% 58%;
     --ring: 10 58% 48%;
 
     --radius: 0.625rem;
 
-    --sidebar-background: 40 38% 93%;
-    --sidebar-foreground: 45 8% 13%;
+    --sidebar-background: 0 72% 11%;
+    --sidebar-foreground: 40 48% 82%;
     --sidebar-primary: 10 58% 48%;
-    --sidebar-primary-foreground: 40 33% 94%;
-    --sidebar-accent: 40 24% 88%;
-    --sidebar-accent-foreground: 45 8% 13%;
-    --sidebar-border: 40 18% 80%;
+    --sidebar-primary-foreground: 40 50% 88%;
+    --sidebar-accent: 0 55% 20%;
+    --sidebar-accent-foreground: 40 48% 82%;
+    --sidebar-border: 0 45% 22%;
     --sidebar-ring: 10 58% 48%;
 
-    /* Deadhead / era accent palette — content only, never structure.
-       Deepened so each era color reads on warm paper. */
-    --dead-red: 8 58% 46%;
-    --dead-blue: 212 45% 40%;
-    --dead-gold: 36 60% 42%;
-    --dead-dark: 45 8% 13%;
-    --dead-surface: 40 44% 95%;
-    --dead-surface-hover: 40 28% 90%;
-    --dead-orange: 22 70% 44%;
-    --dead-cream: 40 30% 92%;
-    --dead-pink: 345 45% 50%;
-    --dead-green: 158 42% 30%;
-    --dead-purple: 265 38% 46%;
-    --dead-rose: 350 45% 48%;
-    --glow-red: 8 58% 46% / 0.25;
-    --glow-gold: 10 58% 48% / 0.22;
+    /* Era accent palette — jewel tones for era color-coding (DESIGN.md). */
+    --dead-red: 10 58% 48%;
+    --dead-blue: 212 45% 42%;
+    --dead-gold: 36 58% 48%;
+    --dead-dark: 0 89% 15%;
+    --dead-surface: 40 50% 81%;
+    --dead-surface-hover: 40 36% 74%;
+    --dead-orange: 28 62% 47%;
+    --dead-cream: 40 48% 84%;
+    --dead-pink: 345 45% 52%;
+    --dead-green: 86 18% 42%;
+    --dead-purple: 265 36% 50%;
+    --dead-rose: 350 45% 50%;
+    --glow-red: 10 58% 48% / 0.25;
+    --glow-gold: 36 58% 48% / 0.22;
 
-    /* Text hierarchy — ink scale (dark to light) */
-    --text-bright: 45 9% 11%;
-    --text-mid: 40 9% 34%;
-    --text-dim: 40 8% 50%;
-    --text-ghost: 40 12% 66%;
+    /* Ink scale — text on parchment objects */
+    --text-bright: 34 18% 12%;
+    --text-mid: 36 12% 32%;
+    --text-dim: 38 10% 46%;
+    --text-ghost: 40 12% 60%;
 
-    /* Typography */
-    --font-display: 'Playfair Display', serif;
+    /* Typography — the Deadhead Archives stack (DESIGN.md §2) */
+    --font-title: 'UnifrakturMaguntia', serif;
+    --font-header: 'Sancreek', serif;
+    --font-ticket: 'Special Elite', 'Courier Prime', monospace;
+    --font-display: 'Sancreek', 'Playfair Display', serif;
     --font-hand: 'Caveat', cursive;
     --font-body: 'DM Sans', -apple-system, sans-serif;
-    --font-mono: 'JetBrains Mono', monospace;
+    --font-mono: 'IBM Plex Mono', monospace;
 
-    --grain-opacity: 0.02;
+    --grain-opacity: 0.035;
   }
 }
 
@@ -99,9 +102,9 @@
 
   h1, h2, h3 {
     font-family: var(--font-display);
-    font-weight: 900;
-    line-height: 1.1;
-    letter-spacing: -0.02em;
+    font-weight: 400;
+    line-height: 1.12;
+    letter-spacing: 0.01em;
   }
 
   h4, h5, h6 {
@@ -275,7 +278,52 @@
    ═══════════════════════════════════════════════ */
 .label-mono {
   font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: 4px;
+  font-size: 11px;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
+}
+
+/* ═══════════════════════════════════════════════
+   ANTI-COUNTERFEIT PRIMITIVES — DESIGN.md §3
+   Reusable kit for the ticket / envelope / archive surfaces.
+   ═══════════════════════════════════════════════ */
+
+/* Faint grayscale paper grain. Compose over a bg color:  class="bg-card paper-grain" */
+.paper-grain {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='pg'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23pg)' opacity='0.05'/%3E%3C/svg%3E");
+}
+
+/* Metallic foil — for action buttons (the one place gradient is allowed). */
+.foil {
+  background: linear-gradient(135deg, #d4af37 0%, #f3e5ab 45%, #b8860b 100%);
+  color: #3a2406;
+  border: 1px solid #8a6a1e;
+}
+
+/* Perforated tear line — never a plain hr. */
+.perforated {
+  border: 0;
+  border-top: 2px dashed hsl(var(--border));
+}
+
+/* Tear-off list row (setlist tracks). */
+.tear-row {
+  border-top: 2px dashed hsl(var(--border));
+}
+
+/* Ink bleed — mimics typewriter ink sinking into paper. */
+.ink-bleed {
+  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.10);
+}
+
+/* Special Elite ticket data — physical record / archive document text. */
+.ticket-data {
+  font-family: var(--font-ticket);
+  letter-spacing: 0.05em;
+}
+
+/* Hand-drawn instability for ornate headers. */
+.skew-hand {
+  display: inline-block;
+  transform: skew(-5deg);
 }
