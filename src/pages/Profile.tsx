@@ -138,7 +138,7 @@ const Profile = () => {
             <div className="relative group">
               <Avatar className="w-24 h-24 border-2 border-border">
                 <AvatarImage src={avatarUrl || undefined} alt={displayName} />
-                <AvatarFallback className="bg-muted text-foreground font-display text-xl">
+                <AvatarFallback className="bg-muted text-card-foreground font-display text-xl">
                   {initials}
                 </AvatarFallback>
               </Avatar>

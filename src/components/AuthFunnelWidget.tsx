@@ -110,8 +110,8 @@ const StepBar = ({
   return (
     <div className="space-y-1">
       <div className="flex items-baseline justify-between gap-3">
-        <span className="text-sm font-body text-foreground/90">{step.label}</span>
-        <span className="text-sm font-body tabular-nums text-foreground">
+        <span className="text-sm font-body text-card-foreground/90">{step.label}</span>
+        <span className="text-sm font-body tabular-nums text-card-foreground">
           {step.visitors}
           {isDrop && (
             <span className="ml-2 text-muted-foreground">
@@ -140,7 +140,7 @@ const FunnelSection = ({
   const max = Math.max(...steps.map((s) => s.visitors), 1);
   return (
     <div className="space-y-3">
-      <h3 className="font-display text-base text-foreground">{title}</h3>
+      <h3 className="font-display text-base text-card-foreground">{title}</h3>
       <div className="space-y-2.5">
         {steps.map((step, i) => (
           <StepBar
@@ -191,7 +191,7 @@ const AuthFunnelWidget = ({ enabled }: AuthFunnelWidgetProps) => {
     <div className="bg-card border border-border rounded-lg p-6 space-y-6">
       <div className="flex items-baseline justify-between gap-3">
         <div>
-          <h2 className="font-display text-xl text-foreground">Sign-up Funnel</h2>
+          <h2 className="font-display text-xl text-card-foreground">Sign-up Funnel</h2>
           <p className="text-sm font-body text-muted-foreground mt-0.5">
             Unique visitors per step · last 7 days
           </p>

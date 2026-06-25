@@ -49,7 +49,7 @@ const LiveVisitorsWidget = ({ enabled }: { enabled: boolean }) => {
           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
           <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500" />
         </span>
-        <h2 className="font-display text-sm text-foreground">Live on Site</h2>
+        <h2 className="font-display text-sm text-card-foreground">Live on Site</h2>
         <span className="text-xs font-mono text-muted-foreground ml-auto">
           {visitors.length} visitor{visitors.length !== 1 ? "s" : ""}
         </span>
@@ -96,7 +96,7 @@ const VisitorRow = ({ visitor }: { visitor: OnlineVisitor }) => (
       )}
     </div>
     <div className="min-w-0 flex-1">
-      <p className="text-sm font-body text-foreground truncate">
+      <p className="text-sm font-body text-card-foreground truncate">
         {visitor.display_name || "Deadhead"}
       </p>
       <p className="text-xs font-mono text-muted-foreground/60">

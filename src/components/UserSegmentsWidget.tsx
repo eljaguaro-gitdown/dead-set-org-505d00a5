@@ -181,7 +181,7 @@ const UserSegmentsWidget = ({ enabled }: Props) => {
       <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
         <div className="flex items-center gap-2">
           <Users2 className="w-5 h-5 text-primary" />
-          <h2 className="font-display text-lg text-foreground">User Segments</h2>
+          <h2 className="font-display text-lg text-card-foreground">User Segments</h2>
           <span className="text-sm text-muted-foreground font-body">
             ({totalUsers} active)
           </span>
@@ -194,7 +194,7 @@ const UserSegmentsWidget = ({ enabled }: Props) => {
               className={`px-2.5 py-1 rounded text-sm font-body transition-colors ${
                 windowKey === w.key
                   ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:text-foreground"
+                  : "text-muted-foreground hover:text-card-foreground"
               }`}
             >
               {w.label}
@@ -229,10 +229,10 @@ const UserSegmentsWidget = ({ enabled }: Props) => {
                 >
                   <div className="flex items-center gap-2 mb-2">
                     <Icon className="w-4 h-4 text-primary" />
-                    <span className="font-display text-base text-foreground">{label}</span>
+                    <span className="font-display text-base text-card-foreground">{label}</span>
                   </div>
                   <div className="flex items-baseline gap-2 mb-1">
-                    <span className="font-display text-2xl text-foreground">{summary.count}</span>
+                    <span className="font-display text-2xl text-card-foreground">{summary.count}</span>
                     <span className="text-sm text-muted-foreground font-body">({pct}%)</span>
                   </div>
                   <p className="text-sm text-muted-foreground font-body leading-snug mb-1">{blurb}</p>
@@ -249,7 +249,7 @@ const UserSegmentsWidget = ({ enabled }: Props) => {
           {/* User list */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <h3 className="font-display text-base text-foreground">
+              <h3 className="font-display text-base text-card-foreground">
                 {activeSegment
                   ? `${SEGMENTS.find((s) => s.key === activeSegment)?.label} (top 50)`
                   : "Most active users (top 25)"}
@@ -257,7 +257,7 @@ const UserSegmentsWidget = ({ enabled }: Props) => {
               {activeSegment && (
                 <button
                   onClick={() => setActiveSegment(null)}
-                  className="text-sm font-body text-muted-foreground hover:text-foreground"
+                  className="text-sm font-body text-muted-foreground hover:text-card-foreground"
                 >
                   Clear filter
                 </button>
@@ -281,15 +281,15 @@ const UserSegmentsWidget = ({ enabled }: Props) => {
                 <tbody>
                   {filtered.map((u) => (
                     <tr key={u.userId} className="border-b border-border/50">
-                      <td className="py-2 pr-3 text-foreground truncate max-w-[160px]">{u.displayName}</td>
+                      <td className="py-2 pr-3 text-card-foreground truncate max-w-[160px]">{u.displayName}</td>
                       <td className="py-2 px-2 text-muted-foreground capitalize">{u.segment}</td>
-                      <td className="py-2 px-2 text-right text-foreground">{u.shares}</td>
-                      <td className="py-2 px-2 text-right text-foreground">{u.setlistsCreated}</td>
-                      <td className="py-2 px-2 text-right text-foreground">{u.messages}</td>
-                      <td className="py-2 px-2 text-right text-foreground">{u.comments}</td>
-                      <td className="py-2 px-2 text-right text-foreground">{u.plays}</td>
-                      <td className="py-2 px-2 text-right text-foreground">{u.favorites}</td>
-                      <td className="py-2 px-2 text-right text-foreground">{u.upvotes}</td>
+                      <td className="py-2 px-2 text-right text-card-foreground">{u.shares}</td>
+                      <td className="py-2 px-2 text-right text-card-foreground">{u.setlistsCreated}</td>
+                      <td className="py-2 px-2 text-right text-card-foreground">{u.messages}</td>
+                      <td className="py-2 px-2 text-right text-card-foreground">{u.comments}</td>
+                      <td className="py-2 px-2 text-right text-card-foreground">{u.plays}</td>
+                      <td className="py-2 px-2 text-right text-card-foreground">{u.favorites}</td>
+                      <td className="py-2 px-2 text-right text-card-foreground">{u.upvotes}</td>
                     </tr>
                   ))}
                   {filtered.length === 0 && (

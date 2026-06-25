@@ -332,7 +332,7 @@ const AudioDiagnostics = () => {
           <h2 className="font-display text-lg mb-3">Environment</h2>
           <dl className="grid grid-cols-2 gap-y-2 font-body text-sm">
             <dt className="text-muted-foreground">User Agent</dt>
-            <dd className="text-foreground break-all">{ua || "—"}</dd>
+            <dd className="text-card-foreground break-all">{ua || "—"}</dd>
             <dt className="text-muted-foreground">iOS</dt>
             <dd>{isIOS ? "Yes" : "No"}</dd>
             <dt className="text-muted-foreground">Safari</dt>
@@ -340,7 +340,7 @@ const AudioDiagnostics = () => {
             <dt className="text-muted-foreground">Firefox iOS</dt>
             <dd>{isFxiOS ? "Yes" : "No"}</dd>
             <dt className="text-muted-foreground">visitor_id</dt>
-            <dd className="text-foreground break-all">{visitorId || "(none)"}</dd>
+            <dd className="text-card-foreground break-all">{visitorId || "(none)"}</dd>
             <dt className="text-muted-foreground">MediaSession</dt>
             <dd>{mediaSession ? "Yes" : "No"}</dd>
             <dt className="text-muted-foreground">AudioContext</dt>
@@ -399,7 +399,7 @@ const AudioDiagnostics = () => {
           <div className="mb-3 p-3 rounded-lg border border-border bg-muted/30">
             <div className="flex items-center justify-between gap-3 mb-2">
               <div>
-                <p className="font-body text-sm font-semibold text-foreground">
+                <p className="font-body text-sm font-semibold text-card-foreground">
                   Step 1 · Unlock audio (iOS gesture)
                 </p>
                 <p className="font-body text-xs text-muted-foreground mt-0.5">
@@ -441,14 +441,14 @@ const AudioDiagnostics = () => {
             <button
               onClick={() => handleFinalize("finished")}
               disabled={!trackerActive}
-              className="px-3 py-2 rounded-lg bg-muted text-foreground font-body text-sm disabled:opacity-50"
+              className="px-3 py-2 rounded-lg bg-muted text-card-foreground font-body text-sm disabled:opacity-50"
             >
               Force finish
             </button>
             <button
               onClick={() => handleFinalize("skipped")}
               disabled={!trackerActive}
-              className="px-3 py-2 rounded-lg bg-muted text-foreground font-body text-sm disabled:opacity-50"
+              className="px-3 py-2 rounded-lg bg-muted text-card-foreground font-body text-sm disabled:opacity-50"
             >
               Force skip
             </button>
@@ -468,7 +468,7 @@ const AudioDiagnostics = () => {
                   <p className="text-destructive font-semibold">
                     Playback blocked: {playErr.name}
                   </p>
-                  <p className="text-foreground/80 mt-1 break-words">{playErr.message}</p>
+                  <p className="text-card-foreground/80 mt-1 break-words">{playErr.message}</p>
                   <p className="text-muted-foreground mt-2">{playErr.hint}</p>
                 </div>
               </div>
@@ -493,19 +493,19 @@ const AudioDiagnostics = () => {
           {latestEvent ? (
             <dl className="grid grid-cols-2 gap-y-1.5 font-body text-sm">
               <dt className="text-muted-foreground">id</dt>
-              <dd className="text-foreground break-all">{latestEvent.id}</dd>
+              <dd className="text-card-foreground break-all">{latestEvent.id}</dd>
               <dt className="text-muted-foreground">ended_reason</dt>
-              <dd className="text-foreground">{latestEvent.ended_reason}</dd>
+              <dd className="text-card-foreground">{latestEvent.ended_reason}</dd>
               <dt className="text-muted-foreground">duration_played_ms</dt>
-              <dd className="text-foreground">{latestEvent.duration_played_ms}</dd>
+              <dd className="text-card-foreground">{latestEvent.duration_played_ms}</dd>
               <dt className="text-muted-foreground">track_duration_ms</dt>
-              <dd className="text-foreground">{latestEvent.track_duration_ms ?? "—"}</dd>
+              <dd className="text-card-foreground">{latestEvent.track_duration_ms ?? "—"}</dd>
               <dt className="text-muted-foreground">completed</dt>
-              <dd className="text-foreground">{String(latestEvent.completed)}</dd>
+              <dd className="text-card-foreground">{String(latestEvent.completed)}</dd>
               <dt className="text-muted-foreground">started_at</dt>
-              <dd className="text-foreground">{latestEvent.started_at}</dd>
+              <dd className="text-card-foreground">{latestEvent.started_at}</dd>
               <dt className="text-muted-foreground">ended_at</dt>
-              <dd className="text-foreground">{latestEvent.ended_at ?? "—"}</dd>
+              <dd className="text-card-foreground">{latestEvent.ended_at ?? "—"}</dd>
             </dl>
           ) : (
             <p className="font-body text-sm text-muted-foreground">
@@ -530,7 +530,7 @@ const AudioDiagnostics = () => {
                       : l.level === "warn"
                       ? "text-accent"
                       : l.level === "ok"
-                      ? "text-foreground"
+                      ? "text-card-foreground"
                       : "text-muted-foreground"
                   }`}
                 >

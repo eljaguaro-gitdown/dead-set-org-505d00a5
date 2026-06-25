@@ -57,7 +57,7 @@ const ScoreShowByDate = ({ onPullSetlist, onSurpriseMe }: ScoreShowByDateProps) 
           >
             <div className="space-y-1.5">
               <h2
-                className="font-display italic text-foreground"
+                className="font-display italic text-card-foreground"
                 style={{ fontSize: "28px", lineHeight: 1.15, color: "#c24a33" }}
               >
                 Score a Show by Date
@@ -91,7 +91,7 @@ const ScoreShowByDate = ({ onPullSetlist, onSurpriseMe }: ScoreShowByDateProps) 
                   <CalendarIcon className="w-5 h-5 shrink-0" style={{ color: "#c24a33" }} />
                   {date ? (
                     <span
-                      className="text-base text-foreground"
+                      className="text-base text-card-foreground"
                       style={{ fontFamily: "'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace" }}
                     >
                       {format(date, "yyyy-MM-dd")}
@@ -161,7 +161,7 @@ const ScoreShowByDate = ({ onPullSetlist, onSurpriseMe }: ScoreShowByDateProps) 
           >
             <div className="space-y-1.5 flex-1">
               <h2
-                className="font-display italic text-foreground"
+                className="font-display italic text-card-foreground"
                 style={{ fontSize: "28px", lineHeight: 1.15, color: "#c24a33" }}
               >
                 Let Cosmic Charlie Pick

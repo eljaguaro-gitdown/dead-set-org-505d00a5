@@ -461,7 +461,7 @@ const CosmicCharlieWelcome = ({ eras, onGenerated, onSkip }: CosmicCharlieWelcom
                             </motion.span>
                             <span
                               className={`font-body text-xs ${
-                                active ? "text-primary font-medium" : "text-foreground"
+                                active ? "text-primary font-medium" : "text-card-foreground"
                               }`}
                             >
                               {e.label}
@@ -501,7 +501,7 @@ const CosmicCharlieWelcome = ({ eras, onGenerated, onSkip }: CosmicCharlieWelcom
                             </motion.span>
                             <span
                               className={`font-body text-xs ${
-                                active ? "text-primary font-medium" : "text-foreground"
+                                active ? "text-primary font-medium" : "text-card-foreground"
                               }`}
                             >
                               {t.label}
@@ -539,7 +539,7 @@ const CosmicCharlieWelcome = ({ eras, onGenerated, onSkip }: CosmicCharlieWelcom
                             >
                               <span
                                 className={`font-marker text-sm leading-tight text-center ${
-                                  active ? "text-primary" : "text-foreground"
+                                  active ? "text-primary" : "text-card-foreground"
                                 }`}
                               >
                                 {era.name}
@@ -634,7 +634,7 @@ const CosmicCharlieWelcome = ({ eras, onGenerated, onSkip }: CosmicCharlieWelcom
                             <div className="flex flex-col gap-0.5">
                               <span
                                 className={`font-body text-sm font-semibold ${
-                                  active ? "text-primary" : "text-foreground"
+                                  active ? "text-primary" : "text-card-foreground"
                                 }`}
                               >
                                 {p.title}

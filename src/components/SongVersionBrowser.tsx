@@ -127,7 +127,7 @@ const SongVersionBrowser = ({ song, curatedVersions, onSelectSong, onPlayArchive
     >
       <button
         onClick={() => onSelectSong(song)}
-        className="w-full text-left p-2 rounded bg-muted/50 hover:bg-muted text-sm font-body text-foreground transition-colors"
+        className="w-full text-left p-2 rounded bg-muted/50 hover:bg-muted text-sm font-body text-card-foreground transition-colors"
       >
         + Add song (no specific version)
       </button>
@@ -243,7 +243,7 @@ function CuratedVersionCard({
       className="w-full text-left p-2 rounded bg-accent/10 border border-accent/30 hover:border-accent/60 transition-colors"
     >
       <div className="flex items-center justify-between">
-        <span className="text-sm font-body text-foreground">{v.show_date}</span>
+        <span className="text-sm font-body text-card-foreground">{v.show_date}</span>
         <div className="flex items-center gap-1">
           {Array.from({ length: v.rating || 0 }).map((_, i) => (
             <Zap key={i} className="w-3 h-3 text-accent fill-accent" />
@@ -329,7 +329,7 @@ function ArchiveVersionCard({
       className="w-full text-left p-2 rounded bg-card border border-border hover:border-primary/30 transition-colors"
     >
       <div className="flex items-center justify-between">
-        <span className="text-sm font-body text-foreground">{av.date || "Unknown date"}</span>
+        <span className="text-sm font-body text-card-foreground">{av.date || "Unknown date"}</span>
         <div className="flex items-center gap-1">
           {av.avgRating != null && av.avgRating > 0 && (
             <Badge variant="outline" className="text-[10px] px-1 py-0 border-accent/30 text-accent">

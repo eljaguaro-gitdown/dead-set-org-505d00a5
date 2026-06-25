@@ -513,7 +513,7 @@ const CosmicCharlieDialog = ({
                     <div className="flex items-center gap-3">
                       <button
                         onClick={() => setMode(null)}
-                        className="font-body text-xs text-muted-foreground hover:text-foreground transition-colors"
+                        className="font-body text-xs text-muted-foreground hover:text-card-foreground transition-colors"
                       >
                         ← Back
                       </button>
@@ -571,7 +571,7 @@ const CosmicCharlieDialog = ({
                     <div className="flex items-center gap-3">
                       <button
                         onClick={goBackBuild}
-                        className="font-body text-xs text-muted-foreground hover:text-foreground transition-colors"
+                        className="font-body text-xs text-muted-foreground hover:text-card-foreground transition-colors"
                       >
                         ← Back
                       </button>
@@ -636,7 +636,7 @@ const CosmicCharlieDialog = ({
                     <div className="flex items-center gap-3">
                       <button
                         onClick={goBackBuild}
-                        className="font-body text-xs text-muted-foreground hover:text-foreground transition-colors"
+                        className="font-body text-xs text-muted-foreground hover:text-card-foreground transition-colors"
                       >
                         ← Back
                       </button>
@@ -699,7 +699,7 @@ const CosmicCharlieDialog = ({
                     <div className="flex items-center gap-3">
                       <button
                         onClick={goBackBuild}
-                        className="font-body text-xs text-muted-foreground hover:text-foreground transition-colors"
+                        className="font-body text-xs text-muted-foreground hover:text-card-foreground transition-colors"
                       >
                         ← Back
                       </button>
@@ -777,8 +777,8 @@ const CosmicCharlieDialog = ({
                     {selectedSong ? (
                       <div className="flex items-center gap-2 p-3 rounded-lg border border-primary bg-primary/10">
                         <Disc3 className="w-4 h-4 text-primary" />
-                        <span className="font-body text-sm text-foreground flex-1">{selectedSong.title}</span>
-                        <button onClick={() => { setSelectedSong(null); setSongSearch(""); }} className="text-xs text-muted-foreground hover:text-foreground">Change</button>
+                        <span className="font-body text-sm text-card-foreground flex-1">{selectedSong.title}</span>
+                        <button onClick={() => { setSelectedSong(null); setSongSearch(""); }} className="text-xs text-muted-foreground hover:text-card-foreground">Change</button>
                       </div>
                     ) : (
                       <div className="space-y-2">
@@ -799,7 +799,7 @@ const CosmicCharlieDialog = ({
                       </div>
                     )}
                     <div className="flex items-center gap-3">
-                      <button onClick={() => setMode(null)} className="font-body text-xs text-muted-foreground hover:text-foreground transition-colors">← Back</button>
+                      <button onClick={() => setMode(null)} className="font-body text-xs text-muted-foreground hover:text-card-foreground transition-colors">← Back</button>
                       <Button size="sm" onClick={() => setExploreStep(1)} disabled={!selectedSong} className="flex-1 bg-primary text-primary-foreground font-body">Next</Button>
                     </div>
                   </motion.div>
@@ -826,7 +826,7 @@ const CosmicCharlieDialog = ({
                       })}
                     </div>
                     <div className="flex items-center gap-3">
-                      <button onClick={() => setExploreStep(0)} className="font-body text-xs text-muted-foreground hover:text-foreground transition-colors">← Back</button>
+                      <button onClick={() => setExploreStep(0)} className="font-body text-xs text-muted-foreground hover:text-card-foreground transition-colors">← Back</button>
                       <Button size="sm" onClick={handleExplore} disabled={!surpriseMe && selectedEraIds.length === 0} className="flex-1 bg-primary text-primary-foreground font-body gap-1.5">
                         <Disc3 className="w-3.5 h-3.5" /> 🔍 Explore Versions
                       </Button>
@@ -846,7 +846,7 @@ const CosmicCharlieDialog = ({
               </div>
               <div className="p-3 rounded-lg bg-primary/5 border border-primary/20">
                 <p className="text-xs text-primary font-body mb-1">Charlie's Liner Notes:</p>
-                <p className="text-sm text-foreground font-body leading-relaxed whitespace-pre-line">{exploreResult.linerNotes}</p>
+                <p className="text-sm text-card-foreground font-body leading-relaxed whitespace-pre-line">{exploreResult.linerNotes}</p>
               </div>
               <div className="space-y-3">
                 {exploreResult.versions.map((v, i) => (
@@ -967,7 +967,7 @@ const CosmicCharlieDialog = ({
               )}
               <div className="p-3 rounded-lg bg-primary/5 border border-primary/20">
                 <p className="text-xs text-primary font-body mb-1">Charlie says:</p>
-                <p className="text-sm text-foreground font-body leading-relaxed">
+                <p className="text-sm text-card-foreground font-body leading-relaxed">
                   {suggestion.explanation}
                 </p>
               </div>
@@ -984,7 +984,7 @@ const CosmicCharlieDialog = ({
                         className="flex items-center gap-2 text-sm font-body"
                       >
                         <span className="text-muted-foreground w-5 text-right text-xs">{i + 1}.</span>
-                        <span className="text-foreground">{song.title}</span>
+                        <span className="text-card-foreground">{song.title}</span>
                         {song.segueToNext && (
                           <span className="text-primary font-bold text-xs">&gt;</span>
                         )}

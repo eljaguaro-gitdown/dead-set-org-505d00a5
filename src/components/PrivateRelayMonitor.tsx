@@ -89,7 +89,7 @@ const PrivateRelayMonitor = () => {
       <div className="px-4 py-3 border-b border-border flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <Apple className="w-4 h-4 text-muted-foreground" />
-          <h2 className="font-display text-sm text-foreground">Apple Private Relay — Welcome Email Delivery</h2>
+          <h2 className="font-display text-sm text-card-foreground">Apple Private Relay — Welcome Email Delivery</h2>
         </div>
         <Button
           variant="ghost"
@@ -143,7 +143,7 @@ const PrivateRelayMonitor = () => {
                       ) : (
                         <AlertTriangle className="w-4 h-4 text-red-400 shrink-0" />
                       )}
-                      <span className="text-sm font-medium text-foreground truncate">
+                      <span className="text-sm font-medium text-card-foreground truncate">
                         {r.display_name || "(no name)"}
                       </span>
                     </div>
@@ -174,7 +174,7 @@ const PrivateRelayMonitor = () => {
 
           <div className="px-4 py-3 border-t border-border bg-muted/20">
             <p className="text-sm text-muted-foreground">
-              <strong className="text-foreground">Note:</strong> "Sent" confirms the email left our server and was accepted by Apple's relay.
+              <strong className="text-card-foreground">Note:</strong> "Sent" confirms the email left our server and was accepted by Apple's relay.
               Apple then forwards it to the user's real inbox — that handoff is invisible to us, but a successful "sent" status with no
               bounce/suppression entry means delivery is working as expected.
             </p>

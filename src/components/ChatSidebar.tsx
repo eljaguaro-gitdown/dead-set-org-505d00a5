@@ -181,7 +181,7 @@ const ChatSidebar = ({ setlistId, user, isOpen, onClose, onUnreadChange }: ChatS
           <div className="flex items-center justify-between p-4 border-b border-border">
             <div className="flex items-center gap-2">
               <MessageCircle className="w-4 h-4 text-primary" />
-              <h3 className="font-display text-sm text-foreground">Setlist Chat</h3>
+              <h3 className="font-display text-sm text-card-foreground">Setlist Chat</h3>
               <span className="text-[10px] text-muted-foreground font-mono bg-muted px-1.5 py-0.5 rounded">
                 {collaborators.length}
               </span>
@@ -204,7 +204,7 @@ const ChatSidebar = ({ setlistId, user, isOpen, onClose, onUnreadChange }: ChatS
                 </button>
               )}
               <button onClick={onClose} className="p-1.5 rounded hover:bg-muted transition-colors">
-                <X className="w-3.5 h-3.5 text-muted-foreground hover:text-foreground" />
+                <X className="w-3.5 h-3.5 text-muted-foreground hover:text-card-foreground" />
               </button>
             </div>
           </div>
@@ -228,7 +228,7 @@ const ChatSidebar = ({ setlistId, user, isOpen, onClose, onUnreadChange }: ChatS
                           {c.displayName[0]?.toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
-                      <span className="text-xs font-body text-foreground flex-1 truncate">{c.displayName}</span>
+                      <span className="text-xs font-body text-card-foreground flex-1 truncate">{c.displayName}</span>
                       <span className="text-[9px] font-mono text-muted-foreground uppercase">{c.role}</span>
                     </div>
                   ))}
@@ -271,7 +271,7 @@ const ChatSidebar = ({ setlistId, user, isOpen, onClose, onUnreadChange }: ChatS
                               {(u.display_name || "?")[0].toUpperCase()}
                             </AvatarFallback>
                           </Avatar>
-                          <span className="text-xs font-body text-foreground">{u.display_name || "Unknown"}</span>
+                          <span className="text-xs font-body text-card-foreground">{u.display_name || "Unknown"}</span>
                           <UserPlus className="w-3 h-3 text-primary ml-auto" />
                         </button>
                       ))}
@@ -317,7 +317,7 @@ const ChatSidebar = ({ setlistId, user, isOpen, onClose, onUnreadChange }: ChatS
                     className={`px-3 py-1.5 rounded-lg text-sm font-body max-w-[85%] ${
                       isMe
                         ? "bg-primary text-primary-foreground"
-                        : "bg-muted text-foreground"
+                        : "bg-muted text-card-foreground"
                     }`}
                   >
                     {msg.content}

@@ -85,7 +85,7 @@ const AnnouncementsBell = ({ variant = "desktop" }: AnnouncementsBellProps) => {
         className="w-[340px] sm:w-[380px] p-0 bg-card border-border max-h-[70vh] overflow-hidden flex flex-col"
       >
         <div className="px-4 py-3 border-b border-border flex items-center justify-between">
-          <h3 className="font-display text-sm text-foreground">From Grateful Jaguaro</h3>
+          <h3 className="font-display text-sm text-card-foreground">From Grateful Jaguaro</h3>
           {unreadCount > 0 && (
             <span className="font-mono text-[10px] text-primary tracking-wider uppercase">
               {unreadCount} new
@@ -125,7 +125,7 @@ const AnnouncementsBell = ({ variant = "desktop" }: AnnouncementsBellProps) => {
                         <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
                       )}
                       <div className="min-w-0 flex-1">
-                        <h4 className="font-display text-sm text-foreground leading-snug group-hover:text-primary transition-colors">
+                        <h4 className="font-display text-sm text-card-foreground leading-snug group-hover:text-primary transition-colors">
                           {n.commenter_name || "A Deadhead"} on{" "}
                           <span className="text-primary/80">
                             {n.setlist_title || "your setlist"}
@@ -182,7 +182,7 @@ const AnnouncementsBell = ({ variant = "desktop" }: AnnouncementsBellProps) => {
                           />
                         )}
                         <div className="min-w-0 flex-1">
-                          <h4 className="font-display text-sm text-foreground leading-snug">
+                          <h4 className="font-display text-sm text-card-foreground leading-snug">
                             {a.title}
                           </h4>
                           <p className="font-body text-xs text-muted-foreground mt-1 whitespace-pre-wrap leading-relaxed">

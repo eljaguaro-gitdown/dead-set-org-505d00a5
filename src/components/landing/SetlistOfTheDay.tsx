@@ -131,7 +131,7 @@ const SetlistOfTheDay = () => {
               <PlaySetlistButton setlistId={spotlight.id} size="lg" />
             </div>
             <div className="min-w-0 flex-1">
-              <h3 className="font-display italic text-2xl sm:text-3xl text-foreground group-hover:text-primary transition-colors leading-tight">
+              <h3 className="font-display italic text-2xl sm:text-3xl text-card-foreground group-hover:text-primary transition-colors leading-tight">
                 {spotlight.title}
               </h3>
               <button

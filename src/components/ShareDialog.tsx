@@ -96,7 +96,7 @@ const ShareDialog = ({ open, onOpenChange, shareLink, creatorName, setlistTitle,
               onClick={handleCopy}
               variant="outline"
               size="sm"
-              className="border-border text-foreground shrink-0 gap-1.5"
+              className="border-border text-card-foreground shrink-0 gap-1.5"
             >
               {copied ? (
                 <>

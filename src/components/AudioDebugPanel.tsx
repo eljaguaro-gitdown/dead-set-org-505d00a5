@@ -28,7 +28,7 @@ const AudioDebugPanel = () => {
 
   return (
     <div
-      className="fixed bottom-2 right-2 z-[60] w-[min(380px,calc(100vw-1rem))] max-h-[70vh] flex flex-col rounded-lg border border-primary/40 bg-card/95 backdrop-blur-md shadow-2xl text-foreground font-mono text-[11px]"
+      className="fixed bottom-2 right-2 z-[60] w-[min(380px,calc(100vw-1rem))] max-h-[70vh] flex flex-col rounded-lg border border-primary/40 bg-card/95 backdrop-blur-md shadow-2xl text-card-foreground font-mono text-[11px]"
       role="dialog"
       aria-label="Audio debug panel"
     >
@@ -39,28 +39,28 @@ const AudioDebugPanel = () => {
         <span className="ml-auto flex items-center gap-1">
           <button
             onClick={copyAll}
-            className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground"
+            className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-card-foreground"
             title="Copy snapshot to clipboard"
           >
             <Copy className="w-3 h-3" />
           </button>
           <button
             onClick={() => audioDebug.clearAll()}
-            className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground"
+            className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-card-foreground"
             title="Clear log"
           >
             <Trash2 className="w-3 h-3" />
           </button>
           <button
             onClick={() => setCollapsed((c) => !c)}
-            className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground"
+            className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-card-foreground"
             title={collapsed ? "Expand" : "Collapse"}
           >
             {collapsed ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
           </button>
           <button
             onClick={() => setOpen(false)}
-            className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground"
+            className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-card-foreground"
             title="Close (reload to reopen)"
           >
             <X className="w-3 h-3" />
@@ -117,7 +117,7 @@ const AudioDebugPanel = () => {
               <div
                 key={e.id}
                 className={`leading-tight ${
-                  e.level === "error" ? "text-destructive" : e.level === "warn" ? "text-[hsl(var(--dead-gold))]" : "text-foreground/90"
+                  e.level === "error" ? "text-destructive" : e.level === "warn" ? "text-[hsl(var(--dead-gold))]" : "text-card-foreground/90"
                 }`}
               >
                 <span className="text-muted-foreground">{fmtTime(e.ts)}</span>{" "}

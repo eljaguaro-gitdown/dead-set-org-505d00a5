@@ -221,7 +221,7 @@ const UserLibrary = () => {
                   <div className="p-4">
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-1.5 min-w-0">
-                        <h3 className="font-display text-sm text-foreground group-hover:text-primary transition-colors leading-tight line-clamp-2">
+                        <h3 className="font-display text-sm text-card-foreground group-hover:text-primary transition-colors leading-tight line-clamp-2">
                           {setlist.title}
                         </h3>
                         {!setlist.is_public && (

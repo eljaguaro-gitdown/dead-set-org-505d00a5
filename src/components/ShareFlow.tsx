@@ -138,8 +138,8 @@ const ShareFlow = ({
         >
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-            <h2 className="font-display text-lg text-foreground">Pass the tape</h2>
-            <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors">
+            <h2 className="font-display text-lg text-card-foreground">Pass the tape</h2>
+            <button onClick={onClose} className="text-muted-foreground hover:text-card-foreground transition-colors">
               <X className="w-5 h-5" />
             </button>
           </div>
@@ -158,7 +158,7 @@ const ShareFlow = ({
 
           {/* Info */}
           <div className="px-6 pt-4 pb-2 text-center">
-            <p className="font-hand text-xl text-foreground">{setlistName}</p>
+            <p className="font-hand text-xl text-card-foreground">{setlistName}</p>
             {showDate && venueName && (
               <p className="font-mono text-xs text-muted-foreground mt-1">
                 {showDate}  ·  {venueName}

@@ -39,7 +39,7 @@ const SaveCelebration = ({ setlistId, setlistTitle, onDismiss }: SaveCelebration
           🎉
         </motion.div>
 
-        <h3 className="font-display text-xl text-foreground mb-1">Your setlist is saved!</h3>
+        <h3 className="font-display text-xl text-card-foreground mb-1">Your setlist is saved!</h3>
         <p className="font-body text-sm text-muted-foreground mb-5">Share it with the world:</p>
 
         <div className="flex justify-center mb-4">

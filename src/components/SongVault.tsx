@@ -63,7 +63,7 @@ const SongVault = ({ songs, eraId, onSelectSong, getNotableVersions, onPlayArchi
   return (
     <div className="flex flex-col h-full">
       <div className="p-4 border-b border-border space-y-3">
-        <h2 className="font-display text-lg text-foreground">The Vault</h2>
+        <h2 className="font-display text-lg text-card-foreground">The Vault</h2>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
@@ -81,7 +81,7 @@ const SongVault = ({ songs, eraId, onSelectSong, getNotableVersions, onPlayArchi
               className={`px-2 py-0.5 text-xs rounded-full border font-body transition-colors ${
                 tagFilter === tag
                   ? TAG_COLORS[tag]
-                  : "border-border text-muted-foreground hover:text-foreground"
+                  : "border-border text-muted-foreground hover:text-card-foreground"
               }`}
             >
               {tag}
@@ -96,7 +96,7 @@ const SongVault = ({ songs, eraId, onSelectSong, getNotableVersions, onPlayArchi
               className={`px-2 py-0.5 text-xs rounded-full border font-body transition-colors ${
                 positionFilter === pos
                   ? "bg-muted text-card-foreground border-card-foreground/30"
-                  : "border-border text-muted-foreground hover:text-foreground"
+                  : "border-border text-muted-foreground hover:text-card-foreground"
               }`}
             >
               {pos}

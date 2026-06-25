@@ -222,7 +222,7 @@ const SetlistMiniCard = ({ setlist, index }: { setlist: SetlistCard; index: numb
     >
       <div className="flex items-start gap-2">
         <div className="min-w-0 flex-1">
-          <h4 className="font-display text-sm text-foreground truncate group-hover:text-primary transition-colors leading-tight">
+          <h4 className="font-display text-sm text-card-foreground truncate group-hover:text-primary transition-colors leading-tight">
             {setlist.title}
           </h4>
           <Link to={`/user/${setlist.creator_id}`} onClick={(e) => e.stopPropagation()} className="font-body text-[11px] text-muted-foreground mt-1 truncate block hover:text-primary transition-colors">

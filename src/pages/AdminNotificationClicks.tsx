@@ -213,7 +213,7 @@ const AdminNotificationClicks = () => {
 
         {/* Time series */}
         <section className="bg-card border border-border rounded-xl p-6 mb-12">
-          <h2 className="font-display text-lg text-foreground mb-6">Clicks over time</h2>
+          <h2 className="font-display text-lg text-card-foreground mb-6">Clicks over time</h2>
           <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={series}>
@@ -260,7 +260,7 @@ const AdminNotificationClicks = () => {
 
         {/* Per-channel breakdown */}
         <section className="bg-card border border-border rounded-xl p-6">
-          <h2 className="font-display text-lg text-foreground mb-6">
+          <h2 className="font-display text-lg text-card-foreground mb-6">
             Top notifications by clicks
           </h2>
           {channelBreakdown.length === 0 ? (
@@ -283,10 +283,10 @@ const AdminNotificationClicks = () => {
                       key={c.channel}
                       className="border-b border-border/40 last:border-0"
                     >
-                      <td className="py-3 pr-4 font-mono text-foreground/90 break-all">
+                      <td className="py-3 pr-4 font-mono text-card-foreground/90 break-all">
                         {c.channel}
                       </td>
-                      <td className="py-3 pr-4 text-right text-foreground">{c.clicks}</td>
+                      <td className="py-3 pr-4 text-right text-card-foreground">{c.clicks}</td>
                       <td className="py-3 text-right text-muted-foreground">{c.users}</td>
                     </tr>
                   ))}
@@ -318,7 +318,7 @@ const SummaryCard = ({
         {label}
       </span>
     </div>
-    <div className="font-display text-4xl text-foreground">{primary.toLocaleString()}</div>
+    <div className="font-display text-4xl text-card-foreground">{primary.toLocaleString()}</div>
     <div className="font-body text-sm text-muted-foreground mt-1">{secondary}</div>
   </div>
 );

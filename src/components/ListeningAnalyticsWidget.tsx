@@ -177,7 +177,7 @@ const ListeningAnalyticsWidget = ({ enabled }: Props) => {
     <div className="bg-card border border-border rounded-xl overflow-hidden">
       <div className="px-4 py-3 border-b border-border flex items-center gap-2">
         <Headphones className="w-4 h-4 text-primary" />
-        <h2 className="font-display text-sm text-foreground">Listening</h2>
+        <h2 className="font-display text-sm text-card-foreground">Listening</h2>
         <div className="ml-auto flex items-center gap-1">
           {WINDOWS.map((w) => (
             <button
@@ -186,7 +186,7 @@ const ListeningAnalyticsWidget = ({ enabled }: Props) => {
               className={`px-2 py-0.5 rounded-md text-sm font-body transition-colors ${
                 windowKey === w.key
                   ? "bg-primary/15 text-primary"
-                  : "text-muted-foreground hover:text-foreground"
+                  : "text-muted-foreground hover:text-card-foreground"
               }`}
             >
               {w.label}
@@ -230,7 +230,7 @@ const ListeningAnalyticsWidget = ({ enabled }: Props) => {
                     key={s.title}
                     className="flex items-center justify-between text-sm font-body"
                   >
-                    <span className="text-foreground truncate pr-2">
+                    <span className="text-card-foreground truncate pr-2">
                       {s.title}
                     </span>
                     <span className="text-primary tabular-nums">
@@ -259,7 +259,7 @@ const Stat = ({ label, value }: { label: string; value: string }) => (
 const Mini = ({ label, value }: { label: string; value: string }) => (
   <div className="flex items-baseline justify-between">
     <span>{label}</span>
-    <span className="text-foreground tabular-nums">{value}</span>
+    <span className="text-card-foreground tabular-nums">{value}</span>
   </div>
 );
 

@@ -109,7 +109,7 @@ const NewVersionBanner = () => {
         <div className="font-mono text-[10px] tracking-[0.25em] text-primary uppercase shrink-0">
           New build
         </div>
-        <p className="font-body text-sm text-foreground flex-1 min-w-0">
+        <p className="font-body text-sm text-card-foreground flex-1 min-w-0">
           A fresh version of Dead-Set is live. Refresh to grab the latest.
         </p>
         <button
@@ -122,7 +122,7 @@ const NewVersionBanner = () => {
         <button
           onClick={handleDismiss}
           aria-label="Dismiss"
-          className="text-muted-foreground hover:text-foreground transition-colors shrink-0"
+          className="text-muted-foreground hover:text-card-foreground transition-colors shrink-0"
         >
           <X className="w-4 h-4" />
         </button>

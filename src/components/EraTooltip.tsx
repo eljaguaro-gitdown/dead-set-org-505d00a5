@@ -125,7 +125,7 @@ const EraTooltip = ({ eraName, yearRange, children }: EraTooltipProps) => {
                   : "-bottom-1 border-r border-b"
               }`}
             />
-            <p className="font-display text-xs text-foreground">
+            <p className="font-display text-xs text-card-foreground">
               {eraName}
             </p>
             {yearRange && (

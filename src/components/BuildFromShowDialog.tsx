@@ -227,7 +227,7 @@ const BuildFromShowDialog = ({ open, onOpenChange, onSeed, initialDate }: BuildF
     <Dialog open={open} onOpenChange={(o) => { if (!o) resetAll(); onOpenChange(o); }}>
       <DialogContent className="bg-card border-border max-w-md">
         <DialogHeader>
-          <DialogTitle className="font-display text-3xl text-foreground flex items-center gap-2">
+          <DialogTitle className="font-display text-3xl text-card-foreground flex items-center gap-2">
             <Sparkles className="w-6 h-6 text-primary" />
             {preview ? "Confirm this show" : "Recreate a show"}
           </DialogTitle>
@@ -241,7 +241,7 @@ const BuildFromShowDialog = ({ open, onOpenChange, onSeed, initialDate }: BuildF
         {preview ? (
           <div className="space-y-4 pt-2">
             <div className="rounded-xl border border-border bg-background/40 p-4 space-y-2">
-              <div className="font-display text-xl text-foreground">{preview.niceDate}</div>
+              <div className="font-display text-xl text-card-foreground">{preview.niceDate}</div>
               {preview.venue && (
                 <div className="font-body text-sm text-muted-foreground">{preview.venue}</div>
               )}
@@ -276,7 +276,7 @@ const BuildFromShowDialog = ({ open, onOpenChange, onSeed, initialDate }: BuildF
             <div className="rounded-xl border border-border bg-background/20 max-h-64 overflow-y-auto">
               <ol className="divide-y divide-border">
                 {preview.trackTitles.map((t, i) => (
-                  <li key={i} className="flex items-baseline gap-3 px-4 py-2 font-body text-sm text-foreground">
+                  <li key={i} className="flex items-baseline gap-3 px-4 py-2 font-body text-sm text-card-foreground">
                     <span className="text-muted-foreground w-6 shrink-0 text-right">{i + 1}.</span>
                     <span className="truncate">{t}</span>
                   </li>

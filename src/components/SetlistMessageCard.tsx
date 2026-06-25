@@ -86,7 +86,7 @@ const SetlistMessageCard = ({ setlistId }: Props) => {
         </span>
       </div>
       <div className="p-3">
-        <p className="font-display text-sm text-foreground line-clamp-1">
+        <p className="font-display text-sm text-card-foreground line-clamp-1">
           {preview.title}
         </p>
         <p className="text-[11px] font-body text-muted-foreground mt-0.5">

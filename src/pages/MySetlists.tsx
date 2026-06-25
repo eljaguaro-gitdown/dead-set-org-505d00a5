@@ -453,7 +453,7 @@ const MySetlists = () => {
                     className={`font-body text-xs px-2.5 py-1 rounded-md transition-colors ${
                       sortBy === opt.value
                         ? "bg-background text-foreground shadow-sm"
-                        : "text-muted-foreground hover:text-foreground"
+                        : "text-muted-foreground hover:text-card-foreground"
                     }`}
                   >
                     {opt.label}

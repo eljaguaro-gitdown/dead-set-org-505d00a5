@@ -94,7 +94,7 @@ const AdminAnnouncementsPanel = () => {
     <div className="bg-card border border-border rounded-lg overflow-hidden">
       <div className="px-4 py-3 border-b border-border flex items-center gap-2">
         <Megaphone className="w-4 h-4 text-muted-foreground" />
-        <h2 className="font-display text-sm text-foreground">Broadcast Announcement</h2>
+        <h2 className="font-display text-sm text-card-foreground">Broadcast Announcement</h2>
         <span className="font-mono text-[10px] text-muted-foreground/60 tracking-wider uppercase ml-auto">
           Sent to all signed-in users
         </span>
@@ -106,7 +106,7 @@ const AdminAnnouncementsPanel = () => {
           placeholder="Title (e.g. Backstage is open)"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          className="font-body"
+          className="font-body bg-secondary text-card-foreground"
           maxLength={120}
         />
         <Textarea
@@ -114,7 +114,7 @@ const AdminAnnouncementsPanel = () => {
           value={body}
           onChange={(e) => setBody(e.target.value)}
           rows={4}
-          className="font-body"
+          className="font-body bg-secondary text-card-foreground"
           maxLength={1000}
         />
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -122,14 +122,14 @@ const AdminAnnouncementsPanel = () => {
             placeholder="CTA label (optional, e.g. Visit Backstage)"
             value={ctaLabel}
             onChange={(e) => setCtaLabel(e.target.value)}
-            className="font-body"
+            className="font-body bg-secondary text-card-foreground"
             maxLength={40}
           />
           <Input
             placeholder="CTA URL (optional, e.g. /backstage)"
             value={ctaUrl}
             onChange={(e) => setCtaUrl(e.target.value)}
-            className="font-body"
+            className="font-body bg-secondary text-card-foreground"
             maxLength={500}
           />
         </div>
@@ -165,7 +165,7 @@ const AdminAnnouncementsPanel = () => {
                 <div className="flex items-start gap-3">
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
-                      <h4 className="font-display text-sm text-foreground">{a.title}</h4>
+                      <h4 className="font-display text-sm text-card-foreground">{a.title}</h4>
                       {!a.published && (
                         <span className="font-mono text-[9px] text-muted-foreground/60 tracking-wider uppercase border border-border rounded px-1.5 py-0.5">
                           Hidden
@@ -187,7 +187,7 @@ const AdminAnnouncementsPanel = () => {
                   <div className="flex items-center gap-1 shrink-0">
                     <button
                       onClick={() => togglePublished(a)}
-                      className="p-1.5 text-muted-foreground hover:text-foreground transition-colors"
+                      className="p-1.5 text-muted-foreground hover:text-card-foreground transition-colors"
                       title={a.published ? "Hide" : "Re-publish"}
                     >
                       {a.published ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}

@@ -182,7 +182,7 @@ export default function DeliverabilityMonitor() {
     <div className="bg-card border border-border rounded-lg overflow-hidden">
       <div className="px-4 py-3 border-b border-border flex items-center gap-2 flex-wrap">
         <Mail className="w-4 h-4 text-muted-foreground" />
-        <h2 className="font-display text-sm text-foreground">Email Deliverability</h2>
+        <h2 className="font-display text-sm text-card-foreground">Email Deliverability</h2>
         <div className="ml-auto flex gap-1">
           {WINDOWS.map((w) => (
             <button
@@ -191,7 +191,7 @@ export default function DeliverabilityMonitor() {
               className={`px-2 py-1 text-xs rounded font-body border transition-colors ${
                 windowId === w.id
                   ? "bg-primary/15 border-primary/40 text-primary"
-                  : "border-border text-muted-foreground hover:text-foreground"
+                  : "border-border text-muted-foreground hover:text-card-foreground"
               }`}
             >
               {w.label}
@@ -288,7 +288,7 @@ export default function DeliverabilityMonitor() {
                     <span className={`uppercase text-[10px] tracking-wider w-20 ${STATUS_TONE[r.status] || ""}`}>
                       {r.status}
                     </span>
-                    <span className="text-foreground truncate flex-1">{r.recipient_email}</span>
+                    <span className="text-card-foreground truncate flex-1">{r.recipient_email}</span>
                     <span className="text-muted-foreground text-xs hidden sm:inline">{r.template_name}</span>
                     <span className="text-muted-foreground text-xs">
                       {new Date(r.created_at).toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
@@ -318,7 +318,7 @@ function Stat({
   return (
     <div className="text-center">
       <p className="text-xs text-muted-foreground font-body uppercase tracking-wider">{label}</p>
-      <p className={`font-display text-2xl mt-1 ${tone || "text-foreground"}`}>{value}</p>
+      <p className={`font-display text-2xl mt-1 ${tone || "text-card-foreground"}`}>{value}</p>
       {sub !== undefined && <p className="text-xs text-muted-foreground font-body mt-0.5">{sub}</p>}
     </div>
   );

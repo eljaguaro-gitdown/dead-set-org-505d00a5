@@ -313,7 +313,7 @@ const SendToFriendDialog = ({
                       </span>
                     )}
                   </div>
-                  <span className="font-body text-sm text-foreground flex-1 text-left truncate">
+                  <span className="font-body text-sm text-card-foreground flex-1 text-left truncate">
                     {recipient.displayName}
                   </span>
                   {sent ? (
