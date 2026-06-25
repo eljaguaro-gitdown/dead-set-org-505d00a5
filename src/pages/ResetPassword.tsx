@@ -80,7 +80,7 @@ const ResetPassword = () => {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   minLength={6}
-                  className="bg-card/80 backdrop-blur-sm border-border text-foreground"
+                  className="bg-card/80 backdrop-blur-sm border-border text-card-foreground"
                 />
               </div>
               <div className="space-y-2">
@@ -94,7 +94,7 @@ const ResetPassword = () => {
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
                   minLength={6}
-                  className="bg-card/80 backdrop-blur-sm border-border text-foreground"
+                  className="bg-card/80 backdrop-blur-sm border-border text-card-foreground"
                 />
               </div>
               <Button

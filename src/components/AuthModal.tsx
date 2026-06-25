@@ -237,7 +237,7 @@ const AuthModal = ({ open, onOpenChange, onAuthenticated, onBeforeRedirect }: Au
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="bg-card/80 backdrop-blur-sm border-border text-foreground"
+                className="bg-card/80 backdrop-blur-sm border-border text-card-foreground"
               />
             </div>
             <div className="space-y-1.5">
@@ -251,7 +251,7 @@ const AuthModal = ({ open, onOpenChange, onAuthenticated, onBeforeRedirect }: Au
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 minLength={6}
-                className="bg-card/80 backdrop-blur-sm border-border text-foreground"
+                className="bg-card/80 backdrop-blur-sm border-border text-card-foreground"
               />
             </div>
             <Button

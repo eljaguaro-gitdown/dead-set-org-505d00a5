@@ -239,7 +239,7 @@ const SendToFriendDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-card border-border text-foreground max-w-sm">
+      <DialogContent className="bg-card border-border text-card-foreground max-w-sm">
         <DialogHeader>
           <DialogTitle className="font-display text-lg flex items-center gap-2">
             <MessageCircle className="w-5 h-5 text-primary" />

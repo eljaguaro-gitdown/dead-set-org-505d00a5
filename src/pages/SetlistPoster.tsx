@@ -535,7 +535,7 @@ const SetlistPoster = () => {
         <div className="flex items-center gap-2">
           <button
             onClick={handlePlayAll}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-body bg-card/80 border border-border text-foreground hover:border-primary/40 transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-body bg-card/80 border border-border text-card-foreground hover:border-primary/40 transition-colors"
           >
             <Play className="w-3 h-3 fill-current" /> Play All
           </button>
@@ -553,7 +553,7 @@ const SetlistPoster = () => {
               onClick={handleRebuildFromShow}
               disabled={rebuilding}
               title={`Overwrite with the exact ${sourceShow.date}${sourceShow.venue ? ` · ${sourceShow.venue}` : ""} setlist from archive.org`}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-body bg-card/80 border border-border text-foreground hover:border-primary/40 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-body bg-card/80 border border-border text-card-foreground hover:border-primary/40 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {rebuilding
                 ? <Loader2 className="w-3 h-3 animate-spin" />

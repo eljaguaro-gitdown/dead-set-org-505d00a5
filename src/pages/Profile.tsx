@@ -166,7 +166,7 @@ const Profile = () => {
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
                 placeholder="Your display name"
-                className="bg-card/80 backdrop-blur-sm border-border text-foreground font-body"
+                className="bg-card/80 backdrop-blur-sm border-border text-card-foreground font-body"
               />
             </div>
             <div className="space-y-2">
@@ -176,7 +176,7 @@ const Profile = () => {
             <div className="space-y-2">
               <Label className="font-body text-sm text-foreground">Home State</Label>
               <Select value={homeState} onValueChange={setHomeState}>
-                <SelectTrigger className="bg-card/80 backdrop-blur-sm border-border text-foreground font-body">
+                <SelectTrigger className="bg-card/80 backdrop-blur-sm border-border text-card-foreground font-body">
                   <SelectValue placeholder="Select your state" />
                 </SelectTrigger>
                 <SelectContent className="bg-card border-border">

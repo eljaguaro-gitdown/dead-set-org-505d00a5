@@ -292,11 +292,11 @@ const Browse = () => {
                 placeholder="Search setlists or creators..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="pl-10 bg-card/60 border-border text-foreground font-body text-sm h-9"
+                className="pl-10 bg-card/60 border-border text-card-foreground font-body text-sm h-9"
               />
             </div>
             <Select value={sortBy} onValueChange={(v) => setSortBy(v as any)}>
-              <SelectTrigger className="flex-1 sm:flex-none sm:w-[160px] bg-card/60 border-border text-foreground font-body text-xs h-9">
+              <SelectTrigger className="flex-1 sm:flex-none sm:w-[160px] bg-card/60 border-border text-card-foreground font-body text-xs h-9">
                 <SortAsc className="w-3 h-3 mr-1 text-muted-foreground" />
                 <SelectValue />
               </SelectTrigger>

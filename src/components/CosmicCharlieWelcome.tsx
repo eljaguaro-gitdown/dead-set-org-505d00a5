@@ -706,7 +706,7 @@ const CosmicCharlieWelcome = ({ eras, onGenerated, onSkip }: CosmicCharlieWelcom
                           value={mustInclude}
                           onChange={(e) => setMustInclude(e.target.value)}
                           placeholder="e.g. Scarlet > Fire, Dark Star"
-                          className="bg-card border-border text-foreground font-body text-sm"
+                          className="bg-card border-border text-card-foreground font-body text-sm"
                         />
                       </div>
                       <div className="space-y-1.5">
@@ -717,7 +717,7 @@ const CosmicCharlieWelcome = ({ eras, onGenerated, onSkip }: CosmicCharlieWelcom
                           value={pleaseAvoid}
                           onChange={(e) => setPleaseAvoid(e.target.value)}
                           placeholder="e.g. Touch of Grey, Drums/Space"
-                          className="bg-card border-border text-foreground font-body text-sm"
+                          className="bg-card border-border text-card-foreground font-body text-sm"
                         />
                       </div>
                       {/* Gold-bordered invitation field */}
@@ -729,7 +729,7 @@ const CosmicCharlieWelcome = ({ eras, onGenerated, onSkip }: CosmicCharlieWelcom
                           value={itsFor}
                           onChange={(e) => setItsFor(e.target.value)}
                           placeholder="e.g. a late night drive alone, converting a friend"
-                          className="bg-card border-border text-foreground font-body text-sm"
+                          className="bg-card border-border text-card-foreground font-body text-sm"
                         />
                       </div>
                     </div>

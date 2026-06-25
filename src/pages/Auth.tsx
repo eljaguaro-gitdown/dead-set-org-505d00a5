@@ -213,7 +213,7 @@ const Auth = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="h-12 text-base bg-card/80 backdrop-blur-sm border-border text-foreground"
+                className="h-12 text-base bg-card/80 backdrop-blur-sm border-border text-card-foreground"
               />
             </div>
             {!isForgot && (
@@ -226,7 +226,7 @@ const Auth = () => {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   minLength={6}
-                  className="h-12 text-base bg-card/80 backdrop-blur-sm border-border text-foreground"
+                  className="h-12 text-base bg-card/80 backdrop-blur-sm border-border text-card-foreground"
                 />
               </div>
             )}

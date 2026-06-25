@@ -70,7 +70,7 @@ const SongVault = ({ songs, eraId, onSelectSong, getNotableVersions, onPlayArchi
             placeholder="Search songs..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-10 bg-card border-border text-foreground font-body"
+            className="pl-10 bg-card border-border text-card-foreground font-body"
           />
         </div>
         <div className="flex flex-wrap gap-1.5">

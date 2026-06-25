@@ -105,7 +105,7 @@ const ShareDropdown = ({ url, ogUrl, title, description }: ShareDropdownProps) =
     <div ref={ref} className="relative">
       <button
         onClick={handleToggle}
-        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-body bg-card/80 border border-border text-foreground hover:border-primary/40 transition-colors"
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-body bg-card/80 border border-border text-card-foreground hover:border-primary/40 transition-colors"
       >
         <Share2 className="w-3 h-3" /> Share
       </button>

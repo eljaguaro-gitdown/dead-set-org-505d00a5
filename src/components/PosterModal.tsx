@@ -62,7 +62,7 @@ const PosterModal = ({
           <button
             onClick={onClose}
             aria-label="Close poster"
-            className="absolute top-4 right-4 w-11 h-11 rounded-lg border border-border bg-card/80 text-foreground hover:bg-card flex items-center justify-center transition-colors"
+            className="absolute top-4 right-4 w-11 h-11 rounded-lg border border-border bg-card/80 text-card-foreground hover:bg-card flex items-center justify-center transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -71,7 +71,7 @@ const PosterModal = ({
             <button
               onClick={(e) => { e.stopPropagation(); onPrev?.(); }}
               aria-label="Previous song"
-              className="absolute left-2 sm:left-6 top-1/2 -translate-y-1/2 w-12 h-12 rounded-lg border border-border bg-card/80 text-foreground hover:bg-card flex items-center justify-center transition-colors z-10"
+              className="absolute left-2 sm:left-6 top-1/2 -translate-y-1/2 w-12 h-12 rounded-lg border border-border bg-card/80 text-card-foreground hover:bg-card flex items-center justify-center transition-colors z-10"
             >
               <ChevronLeft className="w-6 h-6" />
             </button>
@@ -80,7 +80,7 @@ const PosterModal = ({
             <button
               onClick={(e) => { e.stopPropagation(); onNext?.(); }}
               aria-label="Next song"
-              className="absolute right-2 sm:right-6 top-1/2 -translate-y-1/2 w-12 h-12 rounded-lg border border-border bg-card/80 text-foreground hover:bg-card flex items-center justify-center transition-colors z-10"
+              className="absolute right-2 sm:right-6 top-1/2 -translate-y-1/2 w-12 h-12 rounded-lg border border-border bg-card/80 text-card-foreground hover:bg-card flex items-center justify-center transition-colors z-10"
             >
               <ChevronRight className="w-6 h-6" />
             </button>

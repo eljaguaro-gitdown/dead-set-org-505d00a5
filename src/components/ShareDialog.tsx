@@ -78,7 +78,7 @@ const ShareDialog = ({ open, onOpenChange, shareLink, creatorName, setlistTitle,
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-card border-border text-foreground max-w-md">
+      <DialogContent className="bg-card border-border text-card-foreground max-w-md">
         <DialogHeader>
           <DialogTitle className="font-display text-lg">Share & Collaborate</DialogTitle>
           <DialogDescription className="font-body text-muted-foreground text-sm">

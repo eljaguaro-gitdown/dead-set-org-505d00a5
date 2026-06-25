@@ -265,7 +265,7 @@ const SetlistComments = ({ setlistId, isPublic }: SetlistCommentsProps) => {
             onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handlePost()}
             placeholder="Drop a comment..."
             maxLength={500}
-            className="flex-1 bg-card/60 border border-border/40 rounded-lg px-3 py-2.5 text-sm font-body text-foreground placeholder:text-muted-foreground/30 focus:outline-none focus:border-primary/40 transition-colors"
+            className="flex-1 bg-card/60 border border-border/40 rounded-lg px-3 py-2.5 text-sm font-body text-card-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:border-primary/40 transition-colors"
           />
           <button
             onClick={handlePost}
