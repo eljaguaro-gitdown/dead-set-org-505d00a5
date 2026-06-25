@@ -202,16 +202,16 @@ const HeroSection = (_props: HeroSectionProps) => {
           site's design system is untouched. */}
       <style>{`
         .ds-hero {
-          --bg-deep: #f1ebdf;
-          --bg-plaque: #ece3d2;
-          --text-primary: #23221f;
-          --text-soft: #6b665c;
-          --text-eyebrow: #9a8f78;
+          --bg-deep: #4a0404;
+          --bg-plaque: #3a0303;
+          --text-primary: #efe7d0;
+          --text-soft: #cdc5ad;
+          --text-eyebrow: #d6b271;
           --accent-gold: #c24a33;
           --accent-warm: #d2593f;
-          --rule-faint: #ddd3c0;
-          --rule-gold-30: rgba(194, 74, 51, 0.28);
-          --rule-gold-40: rgba(194, 74, 51, 0.40);
+          --rule-faint: rgba(239, 231, 208, 0.28);
+          --rule-gold-30: rgba(194, 74, 51, 0.30);
+          --rule-gold-40: rgba(194, 74, 51, 0.42);
 
           position: relative;
           width: 100%;
@@ -262,7 +262,7 @@ const HeroSection = (_props: HeroSectionProps) => {
           to { transform: rotate(360deg); }
         }
         .ds-hero__logo-word {
-          font-family: 'Playfair Display', Georgia, serif;
+          font-family: 'Sancreek', Georgia, serif;
           font-weight: 700;
           font-style: normal;
           color: var(--accent-gold);
@@ -301,7 +301,7 @@ const HeroSection = (_props: HeroSectionProps) => {
         }
 
         .ds-hero__headline {
-          font-family: 'Playfair Display', Georgia, serif;
+          font-family: 'Sancreek', Georgia, serif;
           font-style: italic;
           font-weight: 400;
           color: var(--text-primary);
@@ -314,7 +314,7 @@ const HeroSection = (_props: HeroSectionProps) => {
         @media (min-width: 960px) { .ds-hero__headline { font-size: 56px; } }
 
         .ds-hero__chase {
-          font-family: 'Playfair Display', Georgia, serif;
+          font-family: 'Sancreek', Georgia, serif;
           font-style: italic;
           font-weight: 400;
           color: var(--text-primary);
@@ -391,7 +391,7 @@ const HeroSection = (_props: HeroSectionProps) => {
           display: flex; flex-direction: column; align-items: center; gap: 8px;
         }
         .ds-hero__charlie-eyebrow {
-          font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+          font-family: 'IBM Plex Mono', ui-monospace, monospace;
           font-size: 10px;
           letter-spacing: 0.28em;
           text-transform: uppercase;
@@ -399,7 +399,7 @@ const HeroSection = (_props: HeroSectionProps) => {
         }
         @media (min-width: 640px) { .ds-hero__charlie-eyebrow { font-size: 11px; } }
         .ds-hero__charlie-name {
-          font-family: 'Playfair Display', Georgia, serif;
+          font-family: 'Sancreek', Georgia, serif;
           font-style: italic;
           font-weight: 700;
           color: var(--accent-gold);
@@ -414,7 +414,7 @@ const HeroSection = (_props: HeroSectionProps) => {
           display: flex; flex-direction: column; align-items: center; gap: 12px;
         }
         .ds-hero__cta-eyebrow {
-          font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+          font-family: 'IBM Plex Mono', ui-monospace, monospace;
           font-size: 11px;
           letter-spacing: 0.26em;
           text-transform: uppercase;
@@ -425,8 +425,8 @@ const HeroSection = (_props: HeroSectionProps) => {
           height: 56px;
           width: 100%;
           max-width: 320px;
-          background: var(--accent-gold);
-          color: #f1ebdf;
+          background: linear-gradient(135deg, #d4af37, #f3e5ab 45%, #b8860b);
+          color: #3a2406;
           font-family: 'DM Sans', system-ui, sans-serif;
           font-weight: 500;
           font-size: 17px;
@@ -442,7 +442,7 @@ const HeroSection = (_props: HeroSectionProps) => {
           outline-offset: 3px;
         }
         .ds-hero__cta-caption {
-          font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+          font-family: 'IBM Plex Mono', ui-monospace, monospace;
           font-size: 12px;
           color: var(--accent-gold);
           opacity: 0.7;
@@ -455,7 +455,7 @@ const HeroSection = (_props: HeroSectionProps) => {
           width: 100%; max-width: 320px;
           margin-top: 20px;
           color: var(--text-eyebrow);
-          font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+          font-family: 'IBM Plex Mono', ui-monospace, monospace;
           font-size: 10px;
           letter-spacing: 0.3em;
           text-transform: uppercase;
@@ -539,7 +539,7 @@ const HeroSection = (_props: HeroSectionProps) => {
         .ds-hero__cta-count {
           display: inline-flex; align-items: center; gap: 6px;
           margin-top: 10px;
-          font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+          font-family: 'IBM Plex Mono', ui-monospace, monospace;
           font-size: 11px;
           letter-spacing: 0.18em;
           text-transform: uppercase;
@@ -564,14 +564,14 @@ const HeroSection = (_props: HeroSectionProps) => {
         @media (min-width: 640px) { .ds-hero__credit { padding: 32px 28px; } }
 
         .ds-hero__credit-eyebrow {
-          font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+          font-family: 'IBM Plex Mono', ui-monospace, monospace;
           font-size: 11px;
           letter-spacing: 0.22em;
           text-transform: uppercase;
           color: var(--text-eyebrow);
         }
         .ds-hero__credit-attribution {
-          font-family: 'Playfair Display', Georgia, serif;
+          font-family: 'Sancreek', Georgia, serif;
           font-style: italic;
           font-weight: 400;
           font-size: 18px;
@@ -641,8 +641,8 @@ const HeroSection = (_props: HeroSectionProps) => {
           width: 100%;
           max-width: 420px;
           margin: 32px auto 0;
-          background: #f8f2e7;
-          border: 1px solid var(--rule-faint);
+          background: #f4ecd6;
+          border: 1px solid #d8c89e;
           border-radius: 8px;
           padding: 18px 18px 16px;
           display: flex;
@@ -660,7 +660,7 @@ const HeroSection = (_props: HeroSectionProps) => {
           position: absolute;
           top: 8px; left: 18px; right: 18px;
           display: flex; justify-content: space-between; align-items: center;
-          font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+          font-family: 'IBM Plex Mono', ui-monospace, monospace;
           font-size: 10px;
           letter-spacing: 0.24em;
           text-transform: uppercase;
@@ -680,8 +680,8 @@ const HeroSection = (_props: HeroSectionProps) => {
           flex-shrink: 0;
           width: 64px; height: 64px;
           border-radius: 999px;
-          background: var(--accent-gold);
-          color: #f1ebdf;
+          background: linear-gradient(135deg, #d4af37, #f3e5ab 45%, #b8860b);
+          color: #3a2406;
           border: none;
           display: inline-flex; align-items: center; justify-content: center;
           cursor: pointer;
@@ -708,7 +708,7 @@ const HeroSection = (_props: HeroSectionProps) => {
           margin-top: 14px;
         }
         .ds-hero__cassette-song {
-          font-family: 'Playfair Display', Georgia, serif;
+          font-family: 'Sancreek', Georgia, serif;
           font-style: italic;
           font-weight: 700;
           font-size: 18px;
@@ -724,14 +724,14 @@ const HeroSection = (_props: HeroSectionProps) => {
           font-family: 'DM Sans', system-ui, sans-serif;
           font-size: 13px;
           line-height: 1.4;
-          color: var(--text-primary);
+          color: #2a2118;
           margin: 0;
         }
         .ds-hero__cassette-venue {
           font-family: 'DM Sans', system-ui, sans-serif;
           font-size: 12px;
           line-height: 1.4;
-          color: var(--text-soft);
+          color: #6b665c;
           margin: 0;
           white-space: nowrap;
           overflow: hidden;
@@ -739,7 +739,7 @@ const HeroSection = (_props: HeroSectionProps) => {
         }
         .ds-hero__cassette-hint {
           margin-top: 10px;
-          font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+          font-family: 'IBM Plex Mono', ui-monospace, monospace;
           font-size: 11px;
           letter-spacing: 0.18em;
           text-transform: uppercase;
