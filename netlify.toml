@@ -2,18 +2,5 @@
   command = "npm run build"
   publish = "dist"
 
-# Restore Lovable's OAuth gateway. Social login redirects to /~oauth/initiate,
-# which Lovable's hosting used to serve. Forward it to Lovable's still-published
-# app, which 302s on to oauth.lovable.app with the project_id. Must precede the
-# SPA catch-all. (Temporary — until Google OAuth moves to our own Supabase client.)
-[[redirects]]
-  from = "/~oauth/*"
-  to = "https://dead-set-org.lovable.app/~oauth/:splat"
-  status = 302
-  force = true
-
-# SPA fallback — let React Router handle client-side routes.
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
+# Redirect rules (SPA fallback + the /~oauth gateway) live in public/_redirects,
+# which Netlify processes first — keeping them here too would be ignored/conflict.
