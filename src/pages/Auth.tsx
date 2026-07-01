@@ -145,6 +145,18 @@ const Auth = () => {
                   ? "Create your free account — start building setlists in seconds."
                   : "Sign in to your setlists"}
             </p>
+            {isSignUp && !isForgot && (
+              <button
+                type="button"
+                onClick={() => setIsSignUp(false)}
+                className="font-body text-sm text-foreground"
+              >
+                Already have an account?{" "}
+                <span className="font-semibold text-primary underline underline-offset-2">
+                  Sign in
+                </span>
+              </button>
+            )}
           </div>
 
           {isInApp && (
@@ -257,14 +269,14 @@ const Auth = () => {
                 Back to sign in
               </button>
             ) : isSignUp ? (
-              <div className="w-full rounded-xl border border-border bg-card/40 p-4 flex flex-col items-center gap-2">
-                <p className="font-body text-sm text-muted-foreground">
+              <div className="w-full rounded-xl border border-border bg-card p-4 flex flex-col items-center gap-2">
+                <p className="font-body text-sm text-card-foreground">
                   Already have an account?
                 </p>
                 <Button
                   type="button"
                   variant="outline"
-                  className="w-full font-body"
+                  className="w-full font-body border-primary/60 text-primary hover:bg-primary/10"
                   onClick={() => setIsSignUp(false)}
                 >
                   Sign in instead
