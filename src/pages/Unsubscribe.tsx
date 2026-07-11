@@ -78,14 +78,14 @@ const Unsubscribe = () => {
         <div className="w-full max-w-sm text-center space-y-6">
           <StealYourFace size={64} />
           {status === "loading" && (
-            <p className="font-body text-muted-foreground">Checking your request…</p>
+            <p className="font-body text-foreground/75">Checking your request…</p>
           )}
           {status === "valid" && (
             <>
               <h1 className="font-display text-2xl text-foreground">
                 {kind === "dispatch" ? "Off the list?" : "Unsubscribe"}
               </h1>
-              <p className="font-body text-muted-foreground">
+              <p className="font-body text-foreground/75">
                 {kind === "dispatch"
                   ? "You'll stop receiving dispatches from the lab. Auth and account emails are not affected."
                   : "You'll stop receiving app emails from Dead-Set.Org. Auth emails (password resets, etc.) are not affected."}
@@ -100,7 +100,7 @@ const Unsubscribe = () => {
               <h1 className="font-display text-2xl text-foreground">
                 {kind === "dispatch" ? "Off the list." : "You're unsubscribed"}
               </h1>
-              <p className="font-body text-muted-foreground">
+              <p className="font-body text-foreground/75">
                 {kind === "dispatch"
                   ? "Off the list. The tapes are still here whenever you want them. Come back anytime."
                   : "We won't send you any more app emails. The music never stopped — but the emails did. ⚡"}
@@ -110,7 +110,7 @@ const Unsubscribe = () => {
           {status === "already" && (
             <>
               <h1 className="font-display text-2xl text-foreground">Already off the list</h1>
-              <p className="font-body text-muted-foreground">
+              <p className="font-body text-foreground/75">
                 {kind === "dispatch"
                   ? "You're already off the dispatch list. The tapes are still here whenever you want them."
                   : "You've already unsubscribed from app emails."}
@@ -120,7 +120,7 @@ const Unsubscribe = () => {
           {status === "invalid" && (
             <>
               <h1 className="font-display text-2xl text-foreground">Invalid link</h1>
-              <p className="font-body text-muted-foreground">
+              <p className="font-body text-foreground/75">
                 This unsubscribe link is invalid or expired.
               </p>
             </>
@@ -128,7 +128,7 @@ const Unsubscribe = () => {
           {status === "error" && (
             <>
               <h1 className="font-display text-2xl text-foreground">Something went wrong</h1>
-              <p className="font-body text-muted-foreground">
+              <p className="font-body text-foreground/75">
                 We couldn't process your request. Please try again later.
               </p>
             </>

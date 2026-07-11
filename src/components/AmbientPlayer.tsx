@@ -150,16 +150,16 @@ const AmbientPlayer = () => {
       </div>
 
       {/* Track info */}
-      <span className="text-base sm:text-lg font-body text-primary group-hover:text-primary/90 transition-colors truncate min-w-0">
+      <span className="text-base sm:text-lg font-body text-dead-gold group-hover:text-dead-gold/90 transition-colors truncate min-w-0">
         {labelPrefix && (
-          <span className="text-[10px] uppercase tracking-[0.15em] text-primary/60 mr-2 font-mono">
+          <span className="text-[10px] uppercase tracking-[0.15em] text-dead-gold mr-2 font-mono">
             {labelPrefix}
           </span>
         )}
         <span className="font-semibold">{display.title}</span>
         {(display.venue || display.date) && (
           <>
-            <span className="text-muted-foreground mx-1.5">—</span>
+            <span className="text-foreground/60 mx-1.5">—</span>
             <span className="text-[hsl(var(--dead-cream))]">
               {display.venue}{display.venue && display.date ? ", " : ""}{display.date}
             </span>

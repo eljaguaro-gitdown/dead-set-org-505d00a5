@@ -156,7 +156,7 @@ const AdminNotificationClicks = () => {
   if (!isAdmin) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-8">
-        <p className="font-body text-muted-foreground">Access denied.</p>
+        <p className="font-body text-foreground/75">Access denied.</p>
       </div>
     );
   }
@@ -167,7 +167,7 @@ const AdminNotificationClicks = () => {
         <Button
           variant="ghost"
           onClick={() => navigate("/admin")}
-          className="mb-8 -ml-3 text-muted-foreground hover:text-foreground"
+          className="mb-8 -ml-3 text-foreground/75 hover:text-foreground"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to admin
@@ -177,7 +177,7 @@ const AdminNotificationClicks = () => {
           <h1 className="font-display text-4xl text-foreground mb-2">
             Notification Click Analytics
           </h1>
-          <p className="font-body text-muted-foreground">
+          <p className="font-body text-foreground/75">
             Tracking CTA clicks from the bell — announcements & comment notifications.
           </p>
         </header>

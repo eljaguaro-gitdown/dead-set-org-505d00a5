@@ -104,7 +104,7 @@ const ShareAppButton = ({ variant = "icon", className = "" }: ShareAppButtonProp
     return (
       <button
         onClick={handleNativeShare}
-        className={`flex items-center gap-1.5 text-xs font-mono text-muted-foreground hover:text-primary transition-colors tracking-wider uppercase ${className}`}
+        className={`flex items-center gap-1.5 text-xs font-mono text-foreground/75 hover:text-foreground transition-colors tracking-wider uppercase ${className}`}
         title="Share Dead Set"
       >
         <Share2 className="w-3.5 h-3.5" />
@@ -126,7 +126,7 @@ const ShareAppButton = ({ variant = "icon", className = "" }: ShareAppButtonProp
           </Button>
         ) : (
           <button
-            className={`flex items-center gap-1.5 text-xs font-mono text-muted-foreground hover:text-primary transition-colors tracking-wider uppercase ${className}`}
+            className={`flex items-center gap-1.5 text-xs font-mono text-foreground/75 hover:text-foreground transition-colors tracking-wider uppercase ${className}`}
             title="Share Dead Set"
           >
             <Share2 className="w-3.5 h-3.5" />

@@ -95,7 +95,7 @@ const AdminAnnouncementsPanel = () => {
       <div className="px-4 py-3 border-b border-border flex items-center gap-2">
         <Megaphone className="w-4 h-4 text-muted-foreground" />
         <h2 className="font-display text-sm text-card-foreground">Broadcast Announcement</h2>
-        <span className="font-mono text-[10px] text-muted-foreground/60 tracking-wider uppercase ml-auto">
+        <span className="font-mono text-[10px] text-muted-foreground tracking-wider uppercase ml-auto">
           Sent to all signed-in users
         </span>
       </div>
@@ -167,7 +167,7 @@ const AdminAnnouncementsPanel = () => {
                     <div className="flex items-center gap-2">
                       <h4 className="font-display text-sm text-card-foreground">{a.title}</h4>
                       {!a.published && (
-                        <span className="font-mono text-[9px] text-muted-foreground/60 tracking-wider uppercase border border-border rounded px-1.5 py-0.5">
+                        <span className="font-mono text-[9px] text-muted-foreground tracking-wider uppercase border border-border rounded px-1.5 py-0.5">
                           Hidden
                         </span>
                       )}
@@ -176,11 +176,11 @@ const AdminAnnouncementsPanel = () => {
                       {a.body}
                     </p>
                     {a.cta_label && a.cta_url && (
-                      <p className="font-mono text-[10px] text-primary/70 mt-1 tracking-wider">
+                      <p className="font-mono text-[10px] text-accent-foreground mt-1 tracking-wider">
                         CTA: {a.cta_label} → {a.cta_url}
                       </p>
                     )}
-                    <p className="font-mono text-[10px] text-muted-foreground/60 mt-1 tracking-wider uppercase">
+                    <p className="font-mono text-[10px] text-muted-foreground mt-1 tracking-wider uppercase">
                       {formatDistanceToNow(new Date(a.created_at), { addSuffix: true })}
                     </p>
                   </div>

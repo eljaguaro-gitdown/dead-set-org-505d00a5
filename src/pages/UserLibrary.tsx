@@ -167,7 +167,7 @@ const UserLibrary = () => {
         {/* Back button */}
         <button
           onClick={() => navigate(-1)}
-          className="flex items-center gap-1.5 font-body text-sm text-muted-foreground hover:text-foreground transition-colors mb-6"
+          className="flex items-center gap-1.5 font-body text-sm text-foreground/75 hover:text-foreground transition-colors mb-6"
         >
           <ArrowLeft className="w-4 h-4" />
           Back
@@ -183,7 +183,7 @@ const UserLibrary = () => {
           </Avatar>
           <div>
             <h1 className="font-display text-3xl sm:text-2xl text-foreground">{displayName}</h1>
-            <p className="font-body text-sm text-muted-foreground">
+            <p className="font-body text-sm text-foreground/75">
               {loading ? "Loading..." : isAdmin
                 ? `${setlists.length} setlist${setlists.length !== 1 ? "s" : ""} (${setlists.filter(s => !s.is_public).length} private)`
                 : `${setlists.length} set${setlists.length !== 1 ? "s" : ""} shared with the lot`
@@ -202,7 +202,7 @@ const UserLibrary = () => {
         ) : setlists.length === 0 ? (
           <div className="text-center py-20">
             <Music className="w-10 h-10 text-muted-foreground/40 mx-auto mb-3" />
-            <p className="font-display text-lg text-muted-foreground">No public setlists yet</p>
+            <p className="font-display text-lg text-foreground/75">No public setlists yet</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -225,7 +225,7 @@ const UserLibrary = () => {
                           {setlist.title}
                         </h3>
                         {!setlist.is_public && (
-                          <Lock className="w-3 h-3 text-muted-foreground/60 shrink-0" />
+                          <Lock className="w-3 h-3 text-muted-foreground shrink-0" />
                         )}
                       </div>
                       <FavoriteButton isFavorite={isFavorite(setlist.id)} onToggle={() => handleToggleFav(setlist.id)} />
@@ -243,7 +243,7 @@ const UserLibrary = () => {
                       )}
                       <span className="text-[10px] font-body text-muted-foreground">{setlist.slot_count} songs</span>
                       {setlist.upvote_count > 0 && (
-                        <span className="text-[10px] font-body text-primary flex items-center gap-0.5">
+                        <span className="text-[10px] font-body text-accent-foreground flex items-center gap-0.5">
                           <Zap className="w-2.5 h-2.5 fill-primary" /> {setlist.upvote_count}
                         </span>
                       )}
@@ -256,10 +256,10 @@ const UserLibrary = () => {
                     {setlist.preview_songs.length > 0 && (
                       <div className="mt-3 pt-2 border-t border-border/20 space-y-0.5">
                         {setlist.preview_songs.map((name, j) => (
-                          <p key={j} className="text-xs font-body text-muted-foreground/70 truncate leading-relaxed">{name}</p>
+                          <p key={j} className="text-xs font-body text-muted-foreground truncate leading-relaxed">{name}</p>
                         ))}
                         {setlist.slot_count > setlist.preview_songs.length && (
-                          <p className="text-[9px] font-body text-muted-foreground/30">
+                          <p className="text-[9px] font-body text-muted-foreground">
                             ...and {setlist.slot_count - setlist.preview_songs.length} more
                           </p>
                         )}

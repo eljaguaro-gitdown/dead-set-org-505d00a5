@@ -246,7 +246,7 @@ const BuildFromShowDialog = ({ open, onOpenChange, onSeed, initialDate }: BuildF
                 <div className="font-body text-sm text-muted-foreground">{preview.venue}</div>
               )}
               <div className="flex flex-wrap gap-2 pt-1">
-                <span className="text-xs font-body px-2 py-1 rounded-md bg-primary/10 text-primary">
+                <span className="text-xs font-body px-2 py-1 rounded-md bg-primary/10 text-accent-foreground">
                   {preview.totalTracks} song{preview.totalTracks === 1 ? "" : "s"}
                 </span>
                 {preview.setBreakdown.map(({ setNumber, count }) => (
@@ -265,7 +265,7 @@ const BuildFromShowDialog = ({ open, onOpenChange, onSeed, initialDate }: BuildF
                   href={preview.seed.archiveUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 text-sm font-body text-primary hover:underline pt-1"
+                  className="inline-flex items-center gap-1.5 text-sm font-body text-accent-foreground hover:underline pt-1"
                 >
                   <ExternalLink className="w-3.5 h-3.5" />
                   Source #1 on archive.org
@@ -447,7 +447,7 @@ const BuildFromShowDialog = ({ open, onOpenChange, onSeed, initialDate }: BuildF
           <p className="text-sm text-muted-foreground font-body leading-relaxed flex items-start gap-1.5 pt-2">
             <ExternalLink className="w-4 h-4 mt-0.5 shrink-0 opacity-60" />
             <span>
-              Setlist data sourced from <span className="text-primary">archive.org</span>.
+              Setlist data sourced from <span className="text-accent-foreground">archive.org</span>.
               Coverage is excellent for ’72 onward; a few early shows may be missing.
             </span>
           </p>

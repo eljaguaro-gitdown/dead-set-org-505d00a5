@@ -62,7 +62,7 @@ const ResetPassword = () => {
           <div className="flex flex-col items-center gap-3">
             <StealYourFace size={80} />
             <h1 className="font-display text-4xl text-primary">Dead-Set.Org</h1>
-            <p className="font-hand text-xl text-muted-foreground">
+            <p className="font-hand text-xl text-foreground/85">
               Pick a new password.
             </p>
           </div>
@@ -106,7 +106,7 @@ const ResetPassword = () => {
               </Button>
             </form>
           ) : (
-            <p className="text-center text-muted-foreground font-body">
+            <p className="text-center text-foreground/75 font-body">
               Loading your reset session...
             </p>
           )}
@@ -114,7 +114,7 @@ const ResetPassword = () => {
           <div className="flex flex-col items-center">
             <button
               onClick={() => navigate("/")}
-              className="font-mono text-[10px] text-muted-foreground/40 hover:text-muted-foreground tracking-widest uppercase transition-colors"
+              className="font-mono text-[10px] text-foreground/60 hover:text-foreground tracking-widest uppercase transition-colors"
             >
               ← Back to Dead Set
             </button>

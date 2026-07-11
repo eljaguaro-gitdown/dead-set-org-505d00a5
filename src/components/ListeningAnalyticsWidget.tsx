@@ -185,7 +185,7 @@ const ListeningAnalyticsWidget = ({ enabled }: Props) => {
               onClick={() => setWindowKey(w.key)}
               className={`px-2 py-0.5 rounded-md text-sm font-body transition-colors ${
                 windowKey === w.key
-                  ? "bg-primary/15 text-primary"
+                  ? "bg-primary/15 text-accent-foreground"
                   : "text-muted-foreground hover:text-card-foreground"
               }`}
             >
@@ -233,7 +233,7 @@ const ListeningAnalyticsWidget = ({ enabled }: Props) => {
                     <span className="text-card-foreground truncate pr-2">
                       {s.title}
                     </span>
-                    <span className="text-primary tabular-nums">
+                    <span className="text-accent-foreground tabular-nums">
                       {s.count}
                     </span>
                   </li>
@@ -248,9 +248,9 @@ const ListeningAnalyticsWidget = ({ enabled }: Props) => {
 };
 
 const Stat = ({ label, value }: { label: string; value: string }) => (
-  <div className="bg-background/40 border border-border/60 rounded-lg p-3">
-    <div className="text-sm text-muted-foreground font-body">{label}</div>
-    <div className="text-2xl font-display text-primary tabular-nums">
+  <div className="bg-background/10 border border-border/60 rounded-lg p-3">
+    <div className="text-sm text-card-foreground/75 font-body">{label}</div>
+    <div className="text-2xl font-display text-accent-foreground tabular-nums">
       {value}
     </div>
   </div>

@@ -314,7 +314,7 @@ const CosmicCharlieWelcome = ({ eras, onGenerated, onSkip }: CosmicCharlieWelcom
                 <p className="font-display text-lg text-foreground">
                   Cosmic Charlie is digging through the tapes...
                 </p>
-                <p className="font-body text-sm text-muted-foreground">
+                <p className="font-body text-sm text-foreground/75">
                   Every show, every setlist, every jam — Charlie remembers
                 </p>
               </div>
@@ -333,7 +333,7 @@ const CosmicCharlieWelcome = ({ eras, onGenerated, onSkip }: CosmicCharlieWelcom
                   />
                 ))}
               </div>
-              <p className="font-mono text-[10px] tracking-[0.22em] text-muted-foreground/60 uppercase">
+              <p className="font-mono text-[10px] tracking-[0.22em] text-foreground/60 uppercase">
                 Usually about 5 seconds
               </p>
             </motion.div>
@@ -380,13 +380,13 @@ const CosmicCharlieWelcome = ({ eras, onGenerated, onSkip }: CosmicCharlieWelcom
                       <h1 className="font-display text-2xl sm:text-3xl text-primary leading-tight">
                         Welcome to Dead-Set.Org
                       </h1>
-                      <p className="font-mono text-[10px] tracking-[0.28em] text-muted-foreground/50 uppercase">
+                      <p className="font-mono text-[10px] tracking-[0.28em] text-foreground/60 uppercase">
                         Wake. Now. Discover.
                       </p>
                     </div>
 
-                    <p className="font-body text-base text-muted-foreground leading-relaxed text-center max-w-md px-2">
-                      <span className="text-primary font-medium">Charlie</span> knows every show the Dead ever played. Tell him your vibe, or hit Surprise Me and let him cook.
+                    <p className="font-body text-base text-foreground/75 leading-relaxed text-center max-w-md px-2">
+                      <span className="text-dead-gold font-medium">Charlie</span> knows every show the Dead ever played. Tell him your vibe, or hit Surprise Me and let him cook.
                     </p>
 
                     <div className="w-full flex flex-col sm:flex-row gap-2.5">
@@ -401,7 +401,7 @@ const CosmicCharlieWelcome = ({ eras, onGenerated, onSkip }: CosmicCharlieWelcom
                         size="lg"
                         variant="outline"
                         onClick={goNext}
-                        className="flex-1 gap-2 text-base px-6 py-5 border-primary/50 text-primary hover:bg-primary/10"
+                        className="flex-1 gap-2 text-base px-6 py-5 border-primary/50 text-dead-gold hover:bg-primary/10"
                       >
                         Customize my show
                         <ChevronRight className="w-4 h-4" />
@@ -410,7 +410,7 @@ const CosmicCharlieWelcome = ({ eras, onGenerated, onSkip }: CosmicCharlieWelcom
 
                     <button
                       onClick={onSkip}
-                      className="font-body text-sm text-muted-foreground/70 hover:text-muted-foreground transition-colors underline underline-offset-4 decoration-muted-foreground/30 hover:decoration-muted-foreground/60"
+                      className="font-body text-sm text-foreground/75 hover:text-foreground transition-colors underline underline-offset-4 decoration-muted-foreground/30 hover:decoration-muted-foreground/60"
                     >
                       I'll build my own setlist instead
                     </button>
@@ -433,7 +433,7 @@ const CosmicCharlieWelcome = ({ eras, onGenerated, onSkip }: CosmicCharlieWelcom
                       <h1 className="font-display text-2xl sm:text-3xl text-primary">
                         What kind of night is it?
                       </h1>
-                      <p className="font-body text-sm text-muted-foreground">Pick one energy</p>
+                      <p className="font-body text-sm text-foreground/75">Pick one energy</p>
                     </div>
 
                     {/* Energy — single select, 3 columns */}
@@ -461,7 +461,7 @@ const CosmicCharlieWelcome = ({ eras, onGenerated, onSkip }: CosmicCharlieWelcom
                             </motion.span>
                             <span
                               className={`font-body text-xs ${
-                                active ? "text-primary font-medium" : "text-card-foreground"
+                                active ? "text-accent-foreground font-medium" : "text-card-foreground"
                               }`}
                             >
                               {e.label}
@@ -472,7 +472,7 @@ const CosmicCharlieWelcome = ({ eras, onGenerated, onSkip }: CosmicCharlieWelcom
                     </div>
 
                     {/* Section divider */}
-                    <p className="font-body text-xs text-muted-foreground uppercase tracking-wider">
+                    <p className="font-body text-xs text-foreground/75 uppercase tracking-wider">
                       Texture — pick one or two
                     </p>
 
@@ -501,7 +501,7 @@ const CosmicCharlieWelcome = ({ eras, onGenerated, onSkip }: CosmicCharlieWelcom
                             </motion.span>
                             <span
                               className={`font-body text-xs ${
-                                active ? "text-primary font-medium" : "text-card-foreground"
+                                active ? "text-accent-foreground font-medium" : "text-card-foreground"
                               }`}
                             >
                               {t.label}
@@ -512,7 +512,7 @@ const CosmicCharlieWelcome = ({ eras, onGenerated, onSkip }: CosmicCharlieWelcom
                     </div>
 
                     {/* Era — peer section to Texture, equal real estate */}
-                    <p className="font-body text-xs text-muted-foreground uppercase tracking-wider">
+                    <p className="font-body text-xs text-foreground/75 uppercase tracking-wider">
                       Era — pick one (optional)
                     </p>
 
@@ -539,12 +539,12 @@ const CosmicCharlieWelcome = ({ eras, onGenerated, onSkip }: CosmicCharlieWelcom
                             >
                               <span
                                 className={`font-marker text-sm leading-tight text-center ${
-                                  active ? "text-primary" : "text-card-foreground"
+                                  active ? "text-accent-foreground" : "text-card-foreground"
                                 }`}
                               >
                                 {era.name}
                               </span>
-                              <span className="text-[10px] font-mono text-muted-foreground/70 tracking-wide">
+                              <span className="text-[10px] font-mono text-muted-foreground tracking-wide">
                                 {era.year_start}–{era.year_end}
                               </span>
                             </motion.button>
@@ -566,7 +566,7 @@ const CosmicCharlieWelcome = ({ eras, onGenerated, onSkip }: CosmicCharlieWelcom
                       variant="outline"
                       size="lg"
                       onClick={() => handleGenerate(undefined)}
-                      className="w-full gap-2 text-base border-primary/40 text-primary hover:bg-primary/10"
+                      className="w-full gap-2 text-base border-primary/40 text-dead-gold hover:bg-primary/10"
                     >
                       🎲 Surprise me — build now
                     </Button>
@@ -589,7 +589,7 @@ const CosmicCharlieWelcome = ({ eras, onGenerated, onSkip }: CosmicCharlieWelcom
                       <h1 className="font-display text-2xl sm:text-3xl text-primary">
                         What's the one thing that matters most?
                       </h1>
-                      <p className="font-body text-sm text-muted-foreground">
+                      <p className="font-body text-sm text-foreground/75">
                         Pick one — this shapes the whole night
                       </p>
                     </div>
@@ -634,7 +634,7 @@ const CosmicCharlieWelcome = ({ eras, onGenerated, onSkip }: CosmicCharlieWelcom
                             <div className="flex flex-col gap-0.5">
                               <span
                                 className={`font-body text-sm font-semibold ${
-                                  active ? "text-primary" : "text-card-foreground"
+                                  active ? "text-accent-foreground" : "text-card-foreground"
                                 }`}
                               >
                                 {p.title}
@@ -651,7 +651,7 @@ const CosmicCharlieWelcome = ({ eras, onGenerated, onSkip }: CosmicCharlieWelcom
                     <div className="flex items-center gap-4 w-full">
                       <button
                         onClick={goBack}
-                        className="font-body text-sm text-muted-foreground hover:text-foreground transition-colors"
+                        className="font-body text-sm text-foreground/75 hover:text-foreground transition-colors"
                       >
                         ← Back
                       </button>
@@ -669,7 +669,7 @@ const CosmicCharlieWelcome = ({ eras, onGenerated, onSkip }: CosmicCharlieWelcom
                       variant="outline"
                       size="lg"
                       onClick={() => handleGenerate(undefined)}
-                      className="w-full gap-2 text-base border-primary/40 text-primary hover:bg-primary/10"
+                      className="w-full gap-2 text-base border-primary/40 text-dead-gold hover:bg-primary/10"
                     >
                       🎲 Surprise me — build now
                     </Button>
@@ -692,14 +692,14 @@ const CosmicCharlieWelcome = ({ eras, onGenerated, onSkip }: CosmicCharlieWelcom
                       <h1 className="font-display text-2xl sm:text-3xl text-primary">
                         Anything specific?
                       </h1>
-                      <p className="font-body text-sm text-muted-foreground">
+                      <p className="font-body text-sm text-foreground/75">
                         All optional — skip straight to Charlie if you want
                       </p>
                     </div>
 
                     <div className="w-full space-y-4">
                       <div className="space-y-1.5">
-                        <label className="font-body text-xs text-muted-foreground uppercase tracking-wider">
+                        <label className="font-body text-xs text-foreground/75 uppercase tracking-wider">
                           Must include
                         </label>
                         <Input
@@ -710,7 +710,7 @@ const CosmicCharlieWelcome = ({ eras, onGenerated, onSkip }: CosmicCharlieWelcom
                         />
                       </div>
                       <div className="space-y-1.5">
-                        <label className="font-body text-xs text-muted-foreground uppercase tracking-wider">
+                        <label className="font-body text-xs text-foreground/75 uppercase tracking-wider">
                           Please avoid
                         </label>
                         <Input
@@ -722,7 +722,7 @@ const CosmicCharlieWelcome = ({ eras, onGenerated, onSkip }: CosmicCharlieWelcom
                       </div>
                       {/* Gold-bordered invitation field */}
                       <div className="space-y-1.5 border-l-2 border-[hsl(var(--dead-gold))] pl-3.5 bg-primary/5 rounded-r-lg py-2.5 pr-3">
-                        <label className="font-body text-xs text-muted-foreground uppercase tracking-wider">
+                        <label className="font-body text-xs text-foreground/75 uppercase tracking-wider">
                           What does a perfect night feel like to you?
                         </label>
                         <Input
@@ -737,7 +737,7 @@ const CosmicCharlieWelcome = ({ eras, onGenerated, onSkip }: CosmicCharlieWelcom
                     <div className="flex items-center gap-4 w-full">
                       <button
                         onClick={goBack}
-                        className="font-body text-sm text-muted-foreground hover:text-foreground transition-colors"
+                        className="font-body text-sm text-foreground/75 hover:text-foreground transition-colors"
                       >
                         ← Back
                       </button>
@@ -753,7 +753,7 @@ const CosmicCharlieWelcome = ({ eras, onGenerated, onSkip }: CosmicCharlieWelcom
 
                     <button
                       onClick={onSkip}
-                      className="font-body text-xs text-muted-foreground/60 hover:text-muted-foreground transition-colors underline underline-offset-2"
+                      className="font-body text-xs text-foreground/60 hover:text-foreground transition-colors underline underline-offset-2"
                     >
                       or build from scratch →
                     </button>

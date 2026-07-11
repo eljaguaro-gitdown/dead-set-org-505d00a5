@@ -188,7 +188,7 @@ const Messages = () => {
       <SiteHeader>
         <button
           onClick={() => navigate("/my-setlists")}
-          className="text-xs font-mono text-muted-foreground hover:text-foreground transition-colors tracking-wider uppercase"
+          className="text-xs font-mono text-foreground/75 hover:text-foreground transition-colors tracking-wider uppercase"
         >
           My Setlists
         </button>
@@ -256,7 +256,7 @@ const Messages = () => {
                         {selectedUsers.map((u) => (
                           <span
                             key={u.user_id}
-                            className="inline-flex items-center gap-1 bg-primary/20 text-primary text-[10px] font-body px-2 py-0.5 rounded-full"
+                            className="inline-flex items-center gap-1 bg-primary/20 text-accent-foreground text-[10px] font-body px-2 py-0.5 rounded-full"
                           >
                             {u.display_name}
                             <button onClick={() => setSelectedUsers((prev) => prev.filter((p) => p.user_id !== u.user_id))}>
@@ -292,7 +292,7 @@ const Messages = () => {
                             >
                               <Avatar className="w-8 h-8">
                                 <AvatarImage src={u.avatar_url || undefined} />
-                                <AvatarFallback className="bg-primary/20 text-primary text-xs">
+                                <AvatarFallback className="bg-primary/20 text-accent-foreground text-xs">
                                   {(u.display_name || "?")[0].toUpperCase()}
                                 </AvatarFallback>
                               </Avatar>
@@ -332,7 +332,7 @@ const Messages = () => {
                 <div className="flex flex-col items-center justify-center h-full gap-3 px-6">
                   <MessageCircle className="w-10 h-10 text-muted-foreground/30" />
                   <p className="text-sm text-muted-foreground font-body text-center">
-                    No conversations yet. Tap <span className="text-primary">+</span> to start one.
+                    No conversations yet. Tap <span className="text-accent-foreground">+</span> to start one.
                   </p>
                 </div>
               )}
@@ -352,7 +352,7 @@ const Messages = () => {
                     <div className="relative shrink-0">
                       <Avatar className="w-10 h-10">
                         <AvatarImage src={conv.otherUserAvatar || undefined} />
-                        <AvatarFallback className="bg-primary/20 text-primary text-sm">
+                        <AvatarFallback className="bg-primary/20 text-accent-foreground text-sm">
                           {conv.otherUserName[0].toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
@@ -405,7 +405,7 @@ const Messages = () => {
                     <div className="relative">
                       <Avatar className="w-8 h-8">
                         <AvatarImage src={activeConv.otherUserAvatar || undefined} />
-                        <AvatarFallback className="bg-primary/20 text-primary text-xs">
+                        <AvatarFallback className="bg-primary/20 text-accent-foreground text-xs">
                           {activeConv.otherUserName[0].toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
@@ -422,7 +422,7 @@ const Messages = () => {
                       </p>
                     )}
                     {!activeConv.isGroup && onlineUserIds.has(activeConv.otherUserId) && (
-                      <p className="text-[10px] text-green-500 font-body">Online</p>
+                      <p className="text-[10px] text-emerald-700 font-body">Online</p>
                     )}
                   </div>
                 </>
@@ -432,7 +432,7 @@ const Messages = () => {
             {/* Messages */}
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
               {messages.length === 0 && (
-                <p className="text-xs text-muted-foreground font-body text-center mt-8">
+                <p className="text-xs text-foreground/75 font-body text-center mt-8">
                   Send a message to start the conversation ✌️
                 </p>
               )}
@@ -440,7 +440,7 @@ const Messages = () => {
                 const isMe = msg.senderId === user?.id;
                 return (
                   <div key={msg.id} className={`flex flex-col ${isMe ? "items-end" : "items-start"}`}>
-                    <span className="text-[10px] text-muted-foreground font-body mb-0.5">
+                    <span className="text-[10px] text-foreground/75 font-body mb-0.5">
                       {msg.senderName} · {formatTime(msg.createdAt)}
                     </span>
                     <MessageBody content={msg.content} isMe={isMe} />
@@ -478,7 +478,7 @@ const Messages = () => {
           <div className="flex-1 flex items-center justify-center bg-background">
             <div className="text-center">
               <MessageCircle className="w-12 h-12 text-muted-foreground/20 mx-auto mb-3" />
-              <p className="text-sm text-muted-foreground font-body">Select a conversation or start a new one</p>
+              <p className="text-sm text-foreground/75 font-body">Select a conversation or start a new one</p>
             </div>
           </div>
         )}

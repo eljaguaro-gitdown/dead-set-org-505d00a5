@@ -213,7 +213,7 @@ const SortableSlotItem = ({
               </div>
             )}
             {!slot.version && slot.notes?.startsWith("From ") && (
-              <div className="mt-1 inline-flex items-center gap-1.5 rounded-[6px] border border-primary/30 bg-primary/10 px-2 py-0.5 text-xs font-body text-primary">
+              <div className="mt-1 inline-flex items-center gap-1.5 rounded-[6px] border border-primary/30 bg-primary/10 px-2 py-0.5 text-xs font-body text-accent-foreground">
                 <span className="opacity-70">Source:</span>
                 <span>{slot.notes.replace(/^From\s+/, "")}</span>
               </div>
@@ -251,7 +251,7 @@ const SortableSlotItem = ({
                   href={archiveResult.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-1 text-[10px] text-secondary hover:text-primary transition-colors font-body"
+                  className="flex items-center gap-1 text-[10px] text-accent-foreground hover:text-accent-foreground/80 transition-colors font-body"
                   title="Open on Archive.org"
                 >
                   <ExternalLink className="w-3 h-3" />
@@ -277,7 +277,7 @@ const SortableSlotItem = ({
               </div>
             )}
             {archiveLoading && !archiveResult && (
-              <span className="text-[10px] text-muted-foreground/50 font-body mt-1 block">
+              <span className="text-[10px] text-muted-foreground font-body mt-1 block">
                 Finding on Archive.org…
               </span>
             )}
@@ -337,7 +337,7 @@ const SetSection = ({
 
   return (
     <div className="space-y-1">
-      <h3 className="font-display text-sm text-muted-foreground uppercase tracking-wider px-2 py-2">
+      <h3 className="font-display text-sm text-foreground/75 uppercase tracking-wider px-2 py-2">
         {title}
       </h3>
       <div
@@ -346,7 +346,7 @@ const SetSection = ({
       >
         {setSlots.length === 0 && (
           <div className="border border-dashed border-border rounded-lg p-6 text-center">
-            <p className="text-sm text-muted-foreground font-body">
+            <p className="text-sm text-foreground/75 font-body">
               {setNumber === 1
                 ? "Every great show starts with the first note."
                 : "Drop songs here"}
@@ -380,7 +380,7 @@ const DescriptionCollapsible = ({ description, defaultOpen = true }: { descripti
     <div>
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-1.5 text-xs font-body text-primary/80 hover:text-primary transition-colors py-1"
+        className="flex items-center gap-1.5 text-xs font-body text-dead-gold hover:text-dead-gold/80 transition-colors py-1"
       >
         <Sparkles className="w-3 h-3" />
         <span>Charlie's Liner Notes</span>
@@ -392,7 +392,7 @@ const DescriptionCollapsible = ({ description, defaultOpen = true }: { descripti
         transition={{ duration: 0.2 }}
         className="overflow-hidden"
       >
-        <p className="text-sm font-body text-muted-foreground italic leading-relaxed px-1 py-2 border-l-2 border-primary/40 pl-3">
+        <p className="text-sm font-body text-foreground/75 italic leading-relaxed px-1 py-2 border-l-2 border-primary/40 pl-3">
           {description}
         </p>
       </motion.div>
@@ -484,7 +484,7 @@ const SetlistDisplay = ({
                 variant="outline"
                 size="sm"
                 disabled={generatingDescription}
-                className="gap-1.5 border-primary/30 text-primary font-body text-xs h-8 px-3 hover:bg-primary/10 transition-all"
+                className="gap-1.5 border-primary/30 text-dead-gold font-body text-xs h-8 px-3 hover:bg-primary/10 transition-all"
               >
                 {generatingDescription ? (
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />

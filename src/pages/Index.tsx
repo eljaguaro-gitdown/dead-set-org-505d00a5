@@ -249,7 +249,7 @@ const Index = () => {
       <SiteHeader large>
         <button
           onClick={() => navigate("/browse")}
-          className="font-mono text-xs sm:text-[10px] tracking-[0.2em] text-muted-foreground hover:text-primary transition-colors uppercase min-h-[44px] flex items-center"
+          className="font-mono text-xs sm:text-[10px] tracking-[0.2em] text-foreground/75 hover:text-foreground transition-colors uppercase min-h-[44px] flex items-center"
         >
           Browse
         </button>
@@ -257,7 +257,7 @@ const Index = () => {
           <>
             <button
               onClick={() => navigate("/my-setlists")}
-              className="font-mono text-xs sm:text-[10px] tracking-[0.2em] text-muted-foreground hover:text-primary transition-colors uppercase min-h-[44px] flex items-center"
+              className="font-mono text-xs sm:text-[10px] tracking-[0.2em] text-foreground/75 hover:text-foreground transition-colors uppercase min-h-[44px] flex items-center"
             >
               My Setlists
             </button>
@@ -271,7 +271,7 @@ const Index = () => {
         ) : (
           <button
             onClick={() => navigate("/auth")}
-            className="font-mono text-xs sm:text-[10px] tracking-[0.2em] text-muted-foreground hover:text-primary transition-colors uppercase min-h-[44px] flex items-center"
+            className="font-mono text-xs sm:text-[10px] tracking-[0.2em] text-foreground/75 hover:text-foreground transition-colors uppercase min-h-[44px] flex items-center"
           >
             Sign In
           </button>
@@ -299,13 +299,13 @@ const Index = () => {
       {topRated.length > 0 && (
         <section id="top-community" className="py-16 sm:py-24 border-t border-border/30">
           <div className="px-6 sm:px-12 mb-10 max-w-3xl mx-auto text-center">
-            <div className="font-mono text-[10px] tracking-[0.3em] text-primary/70 uppercase mb-3">
+            <div className="font-mono text-[10px] tracking-[0.3em] text-dead-gold uppercase mb-3">
               ⚡ Most Loved
             </div>
             <h2 className="font-display italic text-3xl sm:text-5xl text-primary leading-tight">
               Top Community Setlists
             </h2>
-            <p className="font-body text-base sm:text-lg text-muted-foreground mt-4 max-w-xl mx-auto">
+            <p className="font-body text-base sm:text-lg text-foreground/75 mt-4 max-w-xl mx-auto">
               The ones other Deadheads keep coming back to. Ranked by likes and plays.
             </p>
           </div>
@@ -338,20 +338,20 @@ const Index = () => {
                     by {setlist.creator_name}
                   </Link>
                   <div className="flex items-center gap-3 mt-3 flex-wrap">
-                    <span className="inline-flex items-center gap-1 text-sm font-mono text-primary tabular-nums">
+                    <span className="inline-flex items-center gap-1 text-sm font-mono text-accent-foreground tabular-nums">
                       ⚡ {setlist.upvote_count}
                     </span>
                     {setlist.play_count > 0 && (
-                      <span className="text-sm font-mono text-muted-foreground/70 tabular-nums">
+                      <span className="text-sm font-mono text-muted-foreground tabular-nums">
                         ▶ {setlist.play_count}
                       </span>
                     )}
                     {setlist.era_name && (
-                      <span className="px-2 py-0.5 text-[10px] font-mono rounded-md border border-primary/20 text-primary/70 tracking-wider uppercase">
+                      <span className="px-2 py-0.5 text-[10px] font-mono rounded-md border border-primary/20 text-accent-foreground tracking-wider uppercase">
                         {setlist.era_name}
                       </span>
                     )}
-                    <span className="text-[10px] font-mono text-muted-foreground/60 tracking-wider">
+                    <span className="text-[10px] font-mono text-muted-foreground tracking-wider">
                       {setlist.song_count} songs
                     </span>
                   </div>
@@ -364,7 +364,7 @@ const Index = () => {
             <Button
               variant="ghost"
               onClick={() => navigate("/browse?sort=top")}
-              className="font-mono text-[10px] tracking-[0.2em] text-muted-foreground hover:text-primary uppercase gap-1.5"
+              className="font-mono text-[10px] tracking-[0.2em] text-foreground/75 hover:text-foreground uppercase gap-1.5"
             >
               See the full leaderboard
               <ChevronRight className="w-3.5 h-3.5" />
@@ -377,13 +377,13 @@ const Index = () => {
       {featured.length > 0 && (
         <section id="community" className="py-16 sm:py-24 border-t border-border/30 bg-[#0d0d0d]">
           <div className="px-6 sm:px-12 mb-10 max-w-3xl mx-auto text-center">
-            <div className="font-mono text-[10px] tracking-[0.3em] text-primary/70 uppercase mb-3">
+            <div className="font-mono text-[10px] tracking-[0.3em] text-dead-gold uppercase mb-3">
               From the community
             </div>
             <h2 className="font-display italic text-3xl sm:text-5xl text-primary leading-tight">
               What other heads are spinning
             </h2>
-            <p className="font-body text-base sm:text-lg text-muted-foreground mt-4 max-w-xl mx-auto">
+            <p className="font-body text-base sm:text-lg text-foreground/75 mt-4 max-w-xl mx-auto">
               Real setlists built by real Deadheads — discover a night you've never heard,
               or recreate one you'll never forget.
             </p>
@@ -412,7 +412,7 @@ const Index = () => {
                       {setlist.title}
                     </h3>
                     {setlist.upvote_count > 0 && (
-                      <span className="shrink-0 text-xs font-mono text-primary tabular-nums">
+                      <span className="shrink-0 text-xs font-mono text-accent-foreground tabular-nums">
                         ⚡ {setlist.upvote_count}
                       </span>
                     )}
@@ -422,16 +422,16 @@ const Index = () => {
                   </Link>
                   <div className="flex items-center gap-2 mt-3">
                     {setlist.era_name && (
-                      <span className="px-2 py-0.5 text-[10px] font-mono rounded-md border border-primary/20 text-primary/70 tracking-wider uppercase">
+                      <span className="px-2 py-0.5 text-[10px] font-mono rounded-md border border-primary/20 text-accent-foreground tracking-wider uppercase">
                         {setlist.era_name}
                       </span>
                     )}
                     {setlist.play_count > 0 && (
-                      <span className="text-[10px] font-mono text-muted-foreground/60 tracking-wider">
+                      <span className="text-[10px] font-mono text-muted-foreground tracking-wider">
                         ▶ {setlist.play_count}
                       </span>
                     )}
-                    <span className="text-[10px] font-mono text-muted-foreground/60 tracking-wider">
+                    <span className="text-[10px] font-mono text-muted-foreground tracking-wider">
                       {setlist.song_count} songs
                     </span>
                   </div>
@@ -451,20 +451,20 @@ const Index = () => {
               href="https://instagram.com/grateful_jaguaro"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-2 text-[11px] font-mono text-muted-foreground/70 hover:text-primary tracking-wider transition-colors"
+              className="flex items-center gap-2 text-[11px] font-mono text-foreground/70 hover:text-foreground tracking-wider transition-colors"
               aria-label="Follow Dead-Set.Org on Instagram"
             >
               <Instagram className="w-3.5 h-3.5" />
               <span>@grateful_jaguaro</span>
             </a>
-            <div className="flex items-center gap-3 text-[10px] font-mono text-muted-foreground/40 tracking-wider">
+            <div className="flex items-center gap-3 text-[10px] font-mono text-foreground/60 tracking-wider">
               <span>© Dead-Set.Org</span>
               <span>·</span>
-              <Link to="/updates" className="hover:text-muted-foreground transition-colors">Build Notes</Link>
+              <Link to="/updates" className="hover:text-foreground transition-colors">Build Notes</Link>
               <span>·</span>
               <button
                 onClick={() => navigate("/privacy")}
-                className="hover:text-muted-foreground transition-colors"
+                className="hover:text-foreground transition-colors"
               >
                 Privacy
               </button>

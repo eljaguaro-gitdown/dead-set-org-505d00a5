@@ -12,7 +12,7 @@ const PrivacyPolicy = () => {
       <SiteHeader>
         <button
           onClick={() => navigate(-1)}
-          className="font-display text-sm tracking-[0.15em] text-muted-foreground hover:text-primary transition-colors uppercase"
+          className="font-display text-sm tracking-[0.15em] text-foreground/75 hover:text-primary transition-colors uppercase"
         >
           Back
         </button>
@@ -22,7 +22,7 @@ const PrivacyPolicy = () => {
         <h1 className="font-display text-3xl sm:text-4xl text-foreground mb-2 leading-tight">
           Privacy Policy
         </h1>
-        <p className="font-mono text-xs text-muted-foreground mb-8 tracking-wider uppercase">
+        <p className="font-mono text-xs text-foreground/75 mb-8 tracking-wider uppercase">
           Last updated: March 20, 2026
         </p>
 
@@ -65,7 +65,7 @@ const PrivacyPolicy = () => {
                 href="https://www.google.com/settings/ads"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-primary underline underline-offset-2 hover:text-primary/80 transition-colors"
+                className="text-dead-gold underline underline-offset-2 hover:text-primary/80 transition-colors"
               >
                 Google Ads Settings
               </a>
@@ -74,7 +74,7 @@ const PrivacyPolicy = () => {
                 href="https://www.aboutads.info/choices/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-primary underline underline-offset-2 hover:text-primary/80 transition-colors"
+                className="text-dead-gold underline underline-offset-2 hover:text-primary/80 transition-colors"
               >
                 www.aboutads.info
               </a>
@@ -164,7 +164,7 @@ const PrivacyPolicy = () => {
       </main>
 
       <footer className="py-4 text-center border-t border-border/50">
-        <p className="font-mono text-[10px] text-muted-foreground/70 tracking-wider">
+        <p className="font-mono text-[10px] text-foreground/70 tracking-wider">
           © {new Date().getFullYear()} Dead-Set.Org — Built by Deadheads, for Deadheads
         </p>
       </footer>

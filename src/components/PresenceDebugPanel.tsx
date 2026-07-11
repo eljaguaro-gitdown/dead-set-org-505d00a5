@@ -9,8 +9,8 @@ import {
 
 const STATUS_STYLES: Record<PresenceStatus, string> = {
   IDLE: "bg-muted text-muted-foreground",
-  SUBSCRIBING: "bg-amber-500/15 text-amber-400",
-  SUBSCRIBED: "bg-green-500/15 text-green-400",
+  SUBSCRIBING: "bg-amber-500/15 text-amber-800",
+  SUBSCRIBED: "bg-green-500/15 text-emerald-700",
   CHANNEL_ERROR: "bg-destructive/15 text-destructive",
   TIMED_OUT: "bg-destructive/15 text-destructive",
   CLOSED: "bg-muted text-muted-foreground",

@@ -18,7 +18,7 @@ const DancingBearButton = () => {
 
       {/* Blinking label */}
       <motion.span
-        className="font-display text-xs tracking-[0.12em] text-primary uppercase whitespace-nowrap"
+        className="font-display text-xs tracking-[0.12em] text-dead-gold uppercase whitespace-nowrap"
         animate={{ opacity: [1, 1, 0.4, 1, 1] }}
         transition={{
           duration: 3,

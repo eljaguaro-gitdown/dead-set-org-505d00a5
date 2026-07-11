@@ -224,7 +224,7 @@ const ChatSidebar = ({ setlistId, user, isOpen, onClose, onUnreadChange }: ChatS
                     <div key={c.userId} className="flex items-center gap-2">
                       <Avatar className="w-6 h-6">
                         <AvatarImage src={c.avatarUrl || undefined} />
-                        <AvatarFallback className="bg-primary/20 text-primary text-[10px]">
+                        <AvatarFallback className="bg-primary/20 text-accent-foreground text-[10px]">
                           {c.displayName[0]?.toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
@@ -267,7 +267,7 @@ const ChatSidebar = ({ setlistId, user, isOpen, onClose, onUnreadChange }: ChatS
                         >
                           <Avatar className="w-6 h-6">
                             <AvatarImage src={u.avatar_url || undefined} />
-                            <AvatarFallback className="bg-primary/20 text-primary text-[10px]">
+                            <AvatarFallback className="bg-primary/20 text-accent-foreground text-[10px]">
                               {(u.display_name || "?")[0].toUpperCase()}
                             </AvatarFallback>
                           </Avatar>
@@ -296,7 +296,7 @@ const ChatSidebar = ({ setlistId, user, isOpen, onClose, onUnreadChange }: ChatS
                 {collaborators.length <= 1 && isOwner && (
                   <button
                     onClick={() => { setShowInvite(true); setShowMembers(false); }}
-                    className="text-[10px] text-primary font-body hover:underline mt-1"
+                    className="text-[10px] text-accent-foreground font-body hover:underline mt-1"
                   >
                     + Invite someone to chat
                   </button>

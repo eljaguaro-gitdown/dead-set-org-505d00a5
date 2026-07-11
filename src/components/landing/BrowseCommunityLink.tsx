@@ -59,7 +59,7 @@ const BrowseCommunityLink = ({
       onClick={handleClick}
       className={
         className ||
-        "inline-flex items-center gap-1 text-primary underline decoration-primary/40 underline-offset-4 hover:decoration-primary transition-colors font-body"
+        "inline-flex items-center gap-1 text-dead-gold underline decoration-primary/40 underline-offset-4 hover:decoration-primary transition-colors font-body"
       }
       data-cta={`browse_community_${source}`}
     >

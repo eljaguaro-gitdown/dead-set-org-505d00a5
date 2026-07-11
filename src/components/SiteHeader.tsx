@@ -59,7 +59,7 @@ const SiteHeader = ({ children, large = false }: SiteHeaderProps) => {
   const adminLink = isAdmin ? (
     <button
       onClick={() => navigate("/admin")}
-      className="flex items-center gap-1.5 text-xs font-mono text-primary/80 hover:text-primary transition-colors tracking-wider uppercase"
+      className="flex items-center gap-1.5 text-xs font-mono text-dead-gold hover:text-dead-gold/80 transition-colors tracking-wider uppercase"
       title="Admin Dashboard"
     >
       <Shield className="w-3.5 h-3.5" />
@@ -70,7 +70,7 @@ const SiteHeader = ({ children, large = false }: SiteHeaderProps) => {
   const messagesLink = user ? (
     <button
       onClick={() => navigate("/messages")}
-      className="relative flex items-center gap-1.5 text-xs font-mono text-muted-foreground hover:text-foreground transition-colors tracking-wider uppercase"
+      className="relative flex items-center gap-1.5 text-xs font-mono text-foreground/75 hover:text-foreground transition-colors tracking-wider uppercase"
       title="Messages"
     >
       <MessageCircle className="w-3.5 h-3.5" />
@@ -114,7 +114,7 @@ const SiteHeader = ({ children, large = false }: SiteHeaderProps) => {
           {playingSlot.song.title}
         </span>
         {playlistMode && (
-          <span className="text-[9px] font-mono text-muted-foreground tabular-nums shrink-0">
+          <span className="text-[9px] font-mono text-foreground/75 tabular-nums shrink-0">
             {playlistIndex + 1}/{playlistSlots.length}
           </span>
         )}
@@ -137,7 +137,7 @@ const SiteHeader = ({ children, large = false }: SiteHeaderProps) => {
     <button
       type="button"
       onClick={() => navigate("/my-setlists")}
-      className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-primary/10 border border-primary/30 text-primary hover:bg-primary/20 hover:border-primary/50 transition-colors"
+      className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-primary/10 border border-primary/30 text-dead-gold hover:bg-primary/20 hover:border-primary/50 transition-colors"
       title="Back to My Setlists"
       aria-label="Back to My Setlists"
     >
@@ -182,7 +182,7 @@ const SiteHeader = ({ children, large = false }: SiteHeaderProps) => {
             {user && (
               <button
                 onClick={async () => { await signOut(); navigate("/"); }}
-                className="flex items-center gap-1.5 text-xs font-mono text-muted-foreground hover:text-foreground transition-colors tracking-wider uppercase"
+                className="flex items-center gap-1.5 text-xs font-mono text-foreground/75 hover:text-foreground transition-colors tracking-wider uppercase"
                 title="Sign Out"
               >
                 <LogOut className="w-3.5 h-3.5" />
@@ -200,7 +200,7 @@ const SiteHeader = ({ children, large = false }: SiteHeaderProps) => {
                 <AnnouncementsBell variant="mobile" />
                 <button
                   onClick={() => navigate("/messages")}
-                  className="relative p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+                  className="relative p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-foreground/75 hover:text-foreground transition-colors"
                   title="Messages"
                 >
                   <MessageCircle className="w-5 h-5" />
@@ -217,7 +217,7 @@ const SiteHeader = ({ children, large = false }: SiteHeaderProps) => {
             ) : (
               <button
                 onClick={() => navigate("/auth")}
-                className="font-mono text-[10px] tracking-[0.15em] text-primary border border-primary/40 rounded-md px-3 py-2.5 min-h-[44px] hover:bg-primary/10 transition-colors uppercase"
+                className="font-mono text-[10px] tracking-[0.15em] text-dead-gold border border-primary/40 rounded-md px-3 py-2.5 min-h-[44px] hover:bg-primary/10 transition-colors uppercase"
               >
                 Sign In
               </button>
@@ -266,7 +266,7 @@ const SiteHeader = ({ children, large = false }: SiteHeaderProps) => {
                             alert('Tap the browser menu (⋮) then "Add to Home Screen"');
                           }
                         }}
-                        className="min-h-[44px] flex items-center gap-1.5 text-xs font-mono text-primary hover:text-primary/80 transition-colors tracking-wider uppercase"
+                        className="min-h-[44px] flex items-center gap-1.5 text-xs font-mono text-dead-gold hover:text-dead-gold/80 transition-colors tracking-wider uppercase"
                       >
                         <Download className="w-3.5 h-3.5" />
                         Install App
@@ -284,7 +284,7 @@ const SiteHeader = ({ children, large = false }: SiteHeaderProps) => {
                       <SheetClose asChild>
                         <button
                           onClick={() => navigate("/profile")}
-                          className="min-h-[44px] flex items-center gap-1.5 text-xs font-mono text-muted-foreground hover:text-foreground transition-colors tracking-wider uppercase"
+                          className="min-h-[44px] flex items-center gap-1.5 text-xs font-mono text-foreground/75 hover:text-foreground transition-colors tracking-wider uppercase"
                         >
                           <User className="w-3.5 h-3.5" />
                           Profile
@@ -293,7 +293,7 @@ const SiteHeader = ({ children, large = false }: SiteHeaderProps) => {
                       <SheetClose asChild>
                         <button
                           onClick={async () => { await signOut(); navigate("/"); }}
-                          className="min-h-[44px] flex items-center gap-1.5 text-xs font-mono text-muted-foreground hover:text-foreground transition-colors tracking-wider uppercase"
+                          className="min-h-[44px] flex items-center gap-1.5 text-xs font-mono text-foreground/75 hover:text-foreground transition-colors tracking-wider uppercase"
                         >
                           <LogOut className="w-3.5 h-3.5" />
                           Sign Out

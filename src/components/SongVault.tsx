@@ -13,13 +13,13 @@ type Song = Database["public"]["Tables"]["songs"]["Row"];
 type NotableVersion = Database["public"]["Tables"]["notable_versions"]["Row"];
 
 const TAG_COLORS: Record<string, string> = {
-  rocker: "bg-primary/20 text-primary border-primary/30",
-  jam: "bg-secondary/20 text-secondary border-secondary/30",
-  ballad: "bg-accent/20 text-accent border-accent/30",
-  country: "bg-accent/20 text-accent border-accent/30",
-  space: "bg-secondary/20 text-secondary border-secondary/30",
+  rocker: "bg-primary/20 text-accent-foreground border-primary/30",
+  jam: "bg-secondary/20 text-accent-foreground border-secondary/30",
+  ballad: "bg-accent/20 text-accent-foreground border-accent/30",
+  country: "bg-accent/20 text-accent-foreground border-accent/30",
+  space: "bg-secondary/20 text-accent-foreground border-secondary/30",
   drum: "bg-muted text-muted-foreground border-border",
-  blues: "bg-secondary/20 text-secondary border-secondary/30",
+  blues: "bg-secondary/20 text-accent-foreground border-secondary/30",
 };
 
 interface SongVaultProps {
@@ -63,7 +63,7 @@ const SongVault = ({ songs, eraId, onSelectSong, getNotableVersions, onPlayArchi
   return (
     <div className="flex flex-col h-full">
       <div className="p-4 border-b border-border space-y-3">
-        <h2 className="font-display text-lg text-card-foreground">The Vault</h2>
+        <h2 className="font-display text-lg text-foreground">The Vault</h2>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
@@ -81,7 +81,7 @@ const SongVault = ({ songs, eraId, onSelectSong, getNotableVersions, onPlayArchi
               className={`px-2 py-0.5 text-xs rounded-full border font-body transition-colors ${
                 tagFilter === tag
                   ? TAG_COLORS[tag]
-                  : "border-border text-muted-foreground hover:text-card-foreground"
+                  : "border-border text-foreground/75 hover:text-foreground"
               }`}
             >
               {tag}
@@ -96,7 +96,7 @@ const SongVault = ({ songs, eraId, onSelectSong, getNotableVersions, onPlayArchi
               className={`px-2 py-0.5 text-xs rounded-full border font-body transition-colors ${
                 positionFilter === pos
                   ? "bg-muted text-card-foreground border-card-foreground/30"
-                  : "border-border text-muted-foreground hover:text-card-foreground"
+                  : "border-border text-foreground/75 hover:text-foreground"
               }`}
             >
               {pos}
@@ -131,7 +131,7 @@ const SongVault = ({ songs, eraId, onSelectSong, getNotableVersions, onPlayArchi
                       e.stopPropagation();
                       onSelectSong(song);
                     }}
-                    className="flex items-center gap-1 rounded-md bg-primary/15 text-primary border border-primary/30 px-2.5 min-h-[36px] hover:bg-primary/25 active:scale-95 transition-all"
+                    className="flex items-center gap-1 rounded-md bg-primary/15 text-accent-foreground border border-primary/30 px-2.5 min-h-[36px] hover:bg-primary/25 active:scale-95 transition-all"
                     title={`Add ${song.title} to your set`}
                     aria-label={`Add ${song.title} to your set`}
                   >
