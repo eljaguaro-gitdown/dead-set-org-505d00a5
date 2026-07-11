@@ -133,27 +133,27 @@ const SongPage = () => {
     <PageLayout>
       <SiteHeader />
       <main className="mx-auto w-full max-w-2xl px-6 py-10">
-        <Link to="/" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6">
+        <Link to="/" className="inline-flex items-center gap-2 text-sm text-foreground/75 hover:text-foreground mb-6">
           <ArrowLeft className="w-4 h-4" /> Back to Dead-Set.Org
         </Link>
 
         {loading ? (
-          <div className="text-muted-foreground">Loading…</div>
+          <div className="text-foreground/75">Loading…</div>
         ) : !song ? (
-          <div className="text-muted-foreground">Song not found.</div>
+          <div className="text-foreground/75">Song not found.</div>
         ) : (
           <article className="space-y-6">
             {fromName && (
               <div className="flex items-center gap-2 rounded-2xl border border-primary/30 bg-primary/10 px-4 py-3 text-sm">
                 <Sparkles className="w-4 h-4 text-primary shrink-0" />
                 <span>
-                  <span className="font-semibold text-primary">{fromName}</span>
+                  <span className="font-semibold text-dead-gold">{fromName}</span>
                   <span className="text-foreground/80"> sent you this song 🌹</span>
                 </span>
               </div>
             )}
 
-            <div className="flex items-center gap-3 text-primary">
+            <div className="flex items-center gap-3 text-dead-gold">
               <Music className="w-5 h-5" />
               <span className="text-xs uppercase tracking-[0.2em]">Now Spinning</span>
             </div>
@@ -168,7 +168,7 @@ const SongPage = () => {
                   </p>
                 )}
                 {displayVenue && (
-                  <p className="text-lg text-muted-foreground">
+                  <p className="text-lg text-foreground/75">
                     {displayVenue}
                     {version?.city ? `, ${version.city}` : ""}
                   </p>
@@ -201,7 +201,7 @@ const SongPage = () => {
                 <Share2 className="w-4 h-4" /> Share
               </button>
 
-              <div className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2">
+              <div className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-card-foreground">
                 <FavoriteButton
                   isFavorite={favorited}
                   onToggle={handleFavorite}
@@ -213,7 +213,7 @@ const SongPage = () => {
               </div>
             </div>
 
-            <p className="text-sm text-muted-foreground pt-4">
+            <p className="text-sm text-foreground/75 pt-4">
               Open Dead-Set.Org to explore more versions, build setlists, and follow the band's history.
             </p>
           </article>

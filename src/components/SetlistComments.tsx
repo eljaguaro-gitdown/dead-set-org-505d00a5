@@ -173,11 +173,11 @@ const SetlistComments = ({ setlistId, isPublic }: SetlistCommentsProps) => {
     >
       <div className="flex items-center gap-2 mb-4">
         <MessageCircle className="w-4 h-4 text-primary/60" />
-        <h3 className="font-display text-sm tracking-[0.15em] text-muted-foreground uppercase">
+        <h3 className="font-display text-sm tracking-[0.15em] text-foreground/75 uppercase">
           Community Notes
         </h3>
         {comments.length > 0 && (
-          <span className="text-[10px] font-mono text-muted-foreground/50 ml-1">
+          <span className="text-[10px] font-mono text-foreground/60 ml-1">
             ({comments.length})
           </span>
         )}
@@ -210,7 +210,7 @@ const SetlistComments = ({ setlistId, isPublic }: SetlistCommentsProps) => {
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <span className="text-xs font-display text-primary/60">
+                    <span className="text-xs font-display text-dead-gold">
                       {(comment.profile?.display_name || "?")[0].toUpperCase()}
                     </span>
                   )}
@@ -224,7 +224,7 @@ const SetlistComments = ({ setlistId, isPublic }: SetlistCommentsProps) => {
                     >
                       {comment.profile?.display_name || "Unknown Head"}
                     </Link>
-                    <span className="text-[10px] font-mono text-muted-foreground/40">
+                    <span className="text-[10px] font-mono text-foreground/60">
                       {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
                     </span>
                   </div>
@@ -248,7 +248,7 @@ const SetlistComments = ({ setlistId, isPublic }: SetlistCommentsProps) => {
           </AnimatePresence>
 
           {comments.length === 0 && !loading && (
-            <p className="text-center text-xs font-body text-muted-foreground/40 py-6">
+            <p className="text-center text-xs font-body text-foreground/60 py-6">
               No comments yet — be the first to drop a note.
             </p>
           )}
@@ -265,7 +265,7 @@ const SetlistComments = ({ setlistId, isPublic }: SetlistCommentsProps) => {
             onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handlePost()}
             placeholder="Drop a comment..."
             maxLength={500}
-            className="flex-1 bg-card/60 border border-border/40 rounded-lg px-3 py-2.5 text-sm font-body text-card-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:border-primary/40 transition-colors"
+            className="flex-1 bg-card border border-border/40 rounded-lg px-3 py-2.5 text-sm font-body text-card-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/40 transition-colors"
           />
           <button
             onClick={handlePost}
@@ -276,8 +276,8 @@ const SetlistComments = ({ setlistId, isPublic }: SetlistCommentsProps) => {
           </button>
         </div>
       ) : (
-        <p className="mt-4 text-center text-xs font-body text-muted-foreground/40">
-          <a href="/auth" className="text-primary/60 hover:text-primary transition-colors underline underline-offset-2">
+        <p className="mt-4 text-center text-xs font-body text-foreground/60">
+          <a href="/auth" className="text-dead-gold hover:text-dead-gold/80 transition-colors underline underline-offset-2">
             Sign in
           </a>{" "}
           to leave a comment

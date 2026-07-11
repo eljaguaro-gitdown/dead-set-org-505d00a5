@@ -64,7 +64,7 @@ const Section = ({
 }) => (
   <section className="py-16 md:py-24 relative">
     {accent && <div className="absolute right-0 top-8 opacity-20 pointer-events-none hidden md:block">{accent}</div>}
-    <p className="font-mono text-sm text-primary tracking-[0.2em] uppercase mb-4">
+    <p className="font-mono text-sm text-dead-gold tracking-[0.2em] uppercase mb-4">
       {number}
     </p>
     <h2 className="font-display text-3xl md:text-4xl text-foreground mb-3">
@@ -79,7 +79,7 @@ const Section = ({
 
 /* ─── Label ─── */
 const FieldLabel = ({ children }: { children: string }) => (
-  <label className="block font-mono text-xs text-primary tracking-[0.15em] uppercase mb-2.5 font-medium">
+  <label className="block font-mono text-xs text-dead-gold tracking-[0.15em] uppercase mb-2.5 font-medium">
     {children}
   </label>
 );
@@ -91,7 +91,7 @@ const TextInput = ({ placeholder, value, onChange }: { placeholder: string; valu
     placeholder={placeholder}
     value={value}
     onChange={(e) => onChange(e.target.value)}
-    className="w-full bg-card paper-grain border border-border rounded-sm px-5 py-4 font-body text-base text-card-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary transition-all"
+    className="w-full bg-card paper-grain border border-border rounded-sm px-5 py-4 font-body text-base text-card-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-all"
   />
 );
 
@@ -112,7 +112,7 @@ const TextArea = ({
     rows={rows}
     value={value}
     onChange={(e) => onChange(e.target.value)}
-    className="w-full bg-card paper-grain border border-border rounded-sm px-5 py-4 font-body text-base text-card-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary transition-all resize-none"
+    className="w-full bg-card paper-grain border border-border rounded-sm px-5 py-4 font-body text-base text-card-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-all resize-none"
   />
 );
 
@@ -205,7 +205,7 @@ const Backstage = () => {
       {/* HERO HEADER */}
       {/* Back to Dead Set — top */}
       <div className="relative z-20 px-6 pt-4">
-        <button onClick={() => navigate("/")} className="inline-flex items-center gap-2 font-body text-base text-primary hover:text-white transition-colors">
+        <button onClick={() => navigate("/")} className="inline-flex items-center gap-2 font-body text-base text-dead-gold hover:text-white transition-colors">
           <ArrowLeft className="w-4 h-4" /> Back to Dead-Set.Org
         </button>
       </div>
@@ -221,7 +221,7 @@ const Backstage = () => {
           </div>
 
           <div className="text-center md:text-left flex-1">
-            <p className="font-mono text-sm md:text-base text-primary tracking-[0.2em] uppercase mb-4">
+            <p className="font-mono text-sm md:text-base text-dead-gold tracking-[0.2em] uppercase mb-4">
               🎟️&ensp;THE LANYARD'S YOURS &nbsp;·&nbsp; ALL ACCESS
             </p>
             <h1 className="font-display text-4xl md:text-5xl lg:text-6xl text-white leading-tight mb-6">
@@ -272,7 +272,7 @@ const Backstage = () => {
                 <TextArea rows={3} placeholder="What should Dead Set be in five years? What does the community need?" value={s3.bigger} onChange={(v) => setS3({ ...s3, bigger: v })} />
               </div>
               <div className="flex flex-col items-center gap-5 pt-4">
-                <p className="font-display italic text-xl text-primary">"We're building this for you."</p>
+                <p className="font-display italic text-xl text-dead-gold">"We're building this for you."</p>
                 <SubmitButton label="Send My Wish" onClick={submitWish} loading={s3Loading} glow />
               </div>
             </div>
@@ -383,13 +383,13 @@ const Backstage = () => {
 
       {/* FOOTER */}
       <footer className="border-t border-primary/20 mt-16 py-10 text-center space-y-6">
-        <button onClick={() => navigate("/")} className="inline-flex items-center gap-2 font-body text-base text-primary hover:text-white transition-colors mx-auto">
+        <button onClick={() => navigate("/")} className="inline-flex items-center gap-2 font-body text-base text-dead-gold hover:text-white transition-colors mx-auto">
           <ArrowLeft className="w-4 h-4" /> Back to Dead-Set.Org
         </button>
-        <p className="font-mono text-sm text-primary/60 tracking-[0.15em] uppercase leading-relaxed">
+        <p className="font-mono text-sm text-dead-gold tracking-[0.15em] uppercase leading-relaxed">
           DEAD SET &nbsp;·&nbsp; ALL ACCESS &nbsp;·&nbsp; INNER CIRCLE
           <br />
-          <span className="text-foreground/40">dead-set.org</span>
+          <span className="text-foreground/70">dead-set.org</span>
         </p>
       </footer>
     </div>

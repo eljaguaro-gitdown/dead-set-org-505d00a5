@@ -30,17 +30,17 @@ const SocialProof = () => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ delay: 0.3, duration: 0.5 }}
-      className="flex items-center justify-center gap-6 font-mono text-sm tracking-wide text-muted-foreground/70"
+      className="flex items-center justify-center gap-6 font-mono text-sm tracking-wide text-foreground/70"
     >
       {stats.setlists > 0 && (
         <span>
-          <strong className="text-primary font-bold">{stats.setlists.toLocaleString()}</strong>{" "}
+          <strong className="text-dead-gold font-bold">{stats.setlists.toLocaleString()}</strong>{" "}
           setlists built
         </span>
       )}
       {stats.users > 0 && (
         <span>
-          <strong className="text-primary font-bold">{stats.users.toLocaleString()}</strong>{" "}
+          <strong className="text-dead-gold font-bold">{stats.users.toLocaleString()}</strong>{" "}
           Deadheads
         </span>
       )}

@@ -238,10 +238,10 @@ const Admin = () => {
             <User className="w-3 h-3 text-primary" />
           )}
         </div>
-        <button onClick={() => navigate(`/user/${userId}`)} className="text-xs text-card-foreground font-medium hover:text-primary transition-colors">{name}</button>
+        <button onClick={() => navigate(`/user/${userId}`)} className="text-xs text-card-foreground font-medium hover:text-accent-foreground transition-colors">{name}</button>
         <button
           onClick={() => navigate(`/messages?to=${userId}`)}
-          className="inline-flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-colors ml-1"
+          className="inline-flex items-center gap-1 text-xs text-accent-foreground hover:text-accent-foreground/80 transition-colors ml-1"
           title={`Message ${name}`}
         >
           <Send className="w-3 h-3" />
@@ -270,7 +270,7 @@ const Admin = () => {
         <div className="text-center space-y-4">
           <Shield className="w-12 h-12 text-muted-foreground mx-auto" />
           <h1 className="font-display text-xl text-foreground">Access Denied</h1>
-          <p className="font-body text-sm text-muted-foreground">
+          <p className="font-body text-sm text-foreground/75">
             You don't have admin access.
           </p>
           <Button variant="outline" onClick={() => navigate("/")} className="font-body">
@@ -305,7 +305,7 @@ const Admin = () => {
 
       {/* Header */}
       <header className="border-b border-border px-4 py-3 flex items-center gap-3">
-        <button onClick={() => navigate("/")} className="font-display text-lg text-primary">
+        <button onClick={() => navigate("/")} className="font-display text-lg text-dead-gold">
           DS
         </button>
         <div className="w-px h-5 bg-border" />
@@ -317,7 +317,7 @@ const Admin = () => {
           variant="ghost"
           size="sm"
           onClick={() => fetchUsers().then(() => toast.success("Refreshed"))}
-          className="ml-auto font-body text-muted-foreground"
+          className="ml-auto font-body text-foreground/75"
           disabled={loading || refreshing}
           aria-label="Refresh"
         >
@@ -328,7 +328,7 @@ const Admin = () => {
           variant="ghost"
           size="sm"
           onClick={() => navigate("/")}
-          className="font-body text-muted-foreground"
+          className="font-body text-foreground/75"
         >
           <ArrowLeft className="w-3.5 h-3.5 mr-1" /> Back
         </Button>
@@ -485,7 +485,7 @@ const Admin = () => {
                 <div>
                   <div className="flex items-center gap-2 mb-2">
                     <Lightbulb className="w-3.5 h-3.5 text-primary" />
-                    <h3 className="font-display text-xs text-primary uppercase tracking-wider">Wish List ({backstage.wishlist.length})</h3>
+                    <h3 className="font-display text-xs text-accent-foreground uppercase tracking-wider">Wish List ({backstage.wishlist.length})</h3>
                   </div>
                   <div className="space-y-2">
                     {backstage.wishlist.map((w) => (
@@ -531,13 +531,13 @@ const Admin = () => {
                 <div>
                   <div className="flex items-center gap-2 mb-2">
                     <Star className="w-3.5 h-3.5 text-primary" />
-                    <h3 className="font-display text-xs text-primary uppercase tracking-wider">Share Your Set ({backstage.shares.length})</h3>
+                    <h3 className="font-display text-xs text-accent-foreground uppercase tracking-wider">Share Your Set ({backstage.shares.length})</h3>
                   </div>
                   <div className="space-y-2">
                     {backstage.shares.map((s) => (
                       <div key={s.id} className="bg-muted/30 border border-border rounded-md p-3 text-sm font-body">
                         <SubmitterBadge userId={s.user_id} />
-                        {s.handle && <p className="text-primary font-medium mt-1">@{s.handle}</p>}
+                        {s.handle && <p className="text-accent-foreground font-medium mt-1">@{s.handle}</p>}
                         {s.favorite_songs && <p className="text-card-foreground mt-1"><span className="text-muted-foreground">Fav songs:</span> {s.favorite_songs}</p>}
                         {s.favorite_show && <p className="text-card-foreground mt-1"><span className="text-muted-foreground">Fav show:</span> {s.favorite_show}</p>}
                         {s.personal_take && <p className="text-card-foreground mt-1"><span className="text-muted-foreground">Take:</span> {s.personal_take}</p>}
@@ -595,12 +595,12 @@ const Admin = () => {
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => navigate(`/user/${u.id}`)}
-                          className="font-body text-sm text-card-foreground font-medium truncate hover:text-primary transition-colors"
+                          className="font-body text-sm text-card-foreground font-medium truncate hover:text-accent-foreground transition-colors"
                         >
                           {u.displayName || u.email?.split("@")[0]}
                         </button>
                         {!u.emailConfirmedAt && (
-                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-yellow-500/10 text-yellow-600 font-body">
+                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-yellow-500/10 text-yellow-800 font-body">
                             Unverified
                           </span>
                         )}
@@ -623,7 +623,7 @@ const Admin = () => {
                         className={`text-xs font-body ${
                           u.lastSignInAt &&
                           Date.now() - new Date(u.lastSignInAt).getTime() < 86400000
-                            ? "text-accent"
+                            ? "text-accent-foreground"
                             : "text-muted-foreground"
                         }`}
                       >
@@ -631,7 +631,7 @@ const Admin = () => {
                       </span>
                       <button
                         onClick={() => navigate(`/user/${u.id}`)}
-                        className="text-xs font-body text-primary hover:text-primary/80 transition-colors flex items-center gap-1 mt-0.5"
+                        className="text-xs font-body text-accent-foreground hover:text-accent-foreground/80 transition-colors flex items-center gap-1 mt-0.5"
                       >
                         <ListMusic className="w-3 h-3" />
                         {u.setlistCount} setlist{u.setlistCount !== 1 ? "s" : ""}

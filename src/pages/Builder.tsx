@@ -1004,7 +1004,7 @@ const Builder = () => {
           {user && (
             <button
               onClick={() => navigate("/my-setlists")}
-              className="text-2xl font-body text-muted-foreground hover:text-foreground transition-colors shrink-0 hidden sm:flex items-center gap-2"
+              className="text-2xl font-body text-foreground/75 hover:text-foreground transition-colors shrink-0 hidden sm:flex items-center gap-2"
               title="My Setlists"
             >
               <List className="w-8 h-8" /> My Setlists
@@ -1016,7 +1016,7 @@ const Builder = () => {
               onChange={(e) => setTitle(e.target.value)}
               onBlur={handleTitleBlur}
               placeholder="Untitled Setlist"
-              className={`bg-transparent border-0 border-b border-dotted border-border/40 rounded-none font-display text-lg sm:text-4xl md:text-5xl p-0 pb-1 h-auto focus-visible:ring-0 focus-visible:border-b-2 focus-visible:border-solid focus-visible:border-primary min-w-0 flex-1 transition-colors ${title === "Untitled Setlist" ? "text-muted-foreground/50 placeholder:text-muted-foreground/40" : "text-foreground"}`}
+              className={`bg-transparent border-0 border-b border-dotted border-border/40 rounded-none font-display text-lg sm:text-4xl md:text-5xl p-0 pb-1 h-auto focus-visible:ring-0 focus-visible:border-b-2 focus-visible:border-solid focus-visible:border-primary min-w-0 flex-1 transition-colors ${title === "Untitled Setlist" ? "text-foreground/70 placeholder:text-muted-foreground/40" : "text-foreground"}`}
             />
             <Pencil className="w-3.5 h-3.5 text-muted-foreground/30 shrink-0" />
           </div>
@@ -1086,7 +1086,7 @@ const Builder = () => {
           {/* Row 2a: Set selector + Era filter + (mobile) Set/Vault toggle */}
           <div className="flex items-center gap-1.5 sm:gap-2 sm:flex-wrap w-full sm:w-auto">
             <div className="flex items-center gap-1.5 shrink-0">
-              <span className="text-sm text-muted-foreground font-body hidden sm:inline">Add to:</span>
+              <span className="text-sm text-foreground/75 font-body hidden sm:inline">Add to:</span>
               {[1, 2, 3].map((n) => (
                 <button
                   key={n}
@@ -1144,7 +1144,7 @@ const Builder = () => {
                   onClick={() => setMobileTab("setlist")}
                   className={`flex items-center gap-1 h-11 px-2 text-sm font-body transition-colors ${
                     mobileTab === "setlist"
-                      ? "bg-primary/10 text-primary"
+                      ? "bg-primary/10 text-accent-foreground"
                       : "text-muted-foreground"
                   }`}
                   aria-pressed={mobileTab === "setlist"}
@@ -1162,7 +1162,7 @@ const Builder = () => {
                   onClick={() => setMobileTab("songs")}
                   className={`flex items-center gap-1 h-11 px-2 text-sm font-body transition-colors ${
                     mobileTab === "songs"
-                      ? "bg-primary/10 text-primary"
+                      ? "bg-primary/10 text-accent-foreground"
                       : "text-muted-foreground"
                   }`}
                   aria-pressed={mobileTab === "songs"}
@@ -1217,7 +1217,7 @@ const Builder = () => {
               <Button
                 variant="outline"
                 size="sm"
-                className="shrink-0 h-10 px-4 gap-2 border-primary/50 text-primary hover:bg-primary/10 hover:border-primary font-display text-sm transition-all duration-200"
+                className="shrink-0 h-10 px-4 gap-2 border-primary/50 text-dead-gold hover:bg-primary/10 hover:border-primary font-display text-sm transition-all duration-200"
                 onClick={() => navigate(`/setlist/${paramId}`)}
                 title="View your concert poster and shareable plate"
               >
@@ -1338,7 +1338,7 @@ const Builder = () => {
 
            {charlieCreating && activeSlots.length === 0 ? (
             <div role="status" aria-live="polite" className="px-3 py-4 space-y-3">
-              <div className="flex items-center gap-2 text-sm font-body text-muted-foreground">
+              <div className="flex items-center gap-2 text-sm font-body text-foreground/75">
                 <span className="inline-block w-3 h-3 rounded-full bg-primary animate-pulse" />
                 Cosmic Charlie is curating your setlist…
               </div>
@@ -1411,7 +1411,7 @@ const Builder = () => {
                     <p className="font-hand text-base leading-tight mt-0.5" style={{ color: "hsl(220 60% 30%)" }}>
                       {title || "Untitled"}
                     </p>
-                    <p className="font-hand text-[9px] mt-1" style={{ color: "hsl(28 15% 50%)" }}>
+                    <p className="font-hand text-[9px] mt-1" style={{ color: "hsl(28 16% 38%)" }}>
                       {new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}
                     </p>
                   </div>
@@ -1428,7 +1428,7 @@ const Builder = () => {
                           <div className="space-y-0">
                             {setSlotItems.map((slot, i) => (
                               <div key={slot.id} className="flex items-baseline gap-1.5 py-[2px]">
-                                <span className="text-[8px] font-mono tabular-nums w-3 text-right shrink-0" style={{ color: "hsl(28 15% 50%)" }}>
+                                <span className="text-[8px] font-mono tabular-nums w-3 text-right shrink-0" style={{ color: "hsl(28 16% 38%)" }}>
                                   {i + 1}.
                                 </span>
                                 <span className="font-hand text-[11px] leading-snug" style={{ color: "hsl(220 50% 20%)" }}>

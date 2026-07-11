@@ -48,11 +48,11 @@ const FeaturedCards = ({ setlists }: FeaturedCardsProps) => {
             </Link>
             <div className="flex items-center gap-2 mt-2">
               {s.era_name && (
-                <span className="px-1.5 py-0.5 text-[10px] font-mono rounded border border-primary/20 text-primary/70 tracking-wider uppercase">
+                <span className="px-1.5 py-0.5 text-[10px] font-mono rounded border border-primary/20 text-accent-foreground tracking-wider uppercase">
                   {s.era_name}
                 </span>
               )}
-              <span className="text-[10px] font-mono text-muted-foreground/60">
+              <span className="text-[10px] font-mono text-muted-foreground">
                 {s.song_count} songs
               </span>
             </div>

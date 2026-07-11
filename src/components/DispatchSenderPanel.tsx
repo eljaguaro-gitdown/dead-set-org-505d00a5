@@ -54,7 +54,7 @@ function StatusBadge({ status }: { status: DeliveryStatus }) {
   const isPending = status === "pending" || status === "unknown";
   const Icon = isOk ? CheckCircle2 : isPending ? Clock : XCircle;
   const cls = isOk
-    ? "text-emerald-500"
+    ? "text-emerald-700"
     : isPending
       ? "text-muted-foreground"
       : "text-destructive";
@@ -214,7 +214,7 @@ export default function DispatchSenderPanel() {
                 <div className="flex flex-col items-end gap-0.5">
                   <StatusBadge status={r.status} />
                   {r.error && (
-                    <span className="text-sm text-destructive/80 max-w-xs text-right break-words">
+                    <span className="text-sm text-destructive max-w-xs text-right break-words">
                       {r.error}
                     </span>
                   )}

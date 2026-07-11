@@ -382,7 +382,7 @@ const CosmicCharlieDialog = ({
                   </div>
                   <div>
                     <h3 className="font-display text-sm text-foreground">Need a Miracle?</h3>
-                    <p className="text-xs text-muted-foreground font-body mt-0.5">
+                    <p className="text-xs text-foreground/75 font-body mt-0.5">
                       Let Charlie build you a full dream setlist from scratch
                     </p>
                   </div>
@@ -399,7 +399,7 @@ const CosmicCharlieDialog = ({
                   </div>
                   <div>
                     <h3 className="font-display text-sm text-foreground">Ask Charlie to Improve This</h3>
-                    <p className="text-xs text-muted-foreground font-body mt-0.5">
+                    <p className="text-xs text-foreground/75 font-body mt-0.5">
                       Charlie'll optimize flow, suggest swaps &amp; find segue opportunities
                     </p>
                   </div>
@@ -415,7 +415,7 @@ const CosmicCharlieDialog = ({
                   </div>
                   <div>
                     <h3 className="font-display text-sm text-foreground">Version Explorer</h3>
-                    <p className="text-xs text-muted-foreground font-body mt-0.5">
+                    <p className="text-xs text-foreground/75 font-body mt-0.5">
                       Discover the best versions of your favorite song across eras
                     </p>
                   </div>
@@ -458,7 +458,7 @@ const CosmicCharlieDialog = ({
                     className="space-y-4"
                   >
                     <div className="text-center space-y-1">
-                      <h3 className="font-display text-lg text-primary">What kind of night?</h3>
+                      <h3 className="font-display text-lg text-accent-foreground">What kind of night?</h3>
                       <p className="font-body text-xs text-muted-foreground">
                         Tell Charlie in your own words — a long fiery Dark Star, a silky smooth Eyes, a brain-melt Set II. Or skip it.
                       </p>
@@ -489,13 +489,13 @@ const CosmicCharlieDialog = ({
                           Charlie heard:{" "}
                           {moodMatches.matchedPhrases.slice(0, 6).map((p, i) => (
                             <span key={p} className="inline-block">
-                              <span className="text-primary">{p}</span>
+                              <span className="text-accent-foreground">{p}</span>
                               {i < Math.min(moodMatches.matchedPhrases.length, 6) - 1 ? ", " : ""}
                             </span>
                           ))}
                           {moodMatches.matchedPhrases.length > 6 && "..."}
                         </div>
-                        <div className="text-muted-foreground/70">
+                        <div className="text-muted-foreground">
                           He'll bias toward{" "}
                           {moodMatches.vibes.length > 0 && (
                             <>{moodMatches.vibes.length} vibe{moodMatches.vibes.length > 1 ? "s" : ""}</>
@@ -540,7 +540,7 @@ const CosmicCharlieDialog = ({
                     className="space-y-4"
                   >
                     <div className="text-center space-y-1">
-                      <h3 className="font-display text-lg text-primary">What's the vibe tonight?</h3>
+                      <h3 className="font-display text-lg text-accent-foreground">What's the vibe tonight?</h3>
                       <p className="font-body text-xs text-muted-foreground">Pick up to four</p>
                     </div>
                     <div className="grid grid-cols-2 gap-2">
@@ -561,7 +561,7 @@ const CosmicCharlieDialog = ({
                             }`}
                           >
                             <span className="text-base">{vibe.emoji}</span>
-                            <span className={`font-body text-xs ${selected ? "text-primary" : "text-foreground"}`}>
+                            <span className={`font-body text-xs ${selected ? "text-accent-foreground" : "text-foreground"}`}>
                               {vibe.label}
                             </span>
                           </motion.button>
@@ -586,7 +586,7 @@ const CosmicCharlieDialog = ({
                     </div>
                     <button
                       onClick={() => handleGenerate(undefined)}
-                      className="w-full font-body text-xs text-muted-foreground/60 hover:text-muted-foreground transition-colors text-center"
+                      className="w-full font-body text-xs text-muted-foreground hover:text-card-foreground transition-colors text-center"
                     >
                       🎲 Surprise me — skip all this
                     </button>
@@ -605,7 +605,7 @@ const CosmicCharlieDialog = ({
                     className="space-y-4"
                   >
                     <div className="text-center space-y-1">
-                      <h3 className="font-display text-lg text-primary">What matters most?</h3>
+                      <h3 className="font-display text-lg text-accent-foreground">What matters most?</h3>
                       <p className="font-body text-xs text-muted-foreground">Pick one or two</p>
                     </div>
                     <div className="flex flex-col gap-2">
@@ -626,7 +626,7 @@ const CosmicCharlieDialog = ({
                             }`}
                           >
                             <span className="text-base">{priority.emoji}</span>
-                            <span className={`font-body text-xs ${selected ? "text-primary" : "text-foreground"}`}>
+                            <span className={`font-body text-xs ${selected ? "text-accent-foreground" : "text-foreground"}`}>
                               {priority.label}
                             </span>
                           </motion.button>
@@ -664,7 +664,7 @@ const CosmicCharlieDialog = ({
                     className="space-y-4"
                   >
                     <div className="text-center space-y-1">
-                      <h3 className="font-display text-lg text-primary">Anything specific?</h3>
+                      <h3 className="font-display text-lg text-accent-foreground">Anything specific?</h3>
                       <p className="font-body text-xs text-muted-foreground">Totally optional — skip if you want</p>
                     </div>
                     <div className="space-y-3">
@@ -771,7 +771,7 @@ const CosmicCharlieDialog = ({
                 {exploreStep === 0 && (
                   <motion.div key="explore-song" custom={1} variants={slideVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.2 }} className="space-y-4">
                     <div className="text-center space-y-1">
-                      <h3 className="font-display text-lg text-primary">Which song?</h3>
+                      <h3 className="font-display text-lg text-accent-foreground">Which song?</h3>
                       <p className="font-body text-xs text-muted-foreground">Pick the song you want to explore</p>
                     </div>
                     {selectedSong ? (
@@ -807,19 +807,19 @@ const CosmicCharlieDialog = ({
                 {exploreStep === 1 && (
                   <motion.div key="explore-eras" custom={1} variants={slideVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.2 }} className="space-y-4">
                     <div className="text-center space-y-1">
-                      <h3 className="font-display text-lg text-primary">Which eras?</h3>
+                      <h3 className="font-display text-lg text-accent-foreground">Which eras?</h3>
                       <p className="font-body text-xs text-muted-foreground">Pick one or more, or let Charlie surprise you</p>
                     </div>
                     <motion.button whileTap={{ scale: 0.97 }} onClick={() => { setSurpriseMe(true); setSelectedEraIds([]); }} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg border text-left transition-all duration-200 ${surpriseMe ? "border-primary bg-primary/20 ring-1 ring-primary/40" : "border-border bg-background hover:border-primary/40"}`}>
                       <span className="text-base">🎲</span>
-                      <span className={`font-body text-xs ${surpriseMe ? "text-primary" : "text-foreground"}`}>Surprise me — all eras</span>
+                      <span className={`font-body text-xs ${surpriseMe ? "text-accent-foreground" : "text-foreground"}`}>Surprise me — all eras</span>
                     </motion.button>
                     <div className="grid grid-cols-2 gap-2">
                       {allEras.map((era) => {
                         const selected = selectedEraIds.includes(era.id);
                         return (
                           <motion.button key={era.id} whileTap={{ scale: 0.95 }} onClick={() => toggleEra(era.id)} className={`flex flex-col px-3 py-2 rounded-lg border text-left transition-all duration-200 text-xs ${selected ? "border-primary bg-primary/20 ring-1 ring-primary/40" : "border-border bg-background hover:border-primary/40"}`}>
-                            <span className={`font-body ${selected ? "text-primary" : "text-foreground"}`}>{era.name}</span>
+                            <span className={`font-body ${selected ? "text-accent-foreground" : "text-foreground"}`}>{era.name}</span>
                             <span className="text-[10px] text-muted-foreground">{era.year_start}–{era.year_end}</span>
                           </motion.button>
                         );
@@ -841,11 +841,11 @@ const CosmicCharlieDialog = ({
           {exploreResult && (
             <motion.div key="explore-result" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} className="space-y-4">
               <div className="text-center">
-                <h3 className="font-display text-lg text-primary">"{exploreResult.songTitle}"</h3>
+                <h3 className="font-display text-lg text-accent-foreground">"{exploreResult.songTitle}"</h3>
                 <p className="text-xs text-muted-foreground font-body mt-1">Version Explorer</p>
               </div>
               <div className="p-3 rounded-lg bg-primary/5 border border-primary/20">
-                <p className="text-xs text-primary font-body mb-1">Charlie's Liner Notes:</p>
+                <p className="text-xs text-accent-foreground font-body mb-1">Charlie's Liner Notes:</p>
                 <p className="text-sm text-card-foreground font-body leading-relaxed whitespace-pre-line">{exploreResult.linerNotes}</p>
               </div>
               <div className="space-y-3">
@@ -854,7 +854,7 @@ const CosmicCharlieDialog = ({
                     <div className="flex items-start justify-between gap-2">
                       <div>
                         <p className="font-display text-sm text-foreground">{v.showDate}</p>
-                        <p className="text-xs text-muted-foreground font-body">{[v.venue, v.city].filter(Boolean).join(", ")}</p>
+                        <p className="text-xs text-foreground/75 font-body">{[v.venue, v.city].filter(Boolean).join(", ")}</p>
                       </div>
                       {v.rating && (
                         <div className="flex items-center gap-0.5">
@@ -864,14 +864,14 @@ const CosmicCharlieDialog = ({
                         </div>
                       )}
                     </div>
-                    {v.eraName && <span className="inline-block text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary font-body">{v.eraName}</span>}
+                    {v.eraName && <span className="inline-block text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-dead-gold font-body">{v.eraName}</span>}
                     <p className="text-xs text-foreground/80 font-body leading-relaxed">{v.whyThisVersion}</p>
                     {v.archiveUrl && (
                       <div className="flex items-center gap-2">
                         <Button
                           variant="outline"
                           size="sm"
-                          className="h-7 text-xs font-body gap-1 border-primary/30 text-primary hover:bg-primary/10"
+                          className="h-7 text-xs font-body gap-1 border-primary/30 text-dead-gold hover:bg-primary/10"
                           onClick={() => {
                             const slot: PlayableSlot = {
                               id: `explore-${i}-${v.showDate}`,
@@ -890,7 +890,7 @@ const CosmicCharlieDialog = ({
                         >
                           <Play className="w-3 h-3 fill-current" /> Play this version
                         </Button>
-                        <a href={v.archiveUrl} target="_blank" rel="noopener noreferrer" className="text-[10px] text-muted-foreground hover:text-primary hover:underline font-body">Archive.org ↗</a>
+                        <a href={v.archiveUrl} target="_blank" rel="noopener noreferrer" className="text-[10px] text-foreground/75 hover:text-dead-gold hover:underline font-body">Archive.org ↗</a>
                       </div>
                     )}
                   </div>
@@ -963,10 +963,10 @@ const CosmicCharlieDialog = ({
               className="space-y-4"
             >
               {suggestion.setlist_name && (
-                <p className="font-display text-sm text-primary text-center">"{suggestion.setlist_name}"</p>
+                <p className="font-display text-sm text-accent-foreground text-center">"{suggestion.setlist_name}"</p>
               )}
               <div className="p-3 rounded-lg bg-primary/5 border border-primary/20">
-                <p className="text-xs text-primary font-body mb-1">Charlie says:</p>
+                <p className="text-xs text-accent-foreground font-body mb-1">Charlie says:</p>
                 <p className="text-sm text-card-foreground font-body leading-relaxed">
                   {suggestion.explanation}
                 </p>
@@ -986,7 +986,7 @@ const CosmicCharlieDialog = ({
                         <span className="text-muted-foreground w-5 text-right text-xs">{i + 1}.</span>
                         <span className="text-card-foreground">{song.title}</span>
                         {song.segueToNext && (
-                          <span className="text-primary font-bold text-xs">&gt;</span>
+                          <span className="text-accent-foreground font-bold text-xs">&gt;</span>
                         )}
                         {song.notes && (
                           <span className="text-muted-foreground text-xs italic ml-auto truncate max-w-[140px]">
@@ -1025,7 +1025,7 @@ const CosmicCharlieDialog = ({
                       setNewSetlistName(suggestion?.setlist_name?.trim() || "Cosmic Charlie's Pick");
                       setNamingNew(true);
                     }}
-                    className="border-primary/30 text-primary font-body gap-1.5 w-full hover:bg-primary/10"
+                    className="border-primary/30 text-accent-foreground font-body gap-1.5 w-full hover:bg-primary/10"
                   >
                     <Wand2 className="w-3.5 h-3.5" /> Create as New Setlist
                   </Button>

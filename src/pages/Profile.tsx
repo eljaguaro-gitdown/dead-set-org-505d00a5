@@ -155,7 +155,7 @@ const Profile = () => {
               </button>
               <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
             </div>
-            <p className="text-xs text-muted-foreground font-body">Click to upload a new photo</p>
+            <p className="text-xs text-foreground/75 font-body">Click to upload a new photo</p>
           </div>
 
           {/* Fields */}
@@ -170,7 +170,7 @@ const Profile = () => {
               />
             </div>
             <div className="space-y-2">
-              <Label className="font-body text-sm text-muted-foreground">Email</Label>
+              <Label className="font-body text-sm text-foreground/75">Email</Label>
               <Input value={user.email || ""} disabled className="bg-muted border-border text-muted-foreground font-body" />
             </div>
             <div className="space-y-2">
@@ -187,7 +187,7 @@ const Profile = () => {
                   ))}
                 </SelectContent>
               </Select>
-              <p className="text-xs text-muted-foreground font-body">Your logo plate will flex your home state</p>
+              <p className="text-xs text-foreground/75 font-body">Your logo plate will flex your home state</p>
             </div>
           </div>
 

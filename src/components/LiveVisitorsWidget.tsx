@@ -74,7 +74,7 @@ const LiveVisitorsWidget = ({ enabled }: { enabled: boolean }) => {
                 <p className="text-sm font-body text-muted-foreground">
                   {anonymous.length} anonymous visitor{anonymous.length !== 1 ? "s" : ""}
                 </p>
-                <p className="text-xs font-mono text-muted-foreground/60 truncate">
+                <p className="text-xs font-mono text-muted-foreground truncate">
                   {[...new Set(anonymous.map((a) => pageName(a.page)))].join(", ")}
                 </p>
               </div>
@@ -99,7 +99,7 @@ const VisitorRow = ({ visitor }: { visitor: OnlineVisitor }) => (
       <p className="text-sm font-body text-card-foreground truncate">
         {visitor.display_name || "Deadhead"}
       </p>
-      <p className="text-xs font-mono text-muted-foreground/60">
+      <p className="text-xs font-mono text-muted-foreground">
         📍 {pageName(visitor.page)}
       </p>
     </div>

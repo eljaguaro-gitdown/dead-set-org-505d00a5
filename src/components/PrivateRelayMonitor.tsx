@@ -119,11 +119,11 @@ const PrivateRelayMonitor = () => {
               <div className="text-sm text-muted-foreground">Relay Users</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-display text-emerald-400">{sent}</div>
+              <div className="text-2xl font-display text-emerald-700">{sent}</div>
               <div className="text-sm text-muted-foreground">Welcome Sent</div>
             </div>
             <div className="text-center">
-              <div className={`text-2xl font-display ${failed + missing > 0 ? "text-red-400" : "text-muted-foreground"}`}>
+              <div className={`text-2xl font-display ${failed + missing > 0 ? "text-destructive" : "text-muted-foreground"}`}>
                 {failed + missing}
               </div>
               <div className="text-sm text-muted-foreground">Failed / Missing</div>
@@ -139,9 +139,9 @@ const PrivateRelayMonitor = () => {
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
                       {ok ? (
-                        <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                        <CheckCircle2 className="w-4 h-4 text-emerald-700 shrink-0" />
                       ) : (
-                        <AlertTriangle className="w-4 h-4 text-red-400 shrink-0" />
+                        <AlertTriangle className="w-4 h-4 text-destructive shrink-0" />
                       )}
                       <span className="text-sm font-medium text-card-foreground truncate">
                         {r.display_name || "(no name)"}
@@ -151,12 +151,12 @@ const PrivateRelayMonitor = () => {
                       {r.email}
                     </div>
                     {r.welcome_error && (
-                      <div className="text-sm text-red-400 mt-1">
+                      <div className="text-sm text-destructive mt-1">
                         Error: {r.welcome_error}
                       </div>
                     )}
                     {!r.welcome_status && (
-                      <div className="text-sm text-amber-400 mt-1">
+                      <div className="text-sm text-amber-800 mt-1">
                         No welcome email log entry found.
                       </div>
                     )}

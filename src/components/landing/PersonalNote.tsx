@@ -13,18 +13,18 @@ const PersonalNote = () => (
       {/* Gold ornament separator */}
       <span className="text-primary/40 text-xl select-none">✦</span>
 
-      <blockquote className="font-hand text-xl sm:text-2xl text-muted-foreground leading-relaxed">
+      <blockquote className="font-hand text-xl sm:text-2xl text-foreground/75 leading-relaxed">
         "The band may be gone, but the music will never stop. Thanks to an incredible community — and the Internet
         Archive preserving 50 years of live recordings — there are still endless gems waiting to be found. I built
         Dead-Set.Org to help us find them, share them, and keep the flame alive."
       </blockquote>
 
-      <span className="font-body text-sm sm:text-base text-primary/60 tracking-wider">
+      <span className="font-body text-sm sm:text-base text-dead-gold tracking-wider">
         — Kinda feels like we are on to something fun - curated setlists, parking lot vibes, endless surprise and
         delight moments. See ya backstage!
       </span>
 
-      <p className="font-body text-base text-muted-foreground">
+      <p className="font-body text-base text-foreground/75">
         Curious what other heads are spinning?{" "}
         <BrowseCommunityLink source="personal_note" label="Browse community setlists" />
       </p>
@@ -33,7 +33,7 @@ const PersonalNote = () => (
         href="https://instagram.com/grateful_jaguaro"
         target="_blank"
         rel="noopener noreferrer"
-        className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-primary/30 text-primary/80 hover:text-primary hover:border-primary/60 hover:bg-primary/5 transition-all font-body text-sm"
+        className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-primary/30 text-dead-gold hover:text-primary hover:border-primary/60 hover:bg-primary/5 transition-all font-body text-sm"
       >
         <Instagram className="w-4 h-4" />
         <span>Follow @grateful_jaguaro on Instagram</span>

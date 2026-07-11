@@ -131,14 +131,14 @@ const EraTooltip = ({ eraName, yearRange, children }: EraTooltipProps) => {
             {yearRange && (
               <p className="text-[10px] font-body text-muted-foreground mt-0.5">{yearRange}</p>
             )}
-            <p className="font-body text-[11px] text-muted-foreground/80 mt-2 leading-relaxed">
+            <p className="font-body text-[11px] text-muted-foreground mt-2 leading-relaxed">
               {info.description}
             </p>
             <div className="flex flex-wrap gap-1 mt-2">
               {info.keySongs.map((song) => (
                 <span
                   key={song}
-                  className="px-1.5 py-0.5 text-[9px] font-body rounded-sm bg-primary/10 text-primary/80 border border-primary/15"
+                  className="px-1.5 py-0.5 text-[9px] font-body rounded-sm bg-primary/10 text-accent-foreground border border-primary/15"
                 >
                   {song}
                 </span>

@@ -209,6 +209,7 @@ const HeroSection = (_props: HeroSectionProps) => {
           --text-eyebrow: #d6b271;
           --accent-gold: #c24a33;
           --accent-warm: #d2593f;
+          --accent-vivid: #e0704f; /* lightened clay — small text on the maroon ground (5.1:1) */
           --rule-faint: rgba(239, 231, 208, 0.28);
           --rule-gold-30: rgba(194, 74, 51, 0.30);
           --rule-gold-40: rgba(194, 74, 51, 0.42);
@@ -265,7 +266,7 @@ const HeroSection = (_props: HeroSectionProps) => {
           font-family: 'Sancreek', Georgia, serif;
           font-weight: 700;
           font-style: normal;
-          color: var(--accent-gold);
+          color: var(--accent-vivid);
           text-transform: uppercase;
           letter-spacing: 0.10em;
           font-size: 16px;
@@ -435,7 +436,7 @@ const HeroSection = (_props: HeroSectionProps) => {
           transition: background-color 0.2s ease, transform 0.05s ease;
           letter-spacing: 0.01em;
         }
-        .ds-hero__cta-button:hover { background: var(--accent-warm); }
+        .ds-hero__cta-button:hover { filter: brightness(1.06); }
         .ds-hero__cta-button:active { transform: translateY(1px); }
         .ds-hero__cta-button:focus-visible {
           outline: 2px solid var(--accent-warm);
@@ -444,8 +445,7 @@ const HeroSection = (_props: HeroSectionProps) => {
         .ds-hero__cta-caption {
           font-family: 'IBM Plex Mono', ui-monospace, monospace;
           font-size: 12px;
-          color: var(--accent-gold);
-          opacity: 0.7;
+          color: var(--accent-vivid);
           margin: 0;
           text-transform: lowercase;
         }
@@ -543,7 +543,7 @@ const HeroSection = (_props: HeroSectionProps) => {
           font-size: 11px;
           letter-spacing: 0.18em;
           text-transform: uppercase;
-          color: var(--accent-gold);
+          color: var(--accent-vivid);
         }
         .ds-hero__cta-count-dot {
           width: 6px; height: 6px; border-radius: 999px;
@@ -582,14 +582,14 @@ const HeroSection = (_props: HeroSectionProps) => {
         @media (min-width: 640px) { .ds-hero__credit-attribution { font-size: 22px; } }
 
         .ds-hero__archive-link {
-          color: var(--accent-gold);
+          color: var(--accent-vivid);
           text-decoration: none;
           border-bottom: 1px solid var(--rule-gold-40);
           padding-bottom: 1px;
           transition: color 0.2s ease, border-color 0.2s ease;
           white-space: nowrap;
         }
-        .ds-hero__archive-link:hover { color: var(--accent-warm); border-color: var(--accent-warm); }
+        .ds-hero__archive-link:hover { color: #ea8a68; border-color: #ea8a68; }
         .ds-hero__arrow {
           display: inline-block;
           margin-left: 2px;
@@ -615,7 +615,7 @@ const HeroSection = (_props: HeroSectionProps) => {
           font-style: italic;
           font-size: 20px;
           line-height: 1.2;
-          color: var(--accent-gold);
+          color: var(--accent-vivid);
         }
         @media (min-width: 640px) { .ds-hero__tagline { font-size: 22px; } }
 
@@ -664,11 +664,11 @@ const HeroSection = (_props: HeroSectionProps) => {
           font-size: 10px;
           letter-spacing: 0.24em;
           text-transform: uppercase;
-          color: var(--text-eyebrow);
+          color: #7a5f33; /* dark gold ink — the cassette shell is light (#f4ecd6) */
         }
         .ds-hero__cassette-live {
           display: inline-flex; align-items: center; gap: 6px;
-          color: var(--accent-gold);
+          color: #a03a26; /* dark clay ink on the light cassette shell */
         }
         .ds-hero__cassette-live-dot {
           width: 6px; height: 6px; border-radius: 999px;
@@ -692,7 +692,7 @@ const HeroSection = (_props: HeroSectionProps) => {
         @media (min-width: 640px) {
           .ds-hero__play-btn { width: 72px; height: 72px; }
         }
-        .ds-hero__play-btn:hover { background: var(--accent-warm); }
+        .ds-hero__play-btn:hover { filter: brightness(1.06); }
         .ds-hero__play-btn:active { transform: scale(0.96); }
         .ds-hero__play-btn:focus-visible {
           outline: 2px solid var(--accent-warm);

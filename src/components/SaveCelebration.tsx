@@ -53,7 +53,7 @@ const SaveCelebration = ({ setlistId, setlistTitle, onDismiss }: SaveCelebration
 
         <a
           href={`/setlist/${setlistId}`}
-          className="inline-flex items-center gap-1.5 text-sm font-body text-primary hover:text-primary/80 transition-colors"
+          className="inline-flex items-center gap-1.5 text-sm font-body text-accent-foreground hover:text-accent-foreground/80 transition-colors"
         >
           View your poster <ExternalLink className="w-3 h-3" />
         </a>
@@ -80,7 +80,7 @@ const SaveCelebration = ({ setlistId, setlistTitle, onDismiss }: SaveCelebration
         <div className="mt-4">
           <button
             onClick={onDismiss}
-            className="text-xs font-body text-muted-foreground/50 hover:text-muted-foreground transition-colors"
+            className="text-xs font-body text-muted-foreground hover:text-muted-foreground transition-colors"
           >
             Dismiss
           </button>

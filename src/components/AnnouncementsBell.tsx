@@ -47,7 +47,7 @@ const AnnouncementsBell = ({ variant = "desktop" }: AnnouncementsBellProps) => {
       <PopoverTrigger asChild>
         {isMobile ? (
           <button
-            className="relative p-2 text-muted-foreground hover:text-foreground transition-colors"
+            className="relative p-2 text-foreground/75 hover:text-foreground transition-colors"
             title="Announcements"
             aria-label="Announcements"
           >
@@ -63,7 +63,7 @@ const AnnouncementsBell = ({ variant = "desktop" }: AnnouncementsBellProps) => {
           </button>
         ) : (
           <button
-            className="relative flex items-center gap-1.5 text-xs font-mono text-muted-foreground hover:text-foreground transition-colors tracking-wider uppercase"
+            className="relative flex items-center gap-1.5 text-xs font-mono text-foreground/75 hover:text-foreground transition-colors tracking-wider uppercase"
             title="Announcements"
             aria-label="Announcements"
           >
@@ -87,7 +87,7 @@ const AnnouncementsBell = ({ variant = "desktop" }: AnnouncementsBellProps) => {
         <div className="px-4 py-3 border-b border-border flex items-center justify-between">
           <h3 className="font-display text-sm text-card-foreground">From Grateful Jaguaro</h3>
           {unreadCount > 0 && (
-            <span className="font-mono text-[10px] text-primary tracking-wider uppercase">
+            <span className="font-mono text-[10px] text-accent-foreground tracking-wider uppercase">
               {unreadCount} new
             </span>
           )}
@@ -102,7 +102,7 @@ const AnnouncementsBell = ({ variant = "desktop" }: AnnouncementsBellProps) => {
                   Notes on your setlists
                 </span>
                 {commentUnread > 0 && (
-                  <span className="font-mono text-[10px] text-primary tracking-wider uppercase ml-auto">
+                  <span className="font-mono text-[10px] text-accent-foreground tracking-wider uppercase ml-auto">
                     {commentUnread} new
                   </span>
                 )}
@@ -127,7 +127,7 @@ const AnnouncementsBell = ({ variant = "desktop" }: AnnouncementsBellProps) => {
                       <div className="min-w-0 flex-1">
                         <h4 className="font-display text-sm text-card-foreground leading-snug group-hover:text-primary transition-colors">
                           {n.commenter_name || "A Deadhead"} on{" "}
-                          <span className="text-primary/80">
+                          <span className="text-accent-foreground">
                             {n.setlist_title || "your setlist"}
                           </span>
                         </h4>
@@ -136,7 +136,7 @@ const AnnouncementsBell = ({ variant = "desktop" }: AnnouncementsBellProps) => {
                             "{n.preview}"
                           </p>
                         )}
-                        <p className="font-mono text-[10px] text-muted-foreground/60 mt-2 tracking-wider uppercase">
+                        <p className="font-mono text-[10px] text-muted-foreground mt-2 tracking-wider uppercase">
                           {formatDistanceToNow(new Date(n.created_at), { addSuffix: true })}
                         </p>
                       </div>
@@ -153,7 +153,7 @@ const AnnouncementsBell = ({ variant = "desktop" }: AnnouncementsBellProps) => {
               <p className="font-body text-sm text-muted-foreground">
                 No notifications yet.
               </p>
-              <p className="font-body text-xs text-muted-foreground/60 mt-1">
+              <p className="font-body text-xs text-muted-foreground mt-1">
                 The music never stops — check back soon.
               </p>
             </div>
@@ -193,7 +193,7 @@ const AnnouncementsBell = ({ variant = "desktop" }: AnnouncementsBellProps) => {
                               href={a.cta_url}
                               target={a.cta_url.startsWith("http") ? "_blank" : undefined}
                               rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1 mt-2 font-mono text-[11px] text-primary hover:text-primary/80 tracking-wider uppercase"
+                              className="inline-flex items-center gap-1 mt-2 font-mono text-[11px] text-accent-foreground hover:text-accent-foreground/80 tracking-wider uppercase"
                               onClick={() => {
                                 trackCtaClick(`announcement:${a.id}`, a.cta_url!);
                                 setOpen(false);
@@ -205,7 +205,7 @@ const AnnouncementsBell = ({ variant = "desktop" }: AnnouncementsBellProps) => {
                               )}
                             </a>
                           )}
-                          <p className="font-mono text-[10px] text-muted-foreground/60 mt-2 tracking-wider uppercase">
+                          <p className="font-mono text-[10px] text-muted-foreground mt-2 tracking-wider uppercase">
                             {formatDistanceToNow(new Date(a.created_at), { addSuffix: true })}
                           </p>
                         </div>

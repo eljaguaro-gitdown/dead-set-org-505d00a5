@@ -83,7 +83,7 @@ const PwaInstallBanner = () => {
               <h3 className="font-bold text-primary-foreground text-sm leading-tight">
                 Add Dead Set to Home Screen
               </h3>
-              <p className="text-primary-foreground/70 text-xs mt-0.5">
+              <p className="text-primary-foreground text-xs mt-0.5">
                 Quick access, app-like experience
               </p>
             </div>
@@ -108,22 +108,22 @@ const PwaInstallBanner = () => {
               Install App
             </button>
           ) : platform === "ios" ? (
-            <div className="flex items-center gap-3 text-xs text-primary-foreground/80">
+            <div className="flex items-center gap-3 text-xs text-primary-foreground/90">
               <span className="flex items-center gap-1">
                 Tap <Share className="w-3.5 h-3.5 text-primary-foreground inline" />
               </span>
-              <span className="text-primary-foreground/40">→</span>
+              <span className="text-primary-foreground/70">→</span>
               <span className="flex items-center gap-1">
                 then <span className="font-semibold text-primary-foreground">"Add to Home Screen"</span>
                 <Plus className="w-3.5 h-3.5 text-primary-foreground inline" />
               </span>
             </div>
           ) : (
-            <div className="flex items-center gap-3 text-xs text-primary-foreground/80">
+            <div className="flex items-center gap-3 text-xs text-primary-foreground/90">
               <span className="flex items-center gap-1">
                 Tap <MoreVertical className="w-3.5 h-3.5 text-primary-foreground inline" />
               </span>
-              <span className="text-primary-foreground/40">→</span>
+              <span className="text-primary-foreground/70">→</span>
               <span className="flex items-center gap-1">
                 <span className="font-semibold text-primary-foreground">"Add to Home Screen"</span>
               </span>

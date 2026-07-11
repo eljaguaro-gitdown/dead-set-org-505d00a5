@@ -163,7 +163,7 @@ const ReturnToSetlistPill = () => {
             </div>
 
             <div className="flex-1 min-w-0">
-              <div className="font-mono uppercase tracking-[0.18em] text-[10px] text-primary/80">
+              <div className="font-mono uppercase tracking-[0.18em] text-[10px] text-accent-foreground">
                 {isLive ? "Now playing · Back to setlist" : "Pick up where you left off"}
               </div>
               <div className="font-body text-sm text-card-foreground truncate">

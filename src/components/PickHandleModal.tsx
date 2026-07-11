@@ -102,7 +102,7 @@ const PickHandleModal = () => {
     <Dialog open={open} onOpenChange={(o) => { if (!o) dismiss(); }}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <div className="flex items-center gap-2 text-primary mb-2">
+          <div className="flex items-center gap-2 text-accent-foreground mb-2">
             <Sparkles className="w-4 h-4" />
             <span className="text-sm uppercase tracking-wider">Pick your handle</span>
           </div>
@@ -113,7 +113,7 @@ const PickHandleModal = () => {
             {currentName && (
               <>
                 You're showing up right now as{" "}
-                <span className="text-foreground font-medium">"{currentName}"</span>.
+                <span className="text-card-foreground font-medium">"{currentName}"</span>.
                 Pick a name your fellow heads will recognize on setlists, comments,
                 and messages.
               </>

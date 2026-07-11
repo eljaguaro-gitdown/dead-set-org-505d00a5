@@ -57,10 +57,10 @@ const JoinSetlist = () => {
         )}
         {error && (
           <div className="space-y-2">
-            <p className="font-body text-primary">{error}</p>
+            <p className="font-body text-dead-gold">{error}</p>
             <button
               onClick={() => navigate("/")}
-              className="font-body text-sm text-muted-foreground hover:text-foreground underline"
+              className="font-body text-sm text-foreground/75 hover:text-foreground underline"
             >
               Go home
             </button>

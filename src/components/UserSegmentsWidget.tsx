@@ -224,7 +224,7 @@ const UserSegmentsWidget = ({ enabled }: Props) => {
                   className={`text-left p-4 rounded-lg border transition-all ${
                     isActive
                       ? "border-primary bg-primary/5"
-                      : "border-border bg-background/50 hover:border-primary/40"
+                      : "border-border bg-background/10 hover:border-primary/40"
                   }`}
                 >
                   <div className="flex items-center gap-2 mb-2">
@@ -233,11 +233,11 @@ const UserSegmentsWidget = ({ enabled }: Props) => {
                   </div>
                   <div className="flex items-baseline gap-2 mb-1">
                     <span className="font-display text-2xl text-card-foreground">{summary.count}</span>
-                    <span className="text-sm text-muted-foreground font-body">({pct}%)</span>
+                    <span className="text-sm text-card-foreground/75 font-body">({pct}%)</span>
                   </div>
-                  <p className="text-sm text-muted-foreground font-body leading-snug mb-1">{blurb}</p>
+                  <p className="text-sm text-card-foreground/75 font-body leading-snug mb-1">{blurb}</p>
                   {key !== "lurker" && (
-                    <p className="text-sm text-accent font-body">
+                    <p className="text-sm text-accent-foreground font-body">
                       avg {avg} / user
                     </p>
                   )}
