@@ -14,6 +14,7 @@ import AdminAnnouncementsPanel from "@/components/AdminAnnouncementsPanel";
 import DeliverabilityMonitor from "@/components/DeliverabilityMonitor";
 import PrivateRelayMonitor from "@/components/PrivateRelayMonitor";
 import DispatchSenderPanel from "@/components/DispatchSenderPanel";
+import GitHubSyncBadge from "@/components/GitHubSyncBadge";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import {
   AlertDialog,
@@ -387,6 +388,9 @@ const Admin = () => {
             Beta Nudge Email
           </Button>
         </div>
+
+        {/* GitHub sync status */}
+        <GitHubSyncBadge />
 
         {/* Broadcast Announcements */}
         <AdminAnnouncementsPanel />
