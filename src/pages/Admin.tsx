@@ -388,6 +388,9 @@ const Admin = () => {
           </Button>
         </div>
 
+        {/* GitHub sync status */}
+        <GitHubSyncBadge />
+
         {/* Broadcast Announcements */}
         <AdminAnnouncementsPanel />
 
