@@ -135,10 +135,10 @@ const Auth = () => {
           <div className="flex flex-col items-center gap-3">
             <StealYourFace size={80} />
             <h1 className="font-display text-4xl text-primary">Dead-Set.Org</h1>
-            <p className="font-hand text-xl text-muted-foreground">
+            <p className="font-hand text-xl text-foreground/85">
               {isForgot ? "We'll get you back in." : isSignUp ? "Come on in. There's room." : "Welcome back."}
             </p>
-            <p className="font-body text-sm text-muted-foreground/70">
+            <p className="font-body text-sm text-foreground/75">
               {isForgot
                 ? "Enter your email to reset your password"
                 : isSignUp
@@ -152,7 +152,7 @@ const Auth = () => {
                 className="font-body text-sm text-foreground"
               >
                 Already have an account?{" "}
-                <span className="font-semibold text-primary underline underline-offset-2">
+                <span className="font-semibold text-dead-gold underline underline-offset-2">
                   Sign in
                 </span>
               </button>
@@ -166,7 +166,7 @@ const Auth = () => {
                 <p className="font-body text-sm text-foreground">
                   You're browsing inside {appName}
                 </p>
-                <p className="font-body text-xs text-muted-foreground">
+                <p className="font-body text-xs text-foreground/75">
                   Google &amp; Apple sign-in won't work here. Tap <span className="font-mono">⋯</span> &rarr; <span className="text-foreground">Open in Safari</span>, or just use email below — it works everywhere.
                 </p>
               </div>
@@ -177,7 +177,7 @@ const Auth = () => {
           <div className="space-y-3">
             <Button
               variant="outline"
-              className="w-full h-12 text-base border-border text-foreground hover:bg-muted font-body gap-2 disabled:opacity-50"
+              className="w-full h-12 text-base border-border text-foreground hover:bg-foreground/10 hover:text-foreground hover:border-foreground/60 font-body gap-2 disabled:opacity-50"
               onClick={handleGoogleLogin}
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24">
@@ -191,7 +191,7 @@ const Auth = () => {
 
             <Button
               variant="outline"
-              className="w-full h-12 text-base border-border/50 text-muted-foreground hover:bg-muted/40 font-body gap-2 opacity-60"
+              className="w-full h-12 text-base border-border/60 text-foreground/60 hover:bg-foreground/5 hover:text-foreground/60 hover:border-border/60 font-body gap-2"
               onClick={handleAppleLogin}
               title="Apple sign-in is temporarily unavailable — please use Google or email/password"
               aria-label="Apple sign-in temporarily unavailable"
@@ -205,14 +205,14 @@ const Auth = () => {
               </span>
             </Button>
 
-            <p className="text-center font-body text-xs text-muted-foreground/70 pt-1">
+            <p className="text-center font-body text-xs text-foreground/70 pt-1">
               Apple sign-in is resting — Google and email are wide open.
             </p>
           </div>
 
           <div className="flex items-center gap-3">
             <div className="h-px flex-1 bg-border" />
-            <span className="font-mono text-[10px] text-muted-foreground/50 tracking-widest uppercase">or use your email</span>
+            <span className="font-mono text-[10px] text-foreground/70 tracking-widest uppercase">or use your email</span>
             <div className="h-px flex-1 bg-border" />
           </div>
 
@@ -253,7 +253,7 @@ const Auth = () => {
               <button
                 type="button"
                 onClick={() => setIsForgot(true)}
-                className="w-full text-center text-sm text-muted-foreground hover:text-primary font-body transition-colors"
+                className="w-full text-center text-sm text-foreground/70 hover:text-foreground font-body transition-colors"
               >
                 Forgot your password?
               </button>
@@ -264,7 +264,7 @@ const Auth = () => {
             {isForgot ? (
               <button
                 onClick={() => setIsForgot(false)}
-                className="text-sm text-primary hover:underline font-body"
+                className="text-sm text-dead-gold hover:underline font-body"
               >
                 Back to sign in
               </button>
@@ -276,18 +276,18 @@ const Auth = () => {
                 <Button
                   type="button"
                   variant="outline"
-                  className="w-full font-body border-primary/60 text-primary hover:bg-primary/10"
+                  className="w-full font-body border-primary/60 text-accent-foreground hover:bg-primary/10"
                   onClick={() => setIsSignUp(false)}
                 >
                   Sign in instead
                 </Button>
               </div>
             ) : (
-              <p className="text-center text-sm text-muted-foreground font-body">
+              <p className="text-center text-sm text-foreground/75 font-body">
                 New here?{" "}
                 <button
                   onClick={() => setIsSignUp(true)}
-                  className="text-primary hover:underline font-semibold"
+                  className="text-dead-gold hover:underline font-semibold"
                 >
                   Create a free account
                 </button>
@@ -295,7 +295,7 @@ const Auth = () => {
             )}
             <button
               onClick={() => navigate("/")}
-              className="font-mono text-[10px] text-muted-foreground/40 hover:text-muted-foreground tracking-widest uppercase transition-colors"
+              className="font-mono text-[10px] text-foreground/60 hover:text-foreground tracking-widest uppercase transition-colors"
             >
               ← Back to Dead-Set.Org
             </button>
