@@ -5,6 +5,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AudioPlayerProvider } from "@/contexts/AudioPlayerContext";
+import ErrorBoundary from "@/components/ErrorBoundary";
 import GlobalAudioPlayer from "@/components/GlobalAudioPlayer";
 import ReturnToSetlistPill from "@/components/ReturnToSetlistPill";
 import VisitorTracker from "@/components/VisitorTracker";
@@ -44,54 +45,56 @@ const SongPage = lazy(() => import("./pages/Song"));
 const queryClient = new QueryClient();
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <AudioPlayerProvider>
-          <UtmCapture />
-          <Suspense fallback={null}>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/my-setlists" element={<MySetlists />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/builder" element={<Builder />} />
-              <Route path="/builder/:id" element={<Builder />} />
-              <Route path="/join/:token" element={<JoinSetlist />} />
-              <Route path="/browse" element={<Browse />} />
-              <Route path="/setlist/:id" element={<SetlistPoster />} />
-              <Route path="/messages" element={<Messages />} />
-              <Route path="/admin" element={<Admin />} />
-              <Route path="/reset-password" element={<ResetPassword />} />
-              <Route path="/privacy" element={<PrivacyPolicy />} />
-              <Route path="/backstage" element={<Backstage />} />
-              <Route path="/unsubscribe" element={<Unsubscribe />} />
-              <Route path="/updates" element={<Updates />} />
-              <Route path="/admin/changelog" element={<AdminChangelog />} />
-              <Route path="/admin/email/beta-nudge" element={<AdminBetaNudge />} />
-              <Route path="/admin/notification-clicks" element={<AdminNotificationClicks />} />
-              <Route path="/user/:userId" element={<UserLibrary />} />
-              <Route path="/audio-diag" element={<AudioDiagnostics />} />
-              <Route path="/song/:songId" element={<SongPage />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </Suspense>
+  <ErrorBoundary>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <AudioPlayerProvider>
+            <UtmCapture />
+            <Suspense fallback={null}>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/my-setlists" element={<MySetlists />} />
+                <Route path="/profile" element={<Profile />} />
+                <Route path="/builder" element={<Builder />} />
+                <Route path="/builder/:id" element={<Builder />} />
+                <Route path="/join/:token" element={<JoinSetlist />} />
+                <Route path="/browse" element={<Browse />} />
+                <Route path="/setlist/:id" element={<SetlistPoster />} />
+                <Route path="/messages" element={<Messages />} />
+                <Route path="/admin" element={<Admin />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
+                <Route path="/privacy" element={<PrivacyPolicy />} />
+                <Route path="/backstage" element={<Backstage />} />
+                <Route path="/unsubscribe" element={<Unsubscribe />} />
+                <Route path="/updates" element={<Updates />} />
+                <Route path="/admin/changelog" element={<AdminChangelog />} />
+                <Route path="/admin/email/beta-nudge" element={<AdminBetaNudge />} />
+                <Route path="/admin/notification-clicks" element={<AdminNotificationClicks />} />
+                <Route path="/user/:userId" element={<UserLibrary />} />
+                <Route path="/audio-diag" element={<AudioDiagnostics />} />
+                <Route path="/song/:songId" element={<SongPage />} />
+                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Suspense>
 
-          <GlobalAudioPlayer />
-          <ReturnToSetlistPill />
-          <VisitorTracker />
-          <PresenceBroadcaster />
-          <PwaInstallBanner />
-          <AudioDebugPanel />
-          <PickHandleModal />
-          <NewVersionBanner />
-        </AudioPlayerProvider>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
+            <GlobalAudioPlayer />
+            <ReturnToSetlistPill />
+            <VisitorTracker />
+            <PresenceBroadcaster />
+            <PwaInstallBanner />
+            <AudioDebugPanel />
+            <PickHandleModal />
+            <NewVersionBanner />
+          </AudioPlayerProvider>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  </ErrorBoundary>
 );
 
 export default App;
