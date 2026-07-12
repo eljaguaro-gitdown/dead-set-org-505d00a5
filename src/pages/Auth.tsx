@@ -219,7 +219,7 @@ const Auth = () => {
             </Button>
 
             <p className="text-center font-body text-xs text-foreground/70 pt-1">
-              Apple sign-in is resting — Google and email are wide open.
+              Google &amp; Apple sign-in are resting — email is wide open.
             </p>
           </div>
 
