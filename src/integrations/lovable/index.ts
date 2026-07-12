@@ -1,15 +1,16 @@
-// Auth via Lovable Cloud's OAuth gateway. The SDK redirects the browser to
-// `${origin}/~oauth/initiate`; after migrating hosting to Netlify, that path is
-// re-pointed at Lovable's still-published gateway via a redirect in netlify.toml
-// (`/~oauth/*` -> dead-set-org.lovable.app). This keeps social login working
-// without standing up our own Google OAuth client. (Temporary — revisit to move
-// fully onto native Supabase OAuth + our own Google/Apple credentials.)
+// Auth via Lovable Cloud's OAuth gateway. Lovable hosting serves
+// `/~oauth/*` natively on both the *.lovable.app domain and the custom
+// domain (dead-set.org / www.dead-set.org), so the SDK's same-origin default
+// works everywhere. The flow is a same-origin popup + `web_message`
+// handshake: opener and popup must share an origin for the postMessage that
+// hands tokens back, so do NOT set an `oauthBrokerUrl` pointing at a
+// different host — that creates a cross-origin popup and the tokens are
+// silently dropped (blank return page).
 
 import { createLovableAuth } from "@lovable.dev/cloud-auth-js";
 import { supabase } from "../supabase/client";
-const lovableAuth = createLovableAuth({
-  oauthBrokerUrl: "https://dead-set-org.lovable.app/~oauth/initiate",
-});
+const lovableAuth = createLovableAuth();
+
 
 type SignInOptions = {
   redirect_uri?: string;
