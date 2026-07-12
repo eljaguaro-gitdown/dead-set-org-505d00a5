@@ -59,6 +59,15 @@ const hasActiveSessionFlag = () => {
   return sessionStorage.getItem(SESSION_FLAG) === "1";
 };
 
+// Clears sessionStorage markers set right before an OAuth redirect. Safe to
+// call whenever we know we do NOT have an active session, so poisoned tab
+// state from a failed OAuth round-trip cannot outlive the failure.
+const clearStaleOAuthMarkers = () => {
+  if (typeof window === "undefined") return;
+  sessionStorage.removeItem("post_oauth_redirect");
+  sessionStorage.removeItem("ds_pending_oauth_provider");
+};
+
 const ensureAuthInitialized = () => {
   if (isInitialized) return Promise.resolve();
   if (initPromise) return initPromise;
