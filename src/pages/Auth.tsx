@@ -11,7 +11,7 @@ import PageLayout from "@/components/PageLayout";
 import StealYourFace from "@/components/StealYourFace";
 import { getPostAuthRedirect } from "@/lib/postAuthRedirect";
 import { detectInAppBrowser } from "@/lib/inAppBrowser";
-import { trackAuthEvent, markOAuthRedirect } from "@/lib/authFunnel";
+import { trackAuthEvent } from "@/lib/authFunnel";
 
 const SESSION_FLAG = "dead_set_active_session";
 
@@ -107,6 +107,15 @@ const Auth = () => {
   };
 
   const handleGoogleLogin = async () => {
+    // Google sign-in is temporarily gated — see AuthModal.handleGoogleLogin
+    // for the full explanation. Handler + lovable.auth.signInWithOAuth call
+    // retained below for when native Supabase Google OAuth ships.
+    toast.error(
+      "Google sign-in is resting — email and password are wide open.",
+      { duration: 7000 }
+    );
+    return;
+    // eslint-disable-next-line no-unreachable
     if (isInApp) {
       toast.error(
         `Google sign-in doesn't work inside ${appName}. Tap the ⋯ menu and choose "Open in Safari" — or use email below.`,
@@ -114,7 +123,6 @@ const Auth = () => {
       );
       return;
     }
-    markOAuthRedirect("google");
     const { error } = await lovable.auth.signInWithOAuth("google", {
       redirect_uri: window.location.origin,
     });
@@ -177,8 +185,10 @@ const Auth = () => {
           <div className="space-y-3">
             <Button
               variant="outline"
-              className="w-full h-12 text-base border-border text-foreground hover:bg-foreground/10 hover:text-foreground hover:border-foreground/60 font-body gap-2 disabled:opacity-50"
+              className="w-full h-12 text-base border-border/60 text-foreground/60 hover:bg-foreground/5 hover:text-foreground/60 hover:border-border/60 font-body gap-2"
               onClick={handleGoogleLogin}
+              title="Google sign-in is temporarily unavailable — please use email/password"
+              aria-label="Google sign-in temporarily unavailable"
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24">
                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
@@ -187,6 +197,9 @@ const Auth = () => {
                 <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
               </svg>
               Continue with Google
+              <span className="ml-auto rounded-full border border-primary/40 bg-primary/10 px-2 py-0.5 text-[10px] font-mono uppercase tracking-wider text-dead-gold">
+                Unavailable
+              </span>
             </Button>
 
             <Button
@@ -206,7 +219,7 @@ const Auth = () => {
             </Button>
 
             <p className="text-center font-body text-xs text-foreground/70 pt-1">
-              Apple sign-in is resting — Google and email are wide open.
+              Google &amp; Apple sign-in are resting — email is wide open.
             </p>
           </div>
 

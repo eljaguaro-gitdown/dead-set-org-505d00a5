@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { trackAuthEvent, markOAuthRedirect } from "@/lib/authFunnel";
+import { trackAuthEvent } from "@/lib/authFunnel";
 import {
   Sheet,
   SheetContent,
@@ -118,15 +118,20 @@ const AuthModal = ({ open, onOpenChange, onAuthenticated, onBeforeRedirect }: Au
   };
 
   const handleGoogleLogin = async () => {
+    // Google sign-in is temporarily gated: the Lovable OAuth gateway only
+    // delivers tokens via the web_message popup flow (preview iframe only).
+    // On a full-page redirect from the published site the return leg lands
+    // with an empty fragment and no session. Until native Supabase Google
+    // OAuth ships with our own client, keep the button but surface a toast.
+    // Handler and lovable.auth.signInWithOAuth call retained below for the
+    // day we can re-enable — do NOT delete.
+    toast.error(
+      "Google sign-in is resting — email and password are wide open.",
+      { duration: 7000 }
+    );
+    return;
+    // eslint-disable-next-line no-unreachable
     onBeforeRedirect?.();
-    markOAuthRedirect("google");
-    // IMPORTANT: redirect_uri must be a public same-origin URL, NOT a protected
-    // route like /builder. The Lovable OAuth SDK sets window.location.href
-    // BEFORE the returned tokens can be handed to supabase.auth.setSession(),
-    // so if we land on a lazy/protected route the token fragment is dropped
-    // and the app shows a blank page. Point at the origin; smartRedirect on
-    // the landing page routes the user to /builder after the session hydrates.
-    sessionStorage.setItem("post_oauth_redirect", "1");
     const { error } = await lovable.auth.signInWithOAuth("google", {
       redirect_uri: window.location.origin,
     });
@@ -180,24 +185,26 @@ const AuthModal = ({ open, onOpenChange, onAuthenticated, onBeforeRedirect }: Au
             </button>
           </div>
 
-          {/* Apple temporarily unavailable banner */}
+          {/* Social sign-in temporarily unavailable banner */}
           <div
             role="alert"
             className="rounded-xl border-2 border-primary/60 bg-primary/10 p-3 text-center"
           >
             <p className="font-body text-sm font-semibold text-card-foreground">
-              Apple Sign-In is temporarily unavailable
+              Google &amp; Apple sign-in are resting
             </p>
             <p className="font-body text-xs text-muted-foreground mt-0.5">
-              Please use Google or email &amp; password below.
+              Email &amp; password below are wide open.
             </p>
           </div>
 
-          {/* Google OAuth */}
+          {/* Google OAuth — temporarily gated, mirrors the Apple pattern */}
           <Button
             variant="outline"
-            className="w-full border-border text-card-foreground hover:bg-muted font-body gap-2 py-6 text-base"
+            className="w-full border-border/50 text-muted-foreground hover:bg-muted/40 font-body gap-2 py-6 text-base"
             onClick={handleGoogleLogin}
+            title="Google sign-in is temporarily unavailable — please use email/password"
+            aria-label="Google sign-in temporarily unavailable"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
               <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
@@ -206,6 +213,9 @@ const AuthModal = ({ open, onOpenChange, onAuthenticated, onBeforeRedirect }: Au
               <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
             </svg>
             Continue with Google
+            <span className="ml-auto rounded-full border border-primary/40 bg-primary/10 px-2 py-0.5 text-[10px] font-mono uppercase tracking-wider text-accent-foreground">
+              Unavailable
+            </span>
           </Button>
 
           {/* Apple OAuth */}
@@ -213,7 +223,7 @@ const AuthModal = ({ open, onOpenChange, onAuthenticated, onBeforeRedirect }: Au
             variant="outline"
             className="w-full border-border/50 text-muted-foreground hover:bg-muted/40 font-body gap-2 py-6 text-base"
             onClick={handleAppleLogin}
-            title="Apple sign-in is temporarily unavailable — please use Google or email/password"
+            title="Apple sign-in is temporarily unavailable — please use email/password"
             aria-label="Apple sign-in temporarily unavailable"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
