@@ -120,11 +120,19 @@ const AuthModal = ({ open, onOpenChange, onAuthenticated, onBeforeRedirect }: Au
   const handleGoogleLogin = async () => {
     onBeforeRedirect?.();
     markOAuthRedirect("google");
+    // IMPORTANT: redirect_uri must be a public same-origin URL, NOT a protected
+    // route like /builder. The Lovable OAuth SDK sets window.location.href
+    // BEFORE the returned tokens can be handed to supabase.auth.setSession(),
+    // so if we land on a lazy/protected route the token fragment is dropped
+    // and the app shows a blank page. Point at the origin; smartRedirect on
+    // the landing page routes the user to /builder after the session hydrates.
+    sessionStorage.setItem("post_oauth_redirect", "/builder");
     const { error } = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: `${window.location.origin}/builder`,
+      redirect_uri: window.location.origin,
     });
     if (error) toast.error(error.message);
   };
+
 
   const handleAppleLogin = async () => {
     toast.error(
