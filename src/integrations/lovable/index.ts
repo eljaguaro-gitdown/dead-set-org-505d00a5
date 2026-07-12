@@ -7,7 +7,9 @@
 
 import { createLovableAuth } from "@lovable.dev/cloud-auth-js";
 import { supabase } from "../supabase/client";
-const lovableAuth = createLovableAuth();
+const lovableAuth = createLovableAuth({
+  oauthBrokerUrl: "https://dead-set-org.lovable.app/~oauth/initiate",
+});
 
 type SignInOptions = {
   redirect_uri?: string;
