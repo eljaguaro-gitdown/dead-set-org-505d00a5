@@ -30,12 +30,12 @@ const THRESHOLDS = {
 };
 
 const STATUS_TONE: Record<string, string> = {
-  sent: "text-emerald-400",
+  sent: "text-emerald-700",
   bounced: "text-destructive",
   dlq: "text-destructive",
   failed: "text-destructive",
   complained: "text-destructive",
-  suppressed: "text-amber-400",
+  suppressed: "text-amber-800",
   pending: "text-muted-foreground",
 };
 
@@ -182,7 +182,7 @@ export default function DeliverabilityMonitor() {
     <div className="bg-card border border-border rounded-lg overflow-hidden">
       <div className="px-4 py-3 border-b border-border flex items-center gap-2 flex-wrap">
         <Mail className="w-4 h-4 text-muted-foreground" />
-        <h2 className="font-display text-sm text-foreground">Email Deliverability</h2>
+        <h2 className="font-display text-sm text-card-foreground">Email Deliverability</h2>
         <div className="ml-auto flex gap-1">
           {WINDOWS.map((w) => (
             <button
@@ -190,8 +190,8 @@ export default function DeliverabilityMonitor() {
               onClick={() => setWindowId(w.id)}
               className={`px-2 py-1 text-xs rounded font-body border transition-colors ${
                 windowId === w.id
-                  ? "bg-primary/15 border-primary/40 text-primary"
-                  : "border-border text-muted-foreground hover:text-foreground"
+                  ? "bg-primary/15 border-primary/40 text-accent-foreground"
+                  : "border-border text-muted-foreground hover:text-card-foreground"
               }`}
             >
               {w.label}
@@ -215,7 +215,7 @@ export default function DeliverabilityMonitor() {
                   className={`flex items-start gap-2 rounded-lg border p-3 text-sm font-body ${
                     a.level === "critical"
                       ? "border-destructive/40 bg-destructive/10 text-destructive"
-                      : "border-amber-400/40 bg-amber-400/10 text-amber-300"
+                      : "border-amber-400/40 bg-amber-400/10 text-amber-800"
                   }`}
                 >
                   <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
@@ -225,7 +225,7 @@ export default function DeliverabilityMonitor() {
             </div>
           )}
           {alerts.length === 0 && stats.total > 0 && (
-            <div className="flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-3 text-sm font-body text-emerald-400">
+            <div className="flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-3 text-sm font-body text-emerald-700">
               <TrendingUp className="w-4 h-4" />
               All deliverability signals within healthy thresholds.
             </div>
@@ -234,7 +234,7 @@ export default function DeliverabilityMonitor() {
           {/* Stat grid */}
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
             <Stat label="Total Sent" value={stats.total} />
-            <Stat label="Delivered" value={`${stats.deliveryRate.toFixed(1)}%`} sub={`${stats.delivered}`} tone="text-emerald-400" />
+            <Stat label="Delivered" value={`${stats.deliveryRate.toFixed(1)}%`} sub={`${stats.delivered}`} tone="text-emerald-700" />
             <Stat label="Bounced" value={`${stats.bounceRate.toFixed(2)}%`} sub={`${stats.bounced}`} tone={stats.bounceRate >= THRESHOLDS.bounceWarn ? "text-destructive" : undefined} />
             <Stat label="Complaints" value={`${stats.complaintRate.toFixed(2)}%`} sub={`${stats.complained}`} tone={stats.complaintRate >= THRESHOLDS.complaintWarn ? "text-destructive" : undefined} />
             <Stat label="Failed (DLQ)" value={`${stats.failRate.toFixed(1)}%`} sub={`${stats.dlq}`} tone={stats.failRate >= THRESHOLDS.failWarn ? "text-destructive" : undefined} />
@@ -288,7 +288,7 @@ export default function DeliverabilityMonitor() {
                     <span className={`uppercase text-[10px] tracking-wider w-20 ${STATUS_TONE[r.status] || ""}`}>
                       {r.status}
                     </span>
-                    <span className="text-foreground truncate flex-1">{r.recipient_email}</span>
+                    <span className="text-card-foreground truncate flex-1">{r.recipient_email}</span>
                     <span className="text-muted-foreground text-xs hidden sm:inline">{r.template_name}</span>
                     <span className="text-muted-foreground text-xs">
                       {new Date(r.created_at).toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
@@ -318,7 +318,7 @@ function Stat({
   return (
     <div className="text-center">
       <p className="text-xs text-muted-foreground font-body uppercase tracking-wider">{label}</p>
-      <p className={`font-display text-2xl mt-1 ${tone || "text-foreground"}`}>{value}</p>
+      <p className={`font-display text-2xl mt-1 ${tone || "text-card-foreground"}`}>{value}</p>
       {sub !== undefined && <p className="text-xs text-muted-foreground font-body mt-0.5">{sub}</p>}
     </div>
   );

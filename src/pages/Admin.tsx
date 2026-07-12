@@ -239,10 +239,10 @@ const Admin = () => {
             <User className="w-3 h-3 text-primary" />
           )}
         </div>
-        <button onClick={() => navigate(`/user/${userId}`)} className="text-xs text-foreground font-medium hover:text-primary transition-colors">{name}</button>
+        <button onClick={() => navigate(`/user/${userId}`)} className="text-xs text-card-foreground font-medium hover:text-accent-foreground transition-colors">{name}</button>
         <button
           onClick={() => navigate(`/messages?to=${userId}`)}
-          className="inline-flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-colors ml-1"
+          className="inline-flex items-center gap-1 text-xs text-accent-foreground hover:text-accent-foreground/80 transition-colors ml-1"
           title={`Message ${name}`}
         >
           <Send className="w-3 h-3" />
@@ -271,7 +271,7 @@ const Admin = () => {
         <div className="text-center space-y-4">
           <Shield className="w-12 h-12 text-muted-foreground mx-auto" />
           <h1 className="font-display text-xl text-foreground">Access Denied</h1>
-          <p className="font-body text-sm text-muted-foreground">
+          <p className="font-body text-sm text-foreground/75">
             You don't have admin access.
           </p>
           <Button variant="outline" onClick={() => navigate("/")} className="font-body">
@@ -306,7 +306,7 @@ const Admin = () => {
 
       {/* Header */}
       <header className="border-b border-border px-4 py-3 flex items-center gap-3">
-        <button onClick={() => navigate("/")} className="font-display text-lg text-primary">
+        <button onClick={() => navigate("/")} className="font-display text-lg text-dead-gold">
           DS
         </button>
         <div className="w-px h-5 bg-border" />
@@ -318,7 +318,7 @@ const Admin = () => {
           variant="ghost"
           size="sm"
           onClick={() => fetchUsers().then(() => toast.success("Refreshed"))}
-          className="ml-auto font-body text-muted-foreground"
+          className="ml-auto font-body text-foreground/75"
           disabled={loading || refreshing}
           aria-label="Refresh"
         >
@@ -329,7 +329,7 @@ const Admin = () => {
           variant="ghost"
           size="sm"
           onClick={() => navigate("/")}
-          className="font-body text-muted-foreground"
+          className="font-body text-foreground/75"
         >
           <ArrowLeft className="w-3.5 h-3.5 mr-1" /> Back
         </Button>
@@ -340,13 +340,13 @@ const Admin = () => {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <div className="bg-card border border-border rounded-lg p-4">
             <p className="text-xs text-muted-foreground font-body uppercase tracking-wider">Total Users</p>
-            <p className="font-display text-2xl text-foreground mt-1">
+            <p className="font-display text-2xl text-card-foreground mt-1">
               {loading ? "—" : users.length}
             </p>
           </div>
           <div className="bg-card border border-border rounded-lg p-4">
             <p className="text-xs text-muted-foreground font-body uppercase tracking-wider">Active (24h)</p>
-            <p className="font-display text-2xl text-foreground mt-1">
+            <p className="font-display text-2xl text-card-foreground mt-1">
               {loading
                 ? "—"
                 : users.filter(
@@ -358,7 +358,7 @@ const Admin = () => {
           </div>
           <div className="bg-card border border-border rounded-lg p-4">
             <p className="text-xs text-muted-foreground font-body uppercase tracking-wider">Active (7d)</p>
-            <p className="font-display text-2xl text-foreground mt-1">
+            <p className="font-display text-2xl text-card-foreground mt-1">
               {loading
                 ? "—"
                 : users.filter(
@@ -370,7 +370,7 @@ const Admin = () => {
           </div>
           <div className="bg-card border border-border rounded-lg p-4">
             <p className="text-xs text-muted-foreground font-body uppercase tracking-wider">Total Setlists</p>
-            <p className="font-display text-2xl text-foreground mt-1">
+            <p className="font-display text-2xl text-card-foreground mt-1">
               {loading ? "—" : users.reduce((sum, u) => sum + u.setlistCount, 0)}
             </p>
           </div>
@@ -408,36 +408,36 @@ const Admin = () => {
         <div className="bg-card border border-border rounded-lg overflow-hidden">
           <div className="px-4 py-3 border-b border-border flex items-center gap-2">
             <Globe className="w-4 h-4 text-muted-foreground" />
-            <h2 className="font-display text-sm text-foreground">Site Traffic</h2>
+            <h2 className="font-display text-sm text-card-foreground">Site Traffic</h2>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 p-4">
             <div className="text-center">
               <p className="text-xs text-muted-foreground font-body uppercase tracking-wider">Unique (24h)</p>
-              <p className="font-display text-2xl text-foreground mt-1">
+              <p className="font-display text-2xl text-card-foreground mt-1">
                 {loading ? "—" : traffic?.unique24h ?? 0}
               </p>
             </div>
             <div className="text-center">
               <p className="text-xs text-muted-foreground font-body uppercase tracking-wider">Unique (7d)</p>
-              <p className="font-display text-2xl text-foreground mt-1">
+              <p className="font-display text-2xl text-card-foreground mt-1">
                 {loading ? "—" : traffic?.unique7d ?? 0}
               </p>
             </div>
             <div className="text-center">
               <p className="text-xs text-muted-foreground font-body uppercase tracking-wider">Unique (30d)</p>
-              <p className="font-display text-2xl text-foreground mt-1">
+              <p className="font-display text-2xl text-card-foreground mt-1">
                 {loading ? "—" : traffic?.unique30d ?? 0}
               </p>
             </div>
             <div className="text-center">
               <p className="text-xs text-muted-foreground font-body uppercase tracking-wider">All-Time Unique</p>
-              <p className="font-display text-2xl text-foreground mt-1">
+              <p className="font-display text-2xl text-card-foreground mt-1">
                 {loading ? "—" : traffic?.totalUnique ?? 0}
               </p>
             </div>
             <div className="text-center">
               <p className="text-xs text-muted-foreground font-body uppercase tracking-wider">Total Page Views</p>
-              <p className="font-display text-2xl text-foreground mt-1">
+              <p className="font-display text-2xl text-card-foreground mt-1">
                 {loading ? "—" : traffic?.totalPageViews ?? 0}
               </p>
             </div>
@@ -472,7 +472,7 @@ const Admin = () => {
         <div className="bg-card border border-border rounded-lg overflow-hidden">
           <div className="px-4 py-3 border-b border-border flex items-center gap-2">
             <MessageSquare className="w-4 h-4 text-primary" />
-            <h2 className="font-display text-sm text-foreground">Backstage · Inner Circle</h2>
+            <h2 className="font-display text-sm text-card-foreground">Backstage · Inner Circle</h2>
             <span className="text-xs text-muted-foreground font-body ml-auto">
               {!loading && `${backstage.wishlist.length + backstage.bugs.length + backstage.shares.length} submissions`}
             </span>
@@ -489,15 +489,15 @@ const Admin = () => {
                 <div>
                   <div className="flex items-center gap-2 mb-2">
                     <Lightbulb className="w-3.5 h-3.5 text-primary" />
-                    <h3 className="font-display text-xs text-primary uppercase tracking-wider">Wish List ({backstage.wishlist.length})</h3>
+                    <h3 className="font-display text-xs text-accent-foreground uppercase tracking-wider">Wish List ({backstage.wishlist.length})</h3>
                   </div>
                   <div className="space-y-2">
                     {backstage.wishlist.map((w) => (
                       <div key={w.id} className="bg-muted/30 border border-border rounded-md p-3 text-sm font-body">
                         <SubmitterBadge userId={w.user_id} />
-                        {w.top_request && <p className="text-foreground mt-2"><span className="text-muted-foreground">Top request:</span> {w.top_request}</p>}
-                        {w.what_works && <p className="text-foreground mt-1"><span className="text-muted-foreground">What works:</span> {w.what_works}</p>}
-                        {w.bigger_picture && <p className="text-foreground mt-1"><span className="text-muted-foreground">Bigger picture:</span> {w.bigger_picture}</p>}
+                        {w.top_request && <p className="text-card-foreground mt-2"><span className="text-muted-foreground">Top request:</span> {w.top_request}</p>}
+                        {w.what_works && <p className="text-card-foreground mt-1"><span className="text-muted-foreground">What works:</span> {w.what_works}</p>}
+                        {w.bigger_picture && <p className="text-card-foreground mt-1"><span className="text-muted-foreground">Bigger picture:</span> {w.bigger_picture}</p>}
                         <p className="text-xs text-muted-foreground mt-2">{formatDate(w.created_at)}</p>
                       </div>
                     ))}
@@ -516,7 +516,7 @@ const Admin = () => {
                     {backstage.bugs.map((b) => (
                       <div key={b.id} className="bg-muted/30 border border-border rounded-md p-3 text-sm font-body">
                         <SubmitterBadge userId={b.user_id} />
-                        <p className="text-foreground mt-2">{b.description}</p>
+                        <p className="text-card-foreground mt-2">{b.description}</p>
                         <div className="flex flex-wrap gap-3 mt-2 text-xs text-muted-foreground">
                           {b.location && <span>📍 {b.location}</span>}
                           {b.device && <span>📱 {b.device}</span>}
@@ -535,16 +535,16 @@ const Admin = () => {
                 <div>
                   <div className="flex items-center gap-2 mb-2">
                     <Star className="w-3.5 h-3.5 text-primary" />
-                    <h3 className="font-display text-xs text-primary uppercase tracking-wider">Share Your Set ({backstage.shares.length})</h3>
+                    <h3 className="font-display text-xs text-accent-foreground uppercase tracking-wider">Share Your Set ({backstage.shares.length})</h3>
                   </div>
                   <div className="space-y-2">
                     {backstage.shares.map((s) => (
                       <div key={s.id} className="bg-muted/30 border border-border rounded-md p-3 text-sm font-body">
                         <SubmitterBadge userId={s.user_id} />
-                        {s.handle && <p className="text-primary font-medium mt-1">@{s.handle}</p>}
-                        {s.favorite_songs && <p className="text-foreground mt-1"><span className="text-muted-foreground">Fav songs:</span> {s.favorite_songs}</p>}
-                        {s.favorite_show && <p className="text-foreground mt-1"><span className="text-muted-foreground">Fav show:</span> {s.favorite_show}</p>}
-                        {s.personal_take && <p className="text-foreground mt-1"><span className="text-muted-foreground">Take:</span> {s.personal_take}</p>}
+                        {s.handle && <p className="text-accent-foreground font-medium mt-1">@{s.handle}</p>}
+                        {s.favorite_songs && <p className="text-card-foreground mt-1"><span className="text-muted-foreground">Fav songs:</span> {s.favorite_songs}</p>}
+                        {s.favorite_show && <p className="text-card-foreground mt-1"><span className="text-muted-foreground">Fav show:</span> {s.favorite_show}</p>}
+                        {s.personal_take && <p className="text-card-foreground mt-1"><span className="text-muted-foreground">Take:</span> {s.personal_take}</p>}
                         <p className="text-xs text-muted-foreground mt-2">{formatDate(s.created_at)}</p>
                       </div>
                     ))}
@@ -563,7 +563,7 @@ const Admin = () => {
         <div className="bg-card border border-border rounded-lg overflow-hidden">
           <div className="px-4 py-3 border-b border-border flex items-center gap-2">
             <Users className="w-4 h-4 text-muted-foreground" />
-            <h2 className="font-display text-sm text-foreground">User Accounts</h2>
+            <h2 className="font-display text-sm text-card-foreground">User Accounts</h2>
             <span className="text-xs text-muted-foreground font-body ml-auto">
               {!loading && `${users.length} users`}
             </span>
@@ -599,12 +599,12 @@ const Admin = () => {
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => navigate(`/user/${u.id}`)}
-                          className="font-body text-sm text-foreground font-medium truncate hover:text-primary transition-colors"
+                          className="font-body text-sm text-card-foreground font-medium truncate hover:text-accent-foreground transition-colors"
                         >
                           {u.displayName || u.email?.split("@")[0]}
                         </button>
                         {!u.emailConfirmedAt && (
-                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-yellow-500/10 text-yellow-600 font-body">
+                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-yellow-500/10 text-yellow-800 font-body">
                             Unverified
                           </span>
                         )}
@@ -627,7 +627,7 @@ const Admin = () => {
                         className={`text-xs font-body ${
                           u.lastSignInAt &&
                           Date.now() - new Date(u.lastSignInAt).getTime() < 86400000
-                            ? "text-accent"
+                            ? "text-accent-foreground"
                             : "text-muted-foreground"
                         }`}
                       >
@@ -635,7 +635,7 @@ const Admin = () => {
                       </span>
                       <button
                         onClick={() => navigate(`/user/${u.id}`)}
-                        className="text-xs font-body text-primary hover:text-primary/80 transition-colors flex items-center gap-1 mt-0.5"
+                        className="text-xs font-body text-accent-foreground hover:text-accent-foreground/80 transition-colors flex items-center gap-1 mt-0.5"
                       >
                         <ListMusic className="w-3 h-3" />
                         {u.setlistCount} setlist{u.setlistCount !== 1 ? "s" : ""}
@@ -683,7 +683,7 @@ const Admin = () => {
                       </AlertDialogTrigger>
                       <AlertDialogContent className="bg-card border-border">
                         <AlertDialogHeader>
-                          <AlertDialogTitle className="font-display text-foreground">
+                          <AlertDialogTitle className="font-display text-card-foreground">
                             Delete {u.displayName || u.email}?
                           </AlertDialogTitle>
                           <AlertDialogDescription className="font-body text-muted-foreground">

@@ -4,6 +4,7 @@ import { motion, AnimatePresence, useMotionValue, useDragControls } from "framer
 import { Play, Pause, Volume2, VolumeX, X, Loader2, Cast, ChevronRight, GripHorizontal, SkipForward, SkipBack, FastForward } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import PosterModal from "@/components/PosterModal";
+import { EraMotif, eraNameFromDate } from "@/components/EraArt";
 import { findTrackInRecording, matchScore } from "@/lib/archiveOrg";
 import { audioDebug } from "@/lib/audioDebug";
 import {
@@ -681,7 +682,7 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
           <button
             type="button"
             onClick={handleManualResume}
-            className="absolute inset-x-0 -top-10 mx-auto w-fit px-4 py-2 rounded-[10px] bg-background/95 border border-primary/40 text-primary font-mono uppercase tracking-[0.18em] text-sm shadow-lg hover:bg-background hover:border-primary transition-colors flex items-center gap-2"
+            className="absolute inset-x-0 -top-10 mx-auto w-fit px-4 py-2 rounded-[10px] bg-background/95 border border-primary/40 text-dead-gold font-mono uppercase tracking-[0.18em] text-sm shadow-lg hover:bg-background hover:border-primary transition-colors flex items-center gap-2"
             aria-label="Tap to resume playback"
           >
             <Play className="w-3.5 h-3.5" />
@@ -708,7 +709,7 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
             <button
               onClick={onPrev}
               disabled={playlistInfo.current <= 1}
-              className="w-9 h-9 rounded-full bg-muted/60 text-foreground flex items-center justify-center shrink-0 disabled:opacity-30 hover:bg-muted transition-colors max-sm:order-1"
+              className="w-9 h-9 rounded-full bg-muted/60 text-card-foreground flex items-center justify-center shrink-0 disabled:opacity-30 hover:bg-muted transition-colors max-sm:order-1"
               title="Previous song"
               aria-label="Previous song"
             >
@@ -785,7 +786,7 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
                       e.stopPropagation();
                       navigate(`/setlist/${activeSetlistId}`);
                     }}
-                    className="h-7 px-2 rounded-md bg-primary/15 text-primary border border-primary/30 text-[10px] font-mono uppercase tracking-wider hover:bg-primary/25 transition-colors shrink-0 flex items-center gap-1"
+                    className="h-7 px-2 rounded-md bg-primary/15 text-accent-foreground border border-primary/30 text-[10px] font-mono uppercase tracking-wider hover:bg-primary/25 transition-colors shrink-0 flex items-center gap-1"
                     title="Back to setlist"
                   >
                     Setlist <ChevronRight className="w-3 h-3" />
@@ -795,15 +796,16 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
             ) : (
               <>
                 {playlistInfo && (
-                  <p className="font-mono uppercase tracking-[0.18em] text-primary/70 text-[11px] sm:text-sm tabular-nums leading-none mb-1">
+                  <p className="font-mono uppercase tracking-[0.18em] text-accent-foreground text-[11px] sm:text-sm tabular-nums leading-none mb-1">
                     Song {playlistInfo.current} of {playlistInfo.total}
                   </p>
                 )}
                 <p className="text-base sm:text-lg text-card-foreground font-display truncate">
                   {songTitle}
                 </p>
-                <p className="text-xs sm:text-sm text-card-foreground/70 font-ticket uppercase tracking-wide truncate">
-                  {showDate} {venue ? `· ${venue}` : ""}
+                <p className="text-xs sm:text-sm text-card-foreground/70 font-ticket uppercase tracking-wide flex items-center gap-1.5">
+                  <EraMotif era={eraNameFromDate(showDate)} size={13} className="shrink-0" />
+                  <span className="truncate">{showDate} {venue ? `· ${venue}` : ""}</span>
                 </p>
                 {activeSetlistId && (
                   <div className="flex items-center gap-2 mt-1.5">
@@ -822,7 +824,7 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
                         e.stopPropagation();
                         setPosterOpen(true);
                       }}
-                      className="h-7 px-3 rounded-md bg-transparent text-primary border border-primary/40 text-[11px] font-mono uppercase tracking-wider hover:bg-primary/10 transition-all shrink-0 inline-flex items-center gap-1"
+                      className="h-7 px-3 rounded-md bg-transparent text-accent-foreground border border-primary/40 text-[11px] font-mono uppercase tracking-wider hover:bg-primary/10 transition-all shrink-0 inline-flex items-center gap-1"
                       title="View poster"
                     >
                       View Poster
@@ -833,29 +835,29 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
             )}
           </div>
 
-          <span className="text-[11px] text-muted-foreground font-mono tabular-nums shrink-0 max-sm:order-8 max-sm:text-muted-foreground/60">
+          <span className="text-[11px] text-muted-foreground font-mono tabular-nums shrink-0 max-sm:order-8 max-sm:text-muted-foreground">
             {formatTime(progress)} / {formatTime(duration)}
           </span>
 
-          <a href="https://archive.org" target="_blank" rel="noopener noreferrer" className="text-[11px] text-muted-foreground/80 hover:text-muted-foreground font-mono shrink-0 inline max-sm:order-last max-sm:ml-auto transition-colors">
+          <a href="https://archive.org" target="_blank" rel="noopener noreferrer" className="text-[11px] text-muted-foreground hover:text-card-foreground font-mono shrink-0 inline max-sm:order-last max-sm:ml-auto transition-colors">
             via archive.org
           </a>
 
           <Popover>
             <PopoverTrigger asChild>
-              <button className="h-10 w-10 flex items-center justify-center text-muted-foreground hover:text-primary shrink-0 transition-colors rounded-full max-sm:order-9 max-sm:text-muted-foreground/60" title="Cast to speakers">
+              <button className="h-10 w-10 flex items-center justify-center text-muted-foreground hover:text-primary shrink-0 transition-colors rounded-full max-sm:order-9 max-sm:text-muted-foreground" title="Cast to speakers">
                 <Cast className="w-3.5 h-3.5" />
               </button>
             </PopoverTrigger>
             <PopoverContent side="top" align="end" className="w-72 text-xs font-body space-y-2 bg-card border-border">
-              <p className="font-display text-sm text-foreground">🔊 Cast to Sonos & Speakers</p>
+              <p className="font-display text-sm text-card-foreground">🔊 Cast to Sonos & Speakers</p>
               <div className="space-y-1.5 text-muted-foreground">
-                <p><strong className="text-foreground">Chrome:</strong> Menu (⋮) → "Cast…" → select your Sonos/Chromecast device</p>
-                <p><strong className="text-foreground">macOS:</strong> Click the AirPlay icon in the menu bar → select your Sonos speaker</p>
-                <p><strong className="text-foreground">iPhone/iPad:</strong> Open Control Center → tap AirPlay → select your Sonos</p>
-                <p><strong className="text-foreground">Windows:</strong> Settings → Bluetooth & devices → pair your speaker</p>
+                <p><strong className="text-card-foreground">Chrome:</strong> Menu (⋮) → "Cast…" → select your Sonos/Chromecast device</p>
+                <p><strong className="text-card-foreground">macOS:</strong> Click the AirPlay icon in the menu bar → select your Sonos speaker</p>
+                <p><strong className="text-card-foreground">iPhone/iPad:</strong> Open Control Center → tap AirPlay → select your Sonos</p>
+                <p><strong className="text-card-foreground">Windows:</strong> Settings → Bluetooth & devices → pair your speaker</p>
               </div>
-              <p className="text-[10px] text-muted-foreground/60 pt-1 border-t border-border">
+              <p className="text-[10px] text-muted-foreground pt-1 border-t border-border">
                 Sonos One, Beam, Arc, Era & Move support AirPlay 2
               </p>
             </PopoverContent>
@@ -873,7 +875,7 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
                 setCurrentTrack(Number(e.target.value));
                 setPlaying(true);
               }}
-              className="bg-muted border border-border rounded text-[10px] text-foreground font-body px-1 py-0.5 max-w-[100px] shrink-0 max-sm:order-11 max-sm:max-w-[88px] max-sm:text-[11px] max-sm:opacity-70"
+              className="bg-muted border border-border rounded text-[10px] text-card-foreground font-body px-1 py-0.5 max-w-[100px] shrink-0 max-sm:order-11 max-sm:max-w-[88px] max-sm:text-[11px] max-sm:opacity-70"
             >
               {tracks.map((t, i) => (
                 <option key={i} value={i}>

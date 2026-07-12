@@ -101,7 +101,7 @@ const PosterModal = ({
             className="w-full max-w-4xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <p className="font-mono uppercase tracking-[0.2em] text-primary/70 text-center mb-3 text-sm">
+            <p className="font-mono uppercase tracking-[0.2em] text-dead-gold text-center mb-3 text-sm">
               {songTitle}
             </p>
             <ShowPlate
@@ -111,7 +111,7 @@ const PosterModal = ({
               setlistName={songTitle}
               size="full"
             />
-            <p className="font-body text-muted-foreground text-center mt-4">
+            <p className="font-body text-foreground/75 text-center mt-4">
               {showDate}{venue ? ` · ${venue}` : ""}
             </p>
 
@@ -125,12 +125,12 @@ const PosterModal = ({
                 </button>
               )}
               {playlistInfo && (
-                <span className="font-mono text-muted-foreground tabular-nums text-sm">
+                <span className="font-mono text-foreground/75 tabular-nums text-sm">
                   {playlistInfo.current} / {playlistInfo.total}
                 </span>
               )}
             </div>
-            <p className="font-mono text-muted-foreground/60 text-center mt-4 text-sm">
+            <p className="font-mono text-foreground/60 text-center mt-4 text-sm">
               <span className="sm:hidden">Swipe to browse</span>
               <span className="hidden sm:inline">Swipe or use ← → to browse</span>
             </p>

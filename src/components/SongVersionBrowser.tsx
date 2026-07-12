@@ -127,7 +127,7 @@ const SongVersionBrowser = ({ song, curatedVersions, onSelectSong, onPlayArchive
     >
       <button
         onClick={() => onSelectSong(song)}
-        className="w-full text-left p-2 rounded bg-muted/50 hover:bg-muted text-sm font-body text-foreground transition-colors"
+        className="w-full text-left p-2 rounded bg-muted/50 hover:bg-muted text-sm font-body text-card-foreground transition-colors"
       >
         + Add song (no specific version)
       </button>
@@ -154,34 +154,34 @@ const SongVersionBrowser = ({ song, curatedVersions, onSelectSong, onPlayArchive
 
       {/* Archive.org versions */}
       {loading ? (
-        <div className="flex items-center gap-2 py-4 justify-center text-muted-foreground">
+        <div className="flex items-center gap-2 py-4 justify-center text-foreground/75">
           <Loader2 className="w-4 h-4 animate-spin" />
           <span className="text-xs font-body">Searching the tapes…</span>
         </div>
       ) : archiveVersions.length > 0 ? (
         <div className="space-y-1.5">
           <div className="flex items-center justify-between">
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-body">
+            <p className="text-[10px] uppercase tracking-wider text-foreground/75 font-body">
               From the Archive · {archiveVersions.filter((av) => !curatedDates.has(av.date || "")).length} recordings
             </p>
             <div className="flex items-center gap-0.5">
               <button
                 onClick={() => setSortMode("rating")}
-                className={`p-1 rounded transition-colors ${sortMode === "rating" ? "text-accent" : "text-muted-foreground hover:text-foreground"}`}
+                className={`p-1 rounded transition-colors ${sortMode === "rating" ? "text-accent" : "text-foreground/75 hover:text-foreground"}`}
                 title="Sort by rating"
               >
                 <TrendingUp className="w-3.5 h-3.5" />
               </button>
               <button
                 onClick={() => setSortMode("date-asc")}
-                className={`p-1 rounded transition-colors ${sortMode === "date-asc" ? "text-accent" : "text-muted-foreground hover:text-foreground"}`}
+                className={`p-1 rounded transition-colors ${sortMode === "date-asc" ? "text-accent" : "text-foreground/75 hover:text-foreground"}`}
                 title="Oldest first"
               >
                 <Calendar className="w-3.5 h-3.5" />
               </button>
               <button
                 onClick={() => setSortMode("date-desc")}
-                className={`p-1 rounded transition-colors ${sortMode === "date-desc" ? "text-accent" : "text-muted-foreground hover:text-foreground"}`}
+                className={`p-1 rounded transition-colors ${sortMode === "date-desc" ? "text-accent" : "text-foreground/75 hover:text-foreground"}`}
                 title="Newest first"
               >
                 <ArrowUpDown className="w-3.5 h-3.5" />
@@ -214,7 +214,7 @@ const SongVersionBrowser = ({ song, curatedVersions, onSelectSong, onPlayArchive
             ))}
         </div>
       ) : (
-        <p className="text-xs text-muted-foreground font-body px-2">No recordings found on the Archive</p>
+        <p className="text-xs text-foreground/75 font-body px-2">No recordings found on the Archive</p>
       )}
     </div>
   );
@@ -298,9 +298,9 @@ function CuratedVersionCard({
           )}
         </div>
       </div>
-      <p className="text-xs text-muted-foreground font-body mt-0.5">{v.venue}{v.city ? `, ${v.city}` : ""}</p>
+      <p className="text-xs text-foreground/75 font-body mt-0.5">{v.venue}{v.city ? `, ${v.city}` : ""}</p>
       {v.description && (
-        <p className="text-xs text-muted-foreground/70 font-body mt-0.5 italic">{v.description}</p>
+        <p className="text-xs text-foreground/60 font-body mt-0.5 italic">{v.description}</p>
       )}
     </button>
   );
@@ -329,10 +329,10 @@ function ArchiveVersionCard({
       className="w-full text-left p-2 rounded bg-card border border-border hover:border-primary/30 transition-colors"
     >
       <div className="flex items-center justify-between">
-        <span className="text-sm font-body text-foreground">{av.date || "Unknown date"}</span>
+        <span className="text-sm font-body text-card-foreground">{av.date || "Unknown date"}</span>
         <div className="flex items-center gap-1">
           {av.avgRating != null && av.avgRating > 0 && (
-            <Badge variant="outline" className="text-[10px] px-1 py-0 border-accent/30 text-accent">
+            <Badge variant="outline" className="text-[10px] px-1 py-0 border-accent/30 text-accent-foreground">
               ★ {av.avgRating.toFixed(1)}
             </Badge>
           )}
@@ -386,7 +386,7 @@ function ArchiveVersionCard({
         <p className="text-xs text-muted-foreground font-body mt-0.5">{av.venue}</p>
       )}
       {description && (
-        <p className="text-xs text-accent/80 font-body mt-1 italic">"{description}"</p>
+        <p className="text-xs text-accent-foreground font-body mt-1 italic">"{description}"</p>
       )}
     </button>
   );

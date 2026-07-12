@@ -106,10 +106,10 @@ const NewVersionBanner = () => {
       className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[100] max-w-[calc(100vw-2rem)] sm:max-w-md"
     >
       <div className="flex items-center gap-3 rounded-xl border border-primary/40 bg-card/95 backdrop-blur-md px-4 py-3 shadow-[0_0_32px_rgba(201,168,76,0.15)]">
-        <div className="font-mono text-[10px] tracking-[0.25em] text-primary uppercase shrink-0">
+        <div className="font-mono text-[10px] tracking-[0.25em] text-accent-foreground uppercase shrink-0">
           New build
         </div>
-        <p className="font-body text-sm text-foreground flex-1 min-w-0">
+        <p className="font-body text-sm text-card-foreground flex-1 min-w-0">
           A fresh version of Dead-Set is live. Refresh to grab the latest.
         </p>
         <button
@@ -122,7 +122,7 @@ const NewVersionBanner = () => {
         <button
           onClick={handleDismiss}
           aria-label="Dismiss"
-          className="text-muted-foreground hover:text-foreground transition-colors shrink-0"
+          className="text-muted-foreground hover:text-card-foreground transition-colors shrink-0"
         >
           <X className="w-4 h-4" />
         </button>

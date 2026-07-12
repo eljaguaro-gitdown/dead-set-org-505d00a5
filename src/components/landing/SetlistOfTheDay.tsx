@@ -99,14 +99,14 @@ const SetlistOfTheDay = () => {
     >
       <div className="px-6 sm:px-12 max-w-3xl mx-auto">
         <div className="text-center mb-8">
-          <div className="font-mono text-[10px] tracking-[0.3em] text-primary/70 uppercase mb-3 inline-flex items-center gap-2">
+          <div className="font-mono text-[10px] tracking-[0.3em] text-dead-gold uppercase mb-3 inline-flex items-center gap-2">
             <Calendar className="w-3 h-3" />
             Setlist of the Day · {today}
           </div>
           <h2 className="font-display italic text-3xl sm:text-5xl text-primary leading-tight">
             One night, hand-picked.
           </h2>
-          <p className="font-body text-base sm:text-lg text-muted-foreground mt-4 max-w-xl mx-auto">
+          <p className="font-body text-base sm:text-lg text-foreground/75 mt-4 max-w-xl mx-auto">
             A featured setlist from the community — a new one every 24 hours.
           </p>
         </div>
@@ -131,7 +131,7 @@ const SetlistOfTheDay = () => {
               <PlaySetlistButton setlistId={spotlight.id} size="lg" />
             </div>
             <div className="min-w-0 flex-1">
-              <h3 className="font-display italic text-2xl sm:text-3xl text-foreground group-hover:text-primary transition-colors leading-tight">
+              <h3 className="font-display italic text-2xl sm:text-3xl text-card-foreground group-hover:text-primary transition-colors leading-tight">
                 {spotlight.title}
               </h3>
               <button
@@ -145,31 +145,31 @@ const SetlistOfTheDay = () => {
               </button>
               <div className="flex items-center gap-3 mt-3 flex-wrap">
                 {spotlight.eraName && (
-                  <span className="px-2 py-0.5 text-[10px] font-mono rounded-md border border-primary/30 text-primary/80 tracking-wider uppercase">
+                  <span className="px-2 py-0.5 text-[10px] font-mono rounded-md border border-primary/30 text-accent-foreground tracking-wider uppercase">
                     {spotlight.eraName}
                   </span>
                 )}
                 {spotlight.yearsLabel && (
-                  <span className="font-mono text-[11px] tracking-wider text-muted-foreground/70 uppercase">
+                  <span className="font-mono text-[11px] tracking-wider text-muted-foreground uppercase">
                     {spotlight.yearsLabel}
                   </span>
                 )}
-                <span className="font-mono text-[11px] tracking-wider text-muted-foreground/60 uppercase inline-flex items-center gap-1">
+                <span className="font-mono text-[11px] tracking-wider text-muted-foreground uppercase inline-flex items-center gap-1">
                   <Music className="w-3 h-3" />
                   {spotlight.songCount} songs
                 </span>
                 {spotlight.upvoteCount > 0 && (
-                  <span className="font-mono text-sm text-primary tabular-nums">
+                  <span className="font-mono text-sm text-accent-foreground tabular-nums">
                     ⚡ {spotlight.upvoteCount}
                   </span>
                 )}
                 {spotlight.playCount > 0 && (
-                  <span className="font-mono text-sm text-muted-foreground/70 tabular-nums">
+                  <span className="font-mono text-sm text-muted-foreground tabular-nums">
                     ▶ {spotlight.playCount}
                   </span>
                 )}
               </div>
-              <div className="mt-5 inline-flex items-center gap-1.5 font-mono text-[10px] tracking-[0.2em] text-primary uppercase group-hover:gap-2.5 transition-all">
+              <div className="mt-5 inline-flex items-center gap-1.5 font-mono text-[10px] tracking-[0.2em] text-accent-foreground uppercase group-hover:gap-2.5 transition-all">
                 Open the setlist
                 <ChevronRight className="w-3.5 h-3.5" />
               </div>

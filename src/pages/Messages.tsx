@@ -48,7 +48,7 @@ const MessageBody = ({ content, isMe }: { content: string; isMe: boolean }) => {
     return (
       <div
         className={`px-3 py-1.5 rounded-lg text-sm font-body max-w-[85%] ${
-          isMe ? "bg-primary text-primary-foreground" : "bg-muted text-foreground"
+          isMe ? "bg-primary text-primary-foreground" : "bg-muted text-card-foreground"
         }`}
       >
         <Linkify>{content}</Linkify>
@@ -65,7 +65,7 @@ const MessageBody = ({ content, isMe }: { content: string; isMe: boolean }) => {
       {note && (
         <div
           className={`px-3 py-1.5 rounded-lg text-sm font-body ${
-            isMe ? "bg-primary text-primary-foreground" : "bg-muted text-foreground"
+            isMe ? "bg-primary text-primary-foreground" : "bg-muted text-card-foreground"
           }`}
         >
           {note}
@@ -188,7 +188,7 @@ const Messages = () => {
       <SiteHeader>
         <button
           onClick={() => navigate("/my-setlists")}
-          className="text-xs font-mono text-muted-foreground hover:text-foreground transition-colors tracking-wider uppercase"
+          className="text-xs font-mono text-foreground/75 hover:text-foreground transition-colors tracking-wider uppercase"
         >
           My Setlists
         </button>
@@ -199,7 +199,7 @@ const Messages = () => {
         {showConversationList && (
           <div className={`${isMobile && activeConversationId ? "hidden" : ""} ${isMobile ? "w-full" : "w-80"} border-r border-border flex flex-col bg-card`}>
             <div className="p-4 border-b border-border flex items-center justify-between">
-              <h2 className="font-display text-lg text-foreground">Messages</h2>
+              <h2 className="font-display text-lg text-card-foreground">Messages</h2>
               <button
                 onClick={() => { setShowSearch(!showSearch); setGroupMode(false); setSelectedUsers([]); }}
                 aria-label="Start a conversation"
@@ -225,7 +225,7 @@ const Messages = () => {
                       <button
                         onClick={() => { setGroupMode(false); setSelectedUsers([]); }}
                         className={`flex-1 text-[10px] font-mono uppercase tracking-wider py-1.5 rounded transition-colors ${
-                          !groupMode ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground"
+                          !groupMode ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-card-foreground"
                         }`}
                       >
                         Direct Message
@@ -233,7 +233,7 @@ const Messages = () => {
                       <button
                         onClick={() => setGroupMode(true)}
                         className={`flex-1 text-[10px] font-mono uppercase tracking-wider py-1.5 rounded transition-colors flex items-center justify-center gap-1 ${
-                          groupMode ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground"
+                          groupMode ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-card-foreground"
                         }`}
                       >
                         <Users className="w-3 h-3" /> Group
@@ -256,7 +256,7 @@ const Messages = () => {
                         {selectedUsers.map((u) => (
                           <span
                             key={u.user_id}
-                            className="inline-flex items-center gap-1 bg-primary/20 text-primary text-[10px] font-body px-2 py-0.5 rounded-full"
+                            className="inline-flex items-center gap-1 bg-primary/20 text-accent-foreground text-[10px] font-body px-2 py-0.5 rounded-full"
                           >
                             {u.display_name}
                             <button onClick={() => setSelectedUsers((prev) => prev.filter((p) => p.user_id !== u.user_id))}>
@@ -292,11 +292,11 @@ const Messages = () => {
                             >
                               <Avatar className="w-8 h-8">
                                 <AvatarImage src={u.avatar_url || undefined} />
-                                <AvatarFallback className="bg-primary/20 text-primary text-xs">
+                                <AvatarFallback className="bg-primary/20 text-accent-foreground text-xs">
                                   {(u.display_name || "?")[0].toUpperCase()}
                                 </AvatarFallback>
                               </Avatar>
-                              <span className="text-sm font-body text-foreground flex-1">{u.display_name || "Unknown"}</span>
+                              <span className="text-sm font-body text-card-foreground flex-1">{u.display_name || "Unknown"}</span>
                               {groupMode && isSelected && (
                                 <Check className="w-4 h-4 text-primary" />
                               )}
@@ -332,7 +332,7 @@ const Messages = () => {
                 <div className="flex flex-col items-center justify-center h-full gap-3 px-6">
                   <MessageCircle className="w-10 h-10 text-muted-foreground/30" />
                   <p className="text-sm text-muted-foreground font-body text-center">
-                    No conversations yet. Tap <span className="text-primary">+</span> to start one.
+                    No conversations yet. Tap <span className="text-accent-foreground">+</span> to start one.
                   </p>
                 </div>
               )}
@@ -352,7 +352,7 @@ const Messages = () => {
                     <div className="relative shrink-0">
                       <Avatar className="w-10 h-10">
                         <AvatarImage src={conv.otherUserAvatar || undefined} />
-                        <AvatarFallback className="bg-primary/20 text-primary text-sm">
+                        <AvatarFallback className="bg-primary/20 text-accent-foreground text-sm">
                           {conv.otherUserName[0].toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
@@ -363,7 +363,7 @@ const Messages = () => {
                   )}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm font-display text-foreground truncate">{conv.otherUserName}</span>
+                      <span className="text-sm font-display text-card-foreground truncate">{conv.otherUserName}</span>
                       <span className="text-[10px] text-muted-foreground font-mono shrink-0 ml-2">
                         {formatTime(conv.lastMessageAt)}
                       </span>
@@ -405,7 +405,7 @@ const Messages = () => {
                     <div className="relative">
                       <Avatar className="w-8 h-8">
                         <AvatarImage src={activeConv.otherUserAvatar || undefined} />
-                        <AvatarFallback className="bg-primary/20 text-primary text-xs">
+                        <AvatarFallback className="bg-primary/20 text-accent-foreground text-xs">
                           {activeConv.otherUserName[0].toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
@@ -415,14 +415,14 @@ const Messages = () => {
                     </div>
                   )}
                   <div>
-                    <span className="font-display text-sm text-foreground">{activeConv.otherUserName}</span>
+                    <span className="font-display text-sm text-card-foreground">{activeConv.otherUserName}</span>
                     {activeConv.isGroup && activeConv.members.length > 0 && (
                       <p className="text-[10px] text-muted-foreground font-body">
                         {activeConv.members.length + 1} members
                       </p>
                     )}
                     {!activeConv.isGroup && onlineUserIds.has(activeConv.otherUserId) && (
-                      <p className="text-[10px] text-green-500 font-body">Online</p>
+                      <p className="text-[10px] text-emerald-700 font-body">Online</p>
                     )}
                   </div>
                 </>
@@ -432,7 +432,7 @@ const Messages = () => {
             {/* Messages */}
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
               {messages.length === 0 && (
-                <p className="text-xs text-muted-foreground font-body text-center mt-8">
+                <p className="text-xs text-foreground/75 font-body text-center mt-8">
                   Send a message to start the conversation ✌️
                 </p>
               )}
@@ -440,7 +440,7 @@ const Messages = () => {
                 const isMe = msg.senderId === user?.id;
                 return (
                   <div key={msg.id} className={`flex flex-col ${isMe ? "items-end" : "items-start"}`}>
-                    <span className="text-[10px] text-muted-foreground font-body mb-0.5">
+                    <span className="text-[10px] text-foreground/75 font-body mb-0.5">
                       {msg.senderName} · {formatTime(msg.createdAt)}
                     </span>
                     <MessageBody content={msg.content} isMe={isMe} />
@@ -478,7 +478,7 @@ const Messages = () => {
           <div className="flex-1 flex items-center justify-center bg-background">
             <div className="text-center">
               <MessageCircle className="w-12 h-12 text-muted-foreground/20 mx-auto mb-3" />
-              <p className="text-sm text-muted-foreground font-body">Select a conversation or start a new one</p>
+              <p className="text-sm text-foreground/75 font-body">Select a conversation or start a new one</p>
             </div>
           </div>
         )}

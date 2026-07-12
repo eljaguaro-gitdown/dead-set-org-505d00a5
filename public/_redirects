@@ -1,0 +1,8 @@
+# Restore Lovable's OAuth gateway for social login. Forwarded to Lovable's
+# still-published app, which 302s on to oauth.lovable.app with the project_id.
+# MUST come before the SPA catch-all below. Temporary — until Google OAuth
+# moves onto our own Supabase + Google client.
+/~oauth/*    https://dead-set-org.lovable.app/~oauth/:splat    302!
+
+# SPA fallback — let React Router handle client-side routes.
+/*    /index.html    200

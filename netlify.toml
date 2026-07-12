@@ -1,0 +1,6 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+# Redirect rules (SPA fallback + the /~oauth gateway) live in public/_redirects,
+# which Netlify processes first — keeping them here too would be ignored/conflict.

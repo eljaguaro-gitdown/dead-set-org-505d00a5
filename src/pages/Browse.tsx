@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import PageLayout from "@/components/PageLayout";
+import { EraMotif } from "@/components/EraArt";
 import SiteHeader from "@/components/SiteHeader";
 import AdSenseLoader from "@/components/AdSenseLoader";
 import DancingBearButton from "@/components/DancingBearButton";
@@ -223,7 +224,7 @@ const Browse = () => {
         {!isAuthenticated && (
           <button
             onClick={() => navigate("/auth")}
-            className="font-display text-sm tracking-[0.15em] text-muted-foreground hover:text-primary transition-colors uppercase"
+            className="font-display text-sm tracking-[0.15em] text-foreground/75 hover:text-primary transition-colors uppercase"
           >
             Sign In
           </button>
@@ -236,7 +237,7 @@ const Browse = () => {
           <div className="px-4 sm:px-6 max-w-6xl mx-auto">
             <div className="flex items-center gap-3 mb-4">
               <Zap className="w-4 h-4 text-primary" />
-              <h2 className="font-display text-sm tracking-[0.2em] text-muted-foreground uppercase">Featured Setlists</h2>
+              <h2 className="font-display text-sm tracking-[0.2em] text-foreground/75 uppercase">Featured Setlists</h2>
             </div>
             <div className="overflow-x-auto scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
               <div className="flex gap-4 min-w-max sm:min-w-0 sm:grid sm:grid-cols-3">
@@ -255,7 +256,7 @@ const Browse = () => {
           <div className="px-4 sm:px-6 max-w-6xl mx-auto">
             <div className="flex items-center gap-3 mb-4">
               <TrendingUp className="w-4 h-4 text-accent" />
-              <h2 className="font-display text-sm tracking-[0.2em] text-muted-foreground uppercase">Trending This Week</h2>
+              <h2 className="font-display text-sm tracking-[0.2em] text-foreground/75 uppercase">Trending This Week</h2>
             </div>
             <div className="overflow-x-auto scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
               <div className="flex gap-3 min-w-max sm:min-w-0 sm:grid sm:grid-cols-3 lg:grid-cols-6">
@@ -315,8 +316,8 @@ const Browse = () => {
                 onClick={() => setEraFilter("all")}
                 className={`px-3 py-1 text-xs font-body rounded-full border transition-colors whitespace-nowrap ${
                   eraFilter === "all"
-                    ? "bg-primary/15 text-primary border-primary/40"
-                    : "border-border text-muted-foreground hover:text-foreground hover:border-foreground/20"
+                    ? "bg-primary/15 text-dead-gold border-primary/40"
+                    : "border-border text-foreground/75 hover:text-foreground hover:border-foreground/20"
                 }`}
               >
                 All Eras
@@ -332,7 +333,7 @@ const Browse = () => {
                     style={
                       isActive
                         ? { backgroundColor: `hsl(${color} / 0.15)`, color: `hsl(${color})`, borderColor: `hsl(${color} / 0.4)` }
-                        : { borderColor: "hsl(var(--border))", color: "hsl(var(--muted-foreground))" }
+                        : { borderColor: "hsl(var(--border))", color: "hsl(var(--foreground) / 0.75)" }
                     }
                   >
                     {era.name}
@@ -356,8 +357,8 @@ const Browse = () => {
           ) : filtered.length === 0 ? (
             <div className="text-center py-20">
               <StealYourFace size={60} />
-              <p className="font-display text-xl text-muted-foreground mt-4">No setlists found</p>
-              <p className="font-body text-sm text-muted-foreground mt-2">
+              <p className="font-display text-xl text-foreground/75 mt-4">No setlists found</p>
+              <p className="font-body text-sm text-foreground/75 mt-2">
                 Be the first to create and share one!
               </p>
               <button
@@ -385,7 +386,7 @@ const Browse = () => {
                 <div className="flex justify-center mt-8">
                   <button
                     onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
-                    className="px-8 py-2.5 rounded-full border border-border text-muted-foreground hover:text-foreground hover:border-foreground/30 font-body text-sm transition-colors"
+                    className="px-8 py-2.5 rounded-full border border-border text-foreground/75 hover:text-foreground hover:border-foreground/30 font-body text-sm transition-colors"
                   >
                     Load More
                   </button>
@@ -429,16 +430,17 @@ const FeaturedCard = ({ setlist, onClick }: { setlist: SetlistWithMeta; onClick:
           {setlist.era_name && (
             <EraTooltip eraName={setlist.era_name}>
               <span
-                className="px-2 py-0.5 text-[10px] font-mono uppercase tracking-wide rounded-sm border cursor-help"
+                className="inline-flex items-center gap-1.5 px-2 py-0.5 text-[10px] font-mono uppercase tracking-wide rounded-sm border cursor-help"
                 style={{ borderColor: `hsl(${eraColor})`, color: `hsl(${eraColor})` }}
               >
+                <EraMotif era={setlist.era_name} size={13} />
                 {setlist.era_name}
               </span>
             </EraTooltip>
           )}
           <span className="text-[11px] font-mono text-muted-foreground">{setlist.slot_count} songs</span>
           {setlist.upvote_count > 0 && (
-            <span className="text-[11px] font-mono text-primary flex items-center gap-0.5">
+            <span className="text-[11px] font-mono text-accent-foreground flex items-center gap-0.5">
               <Zap className="w-2.5 h-2.5 fill-primary" /> {setlist.upvote_count}
             </span>
           )}
@@ -451,12 +453,12 @@ const FeaturedCard = ({ setlist, onClick }: { setlist: SetlistWithMeta; onClick:
         {setlist.preview_songs.length > 0 && (
           <div className="mt-3 pt-3 perforated">
             {setlist.preview_songs.map((name, i) => (
-              <p key={i} className="text-xs font-mono text-card-foreground/70 leading-relaxed truncate">
+              <p key={i} className="text-xs font-mono text-muted-foreground leading-relaxed truncate">
                 {name}
               </p>
             ))}
             {setlist.slot_count > 4 && (
-              <p className="text-xs font-mono text-card-foreground/40 mt-0.5">
+              <p className="text-xs font-mono text-muted-foreground mt-0.5">
                 + {setlist.slot_count - 4} more
               </p>
             )}
@@ -507,16 +509,17 @@ const SetlistCard = ({ setlist, index, onClick, isFav, onToggleFav }: { setlist:
           {setlist.era_name && (
             <EraTooltip eraName={setlist.era_name}>
               <span
-                className="px-2 py-0.5 text-[10px] font-mono uppercase tracking-wide rounded-sm border cursor-help"
+                className="inline-flex items-center gap-1.5 px-2 py-0.5 text-[10px] font-mono uppercase tracking-wide rounded-sm border cursor-help"
                 style={{ borderColor: `hsl(${eraColor} / 0.35)`, color: `hsl(${eraColor})` }}
               >
+                <EraMotif era={setlist.era_name} size={13} />
                 {setlist.era_name}
               </span>
             </EraTooltip>
           )}
           <span className="text-[11px] font-mono text-muted-foreground">{setlist.slot_count} songs</span>
           {setlist.upvote_count > 0 && (
-            <span className="text-[11px] font-mono text-primary flex items-center gap-0.5">
+            <span className="text-[11px] font-mono text-accent-foreground flex items-center gap-0.5">
               <Zap className="w-2.5 h-2.5 fill-primary" /> {setlist.upvote_count}
             </span>
           )}
@@ -531,12 +534,12 @@ const SetlistCard = ({ setlist, index, onClick, isFav, onToggleFav }: { setlist:
         {setlist.preview_songs.length > 0 && (
           <div className="mt-3 pt-2 perforated space-y-0.5">
             {setlist.preview_songs.map((name, i) => (
-              <p key={i} className="text-xs font-mono text-card-foreground/70 truncate leading-relaxed">
+              <p key={i} className="text-xs font-mono text-muted-foreground truncate leading-relaxed">
                 {name}
               </p>
             ))}
             {setlist.slot_count > setlist.preview_songs.length && (
-              <p className="text-[10px] font-mono text-card-foreground/40">
+              <p className="text-[10px] font-mono text-muted-foreground">
                 ...and {setlist.slot_count - setlist.preview_songs.length} more
               </p>
             )}
@@ -563,7 +566,7 @@ const TrendingCard = ({ setlist, onClick }: { setlist: SetlistWithMeta; onClick:
       <div className="p-3">
         <div className="flex items-start gap-2">
           <div className="min-w-0 flex-1">
-            <h3 className="font-display text-xs text-foreground group-hover:text-primary transition-colors leading-tight line-clamp-2">
+            <h3 className="font-display text-xs text-card-foreground group-hover:text-primary transition-colors leading-tight line-clamp-2">
               {setlist.title}
             </h3>
             <Link to={`/user/${setlist.creator_id}`} onClick={(e) => e.stopPropagation()} className="text-[9px] font-body text-muted-foreground mt-1 truncate block hover:text-primary transition-colors">{setlist.creator_name}</Link>
@@ -571,7 +574,7 @@ const TrendingCard = ({ setlist, onClick }: { setlist: SetlistWithMeta; onClick:
           <PlaySetlistButton setlistId={setlist.id} size="sm" />
         </div>
         <div className="flex items-center gap-2 mt-2">
-          <span className="text-[10px] font-body text-accent flex items-center gap-0.5">
+          <span className="text-[10px] font-body text-accent-foreground flex items-center gap-0.5">
             <Play className="w-2.5 h-2.5 fill-accent" /> {setlist.play_count} plays
           </span>
           <span className="text-[9px] font-body text-muted-foreground">{setlist.slot_count} songs</span>

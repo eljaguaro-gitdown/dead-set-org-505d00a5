@@ -23,8 +23,8 @@ const Pill = ({
     onClick={onClick}
     className={`px-4 py-2 rounded-full text-sm font-body font-medium transition-all duration-200 border ${
       active
-        ? "bg-primary text-[#0D0D0D] border-primary shadow-[0_0_12px_rgba(201,168,76,0.3)]"
-        : "bg-transparent text-primary border-primary/50 hover:border-primary hover:bg-primary/10"
+        ? "bg-primary text-primary-foreground border-primary"
+        : "bg-card paper-grain text-card-foreground border-border hover:border-primary hover:bg-secondary"
     }`}
   >
     {label}
@@ -43,8 +43,8 @@ const Confirmation = ({
 }) => (
   <div className="text-center py-16 space-y-4">
     <p className="text-4xl">{icon}</p>
-    <p className="text-2xl font-display italic text-white">{headline}</p>
-    <p className="text-lg font-body text-primary">{subline}</p>
+    <p className="text-3xl font-display text-primary">{headline}</p>
+    <p className="text-lg font-body text-foreground/80">{subline}</p>
   </div>
 );
 
@@ -64,13 +64,13 @@ const Section = ({
 }) => (
   <section className="py-16 md:py-24 relative">
     {accent && <div className="absolute right-0 top-8 opacity-20 pointer-events-none hidden md:block">{accent}</div>}
-    <p className="font-mono text-sm text-primary tracking-[0.2em] uppercase mb-4">
+    <p className="font-mono text-sm text-dead-gold tracking-[0.2em] uppercase mb-4">
       {number}
     </p>
-    <h2 className="font-display italic text-3xl md:text-4xl text-white mb-3">
+    <h2 className="font-display text-3xl md:text-4xl text-foreground mb-3">
       {title}
     </h2>
-    <p className="font-body text-white/70 text-lg md:text-xl mb-12 max-w-xl leading-relaxed">
+    <p className="font-body text-foreground/70 text-lg md:text-xl mb-12 max-w-xl leading-relaxed">
       {orientation}
     </p>
     {children}
@@ -79,7 +79,7 @@ const Section = ({
 
 /* ─── Label ─── */
 const FieldLabel = ({ children }: { children: string }) => (
-  <label className="block font-mono text-xs text-primary tracking-[0.15em] uppercase mb-2.5 font-medium">
+  <label className="block font-mono text-xs text-dead-gold tracking-[0.15em] uppercase mb-2.5 font-medium">
     {children}
   </label>
 );
@@ -91,7 +91,7 @@ const TextInput = ({ placeholder, value, onChange }: { placeholder: string; valu
     placeholder={placeholder}
     value={value}
     onChange={(e) => onChange(e.target.value)}
-    className="w-full bg-[#1a1a1a] border border-primary/25 rounded-lg px-5 py-4 font-body text-base text-white placeholder:text-white/30 focus:outline-none focus:border-primary/60 focus:shadow-[0_0_16px_rgba(201,168,76,0.1)] transition-all"
+    className="w-full bg-card paper-grain border border-border rounded-sm px-5 py-4 font-body text-base text-card-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-all"
   />
 );
 
@@ -112,7 +112,7 @@ const TextArea = ({
     rows={rows}
     value={value}
     onChange={(e) => onChange(e.target.value)}
-    className="w-full bg-[#1a1a1a] border border-primary/25 rounded-lg px-5 py-4 font-body text-base text-white placeholder:text-white/30 focus:outline-none focus:border-primary/60 focus:shadow-[0_0_16px_rgba(201,168,76,0.1)] transition-all resize-none"
+    className="w-full bg-card paper-grain border border-border rounded-sm px-5 py-4 font-body text-base text-card-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-all resize-none"
   />
 );
 
@@ -132,9 +132,7 @@ const SubmitButton = ({
     type="button"
     onClick={onClick}
     disabled={loading}
-    className={`bg-gradient-to-r from-primary to-[#E8D48B] text-[#0D0D0D] rounded-lg font-body font-bold text-lg px-10 py-4 transition-all duration-300 disabled:opacity-50 w-full md:w-auto md:min-w-[240px] hover:scale-[1.02] active:scale-[0.98] ${
-      glow ? "shadow-[0_0_24px_rgba(201,168,76,0.4)] hover:shadow-[0_0_32px_rgba(201,168,76,0.6)]" : "shadow-[0_0_16px_rgba(201,168,76,0.2)]"
-    }`}
+    className="foil rounded-sm font-body font-bold text-lg px-10 py-4 transition-all duration-300 disabled:opacity-50 w-full md:w-auto md:min-w-[240px] hover:scale-[1.02] active:scale-[0.98]"
   >
     {loading ? "Sending\u2026" : label}
   </button>
@@ -203,18 +201,18 @@ const Backstage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0D0D0D] text-white">
+    <div className="min-h-screen bg-background text-foreground">
       {/* HERO HEADER */}
       {/* Back to Dead Set — top */}
       <div className="relative z-20 px-6 pt-4">
-        <button onClick={() => navigate("/")} className="inline-flex items-center gap-2 font-body text-base text-primary hover:text-white transition-colors">
+        <button onClick={() => navigate("/")} className="inline-flex items-center gap-2 font-body text-base text-dead-gold hover:text-white transition-colors">
           <ArrowLeft className="w-4 h-4" /> Back to Dead-Set.Org
         </button>
       </div>
 
       <header className="relative overflow-hidden min-h-[70vh] flex items-center">
         <img src={bandStageImg} alt="" className="absolute inset-0 w-full h-full object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/60 to-[#0D0D0D]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/55 to-background" />
         <div className="absolute inset-0" style={{ backgroundImage: "radial-gradient(ellipse at 50% 30%, rgba(201,168,76,0.08) 0%, transparent 60%)" }} />
 
         <div className="relative z-10 w-full max-w-5xl mx-auto px-6 md:px-12 py-16 flex flex-col md:flex-row items-center gap-10">
@@ -223,17 +221,17 @@ const Backstage = () => {
           </div>
 
           <div className="text-center md:text-left flex-1">
-            <p className="font-mono text-sm md:text-base text-primary tracking-[0.2em] uppercase mb-4">
-              🎟️&ensp;DEAD SET &nbsp;·&nbsp; ALL ACCESS
+            <p className="font-mono text-sm md:text-base text-dead-gold tracking-[0.2em] uppercase mb-4">
+              🎟️&ensp;THE LANYARD'S YOURS &nbsp;·&nbsp; ALL ACCESS
             </p>
-            <h1 className="font-display italic text-4xl md:text-5xl lg:text-6xl text-white leading-tight mb-6">
+            <h1 className="font-display text-4xl md:text-5xl lg:text-6xl text-white leading-tight mb-6">
               You're backstage now.
             </h1>
-            <div className="space-y-4 font-body text-white/80 text-lg md:text-xl leading-relaxed max-w-lg">
-              <p>Welcome to the inner circle. This is where we build Dead Set together — a small group of people who love this music as much as we do.</p>
-              <p className="text-white">Tell us what's working. Tell us what's broken. Tell us what you dream about.</p>
+            <div className="space-y-4 font-body text-white/85 text-lg md:text-xl leading-relaxed max-w-lg">
+              <p>Security just waved you past the rope. You felt the eyes on your back — <em>who's that?</em> — as you slipped behind the curtain. And here it is: not the chaos you pictured. Warmer. Closer. Everyone in this room loves the music as much as you do.</p>
+              <p className="text-white">This is the inner circle, and you're in it. Tell us what's working, what's broken, what you stay up dreaming about — we read every single word.</p>
             </div>
-            <p className="font-display italic text-xl md:text-2xl text-primary mt-8">"Every show found its way here somehow."</p>
+            <p className="font-hand text-2xl md:text-3xl text-primary mt-8">"Every show found its way here somehow."</p>
           </div>
         </div>
       </header>
@@ -243,7 +241,7 @@ const Backstage = () => {
         <div className="flex items-center gap-6">
           <div className="h-px w-24 md:w-40 bg-gradient-to-r from-transparent to-primary/30" />
           <img src={greenMmsImg} alt="Bowl of green M&Ms" width={512} height={512} loading="lazy" className="w-20 md:w-28 h-auto drop-shadow-[0_4px_16px_rgba(0,200,0,0.2)] hover:scale-110 transition-transform duration-300" />
-          <p className="font-body text-white/50 text-sm italic hidden sm:block">Only green ones backstage.</p>
+          <p className="font-hand text-foreground/70 text-lg hidden sm:block">Only green ones backstage.</p>
           <div className="h-px w-24 md:w-40 bg-gradient-to-l from-transparent to-primary/30" />
         </div>
       </div>
@@ -274,7 +272,7 @@ const Backstage = () => {
                 <TextArea rows={3} placeholder="What should Dead Set be in five years? What does the community need?" value={s3.bigger} onChange={(v) => setS3({ ...s3, bigger: v })} />
               </div>
               <div className="flex flex-col items-center gap-5 pt-4">
-                <p className="font-display italic text-xl text-primary">"We're building this for you."</p>
+                <p className="font-display italic text-xl text-dead-gold">"We're building this for you."</p>
                 <SubmitButton label="Send My Wish" onClick={submitWish} loading={s3Loading} glow />
               </div>
             </div>
@@ -385,13 +383,13 @@ const Backstage = () => {
 
       {/* FOOTER */}
       <footer className="border-t border-primary/20 mt-16 py-10 text-center space-y-6">
-        <button onClick={() => navigate("/")} className="inline-flex items-center gap-2 font-body text-base text-primary hover:text-white transition-colors mx-auto">
+        <button onClick={() => navigate("/")} className="inline-flex items-center gap-2 font-body text-base text-dead-gold hover:text-white transition-colors mx-auto">
           <ArrowLeft className="w-4 h-4" /> Back to Dead-Set.Org
         </button>
-        <p className="font-mono text-sm text-primary/60 tracking-[0.15em] uppercase leading-relaxed">
+        <p className="font-mono text-sm text-dead-gold tracking-[0.15em] uppercase leading-relaxed">
           DEAD SET &nbsp;·&nbsp; ALL ACCESS &nbsp;·&nbsp; INNER CIRCLE
           <br />
-          <span className="text-white/40">dead-set.org</span>
+          <span className="text-foreground/70">dead-set.org</span>
         </p>
       </footer>
     </div>

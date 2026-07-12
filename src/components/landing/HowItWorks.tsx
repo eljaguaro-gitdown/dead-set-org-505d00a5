@@ -48,7 +48,7 @@ const HowItWorks = () => (
           <h3 className="font-body text-lg sm:text-xl font-bold text-foreground">
             {step.title}
           </h3>
-          <p className="font-body text-base sm:text-lg text-muted-foreground leading-relaxed max-w-[280px]">
+          <p className="font-body text-base sm:text-lg text-foreground/75 leading-relaxed max-w-[280px]">
             {step.desc}
           </p>
         </motion.div>

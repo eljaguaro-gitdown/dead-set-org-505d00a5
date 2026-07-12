@@ -227,7 +227,7 @@ const BuildFromShowDialog = ({ open, onOpenChange, onSeed, initialDate }: BuildF
     <Dialog open={open} onOpenChange={(o) => { if (!o) resetAll(); onOpenChange(o); }}>
       <DialogContent className="bg-card border-border max-w-md">
         <DialogHeader>
-          <DialogTitle className="font-display text-3xl text-foreground flex items-center gap-2">
+          <DialogTitle className="font-display text-3xl text-card-foreground flex items-center gap-2">
             <Sparkles className="w-6 h-6 text-primary" />
             {preview ? "Confirm this show" : "Recreate a show"}
           </DialogTitle>
@@ -241,12 +241,12 @@ const BuildFromShowDialog = ({ open, onOpenChange, onSeed, initialDate }: BuildF
         {preview ? (
           <div className="space-y-4 pt-2">
             <div className="rounded-xl border border-border bg-background/40 p-4 space-y-2">
-              <div className="font-display text-xl text-foreground">{preview.niceDate}</div>
+              <div className="font-display text-xl text-card-foreground">{preview.niceDate}</div>
               {preview.venue && (
                 <div className="font-body text-sm text-muted-foreground">{preview.venue}</div>
               )}
               <div className="flex flex-wrap gap-2 pt-1">
-                <span className="text-xs font-body px-2 py-1 rounded-md bg-primary/10 text-primary">
+                <span className="text-xs font-body px-2 py-1 rounded-md bg-primary/10 text-accent-foreground">
                   {preview.totalTracks} song{preview.totalTracks === 1 ? "" : "s"}
                 </span>
                 {preview.setBreakdown.map(({ setNumber, count }) => (
@@ -265,7 +265,7 @@ const BuildFromShowDialog = ({ open, onOpenChange, onSeed, initialDate }: BuildF
                   href={preview.seed.archiveUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 text-sm font-body text-primary hover:underline pt-1"
+                  className="inline-flex items-center gap-1.5 text-sm font-body text-accent-foreground hover:underline pt-1"
                 >
                   <ExternalLink className="w-3.5 h-3.5" />
                   Source #1 on archive.org
@@ -276,7 +276,7 @@ const BuildFromShowDialog = ({ open, onOpenChange, onSeed, initialDate }: BuildF
             <div className="rounded-xl border border-border bg-background/20 max-h-64 overflow-y-auto">
               <ol className="divide-y divide-border">
                 {preview.trackTitles.map((t, i) => (
-                  <li key={i} className="flex items-baseline gap-3 px-4 py-2 font-body text-sm text-foreground">
+                  <li key={i} className="flex items-baseline gap-3 px-4 py-2 font-body text-sm text-card-foreground">
                     <span className="text-muted-foreground w-6 shrink-0 text-right">{i + 1}.</span>
                     <span className="truncate">{t}</span>
                   </li>
@@ -447,7 +447,7 @@ const BuildFromShowDialog = ({ open, onOpenChange, onSeed, initialDate }: BuildF
           <p className="text-sm text-muted-foreground font-body leading-relaxed flex items-start gap-1.5 pt-2">
             <ExternalLink className="w-4 h-4 mt-0.5 shrink-0 opacity-60" />
             <span>
-              Setlist data sourced from <span className="text-primary">archive.org</span>.
+              Setlist data sourced from <span className="text-accent-foreground">archive.org</span>.
               Coverage is excellent for ’72 onward; a few early shows may be missing.
             </span>
           </p>

@@ -47,7 +47,7 @@ const CollaboratorAvatars = ({ collaborators, creatorName }: CollaboratorAvatars
                 </AvatarFallback>
               </Avatar>
             </TooltipTrigger>
-            <TooltipContent className="bg-card border-border text-foreground font-body text-xs">
+            <TooltipContent className="bg-card border-border text-card-foreground font-body text-xs">
               {person.displayName} ({person.role})
             </TooltipContent>
           </Tooltip>

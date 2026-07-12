@@ -137,7 +137,7 @@ const AuthModal = ({ open, onOpenChange, onAuthenticated, onBeforeRedirect }: Au
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="bottom" className="bg-card border-border rounded-t-2xl max-h-[85vh] overflow-y-auto">
         <SheetHeader className="text-center pb-2">
-          <SheetTitle className="font-display text-2xl text-foreground">
+          <SheetTitle className="font-display text-2xl text-card-foreground">
             {isSignUp ? "Create your account" : "Welcome back"}
           </SheetTitle>
           <SheetDescription className="font-body text-muted-foreground">
@@ -155,7 +155,7 @@ const AuthModal = ({ open, onOpenChange, onAuthenticated, onBeforeRedirect }: Au
               className={`flex-1 py-2.5 text-sm font-body font-medium transition-colors ${
                 isSignUp
                   ? "bg-primary text-primary-foreground"
-                  : "bg-transparent text-muted-foreground hover:text-foreground"
+                  : "bg-transparent text-muted-foreground hover:text-card-foreground"
               }`}
             >
               🎟️ New here? Sign up
@@ -165,7 +165,7 @@ const AuthModal = ({ open, onOpenChange, onAuthenticated, onBeforeRedirect }: Au
               className={`flex-1 py-2.5 text-sm font-body font-medium transition-colors ${
                 !isSignUp
                   ? "bg-primary text-primary-foreground"
-                  : "bg-transparent text-muted-foreground hover:text-foreground"
+                  : "bg-transparent text-muted-foreground hover:text-card-foreground"
               }`}
             >
               Sign in
@@ -177,7 +177,7 @@ const AuthModal = ({ open, onOpenChange, onAuthenticated, onBeforeRedirect }: Au
             role="alert"
             className="rounded-xl border-2 border-primary/60 bg-primary/10 p-3 text-center"
           >
-            <p className="font-body text-sm font-semibold text-foreground">
+            <p className="font-body text-sm font-semibold text-card-foreground">
               Apple Sign-In is temporarily unavailable
             </p>
             <p className="font-body text-xs text-muted-foreground mt-0.5">
@@ -188,7 +188,7 @@ const AuthModal = ({ open, onOpenChange, onAuthenticated, onBeforeRedirect }: Au
           {/* Google OAuth */}
           <Button
             variant="outline"
-            className="w-full border-border text-foreground hover:bg-muted font-body gap-2 py-6 text-base"
+            className="w-full border-border text-card-foreground hover:bg-muted font-body gap-2 py-6 text-base"
             onClick={handleGoogleLogin}
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -203,7 +203,7 @@ const AuthModal = ({ open, onOpenChange, onAuthenticated, onBeforeRedirect }: Au
           {/* Apple OAuth */}
           <Button
             variant="outline"
-            className="w-full border-border/50 text-muted-foreground hover:bg-muted/40 font-body gap-2 py-6 text-base opacity-60"
+            className="w-full border-border/50 text-muted-foreground hover:bg-muted/40 font-body gap-2 py-6 text-base"
             onClick={handleAppleLogin}
             title="Apple sign-in is temporarily unavailable — please use Google or email/password"
             aria-label="Apple sign-in temporarily unavailable"
@@ -212,7 +212,7 @@ const AuthModal = ({ open, onOpenChange, onAuthenticated, onBeforeRedirect }: Au
               <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
             </svg>
             Continue with Apple
-            <span className="ml-auto rounded-full border border-primary/40 bg-primary/10 px-2 py-0.5 text-[10px] font-mono uppercase tracking-wider text-primary">
+            <span className="ml-auto rounded-full border border-primary/40 bg-primary/10 px-2 py-0.5 text-[10px] font-mono uppercase tracking-wider text-accent-foreground">
               Unavailable
             </span>
           </Button>
@@ -228,7 +228,7 @@ const AuthModal = ({ open, onOpenChange, onAuthenticated, onBeforeRedirect }: Au
           {/* Email/password */}
           <form onSubmit={handleAuth} className="space-y-3">
             <div className="space-y-1.5">
-              <Label htmlFor="auth-email" className="font-body text-foreground text-sm">
+              <Label htmlFor="auth-email" className="font-body text-card-foreground text-sm">
                 Email
               </Label>
               <Input
@@ -241,7 +241,7 @@ const AuthModal = ({ open, onOpenChange, onAuthenticated, onBeforeRedirect }: Au
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="auth-password" className="font-body text-foreground text-sm">
+              <Label htmlFor="auth-password" className="font-body text-card-foreground text-sm">
                 Password
               </Label>
               <Input

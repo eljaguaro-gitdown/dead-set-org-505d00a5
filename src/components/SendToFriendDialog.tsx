@@ -288,7 +288,7 @@ const SendToFriendDialog = ({
                   {query ? "No Deadheads match that name." : "No conversations yet."}
                 </p>
                 {!query && (
-                  <p className="text-[11px] text-muted-foreground/70 font-body">
+                  <p className="text-[11px] text-muted-foreground font-body">
                     Search above to find any user by name.
                   </p>
                 )}
@@ -313,7 +313,7 @@ const SendToFriendDialog = ({
                       </span>
                     )}
                   </div>
-                  <span className="font-body text-sm text-foreground flex-1 text-left truncate">
+                  <span className="font-body text-sm text-card-foreground flex-1 text-left truncate">
                     {recipient.displayName}
                   </span>
                   {sent ? (

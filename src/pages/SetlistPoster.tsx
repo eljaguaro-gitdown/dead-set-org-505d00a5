@@ -5,6 +5,7 @@ import { ArrowLeft, Share2, Zap, Play, Heart, RefreshCw, Loader2, Headphones, Vo
 import SetlistComments from "@/components/SetlistComments";
 import { useFavorites } from "@/hooks/useFavorites";
 import EraTooltip from "@/components/EraTooltip";
+import { EraBorder } from "@/components/EraArt";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
@@ -465,7 +466,7 @@ const SetlistPoster = () => {
       <div className="grain-overlay min-h-screen bg-background flex items-center justify-center">
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center gap-4">
           <StealYourFace size={80} />
-          <p className="font-body text-muted-foreground animate-pulse">Loading setlist…</p>
+          <p className="font-body text-foreground/75 animate-pulse">Loading setlist…</p>
         </motion.div>
       </div>
     );
@@ -476,7 +477,7 @@ const SetlistPoster = () => {
       <div className="grain-overlay min-h-screen bg-background flex flex-col items-center justify-center gap-4 px-6 text-center">
         <StealYourFace size={60} />
         <p className="font-display text-2xl text-foreground">Charlie can't find that tape.</p>
-        <p className="font-body text-sm text-muted-foreground max-w-sm">
+        <p className="font-body text-sm text-foreground/75 max-w-sm">
           The link may be broken, or the setlist was taken down. Build your own — every night gets a fresh chance.
         </p>
         <button
@@ -496,7 +497,7 @@ const SetlistPoster = () => {
       <div className="grain-overlay min-h-screen bg-background flex flex-col items-center justify-center gap-4 px-6 text-center">
         <StealYourFace size={60} />
         <p className="font-display text-2xl text-foreground">This tape is private.</p>
-        <p className="font-body text-sm text-muted-foreground max-w-sm">
+        <p className="font-body text-sm text-foreground/75 max-w-sm">
           The taper kept this one for themselves. Build your own setlist — Cosmic Charlie's got plenty more reels in the vault.
         </p>
         <button
@@ -528,7 +529,7 @@ const SetlistPoster = () => {
               navigate("/");
             }
           }}
-          className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground font-body text-sm transition-colors"
+          className="flex items-center gap-1.5 text-foreground/75 hover:text-foreground font-body text-sm transition-colors"
         >
           <ArrowLeft className="w-4 h-4" /> {location.key && location.key !== "default" ? "Back" : "Home"}
         </button>
@@ -619,7 +620,7 @@ const SetlistPoster = () => {
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.45 }}
                   className="font-hand text-sm mt-2"
-                  style={{ color: "hsl(28 20% 40%)" }}
+                  style={{ color: "hsl(28 20% 35%)" }}
                 >
                   curated by <Link to={`/user/${setlist.creator_id}`} className="underline decoration-wavy decoration-1 underline-offset-2 hover:opacity-70 transition-opacity">{creatorName}</Link>
                   {eraName && (
@@ -644,7 +645,7 @@ const SetlistPoster = () => {
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.5 }}
                   className="font-hand text-xs mt-1"
-                  style={{ color: "hsl(28 15% 50%)" }}
+                  style={{ color: "hsl(28 16% 38%)" }}
                 >
                   {createdDate}
                 </motion.p>
@@ -659,6 +660,9 @@ const SetlistPoster = () => {
                   }}
                 />
               </div>
+
+              {/* Era-specific motif border — changes with the touring era */}
+              <EraBorder era={eraName} className="mt-3" />
 
               {/* ===== SETLIST BODY — handwritten song list ===== */}
               <div className="px-6 sm:px-14 py-5 space-y-6">
@@ -736,7 +740,7 @@ const SetlistPoster = () => {
                                 ) : (
                                   <span
                                     className="text-base tabular-nums font-mono"
-                                    style={{ color: "hsl(28 15% 40%)" }}
+                                    style={{ color: "hsl(28 16% 36%)" }}
                                   >
                                     {idx + 1}.
                                   </span>
@@ -763,7 +767,7 @@ const SetlistPoster = () => {
                                   {isUnplayable && (
                                     <span
                                       className="inline-flex items-center gap-0.5 text-[9px] font-mono uppercase tracking-wider shrink-0"
-                                      style={{ color: "hsl(28 15% 55%)" }}
+                                      style={{ color: "hsl(28 16% 38%)" }}
                                       title="No circulating Archive.org recording captures this track"
                                     >
                                       <VolumeX className="w-3 h-3" /> no tape
@@ -821,7 +825,7 @@ const SetlistPoster = () => {
                                     animate={{ opacity: 1, x: 0 }}
                                     exit={{ opacity: 0, x: 5 }}
                                     className="text-[10px] font-hand whitespace-nowrap hidden sm:inline"
-                                    style={{ color: "hsl(28 15% 50%)" }}
+                                    style={{ color: "hsl(28 16% 38%)" }}
                                   >
                                     {slot.version.venue}, {slot.version.show_date}
                                   </motion.span>
@@ -873,7 +877,7 @@ const SetlistPoster = () => {
                                     {!slot.notes && !(slot.version?.show_date || playingSlot?.version?.show_date) && (
                                       <p
                                         className="font-hand text-xs italic"
-                                        style={{ color: "hsl(28 15% 50%)" }}
+                                        style={{ color: "hsl(28 16% 38%)" }}
                                       >
                                         Now playing…
                                       </p>
@@ -979,7 +983,7 @@ const SetlistPoster = () => {
 
                   {/* Play count */}
                   {setlist.play_count > 0 && (
-                    <p className="text-[10px] font-mono tracking-wider" style={{ color: "hsl(28 15% 50%)" }}>
+                    <p className="text-[10px] font-mono tracking-wider" style={{ color: "hsl(28 16% 38%)" }}>
                       ▶ {setlist.play_count} play{setlist.play_count !== 1 ? "s" : ""}
                     </p>
                   )}
@@ -990,7 +994,7 @@ const SetlistPoster = () => {
                     <button
                       onClick={() => navigate("/")}
                       className="text-[10px] font-mono tracking-widest uppercase transition-colors hover:underline"
-                      style={{ color: "hsl(28 15% 50%)" }}
+                      style={{ color: "hsl(28 16% 38%)" }}
                     >
                       Built with Dead-Set.Org
                     </button>
@@ -1014,7 +1018,7 @@ const SetlistPoster = () => {
             transition={{ delay: 0.8, duration: 0.5 }}
             className="mt-8 p-6 bg-[#3a0303] rounded-sm"
           >
-            <p className="font-mono text-[10px] tracking-[0.2em] uppercase text-muted-foreground/40 text-center mb-4">
+            <p className="font-mono text-[10px] tracking-[0.2em] uppercase text-foreground/70 text-center mb-4">
               your show plate
             </p>
             <ShowPlate
@@ -1024,7 +1028,7 @@ const SetlistPoster = () => {
             <div className="flex justify-center mt-4">
               <button
                 onClick={() => setShareFlowOpen(true)}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-body bg-primary/10 border border-primary/30 text-primary hover:bg-primary/20 transition-colors"
+                className="flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-body bg-primary/10 border border-primary/30 text-dead-gold hover:bg-primary/20 transition-colors"
               >
                 <Share2 className="w-4 h-4" /> Share Plate
               </button>
@@ -1033,7 +1037,7 @@ const SetlistPoster = () => {
 
           {/* === Cassette spine strip below the card === */}
           <div className="cassette-spine mx-4 sm:mx-8 h-8 flex items-center justify-center border-x border-b border-border/40 rounded-b-sm mt-8">
-            <span className="font-marker text-[9px] tracking-[0.3em] uppercase text-muted-foreground/50">
+            <span className="font-marker text-[9px] tracking-[0.3em] uppercase text-foreground/70">
               {setlist.title} · {eraName || "Dead-Set.Org"} · {slots.length} songs
             </span>
           </div>

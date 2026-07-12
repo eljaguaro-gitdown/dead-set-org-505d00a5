@@ -138,8 +138,8 @@ const ShareFlow = ({
         >
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-            <h2 className="font-display text-lg text-foreground">Pass the tape</h2>
-            <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors">
+            <h2 className="font-display text-lg text-card-foreground">Pass the tape</h2>
+            <button onClick={onClose} className="text-muted-foreground hover:text-card-foreground transition-colors">
               <X className="w-5 h-5" />
             </button>
           </div>
@@ -158,7 +158,7 @@ const ShareFlow = ({
 
           {/* Info */}
           <div className="px-6 pt-4 pb-2 text-center">
-            <p className="font-hand text-xl text-foreground">{setlistName}</p>
+            <p className="font-hand text-xl text-card-foreground">{setlistName}</p>
             {showDate && venueName && (
               <p className="font-mono text-xs text-muted-foreground mt-1">
                 {showDate}  ·  {venueName}
@@ -185,7 +185,7 @@ const ShareFlow = ({
           <div className="px-6 pb-4">
             <div className="flex items-center gap-3 mb-3">
               <div className="h-px flex-1 bg-border" />
-              <span className="font-mono text-[10px] text-muted-foreground/50 tracking-widest uppercase">or share to</span>
+              <span className="font-mono text-[10px] text-muted-foreground tracking-widest uppercase">or share to</span>
               <div className="h-px flex-1 bg-border" />
             </div>
             <div className="grid grid-cols-2 gap-2">
@@ -207,14 +207,14 @@ const ShareFlow = ({
                 Instagram
               </Button>
             </div>
-            <p className="text-[10px] text-muted-foreground/50 font-body text-center mt-2">
+            <p className="text-[10px] text-muted-foreground font-body text-center mt-2">
               For TikTok: save the plate and upload. For Instagram: caption copied + image ready to share.
             </p>
           </div>
 
           {/* Footer */}
           <div className="px-6 pb-4">
-            <button onClick={onClose} className="w-full text-center font-mono text-[10px] text-muted-foreground/40 hover:text-muted-foreground tracking-widest uppercase transition-colors">
+            <button onClick={onClose} className="w-full text-center font-mono text-[10px] text-muted-foreground hover:text-card-foreground tracking-widest uppercase transition-colors">
               <ArrowLeft className="w-3 h-3 inline mr-1" /> Back to Setlist
             </button>
           </div>

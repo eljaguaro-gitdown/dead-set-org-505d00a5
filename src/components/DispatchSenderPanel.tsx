@@ -54,7 +54,7 @@ function StatusBadge({ status }: { status: DeliveryStatus }) {
   const isPending = status === "pending" || status === "unknown";
   const Icon = isOk ? CheckCircle2 : isPending ? Clock : XCircle;
   const cls = isOk
-    ? "text-emerald-500"
+    ? "text-emerald-700"
     : isPending
       ? "text-muted-foreground"
       : "text-destructive";
@@ -163,7 +163,7 @@ export default function DispatchSenderPanel() {
     <div className="bg-card border border-border rounded-lg p-4 space-y-3">
       <div className="flex items-center gap-2">
         <Send className="w-4 h-4 text-muted-foreground" />
-        <h2 className="font-display text-sm text-foreground">Editorial Dispatch 002</h2>
+        <h2 className="font-display text-sm text-card-foreground">Editorial Dispatch 002</h2>
       </div>
       <p className="text-sm text-muted-foreground font-body">
         "We are finding each other" — sends from noreply@notify.dead-set.org (replies go to grateful_jaguaro@dead-set.org).
@@ -176,7 +176,7 @@ export default function DispatchSenderPanel() {
           value={testEmails}
           onChange={(e) => setTestEmails(e.target.value)}
           placeholder="email1@example.com, email2@example.com"
-          className="font-body"
+          className="font-body bg-secondary text-card-foreground"
         />
       </div>
       <div className="flex flex-wrap gap-2">
@@ -210,11 +210,11 @@ export default function DispatchSenderPanel() {
           <ul className="space-y-1.5">
             {results.map((r) => (
               <li key={r.email} className="flex items-start justify-between gap-3 text-sm font-body">
-                <span className="text-foreground truncate">{r.email}</span>
+                <span className="text-card-foreground truncate">{r.email}</span>
                 <div className="flex flex-col items-end gap-0.5">
                   <StatusBadge status={r.status} />
                   {r.error && (
-                    <span className="text-sm text-destructive/80 max-w-xs text-right break-words">
+                    <span className="text-sm text-destructive max-w-xs text-right break-words">
                       {r.error}
                     </span>
                   )}

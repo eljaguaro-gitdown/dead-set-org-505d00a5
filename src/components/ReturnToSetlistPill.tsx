@@ -163,10 +163,10 @@ const ReturnToSetlistPill = () => {
             </div>
 
             <div className="flex-1 min-w-0">
-              <div className="font-mono uppercase tracking-[0.18em] text-[10px] text-primary/80">
+              <div className="font-mono uppercase tracking-[0.18em] text-[10px] text-accent-foreground">
                 {isLive ? "Now playing · Back to setlist" : "Pick up where you left off"}
               </div>
-              <div className="font-body text-sm text-foreground truncate">
+              <div className="font-body text-sm text-card-foreground truncate">
                 {setlistTitle ?? "Your setlist"}
               </div>
               {showProgress && songLine && (
@@ -180,7 +180,7 @@ const ReturnToSetlistPill = () => {
 
             <button
               onClick={handleDismiss}
-              className="w-7 h-7 -mr-1 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-foreground/5 transition-colors shrink-0"
+              className="w-7 h-7 -mr-1 rounded-md flex items-center justify-center text-muted-foreground hover:text-card-foreground hover:bg-foreground/5 transition-colors shrink-0"
               title="Dismiss"
               aria-label="Dismiss"
             >

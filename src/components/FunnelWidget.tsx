@@ -190,7 +190,7 @@ const FunnelWidget = ({ signupDates, signupRecords, enabled }: FunnelWidgetProps
     <div className="bg-card border border-border rounded-lg overflow-hidden">
       <div className="px-4 py-3 border-b border-border flex items-center gap-2">
         <Activity className="w-4 h-4 text-muted-foreground" />
-        <h2 className="font-display text-sm text-foreground">Conversion Funnel</h2>
+        <h2 className="font-display text-sm text-card-foreground">Conversion Funnel</h2>
         <div className="ml-auto flex items-center gap-1">
           {([7, 30] as Range[]).map((r) => (
             <Button
@@ -226,19 +226,19 @@ const FunnelWidget = ({ signupDates, signupRecords, enabled }: FunnelWidgetProps
               <div className="flex items-center justify-between gap-3 flex-wrap">
                 <div className="flex items-center gap-2">
                   <span className="text-base">🌀</span>
-                  <h3 className="font-display text-sm text-primary">Lovable Referrals</h3>
-                  <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground/70">
+                  <h3 className="font-display text-sm text-accent-foreground">Lovable Referrals</h3>
+                  <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
                     launched apr 24
                   </span>
                 </div>
                 <div className="flex items-center gap-4 text-xs font-mono">
                   <span className="text-muted-foreground">
-                    24h: <span className="text-foreground font-bold">{lovable.visitors24h}</span> visits ·{" "}
-                    <span className="text-primary font-bold">{lovable.signups24h}</span> signups
+                    24h: <span className="text-card-foreground font-bold">{lovable.visitors24h}</span> visits ·{" "}
+                    <span className="text-accent-foreground font-bold">{lovable.signups24h}</span> signups
                   </span>
                   <span className="text-muted-foreground">
-                    total: <span className="text-foreground font-bold">{lovable.visitorsTotal}</span> →{" "}
-                    <span className="text-primary font-bold">{lovable.signupsTotal}</span> ({pct(lovable.signupsTotal, lovable.visitorsTotal)})
+                    total: <span className="text-card-foreground font-bold">{lovable.visitorsTotal}</span> →{" "}
+                    <span className="text-accent-foreground font-bold">{lovable.signupsTotal}</span> ({pct(lovable.signupsTotal, lovable.visitorsTotal)})
                   </span>
                 </div>
               </div>
@@ -260,20 +260,20 @@ const FunnelWidget = ({ signupDates, signupRecords, enabled }: FunnelWidgetProps
               <tbody>
                 {rows.map((r) => (
                   <tr key={r.day} className="border-b border-border/40 last:border-0">
-                    <td className="px-4 py-2 text-foreground tabular-nums">{r.day.slice(5)}</td>
+                    <td className="px-4 py-2 text-card-foreground tabular-nums">{r.day.slice(5)}</td>
                     <td className="px-3 py-2 text-right tabular-nums">
                       <div className="inline-flex items-center gap-2 justify-end w-full">
                         <div
                           className="h-1.5 bg-primary/40 rounded-sm"
                           style={{ width: `${(r.visitors / maxVisitors) * 60}px` }}
                         />
-                        <span className="text-foreground">{r.visitors}</span>
+                        <span className="text-card-foreground">{r.visitors}</span>
                       </div>
                     </td>
                     <td className="px-3 py-2 text-right tabular-nums text-muted-foreground">{r.ctaClicks}</td>
                     <td className="px-3 py-2 text-right tabular-nums text-muted-foreground">{r.authVisits}</td>
                     <td className="px-4 py-2 text-right tabular-nums">
-                      <span className={r.signups > 0 ? "text-primary font-bold" : "text-muted-foreground"}>
+                      <span className={r.signups > 0 ? "text-accent-foreground font-bold" : "text-muted-foreground"}>
                         {r.signups > 0 ? `+${r.signups}` : "0"}
                       </span>
                     </td>
@@ -283,9 +283,9 @@ const FunnelWidget = ({ signupDates, signupRecords, enabled }: FunnelWidgetProps
             </table>
           </div>
 
-          <p className="px-4 py-2 text-xs font-body text-muted-foreground/70 border-t border-border">
+          <p className="px-4 py-2 text-xs font-body text-muted-foreground border-t border-border">
             CTA clicks tracked from landing-page hero buttons. Of {totals.ctaClicks} total,{" "}
-            <span className="text-primary font-bold">{totals.ctaClicksV2}</span> came from the new
+            <span className="text-accent-foreground font-bold">{totals.ctaClicksV2}</span> came from the new
             above-the-fold mobile variant. Older clicks may be missing if tracking was added recently.
           </p>
         </>
@@ -307,8 +307,8 @@ const FunnelStat = ({
 }) => (
   <div className="px-4 py-3">
     <p className="text-xs uppercase tracking-wider text-muted-foreground font-mono">{label}</p>
-    <p className={`font-display text-2xl tabular-nums ${highlight ? "text-primary" : "text-foreground"}`}>{value}</p>
-    {sub && <p className="text-xs font-mono text-muted-foreground/70">{sub}</p>}
+    <p className={`font-display text-2xl tabular-nums ${highlight ? "text-primary" : "text-card-foreground"}`}>{value}</p>
+    {sub && <p className="text-xs font-mono text-muted-foreground">{sub}</p>}
   </div>
 );
 

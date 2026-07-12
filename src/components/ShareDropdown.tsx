@@ -115,7 +115,7 @@ const ShareDropdown = ({ url, ogUrl, title, description }: ShareDropdownProps) =
           {user && (
             <button
               onClick={() => { setOpen(false); setDmOpen(true); }}
-              className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm font-body text-foreground hover:bg-muted/50 transition-colors"
+              className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm font-body text-card-foreground hover:bg-muted/50 transition-colors"
             >
               <MessageCircle className="w-4 h-4 text-primary" />
               Send to a Deadhead
@@ -123,28 +123,28 @@ const ShareDropdown = ({ url, ogUrl, title, description }: ShareDropdownProps) =
           )}
           <button
             onClick={copyLink}
-            className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm font-body text-foreground hover:bg-muted/50 transition-colors"
+            className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm font-body text-card-foreground hover:bg-muted/50 transition-colors"
           >
             {copied ? <Check className="w-4 h-4 text-accent" /> : <Copy className="w-4 h-4 text-muted-foreground" />}
             {copied ? "Copied!" : "Copy Link"}
           </button>
           <button
             onClick={shareTwitter}
-            className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm font-body text-foreground hover:bg-muted/50 transition-colors"
+            className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm font-body text-card-foreground hover:bg-muted/50 transition-colors"
           >
             <Twitter className="w-4 h-4 text-muted-foreground" />
             Share on X
           </button>
           <button
             onClick={shareFacebook}
-            className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm font-body text-foreground hover:bg-muted/50 transition-colors"
+            className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm font-body text-card-foreground hover:bg-muted/50 transition-colors"
           >
             <Facebook className="w-4 h-4 text-muted-foreground" />
             Share on Facebook
           </button>
           <button
             onClick={shareInstagram}
-            className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm font-body text-foreground hover:bg-muted/50 transition-colors"
+            className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm font-body text-card-foreground hover:bg-muted/50 transition-colors"
           >
             <Instagram className="w-4 h-4 text-muted-foreground" />
             Share to Instagram
@@ -152,7 +152,7 @@ const ShareDropdown = ({ url, ogUrl, title, description }: ShareDropdownProps) =
           {hasNativeShare && (
             <button
               onClick={shareNative}
-              className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm font-body text-foreground hover:bg-muted/50 transition-colors border-t border-border/50"
+              className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm font-body text-card-foreground hover:bg-muted/50 transition-colors border-t border-border/50"
             >
               <Smartphone className="w-4 h-4 text-muted-foreground" />
               More apps…

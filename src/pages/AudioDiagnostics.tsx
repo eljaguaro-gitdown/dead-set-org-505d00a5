@@ -315,24 +315,24 @@ const AudioDiagnostics = () => {
       <div className="max-w-2xl mx-auto px-4 py-6">
         <Link
           to="/admin"
-          className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground font-body text-sm mb-6"
+          className="inline-flex items-center gap-2 text-foreground/75 hover:text-foreground font-body text-sm mb-6"
         >
           <ArrowLeft className="w-4 h-4" /> Back to Admin
         </Link>
 
         <h1 className="font-display text-3xl text-foreground mb-2">Audio Diagnostics</h1>
-        <p className="font-body text-base text-muted-foreground mb-6">
+        <p className="font-body text-base text-foreground/75 mb-6">
           Reproduces the full playback + analytics pipeline against a known-good
           recording. Use this on iOS Safari to verify <code>play_events</code>{" "}
           insert/update wiring.
         </p>
 
         {/* Environment */}
-        <section className="bg-card border border-border rounded-xl p-4 mb-4">
+        <section className="bg-card text-card-foreground border border-border rounded-xl p-4 mb-4">
           <h2 className="font-display text-lg mb-3">Environment</h2>
           <dl className="grid grid-cols-2 gap-y-2 font-body text-sm">
             <dt className="text-muted-foreground">User Agent</dt>
-            <dd className="text-foreground break-all">{ua || "—"}</dd>
+            <dd className="text-card-foreground break-all">{ua || "—"}</dd>
             <dt className="text-muted-foreground">iOS</dt>
             <dd>{isIOS ? "Yes" : "No"}</dd>
             <dt className="text-muted-foreground">Safari</dt>
@@ -340,7 +340,7 @@ const AudioDiagnostics = () => {
             <dt className="text-muted-foreground">Firefox iOS</dt>
             <dd>{isFxiOS ? "Yes" : "No"}</dd>
             <dt className="text-muted-foreground">visitor_id</dt>
-            <dd className="text-foreground break-all">{visitorId || "(none)"}</dd>
+            <dd className="text-card-foreground break-all">{visitorId || "(none)"}</dd>
             <dt className="text-muted-foreground">MediaSession</dt>
             <dd>{mediaSession ? "Yes" : "No"}</dd>
             <dt className="text-muted-foreground">AudioContext</dt>
@@ -349,7 +349,7 @@ const AudioDiagnostics = () => {
         </section>
 
         {/* Insert probe */}
-        <section className="bg-card border border-border rounded-xl p-4 mb-4">
+        <section className="bg-card text-card-foreground border border-border rounded-xl p-4 mb-4">
           <div className="flex items-center justify-between mb-3 gap-3">
             <h2 className="font-display text-lg">RLS / Insert Probe</h2>
             <button
@@ -364,7 +364,7 @@ const AudioDiagnostics = () => {
             RLS allows this device to insert.
           </p>
           {insertProbe === "ok" && (
-            <div className="flex items-center gap-2 text-accent font-body text-sm">
+            <div className="flex items-center gap-2 text-accent-foreground font-body text-sm">
               <CheckCircle2 className="w-4 h-4" /> Insert succeeded — RLS is OK.
             </div>
           )}
@@ -382,7 +382,7 @@ const AudioDiagnostics = () => {
         </section>
 
         {/* Player */}
-        <section className="bg-card border border-border rounded-xl p-4 mb-4">
+        <section className="bg-card text-card-foreground border border-border rounded-xl p-4 mb-4">
           <h2 className="font-display text-lg mb-1">Test Track</h2>
           <p className="font-body text-sm text-muted-foreground mb-3">
             {TEST_SONG_TITLE} · {TEST_VENUE} · {TEST_SHOW_DATE}
@@ -399,7 +399,7 @@ const AudioDiagnostics = () => {
           <div className="mb-3 p-3 rounded-lg border border-border bg-muted/30">
             <div className="flex items-center justify-between gap-3 mb-2">
               <div>
-                <p className="font-body text-sm font-semibold text-foreground">
+                <p className="font-body text-sm font-semibold text-card-foreground">
                   Step 1 · Unlock audio (iOS gesture)
                 </p>
                 <p className="font-body text-xs text-muted-foreground mt-0.5">
@@ -408,7 +408,7 @@ const AudioDiagnostics = () => {
                 </p>
               </div>
               {unlocked ? (
-                <span className="flex items-center gap-1.5 text-accent font-body text-sm shrink-0">
+                <span className="flex items-center gap-1.5 text-accent-foreground font-body text-sm shrink-0">
                   <CheckCircle2 className="w-4 h-4" /> Unlocked
                 </span>
               ) : (
@@ -433,7 +433,7 @@ const AudioDiagnostics = () => {
             ) : (
               <button
                 onClick={handlePause}
-                className="flex items-center gap-2 px-4 py-2 rounded-full bg-card border border-border font-body hover:border-primary/40"
+                className="flex items-center gap-2 px-4 py-2 rounded-full bg-card text-card-foreground border border-border font-body hover:border-primary/40"
               >
                 <Pause className="w-4 h-4" /> Pause
               </button>
@@ -441,20 +441,20 @@ const AudioDiagnostics = () => {
             <button
               onClick={() => handleFinalize("finished")}
               disabled={!trackerActive}
-              className="px-3 py-2 rounded-lg bg-muted text-foreground font-body text-sm disabled:opacity-50"
+              className="px-3 py-2 rounded-lg bg-muted text-card-foreground font-body text-sm disabled:opacity-50"
             >
               Force finish
             </button>
             <button
               onClick={() => handleFinalize("skipped")}
               disabled={!trackerActive}
-              className="px-3 py-2 rounded-lg bg-muted text-foreground font-body text-sm disabled:opacity-50"
+              className="px-3 py-2 rounded-lg bg-muted text-card-foreground font-body text-sm disabled:opacity-50"
             >
               Force skip
             </button>
             <button
               onClick={handleReset}
-              className="ml-auto flex items-center gap-1.5 px-3 py-2 rounded-lg bg-card border border-border font-body text-sm hover:border-primary/40"
+              className="ml-auto flex items-center gap-1.5 px-3 py-2 rounded-lg bg-card text-card-foreground border border-border font-body text-sm hover:border-primary/40"
             >
               <RotateCcw className="w-3.5 h-3.5" /> Reset
             </button>
@@ -468,7 +468,7 @@ const AudioDiagnostics = () => {
                   <p className="text-destructive font-semibold">
                     Playback blocked: {playErr.name}
                   </p>
-                  <p className="text-foreground/80 mt-1 break-words">{playErr.message}</p>
+                  <p className="text-card-foreground mt-1 break-words">{playErr.message}</p>
                   <p className="text-muted-foreground mt-2">{playErr.hint}</p>
                 </div>
               </div>
@@ -477,12 +477,12 @@ const AudioDiagnostics = () => {
 
           <div className="font-body text-sm text-muted-foreground">
             {fmt(progress * 1000)} / {fmt(duration * 1000)}
-            {trackerActive && <span className="ml-3 text-accent">● tracker active</span>}
+            {trackerActive && <span className="ml-3 text-accent-foreground">● tracker active</span>}
           </div>
         </section>
 
         {/* Latest play_events row */}
-        <section className="bg-card border border-border rounded-xl p-4 mb-4">
+        <section className="bg-card text-card-foreground border border-border rounded-xl p-4 mb-4">
           <h2 className="font-display text-lg mb-3">Latest play_events row (polled every 2s)</h2>
           {pollErr && (
             <div className="flex items-start gap-2 text-destructive font-body text-sm mb-2">
@@ -493,19 +493,19 @@ const AudioDiagnostics = () => {
           {latestEvent ? (
             <dl className="grid grid-cols-2 gap-y-1.5 font-body text-sm">
               <dt className="text-muted-foreground">id</dt>
-              <dd className="text-foreground break-all">{latestEvent.id}</dd>
+              <dd className="text-card-foreground break-all">{latestEvent.id}</dd>
               <dt className="text-muted-foreground">ended_reason</dt>
-              <dd className="text-foreground">{latestEvent.ended_reason}</dd>
+              <dd className="text-card-foreground">{latestEvent.ended_reason}</dd>
               <dt className="text-muted-foreground">duration_played_ms</dt>
-              <dd className="text-foreground">{latestEvent.duration_played_ms}</dd>
+              <dd className="text-card-foreground">{latestEvent.duration_played_ms}</dd>
               <dt className="text-muted-foreground">track_duration_ms</dt>
-              <dd className="text-foreground">{latestEvent.track_duration_ms ?? "—"}</dd>
+              <dd className="text-card-foreground">{latestEvent.track_duration_ms ?? "—"}</dd>
               <dt className="text-muted-foreground">completed</dt>
-              <dd className="text-foreground">{String(latestEvent.completed)}</dd>
+              <dd className="text-card-foreground">{String(latestEvent.completed)}</dd>
               <dt className="text-muted-foreground">started_at</dt>
-              <dd className="text-foreground">{latestEvent.started_at}</dd>
+              <dd className="text-card-foreground">{latestEvent.started_at}</dd>
               <dt className="text-muted-foreground">ended_at</dt>
-              <dd className="text-foreground">{latestEvent.ended_at ?? "—"}</dd>
+              <dd className="text-card-foreground">{latestEvent.ended_at ?? "—"}</dd>
             </dl>
           ) : (
             <p className="font-body text-sm text-muted-foreground">
@@ -515,7 +515,7 @@ const AudioDiagnostics = () => {
         </section>
 
         {/* Event log */}
-        <section className="bg-card border border-border rounded-xl p-4">
+        <section className="bg-card text-card-foreground border border-border rounded-xl p-4">
           <h2 className="font-display text-lg mb-3">Event log</h2>
           {logs.length === 0 ? (
             <p className="font-body text-sm text-muted-foreground">No events yet — press Play.</p>
@@ -528,9 +528,9 @@ const AudioDiagnostics = () => {
                     l.level === "error"
                       ? "text-destructive"
                       : l.level === "warn"
-                      ? "text-accent"
+                      ? "text-accent-foreground"
                       : l.level === "ok"
-                      ? "text-foreground"
+                      ? "text-card-foreground"
                       : "text-muted-foreground"
                   }`}
                 >

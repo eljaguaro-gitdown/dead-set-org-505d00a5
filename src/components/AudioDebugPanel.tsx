@@ -28,39 +28,39 @@ const AudioDebugPanel = () => {
 
   return (
     <div
-      className="fixed bottom-2 right-2 z-[60] w-[min(380px,calc(100vw-1rem))] max-h-[70vh] flex flex-col rounded-lg border border-primary/40 bg-card/95 backdrop-blur-md shadow-2xl text-foreground font-mono text-[11px]"
+      className="fixed bottom-2 right-2 z-[60] w-[min(380px,calc(100vw-1rem))] max-h-[70vh] flex flex-col rounded-lg border border-primary/40 bg-card/95 backdrop-blur-md shadow-2xl text-card-foreground font-mono text-[11px]"
       role="dialog"
       aria-label="Audio debug panel"
     >
       {/* Header */}
       <div className="flex items-center gap-2 px-2 py-1.5 border-b border-border">
         <Bug className="w-3.5 h-3.5 text-primary" />
-        <span className="text-primary tracking-wider uppercase text-[10px]">Audio Debug</span>
+        <span className="text-accent-foreground tracking-wider uppercase text-[10px]">Audio Debug</span>
         <span className="ml-auto flex items-center gap-1">
           <button
             onClick={copyAll}
-            className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground"
+            className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-card-foreground"
             title="Copy snapshot to clipboard"
           >
             <Copy className="w-3 h-3" />
           </button>
           <button
             onClick={() => audioDebug.clearAll()}
-            className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground"
+            className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-card-foreground"
             title="Clear log"
           >
             <Trash2 className="w-3 h-3" />
           </button>
           <button
             onClick={() => setCollapsed((c) => !c)}
-            className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground"
+            className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-card-foreground"
             title={collapsed ? "Expand" : "Collapse"}
           >
             {collapsed ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
           </button>
           <button
             onClick={() => setOpen(false)}
-            className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground"
+            className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-card-foreground"
             title="Close (reload to reopen)"
           >
             <X className="w-3 h-3" />
@@ -76,7 +76,7 @@ const AudioDebugPanel = () => {
             <dd className="truncate" title={snap.slotId || ""}>{truncate(snap.slotId, 40)}</dd>
 
             <dt className="text-muted-foreground">song</dt>
-            <dd className="truncate text-primary" title={snap.songTitle || ""}>{snap.songTitle || "—"}</dd>
+            <dd className="truncate text-accent-foreground" title={snap.songTitle || ""}>{snap.songTitle || "—"}</dd>
 
             <dt className="text-muted-foreground">archive id</dt>
             <dd className="truncate" title={snap.resolvedArchiveId || ""}>{truncate(snap.resolvedArchiveId, 40)}</dd>
@@ -84,7 +84,7 @@ const AudioDebugPanel = () => {
             <dt className="text-muted-foreground">archive url</dt>
             <dd className="truncate" title={snap.archiveUrl || ""}>
               {snap.archiveUrl ? (
-                <a href={snap.archiveUrl} target="_blank" rel="noreferrer" className="text-primary underline">
+                <a href={snap.archiveUrl} target="_blank" rel="noreferrer" className="text-accent-foreground underline">
                   {truncate(snap.archiveUrl, 40)}
                 </a>
               ) : "—"}
@@ -93,14 +93,14 @@ const AudioDebugPanel = () => {
             <dt className="text-muted-foreground">track url</dt>
             <dd className="truncate" title={snap.directTrackUrl || ""}>
               {snap.directTrackUrl ? (
-                <a href={snap.directTrackUrl} target="_blank" rel="noreferrer" className="text-primary underline">
+                <a href={snap.directTrackUrl} target="_blank" rel="noreferrer" className="text-accent-foreground underline">
                   {truncate(snap.directTrackUrl, 40)}
                 </a>
               ) : "—"}
             </dd>
 
             <dt className="text-muted-foreground">state</dt>
-            <dd className="text-primary">{snap.playbackState}</dd>
+            <dd className="text-accent-foreground">{snap.playbackState}</dd>
 
             <dt className="text-muted-foreground">last error</dt>
             <dd className={snap.lastError ? "text-destructive" : ""} title={snap.lastError || ""}>
@@ -117,11 +117,11 @@ const AudioDebugPanel = () => {
               <div
                 key={e.id}
                 className={`leading-tight ${
-                  e.level === "error" ? "text-destructive" : e.level === "warn" ? "text-[hsl(var(--dead-gold))]" : "text-foreground/90"
+                  e.level === "error" ? "text-destructive" : e.level === "warn" ? "text-amber-800" : "text-card-foreground/90"
                 }`}
               >
                 <span className="text-muted-foreground">{fmtTime(e.ts)}</span>{" "}
-                <span className="text-primary/80">[{e.source}]</span>{" "}
+                <span className="text-accent-foreground/80">[{e.source}]</span>{" "}
                 <span>{e.message}</span>
                 {e.data && (
                   <pre className="text-[10px] text-muted-foreground pl-4 whitespace-pre-wrap break-all">

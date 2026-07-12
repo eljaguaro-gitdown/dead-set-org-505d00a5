@@ -36,7 +36,7 @@ const FeaturedCards = ({ setlists }: FeaturedCardsProps) => {
             onClick={() => navigate(`/setlist/${s.id}`)}
             className="flex-shrink-0 w-[160px] sm:w-[180px] snap-start border border-border bg-card/60 backdrop-blur-sm rounded-xl p-3 text-left hover:border-primary/40 hover:-translate-y-0.5 transition-all duration-200 group"
           >
-            <h4 className="font-display text-sm font-bold text-foreground truncate group-hover:text-primary transition-colors leading-snug">
+            <h4 className="font-display text-sm font-bold text-card-foreground truncate group-hover:text-primary transition-colors leading-snug">
               {s.title}
             </h4>
             <Link
@@ -48,11 +48,11 @@ const FeaturedCards = ({ setlists }: FeaturedCardsProps) => {
             </Link>
             <div className="flex items-center gap-2 mt-2">
               {s.era_name && (
-                <span className="px-1.5 py-0.5 text-[10px] font-mono rounded border border-primary/20 text-primary/70 tracking-wider uppercase">
+                <span className="px-1.5 py-0.5 text-[10px] font-mono rounded border border-primary/20 text-accent-foreground tracking-wider uppercase">
                   {s.era_name}
                 </span>
               )}
-              <span className="text-[10px] font-mono text-muted-foreground/60">
+              <span className="text-[10px] font-mono text-muted-foreground">
                 {s.song_count} songs
               </span>
             </div>

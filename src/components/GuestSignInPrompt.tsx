@@ -49,7 +49,7 @@ const GuestSignInPrompt = ({ open, onSignIn, onDismiss }: GuestSignInPromptProps
             >
               ⚡
             </motion.div>
-            <h3 className="font-display text-xl text-primary mb-1">
+            <h3 className="font-display text-xl text-accent-foreground mb-1">
               Nice setlist! Ready to keep it?
             </h3>
             <p className="font-body text-sm text-muted-foreground">
@@ -72,16 +72,16 @@ const GuestSignInPrompt = ({ open, onSignIn, onDismiss }: GuestSignInPromptProps
             🎟️ Create a free account
           </Button>
 
-          <p className="text-center text-xs font-body text-muted-foreground/60 mb-3">
+          <p className="text-center text-xs font-body text-muted-foreground mb-3">
             Already have one?{" "}
-            <button onClick={onSignIn} className="text-primary hover:underline">
+            <button onClick={onSignIn} className="text-accent-foreground hover:underline">
               Sign in
             </button>
           </p>
 
           <button
             onClick={onDismiss}
-            className="w-full text-center text-xs font-body text-muted-foreground/50 hover:text-muted-foreground transition-colors"
+            className="w-full text-center text-xs font-body text-muted-foreground hover:text-muted-foreground transition-colors"
           >
             I'll keep building first
           </button>

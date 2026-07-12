@@ -154,13 +154,13 @@ const CommunityHighlights = () => {
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <TrendingUp className="w-4 h-4 text-accent" />
-              <h3 className="font-display text-sm tracking-[0.15em] text-muted-foreground uppercase">
+              <h3 className="font-display text-sm tracking-[0.15em] text-foreground/75 uppercase">
                 Trending This Week
               </h3>
             </div>
             <button
               onClick={() => navigate("/browse")}
-              className="flex items-center gap-1 font-body text-xs text-muted-foreground/60 hover:text-muted-foreground transition-colors"
+              className="flex items-center gap-1 font-body text-xs text-foreground/60 hover:text-foreground transition-colors"
             >
               See all <ChevronRight className="w-3 h-3" />
             </button>
@@ -181,13 +181,13 @@ const CommunityHighlights = () => {
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <Zap className="w-4 h-4 text-primary" />
-              <h3 className="font-display text-sm tracking-[0.15em] text-muted-foreground uppercase">
+              <h3 className="font-display text-sm tracking-[0.15em] text-foreground/75 uppercase">
                 New From the Community
               </h3>
             </div>
             <button
               onClick={() => navigate("/browse")}
-              className="flex items-center gap-1 font-body text-xs text-muted-foreground/60 hover:text-muted-foreground transition-colors"
+              className="flex items-center gap-1 font-body text-xs text-foreground/60 hover:text-foreground transition-colors"
             >
               See all <ChevronRight className="w-3 h-3" />
             </button>
@@ -218,11 +218,11 @@ const SetlistMiniCard = ({ setlist, index }: { setlist: SetlistCard; index: numb
       role="button"
       tabIndex={0}
       onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); navigate(`/setlist/${setlist.id}`); } }}
-      className="w-[200px] sm:w-[220px] shrink-0 border border-border/40 bg-card/60 backdrop-blur-sm rounded-lg p-4 text-left hover:border-primary/40 hover:shadow-[0_4px_20px_hsl(var(--primary)/0.1)] transition-all group cursor-pointer"
+      className="w-[200px] sm:w-[220px] shrink-0 border border-border/40 bg-card backdrop-blur-sm rounded-lg p-4 text-left hover:border-primary/40 hover:shadow-[0_4px_20px_hsl(var(--primary)/0.1)] transition-all group cursor-pointer"
     >
       <div className="flex items-start gap-2">
         <div className="min-w-0 flex-1">
-          <h4 className="font-display text-sm text-foreground truncate group-hover:text-primary transition-colors leading-tight">
+          <h4 className="font-display text-sm text-card-foreground truncate group-hover:text-primary transition-colors leading-tight">
             {setlist.title}
           </h4>
           <Link to={`/user/${setlist.creator_id}`} onClick={(e) => e.stopPropagation()} className="font-body text-[11px] text-muted-foreground mt-1 truncate block hover:text-primary transition-colors">
@@ -236,12 +236,12 @@ const SetlistMiniCard = ({ setlist, index }: { setlist: SetlistCard; index: numb
       {setlist.preview_songs.length > 0 && (
         <div className="mt-2 space-y-0.5">
           {setlist.preview_songs.map((song, i) => (
-            <p key={i} className="font-body text-xs text-muted-foreground/70 truncate leading-snug">
+            <p key={i} className="font-body text-xs text-muted-foreground truncate leading-snug">
               {song}
             </p>
           ))}
           {setlist.song_count > 3 && (
-            <p className="font-body text-xs text-muted-foreground/50">
+            <p className="font-body text-xs text-muted-foreground">
               +{setlist.song_count - 3} more
             </p>
           )}
@@ -264,16 +264,16 @@ const SetlistMiniCard = ({ setlist, index }: { setlist: SetlistCard; index: numb
           </EraTooltip>
         )}
         {setlist.play_count > 0 && (
-          <span className="text-[10px] font-body text-muted-foreground/50 flex items-center gap-0.5">
+          <span className="text-[10px] font-body text-muted-foreground flex items-center gap-0.5">
             ▶ {setlist.play_count}
           </span>
         )}
         {setlist.upvote_count > 0 && (
-          <span className="text-[10px] font-body text-muted-foreground/50 flex items-center gap-0.5">
+          <span className="text-[10px] font-body text-muted-foreground flex items-center gap-0.5">
             ⚡ {setlist.upvote_count}
           </span>
         )}
-        <span className="text-[10px] font-body text-muted-foreground/40 ml-auto">
+        <span className="text-[10px] font-body text-muted-foreground ml-auto">
           <Music className="w-2.5 h-2.5 inline mr-0.5" />
           {setlist.song_count}
         </span>

@@ -193,7 +193,7 @@ const PlaySetlistButton = ({
               onClick={(e) => e.stopPropagation()}
               aria-label="Playback options"
               title="Playback options"
-              className={`${sz.chev} ml-1 shrink-0 inline-flex items-center justify-center rounded-md text-primary/80 hover:text-primary hover:bg-primary/10 transition-colors`}
+              className={`${sz.chev} ml-1 shrink-0 inline-flex items-center justify-center rounded-md text-primary hover:text-primary hover:bg-primary/10 transition-colors`}
             >
               <ChevronDown className="w-3.5 h-3.5" />
             </button>

@@ -9,8 +9,8 @@ import {
 
 const STATUS_STYLES: Record<PresenceStatus, string> = {
   IDLE: "bg-muted text-muted-foreground",
-  SUBSCRIBING: "bg-amber-500/15 text-amber-400",
-  SUBSCRIBED: "bg-green-500/15 text-green-400",
+  SUBSCRIBING: "bg-amber-500/15 text-amber-800",
+  SUBSCRIBED: "bg-green-500/15 text-emerald-700",
   CHANNEL_ERROR: "bg-destructive/15 text-destructive",
   TIMED_OUT: "bg-destructive/15 text-destructive",
   CLOSED: "bg-muted text-muted-foreground",
@@ -45,7 +45,7 @@ const PresenceDebugPanel = () => {
     <div className="bg-card border border-border rounded-lg overflow-hidden">
       <div className="px-4 py-3 border-b border-border flex items-center gap-2">
         <Activity className="w-4 h-4 text-primary" />
-        <h2 className="font-display text-sm text-foreground">Presence Channel</h2>
+        <h2 className="font-display text-sm text-card-foreground">Presence Channel</h2>
         <span
           className={`ml-auto px-2 py-0.5 rounded text-[11px] font-mono uppercase tracking-wider ${STATUS_STYLES[snap.status]}`}
         >
@@ -68,7 +68,7 @@ const Row = ({ label, value, mono }: { label: string; value: string; mono?: bool
   <div className="px-4 py-2.5 flex items-center justify-between gap-4">
     <dt className="text-sm font-body text-muted-foreground">{label}</dt>
     <dd
-      className={`text-sm text-foreground tabular-nums ${mono ? "font-mono" : "font-body"}`}
+      className={`text-sm text-card-foreground tabular-nums ${mono ? "font-mono" : "font-body"}`}
     >
       {value}
     </dd>

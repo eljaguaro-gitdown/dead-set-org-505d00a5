@@ -330,7 +330,7 @@ const MySetlists = () => {
         <Button
           variant="ghost"
           size="icon"
-          className="text-muted-foreground hover:text-foreground"
+          className="text-foreground/75 hover:text-foreground"
           onClick={() => navigate("/messages")}
           title="Messages"
         >
@@ -339,7 +339,7 @@ const MySetlists = () => {
         <Button
           variant="ghost"
           size="icon"
-          className="text-muted-foreground hover:text-foreground"
+          className="text-foreground/75 hover:text-foreground"
           onClick={() => navigate("/profile")}
           title="Profile"
         >
@@ -349,7 +349,7 @@ const MySetlists = () => {
           variant="ghost"
           size="sm"
           onClick={async () => { await signOut(); navigate("/"); }}
-          className="text-muted-foreground hover:text-foreground font-body"
+          className="text-foreground/75 hover:text-foreground font-body"
         >
           Sign Out
         </Button>
@@ -367,7 +367,7 @@ const MySetlists = () => {
           <h1 className="font-display text-2xl sm:text-3xl text-foreground leading-tight">
             Welcome back{displayName ? `, ${displayName}` : ""} ✦
           </h1>
-          <p className="font-body text-sm text-muted-foreground mt-1">
+          <p className="font-body text-sm text-foreground/75 mt-1">
             Here's what's happening in the Dead-Set.Org community.
           </p>
         </motion.div>
@@ -400,7 +400,7 @@ const MySetlists = () => {
               <h2 className="font-display text-lg sm:text-xl text-foreground">
                 Need a Miracle?
               </h2>
-              <p className="font-body text-xs text-muted-foreground mt-0.5">
+              <p className="font-body text-xs text-foreground/75 mt-0.5">
                 Let Cosmic Charlie build your next dream setlist
               </p>
             </div>
@@ -430,7 +430,7 @@ const MySetlists = () => {
                 Drop a wish, flag a bug, share your story. Every note lands in the build.
               </p>
             </div>
-            <span className="font-body text-xs text-muted-foreground/60 group-hover:text-primary transition-colors shrink-0 hidden sm:inline">
+            <span className="font-body text-xs text-muted-foreground group-hover:text-primary transition-colors shrink-0 hidden sm:inline">
               Visit →
             </span>
           </button>
@@ -453,14 +453,14 @@ const MySetlists = () => {
                     className={`font-body text-xs px-2.5 py-1 rounded-md transition-colors ${
                       sortBy === opt.value
                         ? "bg-background text-foreground shadow-sm"
-                        : "text-muted-foreground hover:text-foreground"
+                        : "text-muted-foreground hover:text-card-foreground"
                     }`}
                   >
                     {opt.label}
                   </button>
                 ))}
               </div>
-              <span className="text-xs text-muted-foreground font-body">
+              <span className="text-xs text-foreground/75 font-body">
                 {setlists.length} setlist{setlists.length !== 1 ? "s" : ""}
               </span>
             </div>
@@ -482,7 +482,7 @@ const MySetlists = () => {
           >
             <div className="space-y-1">
               <h3 className="font-display text-xl text-foreground">No setlists yet</h3>
-              <p className="font-body text-sm text-muted-foreground">Cosmic Charlie is waiting.</p>
+              <p className="font-body text-sm text-foreground/75">Cosmic Charlie is waiting.</p>
             </div>
             <Button
               size="lg"
@@ -495,7 +495,7 @@ const MySetlists = () => {
             <div>
               <button
                 onClick={() => navigate("/browse")}
-                className="font-body text-xs text-muted-foreground/60 hover:text-muted-foreground transition-colors"
+                className="font-body text-xs text-foreground/70 hover:text-muted-foreground transition-colors"
               >
                 or browse what others have built →
               </button>
@@ -731,7 +731,7 @@ const MySetlists = () => {
                   <p className="font-body text-sm text-foreground">
                     You have {privateSetlists.length} private setlist{privateSetlists.length !== 1 ? "s" : ""}
                   </p>
-                  <p className="font-body text-xs text-muted-foreground mt-0.5">
+                  <p className="font-body text-xs text-foreground/75 mt-0.5">
                     Share your creations with the Dead-Set community — make them public so others can discover and enjoy them.
                   </p>
                   <div className="flex flex-wrap gap-2 mt-3">
@@ -740,7 +740,7 @@ const MySetlists = () => {
                         key={s.id}
                         variant="outline"
                         size="sm"
-                        className="gap-1.5 border-primary/30 text-primary font-body text-xs h-7 px-2.5 hover:bg-primary/10"
+                        className="gap-1.5 border-primary/30 text-dead-gold font-body text-xs h-7 px-2.5 hover:bg-primary/10"
                         onClick={async (e) => {
                           e.stopPropagation();
                            const currentSetlist = setlists.find((sl) => sl.id === s.id);
@@ -773,7 +773,7 @@ const MySetlists = () => {
                       </Button>
                     ))}
                     {privateSetlists.length > 5 && (
-                      <span className="font-body text-xs text-muted-foreground self-center">
+                      <span className="font-body text-xs text-foreground/75 self-center">
                         +{privateSetlists.length - 5} more
                       </span>
                     )}
@@ -795,7 +795,7 @@ const MySetlists = () => {
             <div className="flex items-center gap-3 mb-4">
               <Heart className="w-4 h-4 text-primary fill-primary" />
               <h2 className="font-display text-lg text-foreground">Saved Setlists</h2>
-              <span className="text-xs text-muted-foreground font-body">
+              <span className="text-xs text-foreground/75 font-body">
                 {savedSetlists.length} saved
               </span>
             </div>
@@ -827,7 +827,7 @@ const MySetlists = () => {
                       </div>
                       <div className="flex items-center gap-2 mt-2 flex-wrap">
                         {s.era_name && (
-                          <span className="px-2 py-0.5 text-[10px] font-body rounded-full border border-primary/20 text-primary/70">
+                          <span className="px-2 py-0.5 text-[10px] font-body rounded-full border border-primary/20 text-accent-foreground">
                             {s.era_name}
                           </span>
                         )}
@@ -840,7 +840,7 @@ const MySetlists = () => {
                           </span>
                         )}
                         {s.upvote_count > 0 && (
-                          <span className="text-[10px] font-body text-primary">
+                          <span className="text-[10px] font-body text-accent-foreground">
                             ⚡ {s.upvote_count}
                           </span>
                         )}
@@ -876,7 +876,7 @@ const MySetlists = () => {
                 <Heart className="w-4 h-4 text-primary fill-primary" />
                 <div>
                   <h2 className="font-display text-lg text-foreground">Favorite Songs</h2>
-                  <p className="font-body text-xs text-muted-foreground mt-0.5">
+                  <p className="font-body text-xs text-foreground/75 mt-0.5">
                     Your saved songs and the auto-built favorites set.
                   </p>
                 </div>
@@ -885,7 +885,7 @@ const MySetlists = () => {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="border-primary/30 text-primary font-body"
+                  className="border-primary/30 text-dead-gold font-body"
                   onClick={() => navigate(`/builder/${favoriteSetlistId}`)}
                 >
                   Open favorites setlist
@@ -931,7 +931,7 @@ const MySetlists = () => {
                       <Play className="w-3.5 h-3.5 text-primary opacity-70 group-hover:opacity-100 shrink-0" />
                       <h3 className="font-display text-base text-card-foreground group-hover:text-primary transition-colors">{song.title}</h3>
                       {song.tags?.slice(0, 3).map((tag) => (
-                        <span key={tag} className="px-2 py-0.5 text-[10px] font-body rounded-full border border-primary/20 text-primary/70">
+                        <span key={tag} className="px-2 py-0.5 text-[10px] font-body rounded-full border border-primary/20 text-accent-foreground">
                           {tag}
                         </span>
                       ))}
@@ -1018,7 +1018,7 @@ function ShareSongHint() {
           window.localStorage.setItem(SHARE_HINT_KEY, "1");
           setDismissed(true);
         }}
-        className="text-muted-foreground hover:text-foreground px-1"
+        className="text-foreground/75 hover:text-foreground px-1"
         aria-label="Dismiss hint"
       >
         ✕

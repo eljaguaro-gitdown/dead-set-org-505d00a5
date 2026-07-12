@@ -19,7 +19,7 @@ const MiniSetlistBar = ({ title, songCount, onExpand, pulse }: MiniSetlistBarPro
     >
       <div className="flex items-center gap-2 min-w-0">
         <LayoutList className="w-4 h-4 text-primary shrink-0" />
-        <span className="font-body text-sm text-foreground truncate">{title}</span>
+        <span className="font-body text-sm text-card-foreground truncate">{title}</span>
         <span className="text-xs text-muted-foreground font-body shrink-0">
           · {songCount} {songCount === 1 ? "song" : "songs"}
         </span>
