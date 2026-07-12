@@ -19,6 +19,7 @@ import ShareAppButton from "@/components/ShareAppButton";
 import LastUpdatedBadge from "@/components/LastUpdatedBadge";
 import { Button } from "@/components/ui/button";
 import { ChevronRight, Instagram } from "lucide-react";
+import { getPostAuthRedirect } from "@/lib/postAuthRedirect";
 
 interface FeaturedSetlist {
   id: string;
@@ -89,6 +90,34 @@ const Index = () => {
       clearTimeout(t);
     };
   }, [location.hash, topRated.length, featured.length]);
+
+  // Post-OAuth landing: if AuthModal set the marker before redirecting to
+  // Google, route to the same smart destination email sign-in uses. Runs at
+  // most once; when the marker is absent this is a no-op and normal home
+  // rendering (and the A/B redirect below) proceeds untouched.
+  useEffect(() => {
+    if (loading || !user) return;
+    let marker: string | null = null;
+    try {
+      marker = sessionStorage.getItem("post_oauth_redirect");
+    } catch {
+      return;
+    }
+    if (!marker) return;
+    try {
+      sessionStorage.removeItem("post_oauth_redirect");
+    } catch {
+      // ignore
+    }
+    let cancelled = false;
+    (async () => {
+      const path = await getPostAuthRedirect(user.id);
+      if (!cancelled) navigate(path, { replace: true });
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user, loading, navigate]);
 
   // A/B test: variant B auto-starts the wizard (first landing only)
   useEffect(() => {

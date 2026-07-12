@@ -126,7 +126,7 @@ const AuthModal = ({ open, onOpenChange, onAuthenticated, onBeforeRedirect }: Au
     // so if we land on a lazy/protected route the token fragment is dropped
     // and the app shows a blank page. Point at the origin; smartRedirect on
     // the landing page routes the user to /builder after the session hydrates.
-    sessionStorage.setItem("post_oauth_redirect", "/builder");
+    sessionStorage.setItem("post_oauth_redirect", "1");
     const { error } = await lovable.auth.signInWithOAuth("google", {
       redirect_uri: window.location.origin,
     });
