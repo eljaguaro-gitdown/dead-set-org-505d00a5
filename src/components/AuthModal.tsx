@@ -198,11 +198,13 @@ const AuthModal = ({ open, onOpenChange, onAuthenticated, onBeforeRedirect }: Au
             </p>
           </div>
 
-          {/* Google OAuth */}
+          {/* Google OAuth — temporarily gated, mirrors the Apple pattern */}
           <Button
             variant="outline"
-            className="w-full border-border text-card-foreground hover:bg-muted font-body gap-2 py-6 text-base"
+            className="w-full border-border/50 text-muted-foreground hover:bg-muted/40 font-body gap-2 py-6 text-base"
             onClick={handleGoogleLogin}
+            title="Google sign-in is temporarily unavailable — please use email/password"
+            aria-label="Google sign-in temporarily unavailable"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
               <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
@@ -211,6 +213,9 @@ const AuthModal = ({ open, onOpenChange, onAuthenticated, onBeforeRedirect }: Au
               <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
             </svg>
             Continue with Google
+            <span className="ml-auto rounded-full border border-primary/40 bg-primary/10 px-2 py-0.5 text-[10px] font-mono uppercase tracking-wider text-accent-foreground">
+              Unavailable
+            </span>
           </Button>
 
           {/* Apple OAuth */}
@@ -218,7 +223,7 @@ const AuthModal = ({ open, onOpenChange, onAuthenticated, onBeforeRedirect }: Au
             variant="outline"
             className="w-full border-border/50 text-muted-foreground hover:bg-muted/40 font-body gap-2 py-6 text-base"
             onClick={handleAppleLogin}
-            title="Apple sign-in is temporarily unavailable — please use Google or email/password"
+            title="Apple sign-in is temporarily unavailable — please use email/password"
             aria-label="Apple sign-in temporarily unavailable"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
