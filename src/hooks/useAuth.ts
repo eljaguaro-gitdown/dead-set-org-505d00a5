@@ -133,8 +133,17 @@ const ensureAuthInitialized = () => {
     .then(async ({ data: { session } }) => {
       if (session && !hasActiveSessionFlag() && !isOAuthReturn()) {
         await supabase.auth.signOut();
+        clearStaleOAuthMarkers();
         setSnapshot({ user: null, loading: false });
         return;
+      }
+
+      // Defensive: if we ended up with no session AND we are not currently
+      // in the middle of an OAuth return, clear any stale pending-OAuth
+      // markers. Users who hit the broken Google gateway flow can otherwise
+      // carry poisoned sessionStorage across reloads in the same tab.
+      if (!session && !isOAuthReturn()) {
+        clearStaleOAuthMarkers();
       }
 
       setSnapshot({
@@ -143,6 +152,7 @@ const ensureAuthInitialized = () => {
       });
     })
     .catch(() => {
+      clearStaleOAuthMarkers();
       setSnapshot({ user: null, loading: false });
     })
     .finally(() => {
