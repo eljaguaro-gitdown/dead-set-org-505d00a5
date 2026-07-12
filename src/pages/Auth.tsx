@@ -11,7 +11,7 @@ import PageLayout from "@/components/PageLayout";
 import StealYourFace from "@/components/StealYourFace";
 import { getPostAuthRedirect } from "@/lib/postAuthRedirect";
 import { detectInAppBrowser } from "@/lib/inAppBrowser";
-import { trackAuthEvent } from "@/lib/authFunnel";
+import { trackAuthEvent, markOAuthRedirect } from "@/lib/authFunnel";
 
 const SESSION_FLAG = "dead_set_active_session";
 
