@@ -185,16 +185,16 @@ const AuthModal = ({ open, onOpenChange, onAuthenticated, onBeforeRedirect }: Au
             </button>
           </div>
 
-          {/* Apple temporarily unavailable banner */}
+          {/* Social sign-in temporarily unavailable banner */}
           <div
             role="alert"
             className="rounded-xl border-2 border-primary/60 bg-primary/10 p-3 text-center"
           >
             <p className="font-body text-sm font-semibold text-card-foreground">
-              Apple Sign-In is temporarily unavailable
+              Google &amp; Apple sign-in are resting
             </p>
             <p className="font-body text-xs text-muted-foreground mt-0.5">
-              Please use Google or email &amp; password below.
+              Email &amp; password below are wide open.
             </p>
           </div>
 
