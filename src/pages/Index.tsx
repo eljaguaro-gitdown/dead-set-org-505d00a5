@@ -19,6 +19,7 @@ import ShareAppButton from "@/components/ShareAppButton";
 import LastUpdatedBadge from "@/components/LastUpdatedBadge";
 import { Button } from "@/components/ui/button";
 import { ChevronRight, Instagram } from "lucide-react";
+import { getPostAuthRedirect } from "@/lib/postAuthRedirect";
 
 interface FeaturedSetlist {
   id: string;
