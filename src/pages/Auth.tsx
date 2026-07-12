@@ -107,6 +107,15 @@ const Auth = () => {
   };
 
   const handleGoogleLogin = async () => {
+    // Google sign-in is temporarily gated — see AuthModal.handleGoogleLogin
+    // for the full explanation. Handler + lovable.auth.signInWithOAuth call
+    // retained below for when native Supabase Google OAuth ships.
+    toast.error(
+      "Google sign-in is resting — email and password are wide open.",
+      { duration: 7000 }
+    );
+    return;
+    // eslint-disable-next-line no-unreachable
     if (isInApp) {
       toast.error(
         `Google sign-in doesn't work inside ${appName}. Tap the ⋯ menu and choose "Open in Safari" — or use email below.`,
@@ -114,7 +123,6 @@ const Auth = () => {
       );
       return;
     }
-    markOAuthRedirect("google");
     const { error } = await lovable.auth.signInWithOAuth("google", {
       redirect_uri: window.location.origin,
     });
