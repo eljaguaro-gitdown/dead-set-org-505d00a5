@@ -118,22 +118,12 @@ const AuthModal = ({ open, onOpenChange, onAuthenticated, onBeforeRedirect }: Au
   };
 
   const handleGoogleLogin = async () => {
-    // Google sign-in is temporarily gated: the Lovable OAuth gateway only
-    // delivers tokens via the web_message popup flow (preview iframe only).
-    // On a full-page redirect from the published site the return leg lands
-    // with an empty fragment and no session. Until native Supabase Google
-    // OAuth ships with our own client, keep the button but surface a toast.
-    // Handler and lovable.auth.signInWithOAuth call retained below for the
-    // day we can re-enable — do NOT delete.
-    toast.error(
-      "Google sign-in is resting — email and password are wide open.",
-      { duration: 7000 }
-    );
-    return;
-    // eslint-disable-next-line no-unreachable
     onBeforeRedirect?.();
-    const { error } = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
+    markOAuthRedirect("google");
+    sessionStorage.setItem("post_oauth_redirect", "1");
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: window.location.origin },
     });
     if (error) toast.error(error.message);
   };
