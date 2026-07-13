@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Plus, Globe, Lock, Music, Trash2, Calendar, Search, User, ArrowDownUp, Star, FileImage, Heart, Sparkles, Share2, Play } from "lucide-react";
+import { Plus, Globe, Lock, Music, Trash2, Calendar, Search, ArrowDownUp, Star, FileImage, Heart, Sparkles, Share2, Play } from "lucide-react";
 import { shareSong } from "@/lib/shareSong";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 import { Button } from "@/components/ui/button";
@@ -327,17 +327,10 @@ const MySetlists = () => {
         >
           <Search className="w-3.5 h-3.5" /> Browse
         </Button>
-        {/* Messages, Sign Out intentionally omitted — SiteHeader renders its
-            own (messagesLink + user-scoped Sign Out) in both desktop nav and
-            mobile drawer. Passing them here duplicates in the drawer. */}
-        <Button
-          variant="ghost"
-          size="sm"
-          className="text-foreground/75 hover:text-foreground font-body gap-1.5"
-          onClick={() => navigate("/profile")}
-        >
-          <User className="w-4 h-4" /> Profile
-        </Button>
+        {/* Messages, Profile, Sign Out intentionally omitted — SiteHeader
+            renders its own (messagesLink, profileLink, user-scoped Sign Out)
+            in both desktop nav and mobile drawer. Passing any here duplicates
+            in the mobile drawer. */}
       </SiteHeader>
 
       {/* Content */}

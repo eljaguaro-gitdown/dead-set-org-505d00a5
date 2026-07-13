@@ -67,6 +67,17 @@ const SiteHeader = ({ children, large = false }: SiteHeaderProps) => {
     </button>
   ) : null;
 
+  const profileLink = user ? (
+    <button
+      onClick={() => navigate("/profile")}
+      className="flex items-center gap-1.5 text-xs font-mono text-foreground/75 hover:text-foreground transition-colors tracking-wider uppercase"
+      title="Profile"
+    >
+      <User className="w-3.5 h-3.5" />
+      <span className="hidden sm:inline">Profile</span>
+    </button>
+  ) : null;
+
   const messagesLink = user ? (
     <button
       onClick={() => navigate("/messages")}
@@ -177,6 +188,7 @@ const SiteHeader = ({ children, large = false }: SiteHeaderProps) => {
             <ShareAppButton />
             {user && <AnnouncementsBell variant="desktop" />}
             {messagesLink}
+            {profileLink}
             {adminLink}
             {children}
             {user && (
