@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { User } from "@supabase/supabase-js";
 
@@ -39,11 +39,19 @@ export function useCommentNotifications(user: User | null) {
     fetchAll();
   }, [fetchAll]);
 
-  // Realtime: new notifications arrive instantly
+  // Realtime: new notifications arrive instantly.
+  // Channel name is unique per hook instance so multiple mounted consumers
+  // (e.g. desktop + mobile AnnouncementsBell in SiteHeader) don't collide on
+  // the same Supabase topic, which throws "cannot add postgres_changes
+  // callbacks ... after subscribe()".
+  const channelIdRef = useRef<string>();
+  if (!channelIdRef.current) {
+    channelIdRef.current = `comment-notifs-${crypto.randomUUID()}`;
+  }
   useEffect(() => {
     if (!user) return;
     const channel = supabase
-      .channel(`comment-notifs-${user.id}`)
+      .channel(channelIdRef.current!)
       .on(
         "postgres_changes",
         {
