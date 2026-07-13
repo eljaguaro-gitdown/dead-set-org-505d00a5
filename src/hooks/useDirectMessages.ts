@@ -222,12 +222,19 @@ export const useDirectMessages = (user: User | null) => {
     load();
   }, [activeConversationId, user]);
 
-  // Realtime subscription for new messages
+  // Realtime subscription for new messages.
+  // Channel name is unique per hook instance so multiple mounted consumers
+  // don't collide on the same Supabase topic, which throws "cannot add
+  // postgres_changes callbacks ... after subscribe()".
+  const channelIdRef = useRef<string>();
+  if (!channelIdRef.current) {
+    channelIdRef.current = `dm-realtime:${crypto.randomUUID()}`;
+  }
   useEffect(() => {
     if (!user) return;
 
     const channel = supabase
-      .channel("dm-realtime")
+      .channel(channelIdRef.current!)
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "direct_messages" },

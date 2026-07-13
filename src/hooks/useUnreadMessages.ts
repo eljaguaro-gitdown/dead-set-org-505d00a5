@@ -44,12 +44,19 @@ export const useUnreadMessages = (user: User | null) => {
     fetchUnreadCount();
   }, [fetchUnreadCount]);
 
-  // Realtime: listen for new messages & show toast
+  // Realtime: listen for new messages & show toast.
+  // Channel name is unique per hook instance so multiple mounted consumers
+  // don't collide on the same Supabase topic, which throws "cannot add
+  // postgres_changes callbacks ... after subscribe()".
+  const channelIdRef = useRef<string>();
+  if (!channelIdRef.current) {
+    channelIdRef.current = `global-dm-notifications:${crypto.randomUUID()}`;
+  }
   useEffect(() => {
     if (!user) return;
 
     const channel = supabase
-      .channel("global-dm-notifications")
+      .channel(channelIdRef.current!)
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "direct_messages" },
