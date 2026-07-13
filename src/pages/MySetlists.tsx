@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Plus, Globe, Lock, Music, Trash2, Calendar, Search, User, ArrowDownUp, Star, FileImage, Heart, Sparkles, Share2, Play, MessageCircle } from "lucide-react";
+import { Plus, Globe, Lock, Music, Trash2, Calendar, Search, User, ArrowDownUp, Star, FileImage, Heart, Sparkles, Share2, Play } from "lucide-react";
 import { shareSong } from "@/lib/shareSong";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 import { Button } from "@/components/ui/button";
@@ -52,7 +52,7 @@ interface FavoriteSongCard {
 
 const MySetlists = () => {
   const navigate = useNavigate();
-  const { user, loading: authLoading, signOut } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { favoriteIds, toggleFavorite } = useFavorites();
   const { favoriteSongs, favoriteSetlistId, toggleFavoriteSong } = useFavoriteSongs();
   const { playSingle } = useAudioPlayer();
@@ -327,31 +327,16 @@ const MySetlists = () => {
         >
           <Search className="w-3.5 h-3.5" /> Browse
         </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="text-foreground/75 hover:text-foreground"
-          onClick={() => navigate("/messages")}
-          title="Messages"
-        >
-          <MessageCircle className="w-4 h-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="text-foreground/75 hover:text-foreground"
-          onClick={() => navigate("/profile")}
-          title="Profile"
-        >
-          <User className="w-4 h-4" />
-        </Button>
+        {/* Messages, Sign Out intentionally omitted — SiteHeader renders its
+            own (messagesLink + user-scoped Sign Out) in both desktop nav and
+            mobile drawer. Passing them here duplicates in the drawer. */}
         <Button
           variant="ghost"
           size="sm"
-          onClick={async () => { await signOut(); navigate("/"); }}
-          className="text-foreground/75 hover:text-foreground font-body"
+          className="text-foreground/75 hover:text-foreground font-body gap-1.5"
+          onClick={() => navigate("/profile")}
         >
-          Sign Out
+          <User className="w-4 h-4" /> Profile
         </Button>
       </SiteHeader>
 
