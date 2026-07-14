@@ -175,3 +175,17 @@ iOS privacy manifest lives at [`ios/App/App/PrivacyInfo.xcprivacy`](ios/App/App/
 - **Test files:** colocated with source as `*.test.ts(x)` / `*.spec.ts(x)` under `src/`, or grouped in a `__tests__/` subdirectory next to the code under test (see `src/lib/charlie/__tests__/`). Either pattern is accepted — the Vitest glob `src/**/*.{test,spec}.{ts,tsx}` picks both up. The Vitest config does not pick up tests outside `src/`.
 - **TypeScript:** `strict` mode per the standard Vite React template; project references split into `tsconfig.app.json` (app) and `tsconfig.node.json` (build tooling).
 - **PWA:** service worker at [`public/sw.js`](public/sw.js), manifest at [`public/manifest.json`](public/manifest.json), install prompt handled by [`src/components/PwaInstallBanner.tsx`](src/components/PwaInstallBanner.tsx).
+
+---
+
+## Agent team & routing
+
+Three subagents live in .claude/agents/. Dispatch rules:
+
+- **growth-analyst** — anything involving PostHog, funnels, conversion, or "why did this number move." Runs weekly via /growth-weekly (Mondays). Also dispatch proactively after shipping changes to landing, builder entry, auth, or share surfaces. Read-only on src/; writes only to reports/growth/.
+- **community-steward** — anything community-facing: backstage updates, Founding Deadhead emails/replies, Instagram briefs, tasteLexicon proposals. Invoke via /steward. Drafts only — a human (Jay or the Community Steward) sends everything. The human steward's operating plan is docs/community-steward-playbook.md.
+- **qa-release** — MANDATORY before any Lovable publish or App Store build. Invoke via /pre-release. No session may trigger deploy_project without a current PASS verdict from qa-release. A BLOCK verdict stops the release — no exceptions, no "small fix" bypasses.
+
+Separation of duties: analysts and gates never edit app code; build sessions never grade their own release. When qa-release or growth-analyst surfaces a repeated mistake, add the correction to this file (compounding engineering).
+
+Parallel work: run qa-release in its own git worktree so verification never collides with an active build session.
