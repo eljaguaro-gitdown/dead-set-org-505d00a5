@@ -5,6 +5,11 @@ import { startPlayEvent, finalizePlayEvent } from "@/lib/playEventTracker";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
+import {
+  fetchDjIntro,
+  isDjIntroEnabled,
+  type DjIntroLine,
+} from "@/lib/djIntro";
 
 type NotableVersion = Database["public"]["Tables"]["notable_versions"]["Row"];
 type Song = Database["public"]["Tables"]["songs"]["Row"];
@@ -73,12 +78,30 @@ export interface PlayableSlot {
   directTrackUrl?: string | null;
 }
 
+// --- DJ intro pre-roll -----------------------------------------------------
+// When enabled (see isDjIntroEnabled), playSetlist plays a two-character
+// radio-show intro (Cosmic Charlie + Cherise) before the first song. See
+// docs/features/dj-cosmic-charlie.md.
+export type PreRollStatus = "warming" | "playing" | "signoff";
+
+export interface PreRollState {
+  status: PreRollStatus;
+  setlistId: string;
+  setlistTitle?: string | null;
+  lines: DjIntroLine[];
+  signoffUrl: string;
+  currentLineIndex: number;
+  /** playSetlist call sequence — used to detect superseded intros. */
+  seq: number;
+}
+
 interface AudioPlayerState {
   playingSlot: PlayableSlot | null;
   playlistMode: boolean;
   playlistIndex: number;
   playlistSlots: PlayableSlot[];
   activeSetlistId: string | null;
+  preRoll: PreRollState | null;
 }
 
 interface AudioPlayerContextValue extends AudioPlayerState {
@@ -97,6 +120,8 @@ interface AudioPlayerContextValue extends AudioPlayerState {
   queueSetlist: (slots: PlayableSlot[]) => Promise<void>;
   stopPlayback: () => void;
   advancePlaylist: (dir: number) => Promise<void>;
+  /** Skip the DJ intro currently playing / warming and jump straight to Set 1. */
+  skipPreRoll: () => void;
 }
 
 const defaultAudioPlayerContext: AudioPlayerContextValue = {
@@ -105,11 +130,13 @@ const defaultAudioPlayerContext: AudioPlayerContextValue = {
   playlistIndex: 0,
   playlistSlots: [],
   activeSetlistId: null,
+  preRoll: null,
   playSingle: () => undefined,
   playSetlist: async () => undefined,
   queueSetlist: async () => undefined,
   stopPlayback: () => undefined,
   advancePlaylist: async () => undefined,
+  skipPreRoll: () => undefined,
 };
 
 const AudioPlayerContext = createContext<AudioPlayerContextValue>(defaultAudioPlayerContext);
@@ -125,6 +152,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     playlistIndex: 0,
     playlistSlots: [],
     activeSetlistId: null,
+    preRoll: null,
   });
 
   const stateRef = useRef(state);
@@ -134,6 +162,39 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
   // when the user taps "Play" on Setlist B while Setlist A is still resolving
   // its first playable track via Archive.org. Only the LATEST call commits.
   const playSetlistSeqRef = useRef(0);
+
+  // ── DJ intro pre-roll orchestration ─────────────────────────────────
+  // Pending playSetlist calls await a promise that resolves when the intro
+  // finishes (naturally or via skip). completePreRoll clears state + resolves.
+  const preRollDoneResolversRef = useRef<Array<() => void>>([]);
+  const preRollAudioRef = useRef<HTMLAudioElement | null>(null);
+
+  const completePreRoll = useCallback(() => {
+    const resolvers = preRollDoneResolversRef.current;
+    preRollDoneResolversRef.current = [];
+    // Stop any live intro audio immediately so a skipped intro doesn't bleed
+    // into the first song.
+    if (preRollAudioRef.current) {
+      try {
+        preRollAudioRef.current.pause();
+        preRollAudioRef.current.src = "";
+      } catch { /* noop */ }
+      preRollAudioRef.current = null;
+    }
+    setState((prev) => (prev.preRoll ? { ...prev, preRoll: null } : prev));
+    resolvers.forEach((r) => r());
+  }, []);
+
+  const skipPreRoll = useCallback(() => {
+    audioDebug.log("context", "skipPreRoll");
+    completePreRoll();
+  }, [completePreRoll]);
+
+  const waitForPreRollDone = useCallback(() => {
+    return new Promise<void>((resolve) => {
+      preRollDoneResolversRef.current.push(resolve);
+    });
+  }, []);
 
   // Track per-song play events for analytics.
   // Fires whenever the playing song slot changes — start a new event,
@@ -155,11 +216,13 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
   const stopPlayback = useCallback(() => {
     audioDebug.log("context", "stopPlayback");
     playSetlistSeqRef.current++; // invalidate any in-flight playSetlist
+    // Cancel any pending pre-roll too — user pressed stop, they mean it.
+    completePreRoll();
     audioDebug.setSlot(null, null, null, null);
     audioDebug.setPlaybackState("stopped");
     void finalizePlayEvent("skipped");
-    setState({ playingSlot: null, playlistMode: false, playlistIndex: 0, playlistSlots: [], activeSetlistId: null });
-  }, []);
+    setState({ playingSlot: null, playlistMode: false, playlistIndex: 0, playlistSlots: [], activeSetlistId: null, preRoll: null });
+  }, [completePreRoll]);
 
   const playSingle = useCallback(async (
     slot: PlayableSlot,
@@ -167,6 +230,9 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
   ) => {
     audioDebug.log("context", "playSingle", { id: slot.id, song: slot.song.title, hasUrl: !!slot.version?.archive_org_url, hasDirect: !!slot.directTrackUrl, withContext: !!playlistContext });
     playSetlistSeqRef.current++; // invalidate any in-flight playSetlist
+    // playSingle bypasses the DJ intro entirely — it's a "play this one song"
+    // gesture, not a "start the show" gesture. Cancel any active pre-roll.
+    if (stateRef.current.preRoll) completePreRoll();
     audioDebug.setSlot(slot.id, slot.song.title, slot.version?.archive_org_url ?? null, slot.directTrackUrl ?? null);
     audioDebug.setPlaybackState("starting");
 
@@ -191,7 +257,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
       }
     }
 
-    setState({ playingSlot: slot, playlistMode, playlistIndex, playlistSlots, activeSetlistId });
+    setState({ playingSlot: slot, playlistMode, playlistIndex, playlistSlots, activeSetlistId, preRoll: null });
 
     // Resolve direct track URL in background if missing
     if (!slot.directTrackUrl && slot.version?.archive_org_url) {
@@ -227,10 +293,10 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
       } else {
         audioDebug.log("context", "no audio found for song", { song: slot.song.title }, "error");
         toast.error("Couldn't find audio for this song");
-        setState({ playingSlot: null, playlistMode: false, playlistIndex: 0, playlistSlots: [], activeSetlistId: null });
+        setState({ playingSlot: null, playlistMode: false, playlistIndex: 0, playlistSlots: [], activeSetlistId: null, preRoll: null });
       }
     }
-  }, []);
+  }, [completePreRoll]);
 
   /** Resolve a slot: ensure it has an archive URL and directTrackUrl */
   const resolveSlot = async (slot: PlayableSlot): Promise<PlayableSlot | null> => {
@@ -293,7 +359,52 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     if (stateRef.current.playingSlot) {
       void finalizePlayEvent("skipped");
       audioDebug.setSlot(null, null, null, null);
-      setState({ playingSlot: null, playlistMode: false, playlistIndex: 0, playlistSlots: [], activeSetlistId: null });
+      setState({ playingSlot: null, playlistMode: false, playlistIndex: 0, playlistSlots: [], activeSetlistId: null, preRoll: null });
+    }
+    // Cancel any in-flight pre-roll from a previous playSetlist — its promise
+    // resolvers fire so the previous caller can bail on the seq check.
+    if (stateRef.current.preRoll) completePreRoll();
+
+    // ── DJ intro pre-roll ─────────────────────────────────────────────
+    // Feature-gated + requires a real setlistId (guest builds skip). Silently
+    // no-ops on any failure so the setlist plays regardless.
+    if (setlistId && isDjIntroEnabled()) {
+      audioDebug.log("context", "pre-roll: warming", { setlistId, seq });
+      setState((prev) => ({
+        ...prev,
+        preRoll: {
+          status: "warming",
+          setlistId,
+          setlistTitle: null,
+          lines: [],
+          signoffUrl: "/audio/signoff.mp3",
+          currentLineIndex: 0,
+          seq,
+        },
+      }));
+      const intro = await fetchDjIntro(setlistId);
+      if (seq !== playSetlistSeqRef.current) {
+        audioDebug.log("context", "pre-roll: superseded during fetch", { seq }, "warn");
+        return;
+      }
+      if (intro) {
+        audioDebug.log("context", "pre-roll: playing", { lines: intro.lines.length, seq });
+        setState((prev) => (prev.preRoll && prev.preRoll.seq === seq ? {
+          ...prev,
+          preRoll: {
+            ...prev.preRoll,
+            status: "playing",
+            lines: intro.lines,
+            signoffUrl: intro.signoffUrl,
+            currentLineIndex: 0,
+          },
+        } : prev));
+        await waitForPreRollDone();
+        if (seq !== playSetlistSeqRef.current) return;
+      } else {
+        audioDebug.log("context", "pre-roll: no intro available — skipping", { setlistId }, "warn");
+        setState((prev) => (prev.preRoll && prev.preRoll.seq === seq ? { ...prev, preRoll: null } : prev));
+      }
     }
 
     const sorted = [...slots].sort((a, b) => a.setNumber - b.setNumber || a.position - b.position);
@@ -339,8 +450,9 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
       playlistIndex: startIndex,
       playlistSlots: sorted,
       activeSetlistId: setlistId || null,
+      preRoll: null,
     });
-  }, []);
+  }, [completePreRoll, waitForPreRollDone]);
 
   const advancePlaylist = useCallback(async (dir: number) => {
     const { playlistIndex, playlistSlots } = stateRef.current;
@@ -461,9 +573,84 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     prefetchPoolRef.current.clear();
   }, [state.playingSlot]);
 
+  // ── DJ intro playback effects ───────────────────────────────────────
+  // Play the current pre-roll line whenever status="playing" and index advances.
+  // When we run past the last line, transition status to "signoff".
+  useEffect(() => {
+    const pr = state.preRoll;
+    if (!pr || pr.status !== "playing") return;
 
+    const line = pr.lines[pr.currentLineIndex];
+    if (!line) {
+      // Past all script lines — hand off to signoff.
+      setState((prev) => (prev.preRoll && prev.preRoll.seq === pr.seq ? {
+        ...prev,
+        preRoll: { ...prev.preRoll, status: "signoff" },
+      } : prev));
+      return;
+    }
 
+    audioDebug.log("context", "pre-roll: line", { idx: pr.currentLineIndex, speaker: line.speaker });
+    const audio = new Audio(line.url);
+    preRollAudioRef.current = audio;
+    let cancelled = false;
 
+    const advance = () => {
+      if (cancelled) return;
+      setState((prev) => (prev.preRoll && prev.preRoll.seq === pr.seq ? {
+        ...prev,
+        preRoll: { ...prev.preRoll, currentLineIndex: prev.preRoll.currentLineIndex + 1 },
+      } : prev));
+    };
+
+    audio.addEventListener("ended", advance);
+    audio.play().catch((err) => {
+      audioDebug.log("context", "pre-roll: line play failed", { err: String(err) }, "warn");
+      advance();
+    });
+
+    return () => {
+      cancelled = true;
+      audio.removeEventListener("ended", advance);
+      try { audio.pause(); audio.src = ""; } catch { /* noop */ }
+      if (preRollAudioRef.current === audio) preRollAudioRef.current = null;
+    };
+  }, [state.preRoll?.status, state.preRoll?.currentLineIndex, state.preRoll?.seq]);
+
+  // Play the fixed signoff clip when pre-roll enters "signoff" status.
+  // When it finishes, 500ms of silence, then hand off to the setlist.
+  useEffect(() => {
+    const pr = state.preRoll;
+    if (!pr || pr.status !== "signoff") return;
+
+    audioDebug.log("context", "pre-roll: signoff", { seq: pr.seq });
+    const audio = new Audio(pr.signoffUrl);
+    preRollAudioRef.current = audio;
+    let cancelled = false;
+    let handoffTimer: ReturnType<typeof setTimeout> | null = null;
+
+    const finish = () => {
+      if (cancelled) return;
+      // Per design doc §11.3 — 500ms of clean silence between intro and Set 1.
+      handoffTimer = setTimeout(() => {
+        if (!cancelled) completePreRoll();
+      }, 500);
+    };
+
+    audio.addEventListener("ended", finish);
+    audio.play().catch((err) => {
+      audioDebug.log("context", "pre-roll: signoff play failed", { err: String(err) }, "warn");
+      finish();
+    });
+
+    return () => {
+      cancelled = true;
+      if (handoffTimer) clearTimeout(handoffTimer);
+      audio.removeEventListener("ended", finish);
+      try { audio.pause(); audio.src = ""; } catch { /* noop */ }
+      if (preRollAudioRef.current === audio) preRollAudioRef.current = null;
+    };
+  }, [state.preRoll?.status, state.preRoll?.seq, completePreRoll]);
 
   /**
    * Append slots to the end of the active playlist. If nothing is playing,
@@ -491,7 +678,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
   }, [playSetlist]);
 
   return (
-    <AudioPlayerContext.Provider value={{ ...state, playSingle, playSetlist, queueSetlist, stopPlayback, advancePlaylist }}>
+    <AudioPlayerContext.Provider value={{ ...state, playSingle, playSetlist, queueSetlist, stopPlayback, advancePlaylist, skipPreRoll }}>
       {children}
     </AudioPlayerContext.Provider>
   );

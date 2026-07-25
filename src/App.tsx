@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AudioPlayerProvider } from "@/contexts/AudioPlayerContext";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import DjIntroOverlay from "@/components/DjIntroOverlay";
 import GlobalAudioPlayer from "@/components/GlobalAudioPlayer";
 import ReturnToSetlistPill from "@/components/ReturnToSetlistPill";
 import VisitorTracker from "@/components/VisitorTracker";
@@ -83,6 +84,7 @@ const App = () => (
             </Suspense>
 
             <GlobalAudioPlayer />
+            <DjIntroOverlay />
             <ReturnToSetlistPill />
             <VisitorTracker />
             <PresenceBroadcaster />
