@@ -31,3 +31,5 @@ project_id = "dplrumaqrdnzwzqmatqr"
     verify_jwt = false
   [functions.resolve-song-share]
     verify_jwt = false
+  [functions.generate-dj-intro]
+    verify_jwt = false
