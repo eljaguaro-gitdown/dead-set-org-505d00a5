@@ -164,9 +164,10 @@ serve(async (req) => {
       .maybeSingle();
 
     if (cached) {
+      const signed = await withSignedUrls(supabase, cached.lines as IntroLine[]);
       return json({
         intro: {
-          lines: withPublicUrls(cached.lines as IntroLine[], setlistId, hash),
+          lines: signed,
           signoffUrl: SIGNOFF_URL,
           durationMs: cached.total_duration_ms,
           cached: true,
@@ -190,9 +191,10 @@ serve(async (req) => {
     });
     if (insertErr) console.error("[generate-dj-intro] insert failed:", insertErr);
 
+    const signed = await withSignedUrls(supabase, lines);
     return json({
       intro: {
-        lines: withPublicUrls(lines, setlistId, hash),
+        lines: signed,
         signoffUrl: SIGNOFF_URL,
         durationMs: totalMs,
         cached: false,
@@ -451,14 +453,30 @@ function estimateDurationMs(text: string): number {
   return Math.round((words / 165) * 60 * 1000);
 }
 
-// Turn storage paths into full public URLs for the client
-function withPublicUrls(
+// The `dj-intros` bucket is PRIVATE (workspace policy). Access is via
+// short-lived signed URLs generated fresh per response. 1-hour expiry is
+// generous — browsers download the entire MP3 up-front when playback
+// starts, so even a paused-and-resumed session usually plays from
+// already-buffered bytes rather than re-fetching. Signing all paths in
+// one call keeps the response-time cost trivial.
+const SIGNED_URL_EXPIRES_SECONDS = 60 * 60;
+
+async function withSignedUrls(
+  // deno-lint-ignore no-explicit-any
+  supabase: any,
   lines: IntroLine[],
-  _setlistId: string,
-  _hash: string,
-): Array<IntroLine & { url: string }> {
-  return lines.map((l) => ({
+): Promise<Array<IntroLine & { url: string }>> {
+  if (lines.length === 0) return [];
+  const paths = lines.map((l) => l.path);
+  const { data, error } = await supabase.storage
+    .from(BUCKET)
+    .createSignedUrls(paths, SIGNED_URL_EXPIRES_SECONDS);
+  if (error || !data) {
+    throw new Error(`failed to sign intro urls: ${error?.message ?? "no data"}`);
+  }
+  // createSignedUrls returns results in the same order as the input paths.
+  return lines.map((l, i) => ({
     ...l,
-    url: `${SUPABASE_URL}/storage/v1/object/public/${BUCKET}/${l.path}`,
+    url: (data[i] as { signedUrl: string }).signedUrl,
   }));
 }
