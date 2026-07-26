@@ -1065,8 +1065,10 @@ export type Database = {
           dispatch_opt_in: boolean
           dispatch_unsubscribe_token: string
           display_name: string | null
+          dj_intro_enabled: boolean
           home_state: string | null
           id: string
+          song_overlay_enabled: boolean
           user_id: string
         }
         Insert: {
@@ -1075,8 +1077,10 @@ export type Database = {
           dispatch_opt_in?: boolean
           dispatch_unsubscribe_token?: string
           display_name?: string | null
+          dj_intro_enabled?: boolean
           home_state?: string | null
           id?: string
+          song_overlay_enabled?: boolean
           user_id: string
         }
         Update: {
@@ -1085,8 +1089,10 @@ export type Database = {
           dispatch_opt_in?: boolean
           dispatch_unsubscribe_token?: string
           display_name?: string | null
+          dj_intro_enabled?: boolean
           home_state?: string | null
           id?: string
+          song_overlay_enabled?: boolean
           user_id?: string
         }
         Relationships: [
@@ -1124,6 +1130,47 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "setlist_comments_setlist_id_fkey"
+            columns: ["setlist_id"]
+            isOneToOne: false
+            referencedRelation: "setlists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      setlist_intros: {
+        Row: {
+          created_at: string
+          id: string
+          intro_source_hash: string
+          lines: Json
+          script_json: Json
+          setlist_id: string
+          total_duration_ms: number
+          voice_provider: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          intro_source_hash: string
+          lines: Json
+          script_json: Json
+          setlist_id: string
+          total_duration_ms: number
+          voice_provider?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          intro_source_hash?: string
+          lines?: Json
+          script_json?: Json
+          setlist_id?: string
+          total_duration_ms?: number
+          voice_provider?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "setlist_intros_setlist_id_fkey"
             columns: ["setlist_id"]
             isOneToOne: false
             referencedRelation: "setlists"
