@@ -292,20 +292,23 @@ async function computeIntroSourceHash(sl: SetlistForIntro): Promise<string> {
 async function generateScript(sl: SetlistForIntro): Promise<{ script: ScriptLine[] }> {
   const userPrompt = buildUserPrompt(sl);
 
-  // Lovable AI gateway is OpenAI-compatible for chat completions
-  const res = await fetch("https://ai.lovable.dev/v1/chat/completions", {
+  // Lovable AI gateway is OpenAI-compatible for chat completions.
+  // URL + model chosen to match the existing ai-deadhead function which is
+  // known-working through this gateway. Do NOT pass response_format —
+  // Lovable's gateway doesn't reliably pass it through and the system prompt
+  // already tells the model to emit JSON.
+  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${LOVABLE_API_KEY}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: "google/gemini-2.5-flash",
+      model: "google/gemini-3-flash-preview",
       messages: [
         { role: "system", content: SYSTEM_PROMPT },
         { role: "user", content: userPrompt },
       ],
-      response_format: { type: "json_object" },
       temperature: 0.9,
     }),
   });
@@ -317,7 +320,13 @@ async function generateScript(sl: SetlistForIntro): Promise<{ script: ScriptLine
 
   const data = await res.json();
   const content: string = data.choices?.[0]?.message?.content ?? "{}";
-  const parsed = JSON.parse(content) as { script?: ScriptLine[] };
+  // Some models wrap JSON in markdown code fences — strip them if present.
+  const stripped = content
+    .trim()
+    .replace(/^```(?:json)?\s*/i, "")
+    .replace(/\s*```$/i, "")
+    .trim();
+  const parsed = JSON.parse(stripped) as { script?: ScriptLine[] };
 
   const script = parsed.script ?? [];
   validateScript(script);
