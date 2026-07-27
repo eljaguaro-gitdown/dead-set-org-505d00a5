@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Dead Set — Now Casting Two Podcast Hosts</title>
+<meta name="description" content="Every Deadhead knows the feeling. Dead Set is casting a dynamic, passionate duo to host a weekly podcast and lead our community on a magic ride through the archives.">
+<meta name="author" content="Dead-Set.Org">
+<meta name="theme-color" content="#4a0707">
+<meta property="og:site_name" content="Dead Set">
+<meta property="og:title" content="Dead Set — Now Casting Two Podcast Hosts">
+<meta property="og:description" content="Every Deadhead knows the feeling. We're looking for a duo to lead our community on a magic ride through the archives.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://dead-set.org/podcast.html">
+<meta property="og:image" content="https://dead-set.org/cosmic-charlie.jpg">
+<meta property="og:image:alt" content="Cosmic Charlie, your way in">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sancreek&family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&family=DM+Sans:wght@400;500&family=Caveat:wght@400;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --ox:#4a0707; --ox-deep:#3c0505;
+    --cream:#f3ead7; --cream-dim:#e6dac2;
+    --rust:#c1503a; --rust-deep:#a42814;
+    --tan:#c0a38e; --tan-dim:#9a7c68;
+    --ink:#3d2a1c; --ink-soft:#5e4632; --hair:#6d1a14;
+  }
+  html{scroll-behavior:smooth}
+  body{background:var(--ox);color:var(--cream);font-family:'Playfair Display',Georgia,serif;
+    -webkit-font-smoothing:antialiased;
+    background-image:radial-gradient(ellipse at 50% 14%,#5c0e0b 0%,#4a0707 46%,#3a0404 100%);
+    background-attachment:fixed}
+  .wrap{max-width:1120px;margin:0 auto;padding:0 40px}
+  section{padding:60px 0}
+  h2{font-family:'Sancreek',Georgia,serif;font-weight:400;color:var(--rust);
+    font-size:clamp(30px,4.8vw,52px);line-height:1.18;margin-bottom:24px}
+  p{font-size:38px;line-height:1.6;color:var(--cream);margin-bottom:26px}
+  p em{font-style:italic;color:var(--rust)}
+  p strong{font-weight:700;color:#fff6e4}
+  .eyebrow{font-family:'IBM Plex Mono',monospace;font-size:22px;letter-spacing:.24em;
+    text-transform:uppercase;color:var(--tan-dim);margin-bottom:18px}
+  a{color:var(--rust)}
+  .rule{height:1px;background:var(--hair);border:0}
+
+  /* ── HERO — mirrors the printed poster ── */
+  header{text-align:center;padding:64px 0 20px}
+  .charlie{width:min(430px,74vw);aspect-ratio:1;border-radius:50%;object-fit:cover;
+    display:block;margin:0 auto;border:5px solid var(--cream)}
+  h1{font-family:'Sancreek',Georgia,serif;font-weight:400;color:var(--rust);
+    font-size:clamp(46px,10.5vw,116px);line-height:1.05;margin:52px 0 0;letter-spacing:.01em}
+  .feeling{font-family:'Playfair Display',serif;font-style:italic;font-weight:700;
+    color:var(--cream);font-size:clamp(32px,5.4vw,62px);line-height:1.25;margin-top:26px}
+  .thatsong{color:var(--tan);font-size:clamp(24px,3.9vw,46px);line-height:1.5;
+    max-width:900px;margin:26px auto 0}
+  .wordmark{font-family:'Sancreek',Georgia,serif;color:var(--cream);
+    font-size:clamp(34px,6.6vw,74px);line-height:1.1;margin-top:56px;letter-spacing:.01em}
+  .gems{font-family:'IBM Plex Mono',monospace;font-size:clamp(17px,2.4vw,26px);
+    letter-spacing:.22em;text-transform:uppercase;color:var(--rust);margin-top:26px}
+  .casting-rule{max-width:1040px;margin:52px auto 0;height:1px;background:var(--hair)}
+  .nowcasting{font-family:'IBM Plex Mono',monospace;font-size:clamp(17px,2.4vw,26px);
+    letter-spacing:.3em;text-transform:uppercase;color:var(--tan);margin-top:34px}
+  .castline{font-family:'Playfair Display',serif;font-style:italic;color:var(--cream);
+    font-size:clamp(27px,4.4vw,52px);line-height:1.35;max-width:960px;margin:26px auto 0}
+
+  /* ── welcome ── */
+  .welcome{background:rgba(0,0,0,.16);border-top:1px solid var(--hair);
+    border-bottom:1px solid var(--hair);margin-top:64px}
+  .hey{font-family:'Caveat',cursive;font-weight:700;font-size:66px;color:var(--rust);
+    display:block;margin-bottom:16px}
+  .quote{font-style:italic;font-size:46px;line-height:1.4;color:var(--rust);text-align:center;
+    padding:38px 24px;margin:44px 0 0;border-top:2px solid var(--hair);border-bottom:2px solid var(--hair)}
+
+  /* ── builder replica (mirrors the live dead-set.org flow) ── */
+  .builder{margin:46px 0 0;padding:44px 34px 40px;text-align:center;
+    background:rgba(0,0,0,.18);border:1px solid var(--hair);border-radius:22px}
+  .b-charlie{width:132px;height:132px;border-radius:50%;object-fit:cover;display:block;
+    margin:0 auto;border:3px solid #2f3d63}
+  .b-dots{display:flex;gap:9px;justify-content:center;margin-top:16px}
+  .b-dots i{width:9px;height:9px;border-radius:50%;background:#7a2a22;display:block}
+  .b-dots i.on{background:var(--rust)}
+  .b-title{font-family:'Sancreek',Georgia,serif;color:var(--rust);margin-top:26px;
+    font-size:clamp(25px,3.8vw,42px);line-height:1.2}
+  .b-sub{font-family:'DM Sans',sans-serif;color:var(--cream-dim);font-size:24px;margin-top:12px}
+  .b-label{font-family:'DM Sans',sans-serif;font-size:20px;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--tan);margin:30px 0 14px}
+  .b-grid{display:grid;gap:14px}
+  .b-3{grid-template-columns:repeat(auto-fit,minmax(210px,1fr))}
+  .b-card{background:var(--cream);color:#2f2a24;border-radius:10px;padding:16px 18px;
+    display:flex;align-items:center;justify-content:center;gap:11px;
+    font-family:'DM Sans',sans-serif;font-size:22px;font-weight:400;
+    box-shadow:0 1px 0 rgba(0,0,0,.18)}
+  .b-card.b-stack{flex-direction:column;gap:9px;padding:20px 14px}
+  .b-ico{font-size:26px;line-height:1}
+  .b-card.b-era{flex-direction:column;gap:5px;padding:15px 12px}
+  .b-card.b-era b{font-family:'Playfair Display',serif;font-style:italic;font-weight:400;
+    font-size:22px;color:#2f2a24}
+  .b-card.b-era span{font-family:'IBM Plex Mono',monospace;font-size:18px;color:#8a6a4e}
+
+  /* ── lists ── */
+  .cols{display:grid;gap:56px;grid-template-columns:repeat(auto-fit,minmax(400px,1fr))}
+  .list{list-style:none}
+  .list li{font-size:34px;line-height:1.5;color:var(--cream-dim);padding-left:38px;
+    position:relative;margin-bottom:20px}
+  .list li::before{content:"·";position:absolute;left:8px;color:var(--rust);
+    font-size:46px;line-height:.9}
+
+  /* ── real talk ── */
+  .realtalk{border-left:6px solid var(--rust);padding:6px 0 6px 34px;margin-top:12px}
+  .realtalk p{margin-bottom:0}
+  .miracle{font-family:'Sancreek',serif;color:var(--rust);font-size:clamp(24px,3.6vw,40px);
+    display:block;margin-bottom:16px;line-height:1.25}
+
+  /* ── apply ── */
+  .apply{background:var(--cream);color:var(--ink);border-radius:20px;padding:52px 54px}
+  .apply h2{color:var(--rust-deep)}
+  .apply .eyebrow{color:var(--ink-soft)}
+  .apply p{color:var(--ink);font-size:34px}
+  label{display:block;font-family:'IBM Plex Mono',monospace;font-size:20px;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--ink-soft);margin-bottom:9px}
+  input,textarea,select{width:100%;background:#fffaf0;border:2px solid #d8c9ad;border-radius:10px;
+    color:var(--ink);padding:20px 22px;font-family:'Playfair Display',serif;font-size:32px}
+  input:focus,textarea:focus,select:focus{outline:none;border-color:var(--rust)}
+  textarea{min-height:210px;resize:vertical;line-height:1.5}
+  .field{margin-bottom:28px}
+  .grid2{display:grid;gap:28px;grid-template-columns:repeat(auto-fit,minmax(340px,1fr))}
+  .hint{font-size:23px;color:var(--ink-soft);margin-top:8px}
+  .submit{margin-top:10px;border:0;cursor:pointer;font-family:'Sancreek',serif;font-size:26px;
+    letter-spacing:.04em;color:var(--cream);background:var(--rust);padding:24px 48px;border-radius:999px}
+  .submit:hover{background:var(--rust-deep)}
+  .status{margin-top:20px;font-size:28px;display:none}
+  .status.ok{display:block;color:#2f6b3f}
+  .status.err{display:block;color:var(--rust-deep)}
+
+  /* ── signoff ── */
+  .signoff{text-align:center;padding:64px 0 24px}
+  .dm{display:inline-flex;align-items:center;gap:20px;color:var(--tan);
+    font-size:clamp(26px,3.6vw,42px);text-decoration:none}
+  .dm svg{width:1.15em;height:1.15em;flex:0 0 auto}
+  .dm:hover{color:var(--cream)}
+  footer{text-align:center;padding:44px 0 76px;border-top:1px solid var(--hair);margin-top:44px}
+  .footline{font-family:'IBM Plex Mono',monospace;font-size:21px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--tan-dim);line-height:2}
+  footer a{color:var(--tan)}
+
+  @media (max-width:760px){
+    .wrap{padding:0 24px}
+    p{font-size:29px}
+    .list li,.chip{font-size:26px}
+    .quote{font-size:33px}
+    .hey{font-size:52px}
+    input,textarea,select{font-size:26px;padding:16px 18px}
+    .apply{padding:34px 28px}
+    .apply p{font-size:27px}
+    .realtalk{padding-left:22px}
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══ HERO: the poster ═══ -->
+<header>
+  <div class="wrap">
+    <img class="charlie" src="/cosmic-charlie.jpg" alt="Cosmic Charlie, your way in">
+    <h1>HEY NOW!</h1>
+    <div class="feeling">Every Deadhead knows the feeling.</div>
+    <p class="thatsong">That song. That night. That version you'll never forget — and the next one
+      waiting to be found, inhaled, and passed on.</p>
+    <div class="wordmark">Dead-Set.Org</div>
+    <div class="gems">A new way to discover the gems</div>
+    <div class="casting-rule"></div>
+    <div class="nowcasting">Now casting</div>
+    <p class="castline">Two hosts for a weekly podcast to lead our community
+      on a magic ride through the archives.</p>
+  </div>
+</header>
+
+<!-- ═══ WELCOME ═══ -->
+<section class="welcome">
+  <div class="wrap">
+    <span class="hey">Hey Now —</span>
+    <p>You found us. <strong>Thank you</strong> — really. Whether you scanned a code off a wall,
+      followed a link from a friend, or just went looking, you did the exact thing this whole
+      project is about.</p>
+    <p>Dead-Set.org was built to help people discover rare gems — shows that cook, versions of your
+      favorite songs you've never heard. What actually started happening is bigger than that:
+      <em>we are finding each other.</em> Deadhead to Deadhead, one connection at a time.
+      Dead-Set.org is the engine. The community is the song.</p>
+    <p>So thank you for being curious enough to look. Here's what we're building, and what we need.</p>
+    <div class="quote">We're not looking for an audience. We're looking for the two people who
+      can hold the room.</div>
+  </div>
+</section>
+
+<!-- ═══ THE GIG ═══ -->
+<section>
+  <div class="wrap">
+    <div class="eyebrow">The gig</div>
+    <h2>A dynamic, passionate duo.</h2>
+    <p>We're starting a weekly podcast, and we need two people to host it. <strong>You will lead
+      our community in conversation for 90 minutes per week</strong> — and you won't be doing it
+      from a script.</p>
+    <p>Every episode starts with Charlie's question: <em>what kind of night is it?</em> You two
+      answer it honestly — how the week actually went — and that answer becomes an energy, a texture,
+      an era. Cosmic Charlie pulls a night out of the vault to match.</p>
+
+    <div class="builder">
+      <img class="b-charlie" src="/cosmic-charlie.jpg" alt="Cosmic Charlie">
+      <div class="b-dots"><i class="on"></i><i></i><i></i></div>
+      <div class="b-title">What kind of night is it?</div>
+      <div class="b-sub">Pick one energy</div>
+      <div class="b-grid b-3">
+        <div class="b-card b-stack"><span class="b-ico">&#127744;</span><span>Exploratory &amp; deep</span></div>
+        <div class="b-card b-stack"><span class="b-ico">&#9889;</span><span>Tight &amp; driving</span></div>
+        <div class="b-card b-stack"><span class="b-ico">&#127769;</span><span>Mellow &amp; slow</span></div>
+      </div>
+      <div class="b-label">Texture — pick one or two</div>
+      <div class="b-grid b-3">
+        <div class="b-card"><span class="b-ico">&#127774;</span><span>Joyful</span></div>
+        <div class="b-card"><span class="b-ico">&#128420;</span><span>Dark &amp; heavy</span></div>
+        <div class="b-card"><span class="b-ico">&#128167;</span><span>Raw &amp; emotional</span></div>
+        <div class="b-card"><span class="b-ico">&#128302;</span><span>Psychedelic</span></div>
+        <div class="b-card"><span class="b-ico">&#127807;</span><span>Roots &amp; earthy</span></div>
+        <div class="b-card"><span class="b-ico">&#128293;</span><span>Party</span></div>
+      </div>
+      <div class="b-label">Era — pick one (optional)</div>
+      <div class="b-grid b-3">
+        <div class="b-card b-era"><b>Primal Dead</b><span>1965–1969</span></div>
+        <div class="b-card b-era"><b>Americana Peak</b><span>1970–1974</span></div>
+        <div class="b-card b-era"><b>Hiatus &amp; Return</b><span>1975–1977</span></div>
+        <div class="b-card b-era"><b>Shakedown Street</b><span>1978–1979</span></div>
+        <div class="b-card b-era"><b>Go to Nassau</b><span>1980–1983</span></div>
+        <div class="b-card b-era"><b>Touch of Grey</b><span>1984–1989</span></div>
+        <div class="b-card b-era"><b>Final Run</b><span>1990–1995</span></div>
+      </div>
+    </div>
+
+    <p style="margin-top:44px"><strong>Neither of you has heard it.</strong> You read the liner
+      notes out loud, open the poster, press play, and react — first listen, on mic, with the
+      community right there with you.</p>
+  </div>
+</section>
+
+<hr class="rule">
+
+<!-- ═══ WHO WE'RE LOOKING FOR ═══ -->
+<section>
+  <div class="wrap">
+    <div class="eyebrow">Who we're looking for</div>
+    <ul class="list">
+      <li>Two of you — apply as a pair</li>
+      <li>Mid-20s to early 30s</li>
+      <li>Real chemistry on mic</li>
+      <li>Curious, not encyclopedic</li>
+      <li>Previous podcast experience helpful</li>
+      <li>Bay Area preferred, remote OK</li>
+    </ul>
+
+    <div class="realtalk" style="margin-top:52px">
+      <span class="miracle">Real talk: payment in miracles (unpaid).</span>
+      <p>It's a labor of love while we build something worth getting paid for. You bring the ears
+        and the banter.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ APPLY ═══ -->
+<section id="apply">
+  <div class="wrap">
+    <div class="apply">
+      <div class="eyebrow">Grab your co-host</div>
+      <h2>Apply as a pair.</h2>
+      <p>One form, both names. Two minutes of you two talking beats any résumé.</p>
+      <form id="applyForm" novalidate>
+        <div class="grid2">
+          <div class="field"><label for="name1">Your name</label>
+            <input id="name1" name="name1" required autocomplete="name"></div>
+          <div class="field"><label for="name2">Co-host's name</label>
+            <input id="name2" name="name2" required></div>
+        </div>
+        <div class="grid2">
+          <div class="field"><label for="email">Email</label>
+            <input id="email" name="email" type="email" required autocomplete="email"></div>
+          <div class="field"><label for="handles">Your handles</label>
+            <input id="handles" name="handles" placeholder="@you and @them"></div>
+        </div>
+        <div class="grid2">
+          <div class="field"><label for="where">Where are you</label>
+            <select id="where" name="where">
+              <option>The Bay</option><option>Elsewhere in California</option>
+              <option>Elsewhere — remote</option></select></div>
+          <div class="field"><label for="experience">Podcast experience</label>
+            <select id="experience" name="experience">
+              <option>None yet — but we talk like this anyway</option>
+              <option>A little — we've recorded some things</option>
+              <option>Yes — we've hosted a show</option></select></div>
+        </div>
+        <div class="field"><label for="demo">Link to a clip</label>
+          <input id="demo" name="demo" placeholder="Voice memo, video, anything">
+          <div class="hint">Optional, but it's the fastest yes.</div></div>
+        <div class="field"><label for="why">What kind of night is it for you two right now?</label>
+          <textarea id="why" name="why" required placeholder="Pick an energy, a texture, an era — and tell me why. No wrong answer."></textarea></div>
+        <button class="submit" type="submit">Send it</button>
+        <div class="status" id="status"></div>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ SIGN-OFF ═══ -->
+<div class="signoff">
+  <div class="wrap">
+    <a class="dm" href="https://instagram.com/grateful_jaguaro" target="_blank" rel="noopener">
+      <span>DM</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+        <rect x="2.6" y="2.6" width="18.8" height="18.8" rx="5.4"/>
+        <circle cx="12" cy="12" r="4.6"/>
+        <circle cx="17.6" cy="6.4" r="1.25" fill="currentColor" stroke="none"/>
+      </svg>
+      <span>@grateful_jaguaro</span>
+    </a>
+  </div>
+</div>
+
+<footer>
+  <div class="wrap">
+    <div class="footline">
+      Built on the shoulders of the tapers, the traders, and the Internet Archive<br>
+      Please copy and share freely · Trade only · <a href="https://dead-set.org">dead-set.org</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+/* Point ENDPOINT at your Supabase edge function; leave "" for the email fallback. */
+const ENDPOINT = "";
+const FALLBACK_EMAIL = "grateful_jaguaro@dead-set.org";
+const form = document.getElementById('applyForm');
+const statusEl = document.getElementById('status');
+function show(m,ok){ statusEl.textContent=m; statusEl.className='status '+(ok?'ok':'err'); }
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const data = Object.fromEntries(new FormData(form).entries());
+  if(!data.name1||!data.name2||!data.email||!data.why){
+    show('Almost — I need both names, an email, and what kind of night it is.',false); return; }
+  if(!/^\S+@\S+\.\S+$/.test(data.email)){ show('That email looks off — mind checking it?',false); return; }
+  const btn=form.querySelector('.submit'); btn.disabled=true; btn.textContent='Sending…';
+  try{
+    if(ENDPOINT){
+      const res=await fetch(ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({...data,source:'podcast-hosts-page',submitted_at:new Date().toISOString()})});
+      if(!res.ok) throw new Error('bad status '+res.status);
+      form.reset(); show("Got it. I'll be in touch — keep an ear out.",true);
+    } else {
+      const subject=encodeURIComponent('Dead Set Podcast hosts — '+data.name1+' & '+data.name2);
+      const body=encodeURIComponent('Hosts: '+data.name1+' & '+data.name2+
+        '\nEmail: '+data.email+'\nHandles: '+(data.handles||'—')+'\nWhere: '+(data.where||'—')+
+        '\nExperience: '+(data.experience||'—')+'\nClip: '+(data.demo||'—')+
+        '\n\nWhat kind of night it is:\n'+data.why+'\n');
+      window.location.href='mailto:'+FALLBACK_EMAIL+'?subject='+subject+'&body='+body;
+      show('Opening your email — hit send and you\'re in.',true);
+    }
+  }catch(err){ show('Something jammed on my end. DM @grateful_jaguaro and we\'ll sort it.',false); }
+  finally{ btn.disabled=false; btn.textContent='Send it'; }
+});
+</script>
+</body>
+</html>
