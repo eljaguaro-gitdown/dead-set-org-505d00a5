@@ -237,7 +237,7 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
           setError("No audio files found");
         } else {
           setTracks(audioFiles);
-          let bestIdx = 0;
+          let bestIdx = -1;   // no match yet — do NOT default to 0
           let bestScore = 0;
           audioFiles.forEach((t: Track, i: number) => {
             const score = matchScore(t.title, songTitle);
@@ -246,8 +246,20 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
               bestIdx = i;
             }
           });
-          audioDebug.log("player", "fuzzy match selected", { index: bestIdx, score: bestScore, total: audioFiles.length });
-          setCurrentTrack(bestIdx);
+          // Threshold gate — match findBestTrack() in src/lib/archiveOrg.ts.
+          // Without this, a recording that doesn't contain this song would
+          // silently play its first track (e.g. Row Jimmy) while the UI
+          // still says "New Minglewood Blues". Silent-wrong-audio is worse
+          // than no-audio-with-explanation: the existing error path (see the
+          // singleTrackMode auto-skip below) advances the playlist, and
+          // single-song plays surface the error to the user.
+          if (bestIdx >= 0 && bestScore >= 60) {
+            audioDebug.log("player", "fuzzy match selected", { index: bestIdx, score: bestScore, total: audioFiles.length });
+            setCurrentTrack(bestIdx);
+          } else {
+            audioDebug.log("player", "no track above threshold — refusing to play wrong audio", { song: songTitle, identifier, total: audioFiles.length, bestScore }, "warn");
+            setError(`Couldn't find "${songTitle}" in this recording`);
+          }
         }
       } catch (e) {
         if (!cancelled) {
