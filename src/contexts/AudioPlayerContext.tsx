@@ -1,7 +1,19 @@
-import { createContext, useContext, useState, useCallback, useRef, useEffect, type ReactNode } from "react";
+import { createContext, useContext, useState, useCallback, useRef, useEffect, useMemo, type ReactNode } from "react";
 import { findArchiveRecording, findTrackInRecording } from "@/lib/archiveOrg";
 import { audioDebug } from "@/lib/audioDebug";
-import { startPlayEvent, finalizePlayEvent } from "@/lib/playEventTracker";
+import {
+  startPlayEvent,
+  finalizePlayEvent,
+  pausePlayEvent,
+  resumePlayEvent,
+  setPlayEventTrackDuration,
+} from "@/lib/playEventTracker";
+import { resolvePlayerEngine, type PlayerEngine } from "@/lib/player/engineFlag";
+import {
+  GaplessEngine,
+  type EngineTrack,
+  type ProgressSnapshot,
+} from "@/lib/player/gaplessEngine";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
@@ -104,7 +116,35 @@ interface AudioPlayerState {
   preRoll: PreRollState | null;
 }
 
+/**
+ * Transport surface for the gapless engine (Phase 1 of the player swap).
+ * Fully functional when `engine === "gapless"`; under `"legacy"` the mounted
+ * AudioPlayer component owns its own <audio> element, so play/pause/seek/
+ * setVolume are no-ops and next/previous fall through to advancePlaylist.
+ */
+export interface PlayerTransport {
+  engine: PlayerEngine;
+  isPlaying: boolean;
+  /** True while the current slot's track URL is still resolving. */
+  isLoading: boolean;
+  /** True when the browser refused autoplay — show the "tap to start" state. */
+  autoplayBlocked: boolean;
+  play: () => void;
+  pause: () => void;
+  togglePlayPause: () => void;
+  next: () => void;
+  previous: () => void;
+  gotoTrack: (slotId: string) => void;
+  seek: (seconds: number) => void;
+  setVolume: (volume: number) => void;
+  /** High-frequency position snapshot — read from a rAF loop, never per-render. */
+  getProgress: () => ProgressSnapshot;
+  /** ~4Hz updates for time labels. Returns an unsubscribe function. */
+  subscribeProgress: (cb: (p: ProgressSnapshot) => void) => () => void;
+}
+
 interface AudioPlayerContextValue extends AudioPlayerState {
+  transport: PlayerTransport;
   /**
    * Play a single song. If `playlistContext` is provided, the surrounding
    * songs are queued so the player auto-advances when this one ends — this
@@ -124,6 +164,23 @@ interface AudioPlayerContextValue extends AudioPlayerState {
   skipPreRoll: () => void;
 }
 
+const noopTransport: PlayerTransport = {
+  engine: "legacy",
+  isPlaying: false,
+  isLoading: false,
+  autoplayBlocked: false,
+  play: () => undefined,
+  pause: () => undefined,
+  togglePlayPause: () => undefined,
+  next: () => undefined,
+  previous: () => undefined,
+  gotoTrack: () => undefined,
+  seek: () => undefined,
+  setVolume: () => undefined,
+  getProgress: () => ({ currentTime: 0, duration: 0 }),
+  subscribeProgress: () => () => undefined,
+};
+
 const defaultAudioPlayerContext: AudioPlayerContextValue = {
   playingSlot: null,
   playlistMode: false,
@@ -131,6 +188,7 @@ const defaultAudioPlayerContext: AudioPlayerContextValue = {
   playlistSlots: [],
   activeSetlistId: null,
   preRoll: null,
+  transport: noopTransport,
   playSingle: () => undefined,
   playSetlist: async () => undefined,
   queueSetlist: async () => undefined,
@@ -162,6 +220,91 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
   // when the user taps "Play" on Setlist B while Setlist A is still resolving
   // its first playable track via Archive.org. Only the LATEST call commits.
   const playSetlistSeqRef = useRef(0);
+
+  // ── Gapless engine (player_engine flag, default "gapless") ──────────
+  // Context state stays the source of truth; the engine is a sink synced from
+  // state changes, and its callbacks flow back through engineDrivenRef-guarded
+  // updates so the two never feedback-loop. Under "legacy" (flag opt-out or no
+  // Web Audio — including jsdom tests) every engine path below is inert and
+  // the remount-per-track <AudioPlayer> behaves exactly as before.
+  const engineMode = useMemo<PlayerEngine>(() => resolvePlayerEngine(), []);
+  const engineRef = useRef<GaplessEngine | null>(null);
+  /** Slot id the engine is currently on — dedupes sync-effect reloads. */
+  const engineSlotIdRef = useRef<string | null>(null);
+  /** True when the next playingSlot change came from an engine callback. */
+  const engineDrivenRef = useRef(false);
+  /** Generation token for the background resolve-and-append loop. */
+  const resolveGenRef = useRef(0);
+  /** Last progress tick, tagged with its slot — used to tell "finished" from "skipped". */
+  const lastProgressRef = useRef<{ slotId: string | null; currentTime: number; duration: number }>(
+    { slotId: null, currentTime: 0, duration: 0 },
+  );
+  const consecutiveErrorsRef = useRef(0);
+  const [transportState, setTransportState] = useState({
+    isPlaying: false,
+    autoplayBlocked: false,
+  });
+
+  /** Finalize the outgoing play event as "finished" when it actually ran to the end. */
+  const maybeFinalizeFinished = (outgoingSlotId: string | null) => {
+    const p = lastProgressRef.current;
+    if (
+      outgoingSlotId &&
+      p.slotId === outgoingSlotId &&
+      p.duration > 0 &&
+      p.currentTime / p.duration >= 0.85
+    ) {
+      void finalizePlayEvent("finished");
+    }
+  };
+
+  // Engine callbacks delegate through a ref reassigned every render, so the
+  // long-lived engine instance always sees fresh closures.
+  const engineCbRef = useRef({
+    onTrackStarted: (_slotId: string, _queueIndex: number) => undefined as void,
+    onQueueEnded: () => undefined as void,
+    onError: (_error: Error) => undefined as void,
+    onPlayBlocked: () => undefined as void,
+    onPlayStateChanged: (_isPlaying: boolean) => undefined as void,
+  });
+
+  const getEngine = useCallback((): GaplessEngine => {
+    if (!engineRef.current) {
+      const engine = new GaplessEngine({
+        onTrackStarted: (slotId, queueIndex) => engineCbRef.current.onTrackStarted(slotId, queueIndex),
+        onQueueEnded: () => engineCbRef.current.onQueueEnded(),
+        onError: (error) => engineCbRef.current.onError(error),
+        onPlayBlocked: () => engineCbRef.current.onPlayBlocked(),
+        onPlayStateChanged: (isPlaying) => engineCbRef.current.onPlayStateChanged(isPlaying),
+      });
+      // Track duration + per-slot progress for analytics at the throttled rate.
+      engine.subscribeProgress((p) => {
+        lastProgressRef.current = { slotId: engineSlotIdRef.current, ...p };
+        if (p.duration > 0) setPlayEventTrackDuration(p.duration * 1000);
+      });
+      engineRef.current = engine;
+    }
+    return engineRef.current;
+  }, []);
+
+  const toEngineTrack = (slot: PlayableSlot): EngineTrack => ({
+    slotId: slot.id,
+    url: slot.directTrackUrl!,
+    metadata: {
+      title: slot.song.title,
+      artist: "Grateful Dead",
+      album:
+        [slot.version?.venue, slot.version?.show_date].filter(Boolean).join(" · ") || "Dead Set",
+      // Absolute HTTPS URL — relative artwork paths silently fail in Media Session.
+      artwork: [
+        {
+          src: `${window.location.origin}/icons/icon-512.png`,
+          sizes: "512x512",
+          type: "image/png",
+        },
+      ],
+    },
+  });
 
   // ── DJ intro pre-roll orchestration ─────────────────────────────────
   // Pending playSetlist calls await a promise that resolves when the intro
@@ -216,6 +359,8 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
   const stopPlayback = useCallback(() => {
     audioDebug.log("context", "stopPlayback");
     playSetlistSeqRef.current++; // invalidate any in-flight playSetlist
+    resolveGenRef.current++; // cancel background resolve-and-append
+    engineSlotIdRef.current = null;
     // Cancel any pending pre-roll too — user pressed stop, they mean it.
     completePreRoll();
     audioDebug.setSlot(null, null, null, null);
@@ -230,6 +375,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
   ) => {
     audioDebug.log("context", "playSingle", { id: slot.id, song: slot.song.title, hasUrl: !!slot.version?.archive_org_url, hasDirect: !!slot.directTrackUrl, withContext: !!playlistContext });
     playSetlistSeqRef.current++; // invalidate any in-flight playSetlist
+    engineSlotIdRef.current = null; // force the engine to (re)anchor on this slot
     // playSingle bypasses the DJ intro entirely — it's a "play this one song"
     // gesture, not a "start the show" gesture. Cancel any active pre-roll.
     if (stateRef.current.preRoll) completePreRoll();
@@ -351,6 +497,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
   const playSetlist = useCallback(async (slots: PlayableSlot[], setlistId?: string) => {
     if (slots.length === 0) return;
     const seq = ++playSetlistSeqRef.current;
+    engineSlotIdRef.current = null; // force the engine to (re)anchor on the new setlist
     audioDebug.log("context", "playSetlist", { count: slots.length, setlistId, seq });
     audioDebug.setPlaybackState("starting");
 
@@ -456,6 +603,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
 
   const advancePlaylist = useCallback(async (dir: number) => {
     const { playlistIndex, playlistSlots } = stateRef.current;
+    engineSlotIdRef.current = null; // user-driven jump — the sync effect re-anchors the queue
     audioDebug.log("context", "advancePlaylist", { dir, fromIndex: playlistIndex });
 
     for (let i = playlistIndex + dir; i >= 0 && i < playlistSlots.length; i += dir) {
@@ -477,6 +625,147 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     toast.info("End of setlist");
   }, [stopPlayback]);
 
+  // ── Engine bridge: engine → state ───────────────────────────────────
+  // Fresh closures every render; the long-lived engine delegates through the ref.
+  engineCbRef.current = {
+    onTrackStarted: (slotId) => {
+      if (engineMode !== "gapless") return;
+      consecutiveErrorsRef.current = 0;
+      if (engineSlotIdRef.current === slotId) return; // the slot we just anchored on
+      const outgoingSlotId = engineSlotIdRef.current;
+      maybeFinalizeFinished(outgoingSlotId);
+      engineSlotIdRef.current = slotId;
+      const st = stateRef.current;
+      const idx = st.playlistSlots.findIndex((s) => s.id === slotId);
+      if (idx === -1) return;
+      const slot = st.playlistSlots[idx];
+      audioDebug.log("context", "gapless advance", { song: slot.song.title, index: idx });
+      audioDebug.setSlot(slot.id, slot.song.title, slot.version?.archive_org_url ?? null, slot.directTrackUrl ?? null);
+      engineDrivenRef.current = true;
+      setState((prev) => (prev.playingSlot ? { ...prev, playingSlot: slot, playlistIndex: idx } : prev));
+    },
+    onQueueEnded: () => {
+      if (engineMode !== "gapless") return;
+      maybeFinalizeFinished(engineSlotIdRef.current);
+      const st = stateRef.current;
+      if (st.playlistMode && st.playlistIndex < st.playlistSlots.length - 1) {
+        // Slots beyond the built queue (still resolving, or queued after the
+        // append loop finished) — advance through the normal path; the sync
+        // effect re-anchors the queue there.
+        void advancePlaylist(1);
+      } else if (st.playlistMode) {
+        stopPlayback();
+        toast.info("End of setlist");
+      } else {
+        audioDebug.setPlaybackState("ended");
+      }
+    },
+    onError: (error) => {
+      if (engineMode !== "gapless") return;
+      audioDebug.log("context", "gapless engine error", { error: String(error) }, "error");
+      void finalizePlayEvent("error");
+      consecutiveErrorsRef.current += 1;
+      const st = stateRef.current;
+      if (st.playlistMode && consecutiveErrorsRef.current <= 3) {
+        void advancePlaylist(1); // keep the queue moving past a broken track
+      } else {
+        toast.error("Couldn't play this track");
+      }
+    },
+    onPlayBlocked: () => {
+      if (engineMode !== "gapless") return;
+      audioDebug.log("context", "autoplay blocked", {}, "warn");
+      setTransportState((prev) => ({ ...prev, autoplayBlocked: true }));
+    },
+    onPlayStateChanged: (isPlaying) => {
+      if (engineMode !== "gapless") return;
+      audioDebug.setPlaybackState(isPlaying ? "playing" : "paused");
+      if (isPlaying) resumePlayEvent();
+      else pausePlayEvent();
+      setTransportState((prev) => (prev.isPlaying === isPlaying ? prev : { ...prev, isPlaying }));
+    },
+  };
+
+  /**
+   * Resolve upcoming playlist slots in order and append them to the live
+   * queue, so gapless transitions have real URLs ahead of the playhead.
+   * Sequential on purpose — no hammering archive.org in parallel. Reads
+   * playlistSlots through stateRef each iteration so setlists queued while
+   * the loop runs are picked up too.
+   */
+  const resolveAndAppendUpcoming = useCallback(async (gen: number, anchorSlotId: string) => {
+    const engine = engineRef.current;
+    if (!engine) return;
+    const startIdx = stateRef.current.playlistSlots.findIndex((s) => s.id === anchorSlotId);
+    if (startIdx === -1) return;
+    for (let i = startIdx + 1; i < stateRef.current.playlistSlots.length; i++) {
+      if (gen !== resolveGenRef.current) return;
+      const slot = stateRef.current.playlistSlots[i];
+      let resolved = slot;
+      if (!slot.directTrackUrl || !slot.version?.archive_org_url) {
+        const r = await resolveSlot(slot);
+        if (r) resolved = r;
+      }
+      if (gen !== resolveGenRef.current) return;
+      if (!resolved.directTrackUrl) {
+        audioDebug.log("context", "gapless: skipping unresolvable slot", { song: slot.song.title }, "warn");
+        continue;
+      }
+      if (resolved !== slot) {
+        setState((prev) => {
+          const idx = prev.playlistSlots.findIndex((s) => s.id === resolved.id);
+          if (idx === -1) return prev;
+          const copy = [...prev.playlistSlots];
+          copy[idx] = resolved;
+          return { ...prev, playlistSlots: copy };
+        });
+      }
+      audioDebug.log("context", "gapless: queued upcoming track", { song: resolved.song.title });
+      engine.append(toEngineTrack(resolved));
+    }
+  }, []);
+
+  // ── Engine bridge: state → engine ───────────────────────────────────
+  // User-driven playingSlot changes (play, jump, skip) re-anchor the queue at
+  // that slot; engine-driven advances (gapless transitions) skip the rebuild
+  // so the scheduled Web Audio handoff is never torn down mid-segue.
+  useEffect(() => {
+    if (engineMode !== "gapless") return;
+    const slot = state.playingSlot;
+    if (!slot) {
+      resolveGenRef.current++;
+      engineSlotIdRef.current = null;
+      engineRef.current?.clear();
+      setTransportState((prev) =>
+        prev.isPlaying || prev.autoplayBlocked ? { isPlaying: false, autoplayBlocked: false } : prev,
+      );
+      return;
+    }
+    if (engineDrivenRef.current) {
+      engineDrivenRef.current = false;
+      return;
+    }
+    if (!slot.directTrackUrl) return; // still resolving — transport.isLoading covers the UI
+    if (engineSlotIdRef.current === slot.id) return;
+    engineSlotIdRef.current = slot.id;
+    const gen = ++resolveGenRef.current;
+    const engine = getEngine();
+    audioDebug.log("context", "gapless: anchoring queue", { song: slot.song.title });
+    engine.load([toEngineTrack(slot)], 0, true);
+    if (stateRef.current.playlistMode) {
+      void resolveAndAppendUpcoming(gen, slot.id);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [engineMode, state.playingSlot?.id, state.playingSlot?.directTrackUrl, getEngine, resolveAndAppendUpcoming]);
+
+  // Tear the engine down with the provider.
+  useEffect(() => {
+    return () => {
+      engineRef.current?.destroy();
+      engineRef.current = null;
+    };
+  }, []);
+
   /**
    * Prefetch the next few slots in the playlist so even longer transitions
    * (with track-resolution round-trips) are gap-free. Two-stage warm-up per
@@ -493,6 +782,10 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
   const PREFETCH_LOOKAHEAD = 3;
   const prefetchPoolRef = useRef<Map<string, HTMLAudioElement>>(new Map());
   useEffect(() => {
+    // The gapless engine preloads its own queue (preloadNumTracks) and the
+    // resolve-and-append loop handles URL resolution — the hidden-element
+    // pool is legacy-only.
+    if (engineMode === "gapless") return;
     if (!state.playlistMode) return;
     const upcoming = state.playlistSlots.slice(
       state.playlistIndex + 1,
@@ -677,8 +970,80 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     toast.success(`Queued ${sorted.length} ${sorted.length === 1 ? "song" : "songs"}`);
   }, [playSetlist]);
 
+  // Transport surface (Phase 1 gapless swap). Stable enough to rebuild per
+  // render — the provider value object is fresh each render regardless, and
+  // progress deliberately flows through refs/subscriptions, never state.
+  const transport: PlayerTransport = {
+    engine: engineMode,
+    isPlaying: engineMode === "gapless" ? transportState.isPlaying : false,
+    isLoading: !!state.playingSlot && !state.playingSlot.directTrackUrl,
+    autoplayBlocked: transportState.autoplayBlocked,
+    play: () => {
+      if (engineMode !== "gapless") return;
+      setTransportState((prev) => (prev.autoplayBlocked ? { ...prev, autoplayBlocked: false } : prev));
+      // Engine resumes the AudioContext inside this gesture before playing.
+      engineRef.current?.play();
+    },
+    pause: () => {
+      if (engineMode === "gapless") engineRef.current?.pause();
+    },
+    togglePlayPause: () => {
+      if (engineMode !== "gapless") return;
+      setTransportState((prev) => (prev.autoplayBlocked ? { ...prev, autoplayBlocked: false } : prev));
+      engineRef.current?.togglePlayPause();
+    },
+    next: () => {
+      const st = stateRef.current;
+      const engine = engineRef.current;
+      if (engineMode === "gapless" && engine && st.playingSlot) {
+        const idx = engine.indexOfSlot(st.playingSlot.id);
+        // Adjacent track already in the queue → advance inside the engine so
+        // its preload isn't thrown away by a queue rebuild.
+        if (idx >= 0 && idx + 1 < engine.queueLength) {
+          engine.next();
+          return;
+        }
+      }
+      void advancePlaylist(1);
+    },
+    previous: () => {
+      const st = stateRef.current;
+      const engine = engineRef.current;
+      if (engineMode === "gapless" && engine && st.playingSlot) {
+        const idx = engine.indexOfSlot(st.playingSlot.id);
+        if (idx > 0) {
+          engine.previous();
+          return;
+        }
+      }
+      void advancePlaylist(-1);
+    },
+    gotoTrack: (slotId: string) => {
+      const st = stateRef.current;
+      const engine = engineRef.current;
+      if (engineMode === "gapless" && engine) {
+        const idx = engine.indexOfSlot(slotId);
+        if (idx >= 0) {
+          engine.gotoIndex(idx, true);
+          return;
+        }
+      }
+      const slot = st.playlistSlots.find((s) => s.id === slotId);
+      if (slot) void playSingle(slot, { slots: st.playlistSlots, setlistId: st.activeSetlistId });
+    },
+    seek: (seconds: number) => {
+      if (engineMode === "gapless") engineRef.current?.seek(seconds);
+    },
+    setVolume: (volume: number) => {
+      if (engineMode === "gapless") getEngine().setVolume(volume);
+    },
+    getProgress: () => engineRef.current?.progressRef.current ?? { currentTime: 0, duration: 0 },
+    subscribeProgress: (cb) =>
+      engineMode === "gapless" ? getEngine().subscribeProgress(cb) : () => undefined,
+  };
+
   return (
-    <AudioPlayerContext.Provider value={{ ...state, playSingle, playSetlist, queueSetlist, stopPlayback, advancePlaylist, skipPreRoll }}>
+    <AudioPlayerContext.Provider value={{ ...state, transport, playSingle, playSetlist, queueSetlist, stopPlayback, advancePlaylist, skipPreRoll }}>
       {children}
     </AudioPlayerContext.Provider>
   );

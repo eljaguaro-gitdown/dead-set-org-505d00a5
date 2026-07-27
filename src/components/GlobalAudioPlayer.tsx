@@ -1,10 +1,23 @@
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 import AudioPlayer from "@/components/AudioPlayer";
+import GaplessPlayerBar from "@/components/GaplessPlayerBar";
 
+/**
+ * Engine switch (see src/lib/player/engineFlag.ts):
+ * - "gapless" (default): one persistent Queue behind the context; the bar is
+ *   a pure UI shell. No remount between tracks — this is what makes segues
+ *   seamless.
+ * - "legacy": the pre-swap remount-per-track player, kept intact and
+ *   switchable via localStorage player_engine="legacy" for a full release.
+ */
 const GlobalAudioPlayer = () => {
-  const { playingSlot, playlistMode, playlistIndex, playlistSlots, stopPlayback, advancePlaylist, activeSetlistId } = useAudioPlayer();
+  const { playingSlot, playlistMode, playlistIndex, playlistSlots, stopPlayback, advancePlaylist, activeSetlistId, transport } = useAudioPlayer();
 
   if (!playingSlot?.version?.archive_org_url) return null;
+
+  if (transport.engine === "gapless") {
+    return <GaplessPlayerBar />;
+  }
 
   return (
     <AudioPlayer
