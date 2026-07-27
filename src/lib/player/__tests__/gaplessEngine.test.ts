@@ -53,8 +53,8 @@ type FakeQueueInstance = {
   opts: {
     playbackMethod: string;
     preloadNumTracks: number;
-    onStartNewTrack: (info: { index: number; isPlaying: boolean; currentTime: number; duration: number }) => void;
-    onProgress: (info: { index: number; isPlaying: boolean; currentTime: number; duration: number }) => void;
+    onStartNewTrack: (info: { index: number; isPlaying: boolean; currentTime: number; duration: number; playbackType?: string }) => void;
+    onProgress: (info: { index: number; isPlaying: boolean; currentTime: number; duration: number; playbackType?: string }) => void;
   };
   addTrack: ReturnType<typeof vi.fn>;
   gotoTrack: ReturnType<typeof vi.fn>;
@@ -152,6 +152,27 @@ describe("GaplessEngine", () => {
     const playingCalls = (cbs.onPlayStateChanged as ReturnType<typeof vi.fn>).mock.calls
       .filter((c) => c[0] === true);
     expect(playingCalls).toHaveLength(1);
+  });
+
+  it("unlock() creates the queue if needed and resumes the AudioContext", async () => {
+    const engine = new GaplessEngine(makeCallbacks());
+    engine.unlock();
+    await flush();
+
+    expect(instances).toHaveLength(1);
+    const q = instances[0] as unknown as { resumeAudioContext: ReturnType<typeof vi.fn> };
+    expect(q.resumeAudioContext).toHaveBeenCalled();
+  });
+
+  it("progress snapshots carry the playback type for segue instrumentation", async () => {
+    const engine = new GaplessEngine(makeCallbacks());
+    engine.load(tracks, 0, true);
+    await flush();
+
+    lastQueue().opts.onProgress({
+      index: 0, isPlaying: true, currentTime: 10, duration: 300, playbackType: "WEBAUDIO",
+    });
+    expect(engine.progressRef.current.playbackType).toBe("WEBAUDIO");
   });
 
   it("load() replaces the previous queue and clear() tears it down", async () => {

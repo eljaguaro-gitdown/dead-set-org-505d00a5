@@ -14,7 +14,7 @@
  * not leak contexts.
  */
 
-import type { Queue as GaplessQueue, TrackInfo, TrackMetadata } from "gapless";
+import type { Queue as GaplessQueue, TrackInfo, TrackMetadata, PlaybackType } from "gapless";
 import { audioDebug } from "@/lib/audioDebug";
 
 export interface EngineTrack {
@@ -26,6 +26,8 @@ export interface EngineTrack {
 export interface ProgressSnapshot {
   currentTime: number;
   duration: number;
+  /** Which backend produced the last tick — WEBAUDIO means gapless handoff is armed. */
+  playbackType?: PlaybackType;
 }
 
 export interface EngineCallbacks {
@@ -183,6 +185,21 @@ export class GaplessEngine {
     return this.queue?.resumeAudioContext() ?? Promise.resolve();
   }
 
+  /**
+   * Best-effort audio unlock for the FIRST play gesture, before any track has
+   * resolved (so no queue exists yet). Creates the queue if needed and resumes
+   * the shared AudioContext while the gesture's transient activation window is
+   * still open. If the browser refuses anyway, onPlayBlocked → the visible
+   * "tap to start" state remains the safety net.
+   */
+  unlock(): void {
+    this.enqueueOp(async () => {
+      if (this.destroyed) return;
+      if (!this.queue) this.queue = await this.createQueue();
+      await this.queue.resumeAudioContext().catch(() => undefined);
+    });
+  }
+
   // ── introspection ──────────────────────────────────────────────────
 
   indexOfSlot(slotId: string): number {
@@ -270,6 +287,7 @@ export class GaplessEngine {
     this.progressRef.current = {
       currentTime: info.currentTime,
       duration: Number.isFinite(info.duration) ? info.duration : 0,
+      playbackType: info.playbackType,
     };
     this.notifyPlayState(info.isPlaying);
     const now = Date.now();
