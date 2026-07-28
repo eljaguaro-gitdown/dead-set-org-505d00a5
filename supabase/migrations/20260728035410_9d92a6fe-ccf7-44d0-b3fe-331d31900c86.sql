@@ -1,0 +1,1 @@
+DELETE FROM public.podcast_applications WHERE source = 'cors-verify' OR email = 'cors-check@example.com';
