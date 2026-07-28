@@ -1,0 +1,1 @@
+DELETE FROM public.podcast_applications WHERE source = 'smoke-test' OR email = 'test@example.com';
