@@ -1058,6 +1058,57 @@ export type Database = {
         }
         Relationships: []
       }
+      podcast_applications: {
+        Row: {
+          created_at: string
+          demo: string | null
+          email: string
+          experience: string | null
+          handles: string | null
+          id: string
+          location: string | null
+          name1: string
+          name2: string
+          notes: string | null
+          source: string | null
+          status: string
+          user_agent: string | null
+          why: string
+        }
+        Insert: {
+          created_at?: string
+          demo?: string | null
+          email: string
+          experience?: string | null
+          handles?: string | null
+          id?: string
+          location?: string | null
+          name1: string
+          name2: string
+          notes?: string | null
+          source?: string | null
+          status?: string
+          user_agent?: string | null
+          why: string
+        }
+        Update: {
+          created_at?: string
+          demo?: string | null
+          email?: string
+          experience?: string | null
+          handles?: string | null
+          id?: string
+          location?: string | null
+          name1?: string
+          name2?: string
+          notes?: string | null
+          source?: string | null
+          status?: string
+          user_agent?: string | null
+          why?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
