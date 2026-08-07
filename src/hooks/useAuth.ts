@@ -48,7 +48,9 @@ const isOAuthReturn = () => {
 // it guards is shared across tabs via localStorage, so a tab-scoped flag would
 // read as "no active session" in any second tab and the guard below would
 // force-sign-out every tab.
-const setActiveSessionFlag = () => {
+// Exported so every sign-in surface (AuthModal, Auth, ResetPassword) sets the
+// flag in the same store the guard reads from.
+export const setActiveSessionFlag = () => {
   if (typeof window === "undefined") return;
   localStorage.setItem(SESSION_FLAG, "1");
 };

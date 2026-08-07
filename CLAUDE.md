@@ -190,13 +190,8 @@ Separation of duties: analysts and gates never edit app code; build sessions nev
 
 Parallel work: run qa-release in its own git worktree so verification never collides with an active build session.
 
-<<<<<<< Updated upstream
 ### Corrections (banked from gate findings)
 
 - **Verify commits by sha, never by branch name.** When a release context cites a PR/commit/branch, run `git cat-file -t <sha>` against this repo before trusting it — identical branch names exist on both the orphaned `dead-set-org` repo and this repo (`dead-set-org-505d00a5`) with entirely different commit histories, and a PR was once opened against the wrong remote because of it.
 - **qa-release must confirm tool access at session start.** A gate session needs Lovable MCP access (`get_diff`/`list_edits`) for the sync check and live-URL reachability (browser through the session's network policy) for the browser items. If either is unavailable, those items are NEEDS-VERIFICATION by construction and the overall verdict cannot be PASS — run the gate from an environment that has both.
-=======
-Corrections from past gate runs (compounding engineering):
-
-- Brand sweep must grep `supabase/functions/*/index.ts` error strings and their `toast.error(e.message)` surfacing sites, not just .tsx JSX text — Cosmic Charlie edge-function error copy ("AI credits exhausted") reaches users verbatim and slips past a JSX-only scan.
->>>>>>> Stashed changes
+- **Brand sweep must cover edge-function error strings.** Grep `supabase/functions/*/index.ts` error strings and their `toast.error(e.message)` surfacing sites, not just .tsx JSX text — Cosmic Charlie edge-function error copy ("AI credits exhausted") reaches users verbatim and slips past a JSX-only scan.

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { setActiveSessionFlag } from "@/hooks/useAuth";
 import { lovable } from "@/integrations/lovable/index";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,7 +23,6 @@ interface AuthModalProps {
   onBeforeRedirect?: () => void;
 }
 
-const SESSION_FLAG = "dead_set_active_session";
 
 const AuthModal = ({ open, onOpenChange, onAuthenticated, onBeforeRedirect }: AuthModalProps) => {
   const [isSignUp, setIsSignUp] = useState(true);
@@ -64,7 +64,7 @@ const AuthModal = ({ open, onOpenChange, onAuthenticated, onBeforeRedirect }: Au
           // on_auth_user_created_emails trigger (covers every provider).
         }
         if (data.session) {
-          sessionStorage.setItem(SESSION_FLAG, "1");
+          setActiveSessionFlag();
           void trackAuthEvent("signup_email_succeeded", {
             provider: "email",
             userId: data.user?.id ?? null,
@@ -85,7 +85,7 @@ const AuthModal = ({ open, onOpenChange, onAuthenticated, onBeforeRedirect }: Au
         });
         if (error) throw error;
         if (data.session) {
-          sessionStorage.setItem(SESSION_FLAG, "1");
+          setActiveSessionFlag();
         }
         void trackAuthEvent("signin_email_succeeded", {
           provider: "email",
