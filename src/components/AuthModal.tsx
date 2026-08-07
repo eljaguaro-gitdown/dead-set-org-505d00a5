@@ -60,20 +60,8 @@ const AuthModal = ({ open, onOpenChange, onAuthenticated, onBeforeRedirect }: Au
               templateData: { displayName },
             },
           }).catch(() => {});
-          // Notify admin of new signup
-          await supabase.functions.invoke("send-transactional-email", {
-            body: {
-              templateName: "new-signup-notification",
-              recipientEmail: "grateful_jaguaro@dead-set.org",
-              idempotencyKey: `new-signup-notify-${data.user.id}`,
-              templateData: {
-                userEmail: email,
-                displayName,
-                provider: "email",
-                signupTime: data.user.created_at,
-              },
-            },
-          }).catch(() => {});
+          // Admin signup notification is handled server-side by the
+          // on_auth_user_created_emails trigger (covers every provider).
         }
         if (data.session) {
           sessionStorage.setItem(SESSION_FLAG, "1");

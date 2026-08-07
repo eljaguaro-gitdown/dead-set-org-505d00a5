@@ -75,7 +75,9 @@ export const template = {
   component: NewSignupNotificationEmail,
   subject: (data: Record<string, any>) =>
     `🌹 New signup: ${data.displayName || 'A new Deadhead'}`,
-  to: 'grateful_jaguaro@dead-set.org',
+  // No fixed `to`: recipients are controlled by the handle_new_user_emails
+  // trigger, which fans out to each admin address. A hardcoded `to` here
+  // silently overrode those recipients (see send-transactional-email).
   displayName: 'New signup notification',
   previewData: {
     userEmail: 'jerry@example.com',
