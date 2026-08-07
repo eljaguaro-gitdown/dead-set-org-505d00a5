@@ -103,6 +103,15 @@ function levenshtein(a: string, b: string): number {
   return dp[m][n];
 }
 
+// Strip internal directive vocabulary that the model sometimes echoes into
+// fan-facing text (slot notes are visible on public setlists).
+function sanitizeNote(note: string): string {
+  return note
+    .replace(/\(?\b(THE\s+)?AHA[\s-]*MOMENT\b\)?[:\s—–-]*/gi, "")
+    .replace(/^\s*REQUIRED\b[:\s—–-]*/i, "")
+    .trim();
+}
+
 function findBestMatch(title: string, songMap: Map<string, any>): any | null {
   const norm = normalizeTitle(title);
   for (const [key, song] of songMap) {
@@ -250,6 +259,11 @@ that this moment lands. A setlist of all surprises is chaos.
 
 YOU MUST FLAG THIS MOMENT in your explanation. Tell the user exactly what it is
 and why it matters.
+
+NEVER label it in the per-song "notes" field. The notes are fan-facing liner
+copy — describe the moment musically and emotionally in Cosmic Charlie's voice.
+Internal vocabulary ("aha moment", "REQUIRED", "directive", "mandate") must
+never appear in notes, the explanation, or the setlist name.
 `;
 
 const EXPLANATION_FORMAT = `
@@ -907,7 +921,7 @@ CRITICAL RULES:
           title: matched?.title || song.title,
           matched: !!matched,
           segueToNext: song.segueToNext,
-          notes: song.notes || "",
+          notes: sanitizeNote(song.notes || ""),
           position: i,
         };
       }).filter((s: any) => {
@@ -925,7 +939,15 @@ CRITICAL RULES:
 
     // ── Persist this generation to history (for future variety) ──────────
     if (mode === "build" && (callingUser || visitorId)) {
-      const vibeSig = preferences ? preferences.slice(0, 64) : null;
+      // vibe_signature captures the USER's stated vibe. Stale PWA-cached
+      // clients used to append an internal "REQUIRED: ..." directive to
+      // preferences — drop any directive paragraphs before storing.
+      const userPrefText = (preferences || "")
+        .split(/\n{2,}/)
+        .filter((p: string) => !/^\s*REQUIRED\b/i.test(p))
+        .join(" ")
+        .trim();
+      const vibeSig = userPrefText ? userPrefText.slice(0, 64) : null;
       const rows: any[] = [];
       for (const set of resolvedSets) {
         for (const sg of set.songs) {

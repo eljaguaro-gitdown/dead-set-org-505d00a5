@@ -227,7 +227,10 @@ const CosmicCharlieWelcome = ({ eras, onGenerated, onSkip }: CosmicCharlieWelcom
       parts.push(`Context that shapes everything: this setlist is for "${itsFor.trim()}". Read this seriously. A road trip means forward motion — openers that start engines, no songs that stop the car. Converting a friend means the first song must be undeniable. A late night alone means introspective, not social. Calibrate the entire setlist against this context.`);
     }
 
-    parts.push(`REQUIRED: Include exactly one moment in this setlist that a sophisticated Deadhead would stop at and say 'wait — did they actually do that?' This is not a rare song for its own sake. It is a placement, a pairing, or a sequence that reframes something familiar as something unexpected. Examples: Morning Dew placed mid-Set II instead of as a closer; Attics of My Life appearing anywhere after 1972; a historically rare segue pair reconstructed intentionally. One per setlist. The rest of the setlist must be strong enough that this moment lands.`);
+    // The aha-moment requirement lives server-side in ai-deadhead's
+    // AHA_MOMENT_REQUIREMENT (song-agnostic). Appending it here leaked
+    // directive text into vibe_signature and biased the model toward the
+    // name-dropped examples — preferences must carry ONLY what the user chose.
 
     return parts.length > 0 ? parts.join("\n\n") : undefined;
   };
