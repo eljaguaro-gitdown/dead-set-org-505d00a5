@@ -189,3 +189,8 @@ Three subagents live in .claude/agents/. Dispatch rules:
 Separation of duties: analysts and gates never edit app code; build sessions never grade their own release. When qa-release or growth-analyst surfaces a repeated mistake, add the correction to this file (compounding engineering).
 
 Parallel work: run qa-release in its own git worktree so verification never collides with an active build session.
+
+### Corrections (banked from gate findings)
+
+- **Verify commits by sha, never by branch name.** When a release context cites a PR/commit/branch, run `git cat-file -t <sha>` against this repo before trusting it — identical branch names exist on both the orphaned `dead-set-org` repo and this repo (`dead-set-org-505d00a5`) with entirely different commit histories, and a PR was once opened against the wrong remote because of it.
+- **qa-release must confirm tool access at session start.** A gate session needs Lovable MCP access (`get_diff`/`list_edits`) for the sync check and live-URL reachability (browser through the session's network policy) for the browser items. If either is unavailable, those items are NEEDS-VERIFICATION by construction and the overall verdict cannot be PASS — run the gate from an environment that has both.
