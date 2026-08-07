@@ -1,14 +1,12 @@
 import { useNavigate } from "react-router-dom";
 import PageLayout from "@/components/PageLayout";
 import SiteHeader from "@/components/SiteHeader";
-import AdSenseLoader from "@/components/AdSenseLoader";
 
 const PrivacyPolicy = () => {
   const navigate = useNavigate();
 
   return (
     <PageLayout minimal>
-      <AdSenseLoader />
       <SiteHeader>
         <button
           onClick={() => navigate(-1)}
@@ -23,7 +21,7 @@ const PrivacyPolicy = () => {
           Privacy Policy
         </h1>
         <p className="font-mono text-xs text-foreground/75 mb-8 tracking-wider uppercase">
-          Last updated: March 20, 2026
+          Last updated: August 7, 2026
         </p>
 
         <div className="space-y-8 font-body text-foreground/90 text-sm leading-relaxed">
@@ -47,49 +45,16 @@ const PrivacyPolicy = () => {
               <li>To enable collaborative setlist building and sharing</li>
               <li>To communicate with you about your account</li>
               <li>To improve and personalize your experience</li>
-              <li>To display relevant advertisements (desktop only)</li>
             </ul>
           </section>
 
           <section className="space-y-3">
-            <h2 className="font-display text-lg text-foreground">3. Google AdSense & Advertising</h2>
-            <p>
-              We use Google AdSense to display advertisements on the desktop version of our site.
-              Google AdSense uses cookies and similar technologies to serve ads based on your prior
-              visits to this and other websites. Google's use of advertising cookies enables it and
-              its partners to serve ads based on your browsing history.
-            </p>
-            <p>
-              You may opt out of personalized advertising by visiting{" "}
-              <a
-                href="https://www.google.com/settings/ads"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-dead-gold underline underline-offset-2 hover:text-primary/80 transition-colors"
-              >
-                Google Ads Settings
-              </a>
-              . Alternatively, you can opt out of third-party vendor cookies at{" "}
-              <a
-                href="https://www.aboutads.info/choices/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-dead-gold underline underline-offset-2 hover:text-primary/80 transition-colors"
-              >
-                www.aboutads.info
-              </a>
-              .
-            </p>
-          </section>
-
-          <section className="space-y-3">
-            <h2 className="font-display text-lg text-foreground">4. Cookies & Tracking</h2>
+            <h2 className="font-display text-lg text-foreground">3. Cookies & Tracking</h2>
             <p>
               We use cookies and similar tracking technologies for the following purposes:
             </p>
             <ul className="list-disc list-inside space-y-1 pl-2">
               <li><strong>Essential cookies:</strong> Required for authentication and core functionality</li>
-              <li><strong>Advertising cookies:</strong> Used by Google AdSense to serve relevant ads</li>
               <li><strong>Analytics cookies:</strong> Help us understand how visitors use our site</li>
             </ul>
             <p>
@@ -99,15 +64,12 @@ const PrivacyPolicy = () => {
           </section>
 
           <section className="space-y-3">
-            <h2 className="font-display text-lg text-foreground">5. Third-Party Services</h2>
+            <h2 className="font-display text-lg text-foreground">4. Third-Party Services</h2>
             <p>We use the following third-party services:</p>
             <ul className="list-disc list-inside space-y-1 pl-2">
               <li>
                 <strong>Internet Archive (archive.org):</strong> Live recordings are sourced and
                 streamed from the Internet Archive's collection of live music recordings.
-              </li>
-              <li>
-                <strong>Google AdSense:</strong> Advertising on desktop viewports.
               </li>
             </ul>
             <p>
@@ -116,7 +78,7 @@ const PrivacyPolicy = () => {
           </section>
 
           <section className="space-y-3">
-            <h2 className="font-display text-lg text-foreground">6. Data Security</h2>
+            <h2 className="font-display text-lg text-foreground">5. Data Security</h2>
             <p>
               We take reasonable measures to protect your personal information. Your data is stored
               securely and access is restricted to authorized personnel. However, no method of
@@ -125,19 +87,18 @@ const PrivacyPolicy = () => {
           </section>
 
           <section className="space-y-3">
-            <h2 className="font-display text-lg text-foreground">7. Your Rights</h2>
+            <h2 className="font-display text-lg text-foreground">6. Your Rights</h2>
             <p>You have the right to:</p>
             <ul className="list-disc list-inside space-y-1 pl-2">
               <li>Access the personal data we hold about you</li>
               <li>Request correction of inaccurate data</li>
               <li>Request deletion of your account and associated data</li>
-              <li>Opt out of personalized advertising</li>
               <li>Withdraw consent for data processing where applicable</li>
             </ul>
           </section>
 
           <section className="space-y-3">
-            <h2 className="font-display text-lg text-foreground">8. Children's Privacy</h2>
+            <h2 className="font-display text-lg text-foreground">7. Children's Privacy</h2>
             <p>
               Dead-Set.Org is not intended for children under 13. We do not knowingly collect personal
               information from children under 13. If you believe we have collected such information,
@@ -146,7 +107,7 @@ const PrivacyPolicy = () => {
           </section>
 
           <section className="space-y-3">
-            <h2 className="font-display text-lg text-foreground">9. Changes to This Policy</h2>
+            <h2 className="font-display text-lg text-foreground">8. Changes to This Policy</h2>
             <p>
               We may update this Privacy Policy from time to time. We will notify you of any
               material changes by posting the new policy on this page with an updated revision date.
@@ -154,7 +115,7 @@ const PrivacyPolicy = () => {
           </section>
 
           <section className="space-y-3">
-            <h2 className="font-display text-lg text-foreground">10. Contact Us</h2>
+            <h2 className="font-display text-lg text-foreground">9. Contact Us</h2>
             <p>
               If you have questions about this Privacy Policy, please reach out through the app or
               contact us at the email address associated with your account.

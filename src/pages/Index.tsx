@@ -491,6 +491,8 @@ const Index = () => {
               <span>·</span>
               <Link to="/updates" className="hover:text-foreground transition-colors">Build Notes</Link>
               <span>·</span>
+              <Link to="/about" className="hover:text-foreground transition-colors">About</Link>
+              <span>·</span>
               <button
                 onClick={() => navigate("/privacy")}
                 className="hover:text-foreground transition-colors"
