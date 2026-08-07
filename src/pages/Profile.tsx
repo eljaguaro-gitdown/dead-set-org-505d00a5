@@ -13,6 +13,17 @@ import PageLayout from "@/components/PageLayout";
 import SiteHeader from "@/components/SiteHeader";
 import ShowPlate from "@/components/ShowPlate";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 const US_STATES = [
   { code: "CA", name: "California" }, { code: "NY", name: "New York" }, { code: "OR", name: "Oregon" },
@@ -31,7 +42,24 @@ const Profile = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleDeleteAccount = async () => {
+    setDeleting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("delete-account");
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      await supabase.auth.signOut();
+      toast.success("Your account is gone. Safe travels.");
+      navigate("/");
+    } catch (e) {
+      console.error("Account deletion failed", e);
+      toast.error("Couldn't delete your account. Please try again or contact us.");
+      setDeleting(false);
+    }
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -202,6 +230,48 @@ const Profile = () => {
             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
             Save Changes
           </Button>
+
+          {/* Danger zone */}
+          <div className="mt-10 pt-6 border-t border-border/50 space-y-3">
+            <h2 className="font-display text-sm tracking-[0.15em] uppercase text-foreground/60">
+              Danger Zone
+            </h2>
+            <p className="text-xs text-foreground/70 font-body">
+              Deleting your account removes your profile, setlists, comments, messages, and
+              favorites. This can't be undone.
+            </p>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  variant="outline"
+                  disabled={deleting}
+                  className="w-full font-body border-destructive/50 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                >
+                  {deleting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Delete My Account"}
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent className="bg-card border-border">
+                <AlertDialogHeader>
+                  <AlertDialogTitle className="font-display">
+                    Fare you well, fare you well?
+                  </AlertDialogTitle>
+                  <AlertDialogDescription className="font-body">
+                    This permanently deletes your account and everything you've built here —
+                    setlists, comments, messages, favorites. There's no way back from this one.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel className="font-body">Keep My Account</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={handleDeleteAccount}
+                    className="font-body bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    Delete Everything
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
         </motion.div>
       </main>
     </PageLayout>

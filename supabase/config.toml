@@ -35,3 +35,5 @@ project_id = "dplrumaqrdnzwzqmatqr"
     verify_jwt = false
   [functions.podcast-application]
     verify_jwt = false
+  [functions.delete-account]
+    verify_jwt = true
