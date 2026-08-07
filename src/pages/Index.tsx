@@ -499,6 +499,8 @@ const Index = () => {
               >
                 Privacy
               </button>
+              <span>·</span>
+              <Link to="/terms" className="hover:text-foreground transition-colors">Terms</Link>
             </div>
           </div>
       </footer>

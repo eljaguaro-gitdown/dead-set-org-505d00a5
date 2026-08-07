@@ -31,6 +31,7 @@ const SetlistPoster = lazy(() => import("./pages/SetlistPoster"));
 const Admin = lazy(() => import("./pages/Admin"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const About = lazy(() => import("./pages/About"));
+const Terms = lazy(() => import("./pages/Terms"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const Messages = lazy(() => import("./pages/Messages"));
@@ -71,6 +72,7 @@ const App = () => (
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/privacy" element={<PrivacyPolicy />} />
                 <Route path="/about" element={<About />} />
+                <Route path="/terms" element={<Terms />} />
                 <Route path="/backstage" element={<Backstage />} />
                 <Route path="/unsubscribe" element={<Unsubscribe />} />
                 <Route path="/updates" element={<Updates />} />
