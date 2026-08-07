@@ -292,6 +292,7 @@ const Admin = () => {
         aria-hidden={pull === 0 && !refreshing}
         className="fixed top-0 inset-x-0 z-50 flex justify-center pointer-events-none"
         style={{
+          paddingTop: "env(safe-area-inset-top, 0px)",
           transform: `translateY(${refreshing ? threshold * 0.6 : pull * 0.6}px)`,
           opacity: refreshing ? 1 : progress,
           transition: pull === 0 || refreshing ? "transform 200ms ease, opacity 200ms ease" : "none",
