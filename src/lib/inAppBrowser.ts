@@ -1,9 +1,14 @@
+import { isNativeApp } from "@/lib/nativeApp";
+
 /**
  * Detects in-app browsers (Instagram, Facebook, Messages, Gmail, etc.)
  * where third-party cookies don't persist — breaking OAuth state verification.
  */
 export function detectInAppBrowser(): { isInApp: boolean; appName: string | null } {
   if (typeof navigator === "undefined") return { isInApp: false, appName: null };
+  // The Capacitor shell is a WKWebView too (iPhone UA, no "Safari" token),
+  // but it's our own app, not a hostile embed — never flag it.
+  if (isNativeApp()) return { isInApp: false, appName: null };
   const ua = navigator.userAgent || "";
 
   const matchers: Array<[RegExp, string]> = [

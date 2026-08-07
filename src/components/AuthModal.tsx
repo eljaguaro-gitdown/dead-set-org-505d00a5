@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { trackAuthEvent, markOAuthRedirect } from "@/lib/authFunnel";
+import { isNativeApp } from "@/lib/nativeApp";
 import {
   Sheet,
   SheetContent,
@@ -29,6 +30,9 @@ const AuthModal = ({ open, onOpenChange, onAuthenticated, onBeforeRedirect }: Au
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  // Browser-redirect OAuth can't round-trip back into the Capacitor shell,
+  // so the native app is email-only until system-browser OAuth ships.
+  const isNative = isNativeApp();
 
   useEffect(() => {
     if (open) void trackAuthEvent("auth_modal_opened");
@@ -168,6 +172,8 @@ const AuthModal = ({ open, onOpenChange, onAuthenticated, onBeforeRedirect }: Au
           </div>
 
           {/* Google OAuth — native Supabase */}
+          {!isNative && (
+          <>
           <Button
             variant="outline"
             className="w-full border-border text-card-foreground hover:bg-muted/40 font-body gap-2 py-6 text-base"
@@ -201,6 +207,8 @@ const AuthModal = ({ open, onOpenChange, onAuthenticated, onBeforeRedirect }: Au
             </span>
             <div className="h-px flex-1 bg-border" />
           </div>
+          </>
+          )}
 
           {/* Email/password */}
           <form onSubmit={handleAuth} className="space-y-3">
