@@ -820,10 +820,10 @@ const Builder = () => {
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       setDescription(data.description);
-      toast.success("Liner notes generated!");
+      toast.success("Liner notes are in!");
     } catch (e: any) {
       console.error("Description generation error:", e);
-      toast.error(e.message || "Failed to generate description");
+      toast.error(e.message || "The liner notes didn't make it to tape. Give it another go.");
     } finally {
       setGeneratingDescription(false);
     }

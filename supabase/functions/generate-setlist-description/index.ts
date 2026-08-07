@@ -151,18 +151,18 @@ Write the description.`;
         });
       }
       if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "AI credits exhausted. Add credits in workspace settings." }), {
+        return new Response(JSON.stringify({ error: "Cosmic Charlie is taking a breather — try again in a few minutes." }), {
           status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
       const text = await response.text();
       console.error("AI gateway error:", response.status, text);
-      throw new Error("AI gateway error");
+      throw new Error("The liner notes didn't make it to tape. Try again in a moment.");
     }
 
     const data = await response.json();
     const description = data.choices?.[0]?.message?.content?.trim();
-    if (!description) throw new Error("No description generated");
+    if (!description) throw new Error("The liner notes came back blank. Try again in a moment.");
 
     // Save to setlist
     await supabase.from("setlists").update({ description }).eq("id", setlistId);

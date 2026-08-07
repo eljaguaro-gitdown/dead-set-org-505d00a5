@@ -44,19 +44,23 @@ const isOAuthReturn = () => {
   );
 };
 
+// The flag must live in localStorage, not sessionStorage: the Supabase session
+// it guards is shared across tabs via localStorage, so a tab-scoped flag would
+// read as "no active session" in any second tab and the guard below would
+// force-sign-out every tab.
 const setActiveSessionFlag = () => {
   if (typeof window === "undefined") return;
-  sessionStorage.setItem(SESSION_FLAG, "1");
+  localStorage.setItem(SESSION_FLAG, "1");
 };
 
 const clearActiveSessionFlag = () => {
   if (typeof window === "undefined") return;
-  sessionStorage.removeItem(SESSION_FLAG);
+  localStorage.removeItem(SESSION_FLAG);
 };
 
 const hasActiveSessionFlag = () => {
   if (typeof window === "undefined") return false;
-  return sessionStorage.getItem(SESSION_FLAG) === "1";
+  return localStorage.getItem(SESSION_FLAG) === "1";
 };
 
 // Clears sessionStorage markers set right before an OAuth redirect. Safe to

@@ -495,16 +495,16 @@ You MUST respond using the explore_versions tool.`;
           return new Response(JSON.stringify({ error: "Rate limit exceeded. Please try again in a moment." }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
         }
         if (exploreResponse.status === 402) {
-          return new Response(JSON.stringify({ error: "AI credits exhausted." }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+          return new Response(JSON.stringify({ error: "Cosmic Charlie is taking a breather — try again in a few minutes." }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
         }
         const text = await exploreResponse.text();
         console.error("AI gateway error:", exploreResponse.status, text);
-        throw new Error("AI gateway error");
+        throw new Error("Charlie couldn't finish that one. Try again in a moment.");
       }
 
       const exploreData = await exploreResponse.json();
       const exploreToolCall = exploreData.choices?.[0]?.message?.tool_calls?.[0];
-      if (!exploreToolCall) throw new Error("No tool call in response");
+      if (!exploreToolCall) throw new Error("Charlie lost the thread on that one. Give it another try.");
       const exploreResult = JSON.parse(exploreToolCall.function.arguments);
       const enrichedVersions = exploreResult.versions.map((v: any) => {
         const dbVersion = (versions || []).find((dbv: any) => dbv.show_date === v.showDate);
@@ -818,16 +818,16 @@ CRITICAL RULES:
         return new Response(JSON.stringify({ error: "Rate limit exceeded. Please try again in a moment." }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
       if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "AI credits exhausted." }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        return new Response(JSON.stringify({ error: "Cosmic Charlie is taking a breather — try again in a few minutes." }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
       const text = await response.text();
       console.error("AI gateway error:", response.status, text);
-      throw new Error("AI gateway error");
+      throw new Error("Charlie couldn't finish that one. Try again in a moment.");
     }
 
     let data = await response.json();
     let toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
-    if (!toolCall) throw new Error("No tool call in response");
+    if (!toolCall) throw new Error("Charlie lost the thread on that one. Give it another try.");
     let suggestion = JSON.parse(toolCall.function.arguments);
 
     // ── Novelty enforcement ──────────────────────────────────────────────
