@@ -17,6 +17,13 @@
 import type { Queue as GaplessQueue, TrackInfo, TrackMetadata, PlaybackType } from "gapless";
 import { audioDebug } from "@/lib/audioDebug";
 
+// True on any iOS runtime: Safari, a home-screen PWA, or the Capacitor
+// WKWebView shell. iPadOS ≥13 masquerades as MacIntel but exposes touch.
+const isIOS = (): boolean =>
+  typeof navigator !== "undefined" &&
+  (/iPad|iPhone|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1));
+
 export interface EngineTrack {
   slotId: string;
   url: string;
@@ -253,6 +260,13 @@ export class GaplessEngine {
     return new Queue({
       playbackMethod: "HYBRID",
       preloadNumTracks: 2,
+      // iOS (Safari, home-screen PWA, and the Capacitor shell alike)
+      // suspends Web Audio contexts when the app backgrounds or the screen
+      // locks, killing playback mid-show. HTML5 <audio> keeps playing —
+      // and in the native shell UIBackgroundModes/AVAudioSession make it
+      // first-class. Trade sample-accurate segue scheduling for playback
+      // that survives backgrounding on iOS; everywhere else stays HYBRID.
+      webAudioIsDisabled: isIOS(),
       volume: this.volume,
       onProgress: (info) => this.handleProgress(info),
       onStartNewTrack: (info) => this.handleStartNewTrack(info),
