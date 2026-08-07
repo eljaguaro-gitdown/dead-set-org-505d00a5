@@ -10,6 +10,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
 import { useHomeBase } from "@/hooks/useHomeBase";
+import { isNativeApp } from "@/lib/nativeApp";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Sheet,
@@ -262,7 +263,7 @@ const SiteHeader = ({ children, large = false }: SiteHeaderProps) => {
                       <div className="min-h-[44px] flex items-center">{adminLink}</div>
                     </SheetClose>
                   )}
-                  {!window.matchMedia("(display-mode: standalone)").matches && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) && (
+                  {!isNativeApp() && !window.matchMedia("(display-mode: standalone)").matches && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) && (
                     <SheetClose asChild>
                       <button
                         onClick={() => {

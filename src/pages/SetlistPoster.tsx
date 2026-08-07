@@ -519,7 +519,10 @@ const SetlistPoster = () => {
   return (
     <div className="grain-overlay min-h-screen bg-background">
       {/* Minimal transparent top bar */}
-      <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 py-3 bg-background/60 backdrop-blur-sm">
+      <header
+        className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 py-3 bg-background/60 backdrop-blur-sm"
+        style={{ paddingTop: "calc(0.75rem + env(safe-area-inset-top, 0px))" }}
+      >
         <button
           onClick={() => {
             // If user landed here cold (shared link, new tab), location.key is "default".

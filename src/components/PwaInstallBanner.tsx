@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { X, Share, Plus, MoreVertical, Download } from "lucide-react";
+import { isNativeApp } from "@/lib/nativeApp";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
@@ -18,7 +19,8 @@ const PwaInstallBanner = () => {
     const isInIframe = (() => { try { return window.self !== window.top; } catch { return true; } })();
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
-    if (isStandalone || isInIframe || !isMobile) return;
+    // The native app IS the installed app — never pitch the PWA there.
+    if (isNativeApp() || isStandalone || isInIframe || !isMobile) return;
 
     // Check if dismissed recently (7 days)
     const dismissed = localStorage.getItem("pwa-banner-dismissed");
