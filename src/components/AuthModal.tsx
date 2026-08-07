@@ -118,10 +118,14 @@ const AuthModal = ({ open, onOpenChange, onAuthenticated, onBeforeRedirect }: Au
 
 
   const handleAppleLogin = async () => {
-    toast.error(
-      "Apple sign-in is temporarily unavailable. Please use Google or email/password instead.",
-      { duration: 7000 }
-    );
+    onBeforeRedirect?.();
+    markOAuthRedirect("apple");
+    sessionStorage.setItem("post_oauth_redirect", "1");
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "apple",
+      options: { redirectTo: window.location.origin },
+    });
+    if (error) toast.error(error.message);
   };
 
   return (
@@ -163,19 +167,6 @@ const AuthModal = ({ open, onOpenChange, onAuthenticated, onBeforeRedirect }: Au
             </button>
           </div>
 
-          {/* Apple sign-in resting banner */}
-          <div
-            role="alert"
-            className="rounded-xl border-2 border-primary/60 bg-primary/10 p-3 text-center"
-          >
-            <p className="font-body text-sm font-semibold text-card-foreground">
-              Apple sign-in is resting
-            </p>
-            <p className="font-body text-xs text-muted-foreground mt-0.5">
-              Google and email are wide open.
-            </p>
-          </div>
-
           {/* Google OAuth — native Supabase */}
           <Button
             variant="outline"
@@ -194,18 +185,13 @@ const AuthModal = ({ open, onOpenChange, onAuthenticated, onBeforeRedirect }: Au
           {/* Apple OAuth */}
           <Button
             variant="outline"
-            className="w-full border-border/50 text-muted-foreground hover:bg-muted/40 font-body gap-2 py-6 text-base"
+            className="w-full border-border text-card-foreground hover:bg-muted/40 font-body gap-2 py-6 text-base"
             onClick={handleAppleLogin}
-            title="Apple sign-in is temporarily unavailable — please use email/password"
-            aria-label="Apple sign-in temporarily unavailable"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
               <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
             </svg>
             Continue with Apple
-            <span className="ml-auto rounded-full border border-primary/40 bg-primary/10 px-2 py-0.5 text-[10px] font-mono uppercase tracking-wider text-accent-foreground">
-              Unavailable
-            </span>
           </Button>
 
           <div className="flex items-center gap-3">
