@@ -12,6 +12,7 @@ import PageLayout from "@/components/PageLayout";
 import StealYourFace from "@/components/StealYourFace";
 import { getPostAuthRedirect } from "@/lib/postAuthRedirect";
 import { detectInAppBrowser } from "@/lib/inAppBrowser";
+import { isNativeApp } from "@/lib/nativeApp";
 import { trackAuthEvent, markOAuthRedirect } from "@/lib/authFunnel";
 
 
@@ -25,6 +26,10 @@ const Auth = () => {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const { isInApp, appName } = useMemo(() => detectInAppBrowser(), []);
+  // In the Capacitor shell, browser-redirect OAuth can't round-trip back into
+  // the app (Google also blocks embedded webviews outright), so the native
+  // app is email-only until system-browser OAuth with deep-link return ships.
+  const isNative = useMemo(() => isNativeApp(), []);
 
   useEffect(() => {
     void trackAuthEvent("auth_modal_opened", { metadata: { surface: "auth_page" } });
@@ -186,6 +191,7 @@ const Auth = () => {
           )}
 
           {/* OAuth — one-tap, kept above the email form so the fastest path is first */}
+          {!isNative && (
           <div className="space-y-3">
             <Button
               variant="outline"
@@ -212,12 +218,15 @@ const Auth = () => {
               Continue with Apple
             </Button>
           </div>
+          )}
 
+          {!isNative && (
           <div className="flex items-center gap-3">
             <div className="h-px flex-1 bg-border" />
             <span className="font-mono text-[10px] text-foreground/70 tracking-widest uppercase">or use your email</span>
             <div className="h-px flex-1 bg-border" />
           </div>
+          )}
 
           <form onSubmit={handleAuth} className="space-y-4">
             <div className="space-y-2">
@@ -260,6 +269,13 @@ const Auth = () => {
               >
                 Forgot your password?
               </button>
+            )}
+            {isNative && !isSignUp && !isForgot && (
+              <p className="text-center text-xs text-foreground/60 font-body">
+                Joined with Google or Apple on the web? Tap "Forgot your
+                password?" with the same email and we'll set you up with one
+                for the app — same account, same setlists.
+              </p>
             )}
           </form>
 
