@@ -158,7 +158,7 @@ Deno.serve(async (req) => {
       },
       body: JSON.stringify({
         from: "Dead-Set Reports <reports@notify.dead-set.org>",
-        to: ["eljaguaro@gmail.com"],
+        to: [Deno.env.get("ADMIN_REPORT_EMAIL") ?? ""],
         subject,
         html,
       }),

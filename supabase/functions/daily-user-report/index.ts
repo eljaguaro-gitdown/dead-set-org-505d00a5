@@ -72,7 +72,7 @@ Deno.serve(async (req) => {
     const { error } = await supabase.functions.invoke('send-transactional-email', {
       body: {
         templateName: 'daily-user-report',
-        recipientEmail: 'eljaguaro@gmail.com',
+        recipientEmail: Deno.env.get('ADMIN_REPORT_EMAIL'),
         idempotencyKey: `daily-report-${reportDate}`,
         templateData: {
           totalUsers,
