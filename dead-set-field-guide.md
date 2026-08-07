@@ -106,7 +106,7 @@ Dead Set is built the way the music is played — **live, fast, and iteratively*
 | The guide | Gemini Flash via an OpenAI-compatible gateway, powering Cosmic Charlie through function calling. |
 | Email | Resend for transactional mail & dispatches. Domain on GoDaddy (dead-set.org). |
 | Analytics | PostHog — a 15-event activation funnel; custom queries via HogQL in the SQL Insights editor. |
-| Source | `github.com/eljaguaro-gitdown/dead-set-org` (public repo). |
+| Source | `github.com/eljaguaro-gitdown/dead-set-org-505d00a5` (the Lovable-synced repo; the old `dead-set-org` repo is orphaned). |
 | Data source | Internet Archive — Live Music Archive (~2,300 recordings). |
 
 ### B. How the pieces talk
