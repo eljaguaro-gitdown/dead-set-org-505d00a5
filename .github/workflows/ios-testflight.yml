@@ -40,9 +40,29 @@ jobs:
         env:
           ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
           ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+        # Pastes from Windows editors often arrive with CRLF line endings or
+        # with the newlines flattened entirely — either breaks PEM parsing
+        # (CryptoKitASN1Error.invalidPEMDocument). Normalize and, if needed,
+        # rebuild the standard PEM layout from the base64 body.
         run: |
           mkdir -p "$HOME/private_keys"
-          printf '%s' "$ASC_KEY_P8" > "$HOME/private_keys/AuthKey_${ASC_KEY_ID}.p8"
+          KEYFILE="$HOME/private_keys/AuthKey_${ASC_KEY_ID}.p8"
+          CLEANED="$(printf '%s' "$ASC_KEY_P8" | tr -d '\r')"
+          if ! printf '%s' "$CLEANED" | grep -q -- "-----BEGIN PRIVATE KEY-----"; then
+            echo "::error::ASC_KEY_P8 secret is missing '-----BEGIN PRIVATE KEY-----'. Paste the ENTIRE contents of the .p8 file, including the BEGIN/END lines."
+            exit 1
+          fi
+          if [ "$(printf '%s\n' "$CLEANED" | wc -l | tr -d ' ')" -lt 3 ]; then
+            BODY="$(printf '%s' "$CLEANED" | sed -e 's/-----BEGIN PRIVATE KEY-----//' -e 's/-----END PRIVATE KEY-----//' | tr -d '[:space:]')"
+            {
+              echo "-----BEGIN PRIVATE KEY-----"
+              printf '%s\n' "$BODY" | fold -w 64
+              echo "-----END PRIVATE KEY-----"
+            } > "$KEYFILE"
+          else
+            printf '%s\n' "$CLEANED" > "$KEYFILE"
+          fi
+          head -c 30 "$KEYFILE" | grep -q "BEGIN PRIVATE KEY" && echo "Key file written and looks like PEM."
 
       - name: Archive (cloud-managed signing)
         env:
