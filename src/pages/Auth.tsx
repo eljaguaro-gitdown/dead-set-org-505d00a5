@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { setActiveSessionFlag } from "@/hooks/useAuth";
 import { lovable } from "@/integrations/lovable/index";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,7 +14,6 @@ import { getPostAuthRedirect } from "@/lib/postAuthRedirect";
 import { detectInAppBrowser } from "@/lib/inAppBrowser";
 import { trackAuthEvent, markOAuthRedirect } from "@/lib/authFunnel";
 
-const SESSION_FLAG = "dead_set_active_session";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -71,7 +71,7 @@ const Auth = () => {
             provider: "email",
             userId: data.session.user.id,
           });
-          sessionStorage.setItem(SESSION_FLAG, "1");
+          setActiveSessionFlag();
           await smartRedirect(data.session.user.id);
         } else {
           void trackAuthEvent("signup_email_needs_confirmation", {
@@ -95,7 +95,7 @@ const Auth = () => {
             provider: "email",
             userId: data.session.user.id,
           });
-          sessionStorage.setItem(SESSION_FLAG, "1");
+          setActiveSessionFlag();
           await smartRedirect(data.session.user.id);
         }
       }

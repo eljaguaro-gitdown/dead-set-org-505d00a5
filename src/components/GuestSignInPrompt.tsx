@@ -10,7 +10,7 @@ interface GuestSignInPromptProps {
 
 const perks = [
   { icon: Save, label: "Save your setlist so you never lose it" },
-  { icon: FileImage, label: "Generate a shareable concert poster" },
+  { icon: FileImage, label: "Turn your setlist into a shareable show poster" },
   { icon: Share2, label: "Share with friends & the community" },
   { icon: ThumbsUp, label: "Upvote and discover other setlists" },
 ];

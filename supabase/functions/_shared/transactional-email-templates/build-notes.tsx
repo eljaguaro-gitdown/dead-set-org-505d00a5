@@ -283,7 +283,7 @@ export const template = {
       { tag: 'new', title: 'Era system with seven Dead eras', detail: 'Primal Dead through Vince Era. Color-coded throughout the app.' },
     ],
     set2: [
-      { tag: 'new', title: 'Cosmic Charlie — AI setlist generator', detail: 'Describe a vibe, pick an era, set the length. Cosmic Charlie builds your dream setlist from real Dead song data.' },
+      { tag: 'new', title: 'Cosmic Charlie — dream setlist builder', detail: 'Describe a vibe, pick an era, set the length. Cosmic Charlie builds your dream setlist from real Dead song data.' },
       { tag: 'new', title: 'Archive.org live audio streaming', detail: 'Tap any song to hear the actual live recording. Auto-matched tracks, full playlist mode, global audio player.' },
       { tag: 'new', title: 'Browse & discover community setlists', detail: 'Search, sort by popularity or date, filter by era. Era-coded cards with song previews.' },
       { tag: 'new', title: 'Show Plate poster & share flow', detail: 'Visual setlist poster with venue, date, and era branding. Download as image or copy a direct link.' },

@@ -296,7 +296,7 @@ const Backstage = () => {
                 <div className="flex flex-wrap gap-3">
                   {[
                     { label: "Landing Page", value: "landing" },
-                    { label: "Builder / Setlist Generator", value: "builder" },
+                    { label: "Setlist Builder", value: "builder" },
                     { label: "Setlist View", value: "setlist" },
                     { label: "Sharing", value: "sharing" },
                     { label: "Login / Account", value: "account" },

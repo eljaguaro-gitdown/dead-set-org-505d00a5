@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { setActiveSessionFlag } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,7 +9,6 @@ import { toast } from "sonner";
 import PageLayout from "@/components/PageLayout";
 import StealYourFace from "@/components/StealYourFace";
 
-const SESSION_FLAG = "dead_set_active_session";
 
 const ResetPassword = () => {
   const navigate = useNavigate();
@@ -45,7 +45,7 @@ const ResetPassword = () => {
     try {
       const { error } = await supabase.auth.updateUser({ password });
       if (error) throw error;
-      sessionStorage.setItem(SESSION_FLAG, "1");
+      setActiveSessionFlag();
       toast.success("Password updated! You're all set.");
       navigate("/builder");
     } catch (err: any) {
