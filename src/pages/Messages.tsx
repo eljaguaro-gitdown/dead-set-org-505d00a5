@@ -1,7 +1,9 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Send, Search, MessageCircle, Plus, Users, X, Check } from "lucide-react";
+import { ArrowLeft, Send, Search, MessageCircle, Plus, Users, X, Check, Flag, UserX } from "lucide-react";
+import ReportDialog from "@/components/ReportDialog";
+import { useBlockedUsers } from "@/hooks/useModeration";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -102,6 +104,7 @@ const Messages = () => {
   const [groupName, setGroupName] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const onlineUserIds = useOnlineUserIds(!!user);
+  const { blockedIds, block } = useBlockedUsers();
 
   useEffect(() => {
     if (!authLoading && !user) navigate("/auth");
@@ -336,7 +339,7 @@ const Messages = () => {
                   </p>
                 </div>
               )}
-              {conversations.map((conv) => (
+              {conversations.filter((c) => c.isGroup || !blockedIds.has(c.otherUserId)).map((conv) => (
                 <button
                   key={conv.id}
                   onClick={() => setActiveConversationId(conv.id)}
@@ -425,6 +428,33 @@ const Messages = () => {
                       <p className="text-[10px] text-emerald-700 font-body">Online</p>
                     )}
                   </div>
+                  {!activeConv.isGroup && (
+                    <div className="ml-auto flex items-center gap-1">
+                      <ReportDialog
+                        contentType="profile"
+                        contentId={activeConv.otherUserId}
+                        label={activeConv.otherUserName}
+                      >
+                        <button
+                          className="p-2 min-h-[40px] min-w-[40px] flex items-center justify-center text-muted-foreground/50 hover:text-foreground"
+                          title="Report this user"
+                        >
+                          <Flag className="w-4 h-4" />
+                        </button>
+                      </ReportDialog>
+                      <button
+                        onClick={async () => {
+                          if (await block(activeConv.otherUserId)) {
+                            setActiveConversationId(null);
+                          }
+                        }}
+                        className="p-2 min-h-[40px] min-w-[40px] flex items-center justify-center text-muted-foreground/50 hover:text-destructive"
+                        title="Block this user"
+                      >
+                        <UserX className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
                 </>
               )}
             </div>

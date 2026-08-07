@@ -69,9 +69,7 @@ function StatusBadge({ status }: { status: DeliveryStatus }) {
 export default function DispatchSenderPanel() {
   const [busy, setBusy] = useState<"test" | "live" | null>(null);
   const [results, setResults] = useState<RecipientResult[]>([]);
-  const [testEmails, setTestEmails] = useState(
-    "eljaguaro@gmail.com, jay_cohen@icloud.com",
-  );
+  const [testEmails, setTestEmails] = useState("");
 
   async function sendTest() {
     setBusy("test");

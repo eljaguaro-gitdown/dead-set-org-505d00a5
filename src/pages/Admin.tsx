@@ -5,6 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Shield, Users, ArrowLeft, Loader2, Calendar, Mail, User, Trash2, ListMusic, Eye, Globe, MessageSquare, Bug, Star, Lightbulb, Send, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import LiveVisitorsWidget from "@/components/LiveVisitorsWidget";
+import ModerationQueueWidget from "@/components/ModerationQueueWidget";
 import PresenceDebugPanel from "@/components/PresenceDebugPanel";
 import FunnelWidget from "@/components/FunnelWidget";
 import AuthFunnelWidget from "@/components/AuthFunnelWidget";
@@ -463,6 +464,8 @@ const Admin = () => {
         <UserSegmentsWidget enabled={isAdmin} />
 
         {/* Live Visitors */}
+        <ModerationQueueWidget enabled={isAdmin} />
+
         <LiveVisitorsWidget enabled={isAdmin} />
 
         {/* Presence channel debug */}

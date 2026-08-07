@@ -3,6 +3,7 @@ import { useParams, useNavigate, useLocation, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Share2, Zap, Play, Heart, RefreshCw, Loader2, Headphones, VolumeX } from "lucide-react";
 import SetlistComments from "@/components/SetlistComments";
+import ReportDialog from "@/components/ReportDialog";
 import { useFavorites } from "@/hooks/useFavorites";
 import EraTooltip from "@/components/EraTooltip";
 import { EraBorder } from "@/components/EraArt";
@@ -1010,6 +1011,17 @@ const SetlistPoster = () => {
             setlistId={id || ""}
             isPublic={!!setlist?.is_public}
           />
+
+          {/* Report affordance for the setlist itself */}
+          {id && (
+            <div className="mt-3 text-center">
+              <ReportDialog contentType="setlist" contentId={id} label="this setlist">
+                <button className="text-[10px] font-mono tracking-wider uppercase text-foreground/50 hover:text-foreground/80 transition-colors underline underline-offset-2">
+                  Report this setlist
+                </button>
+              </ReportDialog>
+            </div>
+          )}
 
           {/* === Show Plate === */}
           <motion.div

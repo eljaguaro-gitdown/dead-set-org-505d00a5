@@ -254,6 +254,18 @@ const AuthModal = ({ open, onOpenChange, onAuthenticated, onBeforeRedirect }: Au
             </Button>
           </form>
 
+          <p className="text-[11px] font-body text-muted-foreground text-center pt-3">
+            By continuing you agree to our{" "}
+            <a href="/terms" className="underline underline-offset-2 hover:text-foreground">
+              Terms
+            </a>{" "}
+            and{" "}
+            <a href="/privacy" className="underline underline-offset-2 hover:text-foreground">
+              Privacy Policy
+            </a>
+            .
+          </p>
+
           <div className="pb-4" />
         </div>
       </SheetContent>

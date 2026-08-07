@@ -1,9 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageCircle, Send, Trash2 } from "lucide-react";
+import { Flag, MessageCircle, Send, Trash2, UserX } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useBlockedUsers } from "@/hooks/useModeration";
+import ReportDialog from "@/components/ReportDialog";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 
@@ -26,6 +28,8 @@ interface SetlistCommentsProps {
 const SetlistComments = ({ setlistId, isPublic }: SetlistCommentsProps) => {
   const { user } = useAuth();
   const [comments, setComments] = useState<Comment[]>([]);
+  const { blockedIds, block } = useBlockedUsers();
+  const visibleComments = comments.filter((c) => !blockedIds.has(c.user_id));
   const [newComment, setNewComment] = useState("");
   const [loading, setLoading] = useState(true);
   const [posting, setPosting] = useState(false);
@@ -176,9 +180,9 @@ const SetlistComments = ({ setlistId, isPublic }: SetlistCommentsProps) => {
         <h3 className="font-display text-sm tracking-[0.15em] text-foreground/75 uppercase">
           Community Notes
         </h3>
-        {comments.length > 0 && (
+        {visibleComments.length > 0 && (
           <span className="text-[10px] font-mono text-foreground/60 ml-1">
-            ({comments.length})
+            ({visibleComments.length})
           </span>
         )}
       </div>
@@ -193,7 +197,7 @@ const SetlistComments = ({ setlistId, isPublic }: SetlistCommentsProps) => {
       ) : (
         <div className="space-y-3">
           <AnimatePresence>
-            {comments.map((comment) => (
+            {visibleComments.map((comment) => (
               <motion.div
                 key={comment.id}
                 initial={{ opacity: 0, y: 8 }}
@@ -243,11 +247,32 @@ const SetlistComments = ({ setlistId, isPublic }: SetlistCommentsProps) => {
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
                 )}
+
+                {/* Report + block for other people's comments */}
+                {user && user.id !== comment.user_id && (
+                  <div className="shrink-0 flex items-center opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                    <ReportDialog contentType="comment" contentId={comment.id} label="this comment">
+                      <button
+                        className="p-2 -m-1 min-h-[40px] min-w-[40px] flex items-center justify-center text-muted-foreground/40 hover:text-foreground"
+                        title="Report comment"
+                      >
+                        <Flag className="w-3.5 h-3.5" />
+                      </button>
+                    </ReportDialog>
+                    <button
+                      onClick={() => block(comment.user_id)}
+                      className="p-2 -m-1 min-h-[40px] min-w-[40px] flex items-center justify-center text-muted-foreground/40 hover:text-destructive"
+                      title="Block this user"
+                    >
+                      <UserX className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                )}
               </motion.div>
             ))}
           </AnimatePresence>
 
-          {comments.length === 0 && !loading && (
+          {visibleComments.length === 0 && !loading && (
             <p className="text-center text-xs font-body text-foreground/60 py-6">
               No comments yet — be the first to drop a note.
             </p>
