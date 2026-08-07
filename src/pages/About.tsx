@@ -103,6 +103,32 @@ const About = () => {
           </section>
 
           <section className="space-y-3">
+            <h2 className="font-display text-lg text-foreground">Free &amp; open source</h2>
+            <p>
+              The whole platform is open source under the{" "}
+              <a
+                href="https://github.com/eljaguaro-gitdown/dead-set-org-505d00a5/blob/main/LICENSE"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-dead-gold underline underline-offset-2 hover:text-primary/80 transition-colors"
+              >
+                AGPL-3.0 license
+              </a>{" "}
+              — the same license our friends at Relisten chose. Browse the code, open an issue,
+              or send a fix at{" "}
+              <a
+                href="https://github.com/eljaguaro-gitdown/dead-set-org-505d00a5"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-dead-gold underline underline-offset-2 hover:text-primary/80 transition-colors"
+              >
+                GitHub
+              </a>
+              .
+            </p>
+          </section>
+
+          <section className="space-y-3">
             <h2 className="font-display text-lg text-foreground">Good neighbors</h2>
             <p>
               Dead Set stands alongside the projects that raised us:{" "}
