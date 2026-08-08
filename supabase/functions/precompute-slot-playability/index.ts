@@ -90,10 +90,15 @@ async function resolveSlot(archiveUrl: string, songTitle: string) {
   const meta = await fetchMetadata(identifier);
   if (!meta) return { status: "error" as const, error: "metadata fetch failed" };
 
+  const isMp3 = (f: any) =>
+    f.format === "VBR MP3" || (f.name || "").toLowerCase().endsWith(".mp3");
   let bestScore = 0; let bestFile: any = null;
   for (const f of meta.files.filter(isAudioFile)) {
     const score = matchScore(f.title || f.name || "", songTitle);
-    if (score > bestScore) { bestScore = score; bestFile = f; }
+    // MP3 wins ties: raw FLAC won't stream through AVPlayer in the iOS app.
+    if (score > bestScore || (score === bestScore && bestFile && !isMp3(bestFile) && isMp3(f))) {
+      bestScore = score; bestFile = f;
+    }
   }
   if (bestFile && bestScore >= 60) {
     return {
