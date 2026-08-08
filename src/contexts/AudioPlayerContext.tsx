@@ -307,8 +307,11 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     metadata: {
       title: slot.song.title,
       artist: "Grateful Dead",
-      album:
-        [slot.version?.venue, slot.version?.show_date].filter(Boolean).join(" · ") || "Dead Set",
+      // Lock screen's second line reads "Artist — Album", so the album slot
+      // carries venue/date plus the brand.
+      album: [slot.version?.venue, slot.version?.show_date, "Dead-Set.Org"]
+        .filter(Boolean)
+        .join(" · "),
       // Absolute HTTPS URL — relative artwork paths silently fail in Media Session.
       artwork: [
         {
