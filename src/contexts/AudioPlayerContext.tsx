@@ -14,6 +14,8 @@ import {
   type EngineTrack,
   type ProgressSnapshot,
 } from "@/lib/player/gaplessEngine";
+import { NativeEngine } from "@/lib/player/nativeEngine";
+import { isNativeApp } from "@/lib/nativeApp";
 import { captureAudioEvent, archiveIdentifierFromUrl } from "@/lib/player/audioInstrumentation";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -229,7 +231,10 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
   // Web Audio — including jsdom tests) every engine path below is inert and
   // the remount-per-track <AudioPlayer> behaves exactly as before.
   const engineMode = useMemo<PlayerEngine>(() => resolvePlayerEngine(), []);
-  const engineRef = useRef<GaplessEngine | null>(null);
+  // In the Capacitor shell, playback runs in native AVQueuePlayer (survives
+  // backgrounding/lock, drives the lock screen); everywhere else, gapless
+  // Web Audio. Both expose the same surface — nothing downstream branches.
+  const engineRef = useRef<GaplessEngine | NativeEngine | null>(null);
   /** Slot id the engine is currently on — dedupes sync-effect reloads. */
   const engineSlotIdRef = useRef<string | null>(null);
   /** True when the next playingSlot change came from an engine callback. */
@@ -276,9 +281,10 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     onPlayStateChanged: (_isPlaying: boolean) => undefined as void,
   });
 
-  const getEngine = useCallback((): GaplessEngine => {
+  const getEngine = useCallback((): GaplessEngine | NativeEngine => {
     if (!engineRef.current) {
-      const engine = new GaplessEngine({
+      const EngineImpl = isNativeApp() ? NativeEngine : GaplessEngine;
+      const engine = new EngineImpl({
         onTrackStarted: (slotId, queueIndex) => engineCbRef.current.onTrackStarted(slotId, queueIndex),
         onQueueEnded: () => engineCbRef.current.onQueueEnded(),
         onError: (error) => engineCbRef.current.onError(error),
