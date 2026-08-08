@@ -306,12 +306,12 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     url: slot.directTrackUrl!,
     metadata: {
       title: slot.song.title,
-      artist: "Grateful Dead",
-      // Lock screen's second line reads "Artist — Album", so the album slot
-      // carries venue/date plus the brand.
-      album: [slot.version?.venue, slot.version?.show_date, "Dead-Set.Org"]
-        .filter(Boolean)
-        .join(" · "),
+      // The iOS lock screen shows only title + artist (album appears just in
+      // Control Center's expanded view), so the brand rides the artist line.
+      artist: "Grateful Dead · Dead-Set.Org",
+      album:
+        [slot.version?.venue, slot.version?.show_date].filter(Boolean).join(" · ") ||
+        "Dead-Set.Org",
       // Absolute HTTPS URL — relative artwork paths silently fail in Media Session.
       artwork: [
         {
