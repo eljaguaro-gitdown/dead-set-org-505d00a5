@@ -7,6 +7,7 @@ import PosterModal from "@/components/PosterModal";
 import { EraMotif, eraNameFromDate } from "@/components/EraArt";
 import { findTrackInRecording, matchScore } from "@/lib/archiveOrg";
 import { audioDebug } from "@/lib/audioDebug";
+import { isNativeApp } from "@/lib/nativeApp";
 import {
   pausePlayEvent,
   resumePlayEvent,
@@ -332,6 +333,9 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
   // greyed out and tapping our in-app play button hits a stale state.
   useEffect(() => {
     if (typeof window === "undefined" || !("mediaSession" in navigator)) return;
+    // In the native shell, MPNowPlayingInfoCenter (NativeAudioPlugin) owns the
+    // lock screen — the webview's Media Session would fight it for control.
+    if (isNativeApp()) return;
     const setHandler = (action: MediaSessionAction, handler: MediaSessionActionHandler | null) => {
       try { navigator.mediaSession.setActionHandler(action, handler); } catch { /* unsupported action */ }
     };
@@ -409,6 +413,7 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
   // scrubber AND to correctly restore playback after an interruption.
   useEffect(() => {
     if (typeof window === "undefined" || !("mediaSession" in navigator)) return;
+    if (isNativeApp()) return; // native lock screen is driven by MPNowPlayingInfoCenter
     try {
       navigator.mediaSession.playbackState = playing ? "playing" : "paused";
     } catch { /* noop */ }
