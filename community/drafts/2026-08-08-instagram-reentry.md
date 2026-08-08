@@ -62,7 +62,7 @@ No poll needed — let the quiet caption do the work.
 
 ## Option 2 — "Little pockets" (hidden-gem discovery, three spotlights)
 
-**Angle:** Leads with the community's actual practice — digging past the marquee nights for the right minute inside a lesser-talked-about show. Ties Althea / Bird Song / Ramble on Bob spotlights together as one idea rather than three separate plugs. No product update in this one — pure discovery, pure voice.
+**Angle:** Leads with the community's actual practice — digging past the marquee nights for the right minute inside a lesser-talked-about show. Ties Althea / Bird Song / Ramble on Rose spotlights together as one idea rather than three separate plugs. No product update in this one — pure discovery, pure voice.
 
 ### Caption
 
@@ -74,7 +74,7 @@ ones — but the songs inside them are why we keep digging.
 
 Lately: an Althea that takes its time getting where it's
 going. A Bird Song that finds its own quiet by the end. A
-Ramble on Bob with some real bite in it. Little pockets,
+Ramble on Rose with some real bite in it. Little pockets,
 tucked into shows most people scroll past.
 
 That's the whole idea here — not the biggest night, just
@@ -91,18 +91,18 @@ Wake. Now. Discover.
 ```
 
 ### Visual suggestion
-A simple three-frame carousel — one phone screenshot per spotlight tile (Althea Gems, Bird Song Bliss, Ramble on Bob), same crop/framing each time, so it reads as a set rather than an ad. No captions baked into the images; let the post caption carry the words.
+A simple three-frame carousel — one phone screenshot per spotlight tile (Althea Gems, Bird Song Bliss, Ramble on Rose), same crop/framing each time, so it reads as a set rather than an ad. No captions baked into the images; let the post caption carry the words.
 
 ### First comment (links — captions can't hyperlink)
 ```
 Tonight's pockets, in order:
 Althea — https://dead-set.org/setlist/7c0332da-cf0e-4dfe-a5fe-fb64f0d19fd1?ref=instagram-post&utm_source=instagram
 Bird Song — https://dead-set.org/setlist/ed1f3ebf-fe88-4045-a420-aba146c976ad?ref=instagram-post&utm_source=instagram
-Ramble on Bob — https://dead-set.org/setlist/c08c1a09-0d82-4e41-9088-77f1f6f26c14?ref=instagram-post&utm_source=instagram
+Ramble on Rose — https://dead-set.org/setlist/c08c1a09-0d82-4e41-9088-77f1f6f26c14?ref=instagram-post&utm_source=instagram
 ```
 
 ### Story companion
-A poll sticker over the carousel's cover frame: "Which pocket first — Althea, Bird Song, or Ramble on Bob?" Three link stickers underneath, each tagged
+A poll sticker over the carousel's cover frame: "Which pocket first — Althea, Bird Song, or Ramble on Rose?" Three link stickers underneath, each tagged
 `?ref=instagram-story&utm_source=instagram` to its respective setlist. Gives Jess & Marcus something to actually tap and share.
 
 ---
