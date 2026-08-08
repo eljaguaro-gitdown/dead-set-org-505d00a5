@@ -117,6 +117,10 @@ function isAudioFile(f: any): boolean {
   );
 }
 
+function isMp3(f: any): boolean {
+  return f.format === "VBR MP3" || (f.name || "").toLowerCase().endsWith(".mp3");
+}
+
 function findBestTrack(files: any[], songTitle: string): { file: any; score: number } | null {
   const audioFiles = files.filter(isAudioFile);
   let bestScore = 0;
@@ -124,7 +128,10 @@ function findBestTrack(files: any[], songTitle: string): { file: any; score: num
   for (const f of audioFiles) {
     const title = f.title || f.name || "";
     const score = matchScore(title, songTitle);
-    if (score > bestScore) {
+    // MP3 wins ties: FLAC originals and their MP3 derivatives carry the same
+    // title, but raw FLAC won't stream through AVPlayer in the iOS app —
+    // MP3 plays everywhere.
+    if (score > bestScore || (score === bestScore && bestFile && !isMp3(bestFile) && isMp3(f))) {
       bestScore = score;
       bestFile = f;
     }
