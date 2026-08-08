@@ -12,18 +12,47 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Info.plist, this keeps the tape rolling when the app backgrounds
         // or the screen locks, and ignores the ring/silent switch — the
         // same behavior as any music app.
+        //
+        // A one-time setup at launch is NOT enough: WebKit manages the audio
+        // session on behalf of <audio> elements and can replace the category
+        // after media starts (symptom: the ring/silent switch mutes playback,
+        // which .playback never allows). So the session is re-asserted at
+        // every lifecycle edge that precedes backgrounding, and after
+        // interruptions (calls, Siri) end.
+        assertPlaybackSession()
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleAudioSessionInterruption(_:)),
+            name: AVAudioSession.interruptionNotification,
+            object: AVAudioSession.sharedInstance()
+        )
+        return true
+    }
+
+    private func assertPlaybackSession() {
         do {
             try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default)
             try AVAudioSession.sharedInstance().setActive(true)
         } catch {
-            print("AVAudioSession setup failed: \(error)")
+            print("AVAudioSession assert failed: \(error)")
         }
-        return true
+    }
+
+    @objc private func handleAudioSessionInterruption(_ notification: Notification) {
+        guard let info = notification.userInfo,
+              let typeValue = info[AVAudioSessionInterruptionTypeKey] as? UInt,
+              let type = AVAudioSession.InterruptionType(rawValue: typeValue) else { return }
+        if type == .ended {
+            // Re-claim the session once the phone call / Siri / other app is done.
+            assertPlaybackSession()
+        }
     }
 
     func applicationWillResignActive(_ application: UIApplication) {
-        // Sent when the application is about to move from active to inactive state. This can occur for certain types of temporary interruptions (such as an incoming phone call or SMS message) or when the user quits the application and it begins the transition to the background state.
-        // Use this method to pause ongoing tasks, disable timers, and invalidate graphics rendering callbacks. Games should use this method to pause the game.
+        // Last foreground moment before a possible background transition —
+        // make sure the playback session is the active one so iOS keeps the
+        // audio pipeline alive while backgrounded.
+        assertPlaybackSession()
     }
 
     func applicationDidEnterBackground(_ application: UIApplication) {
@@ -36,7 +65,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
     func applicationDidBecomeActive(_ application: UIApplication) {
-        // Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.
+        // WebKit may have fiddled with the session while we were away.
+        assertPlaybackSession()
     }
 
     func applicationWillTerminate(_ application: UIApplication) {
