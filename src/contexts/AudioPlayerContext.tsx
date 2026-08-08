@@ -301,14 +301,32 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     return engineRef.current;
   }, []);
 
+  // Taper-style short date for the lock screen: "1977-05-08" → "5/8/77".
+  // String surgery on purpose — new Date("YYYY-MM-DD") parses as UTC and
+  // shifts a day in Pacific time.
+  const fmtShowDate = (raw?: string | null): string | null => {
+    const m = raw?.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (!m) return raw ?? null;
+    return `${Number(m[2])}/${Number(m[3])}/${m[1].slice(2)}`;
+  };
+
   const toEngineTrack = (slot: PlayableSlot): EngineTrack => ({
     slotId: slot.id,
     url: slot.directTrackUrl!,
     metadata: {
       title: slot.song.title,
       // The iOS lock screen shows only title + artist (album appears just in
-      // Control Center's expanded view), so the brand rides the artist line.
-      artist: "Grateful Dead · Dead-Set.Org",
+      // Control Center's expanded view), so the show's date + venue and the
+      // brand all ride the artist line — date right after the band so it
+      // survives truncation when a long venue name overflows.
+      artist: [
+        "Grateful Dead",
+        fmtShowDate(slot.version?.show_date),
+        slot.version?.venue,
+        "Dead-Set.Org",
+      ]
+        .filter(Boolean)
+        .join(" · "),
       album:
         [slot.version?.venue, slot.version?.show_date].filter(Boolean).join(" · ") ||
         "Dead-Set.Org",
