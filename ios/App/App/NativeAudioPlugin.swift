@@ -55,6 +55,22 @@ public class NativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
     private var artworkCache: [URL: MPMediaItemArtwork] = [:]
     private var lastReportedPlaying = false
 
+    /// The app icon from the bundled web assets — fallback artwork when a
+    /// track's artworkUrl isn't a fetchable http(s) URL (the webview hands us
+    /// capacitor://localhost/... paths, which URLSession can't resolve).
+    private lazy var bundledArtwork: MPMediaItemArtwork? = {
+        let candidates = [
+            Bundle.main.url(forResource: "icon-512", withExtension: "png", subdirectory: "public/icons"),
+            Bundle.main.url(forResource: "icon-192", withExtension: "png", subdirectory: "public/icons"),
+        ]
+        for case let url? in candidates {
+            if let data = try? Data(contentsOf: url), let image = UIImage(data: data) {
+                return MPMediaItemArtwork(boundsSize: image.size) { _ in image }
+            }
+        }
+        return nil
+    }()
+
     public override func load() {
         configureRemoteCommands()
     }
@@ -220,7 +236,10 @@ public class NativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         player = AVQueuePlayer(items: liveItems)
         player.actionAtItemEnd = .advance
 
-        currentItemObservation = player.observe(\.currentItem) { [weak self] _, _ in
+        // .initial matters: without it KVO only fires on *advance*, so the
+        // first track of a queue would never report trackChanged or write
+        // its lock-screen metadata.
+        currentItemObservation = player.observe(\.currentItem, options: [.initial, .new]) { [weak self] _, _ in
             DispatchQueue.main.async { self?.handleCurrentItemChanged() }
         }
         rateObservation = player.observe(\.timeControlStatus) { [weak self] _, _ in
@@ -365,12 +384,16 @@ public class NativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
             MPMediaItemPropertyPlaybackDuration: currentDuration(),
             MPNowPlayingInfoPropertyPlaybackRate: player.timeControlStatus == .playing ? 1.0 : 0.0,
         ]
-        if let artworkUrl = track.artworkUrl {
+        if let artworkUrl = track.artworkUrl,
+           artworkUrl.scheme == "https" || artworkUrl.scheme == "http" {
             if let cached = artworkCache[artworkUrl] {
                 info[MPMediaItemPropertyArtwork] = cached
             } else {
+                if let bundled = bundledArtwork { info[MPMediaItemPropertyArtwork] = bundled }
                 fetchArtwork(from: artworkUrl)
             }
+        } else if let bundled = bundledArtwork {
+            info[MPMediaItemPropertyArtwork] = bundled
         }
         MPNowPlayingInfoCenter.default().nowPlayingInfo = info
     }
