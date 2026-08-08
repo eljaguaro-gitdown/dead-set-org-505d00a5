@@ -55,11 +55,14 @@ public class NativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
     private var artworkCache: [URL: MPMediaItemArtwork] = [:]
     private var lastReportedPlaying = false
 
-    /// The app icon from the bundled web assets — fallback artwork when a
-    /// track's artworkUrl isn't a fetchable http(s) URL (the webview hands us
-    /// capacitor://localhost/... paths, which URLSession can't resolve).
+    /// Cosmic Charlie from the bundled web assets — the lock-screen artwork.
+    /// (Original brand art; also keeps trademarked imagery off store-reviewed
+    /// surfaces.) Used whenever a track's artworkUrl isn't a fetchable http(s)
+    /// URL — the webview hands us capacitor://localhost/... paths, which
+    /// URLSession can't resolve.
     private lazy var bundledArtwork: MPMediaItemArtwork? = {
         let candidates = [
+            Bundle.main.url(forResource: "cosmic-charlie", withExtension: "jpg", subdirectory: "public"),
             Bundle.main.url(forResource: "icon-512", withExtension: "png", subdirectory: "public/icons"),
             Bundle.main.url(forResource: "icon-192", withExtension: "png", subdirectory: "public/icons"),
         ]
