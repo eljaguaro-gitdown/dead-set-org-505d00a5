@@ -17,7 +17,11 @@ const VisitorTracker = () => {
       const visitorId = getVisitorId();
       const pagePath = window.location.pathname;
       const referrer = document.referrer || null;
-      const refParam = new URLSearchParams(window.location.search).get("ref");
+      // ?ref= is the explicit channel tag; utm_source (the industry-standard
+      // param already on tagged links for the PostHog side) is the fallback,
+      // so both attribution pipelines see the same channel.
+      const params = new URLSearchParams(window.location.search);
+      const refParam = params.get("ref") || params.get("utm_source");
 
       try {
         await supabase.functions.invoke("track-visit", {
