@@ -28,7 +28,11 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f
 function classifySource(referrer: string | null, refParam: string | null): string | null {
   const r = (refParam || "").toLowerCase().trim();
   if (r === "lovable" || r === "lovable.dev") return "lovable";
-  if (!referrer) return refParam ? r.slice(0, 64) : null;
+  // An explicit tag is ground truth — it must win over the referrer, which
+  // for tagged campaign links is often a stripped/self-referral artifact
+  // (e.g. Instagram's in-app browser strips document.referrer entirely).
+  if (r) return r.slice(0, 64);
+  if (!referrer) return null;
   try {
     const host = new URL(referrer).hostname.toLowerCase();
     if (host.endsWith("lovable.dev") || host.endsWith("lovable.app")) return "lovable";
