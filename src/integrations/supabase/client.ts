@@ -8,10 +8,31 @@ const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
+// Stable anonymous visitor id, created here (before any tracker runs) so the
+// x-visitor-id header below is always present. Same key VisitorTracker uses.
+const getVisitorId = (): string => {
+  try {
+    const key = "ds_visitor_id";
+    let id = localStorage.getItem(key);
+    if (!id) {
+      id = crypto.randomUUID();
+      localStorage.setItem(key, id);
+    }
+    return id;
+  } catch {
+    return "";
+  }
+};
+
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: {
     storage: localStorage,
     persistSession: true,
     autoRefreshToken: true,
-  }
+  },
+  global: {
+    // RLS policies for anonymous-owned rows (play_events) verify ownership by
+    // matching this header against the row's visitor_id.
+    headers: { "x-visitor-id": getVisitorId() },
+  },
 });

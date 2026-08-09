@@ -302,7 +302,7 @@ const SetlistComments = ({ setlistId, isPublic }: SetlistCommentsProps) => {
         </div>
       ) : (
         <p className="mt-4 text-center text-xs font-body text-foreground/60">
-          <a href="/auth" className="text-dead-gold hover:text-dead-gold/80 transition-colors underline underline-offset-2">
+          <a href={`/auth?redirect=${encodeURIComponent(typeof window !== "undefined" ? window.location.pathname : "/")}`} className="text-dead-gold hover:text-dead-gold/80 transition-colors underline underline-offset-2">
             Sign in
           </a>{" "}
           to leave a comment
