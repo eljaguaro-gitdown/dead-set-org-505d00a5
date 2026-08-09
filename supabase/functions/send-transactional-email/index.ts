@@ -18,7 +18,7 @@ const FROM_DOMAIN = "notify.dead-set.org"
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers':
-    'authorization, x-client-info, apikey, content-type',
+    'authorization, x-client-info, apikey, content-type, x-visitor-id',
 }
 
 // Generate a cryptographically random 32-byte hex token

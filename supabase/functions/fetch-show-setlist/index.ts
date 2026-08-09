@@ -2,7 +2,10 @@
 // Returns an ordered, set-segmented list of song titles + segue flags.
 // No songs DB lookup here — the client fuzzy-matches against its songs table.
 
-import { corsHeaders } from "https://esm.sh/@supabase/supabase-js@2.95.0/cors";
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-visitor-id",
+};
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.95.0";
 
 // ---- Song matching (kept in sync with src/lib/archiveOrg.ts) ----
