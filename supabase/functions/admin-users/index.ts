@@ -122,11 +122,19 @@ Deno.serve(async (req) => {
     // traffic stats in parallel. Traffic stats are computed in a single
     // SQL function instead of pulling the full page_visits table client-side
     // (which was causing 60-130s response times and mobile timeouts).
+    // Traffic: refresh the cache (best-effort), then read it directly.
+    // get_admin_traffic_stats RPC can't be used here — it checks
+    // has_role(auth.uid()) and the service-role client has no uid, so the
+    // call raises and the panel rendered zeros. This function already
+    // verified the caller is an admin above.
     const [usersRes, profilesRes, setlistCountsRes, trafficRes] = await Promise.all([
       adminClient.auth.admin.listUsers({ perPage: 200 }),
       adminClient.from("profiles").select("user_id, display_name, avatar_url"),
       adminClient.from("setlists").select("creator_id").limit(20000),
-      adminClient.rpc("get_admin_traffic_stats"),
+      adminClient
+        .rpc("refresh_admin_traffic_stats")
+        .then(() => adminClient.from("admin_traffic_stats_cache").select("*").eq("id", 1).maybeSingle())
+        .catch(() => adminClient.from("admin_traffic_stats_cache").select("*").eq("id", 1).maybeSingle()),
     ]);
 
     if (usersRes.error) throw usersRes.error;
@@ -141,7 +149,7 @@ Deno.serve(async (req) => {
       countMap.set(s.creator_id, (countMap.get(s.creator_id) || 0) + 1);
     });
 
-    const trafficRow = Array.isArray(trafficRes.data) ? trafficRes.data[0] : null;
+    const trafficRow = trafficRes.data ?? null;
     const totalPageViews = Number(trafficRow?.total_page_views ?? 0);
     const totalUnique = Number(trafficRow?.total_unique ?? 0);
     const unique24h = Number(trafficRow?.unique_24h ?? 0);
