@@ -19,6 +19,7 @@ import { toast } from "sonner";
 import { findArchiveRecordings, matchScore, type ArchiveResult } from "@/lib/archiveOrg";
 import { useFavoriteSongs } from "@/hooks/useFavoriteSongs";
 import type { Database } from "@/integrations/supabase/types";
+import { trackCtaClick } from "@/lib/trackCtaClick";
 
 type Setlist = Omit<Database["public"]["Tables"]["setlists"]["Row"], "share_token">;
 type SetlistSlot = Database["public"]["Tables"]["setlist_slots"]["Row"];
@@ -397,7 +398,7 @@ const SetlistPoster = () => {
   }, [setlist, id, user]);
 
   const handleUpvote = async () => {
-    if (!user) { toast.error("Sign in to upvote"); navigate("/auth"); return; }
+    if (!user) { toast.error("Sign in to upvote"); navigate(`/auth?redirect=${encodeURIComponent(location.pathname)}`); return; }
     if (!id || hasUpvoted || upvoting) return;
     setUpvoting(true);
     const { error } = await supabase.from("setlist_upvotes").insert({ setlist_id: id, user_id: user.id });
@@ -538,6 +539,20 @@ const SetlistPoster = () => {
           <ArrowLeft className="w-4 h-4" /> {location.key && location.key !== "default" ? "Back" : "Home"}
         </button>
         <div className="flex items-center gap-2">
+          {/* Above-the-fold twin of the bottom-flap builder CTA — cold visitors
+              from shared links otherwise had no visible next step without
+              scrolling past the whole setlist. */}
+          {!user && (
+            <button
+              onClick={() => {
+                void trackCtaClick("poster_build_setlist_guest_header", "/builder");
+                navigate("/builder");
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-body bg-primary text-primary-foreground shadow-sm hover:brightness-110 transition-all"
+            >
+              Build your own →
+            </button>
+          )}
           <button
             onClick={handlePlayAll}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-body bg-card/80 border border-border text-card-foreground hover:border-primary/40 transition-colors"
@@ -955,7 +970,7 @@ const SetlistPoster = () => {
                     {/* Favorite button — prominent */}
                     <motion.button
                       onClick={() => {
-                        if (!user) { toast.error("Sign in to save favorites"); navigate("/auth"); return; }
+                        if (!user) { toast.error("Sign in to save favorites"); navigate(`/auth?redirect=${encodeURIComponent(location.pathname)}`); return; }
                         if (id) toggleFavorite(id);
                       }}
                       className={`flex items-center gap-2 px-5 py-3 rounded-xl font-body text-base transition-all ${
@@ -978,7 +993,10 @@ const SetlistPoster = () => {
                       link gets an invitation to build, not just upvote/save dead-ends. */}
                   {!user && (
                     <button
-                      onClick={() => navigate("/builder")}
+                      onClick={() => {
+                        void trackCtaClick("poster_build_setlist_guest_bottom", "/builder");
+                        navigate("/builder");
+                      }}
                       className="w-full max-w-xs h-12 rounded-xl bg-primary text-primary-foreground font-display text-base shadow-md hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
                     >
                       Build your own dream show →
