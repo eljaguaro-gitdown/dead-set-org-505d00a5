@@ -82,29 +82,72 @@ Deno.serve(async (req) => {
   const supabase = createClient(supabaseUrl, supabaseServiceKey)
   const normalizedEmail = payload.email.toLowerCase()
 
-  // 1. Upsert to suppressed_emails (idempotent — safe for retries)
-  const { error: suppressError } = await supabase
-    .from('suppressed_emails')
-    .upsert(
-      {
-        email: normalizedEmail,
-        reason: payload.reason,
-        metadata: payload.metadata ?? null,
-      },
-      { onConflict: 'email' },
-    )
+  // Determine whether this event permanently kills the address.
+  // Complaints and unsubscribes always suppress. Bounces only suppress when
+  // the provider reports a permanent (hard) failure — a transient 4xx
+  // deferral must never blackhole an address on the first occurrence.
+  const severity = String(
+    (payload.metadata as Record<string, unknown> | undefined)?.severity ?? '',
+  ).toLowerCase()
+  const isPermanentBounce =
+    severity === 'permanent' || severity === 'hard' || severity === 'fatal'
 
-  if (suppressError) {
-    console.error('Failed to upsert suppressed email', {
-      error: suppressError,
-      email_redacted: normalizedEmail[0] + '***@' + normalizedEmail.split('@')[1],
-    })
-    return jsonResponse({ error: 'Failed to write suppression' }, 500)
+  let shouldSuppress = payload.reason !== 'bounce' || isPermanentBounce
+  let softBounceCount = 0
+
+  // Soft-bounce threshold: 3 or more soft bounces for the same address
+  // (derived from the existing email_send_log audit trail) escalate to a
+  // permanent suppression.
+  if (!shouldSuppress) {
+    const { count, error: countError } = await supabase
+      .from('email_send_log')
+      .select('id', { count: 'exact', head: true })
+      .eq('recipient_email', normalizedEmail)
+      .eq('status', 'bounced')
+      .ilike('error_message', 'Soft bounce%')
+
+    if (countError) {
+      console.warn('Failed to count prior soft bounces', { error: countError })
+    } else {
+      // +1 for the event we are processing right now
+      softBounceCount = (count ?? 0) + 1
+      if (softBounceCount >= 3) {
+        shouldSuppress = true
+      }
+    }
   }
 
-  // 2. Append a new log entry for the suppression event (never update existing rows)
-  const sendLogStatus = mapReasonToStatus(payload.reason)
-  const sendLogMessage = mapReasonToMessage(payload.reason)
+  if (shouldSuppress) {
+    // 1. Upsert to suppressed_emails (idempotent — safe for retries)
+    const { error: suppressError } = await supabase
+      .from('suppressed_emails')
+      .upsert(
+        {
+          email: normalizedEmail,
+          reason: payload.reason,
+          metadata: payload.metadata ?? null,
+        },
+        { onConflict: 'email' },
+      )
+
+    if (suppressError) {
+      console.error('Failed to upsert suppressed email', {
+        error: suppressError,
+        email_redacted: normalizedEmail[0] + '***@' + normalizedEmail.split('@')[1],
+      })
+      return jsonResponse({ error: 'Failed to write suppression' }, 500)
+    }
+  }
+
+  // 2. Append a new log entry for the event (never update existing rows)
+  const sendLogStatus = shouldSuppress
+    ? mapReasonToStatus(payload.reason)
+    : 'bounced'
+  const sendLogMessage = shouldSuppress
+    ? softBounceCount >= 3
+      ? `Soft bounce threshold reached (${softBounceCount}) — address suppressed`
+      : mapReasonToMessage(payload.reason)
+    : `Soft bounce — transient failure${severity ? ` (severity: ${severity})` : ' (severity missing)'}; address NOT suppressed`
 
   const { error: insertError } = await supabase
     .from('email_send_log')
@@ -124,16 +167,20 @@ Deno.serve(async (req) => {
     })
   }
 
-  console.log('Suppression processed', {
+  console.log('Suppression event processed', {
     email_redacted: normalizedEmail[0] + '***@' + normalizedEmail.split('@')[1],
     reason: payload.reason,
+    severity: severity || null,
+    suppressed: shouldSuppress,
+    soft_bounce_count: softBounceCount || null,
     is_retry: payload.is_retry,
     retry_count: payload.retry_count,
     has_message_id: !!payload.message_id,
   })
 
-  return jsonResponse({ success: true })
+  return jsonResponse({ success: true, suppressed: shouldSuppress })
 })
+
 
 function mapReasonToStatus(
   reason: string,
