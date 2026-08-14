@@ -16,6 +16,7 @@ import {
   appendRecentSongs,
 } from "@/lib/cosmicCharlieHistory";
 import { extractTasteMatches, type LengthHint } from "@/lib/charlie/tasteLexicon";
+import { trackWizardEvent } from "@/lib/wizardEvents";
 
 type Song = Database["public"]["Tables"]["songs"]["Row"];
 type Era = Database["public"]["Tables"]["eras"]["Row"];
@@ -133,6 +134,11 @@ const CosmicCharlieDialog = ({
   const [surpriseMe, setSurpriseMe] = useState(false);
   const [exploreResult, setExploreResult] = useState<ExploreResult | null>(null);
 
+  // Fire wizard_opened once per dialog opening.
+  useEffect(() => {
+    if (open) void trackWizardEvent("wizard_opened");
+  }, [open]);
+
   // Load songs & eras when explore mode is entered
   useEffect(() => {
     if (mode !== "explore") return;
@@ -174,6 +180,14 @@ const CosmicCharlieDialog = ({
   };
 
   const togglePriority = (priority: (typeof PRIORITIES)[number]) => {
+    const alreadySelected = selectedPriorities.some((p) => p.id === priority.id);
+    const atCap = selectedPriorities.length >= 2;
+    if (!alreadySelected && !atCap) {
+      void trackWizardEvent("priority_selected", {
+        mode: "build",
+        priorityId: priority.id,
+      });
+    }
     setSelectedPriorities((prev) => {
       const exists = prev.find((p) => p.id === priority.id);
       if (exists) return prev.filter((p) => p.id !== priority.id);
@@ -226,6 +240,19 @@ const CosmicCharlieDialog = ({
     setLoading(true);
     setSuggestion(null);
 
+    void trackWizardEvent("generate_clicked", {
+      mode: mode ?? undefined,
+      vibeIds: selectedVibes.map((v) => v.id),
+      metadata: {
+        priorityIds: selectedPriorities.map((p) => p.id),
+        hasMoodText: !!moodText.trim(),
+        hasMustInclude: !!mustInclude.trim(),
+        hasPleaseAvoid: !!pleaseAvoid.trim(),
+        hasItsFor: !!itsFor.trim(),
+        surpriseMe: mode === "build" && overridePrefs === undefined && selectedVibes.length === 0,
+      },
+    });
+
     const finalPrefs = mode === "build"
       ? (overridePrefs !== undefined ? overridePrefs : composePreferences())
       : (preferences.trim() || undefined);
@@ -261,6 +288,15 @@ const CosmicCharlieDialog = ({
     if (!selectedSong) return;
     setLoading(true);
     setExploreResult(null);
+
+    void trackWizardEvent("generate_clicked", {
+      mode: "explore",
+      metadata: {
+        songTitle: selectedSong.title,
+        surpriseMe,
+        eraCount: selectedEraIds.length,
+      },
+    });
 
     try {
       const { data, error } = await supabase.functions.invoke("ai-deadhead", {
