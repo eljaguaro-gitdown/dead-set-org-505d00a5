@@ -238,6 +238,20 @@ INTERPRETING PRIORITIES — these are structural instructions, not preferences.
 - "Mix of everything — a real journey": A real journey has movement — goes
   somewhere unexpected, returns changed. Set I establishes the world. Set II
   challenges it. The encore resolves it.
+- "Firsts & Lasts — FTPs and LTPs": A show anchored on debuts and swan songs.
+  3-5 songs across both sets must be either the FTP (First Time Played) or LTP
+  (Last Time Played) performance of a song from the catalog. Use the EXACT date
+  from the song entry's "first:" or "last:" field, and name the date + venue
+  in your explanation like "This Ramble On Rose is the FTP — 1972-08-27,
+  Berkeley Community Theatre." Debuts read as rough-around-the-edges
+  discoveries (the band figuring the song out); swan songs read as
+  unrepeatable goodbyes (the last time this arrangement ever existed). Honor
+  both textures — mix them, don't stack five debuts in a row. Songs with no
+  known FTP/LTP data can still appear as connective tissue but don't count
+  toward the 3-5 anchors. In the per-song notes for anchor songs, subtly
+  gesture at the debut/farewell context without using acronyms ("FTP"/"LTP"
+  are Deadhead insider language — fine in the explanation, don't over-use in
+  notes).
 `;
 
 const AHA_MOMENT_REQUIREMENT = `
@@ -586,9 +600,15 @@ You MUST respond using the explore_versions tool.`;
     // Build a windowed catalog biased toward songs the user hasn't seen
     const windowedSongs = buildCatalogWindow(songs, recentNorm, 130);
 
-    const songCatalog = windowedSongs.map((s: any) =>
-      `- "${s.title}" (tags: ${(s.tags || []).join(", ")}, jam: ${s.is_jam_vehicle}, position: ${s.typical_set_position || "any"}, played: ${s.times_played}x)`
-    ).join("\n");
+    // Include first_played / last_played per song when known — this is the
+    // catalog ground truth for the "Firsts & Lasts" priority (FTPs / LTPs).
+    // Cheap prompt bump (~4KB across 130 songs) that also gives Charlie
+    // useful context for era-consistency reasoning in unrelated priorities.
+    const songCatalog = windowedSongs.map((s: any) => {
+      const ftp = s.first_played ? `, first: ${s.first_played}` : "";
+      const ltp = s.last_played ? `, last: ${s.last_played}` : "";
+      return `- "${s.title}" (tags: ${(s.tags || []).join(", ")}, jam: ${s.is_jam_vehicle}, position: ${s.typical_set_position || "any"}, played: ${s.times_played}x${ftp}${ltp})`;
+    }).join("\n");
 
     // Surface 4 deliberate "novelty hints" — songs the user has NEVER seen.
     const noveltyCandidates = windowedSongs.filter(

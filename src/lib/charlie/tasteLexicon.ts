@@ -6,7 +6,11 @@ export type VibeId =
   | "emotional" | "country" | "blues" | "indica" | "sativa" | "hybrid";
 
 export type PriorityId =
-  | "deep-jams" | "tight" | "rare" | "classics" | "segues" | "journey";
+  | "deep-jams" | "tight" | "rare" | "classics" | "segues" | "journey"
+  // A "Firsts & Lasts" show — songs featured via their FTP (First Time
+  // Played) or LTP (Last Time Played) performances. Deadhead vernacular
+  // for a debuts-and-swan-songs setlist theme.
+  | "firsts-lasts";
 
 // NEW axis — length isn't currently a chip; we capture it from
 // free text and pass it through as a hint to ai-deadhead.
@@ -135,6 +139,20 @@ export const TASTE_LEXICON: TasteTrigger[] = [
   { phrase: "jam vehicle",   priorities: ["deep-jams"] },
   { phrase: "exploration",   priorities: ["deep-jams"] },
   { phrase: "improv",        priorities: ["deep-jams"] },
+  // ── FIRSTS & LASTS ──────────────────────────────────────────────
+  // Deadhead vernacular. FTP = First Time Played (debut of a song),
+  // LTP = Last Time Played (final performance). "Firsts and lasts"
+  // shows anchor around a handful of these dates.
+  { phrase: "ftp",             priorities: ["firsts-lasts"] },
+  { phrase: "ltp",             priorities: ["firsts-lasts"] },
+  { phrase: "first time played", priorities: ["firsts-lasts"] },
+  { phrase: "last time played",  priorities: ["firsts-lasts"] },
+  { phrase: "firsts and lasts",  priorities: ["firsts-lasts"] },
+  { phrase: "firsts & lasts",    priorities: ["firsts-lasts"] },
+  { phrase: "debut",             priorities: ["firsts-lasts"] },
+  { phrase: "swan song",         priorities: ["firsts-lasts"] },
+  { phrase: "premiere",          priorities: ["firsts-lasts"] },
+  { phrase: "farewell",          priorities: ["firsts-lasts"] },
 ];
 
 // ─── Extraction ────────────────────────────────────────────────────

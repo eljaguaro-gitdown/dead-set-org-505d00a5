@@ -123,6 +123,12 @@ const PRIORITIES = [
     title: "Flow — one continuous piece of music",
     desc: "Segues everywhere, nothing stops, nothing restarts",
   },
+  {
+    id: "firsts-lasts",
+    emoji: "🎇",
+    title: "Firsts and Lasts — FTPs and LTPs",
+    desc: "A show anchored on debut performances and swan songs — the discoveries and the goodbyes",
+  },
 ] as const;
 
 // ── Animation ───────────────────────────────────────────────────────────
@@ -211,6 +217,7 @@ const CosmicCharlieWelcome = ({ eras, onGenerated, onSkip }: CosmicCharlieWelcom
         rare: "The user wants to be surprised. Include at least two songs with genuine rarity — songs played fewer than 50 times in the band's history, or songs placed in positions where they almost never appeared. Rare songs must be structurally earned, not dropped in randomly. Flag each one in the explanation.",
         canonical: "Build the strongest possible version of a transcendent night from the songs a Deadhead would recognize immediately. The test is not 'is this song famous' — it is 'does this song deserve its place in this night's arc.' Every song must justify its position.",
         flow: "Every Set II transition must be a segue, marked with →. Aim for at least one three-song segue chain. The setlist should feel like one continuous piece of music that happens to have song-shaped sections within it.",
+        "firsts-lasts": "The user wants a Firsts and Lasts show — a setlist anchored on FTPs (First Time Played) and LTPs (Last Time Played). Weight the setlist so that 3-5 songs across both sets are either debut performances or swan songs. For each such song, USE THE EXACT FTP or LTP date from the catalog data (the 'first:' and 'last:' fields on each song entry), and name the date + venue in your explanation like \"This Ramble On Rose is the FTP — 1972-08-27, Berkeley Community Theatre.\" Debuts read as rough-around-the-edges discoveries; swan songs read as unrepeatable goodbyes — honor both textures. If a song has no FTP/LTP data, it can still appear but doesn't count toward the 3-5 anchors. The rest of the setlist fills around these anchors with era-appropriate connective tissue.",
       };
       parts.push(priorityMap[selectedPriority]);
     }

@@ -86,6 +86,7 @@ const PRIORITIES = [
   { id: "classics", emoji: "⭐", label: "Stick to the classics" },
   { id: "segues", emoji: "🔗", label: "Lots of segues — keep it flowing" },
   { id: "journey", emoji: "🎢", label: "Mix of everything — a real journey" },
+  { id: "firsts-lasts", emoji: "🎇", label: "Firsts & Lasts — FTPs and LTPs" },
 ];
 
 const slideVariants = {
