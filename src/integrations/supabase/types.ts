@@ -1638,6 +1638,50 @@ export type Database = {
         }
         Relationships: []
       }
+      wizard_events: {
+        Row: {
+          created_at: string
+          event_name: string
+          id: string
+          metadata: Json | null
+          mode: string | null
+          priority_id: string | null
+          user_id: string | null
+          vibe_ids: string[] | null
+          visitor_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_name: string
+          id?: string
+          metadata?: Json | null
+          mode?: string | null
+          priority_id?: string | null
+          user_id?: string | null
+          vibe_ids?: string[] | null
+          visitor_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_name?: string
+          id?: string
+          metadata?: Json | null
+          mode?: string | null
+          priority_id?: string | null
+          user_id?: string | null
+          vibe_ids?: string[] | null
+          visitor_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wizard_events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "dispatch_recipients"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
     }
     Views: {
       cosmic_charlie_song_frequency: {
