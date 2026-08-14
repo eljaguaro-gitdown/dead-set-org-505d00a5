@@ -30,3 +30,14 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'weekly-insights': weeklyInsights,
   'featured-setlist': featuredSetlist,
 }
+
+// Internal operator alerts. These are never subscriber mail, so they SKIP the
+// suppressed_emails check — a bounce on the operator's own address must not
+// silently blackhole ops notifications. Subscriber-facing templates keep the
+// strict suppression behavior.
+export const INTERNAL_TEMPLATES: string[] = [
+  'new-signup-notification',
+  'daily-user-report',
+  'weekly-insights',
+]
+
