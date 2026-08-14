@@ -130,6 +130,54 @@ const ensureAuthInitialized = () => {
             () => null,
           );
         }
+
+        // Defensive client-side backfill for the welcome + admin-notification
+        // emails. The server-side handle_new_user_emails trigger on auth.users
+        // is the primary path (fires for every provider — email, Google, etc.),
+        // but a missing vault secret or pg_net.http_post hiccup would leave a
+        // fresh signup with no welcome email and no admin ping — silent, since
+        // trigger errors only surface in postgres logs. Firing the same
+        // request from the client with the SAME idempotency keys the trigger
+        // uses means: trigger succeeded → this is a no-op; trigger failed →
+        // this saves the day. Fire-and-forget so it never blocks UX.
+        if (isFreshAccount && session.user.email) {
+          const meta = session.user.user_metadata as Record<string, unknown> | null;
+          const displayName =
+            (typeof meta?.full_name === "string" && meta.full_name) ||
+            (typeof meta?.name === "string" && meta.name) ||
+            session.user.email.split("@")[0] ||
+            "Deadhead";
+          const provider =
+            (session.user.app_metadata as Record<string, unknown> | null)?.provider as string | undefined
+            ?? pendingOAuth
+            ?? "email";
+
+          void supabase.functions.invoke("send-transactional-email", {
+            body: {
+              templateName: "welcome-email",
+              recipientEmail: session.user.email,
+              idempotencyKey: `welcome-${session.user.id}`,
+              templateData: { displayName },
+            },
+          }).then(() => null, () => null);
+
+          const ADMIN_RECIPIENTS = ["grateful_jaguaro@dead-set.org", "eljaguaro@gmail.com"];
+          for (const adminEmail of ADMIN_RECIPIENTS) {
+            void supabase.functions.invoke("send-transactional-email", {
+              body: {
+                templateName: "new-signup-notification",
+                recipientEmail: adminEmail,
+                idempotencyKey: `new-signup-notify-${session.user.id}-${adminEmail}`,
+                templateData: {
+                  userEmail: session.user.email,
+                  displayName,
+                  provider,
+                  signupTime: session.user.created_at,
+                },
+              },
+            }).then(() => null, () => null);
+          }
+        }
       }
     }
 
