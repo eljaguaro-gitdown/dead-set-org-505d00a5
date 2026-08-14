@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,6 +13,35 @@ interface RecipientResult {
   status: DeliveryStatus;
   error?: string;
 }
+
+interface DispatchEntry {
+  id: string;
+  subject: string;
+  htmlPath: string;
+  label: string;
+  blurb: string;
+}
+
+// Registered dispatches — the html_path must exist in send-dispatch's
+// DISPATCH_HTML map (see supabase/functions/send-dispatch/index.ts). Add a new
+// entry here after registering the corresponding dispatch_NNN.ts module.
+// Newest first.
+const DISPATCHES: DispatchEntry[] = [
+  {
+    id: "003",
+    subject: "Firsts & Lasts — a letter from the lab",
+    htmlPath: "dispatches/003.html",
+    label: "003 · Firsts & Lasts",
+    blurb: "Community update + FTP/LTP launch, with a shout to Philly Bob.",
+  },
+  {
+    id: "002",
+    subject: "We are finding each other",
+    htmlPath: "dispatches/002.html",
+    label: "002 · We are finding each other",
+    blurb: "Editorial — the community loop, Nightfall of Diamonds, score-by-date.",
+  },
+];
 
 const TERMINAL = new Set<DeliveryStatus>(["sent", "failed", "dlq", "suppressed", "bounced", "complained"]);
 
@@ -32,7 +61,6 @@ async function pollDelivery(messageIds: string[], timeoutMs = 45000): Promise<Re
       .order("created_at", { ascending: false });
 
     if (data) {
-      // latest row per message_id wins
       const seen = new Set<string>();
       for (const row of data) {
         if (!row.message_id || seen.has(row.message_id)) continue;
@@ -70,6 +98,14 @@ export default function DispatchSenderPanel() {
   const [busy, setBusy] = useState<"test" | "live" | null>(null);
   const [results, setResults] = useState<RecipientResult[]>([]);
   const [testEmails, setTestEmails] = useState("");
+  const [selectedId, setSelectedId] = useState<string>(DISPATCHES[0].id);
+  const [subjectOverride, setSubjectOverride] = useState<string>("");
+
+  const selected = useMemo(
+    () => DISPATCHES.find((d) => d.id === selectedId) ?? DISPATCHES[0],
+    [selectedId],
+  );
+  const effectiveSubject = subjectOverride.trim() || selected.subject;
 
   async function sendTest() {
     setBusy("test");
@@ -87,15 +123,14 @@ export default function DispatchSenderPanel() {
     const initial: RecipientResult[] = list.map((email) => ({ email, status: "pending" }));
     setResults(initial);
 
-    // Enqueue each test recipient and capture message_id from edge function
     const enqueued: RecipientResult[] = [];
     for (const email of list) {
       try {
         const { data, error } = await supabase.functions.invoke("send-dispatch", {
           body: {
-            dispatch_id: "002",
-            subject: "We are finding each other",
-            html_path: "dispatches/002.html",
+            dispatch_id: selected.id,
+            subject: effectiveSubject,
+            html_path: selected.htmlPath,
             test_mode: true,
             test_recipient: email,
           },
@@ -114,7 +149,6 @@ export default function DispatchSenderPanel() {
     }
     setResults([...enqueued]);
 
-    // Poll provider delivery status
     const ids = enqueued.map((r) => r.messageId).filter((x): x is string => !!x);
     if (ids.length > 0) {
       const delivery = await pollDelivery(ids);
@@ -134,15 +168,15 @@ export default function DispatchSenderPanel() {
   }
 
   async function sendLive() {
-    if (!window.confirm("Send Dispatch 002 to ALL opted-in users?")) return;
+    if (!window.confirm(`Send Dispatch ${selected.id} ("${effectiveSubject}") to ALL opted-in users?`)) return;
     setBusy("live");
     setResults([]);
     try {
       const { data, error } = await supabase.functions.invoke("send-dispatch", {
         body: {
-          dispatch_id: "002",
-          subject: "We are finding each other",
-          html_path: "dispatches/002.html",
+          dispatch_id: selected.id,
+          subject: effectiveSubject,
+          html_path: selected.htmlPath,
           test_mode: false,
         },
       });
@@ -161,11 +195,46 @@ export default function DispatchSenderPanel() {
     <div className="bg-card border border-border rounded-lg p-4 space-y-3">
       <div className="flex items-center gap-2">
         <Send className="w-4 h-4 text-muted-foreground" />
-        <h2 className="font-display text-sm text-card-foreground">Editorial Dispatch 002</h2>
+        <h2 className="font-display text-sm text-card-foreground">Editorial Dispatch</h2>
       </div>
-      <p className="text-sm text-muted-foreground font-body">
-        "We are finding each other" — sends from noreply@notify.dead-set.org (replies go to grateful_jaguaro@dead-set.org).
-      </p>
+
+      <div className="space-y-2">
+        <label className="text-sm text-muted-foreground font-body block">
+          Which dispatch
+        </label>
+        <select
+          value={selectedId}
+          onChange={(e) => {
+            setSelectedId(e.target.value);
+            setSubjectOverride("");
+          }}
+          disabled={busy !== null}
+          className="w-full h-9 rounded-md border border-input bg-secondary text-card-foreground px-3 text-sm font-body focus:outline-none focus:ring-2 focus:ring-ring"
+        >
+          {DISPATCHES.map((d) => (
+            <option key={d.id} value={d.id}>
+              {d.label}
+            </option>
+          ))}
+        </select>
+        <p className="text-xs text-muted-foreground font-body">
+          {selected.blurb} Sends from noreply@notify.dead-set.org (replies go to grateful_jaguaro@dead-set.org).
+        </p>
+      </div>
+
+      <div className="space-y-2">
+        <label className="text-sm text-muted-foreground font-body block">
+          Subject line <span className="text-xs opacity-70">(override for this send only — leave blank to use default)</span>
+        </label>
+        <Input
+          value={subjectOverride}
+          onChange={(e) => setSubjectOverride(e.target.value)}
+          placeholder={selected.subject}
+          disabled={busy !== null}
+          className="font-body bg-secondary text-card-foreground"
+        />
+      </div>
+
       <div className="space-y-2">
         <label className="text-sm text-muted-foreground font-body block">
           Test recipients (comma-separated)
@@ -174,9 +243,11 @@ export default function DispatchSenderPanel() {
           value={testEmails}
           onChange={(e) => setTestEmails(e.target.value)}
           placeholder="email1@example.com, email2@example.com"
+          disabled={busy !== null}
           className="font-body bg-secondary text-card-foreground"
         />
       </div>
+
       <div className="flex flex-wrap gap-2">
         <Button
           variant="outline"
@@ -195,7 +266,7 @@ export default function DispatchSenderPanel() {
           className="font-body"
         >
           {busy === "live" ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Send className="w-4 h-4 mr-2" />}
-          Send to everyone
+          Send Dispatch {selected.id} to everyone
         </Button>
       </div>
 
