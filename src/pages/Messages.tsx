@@ -401,33 +401,50 @@ const Messages = () => {
               {activeConv && (
                 <>
                   {activeConv.isGroup ? (
-                    <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
-                      <Users className="w-4 h-4 text-primary" />
-                    </div>
+                    <>
+                      <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
+                        <Users className="w-4 h-4 text-primary" />
+                      </div>
+                      <div>
+                        <span className="font-display text-sm text-card-foreground">{activeConv.otherUserName}</span>
+                        {activeConv.members.length > 0 && (
+                          <p className="text-[10px] text-muted-foreground font-body">
+                            {activeConv.members.length + 1} members
+                          </p>
+                        )}
+                      </div>
+                    </>
                   ) : (
-                    <div className="relative">
-                      <Avatar className="w-8 h-8">
-                        <AvatarImage src={activeConv.otherUserAvatar || undefined} />
-                        <AvatarFallback className="bg-primary/20 text-accent-foreground text-xs">
-                          {activeConv.otherUserName[0].toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      {onlineUserIds.has(activeConv.otherUserId) && (
-                        <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-card" />
-                      )}
-                    </div>
+                    // Avatar + name are one clickable target that navigates to the
+                    // other user's public library (UserLibrary at /user/:userId).
+                    // Group headers don't get this because there's no single profile
+                    // to point at.
+                    <button
+                      type="button"
+                      onClick={() => navigate(`/user/${activeConv.otherUserId}`)}
+                      className="flex items-center gap-3 text-left hover:opacity-80 transition-opacity min-h-[44px] rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+                      title={`View ${activeConv.otherUserName}'s public setlists`}
+                      aria-label={`View ${activeConv.otherUserName}'s public setlists`}
+                    >
+                      <div className="relative">
+                        <Avatar className="w-8 h-8">
+                          <AvatarImage src={activeConv.otherUserAvatar || undefined} />
+                          <AvatarFallback className="bg-primary/20 text-accent-foreground text-xs">
+                            {activeConv.otherUserName[0].toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        {onlineUserIds.has(activeConv.otherUserId) && (
+                          <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-card" />
+                        )}
+                      </div>
+                      <div>
+                        <span className="font-display text-sm text-card-foreground">{activeConv.otherUserName}</span>
+                        {onlineUserIds.has(activeConv.otherUserId) && (
+                          <p className="text-[10px] text-emerald-700 font-body">Online</p>
+                        )}
+                      </div>
+                    </button>
                   )}
-                  <div>
-                    <span className="font-display text-sm text-card-foreground">{activeConv.otherUserName}</span>
-                    {activeConv.isGroup && activeConv.members.length > 0 && (
-                      <p className="text-[10px] text-muted-foreground font-body">
-                        {activeConv.members.length + 1} members
-                      </p>
-                    )}
-                    {!activeConv.isGroup && onlineUserIds.has(activeConv.otherUserId) && (
-                      <p className="text-[10px] text-emerald-700 font-body">Online</p>
-                    )}
-                  </div>
                   {!activeConv.isGroup && (
                     <div className="ml-auto flex items-center gap-1">
                       <ReportDialog
