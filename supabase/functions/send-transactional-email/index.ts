@@ -1,7 +1,7 @@
 import * as React from 'npm:react@18.3.1'
 import { renderAsync } from 'npm:@react-email/components@0.0.22'
 import { createClient } from 'npm:@supabase/supabase-js@2'
-import { TEMPLATES } from '../_shared/transactional-email-templates/registry.ts'
+import { TEMPLATES, INTERNAL_TEMPLATES } from '../_shared/transactional-email-templates/registry.ts'
 
 // Configuration baked in at scaffold time — do NOT change these manually.
 // To update, re-run the email domain setup flow.
@@ -124,45 +124,57 @@ Deno.serve(async (req) => {
   // Create Supabase client with service role (bypasses RLS)
   const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
-  // 2. Check suppression list (fail-closed: if we can't verify, don't send)
-  const { data: suppressed, error: suppressionError } = await supabase
-    .from('suppressed_emails')
-    .select('id')
-    .eq('email', effectiveRecipient.toLowerCase())
-    .maybeSingle()
+  // 2. Check suppression list (fail-closed: if we can't verify, don't send).
+  // Internal operator alerts bypass suppression entirely — a bounce on the
+  // operator's own address must never silently swallow ops mail.
+  const isInternalTemplate = INTERNAL_TEMPLATES.includes(templateName)
 
-  if (suppressionError) {
-    console.error('Suppression check failed — refusing to send', {
-      error: suppressionError,
+  if (!isInternalTemplate) {
+    const { data: suppressed, error: suppressionError } = await supabase
+      .from('suppressed_emails')
+      .select('id')
+      .eq('email', effectiveRecipient.toLowerCase())
+      .maybeSingle()
+
+    if (suppressionError) {
+      console.error('Suppression check failed — refusing to send', {
+        error: suppressionError,
+        effectiveRecipient,
+      })
+      return new Response(
+        JSON.stringify({ error: 'Failed to verify suppression status' }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      )
+    }
+
+    if (suppressed) {
+      // Log the suppressed attempt
+      await supabase.from('email_send_log').insert({
+        message_id: messageId,
+        template_name: templateName,
+        recipient_email: effectiveRecipient,
+        status: 'suppressed',
+      })
+
+      console.log('Email suppressed', { effectiveRecipient, templateName })
+      return new Response(
+        JSON.stringify({ success: false, reason: 'email_suppressed' }),
+        {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      )
+    }
+  } else {
+    console.log('Internal template — skipping suppression check', {
+      templateName,
       effectiveRecipient,
     })
-    return new Response(
-      JSON.stringify({ error: 'Failed to verify suppression status' }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
-    )
   }
 
-  if (suppressed) {
-    // Log the suppressed attempt
-    await supabase.from('email_send_log').insert({
-      message_id: messageId,
-      template_name: templateName,
-      recipient_email: effectiveRecipient,
-      status: 'suppressed',
-    })
-
-    console.log('Email suppressed', { effectiveRecipient, templateName })
-    return new Response(
-      JSON.stringify({ success: false, reason: 'email_suppressed' }),
-      {
-        status: 200,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
-    )
-  }
 
   // 3. Get or create unsubscribe token (one token per email address)
   const normalizedEmail = effectiveRecipient.toLowerCase()

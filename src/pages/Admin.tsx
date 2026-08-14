@@ -13,6 +13,8 @@ import ListeningAnalyticsWidget from "@/components/ListeningAnalyticsWidget";
 import UserSegmentsWidget from "@/components/UserSegmentsWidget";
 import AdminAnnouncementsPanel from "@/components/AdminAnnouncementsPanel";
 import DeliverabilityMonitor from "@/components/DeliverabilityMonitor";
+import SuppressedAddressesPanel from "@/components/SuppressedAddressesPanel";
+
 import PrivateRelayMonitor from "@/components/PrivateRelayMonitor";
 import DispatchSenderPanel from "@/components/DispatchSenderPanel";
 import GitHubSyncBadge from "@/components/GitHubSyncBadge";
@@ -402,6 +404,10 @@ const Admin = () => {
 
         {/* Email Deliverability Monitoring */}
         <DeliverabilityMonitor />
+
+        {/* Suppression list management */}
+        <SuppressedAddressesPanel />
+
 
         {/* Apple Private Relay welcome-email confirmation */}
         <PrivateRelayMonitor />
