@@ -403,6 +403,10 @@ const Admin = () => {
         {/* Email Deliverability Monitoring */}
         <DeliverabilityMonitor />
 
+        {/* Suppression list management */}
+        <SuppressedAddressesPanel />
+
+
         {/* Apple Private Relay welcome-email confirmation */}
         <PrivateRelayMonitor />
 
