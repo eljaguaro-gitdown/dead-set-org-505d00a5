@@ -9,6 +9,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { matchScore } from "@/lib/archiveOrg";
+import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import type { Database } from "@/integrations/supabase/types";
@@ -73,6 +74,7 @@ interface PreviewData {
 }
 
 const BuildFromShowDialog = ({ open, onOpenChange, onSeed, initialDate }: BuildFromShowDialogProps) => {
+  const { unlockAudio } = useAudioPlayer();
   const [mode, setMode] = useState<"date" | "calendar-day" | "all-years">("date");
   const [date, setDate] = useState<Date | undefined>();
   const [month, setMonth] = useState<number>(new Date().getMonth() + 1);
@@ -177,6 +179,9 @@ const BuildFromShowDialog = ({ open, onOpenChange, onSeed, initialDate }: BuildF
 
   const handleConfirm = useCallback(async () => {
     if (!preview) return;
+    // The show rolls on its own once it's loaded in — unlock audio inside this
+    // tap, since the writes + navigate ahead outlast the gesture window.
+    unlockAudio();
     setConfirming(true);
     try {
       await onSeed(preview.seed);
@@ -193,7 +198,7 @@ const BuildFromShowDialog = ({ open, onOpenChange, onSeed, initialDate }: BuildF
     } finally {
       setConfirming(false);
     }
-  }, [preview, onSeed, onOpenChange, resetAll]);
+  }, [preview, onSeed, onOpenChange, resetAll, unlockAudio]);
 
   const handleBuildDate = useCallback(() => {
     if (!date) return;

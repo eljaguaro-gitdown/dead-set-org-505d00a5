@@ -238,6 +238,52 @@ const Builder = () => {
   const activeSlots = isGuestMode ? guestSlots : slots;
   const hasGuestData = guestSlots.length > 0;
 
+  // ── Drop the needle on a freshly built setlist ──────────────────────
+  // A show that just materialized should start playing on its own — the whole
+  // point of asking Charlie (or pulling a night off the Archive) is to HEAR it.
+  // Creation is async and, for signed-in users, ends in a navigate() to
+  // /builder/:id, so the slots aren't on screen when the handler finishes.
+  // Handlers therefore ARM this ref and the effect below drops the needle once
+  // the setlist has actually landed.
+  const pendingAutoplayRef = useRef<{ setlistId: string | null; armedAt: number } | null>(null);
+
+  /** How long an armed autoplay stays live before we assume the load fell over. */
+  const AUTOPLAY_ARM_TTL_MS = 20_000;
+
+  /**
+   * Queue up autoplay for the setlist that's about to appear. `setlistId` is
+   * the row we're waiting on (null for guest builds, which never persist) —
+   * we hold until local state has caught up to THAT setlist so we never start
+   * the DJ intro for, or bump the play count of, the one being replaced.
+   */
+  const armAutoplay = useCallback((setlistId: string | null) => {
+    pendingAutoplayRef.current = { setlistId, armedAt: Date.now() };
+  }, []);
+
+  useEffect(() => {
+    const pending = pendingAutoplayRef.current;
+    if (!pending) return;
+    // If the setlist never showed up, let the arm lapse rather than ambushing
+    // the user with music the next time slots happen to change.
+    if (Date.now() - pending.armedAt > AUTOPLAY_ARM_TTL_MS) {
+      pendingAutoplayRef.current = null;
+      return;
+    }
+    // Charlie's skeleton is still up — the songs haven't rendered yet.
+    if (charlieCreating) return;
+    if (activeSlots.length === 0) return;
+    // Signed-in flows navigate to the new setlist; wait for state to catch up.
+    if (pending.setlistId && setlist?.id !== pending.setlistId) return;
+
+    pendingAutoplayRef.current = null;
+
+    // Never talk over a tape that's already rolling — the Play Setlist button
+    // is right there if they want to switch.
+    if (playingSlot) return;
+
+    void globalPlaySetlist(activeSlots, pending.setlistId ?? undefined);
+  }, [activeSlots, charlieCreating, playingSlot, setlist?.id, globalPlaySetlist]);
+
   // Restore cached guest data from sessionStorage (survives OAuth redirect)
   const restoredRef = useRef(false);
   useEffect(() => {
@@ -626,6 +672,7 @@ const Builder = () => {
         setCharlieCreating(true);
         setTitle(newTitle);
         if (suggestion.explanation) setDescription(suggestion.explanation);
+        armAutoplay(null);
         setGuestSlots(builtSlots);
         setMobileTab("setlist");
         // Brief skeleton so UI doesn't flash empty between dialog close and render
@@ -649,6 +696,7 @@ const Builder = () => {
         }
         // Hydrate local slots immediately so the UI shows the songs even if the
         // post-navigate loadSetlist() races or briefly returns an empty result.
+        armAutoplay(created.id);
         setSlots(builtSlots);
         setMobileTab("setlist");
         navigate(`/builder/${created.id}`, { replace: false });
@@ -657,7 +705,7 @@ const Builder = () => {
         setTimeout(() => setCharlieCreating(false), 400);
       }
     },
-    [isGuestMode, songs, createSetlist, selectedEra, navigate, setSlots]
+    [isGuestMode, songs, createSetlist, selectedEra, navigate, setSlots, armAutoplay]
   );
 
   const addSongsToCurrentSetlist = useCallback(
@@ -741,6 +789,7 @@ const Builder = () => {
       if (seed.eraId) setSelectedEra(seed.eraId);
 
       if (isGuestMode) {
+        armAutoplay(null);
         setGuestSlots(newSlots);
         setMobileTab("setlist");
         return;
@@ -785,10 +834,12 @@ const Builder = () => {
         }
 
         // 3. Sync local state immediately (realtime will reconcile)
+        armAutoplay(setlist.id);
         setSlots(newSlots);
       } else {
         const created = await createSetlist(seed.title, seed.eraId);
         if (!created || !user) return;
+        armAutoplay(created.id);
         const rows = newSlots.map((slot) => ({
           id: slot.id,
           setlist_id: created.id,
@@ -807,7 +858,7 @@ const Builder = () => {
       }
       setMobileTab("setlist");
     },
-    [isGuestMode, setlist, user, createSetlist, updateTitle, navigate, setSlots, songs],
+    [isGuestMode, setlist, user, createSetlist, updateTitle, navigate, setSlots, songs, armAutoplay],
   );
 
   const handleGenerateDescription = useCallback(async () => {
@@ -895,12 +946,14 @@ const Builder = () => {
       }
 
       if (isGuestMode) {
+        armAutoplay(null);
         setGuestSlots(newSlots);
       } else {
         // For authenticated users, create the setlist first then persist slots directly
         // (setlist is null at this point because init was skipped while welcome was shown)
         const created = await createSetlist(newTitle, eraId);
         if (created) {
+          armAutoplay(created.id);
           for (const slot of newSlots) {
             await supabase.from("setlist_slots").insert({
               id: slot.id,
@@ -930,14 +983,9 @@ const Builder = () => {
       }
       setMobileTab("setlist");
 
-      const firstPlayable = newSlots.find((s) => s.version?.archive_org_url);
-      if (firstPlayable) {
-        playSingle(firstPlayable);
-      }
-
       toast.success("Charlie's got you — your dream show is ready! 🎶");
     },
-    [songs, isGuestMode, createSetlist, user, navigate, playSingle]
+    [songs, isGuestMode, createSetlist, user, navigate, armAutoplay]
   );
 
   // Show guest sign-in prompt after guest builds a setlist with 2+ songs

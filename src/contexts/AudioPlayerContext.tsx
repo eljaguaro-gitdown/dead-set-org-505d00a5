@@ -165,6 +165,14 @@ interface AudioPlayerContextValue extends AudioPlayerState {
   advancePlaylist: (dir: number) => Promise<void>;
   /** Skip the DJ intro currently playing / warming and jump straight to Set 1. */
   skipPreRoll: () => void;
+  /**
+   * Open the audio pipeline from inside a user gesture, before there is
+   * anything to play. Call this in the tap that KICKS OFF a flow that ends in
+   * playback (e.g. "build me a show") — by the time the setlist comes back the
+   * gesture's activation window has long closed, and without this the browser
+   * refuses the autoplay. Safe to call repeatedly; a no-op on native/legacy.
+   */
+  unlockAudio: () => void;
 }
 
 const noopTransport: PlayerTransport = {
@@ -198,6 +206,7 @@ const defaultAudioPlayerContext: AudioPlayerContextValue = {
   stopPlayback: () => undefined,
   advancePlaylist: async () => undefined,
   skipPreRoll: () => undefined,
+  unlockAudio: () => undefined,
 };
 
 const AudioPlayerContext = createContext<AudioPlayerContextValue>(defaultAudioPlayerContext);
@@ -1017,6 +1026,18 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
   }, [state.preRoll?.status, state.preRoll?.seq, completePreRoll]);
 
   /**
+   * Gesture-time audio unlock, for flows where the tap and the playback are
+   * separated by seconds of async work (Charlie building a show, fetching a
+   * night off the Archive). Same call playSetlist makes at the top of its own
+   * user gesture — just hoisted to the gesture that starts the wait.
+   */
+  const unlockAudio = useCallback(() => {
+    if (engineMode !== "gapless") return;
+    audioDebug.log("context", "unlockAudio (pre-gesture)");
+    getEngine().unlock();
+  }, [engineMode, getEngine]);
+
+  /**
    * Append slots to the end of the active playlist. If nothing is playing,
    * falls back to playSetlist so the queue starts immediately.
    */
@@ -1117,7 +1138,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AudioPlayerContext.Provider value={{ ...state, transport, playSingle, playSetlist, queueSetlist, stopPlayback, advancePlaylist, skipPreRoll }}>
+    <AudioPlayerContext.Provider value={{ ...state, transport, playSingle, playSetlist, queueSetlist, stopPlayback, advancePlaylist, skipPreRoll, unlockAudio }}>
       {children}
     </AudioPlayerContext.Provider>
   );

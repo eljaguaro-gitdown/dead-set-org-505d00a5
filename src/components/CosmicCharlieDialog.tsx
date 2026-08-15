@@ -104,7 +104,7 @@ const CosmicCharlieDialog = ({
   onApplySuggestion,
   onCreateNewSetlist,
 }: CosmicCharlieDialogProps) => {
-  const { playSingle } = useAudioPlayer();
+  const { playSingle, unlockAudio } = useAudioPlayer();
   const [mode, setMode] = useState<"build" | "improve" | "explore" | null>(null);
   const [preferences, setPreferences] = useState("");
   const [loading, setLoading] = useState(false);
@@ -329,6 +329,9 @@ const CosmicCharlieDialog = ({
 
   const handleCreateNew = () => {
     if (!suggestion) return;
+    // The new setlist starts playing once it lands — open the audio pipeline
+    // now, while this tap still counts as a user gesture.
+    unlockAudio();
     const title = newSetlistName.trim() || suggestion.setlist_name?.trim() || undefined;
     onCreateNewSetlist(suggestion, title);
     handleReset();
@@ -938,6 +941,7 @@ const CosmicCharlieDialog = ({
                   size="sm"
                   onClick={() => {
                     if (!exploreResult || !selectedSong) return;
+                    unlockAudio();
                     const fakeSuggestion: AISuggestion = {
                       setlist_name: `${exploreResult.songTitle} — Listening Guide`,
                       explanation: exploreResult.linerNotes,

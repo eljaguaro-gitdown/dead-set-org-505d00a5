@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import EraTooltip from "@/components/EraTooltip";
+import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 import type { Database } from "@/integrations/supabase/types";
 import {
   getVisitorId,
@@ -169,6 +170,7 @@ const CosmicCharlieWelcome = ({ eras, onGenerated, onSkip }: CosmicCharlieWelcom
 
   const [loading, setLoading] = useState(false);
   const recentSongsRef = useRef<string[]>(loadRecentSongs());
+  const { unlockAudio } = useAudioPlayer();
 
   // ── Helpers ─────────────────────────────────────────────────────────
 
@@ -245,6 +247,11 @@ const CosmicCharlieWelcome = ({ eras, onGenerated, onSkip }: CosmicCharlieWelcom
   // ── Generate ────────────────────────────────────────────────────────
 
   const handleGenerate = async (preferences?: string) => {
+    // Still inside the tap. The finished show starts playing on its own, but
+    // that's seconds from now — open the audio pipeline while the browser is
+    // still treating this as a user gesture, or it'll refuse the first track.
+    unlockAudio();
+
     // Pure "Surprise Me" path: no explicit preferences AND no era picked.
     // If we generated one in the last 30s, replay it so back-nav doesn't
     // produce a different show.
