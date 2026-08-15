@@ -253,8 +253,8 @@ const Builder = () => {
   /**
    * Queue up autoplay for the setlist that's about to appear. `setlistId` is
    * the row we're waiting on (null for guest builds, which never persist) —
-   * we hold until local state has caught up to THAT setlist so we never start
-   * the DJ intro for, or bump the play count of, the one being replaced.
+   * we hold until local state has caught up to THAT setlist so we never play,
+   * or bump the play count of, the one being replaced.
    */
   const armAutoplay = useCallback((setlistId: string | null) => {
     pendingAutoplayRef.current = { setlistId, armedAt: Date.now() };
