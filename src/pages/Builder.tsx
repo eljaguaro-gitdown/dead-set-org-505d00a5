@@ -191,7 +191,6 @@ const Builder = () => {
   const [charlieOpen, setCharlieOpen] = useState(false);
   const [showDateOpen, setShowDateOpen] = useState(false);
   const [showDateInitial, setShowDateInitial] = useState<Date | null>(null);
-  const [initialized, setInitialized] = useState(false);
   const { playSingle, playSetlist: globalPlaySetlist, playingSlot } = useAudioPlayer();
   const [description, setDescription] = useState<string | null>(null);
   const [generatingDescription, setGeneratingDescription] = useState(false);
@@ -338,24 +337,37 @@ const Builder = () => {
     sessionStorage.setItem("deadset-guest-cache", JSON.stringify(payload));
   }, [guestSlots, title, selectedEra, description]);
 
-  // Initialize setlist for authenticated users (create new or load existing)
-  const creatingRef = useRef(false);
-  useEffect(() => {
-    if (!user || initialized || authLoading || showWelcome || hasGuestData) return;
-    if (!paramId && !setlist) {
-      if (creatingRef.current) return;
-      creatingRef.current = true;
-      createSetlist(title, selectedEra).then((created) => {
-        if (created) {
-          navigate(`/builder/${created.id}`, { replace: true });
-        }
-        setInitialized(true);
-        creatingRef.current = false;
-      });
-    } else {
-      setInitialized(true);
+  // There is deliberately no create-on-mount effect for signed-in users.
+  //
+  // An empty builder is a blank page, not a saved setlist. Creating the row on
+  // mount meant everyone who opened /builder and wandered off left a permanent
+  // "Untitled Setlist" with no songs behind — roughly one in three community
+  // setlists, every one untitled and untouched after creation. Existing
+  // setlists still load from paramId inside useSetlist; new ones are created
+  // on the user's first real edit, via ensureSetlist below.
+
+  /**
+   * Create the setlist row on demand, or return the one that already exists.
+   *
+   * Callers must persist their write against the RETURNED row's id rather than
+   * `setlist`, which is still null in the same tick, and should navigate only
+   * after that write lands — routing to /builder/:id triggers a reload that
+   * would otherwise overwrite the optimistic local state with an empty result.
+   *
+   * The in-flight promise is shared so two fast edits can't race into two rows.
+   */
+  const creatingSetlistRef = useRef<ReturnType<typeof createSetlist> | null>(null);
+  const ensureSetlist = useCallback(async () => {
+    if (setlist) return setlist;
+    if (creatingSetlistRef.current) return creatingSetlistRef.current;
+    const pending = createSetlist(title, selectedEra);
+    creatingSetlistRef.current = pending;
+    try {
+      return await pending;
+    } finally {
+      creatingSetlistRef.current = null;
     }
-  }, [user, paramId, initialized, authLoading, setlist, showWelcome, hasGuestData]);
+  }, [setlist, createSetlist, title, selectedEra]);
 
   // Sync title from loaded setlist
   useEffect(() => {
@@ -384,7 +396,7 @@ const Builder = () => {
   }, [title, setlist, updateTitle, isGuestMode]);
 
   const handleSelectSong = useCallback(
-    (song: Song, version?: NotableVersion) => {
+    async (song: Song, version?: NotableVersion) => {
       const currentSlots = isGuestMode ? guestSlots : slots;
       const setSlotCount = currentSlots.filter((s) => s.setNumber === activeSet).length;
       const newSlot: SetlistSlotData = {
@@ -396,18 +408,26 @@ const Builder = () => {
         segueToNext: false,
         notes: "",
       };
-      if (isGuestMode) {
-        setGuestSlots((prev) => [...prev, newSlot]);
-      } else {
-        addSlot(newSlot);
-      }
       toast.success(`Added ${song.title} to ${activeSet === 3 ? "Encore" : `Set ${activeSet}`}`, { duration: 2000 });
       if (isMobile && mobileTab === "songs") {
         setMiniBarPulse(true);
         setTimeout(() => setMiniBarPulse(false), 400);
       }
+
+      if (isGuestMode) {
+        setGuestSlots((prev) => [...prev, newSlot]);
+        return;
+      }
+
+      // First song is what turns a blank builder into a real setlist.
+      const target = await ensureSetlist();
+      if (!target) return; // createSetlist already surfaced the error
+      await addSlot(newSlot, target.id);
+      // Route only after the slot is persisted, so the reload this triggers
+      // reads the song back instead of blanking the optimistic state.
+      if (!paramId) navigate(`/builder/${target.id}`, { replace: true });
     },
-    [slots, guestSlots, activeSet, addSlot, isMobile, isGuestMode]
+    [slots, guestSlots, activeSet, addSlot, isMobile, isGuestMode, mobileTab, ensureSetlist, paramId, navigate]
   );
 
   const handleRemoveSlot = useCallback((id: string) => {
@@ -580,10 +600,6 @@ const Builder = () => {
         await supabase.from("setlist_slots").insert(slotsToInsert);
       }
 
-      // Mark initialized BEFORE clearing guest data to prevent the
-      // init effect from racing and trying to create a duplicate setlist
-      setInitialized(true);
-
       // Clear guest state and cache
       sessionStorage.removeItem("deadset-guest-cache");
       setGuestSlots([]);
@@ -623,14 +639,22 @@ const Builder = () => {
         setGuestSlots(newSlots);
         setMobileTab("setlist");
       } else {
+        // Charlie can be applied to a builder that has no row yet — these
+        // songs are the first edit, so create on demand like any other.
+        const target = await ensureSetlist();
+        if (!target) return;
         for (const slot of slots) {
           await removeSlot(slot.id);
         }
-        await addSongsToCurrentSetlist(suggestion);
-        if (newTitle !== setlist?.title) updateTitle(newTitle);
+        await addSongsToCurrentSetlist(suggestion, target.id);
+        if (newTitle !== target.title) updateTitle(newTitle);
+        if (!paramId) navigate(`/builder/${target.id}`, { replace: true });
       }
     },
-    [isGuestMode, slots, songs, removeSlot, title, setlist, updateTitle]
+    // addSongsToCurrentSetlist is intentionally omitted — it is declared below
+    // this callback, so referencing it here is a temporal-dead-zone error.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [isGuestMode, slots, songs, removeSlot, title, updateTitle, ensureSetlist, paramId, navigate]
   );
 
   const handleCreateNewFromCharlie = useCallback(
@@ -709,7 +733,7 @@ const Builder = () => {
   );
 
   const addSongsToCurrentSetlist = useCallback(
-    async (suggestion: { sets: { setNumber: number; songs: { songId: string; title: string; segueToNext: boolean; notes: string; position: number }[] }[] }) => {
+    async (suggestion: { sets: { setNumber: number; songs: { songId: string; title: string; segueToNext: boolean; notes: string; position: number }[] }[] }, targetSetlistId?: string) => {
       for (const set of suggestion.sets) {
         for (const suggestedSong of set.songs) {
           const song = songs.find((s) => s.id === suggestedSong.songId);
@@ -723,7 +747,7 @@ const Builder = () => {
             segueToNext: suggestedSong.segueToNext,
             notes: suggestedSong.notes || "",
           };
-          await addSlot(newSlot);
+          await addSlot(newSlot, targetSetlistId);
         }
       }
     },
@@ -887,7 +911,9 @@ const Builder = () => {
       setSavedSetlistId(setlist.id);
       setShowCelebration(true);
     } else {
-      toast.success("Setlist is saved!");
+      // Nothing exists to save until the first song lands — saying otherwise
+      // was a lie the moment setlist creation stopped happening on mount.
+      toast.info("Add a song first — it saves itself from there.");
     }
   }, [requireAuth, setlist]);
 

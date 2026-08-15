@@ -226,10 +226,17 @@ export const useSetlist = (user: User | null, setlistId?: string | null) => {
     }
   }, [user]);
 
-  const addSlot = useCallback(async (slot: SetlistSlotData) => {
+  /**
+   * `targetSetlistId` exists for the lazy-creation path: the setlist row is
+   * created on the user's first edit, and `setlist` state hasn't re-rendered
+   * yet at that moment, so the caller passes the id it just created. Without
+   * it the slot would land in local state and never persist.
+   */
+  const addSlot = useCallback(async (slot: SetlistSlotData, targetSetlistId?: string) => {
     setSlots((prev) => [...prev, slot]);
-    if (setlist) {
-      await persistSlot(slot, setlist.id);
+    const setlistId = targetSetlistId ?? setlist?.id;
+    if (setlistId) {
+      await persistSlot(slot, setlistId);
       // Cache song/version for realtime reconstruction
       songsCache.current.set(slot.song.id, slot.song);
       if (slot.version) versionsCache.current.set(slot.version.id, slot.version);
