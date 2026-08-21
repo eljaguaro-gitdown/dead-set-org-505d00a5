@@ -78,8 +78,12 @@ create policy "Published song features are readable by everyone"
 drop policy if exists "Admins manage song features" on public.song_features;
 create policy "Admins manage song features"
   on public.song_features for all
+  to authenticated
   using (public.has_role(auth.uid(), 'admin'))
   with check (public.has_role(auth.uid(), 'admin'));
+-- Without `to authenticated`, anon evaluates this policy on every read and
+-- dies on `permission denied for function has_role` (42501).
+grant execute on function public.has_role(uuid, app_role) to authenticated;
 
 -- RLS alone is not enough for Data API reads — grant explicitly.
 grant select on public.song_features to anon, authenticated;
