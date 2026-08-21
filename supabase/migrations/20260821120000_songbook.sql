@@ -61,6 +61,10 @@ create table if not exists public.song_features (
   stats_source_name text,
   stats_source_url  text,
 
+  -- When true, the landing hero cassette features this issue's benchmark
+  -- version instead of the daily community rotation. Clear to stop; no deploy.
+  spotlight     boolean not null default false,
+
   created_at    timestamptz not null default now(),
   updated_at    timestamptz not null default now()
 );

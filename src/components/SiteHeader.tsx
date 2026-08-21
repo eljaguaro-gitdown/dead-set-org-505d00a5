@@ -158,6 +158,32 @@ const SiteHeader = ({ children, large = false }: SiteHeaderProps) => {
     </button>
   ) : null;
 
+  // The Songbook is new — draw the eye until we decide to stop.
+  // Flip to false to keep the link but drop the NEW treatment.
+  const SONGBOOK_IS_NEW = true;
+
+  const songbookLink = (compact: boolean) => (
+    <button
+      onClick={() => navigate("/songbook")}
+      className={`relative flex items-center gap-1.5 font-mono tracking-wider uppercase transition-colors ${
+        compact
+          ? "text-[10px] tracking-[0.12em] text-dead-gold border border-primary/40 rounded-md px-2.5 py-2 min-h-[44px] hover:bg-primary/10"
+          : "text-xs text-foreground/85 hover:text-primary"
+      }`}
+      title="The Songbook — one song a week, by era"
+    >
+      <span>Songbook</span>
+      {SONGBOOK_IS_NEW && (
+        <span className="relative flex items-center">
+          <span className="font-mono text-[9px] tracking-[0.1em] text-primary-foreground bg-primary rounded-[3px] px-1 py-[1px] leading-none">
+            NEW
+          </span>
+          <span className="absolute inset-0 rounded-[3px] bg-primary animate-ping opacity-40" />
+        </span>
+      )}
+    </button>
+  );
+
   const isRepeatVisitor = typeof window !== "undefined" && !!localStorage.getItem("dead_set_visited");
 
   useEffect(() => {
@@ -179,12 +205,13 @@ const SiteHeader = ({ children, large = false }: SiteHeaderProps) => {
           Dead-Set.Org
         </span>
       </button>
-      {(children || adminLink || messagesLink || nowPlaying || returnToSetlistsPill || cosmicCharlieCta) && (
+      {(
         <>
           {/* Desktop nav */}
           <div className="hidden sm:flex items-center gap-4 sm:gap-6">
             {nowPlaying}
             {!nowPlaying && returnToSetlistsPill}
+            {songbookLink(false)}
             {cosmicCharlieCta}
             <ShareAppButton />
             {user && <AnnouncementsBell variant="desktop" />}
@@ -206,6 +233,7 @@ const SiteHeader = ({ children, large = false }: SiteHeaderProps) => {
           {/* Mobile: persistent top-level actions + hamburger */}
           <div className="sm:hidden flex items-center gap-2">
             {!nowPlaying && returnToSetlistsPill}
+            {songbookLink(true)}
             {cosmicCharlieCta}
             {/* Persistent mobile: Announcements + Messages for logged-in, Sign In for repeat guests */}
             {user ? (
