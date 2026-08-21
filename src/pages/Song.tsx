@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, useSearchParams, Link } from "react-router-dom";
+import { useParams, useSearchParams, Link, Navigate } from "react-router-dom";
 import { Music, ArrowLeft, Play, Share2, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
@@ -28,8 +28,16 @@ interface VersionRow {
   rating: number | null;
 }
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 const SongPage = () => {
   const { songId } = useParams<{ songId: string }>();
+  // /song/:songId takes a UUID. A human-readable slug (e.g. a guessed or
+  // hand-typed /song/shakedown-street) belongs to The Songbook — send it there
+  // instead of dead-ending on "Song not found".
+  if (songId && !UUID_RE.test(songId)) {
+    return <Navigate to={`/songbook/${songId}`} replace />;
+  }
   const [searchParams] = useSearchParams();
   const versionId = searchParams.get("v");
   const fallbackDate = searchParams.get("d");
