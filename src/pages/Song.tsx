@@ -10,6 +10,7 @@ import SiteHeader from "@/components/SiteHeader";
 import { Button } from "@/components/ui/button";
 import FavoriteButton from "@/components/FavoriteButton";
 import { shareSong } from "@/lib/shareSong";
+import SongEraLadder, { type LadderVersion } from "@/components/SongEraLadder";
 import { toast } from "sonner";
 
 interface SongRow {
@@ -66,7 +67,7 @@ const SongPage = () => {
   }, [songId, versionId]);
 
   useEffect(() => {
-    if (autoPlayed || !song) return;
+    if (autoPlayed || !song || !versionId) return;
     setAutoPlayed(true);
     playSingle({
       id: `share-${song.id}-${version?.id ?? "base"}`,
@@ -117,6 +118,28 @@ const SongPage = () => {
     }
   };
 
+  const handleLadderPlay = (v: LadderVersion) => {
+    if (!song) return;
+    playSingle({
+      id: `ladder-${song.id}-${v.id}`,
+      song: { id: song.id, title: song.title },
+      version: {
+        id: v.id,
+        song_id: song.id,
+        show_date: v.show_date ?? "",
+        venue: v.venue,
+        city: v.city,
+        archive_org_url: v.archive_org_url,
+        era_id: v.era_id,
+        rating: null,
+        description: null,
+      } as never,
+      setNumber: 1,
+      position: 0,
+      segueToNext: false,
+    });
+  };
+
   const handleShare = () => {
     if (!song) return;
     void shareSong({
@@ -132,7 +155,7 @@ const SongPage = () => {
   return (
     <PageLayout>
       <SiteHeader />
-      <main className="mx-auto w-full max-w-2xl px-6 py-10">
+      <main className="mx-auto w-full max-w-3xl px-5 md:px-6 py-8 md:py-10">
         <Link to="/" className="inline-flex items-center gap-2 text-sm text-foreground/75 hover:text-foreground mb-6">
           <ArrowLeft className="w-4 h-4" /> Back to Dead-Set.Org
         </Link>
@@ -213,9 +236,14 @@ const SongPage = () => {
               </div>
             </div>
 
-            <p className="text-sm text-foreground/75 pt-4">
-              Open Dead-Set.Org to explore more versions, build setlists, and follow the band's history.
-            </p>
+            <div className="pt-8 mt-2 border-t-2 border-dashed border-primary/30">
+              <SongEraLadder
+                songId={song.id}
+                songTitle={song.title}
+                activeVersionId={version?.id ?? null}
+                onPlay={handleLadderPlay}
+              />
+            </div>
           </article>
         )}
       </main>
