@@ -4,6 +4,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { DISPATCH_002_HTML_B64 } from "./dispatch_002.ts";
 import { DISPATCH_003_HTML } from "./dispatch_003.ts";
+import { DISPATCH_004_HTML } from "./dispatch_004.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -33,6 +34,8 @@ const DISPATCH_HTML: Record<string, string> = {
   "002": decodeB64(DISPATCH_002_HTML_B64),
   "dispatches/003.html": DISPATCH_003_HTML,
   "003": DISPATCH_003_HTML,
+  "dispatches/004.html": DISPATCH_004_HTML,
+  "004": DISPATCH_004_HTML,
 };
 
 // Append UTM params to every absolute URL inside the HTML body, and
