@@ -5,7 +5,7 @@ declare const __BUILD_SHA__: string;
 declare const __BUILD_SHA_SHORT__: string;
 declare const __BUILD_TIME__: string;
 
-const REPO = "eljaguaro-gitdown/dead-set-org";
+const REPO = "eljaguaro-gitdown/dead-set-org-505d00a5";
 const BRANCH = "main";
 
 type Status = "loading" | "in-sync" | "behind" | "ahead" | "error";
