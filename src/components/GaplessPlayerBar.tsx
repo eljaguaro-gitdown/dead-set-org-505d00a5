@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence, useMotionValue, useDragControls } from "framer-motion";
-import { Play, Pause, Volume2, VolumeX, X, Loader2, Cast, ChevronRight, GripHorizontal, SkipForward, SkipBack } from "lucide-react";
+import { Play, Pause, Volume2, VolumeX, X, Loader2, Cast, ChevronRight, GripHorizontal, SkipForward, SkipBack, RotateCw } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import PosterModal from "@/components/PosterModal";
 import { EraMotif, eraNameFromDate } from "@/components/EraArt";
@@ -134,8 +134,30 @@ const GaplessPlayerBar = () => {
           <GripHorizontal className="w-3.5 h-3.5" />
         </button>
 
+        {/* Something went wrong and playback will not resume by itself.
+            Takes precedence over the autoplay prompt — if both are somehow
+            set, the error is the one the listener needs to act on. */}
+        {transport.error ? (
+          <div
+            role="alert"
+            className="absolute inset-x-0 -top-12 mx-auto w-fit max-w-[92vw] px-4 py-2 rounded-[10px] bg-background/95 border border-destructive/50 shadow-lg flex items-center gap-3"
+          >
+            <span className="text-sm text-card-foreground font-body truncate">
+              {transport.error}
+            </span>
+            <button
+              type="button"
+              onClick={transport.retry}
+              className="shrink-0 h-7 px-3 rounded-md border border-primary/50 text-dead-gold font-mono uppercase tracking-[0.14em] text-[11px] hover:bg-primary/10 transition-colors inline-flex items-center gap-1.5"
+            >
+              <RotateCw className="w-3 h-3" />
+              Try again
+            </button>
+          </div>
+        ) : null}
+
         {/* Autoplay blocked — needs one tap to open the audio pipeline */}
-        {transport.autoplayBlocked && (
+        {!transport.error && transport.autoplayBlocked && (
           <button
             type="button"
             onClick={transport.play}
@@ -166,12 +188,12 @@ const GaplessPlayerBar = () => {
           )}
 
           <button
-            onClick={transport.togglePlayPause}
-            disabled={transport.isLoading}
+            onClick={transport.error ? transport.retry : transport.togglePlayPause}
+            disabled={transport.isLoading && !transport.error}
             className="w-12 h-12 rounded-full foil flex items-center justify-center shrink-0 disabled:opacity-50 transition-all hover:brightness-105 max-sm:order-2"
             aria-label={transport.isPlaying ? "Pause" : "Play"}
           >
-            {transport.isLoading ? (
+            {transport.isLoading && !transport.error ? (
               <Loader2 className="w-5 h-5 animate-spin" />
             ) : transport.isPlaying ? (
               <Pause className="w-5 h-5" />

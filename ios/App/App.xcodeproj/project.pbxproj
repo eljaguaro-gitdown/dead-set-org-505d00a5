@@ -13,6 +13,7 @@
 		504EC3081FED79650016851F /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 504EC3071FED79650016851F /* AppDelegate.swift */; };
 		DEAD5E7020260808000000C4 /* MainViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEAD5E7020260808000000C3 /* MainViewController.swift */; };
 		DEAD5E7020260808000000C2 /* NativeAudioPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEAD5E7020260808000000C1 /* NativeAudioPlugin.swift */; };
+		DEAD5E7020260916000000D2 /* DeepLinkPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEAD5E7020260916000000D1 /* DeepLinkPlugin.swift */; };
 		504EC30D1FED79650016851F /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 504EC30B1FED79650016851F /* Main.storyboard */; };
 		504EC30F1FED79650016851F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 504EC30E1FED79650016851F /* Assets.xcassets */; };
 		504EC3121FED79650016851F /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 504EC3101FED79650016851F /* LaunchScreen.storyboard */; };
@@ -27,6 +28,7 @@
 		504EC3071FED79650016851F /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		DEAD5E7020260808000000C3 /* MainViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainViewController.swift; sourceTree = "<group>"; };
 		DEAD5E7020260808000000C1 /* NativeAudioPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeAudioPlugin.swift; sourceTree = "<group>"; };
+		DEAD5E7020260916000000D1 /* DeepLinkPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeepLinkPlugin.swift; sourceTree = "<group>"; };
 		504EC30C1FED79650016851F /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		504EC30E1FED79650016851F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		504EC3111FED79650016851F /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
@@ -72,6 +74,7 @@
 				504EC3071FED79650016851F /* AppDelegate.swift */,
 				DEAD5E7020260808000000C3 /* MainViewController.swift */,
 				DEAD5E7020260808000000C1 /* NativeAudioPlugin.swift */,
+				DEAD5E7020260916000000D1 /* DeepLinkPlugin.swift */,
 				504EC30B1FED79650016851F /* Main.storyboard */,
 				504EC30E1FED79650016851F /* Assets.xcassets */,
 				504EC3101FED79650016851F /* LaunchScreen.storyboard */,
@@ -168,6 +171,7 @@
 				504EC3081FED79650016851F /* AppDelegate.swift in Sources */,
 				DEAD5E7020260808000000C4 /* MainViewController.swift in Sources */,
 				DEAD5E7020260808000000C2 /* NativeAudioPlugin.swift in Sources */,
+				DEAD5E7020260916000000D2 /* DeepLinkPlugin.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

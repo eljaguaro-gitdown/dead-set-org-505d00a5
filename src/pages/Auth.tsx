@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
+import { authRedirectTo } from "@/lib/authRedirect";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { setActiveSessionFlag } from "@/hooks/useAuth";
@@ -50,7 +51,7 @@ const Auth = () => {
     try {
       if (isForgot) {
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: `${window.location.origin}/reset-password`,
+          redirectTo: authRedirectTo("/reset-password"),
         });
         if (error) throw error;
         toast.success("Check your email for a reset link!");
@@ -60,7 +61,7 @@ const Auth = () => {
         const { error, data } = await supabase.auth.signUp({
           email,
           password,
-          options: { emailRedirectTo: window.location.origin },
+          options: { emailRedirectTo: authRedirectTo() },
         });
         if (error) {
           void trackAuthEvent("signup_email_failed", {
@@ -123,7 +124,7 @@ const Auth = () => {
     sessionStorage.setItem("post_oauth_redirect", "1");
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: window.location.origin },
+      options: { redirectTo: authRedirectTo() },
     });
     if (error) toast.error(error.message);
   };
@@ -140,7 +141,7 @@ const Auth = () => {
     sessionStorage.setItem("post_oauth_redirect", "1");
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "apple",
-      options: { redirectTo: window.location.origin },
+      options: { redirectTo: authRedirectTo() },
     });
     if (error) toast.error(error.message);
   };

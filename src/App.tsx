@@ -15,6 +15,7 @@ import AudioDebugPanel from "@/components/AudioDebugPanel";
 import PickHandleModal from "@/components/PickHandleModal";
 import UtmCapture from "@/components/UtmCapture";
 import NewVersionBanner from "@/components/NewVersionBanner";
+import NativeAuthCallback from "@/components/NativeAuthCallback";
 
 // Eagerly load the landing page for fastest FCP/LCP
 import Index from "./pages/Index";
@@ -92,7 +93,8 @@ const App = () => (
 
             <GlobalAudioPlayer />
             <ReturnToSetlistPill />
-            <VisitorTracker />
+            <NativeAuthCallback />
+        <VisitorTracker />
             <PresenceBroadcaster />
             <PwaInstallBanner />
             <AudioDebugPanel />

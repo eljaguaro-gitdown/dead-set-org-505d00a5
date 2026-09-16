@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { authRedirectTo } from "@/lib/authRedirect";
 import { supabase } from "@/integrations/supabase/client";
 import { setActiveSessionFlag } from "@/hooks/useAuth";
 import { lovable } from "@/integrations/lovable/index";
@@ -50,7 +51,7 @@ const AuthModal = ({ open, onOpenChange, onAuthenticated, onBeforeRedirect }: Au
         const { error, data } = await supabase.auth.signUp({
           email,
           password,
-          options: { emailRedirectTo: window.location.origin },
+          options: { emailRedirectTo: authRedirectTo() },
         });
         if (error) throw error;
         // Send welcome email regardless of session
@@ -115,7 +116,7 @@ const AuthModal = ({ open, onOpenChange, onAuthenticated, onBeforeRedirect }: Au
     sessionStorage.setItem("post_oauth_redirect", "1");
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: window.location.origin },
+      options: { redirectTo: authRedirectTo() },
     });
     if (error) toast.error(error.message);
   };
@@ -127,7 +128,7 @@ const AuthModal = ({ open, onOpenChange, onAuthenticated, onBeforeRedirect }: Au
     sessionStorage.setItem("post_oauth_redirect", "1");
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "apple",
-      options: { redirectTo: window.location.origin },
+      options: { redirectTo: authRedirectTo() },
     });
     if (error) toast.error(error.message);
   };
