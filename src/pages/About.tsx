@@ -81,6 +81,17 @@ const About = () => {
           </section>
 
           <section className="space-y-3">
+            <h2 className="font-display text-lg text-foreground">Not affiliated with the band</h2>
+            <p>
+              Dead Set is an independent, non-commercial fan project. It is not affiliated with,
+              endorsed by, or sponsored by the Grateful Dead, Grateful Dead Productions, Rhino
+              Entertainment, or Warner Music Group. All trademarks are the property of their
+              respective owners. Recordings stream from the Internet Archive&rsquo;s Live Music
+              Archive and belong to the tapers and the community that has kept them alive.
+            </p>
+          </section>
+
+          <section className="space-y-3">
             <h2 className="font-display text-lg text-foreground">
               The Grateful Dead's policy on digital distribution
             </h2>

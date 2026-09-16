@@ -51,6 +51,11 @@ tapers, the traders, and the Archive itself.
 The music never stopped. Come dig with us.
 
 Wake. Now. Discover.
+
+Dead Set is an independent fan project. It is not affiliated with, endorsed
+by, or sponsored by the Grateful Dead, Grateful Dead Productions, Rhino
+Entertainment, or Warner Music Group. All trademarks are the property of
+their respective owners.
 ```
 
 ## Keywords (100 chars max, comma-separated)
@@ -80,11 +85,32 @@ Answer honestly. The one flag: vibe labels using cannabis strain names
 answer YES to user-generated content — we have report/block + moderation,
 which is what Apple checks for.
 
+## App Review Information
+
+- **Contact:** Jay Cohen · eljaguaro@gmail.com · phone TBD
+- **Demo account:** eljaguaro+appreview@gmail.com — must be created through the
+  app's email signup AND confirmed before submitting. Blocked until the native
+  redirect fix ships; email confirmation does not currently complete on device.
+- **Notes:** paste `docs/appstore/reviewer-notes.md`.
+
 ## App Privacy (data collection questionnaire)
 
 - **Contact info → Email address:** collected, linked to identity (account)
 - **User content:** setlists/comments, linked to identity
 - **Identifiers → User ID:** yes (account id)
-- **Usage data → Product interaction:** collected, NOT linked to identity
-  (anonymous visitor analytics), not used for tracking
+- **Usage data → Product interaction:** collected, LINKED to identity, not used
+  for tracking. (This says linked because signed-in play/share/page events carry
+  a user_id. It must match PrivacyInfo.xcprivacy, which declares it linked — a
+  manifest that disagrees with this questionnaire is a known rejection trigger.)
+- **Identifiers → Device ID:** collected, linked to identity, not used for
+  tracking. This is `ds_visitor_id`, a random UUID kept in localStorage and sent
+  as the x-visitor-id header. Not an IDFA or IDFV, but persistent, and joined to
+  a user_id in visitor_attribution once someone signs up.
 - **Tracking (ATT):** NO — no cross-app tracking, no ads
+
+> Diagnostics: PrivacyInfo.xcprivacy currently declares CrashData and
+> PerformanceData (unlinked). No crash or performance SDK actually ships — there
+> is no Sentry, Bugsnag, Crashlytics or Datadog anywhere in the project. Over-
+> declaring is not a rejection risk, but it does put "Diagnostics" on the public
+> privacy label for data the app never collects. Decide whether to drop those two
+> entries before submitting.

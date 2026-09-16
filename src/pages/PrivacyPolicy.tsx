@@ -33,8 +33,16 @@ const PrivacyPolicy = () => {
               data you create through the app, including setlists, chat messages, and upvotes.
             </p>
             <p>
-              We automatically collect certain technical information when you visit our site,
-              including your IP address, browser type, device information, and pages visited.
+              When you first visit, we create a random identifier and keep it in your browser
+              so we can count visits and playback without knowing who you are. Alongside it we
+              record the pages you open, which shows and songs you play, and anything you share
+              — plus your browser's user-agent string and the page that referred you. If you
+              later create an account, that identifier is associated with it.
+            </p>
+            <p>
+              Our hosting provider records your IP address in its server logs, as any web host
+              does. We do not store it in our own database and we do not use it to build a
+              profile of you.
             </p>
           </section>
 
