@@ -111,17 +111,23 @@ export const getPresenceChannel = (): RealtimeChannel => {
   if (channel) return channel;
 
   const visitorId = getOrCreateVisitorId();
-  channel = supabase.channel(CHANNEL_NAME, {
+  // Hold a local reference. The subscribe callback below outlives a
+  // reconnect, and if it reads the module-level `channel` it will happily
+  // track onto whichever channel replaced it — adding a second presence
+  // entry under the same key. Same supersede pattern as playSetlistSeqRef.
+  const ch = supabase.channel(CHANNEL_NAME, {
     config: { presence: { key: visitorId } },
   });
+  channel = ch;
 
   setDebug({ status: "SUBSCRIBING" });
 
-  channel
+  ch
     .on("presence", { event: "sync" }, () => notifySync("sync"))
     .on("presence", { event: "join" }, () => notifySync("join"))
     .on("presence", { event: "leave" }, () => notifySync("leave"))
     .subscribe(async (status) => {
+      if (channel !== ch) return; // superseded by a reconnect
       const mapped: PresenceStatus =
         status === "SUBSCRIBED"
           ? "SUBSCRIBED"
@@ -137,12 +143,12 @@ export const getPresenceChannel = (): RealtimeChannel => {
         subscribedAt: status === "SUBSCRIBED" ? Date.now() : debug.subscribedAt,
       });
       if (status === "SUBSCRIBED" && currentPayload) {
-        await channel!.track(currentPayload);
+        await ch.track(currentPayload);
         notifySync("sync");
       }
     });
 
-  return channel;
+  return ch;
 };
 
 /**
@@ -154,12 +160,22 @@ export const getPresenceChannel = (): RealtimeChannel => {
  */
 export const reconnectPresenceChannel = async (): Promise<void> => {
   if (channel) {
+    const dying = channel;
+    channel = null; // stop the old subscribe callback from re-tracking
     try {
-      await supabase.removeChannel(channel);
+      // untrack first: removeChannel resolves locally, so without an explicit
+      // leave the server can still be holding our old presence entry when the
+      // replacement channel tracks under the same key. That is how one idle
+      // admin accumulated 13 tracked presences that deduped to 1 visitor.
+      await dying.untrack();
+    } catch (e) {
+      console.warn("[presenceChannel] untrack failed", e);
+    }
+    try {
+      await supabase.removeChannel(dying);
     } catch (e) {
       console.warn("[presenceChannel] removeChannel failed", e);
     }
-    channel = null;
   }
   setDebug({ status: "IDLE", subscribedAt: null });
   if (currentPayload) {

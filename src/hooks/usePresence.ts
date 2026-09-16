@@ -57,11 +57,19 @@ export const usePresence = () => {
       presenceRef.current = payload;
       await trackPresence(payload);
 
+      // Re-track on every beat, even when the page has not changed. This used
+      // to bail out when the path was unchanged, which meant an idle visitor
+      // emitted no presence traffic at all — and the staleness watchdog below
+      // read that silence as a dead socket and tore down a healthy channel
+      // roughly every 90 seconds. A beat is the liveness signal; without one,
+      // "quiet" and "dead" are indistinguishable.
       heartbeat = setInterval(() => {
         if (!presenceRef.current) return;
         const path = window.location.pathname;
-        if (presenceRef.current.page === path) return; // no-op heartbeat — keep payload stable
-        const updated = { ...presenceRef.current, page: path };
+        const updated =
+          presenceRef.current.page === path
+            ? presenceRef.current
+            : { ...presenceRef.current, page: path };
         presenceRef.current = updated;
         trackPresence(updated);
       }, HEARTBEAT_INTERVAL);
@@ -94,8 +102,9 @@ export const usePresence = () => {
     // If we've been "SUBSCRIBING" for too long without reaching SUBSCRIBED,
     // treat that as stuck and force a reconnect.
     const SUBSCRIBING_STUCK_MS = 15_000;
-    // If we're SUBSCRIBED but haven't seen any sync event in this long, the
-    // socket is likely dead even though status hasn't flipped yet.
+    // If we're SUBSCRIBED but haven't seen any sync event in this long AND
+    // the socket reports itself disconnected, the channel is dead even though
+    // status hasn't flipped yet. Three missed 30s heartbeats.
     const SYNC_STALE_MS = 90_000;
 
     const maybeReconnect = (reason: string) => {
@@ -109,8 +118,15 @@ export const usePresence = () => {
         if (now - since > SUBSCRIBING_STUCK_MS) stale = true;
       }
 
+      // A quiet channel on a live socket is healthy, not dead. Presence sync
+      // only fires on join/leave/track, so on a low-traffic night a single
+      // visitor legitimately sees nothing for minutes. Requiring the socket
+      // to actually be disconnected before declaring staleness is what stops
+      // the watchdog from reconnecting in a loop and leaving ghost entries
+      // behind each time.
       if (!stale && snap.status === "SUBSCRIBED" && snap.lastSyncAt) {
-        if (now - snap.lastSyncAt > SYNC_STALE_MS) stale = true;
+        const quiet = now - snap.lastSyncAt > SYNC_STALE_MS;
+        if (quiet && !supabase.realtime.isConnected()) stale = true;
       }
 
       if (!stale) return;
