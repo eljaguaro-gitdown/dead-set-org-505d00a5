@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { AlertTriangle } from "lucide-react";
 import PageLayout from "@/components/PageLayout";
-import StealYourFace from "@/components/StealYourFace";
+import CharlieMark from "@/components/CharlieMark";
 import { getPostAuthRedirect } from "@/lib/postAuthRedirect";
 import { detectInAppBrowser } from "@/lib/inAppBrowser";
 import { isNativeApp } from "@/lib/nativeApp";
@@ -150,7 +150,7 @@ const Auth = () => {
       <div className="flex-1 flex items-center justify-center px-4">
         <div className="w-full max-w-sm space-y-8">
           <div className="flex flex-col items-center gap-3">
-            <StealYourFace size={80} />
+            <CharlieMark size={80} />
             <h1 className="font-display text-4xl text-primary">Dead-Set.Org</h1>
             <p className="font-hand text-xl text-foreground/85">
               {isForgot ? "We'll get you back in." : isSignUp ? "Come on in. There's room." : "Welcome back."}

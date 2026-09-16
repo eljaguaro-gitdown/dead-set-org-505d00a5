@@ -10,7 +10,7 @@ import { EraBorder } from "@/components/EraArt";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
-import StealYourFace from "@/components/StealYourFace";
+import CharlieMark from "@/components/CharlieMark";
 import DancingBear from "@/components/DancingBear";
 import ShareDropdown from "@/components/ShareDropdown";
 import ShareFlow from "@/components/ShareFlow";
@@ -467,7 +467,7 @@ const SetlistPoster = () => {
     return (
       <div className="grain-overlay min-h-screen bg-background flex items-center justify-center">
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center gap-4">
-          <StealYourFace size={80} />
+          <CharlieMark size={80} />
           <p className="font-body text-foreground/75 animate-pulse">Loading setlist…</p>
         </motion.div>
       </div>
@@ -477,7 +477,7 @@ const SetlistPoster = () => {
   if (!setlist) {
     return (
       <div className="grain-overlay min-h-screen bg-background flex flex-col items-center justify-center gap-4 px-6 text-center">
-        <StealYourFace size={60} />
+        <CharlieMark size={60} />
         <p className="font-display text-2xl text-foreground">Charlie can't find that tape.</p>
         <p className="font-body text-sm text-foreground/75 max-w-sm">
           The link may be broken, or the setlist was taken down. Build your own — every night gets a fresh chance.
@@ -497,7 +497,7 @@ const SetlistPoster = () => {
   if (setlist.is_public === false && !isOwner) {
     return (
       <div className="grain-overlay min-h-screen bg-background flex flex-col items-center justify-center gap-4 px-6 text-center">
-        <StealYourFace size={60} />
+        <CharlieMark size={60} />
         <p className="font-display text-2xl text-foreground">This tape is private.</p>
         <p className="font-body text-sm text-foreground/75 max-w-sm">
           The taper kept this one for themselves. Build your own setlist — Cosmic Charlie's got plenty more reels in the vault.
@@ -608,7 +608,7 @@ const SetlistPoster = () => {
                   animate={{ scale: 1, rotate: 0 }}
                   transition={{ delay: 0.3, duration: 0.5, ease: "easeOut" }}
                 >
-                  <StealYourFace size={50} />
+                  <CharlieMark size={50} />
                 </motion.div>
 
                 {/* "GRATEFUL DEAD" — hand-lettered style */}

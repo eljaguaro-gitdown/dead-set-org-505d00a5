@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import StealYourFace from "@/components/StealYourFace";
+import CharlieMark from "@/components/CharlieMark";
 
 const JoinSetlist = () => {
   const { token } = useParams<{ token: string }>();
@@ -51,7 +51,7 @@ const JoinSetlist = () => {
   return (
     <div className="grain-overlay min-h-screen bg-background flex items-center justify-center">
       <div className="text-center space-y-4">
-        <StealYourFace size={80} />
+        <CharlieMark size={80} />
         {joining && (
           <p className="font-body text-foreground animate-pulse">Joining setlist...</p>
         )}

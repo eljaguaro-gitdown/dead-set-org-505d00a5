@@ -13,6 +13,7 @@ Paste-ready metadata for App Store Connect. Voice per dead-set-field-guide.md
 - **Copyright:** © 2026 Dead Set. Recordings stream from the Internet Archive's Live Music Archive.
 - **Support URL:** https://dead-set.org/about
 - **Marketing URL:** https://dead-set.org
+- **Privacy Policy URL:** https://dead-set.org/privacy
 
 ## Promotional Text (170 chars, editable without review)
 
@@ -55,7 +56,7 @@ Wake. Now. Discover.
 ## Keywords (100 chars max, comma-separated)
 
 ```
-grateful dead,setlist,jerry garcia,live music,tapes,concert,archive,jam,bootleg,deadhead
+grateful dead,setlist,jerry garcia,live music,tapes,concert,archive,jam,taper,deadhead
 ```
 (97 chars)
 

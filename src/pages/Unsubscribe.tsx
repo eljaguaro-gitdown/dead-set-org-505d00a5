@@ -3,7 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import PageLayout from "@/components/PageLayout";
 import { Button } from "@/components/ui/button";
-import StealYourFace from "@/components/StealYourFace";
+import CharlieMark from "@/components/CharlieMark";
 
 type Status = "loading" | "valid" | "already" | "invalid" | "success" | "error";
 
@@ -76,7 +76,7 @@ const Unsubscribe = () => {
     <PageLayout>
       <div className="flex-1 flex items-center justify-center px-4">
         <div className="w-full max-w-sm text-center space-y-6">
-          <StealYourFace size={64} />
+          <CharlieMark size={64} />
           {status === "loading" && (
             <p className="font-body text-foreground/75">Checking your request…</p>
           )}
