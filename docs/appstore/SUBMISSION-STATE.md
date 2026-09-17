@@ -22,17 +22,23 @@ doc is worse than no doc, because it will be believed.
 | | |
 |---|---|
 | App Store Connect | Record exists — **Apple ID 6799269210**, "Dead Set: Wake Now Discover", iOS App 1.0 at *Prepare for Submission* |
-| Builds | **19 uploaded, all Complete / Ready to Submit.** Build 19 is from 2026-08-21 |
+| Builds | **20 uploaded.** Builds 1–19 are from 2026-08-07 to 2026-08-21. **Build 21 was uploaded 2026-09-17 by run 20** and is the first build carrying the PR #35 fixes |
 | Build pipeline | Works, and it is CI. **All 19 builds came from `ios-testflight.yml`** |
-| CI workflow | `.github/workflows/ios-testflight.yml`, `workflow_dispatch`, **run 19 times, every run succeeded**, 2026-08-07 to 2026-08-21 |
+| CI workflow | `.github/workflows/ios-testflight.yml`, `workflow_dispatch`, **run 20 times, every run succeeded**, 2026-08-07 to 2026-09-17 |
 | Code | All submission-blocking fixes merged to `main` in PR #35 (5 commits) |
 
-**The critical fact: every existing build predates the fixes.** Build 19 still
+**Builds 1–19 all predate the fixes — do not submit any of them.** Build 19 still
 renders Steal Your Face in the header and still has the broken native auth
 redirect. Submitting it would ship the IP exposure that PR #35 removed, and
 screenshots taken from it would put a Grateful Dead Productions mark on the
-store page. A new build is required — not to prove the pipeline works, but to
-carry the code.
+store page.
+
+**Build 21 is the first submittable build.** Uploaded 2026-09-17 by run 20 of
+the CI workflow, from `23cc133`, whose app code is identical to `main` at
+`e47817d`. The run's archive, export and upload steps all succeeded and the
+log ends in `Upload succeeded`. Its App Store Connect processing state was not
+confirmed at the time of writing — check that it reached *Ready to Submit*
+before building anything else on it.
 
 ## What PR #35 fixed
 
@@ -60,11 +66,12 @@ carry the code.
 
 ## What is left, in dependency order
 
-1. **Run the CI workflow** → uploads build 21. Everything else waits on this.
-   The next run is run_number 20 and `BUILD_NUMBER_OFFSET` is 1, so it uploads
-   build 21. (The offset was briefly 20, set on the mistaken belief that Xcode
-   had uploaded builds 1–19 and this workflow had never run; that would have
-   uploaded build 40. Corrected 2026-09-17 — see `CLAUDE.md`.)
+1. ~~**Run the CI workflow** → uploads build 21.~~ **Done 2026-09-17** (run 20,
+   `Upload succeeded`). The offset was briefly 20, set on the mistaken belief
+   that Xcode had uploaded builds 1–19 and this workflow had never run — that
+   would have uploaded build 40. Corrected to 1 before the run; see `CLAUDE.md`.
+   **The offset fix is still only on `claude/wonderful-hawking-qav0uh` (PR #36)
+   — merge it, or the next run dispatched from `main` reverts to offset 20.**
 2. **Screenshots** — iPhone **6.5"** only (1242x2688, 2688x1242, 1284x2778,
    2778x1284). ASC uses only the first three on the install sheet. Must come
    from build 21 or later so Cosmic Charlie appears, not Steal Your Face.
