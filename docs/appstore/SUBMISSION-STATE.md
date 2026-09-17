@@ -6,7 +6,8 @@ Connect, Lovable Cloud, and the Supabase auth config, and a session that reads
 only the repo will draw confident wrong conclusions. That happened repeatedly on
 2026-09-17; the corrections are banked in `CLAUDE.md`.
 
-**Last updated:** 2026-09-17, after merging PR #35.
+**Last updated:** 2026-09-17, after merging PR #35 and correcting this doc's
+claims about the build pipeline.
 
 Paths beginning `claude/` below are docs in the **Dead Set Claude project**, not
 files in this repo — don't go looking for them on disk. Everything else is
@@ -22,8 +23,8 @@ doc is worse than no doc, because it will be believed.
 |---|---|
 | App Store Connect | Record exists — **Apple ID 6799269210**, "Dead Set: Wake Now Discover", iOS App 1.0 at *Prepare for Submission* |
 | Builds | **19 uploaded, all Complete / Ready to Submit.** Build 19 is from 2026-08-21 |
-| Build pipeline | Works. Builds 13–19 were uploaded from Xcode, not from CI |
-| CI workflow | `.github/workflows/ios-testflight.yml`, `workflow_dispatch`, **never run** |
+| Build pipeline | Works, and it is CI. **All 19 builds came from `ios-testflight.yml`** |
+| CI workflow | `.github/workflows/ios-testflight.yml`, `workflow_dispatch`, **run 19 times, every run succeeded**, 2026-08-07 to 2026-08-21 |
 | Code | All submission-blocking fixes merged to `main` in PR #35 (5 commits) |
 
 **The critical fact: every existing build predates the fixes.** Build 19 still
@@ -60,8 +61,10 @@ carry the code.
 ## What is left, in dependency order
 
 1. **Run the CI workflow** → uploads build 21. Everything else waits on this.
-   `BUILD_NUMBER_OFFSET` in the workflow exists because run_number would
-   otherwise collide with the 19 existing builds.
+   The next run is run_number 20 and `BUILD_NUMBER_OFFSET` is 1, so it uploads
+   build 21. (The offset was briefly 20, set on the mistaken belief that Xcode
+   had uploaded builds 1–19 and this workflow had never run; that would have
+   uploaded build 40. Corrected 2026-09-17 — see `CLAUDE.md`.)
 2. **Screenshots** — iPhone **6.5"** only (1242x2688, 2688x1242, 1284x2778,
    2778x1284). ASC uses only the first three on the install sheet. Must come
    from build 21 or later so Cosmic Charlie appears, not Steal Your Face.
