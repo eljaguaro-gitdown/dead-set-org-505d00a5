@@ -35,10 +35,17 @@ store page.
 
 **Build 21 is the first submittable build.** Uploaded 2026-09-17 by run 20 of
 the CI workflow, from `23cc133`, whose app code is identical to `main` at
-`e47817d`. The run's archive, export and upload steps all succeeded and the
-log ends in `Upload succeeded`. Its App Store Connect processing state was not
-confirmed at the time of writing — check that it reached *Ready to Submit*
-before building anything else on it.
+`e47817d`. Confirmed in App Store Connect as **1.0 (21), created Sep 17 2026
+4:55 PM**, *Processing* at the time of writing — check it reached *Ready to
+Submit* before building anything else on it. While a build is Processing, ASC
+shows a placeholder tile instead of the app icon; that is not a missing asset.
+
+The ASC timestamps also settle where the earlier builds came from. Each build's
+creation time is one workflow-duration after its run started: run 18 (Aug 9
+3:40 PM local) → build 18 at 3:43 PM, run 19 (Aug 21 2:49 AM) → build 19 at
+2:53 AM, run 20 (Sep 17 4:52 PM) → build 21 at 4:55 PM. The icons agree too:
+builds 13–17 carry the old mark, 18 onward the Cosmic Charlie icon that landed
+Aug 9, the day build 18 was created.
 
 ## What PR #35 fixed
 
