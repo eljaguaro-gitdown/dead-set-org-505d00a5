@@ -120,6 +120,24 @@
       </array>
     </dict>
 
+    <!-- Device ID — ds_visitor_id, a random UUID minted in localStorage on first
+         visit and sent as the x-visitor-id header. Not an IDFA or IDFV and never
+         used for tracking, but it is persistent and it is joined to a user_id in
+         visitor_attribution once someone signs up, so it is declared linked. -->
+    <dict>
+      <key>NSPrivacyCollectedDataType</key>
+      <string>NSPrivacyCollectedDataTypeDeviceID</string>
+      <key>NSPrivacyCollectedDataTypeLinked</key>
+      <true/>
+      <key>NSPrivacyCollectedDataTypeTracking</key>
+      <false/>
+      <key>NSPrivacyCollectedDataTypePurposes</key>
+      <array>
+        <string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+        <string>NSPrivacyCollectedDataTypePurposeAnalytics</string>
+      </array>
+    </dict>
+
     <!-- Product Interaction — plays, favorites, upvotes, presence (analytics) -->
     <dict>
       <key>NSPrivacyCollectedDataType</key>

@@ -109,6 +109,16 @@ export interface PlayerTransport {
   isLoading: boolean;
   /** True when the browser refused autoplay — show the "tap to start" state. */
   autoplayBlocked: boolean;
+  /**
+   * Set when playback cannot continue on its own and the bar should say so.
+   * Until this existed, every failure on the gapless path was either a toast
+   * that had already faded or a spinner that never stopped — all of the
+   * recovery UI lived in AudioPlayer.tsx, which never mounts under this
+   * engine. Human copy: it goes straight on screen.
+   */
+  error: string | null;
+  /** Re-resolve and re-anchor the current slot after an error. */
+  retry: () => void;
   play: () => void;
   pause: () => void;
   togglePlayPause: () => void;
@@ -231,13 +241,49 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     playbackType?: ProgressSnapshot["playbackType"];
   }>({ slotId: null, currentTime: 0, duration: 0 });
   const consecutiveErrorsRef = useRef(0);
+  /** advancePlaylist is defined below playSingle; reach it through a ref. */
+  const advancePlaylistRef = useRef<(dir: number) => Promise<void>>(async () => {});
   /** Set by transport.next/previous/gotoTrack so engine advances they cause
    *  aren't counted as gapless segues in instrumentation. */
   const userJumpRef = useRef(false);
-  const [transportState, setTransportState] = useState({
+  const [transportState, setTransportState] = useState<{
+    isPlaying: boolean;
+    autoplayBlocked: boolean;
+    /**
+     * Scoped to the slot it belongs to. An unscoped error had to be cleared by
+     * an effect watching playingSlot.id, and that effect could run in the same
+     * flush as the setState that raised the error — silently wiping it. Tying
+     * it to a slot means a stale error simply stops being exposed.
+     */
+    error: { slotId: string | null; message: string } | null;
+  }>({
     isPlaying: false,
     autoplayBlocked: false,
+    error: null,
   });
+
+  /** How long a slot may sit unresolved before we stop pretending it is loading. */
+  const RESOLVE_TIMEOUT_MS = 25_000;
+  /** How long playback may report the same position before we call it stalled. */
+  const STALL_TIMEOUT_MS = 25_000;
+
+  /**
+   * @param forSlotId pass explicitly whenever the caller knows which slot the
+   * error belongs to. stateRef is synced in an effect, so inside the same
+   * render flush that set a new playingSlot it still holds the previous one —
+   * an error scoped from it would be filed against the wrong slot and never
+   * shown.
+   */
+  const setPlaybackError = useCallback((message: string, forSlotId?: string | null) => {
+    setTransportState((prev) => {
+      const slotId = forSlotId !== undefined ? forSlotId : stateRef.current.playingSlot?.id ?? null;
+      if (prev.error?.message === message && prev.error?.slotId === slotId) return prev;
+      return { ...prev, error: { slotId, message } };
+    });
+  }, []);
+  const clearPlaybackError = useCallback(() => {
+    setTransportState((prev) => (prev.error === null ? prev : { ...prev, error: null }));
+  }, []);
 
   /** Finalize the outgoing play event as "finished" when it actually ran to the end. */
   const maybeFinalizeFinished = (outgoingSlotId: string | null) => {
@@ -397,6 +443,22 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     // Resolve direct track URL in background if missing
     if (!slot.directTrackUrl && slot.version?.archive_org_url) {
       const resolved = await resolveSlot(slot);
+      // resolveSlot returns the slot UNCHANGED when it cannot find the song
+      // inside that recording. Under the legacy player that was survivable —
+      // AudioPlayer fell back to the whole recording. On the gapless path
+      // nothing rescues it, so isLoading (defined as !directTrackUrl) stayed
+      // true and the bar span forever. Treat it as the determinate failure
+      // it is, straight away rather than after the watchdog below.
+      if (resolved && !resolved.directTrackUrl && engineMode === "gapless") {
+        audioDebug.log("context", "unplayable slot — no direct track", { song: slot.song.title }, "error");
+        if (playlistMode) {
+          toast.info(`Skipping ${slot.song.title} — not on this tape`);
+          void advancePlaylistRef.current(1);
+        } else {
+          setPlaybackError("That song isn't on this tape.", slot.id);
+        }
+        return;
+      }
       if (resolved) {
         audioDebug.setDirectTrackUrl(resolved.directTrackUrl ?? null);
         audioDebug.log("context", "resolved direct track", { url: resolved.directTrackUrl });
@@ -431,7 +493,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
         setState({ playingSlot: null, playlistMode: false, playlistIndex: 0, playlistSlots: [], activeSetlistId: null });
       }
     }
-  }, [engineMode, getEngine]);
+  }, [engineMode, getEngine, setPlaybackError]);
 
   /** Resolve a slot: ensure it has an archive URL and directTrackUrl */
   const resolveSlot = async (slot: PlayableSlot): Promise<PlayableSlot | null> => {
@@ -546,7 +608,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     });
   }, [engineMode, getEngine]);
 
-  const advancePlaylist = useCallback(async (dir: number) => {
+  const advancePlaylist: (dir: number) => Promise<void> = useCallback(async (dir: number) => {
     const { playlistIndex, playlistSlots } = stateRef.current;
     engineSlotIdRef.current = null; // user-driven jump — the sync effect re-anchors the queue
     audioDebug.log("context", "advancePlaylist", { dir, fromIndex: playlistIndex });
@@ -636,7 +698,9 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
       if (st.playlistMode && consecutiveErrorsRef.current <= 3) {
         void advancePlaylist(1); // keep the queue moving past a broken track
       } else {
-        toast.error("Couldn't play this track");
+        // Previously just a toast, which left a dead bar sitting on a track
+        // that would never play and no way back other than closing it.
+        setPlaybackError("That tape won't play. The source may be offline.");
       }
     },
     onPlayBlocked: () => {
@@ -725,6 +789,59 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [engineMode, state.playingSlot?.id, state.playingSlot?.directTrackUrl, getEngine, resolveAndAppendUpcoming]);
+
+  // Keep the forward ref pointed at the live advancePlaylist.
+  useEffect(() => {
+    advancePlaylistRef.current = advancePlaylist;
+  }, [advancePlaylist]);
+
+  // A new song starts its error budget over. The error itself needs no
+  // clearing here — it is scoped to a slot id and simply stops being exposed.
+  useEffect(() => {
+    consecutiveErrorsRef.current = 0;
+  }, [state.playingSlot?.id]);
+
+  // Resolution watchdog. The determinate case is handled inline in playSingle,
+  // but none of the archive.org fetches carry an AbortController, so a hung
+  // request would otherwise spin the bar indefinitely. This is the net.
+  useEffect(() => {
+    if (engineMode !== "gapless") return;
+    const slot = state.playingSlot;
+    if (!slot || slot.directTrackUrl) return;
+    const timer = window.setTimeout(() => {
+      if (stateRef.current.playingSlot?.id !== slot.id) return;
+      if (stateRef.current.playingSlot?.directTrackUrl) return;
+      audioDebug.log("context", "resolution timed out", { song: slot.song.title }, "error");
+      setPlaybackError("Still looking for that tape. Archive.org may be slow right now.", slot.id);
+    }, RESOLVE_TIMEOUT_MS);
+    return () => window.clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [engineMode, state.playingSlot?.id, state.playingSlot?.directTrackUrl, setPlaybackError]);
+
+  // Stall watchdog — the gapless counterpart to the 25s detector that lives in
+  // AudioPlayer.tsx and never runs on this path. Deliberately passive: it
+  // surfaces a retry and never pauses or tears down playback, because a false
+  // positive that killed a good stream would be worse than a missed stall.
+  useEffect(() => {
+    if (engineMode !== "gapless") return;
+    if (!transportState.isPlaying) return;
+    let lastTime = lastProgressRef.current.currentTime;
+    let lastMovedAt = Date.now();
+    const id = window.setInterval(() => {
+      const p = lastProgressRef.current;
+      if (p.currentTime !== lastTime) {
+        lastTime = p.currentTime;
+        lastMovedAt = Date.now();
+        return;
+      }
+      // Sitting at the very end is an ending, not a stall.
+      if (p.duration > 0 && p.currentTime / p.duration >= 0.99) return;
+      if (Date.now() - lastMovedAt < STALL_TIMEOUT_MS) return;
+      audioDebug.log("context", "playback stalled", { at: p.currentTime }, "warn");
+      setPlaybackError("The tape stopped feeding. Check your connection.");
+    }, 5_000);
+    return () => window.clearInterval(id);
+  }, [engineMode, transportState.isPlaying, state.playingSlot?.id, setPlaybackError]);
 
   // Tear the engine down with the provider.
   useEffect(() => {
@@ -879,6 +996,30 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     isPlaying: engineMode === "gapless" ? transportState.isPlaying : false,
     isLoading: !!state.playingSlot && !state.playingSlot.directTrackUrl,
     autoplayBlocked: transportState.autoplayBlocked,
+    error:
+      transportState.error && transportState.error.slotId === (state.playingSlot?.id ?? null)
+        ? transportState.error.message
+        : null,
+    retry: () => {
+      const slot = stateRef.current.playingSlot;
+      if (!slot) return;
+      clearPlaybackError();
+      consecutiveErrorsRef.current = 0;
+      engineSlotIdRef.current = null; // force the sync effect to re-anchor
+      resolveGenRef.current++;
+      audioDebug.log("context", "retry requested", { song: slot.song.title });
+      // Drop the resolved URL so playSingle runs the full resolution path
+      // again rather than re-loading the same dead address.
+      void playSingle(
+        { ...slot, directTrackUrl: null },
+        stateRef.current.playlistMode
+          ? {
+              slots: stateRef.current.playlistSlots,
+              setlistId: stateRef.current.activeSetlistId,
+            }
+          : undefined,
+      );
+    },
     play: () => {
       if (engineMode !== "gapless") return;
       setTransportState((prev) => (prev.autoplayBlocked ? { ...prev, autoplayBlocked: false } : prev));

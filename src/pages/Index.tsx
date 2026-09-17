@@ -502,6 +502,11 @@ const Index = () => {
               <span>·</span>
               <Link to="/terms" className="hover:text-foreground transition-colors">Terms</Link>
             </div>
+            <p className="mt-4 text-[11px] leading-relaxed text-muted-foreground/80 max-w-2xl mx-auto text-center">
+              An independent, non-commercial fan project. Not affiliated with, endorsed by, or
+              sponsored by the Grateful Dead, Grateful Dead Productions, Rhino Entertainment, or
+              Warner Music Group. All trademarks are the property of their respective owners.
+            </p>
           </div>
       </footer>
     </PageLayout>

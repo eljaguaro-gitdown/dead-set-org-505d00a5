@@ -9,7 +9,7 @@ import PageLayout from "@/components/PageLayout";
 import { EraMotif } from "@/components/EraArt";
 import SiteHeader from "@/components/SiteHeader";
 import DancingBearButton from "@/components/DancingBearButton";
-import StealYourFace from "@/components/StealYourFace";
+import CharlieMark from "@/components/CharlieMark";
 import EraTooltip from "@/components/EraTooltip";
 import FavoriteButton from "@/components/FavoriteButton";
 import PlaySetlistButton from "@/components/PlaySetlistButton";
@@ -354,7 +354,7 @@ const Browse = () => {
             </div>
           ) : filtered.length === 0 ? (
             <div className="text-center py-20">
-              <StealYourFace size={60} />
+              <CharlieMark size={60} />
               <p className="font-display text-xl text-foreground/75 mt-4">No setlists found</p>
               <p className="font-body text-sm text-foreground/75 mt-2">
                 Be the first to create and share one!

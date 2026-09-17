@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
+import { authRedirectTo } from "@/lib/authRedirect";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { setActiveSessionFlag } from "@/hooks/useAuth";
@@ -9,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { AlertTriangle } from "lucide-react";
 import PageLayout from "@/components/PageLayout";
-import StealYourFace from "@/components/StealYourFace";
+import CharlieMark from "@/components/CharlieMark";
 import { getPostAuthRedirect } from "@/lib/postAuthRedirect";
 import { detectInAppBrowser } from "@/lib/inAppBrowser";
 import { isNativeApp } from "@/lib/nativeApp";
@@ -50,7 +51,7 @@ const Auth = () => {
     try {
       if (isForgot) {
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: `${window.location.origin}/reset-password`,
+          redirectTo: authRedirectTo("/reset-password"),
         });
         if (error) throw error;
         toast.success("Check your email for a reset link!");
@@ -60,7 +61,7 @@ const Auth = () => {
         const { error, data } = await supabase.auth.signUp({
           email,
           password,
-          options: { emailRedirectTo: window.location.origin },
+          options: { emailRedirectTo: authRedirectTo() },
         });
         if (error) {
           void trackAuthEvent("signup_email_failed", {
@@ -123,7 +124,7 @@ const Auth = () => {
     sessionStorage.setItem("post_oauth_redirect", "1");
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: window.location.origin },
+      options: { redirectTo: authRedirectTo() },
     });
     if (error) toast.error(error.message);
   };
@@ -140,7 +141,7 @@ const Auth = () => {
     sessionStorage.setItem("post_oauth_redirect", "1");
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "apple",
-      options: { redirectTo: window.location.origin },
+      options: { redirectTo: authRedirectTo() },
     });
     if (error) toast.error(error.message);
   };
@@ -150,7 +151,7 @@ const Auth = () => {
       <div className="flex-1 flex items-center justify-center px-4">
         <div className="w-full max-w-sm space-y-8">
           <div className="flex flex-col items-center gap-3">
-            <StealYourFace size={80} />
+            <CharlieMark size={80} />
             <h1 className="font-display text-4xl text-primary">Dead-Set.Org</h1>
             <p className="font-hand text-xl text-foreground/85">
               {isForgot ? "We'll get you back in." : isSignUp ? "Come on in. There's room." : "Welcome back."}

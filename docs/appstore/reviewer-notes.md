@@ -17,14 +17,27 @@ corresponding recordings. The app is free, contains no ads, no purchases,
 and no monetization of any kind.
 
 AUDIO CONTENT & RIGHTS (guideline 5.2)
+Dead Set is an independent, non-commercial fan project. It is not
+affiliated with, endorsed by, or sponsored by the Grateful Dead, Grateful
+Dead Productions, Rhino Entertainment, or Warner Music Group. All
+trademarks are the property of their respective owners. This is stated in
+the app's footer and on https://dead-set.org/about.
+
 All audio streams directly from the Internet Archive's Live Music Archive
 (archive.org), the long-standing public repository of Grateful Dead concert
 recordings. The Grateful Dead explicitly permitted audience taping and
 free trading of their live performances throughout their career, and the
 band's non-commercial trading policy is honored: we host no audio
 ourselves, we stream from the Archive's public endpoints, we carry no
-advertising, and we sell nothing. Our rights posture — including the
-Grateful Dead's posted policy — is documented in-app and at
+advertising, and we sell nothing.
+
+The Archive distinguishes audience tapes, which it offers as downloads,
+from soundboards, which the band asked it to make available for streaming
+only. Dead Set offers no download anywhere in the app, and on items the
+Archive marks access-restricted or stream_only it plays the Archive's own
+MP3 stream and never requests the restricted original — if such an item
+has no streamable derivative, the app skips it rather than reaching for
+the file. The band's posted policy is reproduced verbatim in-app at
 https://dead-set.org/about.
 
 Precedent: this is the same content source and rights model as Relisten

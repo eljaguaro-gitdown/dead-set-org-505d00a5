@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Star, ChevronRight } from "lucide-react";
-import StealYourFace from "@/components/StealYourFace";
+import CharlieMark from "@/components/CharlieMark";
 import CosmicCharlieAvatar from "@/components/CosmicCharlieAvatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -391,7 +391,7 @@ const CosmicCharlieWelcome = ({ eras, onGenerated, onSkip }: CosmicCharlieWelcom
                     transition={{ duration: 0.25, ease: "easeInOut" }}
                     className="w-full flex flex-col items-center gap-6"
                   >
-                    <StealYourFace size={72} />
+                    <CharlieMark size={72} />
 
                     <div className="text-center space-y-2">
                       <h1 className="font-display text-2xl sm:text-3xl text-primary leading-tight">

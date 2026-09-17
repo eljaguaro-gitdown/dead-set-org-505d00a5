@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import PageLayout from "@/components/PageLayout";
-import StealYourFace from "@/components/StealYourFace";
+import CharlieMark from "@/components/CharlieMark";
 
 
 const ResetPassword = () => {
@@ -60,7 +60,7 @@ const ResetPassword = () => {
       <div className="flex-1 flex items-center justify-center px-4">
         <div className="w-full max-w-sm space-y-8">
           <div className="flex flex-col items-center gap-3">
-            <StealYourFace size={80} />
+            <CharlieMark size={80} />
             <h1 className="font-display text-4xl text-primary">Dead-Set.Org</h1>
             <p className="font-hand text-xl text-foreground/85">
               Pick a new password.

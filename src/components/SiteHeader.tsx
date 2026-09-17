@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Menu, Shield, MessageCircle, LogOut, User, Download, ListMusic, Home, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
-import StealYourFace from "@/components/StealYourFace";
+import CharlieMark from "@/components/CharlieMark";
 import ShareAppButton from "@/components/ShareAppButton";
 import AnnouncementsBell from "@/components/AnnouncementsBell";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -196,7 +196,7 @@ const SiteHeader = ({ children, large = false }: SiteHeaderProps) => {
         onClick={() => navigate("/")}
         className="flex items-center gap-3 sm:gap-4 group"
       >
-        <StealYourFace size={large ? (isMobile ? 36 : 48) : (isMobile ? 28 : 40)} />
+        <CharlieMark size={large ? (isMobile ? 36 : 48) : (isMobile ? 28 : 40)} />
         <span
           className={`font-display text-foreground tracking-tight transition-colors group-hover:text-primary ${
             large ? "text-xl sm:text-2xl md:text-3xl" : "text-lg sm:text-xl md:text-2xl"

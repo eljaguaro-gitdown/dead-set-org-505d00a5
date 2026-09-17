@@ -29,6 +29,15 @@ interface ActiveEvent {
 
 let active: ActiveEvent | null = null;
 
+// Starts are serialized through this chain. startPlayEvent does async work
+// (auth lookup, then insert) between checking `active` and setting it, so two
+// starts firing in the same tick both saw active === null, both inserted, and
+// the first row was orphaned at ended_reason='in_progress' forever — 19 such
+// rows in production, including two inserted 7ms apart. Chaining means the
+// second start waits for the first to own `active`, then finalizes it as
+// skipped through the normal path.
+let startChain: Promise<void> = Promise.resolve();
+
 const getVisitorId = (): string | null => {
   try { return localStorage.getItem("ds_visitor_id"); } catch { return null; }
 };
@@ -45,6 +54,7 @@ const isCompleted = (listenedMs: number, trackDurationMs: number | null): boolea
 
 /** Begin tracking a new song. Auto-finalizes any prior event as "skipped". */
 export const startPlayEvent = async (input: PlayEventStartInput): Promise<void> => {
+  const run = async (): Promise<void> => {
   if (active) {
     await finalizePlayEvent("skipped");
   }
@@ -87,6 +97,10 @@ export const startPlayEvent = async (input: PlayEventStartInput): Promise<void> 
   } catch {
     // Analytics never blocks UX
   }
+  };
+
+  startChain = startChain.then(run, run);
+  return startChain;
 };
 
 /** Pause accounting (audio paused mid-track). */
@@ -144,10 +158,19 @@ if (typeof window !== "undefined") {
   };
   window.addEventListener("pagehide", flushOnExit);
   window.addEventListener("beforeunload", flushOnExit);
-  document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "hidden" && active) {
-      // Persist accumulated time but keep the row open in case they return.
-      pausePlayEvent();
-    }
-  });
+  // NOTE: deliberately no visibilitychange handler here.
+  //
+  // There used to be one that called pausePlayEvent() when the tab went
+  // hidden. Hiding the tab does not stop the tape — background audio is the
+  // whole point of the Media Session work — and nothing called
+  // resumePlayEvent() on the way back, because the audio element never
+  // emitted a pause/play pair. So backgrounding once froze runStartedAt at
+  // null and the listen clock stayed dead for the rest of the track.
+  //
+  // That is what produced 92 rows with ended_reason='finished' whose
+  // duration_played_ms averaged 33% of the wall-clock time the row was open
+  // (567s open against a 438s average track — the song really did play out).
+  // Real pauses already arrive through the audio element's pause event,
+  // togglePlay, the Media Session handlers and the gapless engine's
+  // onPlayStateChanged. Tab visibility is not a playback signal.
 }

@@ -103,6 +103,46 @@ export { matchScore, normalize };
  * within that specific recording. This avoids the generic search which can
  * return tracks from entirely different shows.
  */
+/**
+ * archive.org can hang rather than fail. Nothing here carried an
+ * AbortController, so a stalled request left the player's isLoading state
+ * (defined as !directTrackUrl) true forever. The player now has a watchdog,
+ * but failing fast at the source is better than being rescued at 25s.
+ */
+const ARCHIVE_TIMEOUT_MS = 12_000;
+
+async function fetchArchive(url: string): Promise<Response> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), ARCHIVE_TIMEOUT_MS);
+  try {
+    return await fetch(url, { signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/**
+ * True when the band has asked the Archive to stream an item rather than
+ * serve it as files. Soundboards carry this; audience tapes generally do not.
+ *
+ * Per archive.org's own Grateful Dead collection page: "Audience-made Grateful
+ * Dead concert recordings are available as downloads while available
+ * soundboards are accessible in streaming format only."
+ *
+ * We only ever stream, and MP3 derivatives are what archive.org's own player
+ * streams, so this is not about withholding playback — it is about never
+ * reaching for a restricted lossless ORIGINAL on those items. Doing so earns a
+ * 403 (feeding the error rate) and is the one place the App Review notes'
+ * claim that the band's policy is honored could be shown false.
+ */
+function isRestrictedItem(meta: { metadata?: Record<string, unknown> } | null): boolean {
+  const md: Record<string, unknown> = meta?.metadata ?? {};
+  if (String(md["access-restricted-item"]).toLowerCase() === "true") return true;
+  const collection = md.collection;
+  const list = Array.isArray(collection) ? collection : collection ? [collection] : [];
+  return list.some((c: unknown) => String(c).toLowerCase() === "stream_only");
+}
+
 function isAudioFile(f: any): boolean {
   const fmt = f.format || "";
   const name = (f.name || "").toLowerCase();
@@ -121,8 +161,26 @@ function isMp3(f: any): boolean {
   return f.format === "VBR MP3" || (f.name || "").toLowerCase().endsWith(".mp3");
 }
 
-function findBestTrack(files: any[], songTitle: string): { file: any; score: number } | null {
-  const audioFiles = files.filter(isAudioFile);
+/** Lossy derivatives archive.org generates for streaming — never the original. */
+function isDerivative(f: { name?: string; format?: string }): boolean {
+  const name = (f.name || "").toLowerCase();
+  return (
+    f.format === "VBR MP3" ||
+    f.format === "Ogg Vorbis" ||
+    name.endsWith(".mp3") ||
+    name.endsWith(".ogg")
+  );
+}
+
+function findBestTrack(
+  files: any[],
+  songTitle: string,
+  opts: { restricted?: boolean } = {},
+): { file: any; score: number } | null {
+  // On a restricted item only derivatives are eligible. Elsewhere FLAC stays
+  // a last resort — it loses to MP3 on ties below, and AVPlayer cannot stream
+  // it on iOS anyway, but it is better than nothing on the web.
+  const audioFiles = files.filter(opts.restricted ? isDerivative : isAudioFile);
   let bestScore = 0;
   let bestFile: any = null;
   for (const f of audioFiles) {
@@ -143,7 +201,9 @@ function findBestTrack(files: any[], songTitle: string): { file: any; score: num
  * Try fetching metadata for an identifier, with fallback variants
  * (e.g. stripping .flac16 suffix which often has empty metadata).
  */
-async function fetchMetadataWithFallback(identifier: string): Promise<{ files: any[]; resolvedId: string } | null> {
+async function fetchMetadataWithFallback(
+  identifier: string,
+): Promise<{ files: any[]; resolvedId: string; restricted: boolean } | null> {
   const variants = [identifier];
   // Many AI-generated URLs use .flac16 suffix identifiers that have empty metadata;
   // the base identifier (without .flac16) usually works
@@ -154,7 +214,7 @@ async function fetchMetadataWithFallback(identifier: string): Promise<{ files: a
     // One retry for transient archive.org failures (504/503 are common).
     for (let attempt = 0; attempt < 2; attempt++) {
       try {
-        const res = await fetch(`https://archive.org/metadata/${id}`);
+        const res = await fetchArchive(`https://archive.org/metadata/${id}`);
         if (!res.ok) {
           if (attempt === 0 && (res.status >= 500 || res.status === 429)) {
             await new Promise((r) => setTimeout(r, 600));
@@ -164,7 +224,9 @@ async function fetchMetadataWithFallback(identifier: string): Promise<{ files: a
         }
         const meta = await res.json();
         const files = meta.files || [];
-        if (files.length > 0) return { files, resolvedId: id };
+        if (files.length > 0) {
+          return { files, resolvedId: id, restricted: isRestrictedItem(meta) };
+        }
         break;
       } catch {
         if (attempt === 0) {
@@ -188,9 +250,16 @@ export async function findTrackInRecording(
   const meta = await fetchMetadataWithFallback(identifier);
   if (!meta) return null;
 
-  const best = findBestTrack(meta.files, songTitle);
+  const best = findBestTrack(meta.files, songTitle, { restricted: meta.restricted });
   if (best) {
     return `https://archive.org/download/${meta.resolvedId}/${encodeURIComponent(best.file.name)}`;
+  }
+
+  if (meta.restricted) {
+    console.warn(
+      `[QA] "${songTitle}" in ${meta.resolvedId}: stream-only item with no MP3 derivative — skipping rather than reaching for the restricted original`,
+    );
+    return null;
   }
 
   console.warn(
@@ -220,7 +289,7 @@ export async function findArchiveRecording(
         `collection:GratefulDead "${cleanTitle}"${eraDateClause}`
       );
       const apiUrl = `https://archive.org/advancedsearch.php?q=${query}&fl=identifier,date,avg_rating,venue&sort[]=avg_rating+desc&output=json&rows=10`;
-      const res = await fetch(apiUrl);
+      const res = await fetchArchive(apiUrl);
       if (!res.ok) {
         cache.set(key, null);
         return null;
@@ -247,7 +316,7 @@ export async function findArchiveRecording(
       for (const doc of docs) {
         const identifier = doc.identifier;
         try {
-          const metaRes = await fetch(`https://archive.org/metadata/${identifier}`);
+          const metaRes = await fetchArchive(`https://archive.org/metadata/${identifier}`);
           if (!metaRes.ok) continue;
           const meta = await metaRes.json();
           const audioFiles = (meta.files || []).filter(
@@ -333,7 +402,7 @@ export async function findManyArchiveRecordings(
     const cleanTitle = songTitle.replace(/["!?.,;:()\[\]]/g, "").trim();
     const query = encodeURIComponent(`collection:GratefulDead "${cleanTitle}"`);
     const apiUrl = `https://archive.org/advancedsearch.php?q=${query}&fl=identifier,date,avg_rating,venue&sort[]=avg_rating+desc&output=json&rows=${maxResults}`;
-    const res = await fetch(apiUrl);
+    const res = await fetchArchive(apiUrl);
     if (!res.ok) return [];
     const data = await res.json();
     const docs = data?.response?.docs;
