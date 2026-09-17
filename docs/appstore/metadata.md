@@ -5,8 +5,10 @@ Paste-ready metadata for App Store Connect. Voice per dead-set-field-guide.md
 
 ## App Information
 
+- **App Store Connect record:** already created — Apple ID `6799269210`,
+  iOS App 1.0 at "Prepare for Submission"
 - **Name:** Dead Set: Wake Now Discover
-- **Subtitle** (30 chars max): `Build the Dead show you crave`
+- **Subtitle** (30 chars max, currently 29): `Build the Dead show you crave`
 - **Category:** Music (primary); Entertainment (secondary)
 - **Bundle ID:** org.deadset.app
 - **Price:** Free
@@ -15,10 +17,13 @@ Paste-ready metadata for App Store Connect. Voice per dead-set-field-guide.md
 - **Marketing URL:** https://dead-set.org
 - **Privacy Policy URL:** https://dead-set.org/privacy
 
-## Promotional Text (170 chars, editable without review)
+## Promotional Text (170 chars max, editable without review)
+
+Currently 166. The previous draft was 175 and Apple would have rejected the
+paste — count this field after any edit.
 
 ```
-Every setlist is a reconstructed night — the Althea from Boston '93 next to the one from Red Rocks '82. Built by Deadheads, streamed from tapes that never stopped circulating.
+Every setlist is a reconstructed night — the Althea from Boston '93 next to the one from Red Rocks '82. Built by Deadheads, from tapes that never stopped circulating.
 ```
 
 ## Description
@@ -58,16 +63,24 @@ Entertainment, or Warner Music Group. All trademarks are the property of
 their respective owners.
 ```
 
-## Keywords (100 chars max, comma-separated)
+## Keywords (100 chars max, comma-separated — currently 86)
 
 ```
 grateful dead,setlist,jerry garcia,live music,tapes,concert,archive,jam,taper,deadhead
 ```
 (97 chars)
 
-## Screenshots (Jay takes on iPhone — 6.7"/6.9" set required, 3–6 shots)
+## Screenshots (Jay takes on iPhone)
 
-Suggested order:
+App Store Connect for this app (Apple ID 6799269210) presents a single iPhone
+slot: **6.5" Display**, accepting 1242x2688, 2688x1242, 1284x2778 or 2778x1284.
+It also states only the first three are used on the install sheet — so three
+strong shots matter more than ten. An earlier note here said 6.7"/6.9"; that
+was wrong, read off the wrong Apple doc rather than off the actual listing.
+
+Up to 3 app previews and 10 screenshots are accepted.
+
+Suggested order (first three are the ones that count):
 1. A setlist poster page mid-scroll (Althea Gems — parchment, versions visible)
 2. Lock screen with the player: title + "Grateful Dead · date · venue · Dead-Set.Org" + Charlie artwork
 3. The Builder with a set in progress
