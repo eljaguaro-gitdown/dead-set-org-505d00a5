@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import cosmicCharlie from "@/assets/cosmic-charlie.jpg";
+import { charlieArtFor } from "@/lib/charlieArt";
 
 interface CosmicCharlieAvatarProps {
   size?: number;
@@ -13,6 +13,11 @@ interface CosmicCharlieAvatarProps {
 /**
  * Brand portrait of Cosmic Charlie — the Deadhead Guide.
  * Use anywhere we surface Charlie (CTAs, dialog headers, welcome wizard).
+ *
+ * Renders from 28px (DancingBearButton) to 88px (the welcome wizard), so the
+ * art is picked by size — see charlieArtFor. The welcome wizard and dialog
+ * headers still get the full illustration; the small buttons get a crop that
+ * is actually legible.
  */
 const CosmicCharlieAvatar = ({
   size = 64,
@@ -22,7 +27,7 @@ const CosmicCharlieAvatar = ({
 }: CosmicCharlieAvatarProps) => {
   const img = (
     <img
-      src={cosmicCharlie}
+      src={charlieArtFor(size)}
       alt="Cosmic Charlie"
       width={size}
       height={size}
