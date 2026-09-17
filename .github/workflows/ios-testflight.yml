@@ -10,13 +10,31 @@
 #   ASC_ISSUER_ID  — Issuer ID from the same API keys page
 #   ASC_KEY_P8     — full contents of the AuthKey_<KEY_ID>.p8 file
 #
-# Trigger manually from the Actions tab (Run workflow). The build number
-# is the workflow run number, so every upload is unique.
+# Trigger manually from the Actions tab (Run workflow).
+#
+# BUILD NUMBER: run_number + BUILD_NUMBER_OFFSET.
+#
+# The offset exists because this workflow did not upload the first 19
+# builds — those went up from Xcode between 2026-08-07 and 2026-08-21,
+# before this file was added on 2026-09-14. So github.run_number starts
+# at 1 here, and an unoffset first run would have tried to upload build
+# 1 of version 1.0, which already exists. App Store Connect rejects a
+# build number it has already seen, so that run would have died at the
+# upload step looking like a signing or export failure.
+#
+# Raise the offset if builds are ever uploaded by another route again;
+# the number only has to increase, it does not have to be contiguous.
 
 name: iOS TestFlight
 
 on:
   workflow_dispatch:
+
+env:
+  # Highest build already in App Store Connect for version 1.0 is 19
+  # (uploaded from Xcode, 2026-08-21). +20 clears it with headroom, so the
+  # first run of this workflow uploads build 21.
+  BUILD_NUMBER_OFFSET: 20
 
 jobs:
   build-upload:
@@ -93,7 +111,7 @@ jobs:
             DEVELOPMENT_TEAM=GWVFKQA45L \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
-            CURRENT_PROJECT_VERSION=${{ github.run_number }}
+            CURRENT_PROJECT_VERSION=$(( ${{ github.run_number }} + ${BUILD_NUMBER_OFFSET} ))
 
       - name: Export and upload to TestFlight
         env:
