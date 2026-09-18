@@ -14,16 +14,23 @@
 #
 # BUILD NUMBER: run_number + BUILD_NUMBER_OFFSET.
 #
-# The offset exists because this workflow did not upload the first 19
-# builds — those went up from Xcode between 2026-08-07 and 2026-08-21,
-# before this file was added on 2026-09-14. So github.run_number starts
-# at 1 here, and an unoffset first run would have tried to upload build
-# 1 of version 1.0, which already exists. App Store Connect rejects a
-# build number it has already seen, so that run would have died at the
-# upload step looking like a signing or export failure.
+# This workflow uploaded builds 1-19 itself. It was added 2026-08-07 and
+# dispatched 19 times through 2026-08-21, every run succeeding at the
+# upload step, with CURRENT_PROJECT_VERSION set to github.run_number and
+# no offset — so run N produced build N, and run 19 (2026-08-21) is the
+# build 19 that App Store Connect shows for that date.
 #
-# Raise the offset if builds are ever uploaded by another route again;
-# the number only has to increase, it does not have to be contiguous.
+# An earlier offset of 20 was set on the belief that Xcode had uploaded
+# builds 13-19 and that this file had never run. Both were wrong; the
+# repo's own Actions history disproves them. That offset would have made
+# the next run upload build 40.
+#
+# So the offset only has to clear 19 by one: run 20 + 1 = build 21.
+#
+# Raise the offset if builds are ever uploaded by another route; the
+# number only has to increase, it does not have to be contiguous. Check
+# the Actions run history AND App Store Connect before changing it —
+# each one alone has produced a confidently wrong answer here.
 
 name: iOS TestFlight
 
@@ -31,10 +38,10 @@ on:
   workflow_dispatch:
 
 env:
-  # Highest build already in App Store Connect for version 1.0 is 19
-  # (uploaded from Xcode, 2026-08-21). +20 clears it with headroom, so the
-  # first run of this workflow uploads build 21.
-  BUILD_NUMBER_OFFSET: 20
+  # Highest build in App Store Connect for version 1.0 is 19, uploaded by
+  # run 19 of this workflow on 2026-08-21. The next run is run_number 20,
+  # so +1 clears it and uploads build 21.
+  BUILD_NUMBER_OFFSET: 1
 
 jobs:
   build-upload:
