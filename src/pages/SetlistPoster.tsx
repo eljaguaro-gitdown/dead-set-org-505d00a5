@@ -20,6 +20,7 @@ import { findArchiveRecordings, matchScore, type ArchiveResult } from "@/lib/arc
 import { useFavoriteSongs } from "@/hooks/useFavoriteSongs";
 import type { Database } from "@/integrations/supabase/types";
 import { trackCtaClick } from "@/lib/trackCtaClick";
+import { SYNTHETIC_VERSION_DEFAULTS } from "@/lib/syntheticVersion";
 
 type Setlist = Omit<Database["public"]["Tables"]["setlists"]["Row"], "share_token">;
 type SetlistSlot = Database["public"]["Tables"]["setlist_slots"]["Row"];
@@ -423,6 +424,7 @@ const SetlistPoster = () => {
   const buildPlayableSlot = useCallback((slot: EnrichedSlot) => {
     const resolvedArchive = resolvedArchives[slot.song.title] ?? null;
     const resolvedVersion = slot.version || (resolvedArchive ? {
+      ...SYNTHETIC_VERSION_DEFAULTS,
       id: "",
       song_id: slot.song.id,
       show_date: resolvedArchive.date || "",

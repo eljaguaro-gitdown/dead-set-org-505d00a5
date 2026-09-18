@@ -63,6 +63,7 @@ import {
   useAudioPlayer,
   type PlayableSlot,
 } from "./AudioPlayerContext";
+import { SYNTHETIC_VERSION_DEFAULTS } from "@/lib/syntheticVersion";
 
 const makeSlot = (i: number): PlayableSlot => ({
   id: `slot-${i}`,
@@ -71,6 +72,7 @@ const makeSlot = (i: number): PlayableSlot => ({
   position: i,
   segueToNext: false,
   version: {
+    ...SYNTHETIC_VERSION_DEFAULTS,
     id: `v-${i}`,
     song_id: `song-${i}`,
     show_date: "1977-05-08",
@@ -172,6 +174,7 @@ describe("AudioPlayerContext — server-precomputed playability", () => {
       position: 0,
       segueToNext: false,
       version: {
+        ...SYNTHETIC_VERSION_DEFAULTS,
         id: "v-x", song_id: "song-x", show_date: "1977-05-08",
         archive_org_url: "https://archive.org/details/gd1977-05-08.sbd",
         venue: "Barton Hall", city: "Ithaca, NY",
@@ -205,6 +208,7 @@ describe("AudioPlayerContext — server-precomputed playability", () => {
       position: 0,
       segueToNext: false,
       version: {
+        ...SYNTHETIC_VERSION_DEFAULTS,
         id: "v-y", song_id: "song-y", show_date: "1977-05-08",
         archive_org_url: "https://archive.org/details/gd1977-05-08.sbd",
         venue: "Barton Hall", city: "Ithaca, NY",

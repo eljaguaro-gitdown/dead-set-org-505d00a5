@@ -20,6 +20,7 @@ import { captureAudioEvent, archiveIdentifierFromUrl } from "@/lib/player/audioI
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
+import { SYNTHETIC_VERSION_DEFAULTS } from "@/lib/syntheticVersion";
 
 type NotableVersion = Database["public"]["Tables"]["notable_versions"]["Row"];
 type Song = Database["public"]["Tables"]["songs"]["Row"];
@@ -165,6 +166,8 @@ const noopTransport: PlayerTransport = {
   isPlaying: false,
   isLoading: false,
   autoplayBlocked: false,
+  error: null,
+  retry: () => undefined,
   play: () => undefined,
   pause: () => undefined,
   togglePlayPause: () => undefined,
@@ -508,6 +511,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
       const version: NotableVersion = slot.version
         ? { ...slot.version, archive_org_url: slot.version.archive_org_url ?? precomputed.detailsUrl }
         : {
+            ...SYNTHETIC_VERSION_DEFAULTS,
             id: "", song_id: slot.song.id, show_date: "",
             archive_org_url: precomputed.detailsUrl, venue: null,
             city: null, era_id: null, rating: null, description: null,
@@ -535,6 +539,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
       return {
         ...slot,
         version: {
+          ...SYNTHETIC_VERSION_DEFAULTS,
           id: "", song_id: slot.song.id, show_date: result.date || "",
           archive_org_url: result.url, venue: result.venue,
           city: null, era_id: null, rating: null, description: null,
@@ -769,7 +774,9 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
       engineSlotIdRef.current = null;
       engineRef.current?.clear();
       setTransportState((prev) =>
-        prev.isPlaying || prev.autoplayBlocked ? { isPlaying: false, autoplayBlocked: false } : prev,
+        prev.isPlaying || prev.autoplayBlocked
+          ? { isPlaying: false, autoplayBlocked: false, error: null }
+          : prev,
       );
       return;
     }

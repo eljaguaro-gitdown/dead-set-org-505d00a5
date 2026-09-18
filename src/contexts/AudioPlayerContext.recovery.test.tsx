@@ -95,6 +95,7 @@ vi.mock("@/integrations/supabase/client", () => ({
 
 import { findTrackInRecording } from "@/lib/archiveOrg";
 import { AudioPlayerProvider, useAudioPlayer, type PlayableSlot } from "./AudioPlayerContext";
+import { SYNTHETIC_VERSION_DEFAULTS } from "@/lib/syntheticVersion";
 
 const makeSlot = (i: number): PlayableSlot => ({
   id: `slot-${i}`,
@@ -103,6 +104,7 @@ const makeSlot = (i: number): PlayableSlot => ({
   position: i,
   segueToNext: false,
   version: {
+    ...SYNTHETIC_VERSION_DEFAULTS,
     id: `v-${i}`, song_id: `song-${i}`, show_date: "1977-05-08",
     archive_org_url: `https://archive.org/details/gd1977-05-08-${i}`,
     venue: "Barton Hall", city: "Ithaca, NY",

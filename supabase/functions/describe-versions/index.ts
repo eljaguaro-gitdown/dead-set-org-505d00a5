@@ -12,7 +12,13 @@ serve(async (req) => {
 
   try {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+    if (!LOVABLE_API_KEY) {
+      // The catch-all below discards this message, so it cannot reach a fan
+      // today. Matching the siblings anyway: the day someone "fixes" that
+      // catch to forward error.message, the key name would ship with it.
+      console.error("LOVABLE_API_KEY is not configured");
+      throw new Error("Notes service is not configured");
+    }
 
     const { songTitle, versions, yearRange } = await req.json();
     if (!songTitle || !versions?.length) {
