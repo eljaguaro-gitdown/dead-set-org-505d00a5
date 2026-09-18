@@ -45,7 +45,10 @@ function normalize(s: string): string {
   return s
     .toLowerCase()
     .replace(/\bgood\s+times\s+blues\b/g, "good time blues")
-    .replace(/\.[^.]+$/, "")              // strip file extension
+    // Real audio extensions only. The old /\.[^.]+$/ also truncated any title
+    // with an abbreviation in it — "c.c. rider" became "c.c" — so a track and a
+    // song could only match when both happened to be mangled identically.
+    .replace(/\.(flac|mp3|ogg|oga|shn|m4a|aac|wav|aiff?|opus|wma|ape)$/i, "")
     .replace(/^d\d+t\d+\s*[-.]?\s*/i, "") // strip "d1t03 - " prefix
     .replace(/^t?\d+\s*[-.]?\s*/, "")     // strip "03 - " or "t03." prefix
     .replace(/[''`]/g, "")                // drop apostrophes (truckin' = truckin)
