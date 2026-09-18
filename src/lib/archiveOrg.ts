@@ -23,6 +23,20 @@ function cacheKey(songTitle: string, yearStart?: number | null, yearEnd?: number
 }
 
 /**
+ * True when an archive.org date string falls inside an inclusive year window.
+ * Tolerates the malformed/missing dates the Archive occasionally carries.
+ */
+export function isYearInWindow(
+  date: string | null | undefined,
+  yearStart: number,
+  yearEnd: number,
+): boolean {
+  if (!date) return false;
+  const yr = parseInt(String(date).slice(0, 4), 10);
+  return Number.isFinite(yr) && yr >= yearStart && yr <= yearEnd;
+}
+
+/**
  * Normalize a string for fuzzy comparison: lowercase, drop apostrophes, then
  * everything non-alphanumeric becomes a space. Strip file extensions and the
  * common "d1t03 - " / "03 - " track-number prefixes that come from archive.org.
@@ -300,11 +314,7 @@ export async function findArchiveRecording(
       // Belt-and-suspenders: drop any doc whose date falls outside the era window
       // (in case archive.org's date field is malformed or the search ignores the clause).
       if (hasEra) {
-        docs = docs.filter((d) => {
-          if (!d.date) return false;
-          const yr = parseInt(String(d.date).slice(0, 4), 10);
-          return Number.isFinite(yr) && yr >= yearStart! && yr <= yearEnd!;
-        });
+        docs = docs.filter((d) => isYearInWindow(d.date, yearStart!, yearEnd!));
       }
 
       if (docs.length === 0) {
@@ -392,15 +402,27 @@ const multiCache = new Map<string, ArchiveVersion[]>();
 
 export async function findManyArchiveRecordings(
   songTitle: string,
-  maxResults = 50
+  maxResults = 50,
+  yearStart?: number | null,
+  yearEnd?: number | null
 ): Promise<ArchiveVersion[]> {
-  const key = songTitle.toLowerCase().trim();
+  const key = cacheKey(songTitle, yearStart, yearEnd);
   if (multiCache.has(key)) return multiCache.get(key)!;
+
+  // Narrow at the *query*, not after the fact. Archive.org sorts by rating and
+  // we only take `maxResults` rows, so filtering a global top-50 down to a year
+  // window can come back empty even when hundreds of in-window tapes circulate.
+  const hasWindow = !!(yearStart && yearEnd);
+  const windowDateClause = hasWindow
+    ? ` AND date:[${yearStart}-01-01 TO ${yearEnd}-12-31]`
+    : "";
 
   try {
     // Strip punctuation that can break archive.org's quoted phrase search (e.g. "Slipknot!")
     const cleanTitle = songTitle.replace(/["!?.,;:()\[\]]/g, "").trim();
-    const query = encodeURIComponent(`collection:GratefulDead "${cleanTitle}"`);
+    const query = encodeURIComponent(
+      `collection:GratefulDead "${cleanTitle}"${windowDateClause}`
+    );
     const apiUrl = `https://archive.org/advancedsearch.php?q=${query}&fl=identifier,date,avg_rating,venue&sort[]=avg_rating+desc&output=json&rows=${maxResults}`;
     const res = await fetchArchive(apiUrl);
     if (!res.ok) return [];
@@ -408,13 +430,20 @@ export async function findManyArchiveRecordings(
     const docs = data?.response?.docs;
     if (!docs || docs.length === 0) return [];
 
-    const versions: ArchiveVersion[] = docs.map((doc: any) => ({
+    let versions: ArchiveVersion[] = docs.map((doc: any) => ({
       identifier: doc.identifier,
       url: `https://archive.org/details/${doc.identifier}`,
       date: doc.date ? doc.date.split("T")[0] : null,
       venue: doc.venue || null,
       avgRating: doc.avg_rating ? Number(doc.avg_rating) : null,
     }));
+
+    // Belt-and-suspenders, same as findArchiveRecording: drop anything outside
+    // the window in case archive.org's date field is malformed or the clause is
+    // ignored. A version shown under "1974-1976" must actually be from it.
+    if (hasWindow) {
+      versions = versions.filter((v) => isYearInWindow(v.date, yearStart!, yearEnd!));
+    }
 
     multiCache.set(key, versions);
     return versions;

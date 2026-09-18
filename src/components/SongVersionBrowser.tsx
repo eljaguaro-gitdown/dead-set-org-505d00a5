@@ -2,16 +2,45 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import { Zap, ExternalLink, Headphones, Star, Loader2, ArrowUpDown, Calendar, TrendingUp, Heart, Share2 } from "lucide-react";
 import { shareSong } from "@/lib/shareSong";
 import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { findManyArchiveRecordings, type ArchiveVersion } from "@/lib/archiveOrg";
+import {
+  ALL_PLAYING_YEARS,
+  ALL_YEARS,
+  encodeYearWindow,
+  eraToYearWindow,
+  formatYearWindow,
+  parseYearWindow,
+  sameYearWindow,
+  widenYearWindow,
+  type YearWindow,
+} from "@/lib/yearWindow";
+import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 
 type Song = Database["public"]["Tables"]["songs"]["Row"];
 type NotableVersion = Database["public"]["Tables"]["notable_versions"]["Row"];
+type Era = Database["public"]["Tables"]["eras"]["Row"];
+
+/** How many in-window versions we ask Charlie to write notes for. */
+const NOTE_COUNT = 10;
 
 interface SongVersionBrowserProps {
   song: Song;
   curatedVersions: NotableVersion[];
+  /** Era rows, used to offer named eras alongside single years in the dig-deep control. */
+  eras?: Era[];
+  /** The era selected in the builder toolbar, if any — seeds the year window. */
+  eraId?: string | null;
   onSelectSong: (song: Song, version?: NotableVersion) => void;
   onPlayArchive?: (url: string, songTitle: string, showDate: string, venue?: string | null) => void;
   isFavoriteVersion?: (input: {
@@ -34,39 +63,131 @@ interface SongVersionBrowserProps {
 
 type SortMode = "rating" | "date-asc" | "date-desc";
 
-const SongVersionBrowser = ({ song, curatedVersions, onSelectSong, onPlayArchive, isFavoriteVersion, onToggleFavoriteVersion }: SongVersionBrowserProps) => {
+const SongVersionBrowser = ({ song, curatedVersions, eras, eraId, onSelectSong, onPlayArchive, isFavoriteVersion, onToggleFavoriteVersion }: SongVersionBrowserProps) => {
+  const { user } = useAuth();
   const [archiveVersions, setArchiveVersions] = useState<ArchiveVersion[]>([]);
   const [loading, setLoading] = useState(true);
   const [sortMode, setSortMode] = useState<SortMode>("rating");
   const [descriptions, setDescriptions] = useState<Record<string, string>>({});
   const [loadingDescriptions, setLoadingDescriptions] = useState(false);
 
+  // Seed the window from whatever era the builder toolbar already has selected,
+  // so expanding a song inside "Europe '72" digs into those years by default.
+  const seededWindow = useMemo(() => {
+    const era = eras?.find((e) => e.id === eraId);
+    return era ? eraToYearWindow(era) : null;
+  }, [eras, eraId]);
+
+  const [yearWindow, setYearWindow] = useState<YearWindow | null>(seededWindow);
+
+  /** Named eras that map cleanly onto a year span, for the dig-deep control. */
+  const eraWindows = useMemo(
+    () =>
+      (eras ?? [])
+        .map((e) => ({ id: e.id, name: e.name, window: eraToYearWindow(e) }))
+        .filter((e): e is { id: string; name: string; window: YearWindow } => e.window !== null),
+    [eras],
+  );
+
+  // Follow the toolbar when the user changes era while a song is open. Compared
+  // by value, not identity: eraToYearWindow builds a fresh object each time, so
+  // an identity check would stomp the user's own window on any re-render.
+  const lastSeeded = useRef(seededWindow);
+  useEffect(() => {
+    if (!sameYearWindow(lastSeeded.current, seededWindow)) {
+      lastSeeded.current = seededWindow;
+      setYearWindow(seededWindow);
+    }
+  }, [seededWindow]);
+
+  // Narrow at the query so a tight window still returns the best of *that* span,
+  // not whatever survives from a global top-50.
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    findManyArchiveRecordings(song.title, 50).then((results) => {
+    findManyArchiveRecordings(song.title, 50, yearWindow?.start, yearWindow?.end).then((results) => {
       if (!cancelled) {
         setArchiveVersions(results);
         setLoading(false);
       }
     });
     return () => { cancelled = true; };
-  }, [song.id, song.title]);
+  }, [song.id, song.title, yearWindow?.start, yearWindow?.end]);
 
-  // Fetch AI descriptions for the top-rated versions
+  // Merge: curated versions first (highlighted), then archive versions (deduped by date)
+  const curatedDateKey = curatedVersions.map((v) => v.show_date).join("|");
+  const curatedDates = useMemo(
+    () => new Set(curatedVersions.map((v) => v.show_date)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [curatedDateKey],
+  );
+
+  /** In-window archive versions, minus anything already shown as a curated pick. */
+  const windowVersions = useMemo(
+    () => archiveVersions.filter((av) => !curatedDates.has(av.date || "")),
+    [archiveVersions, curatedDates],
+  );
+
+  const sortedVersions = useMemo(() => {
+    return [...windowVersions].sort((a, b) => {
+      if (sortMode === "rating") return (b.avgRating || 0) - (a.avgRating || 0);
+      if (sortMode === "date-asc") return (a.date || "").localeCompare(b.date || "");
+      return (b.date || "").localeCompare(a.date || "");
+    });
+  }, [windowVersions, sortMode]);
+
+  /**
+   * The versions Charlie writes notes for: the best of what's *in the window*.
+   * Derived from the unsorted in-window set so flipping the sort buttons never
+   * re-asks for notes, and so a narrow window still gets described — the old
+   * code sliced the global top 10, which could contain nothing in range at all.
+   */
+  const noteTargets = useMemo(
+    () =>
+      [...windowVersions]
+        .sort((a, b) => (b.avgRating || 0) - (a.avgRating || 0))
+        .slice(0, NOTE_COUNT),
+    [windowVersions],
+  );
+
+  /**
+   * What the start select displays. Once the end is widened the window no
+   * longer matches any single option, so fall back to the start year — without
+   * this the trigger renders blank for every range that isn't exactly an era.
+   */
+  const startSelectValue = useMemo(() => {
+    if (!yearWindow) return ALL_YEARS;
+    const era = eraWindows.find((e) => sameYearWindow(e.window, yearWindow));
+    if (era) return encodeYearWindow(era.window);
+    return `${yearWindow.start}-${yearWindow.start}`;
+  }, [yearWindow, eraWindows]);
+
+  const noteTargetKey = noteTargets.map((v) => v.identifier).join(",");
+
+  /** How many of the in-window picks already carry a note. */
+  const describedCount = useMemo(
+    () => noteTargets.filter((v) => descriptions[v.identifier]).length,
+    [noteTargets, descriptions],
+  );
+
   useEffect(() => {
-    if (archiveVersions.length === 0 || loading) return;
+    if (loading || noteTargets.length === 0) return;
+    // Charlie's notes come from an authenticated endpoint; for signed-out
+    // visitors we show the invitation below instead of firing a doomed request.
+    if (!user) return;
+
+    // Only ask about versions we haven't already got a note for — windows
+    // overlap, and the notes are keyed by identifier.
+    const pending = noteTargets.filter((v) => !descriptions[v.identifier]);
+    if (pending.length === 0) return;
+
     let cancelled = false;
     setLoadingDescriptions(true);
-
-    const topByRating = [...archiveVersions]
-      .sort((a, b) => (b.avgRating || 0) - (a.avgRating || 0))
-      .slice(0, 10);
 
     supabase.functions.invoke("describe-versions", {
       body: {
         songTitle: song.title,
-        versions: topByRating.map((v) => ({
+        versions: pending.map((v) => ({
           identifier: v.identifier,
           date: v.date,
           venue: v.venue,
@@ -75,26 +196,16 @@ const SongVersionBrowser = ({ song, curatedVersions, onSelectSong, onPlayArchive
       },
     }).then(({ data, error }) => {
       if (!cancelled && data?.descriptions) {
-        setDescriptions(data.descriptions);
+        setDescriptions((prev) => ({ ...prev, ...data.descriptions }));
       }
-      if (error) console.warn("Failed to fetch version descriptions:", error);
+      // Never surface the raw error to the room — it is written for us, not fans.
+      if (error) console.warn("Failed to fetch version notes:", error);
       if (!cancelled) setLoadingDescriptions(false);
     });
 
     return () => { cancelled = true; };
-  }, [archiveVersions, loading, song.title]);
-
-  // Merge: curated versions first (highlighted), then archive versions (deduped by date)
-  const curatedDates = new Set(curatedVersions.map((v) => v.show_date));
-
-  const sortedVersions = useMemo(() => {
-    const filtered = archiveVersions.filter((av) => !curatedDates.has(av.date || ""));
-    return [...filtered].sort((a, b) => {
-      if (sortMode === "rating") return (b.avgRating || 0) - (a.avgRating || 0);
-      if (sortMode === "date-asc") return (a.date || "").localeCompare(b.date || "");
-      return (b.date || "").localeCompare(a.date || "");
-    });
-  }, [archiveVersions, curatedDates, sortMode]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [noteTargetKey, loading, song.title, user]);
 
   const handleSelectArchiveVersion = (av: ArchiveVersion) => {
     // Create a synthetic NotableVersion so the builder can use it
@@ -152,17 +263,96 @@ const SongVersionBrowser = ({ song, curatedVersions, onSelectSong, onPlayArchive
         </div>
       )}
 
+      {/* Dig deep — narrow the hunt to a year or a span of years.
+          The first control picks the start (or a whole era in one tap); the
+          second widens it into a range, so "1974" and "1974–76" both fall out
+          of the same pair without a third mode. */}
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+        <span className="text-[10px] uppercase tracking-wider text-foreground/75 font-body shrink-0">
+          Dig deep
+        </span>
+        <Select value={startSelectValue} onValueChange={(v) => setYearWindow(parseYearWindow(v))}>
+          <SelectTrigger
+            className={`h-8 w-auto min-w-[96px] max-w-[170px] bg-card border-border font-body text-xs ${
+              yearWindow ? "text-primary border-primary/50" : "text-card-foreground"
+            }`}
+            aria-label={`Narrow ${song.title} versions to a year, era, or the start of a range`}
+          >
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent className="bg-card border-border max-h-[280px]">
+            <SelectItem value={ALL_YEARS} className="font-body text-xs">
+              All years
+            </SelectItem>
+            {eraWindows.length > 0 && (
+              <SelectGroup>
+                <SelectLabel className="text-[10px] uppercase tracking-wider text-foreground/75 font-body">
+                  Eras
+                </SelectLabel>
+                {eraWindows.map(({ id, name, window }) => (
+                  <SelectItem key={id} value={encodeYearWindow(window)} className="font-body text-xs">
+                    {name} ({formatYearWindow(window)})
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            )}
+            <SelectGroup>
+              <SelectLabel className="text-[10px] uppercase tracking-wider text-foreground/75 font-body">
+                Years
+              </SelectLabel>
+              {ALL_PLAYING_YEARS.map((year) => (
+                <SelectItem key={year} value={`${year}-${year}`} className="font-body text-xs">
+                  {year}
+                </SelectItem>
+              ))}
+            </SelectGroup>
+          </SelectContent>
+        </Select>
+
+        {yearWindow && (
+          <>
+            <span className="text-xs text-foreground/75 font-body" aria-hidden="true">
+              {"–"}
+            </span>
+            <Select
+              value={String(yearWindow.end)}
+              onValueChange={(v) => {
+                const end = Number(v);
+                setYearWindow((w) => (w ? widenYearWindow(w, end) : w));
+              }}
+            >
+              <SelectTrigger
+                className="h-8 w-auto min-w-[74px] bg-card border-border border-primary/50 text-primary font-body text-xs"
+                aria-label={`Last year to include for ${song.title}`}
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-card border-border max-h-[280px]">
+                {ALL_PLAYING_YEARS.filter((y) => y >= yearWindow.start).map((year) => (
+                  <SelectItem key={year} value={String(year)} className="font-body text-xs">
+                    {year}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </>
+        )}
+      </div>
+
       {/* Archive.org versions */}
       {loading ? (
         <div className="flex items-center gap-2 py-4 justify-center text-foreground/75">
           <Loader2 className="w-4 h-4 animate-spin" />
-          <span className="text-xs font-body">Searching the tapes…</span>
+          <span className="text-xs font-body">
+            {yearWindow ? `Searching the ${formatYearWindow(yearWindow)} tapes…` : "Searching the tapes…"}
+          </span>
         </div>
-      ) : archiveVersions.length > 0 ? (
+      ) : windowVersions.length > 0 ? (
         <div className="space-y-1.5">
           <div className="flex items-center justify-between">
             <p className="text-[10px] uppercase tracking-wider text-foreground/75 font-body">
-              From the Archive · {archiveVersions.filter((av) => !curatedDates.has(av.date || "")).length} recordings
+              From the Archive · {windowVersions.length} circulating
+              {yearWindow ? ` · ${formatYearWindow(yearWindow)}` : ""}
             </p>
             <div className="flex items-center gap-0.5">
               <button
@@ -188,6 +378,20 @@ const SongVersionBrowser = ({ song, curatedVersions, onSelectSong, onPlayArchive
               </button>
             </div>
           </div>
+          {/* Charlie's notes: in flight, or an invitation for signed-out visitors.
+              The notes endpoint is behind sign-in, so rather than letting them
+              silently vanish we say who is missing from the conversation. */}
+          {user && loadingDescriptions && describedCount === 0 && (
+            <p className="text-[11px] font-body text-foreground/75 italic px-0.5">
+              Cosmic Charlie is pulling these off the shelf…
+            </p>
+          )}
+          {!user && (
+            <p className="text-[11px] font-body text-foreground/75 italic px-0.5">
+              Sign in and Cosmic Charlie will tell you what makes each of these worth the hunt.
+            </p>
+          )}
+
           {sortedVersions.map((av) => (
               <ArchiveVersionCard
                 key={av.identifier}
@@ -212,6 +416,19 @@ const SongVersionBrowser = ({ song, curatedVersions, onSelectSong, onPlayArchive
                 })}
               />
             ))}
+        </div>
+      ) : yearWindow ? (
+        <div className="px-2 py-3 space-y-2">
+          <p className="text-xs text-foreground/75 font-body">
+            Nothing from {formatYearWindow(yearWindow)} circulating for {song.title}. Widen the
+            years and see what turns up.
+          </p>
+          <button
+            onClick={() => setYearWindow(null)}
+            className="text-xs font-body text-primary hover:underline"
+          >
+            Open it back up to all years
+          </button>
         </div>
       ) : (
         <p className="text-xs text-foreground/75 font-body px-2">No recordings found on the Archive</p>
