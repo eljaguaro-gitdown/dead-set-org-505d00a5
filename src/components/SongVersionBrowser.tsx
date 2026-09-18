@@ -34,6 +34,9 @@ type Era = Database["public"]["Tables"]["eras"]["Row"];
 /** How many in-window versions we ask Charlie to write notes for. */
 const NOTE_COUNT = 10;
 
+/** Stable empty map, so a window with no notes yet doesn't churn renders. */
+const NO_NOTES: Record<string, string> = {};
+
 interface SongVersionBrowserProps {
   song: Song;
   curatedVersions: NotableVersion[];
@@ -68,8 +71,10 @@ const SongVersionBrowser = ({ song, curatedVersions, eras, eraId, onSelectSong, 
   const [archiveVersions, setArchiveVersions] = useState<ArchiveVersion[]>([]);
   const [loading, setLoading] = useState(true);
   const [sortMode, setSortMode] = useState<SortMode>("rating");
-  const [descriptions, setDescriptions] = useState<Record<string, string>>({});
+  const [notesByWindow, setNotesByWindow] = useState<Record<string, Record<string, string>>>({});
   const [loadingDescriptions, setLoadingDescriptions] = useState(false);
+  /** Which window the loaded recordings belong to — "" until the first load. */
+  const [loadedWindowKey, setLoadedWindowKey] = useState("");
 
   // Seed the window from whatever era the builder toolbar already has selected,
   // so expanding a song inside "Europe '72" digs into those years by default.
@@ -79,6 +84,15 @@ const SongVersionBrowser = ({ song, curatedVersions, eras, eraId, onSelectSong, 
   }, [eras, eraId]);
 
   const [yearWindow, setYearWindow] = useState<YearWindow | null>(seededWindow);
+
+  /**
+   * Charlie now weighs each night against the rest of the window, so a note is
+   * only true of the window it was written for: the standout of 1974-76 is not
+   * the same claim as the standout of every year. Notes are therefore kept per
+   * window rather than per identifier.
+   */
+  const windowKey = yearWindow ? encodeYearWindow(yearWindow) : ALL_YEARS;
+  const descriptions = notesByWindow[windowKey] ?? NO_NOTES;
 
   /** Named eras that map cleanly onto a year span, for the dig-deep control. */
   const eraWindows = useMemo(
@@ -102,17 +116,23 @@ const SongVersionBrowser = ({ song, curatedVersions, eras, eraId, onSelectSong, 
 
   // Narrow at the query so a tight window still returns the best of *that* span,
   // not whatever survives from a global top-50.
+  const windowStart = yearWindow?.start;
+  const windowEnd = yearWindow?.end;
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    findManyArchiveRecordings(song.title, 50, yearWindow?.start, yearWindow?.end).then((results) => {
+    // Same shape as encodeYearWindow, built from the primitives the dependency
+    // array already tracks so the effect doesn't hang off the window object.
+    const key = windowStart && windowEnd ? `${windowStart}-${windowEnd}` : ALL_YEARS;
+    findManyArchiveRecordings(song.title, 50, windowStart, windowEnd).then((results) => {
       if (!cancelled) {
         setArchiveVersions(results);
+        setLoadedWindowKey(key);
         setLoading(false);
       }
     });
     return () => { cancelled = true; };
-  }, [song.id, song.title, yearWindow?.start, yearWindow?.end]);
+  }, [song.id, song.title, windowStart, windowEnd]);
 
   // Merge: curated versions first (highlighted), then archive versions (deduped by date)
   const curatedDateKey = curatedVersions.map((v) => v.show_date).join("|");
@@ -170,8 +190,18 @@ const SongVersionBrowser = ({ song, curatedVersions, eras, eraId, onSelectSong, 
     [noteTargets, descriptions],
   );
 
+  /** The era's own name, when the window lines up with one — Charlie can use it. */
+  const eraName = useMemo(() => {
+    if (!yearWindow) return null;
+    return eraWindows.find((e) => sameYearWindow(e.window, yearWindow))?.name ?? null;
+  }, [eraWindows, yearWindow]);
+
   useEffect(() => {
     if (loading || noteTargets.length === 0) return;
+    // Between choosing a window and its recordings arriving, `loading` has not
+    // flipped yet — without this the notes would be written about the window
+    // the visitor just left.
+    if (loadedWindowKey !== windowKey) return;
     // Charlie's notes come from an authenticated endpoint; for signed-out
     // visitors we show the invitation below instead of firing a doomed request.
     if (!user) return;
@@ -193,10 +223,16 @@ const SongVersionBrowser = ({ song, curatedVersions, eras, eraId, onSelectSong, 
           venue: v.venue,
           rating: v.avgRating,
         })),
+        // Lets Charlie weigh each night against the rest of the window rather
+        // than against the song's whole history.
+        yearRange: yearWindow ? { ...yearWindow, eraName } : null,
       },
     }).then(({ data, error }) => {
       if (!cancelled && data?.descriptions) {
-        setDescriptions((prev) => ({ ...prev, ...data.descriptions }));
+        setNotesByWindow((prev) => ({
+          ...prev,
+          [windowKey]: { ...prev[windowKey], ...data.descriptions },
+        }));
       }
       // Never surface the raw error to the room — it is written for us, not fans.
       if (error) console.warn("Failed to fetch version notes:", error);
@@ -205,7 +241,7 @@ const SongVersionBrowser = ({ song, curatedVersions, eras, eraId, onSelectSong, 
 
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [noteTargetKey, loading, song.title, user]);
+  }, [noteTargetKey, loading, song.title, user, windowKey, loadedWindowKey, eraName]);
 
   const handleSelectArchiveVersion = (av: ArchiveVersion) => {
     // Create a synthetic NotableVersion so the builder can use it
