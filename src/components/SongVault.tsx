@@ -11,6 +11,7 @@ import type { Database } from "@/integrations/supabase/types";
 
 type Song = Database["public"]["Tables"]["songs"]["Row"];
 type NotableVersion = Database["public"]["Tables"]["notable_versions"]["Row"];
+type Era = Database["public"]["Tables"]["eras"]["Row"];
 
 const TAG_COLORS: Record<string, string> = {
   rocker: "bg-primary/20 text-accent-foreground border-primary/30",
@@ -25,12 +26,14 @@ const TAG_COLORS: Record<string, string> = {
 interface SongVaultProps {
   songs: Song[];
   eraId?: string | null;
+  /** Era rows — passed through so the version browser can offer named eras. */
+  eras?: Era[];
   onSelectSong: (song: Song, version?: NotableVersion) => void;
   getNotableVersions: (songId: string, eraId?: string | null) => Promise<NotableVersion[] | null>;
   onPlayArchive?: (url: string, songTitle: string, showDate: string, venue?: string | null) => void;
 }
 
-const SongVault = ({ songs, eraId, onSelectSong, getNotableVersions, onPlayArchive }: SongVaultProps) => {
+const SongVault = ({ songs, eraId, eras, onSelectSong, getNotableVersions, onPlayArchive }: SongVaultProps) => {
   const [search, setSearch] = useState("");
   const [tagFilter, setTagFilter] = useState<string | null>(null);
   const [positionFilter, setPositionFilter] = useState<string | null>(null);
@@ -195,6 +198,8 @@ const SongVault = ({ songs, eraId, onSelectSong, getNotableVersions, onPlayArchi
                   <SongVersionBrowser
                     song={song}
                     curatedVersions={curatedVersions}
+                    eras={eras}
+                    eraId={eraId}
                     onSelectSong={onSelectSong}
                     onPlayArchive={onPlayArchive}
                     isFavoriteVersion={isFavoriteVersion}

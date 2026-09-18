@@ -1542,6 +1542,7 @@ const Builder = () => {
             <SongVault
               songs={songs}
               eraId={selectedEra}
+              eras={eras}
               onSelectSong={handleSelectSong}
               getNotableVersions={getNotableVersions}
               onPlayArchive={(url, songTitle, showDate, venue) => {
