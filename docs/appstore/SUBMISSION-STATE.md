@@ -6,8 +6,8 @@ Connect, Lovable Cloud, and the Supabase auth config, and a session that reads
 only the repo will draw confident wrong conclusions. That happened repeatedly on
 2026-09-17; the corrections are banked in `CLAUDE.md`.
 
-**Last updated:** 2026-09-17, after merging PR #35 and correcting this doc's
-claims about the build pipeline.
+**Last updated:** 2026-09-18, after opening PR #39 (year-range dig-deep) and
+correcting two stale claims about the CI offset fix.
 
 Paths beginning `claude/` below are docs in the **Dead Set Claude project**, not
 files in this repo — don't go looking for them on disk. Everything else is
@@ -26,6 +26,7 @@ doc is worse than no doc, because it will be believed.
 | Build pipeline | Works, and it is CI. **All 19 builds came from `ios-testflight.yml`** |
 | CI workflow | `.github/workflows/ios-testflight.yml`, `workflow_dispatch`, **run 20 times, every run succeeded**, 2026-08-07 to 2026-09-17 |
 | Code | All submission-blocking fixes merged to `main` in PR #35 (5 commits) |
+| Candidate | **PR #39 is open app code.** If it merges, the next build — not 21 — becomes the candidate. See "The candidate moves with app code" below |
 
 **Builds 1–19 all predate the fixes — do not submit any of them.** Build 19 still
 renders Steal Your Face in the header and still has the broken native auth
@@ -77,11 +78,24 @@ Aug 9, the day build 18 was created.
    `Upload succeeded`). The offset was briefly 20, set on the mistaken belief
    that Xcode had uploaded builds 1–19 and this workflow had never run — that
    would have uploaded build 40. Corrected to 1 before the run; see `CLAUDE.md`.
-   **The offset fix is still only on `claude/wonderful-hawking-qav0uh` (PR #36)
-   — merge it, or the next run dispatched from `main` reverts to offset 20.**
+   ~~The offset fix is still only on `claude/wonderful-hawking-qav0uh` (PR #36)
+   — merge it, or the next run dispatched from `main` reverts to offset 20.~~
+   **Merged — this warning is resolved (2026-09-18).** Verified by content, not
+   by branch name: `60959f9` on `main` is the merge commit for PR #36, and
+   `.github/workflows/ios-testflight.yml` on `main` reads
+   `BUILD_NUMBER_OFFSET: 1`. The next run is run_number 21 → **build 22**.
+   **Note the trap this doc walked into:** the branch
+   `claude/wonderful-hawking-qav0uh` was *reused* after #36 merged, and is now
+   the head of **PR #37** (the sync badge, on hold). A "(PR #36)" pointer at
+   that branch name therefore resolves to the wrong PR — the same branch-name
+   collision banked in `CLAUDE.md`. Verify by sha and file content, never by
+   branch name or remembered PR number.
 2. **Screenshots** — iPhone **6.5"** only (1242x2688, 2688x1242, 1284x2778,
    2778x1284). ASC uses only the first three on the install sheet. Must come
-   from build 21 or later so Cosmic Charlie appears, not Steal Your Face.
+   from build 21 or later so Cosmic Charlie appears, not Steal Your Face —
+   and from **whichever build is actually the candidate**, which moves every
+   time app code merges. Still not taken as of 2026-09-18, which is why
+   merging PR #39 costs no screenshot rework.
 3. **Demo account** `eljaguaro+appreview@gmail.com` — create AND confirm on
    build 21, which is the first build where native email confirmation works.
    Missing credentials is a near-automatic 2.1 rejection.
@@ -93,6 +107,29 @@ Aug 9, the day build 18 was created.
    Declare Product Interaction *linked*, Device ID *linked*, neither tracking.
 7. **App Review** — demo credentials + paste `reviewer-notes.md`.
 8. **Pricing and Availability** → Free.
+
+## The candidate moves with app code
+
+**Build 21 is the candidate only until the next app-code merge.** This is the
+rule the "Where things stand" table points at, written out because it is the
+thing a session re-derives wrongly: the candidate is not a build you pick, it
+is whatever build carries the current `main`.
+
+Open PRs, and what each does to the candidate:
+
+| PR | Contents | Effect |
+|---|---|---|
+| **#39** year-range dig-deep | App code (`src/`) | **Supersedes build 21.** Requires a new CI run and re-verification |
+| **#37** sync badge | App code, admin-only, cosmetic | Same effect — deliberately held until after submission for exactly this reason |
+| **#38** reviewer notes | Docs only | None. Safe to merge against any candidate |
+
+Merging #39 costs a CI run (run 21 → build 22) and a fresh `qa-release` pass.
+It costs **no screenshot rework**, because screenshots have never been taken —
+which is the argument for taking the feature now rather than after submission.
+
+**`qa-release` is mandatory before any publish or App Store build, and it does
+not carry over.** A PASS on build 21 says nothing about build 22. Run it in its
+own git worktree, from a session that did not write the code.
 
 ## Decisions taken
 
