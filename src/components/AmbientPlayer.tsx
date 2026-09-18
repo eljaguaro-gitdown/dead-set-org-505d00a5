@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { Play, Pause } from "lucide-react";
 import { useAudioPlayer, type PlayableSlot } from "@/contexts/AudioPlayerContext";
+import { SYNTHETIC_VERSION_DEFAULTS } from "@/lib/syntheticVersion";
 
 interface FeaturedTrack {
   title: string;
@@ -95,6 +96,7 @@ const AmbientPlayer = () => {
       id: `ambient-${ambientTrack.title}`,
       song: { id: `ambient-song`, title: ambientTrack.title },
       version: {
+        ...SYNTHETIC_VERSION_DEFAULTS,
         id: `ambient-version`,
         song_id: `ambient-song`,
         show_date: ambientTrack.date,

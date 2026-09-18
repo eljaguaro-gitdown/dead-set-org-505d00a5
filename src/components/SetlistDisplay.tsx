@@ -25,6 +25,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { findArchiveRecording, type ArchiveResult } from "@/lib/archiveOrg";
 import type { Database } from "@/integrations/supabase/types";
+import { SYNTHETIC_VERSION_DEFAULTS } from "@/lib/syntheticVersion";
 
 type Song = Database["public"]["Tables"]["songs"]["Row"];
 type NotableVersion = Database["public"]["Tables"]["notable_versions"]["Row"];
@@ -155,6 +156,7 @@ const SortableSlotItem = ({
               ...slot,
               directTrackUrl: archiveResult?.directTrackUrl || null,
               version: slot.version || (archiveResult ? {
+                ...SYNTHETIC_VERSION_DEFAULTS,
                 id: "", song_id: slot.song.id, show_date: archiveResult.date || "",
                 archive_org_url: archiveResult.url, venue: archiveResult.venue,
                 city: null, era_id: null, rating: null, description: null,
@@ -227,6 +229,7 @@ const SortableSlotItem = ({
                       ...slot,
                       directTrackUrl: archiveResult.directTrackUrl || null,
                       version: slot.version || {
+                        ...SYNTHETIC_VERSION_DEFAULTS,
                         id: "",
                         song_id: slot.song.id,
                         show_date: archiveResult.date || "",

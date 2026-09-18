@@ -16,6 +16,7 @@ import CommunityHighlights from "@/components/CommunityHighlights";
 import { emitCommunityFeedOptimisticInsert } from "@/lib/communityFeedEvents";
 
 import type { Database } from "@/integrations/supabase/types";
+import { SYNTHETIC_VERSION_DEFAULTS } from "@/lib/syntheticVersion";
 
 type SetlistRow = Database["public"]["Tables"]["setlists"]["Row"];
 type EraRow = Database["public"]["Tables"]["eras"]["Row"];
@@ -889,6 +890,7 @@ const MySetlists = () => {
                         song: { id: song.id, title: song.title },
                         version: song.notable_version_id || song.version_archive_org_url
                           ? {
+                              ...SYNTHETIC_VERSION_DEFAULTS,
                               id: song.notable_version_id ?? "",
                               song_id: song.id,
                               show_date: song.version_show_date ?? "",

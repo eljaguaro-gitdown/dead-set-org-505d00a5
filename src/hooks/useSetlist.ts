@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 import type { SetlistSlotData } from "@/components/SetlistDisplay";
 import type { User } from "@supabase/supabase-js";
+import { SYNTHETIC_VERSION_DEFAULTS } from "@/lib/syntheticVersion";
 
 type SetlistRow = Database["public"]["Tables"]["setlists"]["Row"];
 type Song = Database["public"]["Tables"]["songs"]["Row"];
@@ -21,6 +22,7 @@ const decodeArchiveNotes = (slotId: string, songId: string, rawNotes: string | n
     const meta = JSON.parse(metaStr);
     if (meta.__archive) {
       version = {
+        ...SYNTHETIC_VERSION_DEFAULTS,
         id: `archive-reconstructed-${slotId}`,
         song_id: songId,
         show_date: meta.show_date || "",

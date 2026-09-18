@@ -30,6 +30,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 import { emitCommunityFeedOptimisticInsert } from "@/lib/communityFeedEvents";
 import type { Database } from "@/integrations/supabase/types";
+import { SYNTHETIC_VERSION_DEFAULTS } from "@/lib/syntheticVersion";
 
 type Song = Database["public"]["Tables"]["songs"]["Row"];
 type NotableVersion = Database["public"]["Tables"]["notable_versions"]["Row"];
@@ -43,6 +44,7 @@ const buildArchiveVersion = (
 ): NotableVersion | null => {
   if (!sourceDate || !sourceArchiveUrl) return null;
   return {
+    ...SYNTHETIC_VERSION_DEFAULTS,
     id: `archive-show-${slotId}`,
     song_id: songId,
     show_date: sourceDate,

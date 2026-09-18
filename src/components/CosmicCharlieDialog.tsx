@@ -17,6 +17,7 @@ import {
 } from "@/lib/cosmicCharlieHistory";
 import { extractTasteMatches, type LengthHint } from "@/lib/charlie/tasteLexicon";
 import { trackWizardEvent } from "@/lib/wizardEvents";
+import { SYNTHETIC_VERSION_DEFAULTS } from "@/lib/syntheticVersion";
 
 type Song = Database["public"]["Tables"]["songs"]["Row"];
 type Era = Database["public"]["Tables"]["eras"]["Row"];
@@ -917,6 +918,7 @@ const CosmicCharlieDialog = ({
                               id: `explore-${i}-${v.showDate}`,
                               song: { id: "", title: exploreResult.songTitle },
                               version: {
+                                ...SYNTHETIC_VERSION_DEFAULTS,
                                 id: "", song_id: "", show_date: v.showDate,
                                 archive_org_url: v.archiveUrl!, venue: v.venue,
                                 city: v.city, era_id: null, rating: v.rating, description: v.description,

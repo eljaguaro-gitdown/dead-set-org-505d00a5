@@ -26,6 +26,7 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
+import { SYNTHETIC_VERSION_DEFAULTS } from "@/lib/syntheticVersion";
 
 type Song = Database["public"]["Tables"]["songs"]["Row"];
 type NotableVersion = Database["public"]["Tables"]["notable_versions"]["Row"];
@@ -246,6 +247,7 @@ const SongVersionBrowser = ({ song, curatedVersions, eras, eraId, onSelectSong, 
   const handleSelectArchiveVersion = (av: ArchiveVersion) => {
     // Create a synthetic NotableVersion so the builder can use it
     const syntheticVersion: NotableVersion = {
+      ...SYNTHETIC_VERSION_DEFAULTS,
       id: `archive-${av.identifier}`,
       song_id: song.id,
       show_date: av.date || "",
