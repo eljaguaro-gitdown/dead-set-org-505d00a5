@@ -96,7 +96,7 @@ mid-transition.
   Document observed behavior here; do not attempt to fix in this workstream.
 - **Lock-screen metadata needs verification on a physical iPhone** (Phase 2
   acceptance) — title, artist, album, artwork.
-- `bun.lockb` still needs a plain `bun install` from a normal dev environment
+- `bun.lock` still needs a plain `bun install` from a normal dev environment
   to pick up the `gapless` dependency (the remote sandbox couldn't reach the
   private registry mirror the lockfile pins).
 - Manual skips re-anchor the queue (intentional: a skip is a seek, not a
