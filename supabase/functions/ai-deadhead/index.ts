@@ -363,7 +363,12 @@ serve(async (req) => {
 
   try {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+    if (!LOVABLE_API_KEY) {
+      // Keep the env var name in the log, out of the thrown message: this
+      // message can reach the client in the 500 body.
+      console.error("LOVABLE_API_KEY is not configured");
+      throw new Error("Notes service is not configured");
+    }
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
@@ -512,7 +517,7 @@ You MUST respond using the explore_versions tool.`;
           return new Response(JSON.stringify({ error: "Cosmic Charlie is taking a breather — try again in a few minutes." }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
         }
         const text = await exploreResponse.text();
-        console.error("AI gateway error:", exploreResponse.status, text);
+        console.error("Notes service error:", exploreResponse.status, text);
         throw new Error("Charlie couldn't finish that one. Try again in a moment.");
       }
 
@@ -841,7 +846,7 @@ CRITICAL RULES:
         return new Response(JSON.stringify({ error: "Cosmic Charlie is taking a breather — try again in a few minutes." }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
       const text = await response.text();
-      console.error("AI gateway error:", response.status, text);
+      console.error("Notes service error:", response.status, text);
       throw new Error("Charlie couldn't finish that one. Try again in a moment.");
     }
 
