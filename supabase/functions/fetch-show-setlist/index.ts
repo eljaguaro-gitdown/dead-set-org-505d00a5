@@ -174,7 +174,13 @@ async function findNearbyShowDates(date: string, windowDays = 21): Promise<strin
 // Strip leading track-number / disc / set prefix, trailing file ext, and decoration.
 function cleanTitle(raw: string): string {
   return raw
-    .replace(/\.[^.]+$/, "")                       // .flac, .mp3
+    // Only real audio extensions. This used to be /\.[^.]+$/ — "strip the last
+    // dot and everything after it" — which also ate the second half of every
+    // title with an abbreviation in it: "C.C. Rider" became "C.C", "U.S. Blues"
+    // became "U.S". Unmatched titles get inserted into `songs` below, so the
+    // catalog grew a row for each mangled name. St. Stephen and Mr. Charlie
+    // were next.
+    .replace(/\.(flac|mp3|ogg|oga|shn|m4a|aac|wav|aiff?|opus|wma|ape)$/i, "")
     .replace(/^[ds]\d+t\d+\s*[-.:]?\s*/i, "")      // d1t03 — or s2t01 -
     .replace(/^t?\d+\s*[-.:]?\s*/, "")             // 03 - or t03.
     .replace(/[*†‡#@~]+/g, "")                     // segue/jam asterisks anywhere
