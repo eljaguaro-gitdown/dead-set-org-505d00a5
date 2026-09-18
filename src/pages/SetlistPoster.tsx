@@ -813,6 +813,14 @@ const SetlistPoster = () => {
                                     </span>
                                   );
                                 })()}
+                                {slot.version?.description && (
+                                  <span
+                                    className="font-hand text-xs sm:text-sm leading-snug mt-1 italic"
+                                    style={{ color: "hsl(28 20% 44%)" }}
+                                  >
+                                    {slot.version.description}
+                                  </span>
+                                )}
                               </div>
                               <button
                                 onClick={async (e) => {

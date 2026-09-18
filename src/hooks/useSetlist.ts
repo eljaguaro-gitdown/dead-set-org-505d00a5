@@ -10,7 +10,7 @@ type SetlistRow = Database["public"]["Tables"]["setlists"]["Row"];
 type Song = Database["public"]["Tables"]["songs"]["Row"];
 type NotableVersion = Database["public"]["Tables"]["notable_versions"]["Row"];
 
-const decodeArchiveNotes = (slotId: string, songId: string, rawNotes: string | null) => {
+export const decodeArchiveNotes = (slotId: string, songId: string, rawNotes: string | null) => {
   let notes = rawNotes || "";
   let version: NotableVersion | null = null;
 
@@ -31,7 +31,8 @@ const decodeArchiveNotes = (slotId: string, songId: string, rawNotes: string | n
         city: null,
         era_id: null,
         rating: meta.rating || null,
-        description: null,
+        // Charlie's note for this tape, written when the version was picked.
+        description: meta.note || null,
       };
       notes = nlIndex > -1 ? notes.substring(nlIndex + 1) : "";
     }
@@ -42,7 +43,7 @@ const decodeArchiveNotes = (slotId: string, songId: string, rawNotes: string | n
   return { notes, version };
 };
 
-const encodeArchiveNotes = (slot: SetlistSlotData) => {
+export const encodeArchiveNotes = (slot: SetlistSlotData) => {
   const userNotes = slot.notes || "";
   if (!slot.version?.id?.startsWith("archive-")) return userNotes;
   const archiveMeta = JSON.stringify({
@@ -51,6 +52,7 @@ const encodeArchiveNotes = (slot: SetlistSlotData) => {
     venue: slot.version.venue,
     archive_org_url: slot.version.archive_org_url,
     rating: slot.version.rating,
+    note: slot.version.description || undefined,
   });
   return archiveMeta + (userNotes ? `\n${userNotes}` : "");
 };

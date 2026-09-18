@@ -284,6 +284,14 @@ const SortableSlotItem = ({
                 Finding on Archive.org…
               </span>
             )}
+            {slot.version?.description && (
+              <p
+                className="mt-2 text-xs lg:text-sm font-hand leading-snug text-muted-foreground"
+                title="Why this version"
+              >
+                {slot.version.description}
+              </p>
+            )}
             <Textarea
               placeholder="Notes..."
               value={slot.notes}
