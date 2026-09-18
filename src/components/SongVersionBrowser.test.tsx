@@ -145,6 +145,95 @@ describe("SongVersionBrowser — dig deep by year", () => {
     ).toBeInTheDocument();
   });
 
+  it("tells Charlie which window he is judging, and names the era when there is one", async () => {
+    findManyArchiveRecordings.mockResolvedValue(IN_WINDOW);
+
+    renderBrowser({ eras: ERAS, eraId: "era-74" });
+
+    await waitFor(() => expect(invoke).toHaveBeenCalled());
+    const [, options] = invoke.mock.calls[0];
+    expect(options.body.yearRange).toEqual({
+      start: 1974,
+      end: 1976,
+      eraName: "Wall of Sound",
+    });
+  });
+
+  it("sends no window when the visitor is browsing every year", async () => {
+    findManyArchiveRecordings.mockResolvedValue(ALL_YEARS_TOP);
+
+    renderBrowser();
+
+    await waitFor(() => expect(invoke).toHaveBeenCalled());
+    expect(invoke.mock.calls[0][1].body.yearRange).toBeNull();
+  });
+
+  it("does not reuse a window's notes under a different window", async () => {
+    // A note written about the standout of 1974-76 would read as a lie once the
+    // window is every year, so the same recording has to be asked about again.
+    findManyArchiveRecordings.mockResolvedValue(IN_WINDOW);
+    invoke.mockResolvedValue({
+      data: { descriptions: { "gd1975-a": "Patient, unhurried, and it never lands where you expect." } },
+      error: null,
+    });
+
+    const { rerender } = renderBrowser({ eras: ERAS, eraId: "era-74" });
+    await waitFor(() => expect(invoke).toHaveBeenCalledTimes(1));
+    expect(
+      await screen.findByText(/Patient, unhurried, and it never lands where you expect/),
+    ).toBeInTheDocument();
+
+    // Toolbar moves off the era: same recordings, wider window.
+    findManyArchiveRecordings.mockResolvedValue(IN_WINDOW);
+    rerender(
+      <SongVersionBrowser
+        song={song}
+        curatedVersions={[]}
+        onSelectSong={vi.fn()}
+        eras={ERAS}
+        eraId={null}
+      />,
+    );
+
+    await waitFor(() => expect(invoke).toHaveBeenCalledTimes(2));
+    const [, second] = invoke.mock.calls[1];
+    expect(second.body.yearRange).toBeNull();
+    expect((second.body.versions as { identifier: string }[]).map((v) => v.identifier))
+      .toContain("gd1975-a");
+  });
+
+  it("never writes notes about the window the visitor just left", async () => {
+    // Changing window re-queries, but `loading` has not flipped in that first
+    // render — so the previous window's recordings are still in state. Asking
+    // about them would file 1974-76 versions under "all years".
+    findManyArchiveRecordings.mockResolvedValue(IN_WINDOW);
+
+    const { rerender } = renderBrowser({ eras: ERAS, eraId: "era-74" });
+    await waitFor(() => expect(invoke).toHaveBeenCalledTimes(1));
+
+    findManyArchiveRecordings.mockResolvedValue(ALL_YEARS_TOP);
+    rerender(
+      <SongVersionBrowser
+        song={song}
+        curatedVersions={[]}
+        onSelectSong={vi.fn()}
+        eras={ERAS}
+        eraId={null}
+      />,
+    );
+
+    await waitFor(() => expect(invoke).toHaveBeenCalledTimes(2));
+
+    const allYearsCalls = invoke.mock.calls.filter(([, o]) => o.body.yearRange === null);
+    expect(allYearsCalls.length).toBeGreaterThan(0);
+    for (const [, options] of allYearsCalls) {
+      const sent = (options.body.versions as { identifier: string }[]).map((v) => v.identifier);
+      // Every one of these must come from the all-years query, not the era one.
+      expect(sent).not.toContain("gd1975-a");
+      expect(sent).not.toContain("gd1974-b");
+    }
+  });
+
   it("never fires a doomed notes request for a signed-out visitor", async () => {
     mockUser = null;
     findManyArchiveRecordings.mockResolvedValue(IN_WINDOW);
