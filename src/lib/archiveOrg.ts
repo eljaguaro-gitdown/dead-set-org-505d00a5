@@ -77,14 +77,13 @@ function tokens(s: string): string[] {
 }
 
 /**
- * Score how well a track title matches the desired song title.
- * Returns 0 for no match, higher is better. Threshold for a real match is 60.
+ * Score one title against one song, with no medley handling — see matchScore.
  *
  * Strict by design: short substring overlaps that previously caused
  * "Mississippi Half Step" → "St. Stephen" (because "step" ⊂ "stephen") now
  * score 0. We only credit *whole-token* equality for the word-overlap path.
  */
-function matchScore(trackTitle: string, songTitle: string): number {
+function scoreTitlePair(trackTitle: string, songTitle: string): number {
   const ct = compact(trackTitle);
   const cs = compact(songTitle);
   if (!ct || !cs) return 0;
@@ -111,6 +110,41 @@ function matchScore(trackTitle: string, songTitle: string): number {
   if (overlap === trackSig.size && overlap >= 2) return 70;
 
   return 0;
+}
+
+/**
+ * Segue markers that join several songs under one track title. Tapers write the
+ * whole suite as one file — "Help > Slipknot > Franklin's Tower", "Scarlet ->
+ * Fire" — because that is how it was played.
+ */
+const SEGUE_SPLIT = /\s*(?:->|-->|→|>)\s*/;
+
+/**
+ * Score how well a track title matches the desired song title.
+ * Returns 0 for no match, higher is better. Threshold for a real match is 60.
+ *
+ * Strict by design: short substring overlaps that previously caused
+ * "Mississippi Half Step" → "St. Stephen" (because "step" ⊂ "stephen") now
+ * score 0. We only credit *whole-token* equality for the word-overlap path.
+ *
+ * Medleys are scored per segment. Against the whole string a suite scores 0 —
+ * "Help > Slipknot > Franklin" shares one significant word with "Help on the
+ * Way" and loses on every rule — so every medley-titled tape looked like it did
+ * not contain the song. That was tolerable while the browser offered versions
+ * the player might still refuse; once the browser started filtering on this
+ * score, it began hiding real tapes. The segue is the product here, so a suite
+ * genuinely does contain each of its songs.
+ */
+function matchScore(trackTitle: string, songTitle: string): number {
+  const direct = scoreTitlePair(trackTitle, songTitle);
+  if (direct === 100) return direct;
+
+  const segments = trackTitle.split(SEGUE_SPLIT).map((s) => s.trim()).filter(Boolean);
+  if (segments.length < 2) return direct;
+
+  // Best segment wins, never worse than the whole-string score. A tape with a
+  // dedicated track for the song still scores 100 and outranks the suite.
+  return segments.reduce((best, seg) => Math.max(best, scoreTitlePair(seg, songTitle)), direct);
 }
 
 export { matchScore, normalize };
