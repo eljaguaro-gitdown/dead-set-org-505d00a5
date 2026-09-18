@@ -400,6 +400,101 @@ export interface ArchiveVersion {
 
 const multiCache = new Map<string, ArchiveVersion[]>();
 
+/** Enough confirmed tapes to fill the browser — stop checking past this. */
+const VERIFIED_TARGET = 24;
+/**
+ * Ceiling on metadata fetches per search. A song with no tape in the window
+ * (ask for Crazy Fingers in 1974 — it debuted in 1975) fails every check, and
+ * without this it would walk the entire candidate list to prove it.
+ */
+const MAX_VERIFY_CHECKS = 36;
+const VERIFY_CONCURRENCY = 6;
+
+/**
+ * Three states on purpose. "We could not check" is not "there is no tape":
+ * archive.org times out, rate-limits, and occasionally 503s, and collapsing
+ * that into `false` makes a real recording vanish from the browser at random.
+ * It cost a version of this filter its own correctness — the same tape was
+ * dropped on one run and kept on the next.
+ */
+type TrackPresence = "present" | "absent" | "unknown";
+
+async function checkRecordingForTrack(
+  identifier: string,
+  songTitle: string,
+): Promise<TrackPresence> {
+  try {
+    const meta = await fetchMetadataWithFallback(identifier);
+    // No metadata means the check did not happen, not that the tape is empty.
+    if (!meta) return "unknown";
+    // Same threshold the player uses to decide what to play, so the browser
+    // cannot offer a version that playback would then refuse.
+    return findBestTrack(meta.files, songTitle, { restricted: meta.restricted }) !== null
+      ? "present"
+      : "absent";
+  } catch {
+    return "unknown";
+  }
+}
+
+/**
+ * Keep only the recordings that actually contain the song.
+ *
+ * The search that produced these matched archive.org's *item* text — the
+ * collection, the description, whatever else is indexed — not its track list.
+ * So a 1974 show comes back for a song first played in 1975, and nothing
+ * downstream notices: it gets added to a setlist, rendered with a real date
+ * and venue, and only fails at play time with "Couldn't find X in this
+ * recording" — or, if the playability precompute has run, as a "no tape" badge
+ * on a slot the user deliberately chose.
+ *
+ * Only a confirmed absence removes a version. A recording we could not check
+ * is kept: the player refuses to play audio it cannot match anyway, so an
+ * unverifiable tape degrades to the old behaviour instead of disappearing.
+ *
+ * Verified in order so the rating sort survives, with bounded concurrency and
+ * an early stop, because each check costs one metadata fetch.
+ */
+export async function keepRecordingsContainingSong(
+  versions: ArchiveVersion[],
+  songTitle: string,
+  opts: { target?: number; maxChecks?: number; concurrency?: number } = {},
+): Promise<ArchiveVersion[]> {
+  const target = opts.target ?? VERIFIED_TARGET;
+  const maxChecks = opts.maxChecks ?? MAX_VERIFY_CHECKS;
+  const concurrency = Math.max(1, opts.concurrency ?? VERIFY_CONCURRENCY);
+
+  const kept: ArchiveVersion[] = [];
+  let checked = 0;
+  let confirmedAbsent = 0;
+
+  for (let i = 0; i < versions.length; i += concurrency) {
+    if (kept.length >= target || checked >= maxChecks) break;
+    const batch = versions.slice(i, i + concurrency);
+    checked += batch.length;
+    const presence = await Promise.all(
+      batch.map((v) => checkRecordingForTrack(v.identifier, songTitle)),
+    );
+    batch.forEach((v, j) => {
+      if (presence[j] === "absent") confirmedAbsent++;
+      else kept.push(v);
+    });
+  }
+
+  // Candidates past `checked` are deliberately not carried over. Stopping
+  // early is a budget decision, not evidence — "here are the ones we could
+  // confirm out of the first N" is honest; padding the list with unverified
+  // ones would put the bad versions straight back.
+
+  if (confirmedAbsent > 0) {
+    console.warn(
+      `[QA] "${songTitle}": dropped ${confirmedAbsent} of ${checked} candidate recording(s) that do not contain the track — the search matches item text, not track lists`,
+    );
+  }
+
+  return kept;
+}
+
 export async function findManyArchiveRecordings(
   songTitle: string,
   maxResults = 50,
@@ -444,6 +539,12 @@ export async function findManyArchiveRecordings(
     if (hasWindow) {
       versions = versions.filter((v) => isYearInWindow(v.date, yearStart!, yearEnd!));
     }
+
+    // The query above matched item text, not track lists. Confirm each tape
+    // actually contains the song before anyone can pick it — a version offered
+    // here ends up in a setlist, and an empty list is the honest answer when
+    // nothing circulates.
+    versions = await keepRecordingsContainingSong(versions, songTitle);
 
     multiCache.set(key, versions);
     return versions;
