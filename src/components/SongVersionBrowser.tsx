@@ -256,7 +256,10 @@ const SongVersionBrowser = ({ song, curatedVersions, eras, eraId, onSelectSong, 
       city: null,
       era_id: null,
       rating: av.avgRating ? Math.min(5, Math.round(av.avgRating)) : null,
-      description: null,
+      // Charlie's note for this exact tape, so what sold the version in the
+      // vault travels with it into the set and the poster instead of being
+      // lost the moment it is picked.
+      description: descriptions[av.identifier] ?? null,
     };
     onSelectSong(song, syntheticVersion);
   };
