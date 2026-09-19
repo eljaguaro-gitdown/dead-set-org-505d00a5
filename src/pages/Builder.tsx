@@ -25,7 +25,11 @@ import ShowPlate from "@/components/ShowPlate";
 import ShareFlow from "@/components/ShareFlow";
 import { useSongs } from "@/hooks/useSongs";
 import { useAuth } from "@/hooks/useAuth";
-import { useSetlist } from "@/hooks/useSetlist";
+// encodeArchiveNotes is shared with the autosave path on purpose: this file
+// used to keep its own copy, and when the slot-notes blob gained Charlie's
+// per-version note the copy was not updated — so a guest who picked a version
+// and then signed in saved the slot without its note.
+import { encodeArchiveNotes, useSetlist } from "@/hooks/useSetlist";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 import { emitCommunityFeedOptimisticInsert } from "@/lib/communityFeedEvents";
@@ -56,18 +60,6 @@ const buildArchiveVersion = (
     rating: null,
     description: null,
   };
-};
-
-const encodeArchiveNotes = (slot: SetlistSlotData) => {
-  if (!slot.version?.id?.startsWith("archive-")) return slot.notes;
-  const archiveMeta = JSON.stringify({
-    __archive: true,
-    show_date: slot.version.show_date,
-    venue: slot.version.venue,
-    archive_org_url: slot.version.archive_org_url,
-    rating: slot.version.rating,
-  });
-  return archiveMeta + (slot.notes ? `\n${slot.notes}` : "");
 };
 
 /* Overflow menu sub-component */
