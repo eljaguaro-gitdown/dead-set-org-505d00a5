@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { captureEvent, captureException } from "@/lib/posthog";
 
 type ShareType = "app_link" | "setlist" | "poster";
 type ShareChannel =
@@ -39,7 +40,14 @@ export const trackShare = async ({
       setlist_id: setlistId ?? null,
       metadata: (metadata as Record<string, string>) ?? null,
     }]);
-  } catch {
+
+    captureEvent("setlist_shared", {
+      share_type: shareType,
+      channel,
+      setlist_id: setlistId,
+    });
+  } catch (error) {
+    captureException(error, { flow: "share_tracking", channel, share_type: shareType });
     // Silent fail — never block UX for analytics
   }
 };

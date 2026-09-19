@@ -1,9 +1,10 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import { captureServerEvent } from "../_shared/posthog.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-visitor-id, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+    "authorization, x-client-info, apikey, content-type, x-visitor-id, x-posthog-distinct-id, x-posthog-session-id, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 Deno.serve(async (req) => {
@@ -97,6 +98,17 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    const browserDistinctId = req.headers.get("X-POSTHOG-DISTINCT-ID");
+    const browserSessionId = req.headers.get("X-POSTHOG-SESSION-ID");
+    await captureServerEvent({
+      distinctId: browserDistinctId === user.id ? browserDistinctId : user.id,
+      event: "setlist_joined",
+      properties: {
+        setlist_id: setlist.id,
+        ...(browserSessionId ? { $session_id: browserSessionId } : {}),
+      },
+    });
 
     return new Response(
       JSON.stringify({ setlist_id: setlist.id, title: setlist.title, joined: true }),

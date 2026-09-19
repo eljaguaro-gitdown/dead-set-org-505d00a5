@@ -2,6 +2,7 @@ import { useState, type MouseEvent } from "react";
 import { Play, Loader2, Pause, ChevronDown, ListPlus, Disc3, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAudioPlayer, type PlayableSlot } from "@/contexts/AudioPlayerContext";
+import { captureEvent, captureException } from "@/lib/posthog";
 import { toast } from "sonner";
 import {
   DropdownMenu,
@@ -116,6 +117,7 @@ const PlaySetlistButton = ({
       await action(playable);
     } catch (err) {
       console.error("[PlaySetlistButton] failed", err);
+      captureException(err, { flow: "setlist_playback", setlist_id: setlistId });
       toast.error("Couldn't start playback");
     } finally {
       setLoading(false);
@@ -131,12 +133,28 @@ const PlaySetlistButton = ({
       return;
     }
 
-    await runWithSlots((playable) => playSetlist(playable, setlistId));
+    await runWithSlots(async (playable) => {
+      await playSetlist(playable, setlistId);
+      captureEvent("setlist_play_started", {
+        setlist_id: setlistId,
+        play_mode: "all",
+        song_count: playable.length,
+        surface: "primary_button",
+      });
+    });
   };
 
   const handleMode = async (mode: PlayMode) => {
     if (mode === "all") {
-      await runWithSlots((playable) => playSetlist(playable, setlistId));
+      await runWithSlots(async (playable) => {
+        await playSetlist(playable, setlistId);
+        captureEvent("setlist_play_started", {
+          setlist_id: setlistId,
+          play_mode: "all",
+          song_count: playable.length,
+          surface: "options_menu",
+        });
+      });
       return;
     }
     if (mode === "openers") {
@@ -153,6 +171,12 @@ const PlaySetlistButton = ({
           return;
         }
         await playSetlist(openers, setlistId);
+        captureEvent("setlist_play_started", {
+          setlist_id: setlistId,
+          play_mode: "openers",
+          song_count: openers.length,
+          surface: "options_menu",
+        });
         toast.success(`Playing ${openers.length} opener${openers.length === 1 ? "" : "s"}`);
       });
       return;

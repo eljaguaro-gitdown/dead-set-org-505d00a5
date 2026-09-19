@@ -4,6 +4,7 @@ import { ArrowLeft } from "lucide-react";
 import { songbookDb } from "@/lib/songbookDb";
 import PageLayout from "@/components/PageLayout";
 import SiteHeader from "@/components/SiteHeader";
+import { captureEvent } from "@/lib/posthog";
 
 /**
  * The Songbook — one song a week, forever.
@@ -101,6 +102,10 @@ const Songbook = () => {
 
               <Link
                 to={`/songbook/${current.slug}`}
+                onClick={() => captureEvent("songbook_issue_opened", {
+                  issue_number: current.issue_number,
+                  placement: "current",
+                })}
                 className="block bg-card text-card-foreground rounded-sm p-6 md:p-9 border border-border hover:border-primary/50 transition-colors group"
               >
                 <p className="font-ticket text-[10px] uppercase tracking-[0.18em] text-primary mb-3">
@@ -147,6 +152,10 @@ const Songbook = () => {
                     <Link
                       key={f.id}
                       to={`/songbook/${f.slug}`}
+                      onClick={() => captureEvent("songbook_issue_opened", {
+                        issue_number: f.issue_number,
+                        placement: "archive",
+                      })}
                       className="block bg-card text-card-foreground rounded-sm p-4 border border-border hover:border-primary/50 transition-colors group"
                     >
                       <p className="font-ticket text-[9px] uppercase tracking-[0.16em] text-muted-foreground mb-1.5">

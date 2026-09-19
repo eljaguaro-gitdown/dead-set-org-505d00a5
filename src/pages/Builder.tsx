@@ -29,6 +29,7 @@ import { useSetlist } from "@/hooks/useSetlist";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 import { emitCommunityFeedOptimisticInsert } from "@/lib/communityFeedEvents";
+import { captureEvent } from "@/lib/posthog";
 import type { Database } from "@/integrations/supabase/types";
 import { SYNTHETIC_VERSION_DEFAULTS } from "@/lib/syntheticVersion";
 
@@ -601,6 +602,13 @@ const Builder = () => {
       if (slotsToInsert.length > 0) {
         await supabase.from("setlist_slots").insert(slotsToInsert);
       }
+
+      captureEvent("setlist_created", {
+        setlist_id: newSetlist.id,
+        song_count: slotsToInsert.length,
+        has_era: Boolean(eraToSave),
+        source: "guest_conversion",
+      });
 
       // Clear guest state and cache
       sessionStorage.removeItem("deadset-guest-cache");

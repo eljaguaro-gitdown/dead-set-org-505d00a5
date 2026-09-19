@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useBlockedUsers } from "@/hooks/useModeration";
 import ReportDialog from "@/components/ReportDialog";
+import { captureEvent, captureException } from "@/lib/posthog";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 
@@ -97,8 +98,13 @@ const SetlistComments = ({ setlistId, isPublic }: SetlistCommentsProps) => {
     });
 
     if (error) {
+      captureException(error, { flow: "comment_post", setlist_id: setlistId });
       toast.error("Couldn't post comment");
     } else {
+      captureEvent("comment_posted", {
+        setlist_id: setlistId,
+        comment_length: trimmed.length,
+      });
       setNewComment("");
       await fetchComments();
 

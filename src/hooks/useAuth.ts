@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { User } from "@supabase/supabase-js";
 import { markConversion } from "@/lib/abTest";
 import { trackAuthEvent, consumePendingOAuth } from "@/lib/authFunnel";
+import { identifyUser, resetPostHog } from "@/lib/posthog";
 
 const SESSION_FLAG = "dead_set_active_session";
 
@@ -23,6 +24,7 @@ let authSnapshot: AuthSnapshot = {
 
 let isInitialized = false;
 let initPromise: Promise<void> | null = null;
+let identifiedUserId: string | null = null;
 const listeners = new Set<(snapshot: AuthSnapshot) => void>();
 
 const emitSnapshot = () => {
@@ -91,6 +93,23 @@ const ensureAuthInitialized = () => {
     if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED" || event === "INITIAL_SESSION") {
       if (session) {
         setActiveSessionFlag();
+      }
+
+      if ((event === "SIGNED_IN" || event === "INITIAL_SESSION") && session?.user) {
+        if (identifiedUserId && identifiedUserId !== session.user.id) {
+          resetPostHog();
+        }
+        identifiedUserId = session.user.id;
+        const metadata = session.user.user_metadata as Record<string, unknown> | null;
+        const appMetadata = session.user.app_metadata as Record<string, unknown> | null;
+        identifyUser(session.user.id, {
+          email: session.user.email,
+          name:
+            (typeof metadata?.full_name === "string" && metadata.full_name) ||
+            (typeof metadata?.name === "string" && metadata.name) ||
+            undefined,
+          role: typeof appMetadata?.role === "string" ? appMetadata.role : undefined,
+        });
       }
 
       if (event === "SIGNED_IN" && session?.user) {
@@ -183,6 +202,10 @@ const ensureAuthInitialized = () => {
 
     if (event === "SIGNED_OUT") {
       clearActiveSessionFlag();
+      if (identifiedUserId) {
+        resetPostHog();
+        identifiedUserId = null;
+      }
     }
 
     setSnapshot({
