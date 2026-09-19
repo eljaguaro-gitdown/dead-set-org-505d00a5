@@ -83,7 +83,17 @@ const UserSegmentsWidget = ({ enabled }: Props) => {
 
       const [sharesRes, setlistsRes, dmsRes, commentsRes, playsRes, favsRes, upvotesRes, profilesRes] =
         await Promise.all([
-          range(supabase.from("share_events").select("user_id").not("user_id", "is", null)).limit(10000),
+          // Excludes cta_click: those are landing-page button presses written
+          // into share_events by trackCtaClick(), not shares. Without this a
+          // visitor who clicked "Build your own" landed in the "sharers"
+          // segment having never shared anything.
+          range(
+            supabase
+              .from("share_events")
+              .select("user_id")
+              .neq("share_type", "cta_click")
+              .not("user_id", "is", null),
+          ).limit(10000),
           range(supabase.from("setlists").select("creator_id")).limit(10000),
           range(supabase.from("direct_messages").select("sender_id")).limit(10000),
           range(supabase.from("setlist_comments").select("user_id")).limit(10000),
