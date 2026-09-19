@@ -11,7 +11,9 @@ import { Button } from "@/components/ui/button";
 import FavoriteButton from "@/components/FavoriteButton";
 import { shareSong } from "@/lib/shareSong";
 import SongEraLadder, { type LadderVersion } from "@/components/SongEraLadder";
+import { ladderSlot, ladderPlaylist } from "@/lib/ladderPlayback";
 import { toast } from "sonner";
+import { captureEvent } from "@/lib/posthog";
 
 interface SongRow {
   id: string;
@@ -43,7 +45,7 @@ const SongPage = () => {
   const fallbackDate = searchParams.get("d");
   const fallbackVenue = searchParams.get("venue");
   const fromName = searchParams.get("from");
-  const { playSingle } = useAudioPlayer();
+  const { playSingle, playSetlist, playingSlot } = useAudioPlayer();
   const { user } = useAuth();
   const { isFavoriteVersion, toggleFavoriteSong } = useFavoriteSongs();
   const [song, setSong] = useState<SongRow | null>(null);
@@ -128,23 +130,23 @@ const SongPage = () => {
 
   const handleLadderPlay = (v: LadderVersion) => {
     if (!song) return;
-    playSingle({
-      id: `ladder-${song.id}-${v.id}`,
-      song: { id: song.id, title: song.title },
-      version: {
-        id: v.id,
-        song_id: song.id,
-        show_date: v.show_date ?? "",
-        venue: v.venue,
-        city: v.city,
-        archive_org_url: v.archive_org_url,
-        era_id: v.era_id,
-        rating: null,
-        description: null,
-      } as never,
-      setNumber: 1,
-      position: 0,
-      segueToNext: false,
+    playSingle(ladderSlot(song, v));
+  };
+
+  const handlePlaySleepers = async (sleepers: LadderVersion[]) => {
+    if (!song) return;
+    const slots = ladderPlaylist(song, sleepers);
+    if (slots.length === 0) {
+      toast.info("No tape circulating for these yet");
+      return;
+    }
+    await playSetlist(slots);
+    captureEvent("sleepers_play_started", {
+      song_id: song.id,
+      song_title: song.title,
+      sleeper_count: sleepers.length,
+      playable_count: slots.length,
+      surface: "song_page",
     });
   };
 
@@ -250,6 +252,8 @@ const SongPage = () => {
                 songTitle={song.title}
                 activeVersionId={version?.id ?? null}
                 onPlay={handleLadderPlay}
+                onPlaySleepers={handlePlaySleepers}
+                playingVersionId={playingSlot?.version?.id ?? null}
               />
             </div>
           </article>

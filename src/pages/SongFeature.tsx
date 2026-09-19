@@ -7,6 +7,9 @@ import PageLayout from "@/components/PageLayout";
 import SiteHeader from "@/components/SiteHeader";
 import ShareDropdown from "@/components/ShareDropdown";
 import SongEraLadder, { type LadderVersion } from "@/components/SongEraLadder";
+import { ladderSlot, ladderPlaylist } from "@/lib/ladderPlayback";
+import { captureEvent } from "@/lib/posthog";
+import { toast } from "sonner";
 
 /**
  * One issue of The Songbook — the long-form discussion of a single song,
@@ -56,7 +59,7 @@ const Prose = ({ text }: { text: string }) => (
 
 const SongFeature = () => {
   const { slug } = useParams<{ slug: string }>();
-  const { playSingle } = useAudioPlayer();
+  const { playSingle, playSetlist, playingSlot } = useAudioPlayer();
   const [feature, setFeature] = useState<FeatureRow | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -103,23 +106,24 @@ const SongFeature = () => {
 
   const handlePlay = (v: LadderVersion) => {
     if (!feature?.song_id) return;
-    playSingle({
-      id: `songbook-${feature.song_id}-${v.id}`,
-      song: { id: feature.song_id, title: feature.title },
-      version: {
-        id: v.id,
-        song_id: feature.song_id,
-        show_date: v.show_date ?? "",
-        venue: v.venue,
-        city: v.city,
-        archive_org_url: v.archive_org_url,
-        era_id: v.era_id,
-        rating: null,
-        description: null,
-      } as never,
-      setNumber: 1,
-      position: 0,
-      segueToNext: false,
+    playSingle(ladderSlot({ id: feature.song_id, title: feature.title }, v));
+  };
+
+  const handlePlaySleepers = async (sleepers: LadderVersion[]) => {
+    if (!feature?.song_id) return;
+    const song = { id: feature.song_id, title: feature.title };
+    const slots = ladderPlaylist(song, sleepers);
+    if (slots.length === 0) {
+      toast.info("No tape circulating for these yet");
+      return;
+    }
+    await playSetlist(slots);
+    captureEvent("sleepers_play_started", {
+      song_id: song.id,
+      song_title: song.title,
+      sleeper_count: sleepers.length,
+      playable_count: slots.length,
+      surface: "songbook_feature",
     });
   };
 
@@ -222,6 +226,8 @@ const SongFeature = () => {
                 songId={feature.song_id}
                 songTitle={feature.title}
                 onPlay={handlePlay}
+                onPlaySleepers={handlePlaySleepers}
+                playingVersionId={playingSlot?.version?.id ?? null}
               />
             </div>
           )}
