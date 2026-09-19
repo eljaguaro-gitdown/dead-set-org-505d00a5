@@ -17,7 +17,16 @@ export const captureServerEvent = async ({
     return;
   }
 
-  const posthog = new PostHog(projectToken, { host });
-  posthog.capture({ distinctId, event, properties });
-  await posthog.shutdown();
+  // Never throw. Callers await this after the real work has already
+  // committed — the account is deleted, the setlist is joined — and they sit
+  // inside the handler's outer try. An unhandled throw here would return a 500
+  // for an operation that actually succeeded, telling someone their account
+  // deletion failed when it did not, and inviting a retry.
+  try {
+    const posthog = new PostHog(projectToken, { host });
+    posthog.capture({ distinctId, event, properties });
+    await posthog.shutdown();
+  } catch (e) {
+    console.error("PostHog server event failed; continuing:", e instanceof Error ? e.message : e);
+  }
 };
