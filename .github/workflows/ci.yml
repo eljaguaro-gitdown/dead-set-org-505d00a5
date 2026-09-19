@@ -1,0 +1,66 @@
+# Runs on every pull request and on pushes to main — the checks a contributor
+# runs locally before pushing, run again where nobody can forget them.
+#
+# Why this exists: "Play the N sleepers" shipped a button whose onClick only
+# filtered a list, with no test covering what the label promised. Nothing in
+# the repo ran on a pull request, so the first thing to exercise it was a
+# phone. Typecheck, tests and a production build now run before review does.
+#
+# Install matches ios-testflight.yml: bun, the repo's package manager, with
+# bun.lock (the live lockfile — bun.lockb is a fossil, see CLAUDE.md) as the
+# source of truth. --frozen-lockfile additionally fails the job when
+# package.json and bun.lock disagree, which is its own class of bug: a
+# dependency added to one and not the other builds locally and ships without
+# the package.
+#
+# Secrets: none. VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY are
+# publishable values committed in .env, so the build and the tests that read
+# them work from a plain checkout.
+
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# A second push to the same branch makes the first run's answer irrelevant.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Typecheck, test, build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Typecheck
+        run: bun run typecheck
+
+      # src/test/anonDraftRls.test.ts is a smoke test against the real
+      # Supabase backend: it inserts a draft row, asserts RLS denies a foreign
+      # session, and deletes it again in afterAll. It therefore needs network
+      # to the project host, and it writes (transiently) to production.
+      - name: Tests
+        run: bun run test
+
+      - name: Build
+        run: bun run build
+
+      # Advisory, not a gate. `eslint .` reports 274 errors and 38 warnings
+      # across the repo as of a5329c9 — almost all pre-existing (hooks called
+      # after early returns, `any` in generated-adjacent code). Blocking on
+      # that would fail every pull request for reasons unrelated to its diff.
+      # The step keeps the number visible so it can come down; flip
+      # continue-on-error off once it reaches zero.
+      - name: Lint (advisory — see comment)
+        run: bun run lint
+        continue-on-error: true
