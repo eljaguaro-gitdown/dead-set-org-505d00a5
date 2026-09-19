@@ -95,9 +95,22 @@ Deno.serve(async (req) => {
       .map(([provider, count]) => `${provider}: ${count}`)
       .join(', ')
 
-    // Shares this week
+    // Shares this week.
+    //
+    // share_events is not only shares. trackCtaClick() writes landing-page and
+    // poster CTA button clicks into the same table with share_type
+    // 'cta_click', and they outnumber real shares roughly 2:1 — 238 of 372
+    // rows at the time of writing. Counting the table unfiltered inflated this
+    // number in every weekly report since 2026-04-23, and the inflated figure
+    // was also fed to the model that writes the analysis paragraph.
+    //
+    // Excluded by name rather than allow-listed: a genuinely new share channel
+    // should start counting the day it ships, without anyone remembering to
+    // add it here. A new NON-share event type is the case that needs a thought,
+    // and that thought belongs at the write site.
     const { count: sharesThisWeek } = await supabase
       .from('share_events').select('*', { count: 'exact', head: true })
+      .neq('share_type', 'cta_click')
       .gte('created_at', oneWeekAgo.toISOString())
 
     // ─── AI Analysis ───
