@@ -50,7 +50,8 @@
 -- session that never reported an ending cannot be said to have not completed.
 -- Including them would understate completion rate by ~28%.
 --
--- 21.2% of all play attempts end in ended_reason='error' (100 of 472). That is
+-- 21.2% of all play attempts end in ended_reason='error' (100 of 472, measured
+-- 2026-08-15). That is
 -- a product signal worth escalating regardless of whose account it came from.
 -- =============================================================================
 

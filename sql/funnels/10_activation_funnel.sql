@@ -48,18 +48,21 @@
 --   3 created_setlist  >=1 row in setlists with creator_id = actor
 --   4 added_slots      >=1 of those setlists has >=1 setlist_slots row
 --   5 shared           >=1 share_events row with share_type <> 'cta_click'
---                      (cta_click is a button click, not a share — it is 219 of
---                      335 rows and would inflate this step ~3x)
+--                      (cta_click is a button click, not a share — it is 238 of
+--                      372 rows as of 2026-09-19 and would inflate this step ~2.8x)
 --   6 played           >=1 play_events row
 --
 -- CAVEAT ON STEP 4: at ACTOR level this converts at 100%, which looks like a
 -- broken step but is true — every creator who made a setlist made at least one
 -- with songs in it. The abandonment is at SETLIST level: 48 of 224 setlists
--- (21%) have zero slots. If you want the number that actually moves, use the
+-- (21%) have zero slots, measured 2026-08-15 — and note 3fa6a2c (2026-08-15)
+-- fixed the eager-row-creation bug that produced most of those empties, so the
+-- ratio after that date is not comparable to this one. If you want the number that actually moves, use the
 -- setlist-level metric in 50_creator_retention.sql, not this step.
 --
--- CAVEAT ON STEP 6: playback is not yet a real user behaviour. 463 of 472
--- play_events (98.1%) belong to the founder's account, which this query
+-- CAVEAT ON STEP 6: playback is not yet a real user behaviour. Measured
+-- 2026-08-15, 463 of 472 play_events (98.1%) belonged to the founder's
+-- account — still 597 of 609 (98.0%) on 2026-09-19 — which this query
 -- excludes. What remains is a handful of events from 3 anonymous browsers and
 -- one other account. Treat step 6 as instrumentation-confirmed but
 -- statistically empty until real listening volume appears.
