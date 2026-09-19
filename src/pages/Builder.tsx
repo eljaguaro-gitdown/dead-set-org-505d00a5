@@ -212,6 +212,25 @@ const Builder = () => {
   // Guest mode: track local-only slots when no user/setlist
   const isGuestMode = !user && !paramId;
 
+  /**
+   * Top of the guest funnel. Everything a signed-out visitor does in the
+   * builder was invisible until now — the only event that ever fired was
+   * setlist_created, which by definition only covers the ones who converted.
+   * These four (guest_builder_started, guest_song_added, auth_wall_shown,
+   * auth_wall_response) exist to show where the other ones go.
+   *
+   * Fired once per mount, and only after auth has resolved, so a signed-in
+   * visitor mid-rehydration is never miscounted as a guest.
+   */
+  const guestStartLogged = useRef(false);
+  useEffect(() => {
+    if (authLoading || !isGuestMode || guestStartLogged.current) return;
+    guestStartLogged.current = true;
+    captureEvent("guest_builder_started", {
+      entry: wizardRequested ? "wizard" : "direct",
+    });
+  }, [authLoading, isGuestMode, wizardRequested]);
+
   const { songs, eras, loading: songsLoading, getNotableVersions } = useSongs(selectedEra);
   const {
     setlist,
@@ -403,6 +422,16 @@ const Builder = () => {
         segueToNext: false,
         notes: "",
       };
+      if (isGuestMode) {
+        // Depth, not identity: song_count is what shows where guests stop.
+        // No song title or free text — the catalog id is enough to segment by.
+        captureEvent("guest_song_added", {
+          song_count: currentSlots.length + 1,
+          set_number: activeSet,
+          song_id: song.id,
+          with_version: Boolean(version),
+        });
+      }
       toast.success(`Added ${song.title} to ${activeSet === 3 ? "Encore" : `Set ${activeSet}`}`, { duration: 2000 });
       if (isMobile && mobileTab === "songs") {
         setMiniBarPulse(true);
@@ -1022,6 +1051,10 @@ const Builder = () => {
       const timer = setTimeout(() => {
         setShowGuestPrompt(true);
         setGuestPromptShown(true);
+        captureEvent("auth_wall_shown", {
+          song_count: guestSlots.length,
+          trigger: "guest_setlist_threshold",
+        });
       }, 1200);
       return () => clearTimeout(timer);
     }
@@ -1664,12 +1697,24 @@ const Builder = () => {
       <GuestSignInPrompt
         open={showGuestPrompt}
         onSignIn={() => {
+          captureEvent("auth_wall_response", {
+            response: "sign_in",
+            song_count: guestSlots.length,
+          });
           cacheGuestData();
           setShowGuestPrompt(false);
           pendingActionRef.current = "save";
           setAuthModalOpen(true);
         }}
-        onDismiss={() => setShowGuestPrompt(false)}
+        onDismiss={() => {
+          // Counted deliberately: a dismissal is the drop-off this funnel was
+          // built to find, and it is the outcome that leaves no other trace.
+          captureEvent("auth_wall_response", {
+            response: "dismissed",
+            song_count: guestSlots.length,
+          });
+          setShowGuestPrompt(false);
+        }}
       />
 
       </>}
