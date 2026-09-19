@@ -96,7 +96,8 @@
 --    a sequential funnel by construction. Measured: of 48 real (non-QA) users,
 --    28 predate the epoch; of the 20 who signed up on/after 2026-04-24, 19 have
 --    an attribution row — 95% coverage in-era vs ~0% before. 99 of 224 setlists
---    were created pre-epoch. Running the funnel from before 2026-04-24 does not
+--    were created pre-epoch (measured 2026-08-15; 239 setlists exist as of
+--    2026-09-19, so re-measure before quoting the ratio). Running the funnel from before 2026-04-24 does not
 --    produce a "longer" funnel, it produces a wrong one.
 --
 --
@@ -107,10 +108,14 @@
 -- where 3 QA addresses tripped a bounce advisory. The SAME 3 accounts are in
 -- these event tables and between them created 8 setlists.
 --
--- Internal accounts: eljaguaro@gmail.com is the founder. His account is 129 of
--- 224 setlists (57.6%), 463 of 472 play_events (98.1%), and 30 distinct
--- visitor_ids. On a 48-real-user dataset that is not a rounding error, it is the
+-- Internal accounts: eljaguaro@gmail.com is the founder. As of 2026-09-19 his
+-- account is 144 of 239 setlists (60.3%) and 597 of 609 attributed play_events
+-- (98.0%). On a ~50-real-user dataset that is not a rounding error, it is the
 -- dataset. He is excluded by default. Comment the line out to include him.
+--
+-- Counts in these notes are dated snapshots, not invariants. Re-measure before
+-- quoting one; an earlier revision of this file carried figures that had drifted
+-- by roughly 11% and were repeated downstream as current.
 --
 -- =============================================================================
 
@@ -210,12 +215,20 @@ GRANT SELECT ON public.analytics_visitor_identity TO service_role;
 --
 -- NOTE on share_events: share_type='cta_click' is NOT a share. src/lib/
 -- trackCtaClick.ts writes CTA/button clicks into share_events, and they are the
--- MAJORITY of the table (219 of 335 rows). Counting share_events without
--- filtering share_type inflates "shared" by roughly 3x. Real shares are
--- share_type IN ('setlist','app_link') — 116 rows. cta_click is preserved here
--- under its own event_name so it stays available, but it is not a share.
+-- MAJORITY of the table (238 of 372 rows as of 2026-09-19). Counting
+-- share_events without filtering share_type inflates "shared" by roughly 2.8x.
+-- Real shares are everything except cta_click — 134 rows. Exclude by name
+-- rather than allow-listing ('setlist','app_link'), because ShareType also
+-- carries 'poster' and an allow-list silently drops any channel added later.
+-- cta_click is preserved here under its own event_name so it stays available,
+-- but it is not a share.
 --
--- NOTE on wizard_events: the table exists but is EMPTY (0 rows) — the primary
+-- This note was correct in this file from the start while the application code
+-- was not: the weekly insights email and the admin "sharers" segment both
+-- counted the table unfiltered until 99dfe90 (2026-09-19). Diagnosis living in
+-- a file nobody greps is not a fix.
+--
+-- NOTE on wizard_events: effectively empty (1 row as of 2026-09-19) — the primary
 -- wizard surface was never instrumented. It is unioned in below so that the
 -- moment instrumentation lands, wizard steps flow through with no query changes.
 -- Nothing downstream depends on it having rows. Its timestamp column is

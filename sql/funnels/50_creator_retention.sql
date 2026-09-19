@@ -24,14 +24,17 @@
 -- In 10_activation_funnel.sql, "added_slots" converts at 100% and looks like a
 -- dead step. At ACTOR level that is genuinely true: every creator who made a
 -- setlist made at least one with songs in it. But at SETLIST level, 48 of 224
--- setlists (21%) have ZERO slots — someone hit create and walked away. That
+-- setlists (21%) had ZERO slots as of 2026-08-15 — someone hit create and
+-- walked away. Re-measure before quoting: 3fa6a2c (2026-08-15) fixed the eager
+-- row creation that produced most of these, so the current ratio is lower. That
 -- abandonment is invisible in an actor-keyed funnel, so it gets its own query
 -- here. If you want a number that can actually improve, this is the one.
 --
 --
 -- THE FOUNDER PROBLEM
 -- -------------------
--- eljaguaro@gmail.com created 129 of 224 setlists (57.6%). Including him,
+-- eljaguaro@gmail.com created 129 of 224 setlists (57.6%) as of 2026-08-15,
+-- and 144 of 239 (60.3%) as of 2026-09-19 — the share is rising. Including him,
 -- "average setlists per creator" is 5.3, which describes nobody. All three
 -- queries below carry a `segment` column instead of silently dropping him, so
 -- the community figure and the internal figure are both visible and never
