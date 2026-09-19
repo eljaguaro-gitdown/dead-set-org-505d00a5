@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { songbookDb } from "@/lib/songbookDb";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -44,6 +44,14 @@ interface Props {
   /** Highlighted as "you are here" — e.g. the version a share link landed on. */
   activeVersionId?: string | null;
   onPlay?: (version: LadderVersion) => void;
+  /**
+   * Start the sleepers as a queue, oldest first. The sleeper card's button
+   * says "play", so it has to play — filtering the ladder underneath it is
+   * what the card does as well, not instead.
+   */
+  onPlaySleepers?: (versions: LadderVersion[]) => void;
+  /** The version sounding right now, so a running queue shows its place. */
+  playingVersionId?: string | null;
 }
 
 /** Era accent colours. Every one of the seven DB eras gets one — the old
@@ -67,13 +75,14 @@ const fmtDate = (iso: string | null) => {
   return `${months[m - 1]} ${d}, ${y}`;
 };
 
-const SongEraLadder = ({ songId, songTitle, activeVersionId, onPlay }: Props) => {
+const SongEraLadder = ({ songId, songTitle, activeVersionId, onPlay, onPlaySleepers, playingVersionId }: Props) => {
   const isMobile = useIsMobile();
   const [eras, setEras] = useState<LadderEra[]>([]);
   const [versions, setVersions] = useState<LadderVersion[]>([]);
   const [loading, setLoading] = useState(true);
   const [openEra, setOpenEra] = useState<string | null>(null);
   const [sleepersOnly, setSleepersOnly] = useState(false);
+  const ladderRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -101,7 +110,17 @@ const SongEraLadder = ({ songId, songTitle, activeVersionId, onPlay }: Props) =>
   );
   const sleeperCutoff = leader * SLEEPER_RATIO;
   const isSleeper = (v: LadderVersion) => v.votes != null && leader > 0 && v.votes < sleeperCutoff;
-  const sleeperCount = versions.filter(isSleeper).length;
+  const sleepers = versions.filter(isSleeper);
+  const sleeperCount = sleepers.length;
+
+  /** The sleeper card's play button: start the queue, then show what's in it. */
+  const handlePlaySleepers = () => {
+    setSleepersOnly(true);
+    onPlaySleepers?.(sleepers);
+    // On a phone the ladder is a screen and a half below this card, so the
+    // filter alone reads as "nothing happened" — take the listener to it.
+    ladderRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
 
   const byEra = useMemo(() => {
     const map = new Map<string, LadderVersion[]>();
@@ -260,11 +279,9 @@ const SongEraLadder = ({ songId, songTitle, activeVersionId, onPlay }: Props) =>
           <div className="flex items-center gap-3 flex-wrap">
             <button
               type="button"
-              onClick={() => setSleepersOnly(true)}
-              aria-pressed={sleepersOnly}
-              className={`font-ticket text-[11px] uppercase tracking-[0.1em] px-4 py-2.5 rounded-sm transition-colors ${
-                sleepersOnly ? "bg-primary/80 text-primary-foreground" : "bg-primary text-primary-foreground hover:opacity-90"
-              }`}
+              onClick={handlePlaySleepers}
+              aria-label={`Play the ${sleeperCount} ${songTitle} sleepers, oldest first`}
+              className="font-ticket text-[11px] uppercase tracking-[0.1em] px-4 py-2.5 rounded-sm bg-primary text-primary-foreground hover:opacity-90 active:opacity-80 transition-opacity"
             >
               ▶ Play the {sleeperCount} sleepers
             </button>
@@ -283,7 +300,7 @@ const SongEraLadder = ({ songId, songTitle, activeVersionId, onPlay }: Props) =>
       )}
 
       {/* ── THE LADDER ────────────────────────────────────────────────── */}
-      <div className={isMobile ? "relative pl-5" : ""}>
+      <div ref={ladderRef} className={`scroll-mt-4 ${isMobile ? "relative pl-5" : ""}`}>
         {/* Mobile: the vertical spine the eras hang off */}
         {isMobile && <span aria-hidden className="absolute left-[5px] top-2 bottom-2 w-px bg-border" />}
 
@@ -320,7 +337,8 @@ const SongEraLadder = ({ songId, songTitle, activeVersionId, onPlay }: Props) =>
               <div className="flex flex-col gap-0.5 mt-2">
                 {list.map((v) => {
                   const sleeper = isSleeper(v);
-                  const here = v.id === activeVersionId;
+                  const playing = !!playingVersionId && v.id === playingVersionId;
+                  const here = v.id === activeVersionId && !playing;
                   const pct = leader ? Math.round(((v.votes ?? 0) / leader) * 100) : 0;
                   return (
                     <button
@@ -328,7 +346,7 @@ const SongEraLadder = ({ songId, songTitle, activeVersionId, onPlay }: Props) =>
                       type="button"
                       onClick={() => onPlay?.(v)}
                       className={`w-full text-left rounded-sm border px-2.5 py-2.5 transition-colors ${
-                        here
+                        playing || here
                           ? "bg-primary/12 border-primary/45"
                           : "border-transparent hover:bg-muted/50 hover:border-border"
                       }`}
@@ -336,7 +354,7 @@ const SongEraLadder = ({ songId, songTitle, activeVersionId, onPlay }: Props) =>
                       {/* Mobile stacks; desktop puts meta in a right rail */}
                       <div className={isMobile ? "" : "grid grid-cols-[1fr_auto] gap-x-4 items-baseline"}>
                         <div className="min-w-0">
-                          <span className={`block font-hand text-xl leading-tight ${here ? "text-primary" : "text-[hsl(var(--dead-blue))]"}`}>
+                          <span className={`block font-hand text-xl leading-tight ${playing || here ? "text-primary" : "text-[hsl(var(--dead-blue))]"}`}>
                             {fmtDate(v.show_date)}
                           </span>
                           <span className="block font-ticket text-[11px] text-muted-foreground mt-0.5">
@@ -352,8 +370,9 @@ const SongEraLadder = ({ songId, songTitle, activeVersionId, onPlay }: Props) =>
                         <div className={isMobile
                           ? "flex items-center gap-2 flex-wrap mt-2"
                           : "flex flex-col items-end gap-1 shrink-0"}>
+                          {playing && <Chip tone="here">▶ Playing</Chip>}
                           {here && <Chip tone="here">You are here</Chip>}
-                          {v.is_benchmark && !here && <Chip tone="canon">★ Era benchmark</Chip>}
+                          {v.is_benchmark && !here && !playing && <Chip tone="canon">★ Era benchmark</Chip>}
                           {sleeper && <Chip tone="sleep">◆ Sleeper</Chip>}
                           {v.votes != null && (
                             <span className="font-mono text-[13px] font-medium text-card-foreground tabular-nums leading-none">
