@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { getPostHogCorrelationHeaders } from "@/lib/posthog";
 import { toast } from "sonner";
 import CharlieMark from "@/components/CharlieMark";
 
@@ -28,6 +29,7 @@ const JoinSetlist = () => {
 
       const { data, error: invokeError } = await supabase.functions.invoke("join-setlist", {
         body: { token },
+        headers: getPostHogCorrelationHeaders(),
       });
 
       if (invokeError || !data?.setlist_id) {

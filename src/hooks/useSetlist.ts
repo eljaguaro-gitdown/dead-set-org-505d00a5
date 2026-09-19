@@ -5,6 +5,7 @@ import type { Database } from "@/integrations/supabase/types";
 import type { SetlistSlotData } from "@/components/SetlistDisplay";
 import type { User } from "@supabase/supabase-js";
 import { SYNTHETIC_VERSION_DEFAULTS } from "@/lib/syntheticVersion";
+import { captureEvent } from "@/lib/posthog";
 
 type SetlistRow = Database["public"]["Tables"]["setlists"]["Row"];
 type Song = Database["public"]["Tables"]["songs"]["Row"];
@@ -94,6 +95,11 @@ export const useSetlist = (user: User | null, setlistId?: string | null) => {
       toast.error("Failed to create setlist");
       return null;
     }
+    captureEvent("setlist_created", {
+      setlist_id: data.id,
+      has_era: Boolean(eraId),
+      source: "authenticated_builder",
+    });
     setSetlist(data);
     return data;
   }, [user]);

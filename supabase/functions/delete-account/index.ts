@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import { captureServerEvent } from "../_shared/posthog.ts";
 
 // In-app account deletion (App Store guideline 5.1.1(v) and GDPR-style
 // erasure). verify_jwt = true in config.toml — the gateway guarantees a
@@ -123,6 +124,15 @@ Deno.serve(async (req) => {
     // 6) Finally, the auth user itself
     const { error: authError } = await admin.auth.admin.deleteUser(uid);
     if (authError) throw new Error(`auth delete failed: ${authError.message}`);
+
+    await captureServerEvent({
+      distinctId: uid,
+      event: "account_deleted",
+      properties: {
+        owned_setlist_count: setlistIds.length,
+        $process_person_profile: false,
+      },
+    });
 
     console.log(`[delete-account] deleted user ${uid}`);
     return new Response(JSON.stringify({ success: true }), {

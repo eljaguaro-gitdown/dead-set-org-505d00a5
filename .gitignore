@@ -27,3 +27,9 @@ dist-ssr
 
 # TypeScript incremental build caches
 *.tsbuildinfo
+
+# PostHog wizard scaffolding — vendor-generated, not app code.
+# .claude/agents and .claude/commands stay tracked; only skills/ is ignored.
+# Force-add (git add -f) if you ever author a skill you want in the repo.
+.claude/skills/
+posthog-self-driving-report.md
