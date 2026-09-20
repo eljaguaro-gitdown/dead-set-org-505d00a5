@@ -6,7 +6,7 @@ Connect, Lovable Cloud, and the Supabase auth config, and a session that reads
 only the repo will draw confident wrong conclusions. That happened repeatedly on
 2026-09-17; the corrections are banked in `CLAUDE.md`.
 
-**Last updated:** 2026-09-20, after run 21 uploaded build 22 from `3bcde32`.
+**Last updated:** 2026-09-20, after run 22 uploaded build 23 from `b4cfc2f`.
 
 Paths beginning `claude/` below are docs in the **Dead Set Claude project**, not
 files in this repo — don't go looking for them on disk. Everything else is
@@ -21,9 +21,9 @@ doc is worse than no doc, because it will be believed.
 | | |
 |---|---|
 | App Store Connect | Record exists — **Apple ID 6799269210**, "Dead Set: Wake Now Discover", iOS App 1.0 at *Prepare for Submission* |
-| Builds | **21 uploaded.** Builds 1–19 are from 2026-08-07 to 2026-08-21. Build 21 went up 2026-09-17 (run 20). **Build 22 was uploaded 2026-09-20 by run 21** and is the newest |
+| Builds | **22 uploaded.** Builds 1–19 are from 2026-08-07 to 2026-08-21. Build 21 went up 2026-09-17 (run 20), build 22 on 2026-09-20 (run 21). **Build 23 was uploaded 2026-09-20 by run 22** and is the newest |
 | Build pipeline | Works, and it is CI. **Every build came from `ios-testflight.yml`** |
-| CI workflow | `.github/workflows/ios-testflight.yml`, `workflow_dispatch`, **run 21 times, every run succeeded**, 2026-08-07 to 2026-09-20 |
+| CI workflow | `.github/workflows/ios-testflight.yml`, `workflow_dispatch`, **run 22 times, every run succeeded**, 2026-08-07 to 2026-09-20 |
 | Code | PR #35's submission-blocking fixes are on `main`; build 22 adds 43 further commits |
 
 **Builds 1–19 all predate the fixes — do not submit any of them.** Build 19 still
@@ -32,7 +32,30 @@ redirect. Submitting it would ship the IP exposure that PR #35 removed, and
 screenshots taken from it would put a Grateful Dead Productions mark on the
 store page.
 
-**Build 22 is the current submission candidate.** Uploaded 2026-09-20 by run 21
+**Build 23 is the current submission candidate.** Uploaded 2026-09-20 by run
+22 (run id 35537759220) from `b4cfc2f` on
+`claude/ios-testflight-build-update-13rsaa` — **not from `main`**, so merge
+that branch before anyone reasons about `main` as the shipping code. Log ends
+`Upload succeeded` / `** EXPORT SUCCEEDED **` at 21:11:10 UTC. Build number
+derived the same way as below: run_number 22 + offset 1.
+
+**What build 23 adds over 22: Google and Apple sign-in work inside the iOS
+app.** They were hidden on native because Google refuses OAuth in an embedded
+web view; the app now runs the flow through `ASWebAuthenticationSession`
+(`ios/App/App/WebAuthPlugin.swift` + `src/lib/oauthSignIn.ts`). **Guideline 4.8
+now applies** — Google and Apple must both be offered, and both are.
+
+The Archive step compiled in 49s and succeeded, which rules out a Swift
+compile error. It does **not** by itself prove `WebAuthPlugin.swift` was
+included in the target — a file missing from `project.pbxproj` is silently
+skipped, and the archive still succeeds. The four pbxproj entries were added
+mirroring `DeepLinkPlugin.swift` and verified by grep, but the conclusive
+check is on device: if the plugin is missing, tapping Continue with Google
+raises an unimplemented-method error instead of opening a Safari sheet.
+
+---
+
+**Build 22** (the previous candidate) remains valid. Uploaded 2026-09-20 by run 21
 of the CI workflow (run id 35535662846), from `main` at `3bcde32` — the same sha
 the QA gate graded. The run's own log ends `Upload succeeded.` / `Uploaded App` /
 `** EXPORT SUCCEEDED **` at 20:31:14 UTC.
