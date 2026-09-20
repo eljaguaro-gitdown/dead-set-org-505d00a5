@@ -144,12 +144,20 @@ Aug 9, the day build 18 was created.
 2. **Screenshots** — iPhone **6.5"** only (1242x2688, 2688x1242, 1284x2778,
    2778x1284). ASC uses only the first three on the install sheet. Must come
    from build 21 or later so Cosmic Charlie appears, not Steal Your Face;
-   prefer **build 22**, the newest. One caveat if the share poster is among
-   them: `SetlistPoster.tsx:819` styles the new version-note caption
-   `hsl(28 20% 44%)`, which computes to **4.18:1** on `#0a0a0a` — under AA's
-   4.5:1 for small italic text. The `dead.gold` token would give 6.49:1. Not a
-   rejection risk, but it is in the frame on the surface most likely to be
-   screenshotted.
+   prefer **build 24**, the newest. ~~One caveat if the share poster is among
+   them: the version-note caption is under AA.~~ **Fixed** — the caption is
+   `hsl(28 20% 39%)`, 4.59:1, and every hand-written text colour on the poster
+   now clears AA against the paper it sits on.
+
+   *Correction worth keeping:* this entry first recorded that caption as
+   **4.18:1 on `#0a0a0a`**. Both halves were wrong. The text does not sit on
+   the app's near-black page background — it sits inside `.jcard-paper`, the
+   cream J-card, `hsl(42 40% 88%)`. Measured against the right background the
+   real figure was **3.79:1**: a worse failure than the one reported, arrived
+   at by taking a claim about the background on trust and only checking the
+   colour. A contrast ratio is a property of a pair, and
+   [`posterContrast.test.ts`](../../src/lib/__tests__/posterContrast.test.ts)
+   now reads the background out of `index.css` rather than restating it.
 3. **Demo account** `eljaguaro+appreview@gmail.com` — create AND confirm on
    build 21 or later; those are the builds where native email confirmation
    works. Missing credentials is a near-automatic 2.1 rejection. Give the
