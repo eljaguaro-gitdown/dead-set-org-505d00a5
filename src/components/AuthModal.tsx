@@ -7,8 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { trackAuthEvent, markOAuthRedirect } from "@/lib/authFunnel";
-import { isNativeApp } from "@/lib/nativeApp";
+import { trackAuthEvent } from "@/lib/authFunnel";
+import { signInWithProvider, type OAuthProvider } from "@/lib/oauthSignIn";
 import {
   Sheet,
   SheetContent,
@@ -31,9 +31,6 @@ const AuthModal = ({ open, onOpenChange, onAuthenticated, onBeforeRedirect }: Au
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  // Browser-redirect OAuth can't round-trip back into the Capacitor shell,
-  // so the native app is email-only until system-browser OAuth ships.
-  const isNative = isNativeApp();
 
   useEffect(() => {
     if (open) void trackAuthEvent("auth_modal_opened");
@@ -110,27 +107,32 @@ const AuthModal = ({ open, onOpenChange, onAuthenticated, onBeforeRedirect }: Au
     }
   };
 
-  const handleGoogleLogin = async () => {
+  const handleOAuthLogin = async (provider: OAuthProvider) => {
+    // Still called on native even though nothing redirects: the caller uses it
+    // to persist in-progress builder state, and an OAuth sheet that the fan
+    // cancels should not be the thing that loses their setlist.
     onBeforeRedirect?.();
-    markOAuthRedirect("google");
-    sessionStorage.setItem("post_oauth_redirect", "1");
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: authRedirectTo() },
-    });
-    if (error) toast.error(error.message);
-  };
 
+    setLoading(true);
+    try {
+      const result = await signInWithProvider(provider);
+      if (result.status === "error") {
+        toast.error(result.message);
+        return;
+      }
+      // "cancelled" is the fan closing the sheet; "redirecting" is the web
+      // tab on its way out. Neither wants a message.
+      if (result.status !== "signed-in") return;
 
-  const handleAppleLogin = async () => {
-    onBeforeRedirect?.();
-    markOAuthRedirect("apple");
-    sessionStorage.setItem("post_oauth_redirect", "1");
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "apple",
-      options: { redirectTo: authRedirectTo() },
-    });
-    if (error) toast.error(error.message);
+      // Native completes in-process, so there is no page load to pick the
+      // session up — close the sheet and tell the caller, exactly as the
+      // email path does.
+      setActiveSessionFlag();
+      onOpenChange(false);
+      onAuthenticated();
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -173,12 +175,10 @@ const AuthModal = ({ open, onOpenChange, onAuthenticated, onBeforeRedirect }: Au
           </div>
 
           {/* Google OAuth — native Supabase */}
-          {!isNative && (
-          <>
           <Button
             variant="outline"
             className="w-full border-border text-card-foreground hover:bg-muted/40 font-body gap-2 py-6 text-base"
-            onClick={handleGoogleLogin}
+            onClick={() => void handleOAuthLogin("google")}
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
               <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
@@ -193,7 +193,7 @@ const AuthModal = ({ open, onOpenChange, onAuthenticated, onBeforeRedirect }: Au
           <Button
             variant="outline"
             className="w-full border-border text-card-foreground hover:bg-muted/40 font-body gap-2 py-6 text-base"
-            onClick={handleAppleLogin}
+            onClick={() => void handleOAuthLogin("apple")}
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
               <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
@@ -208,8 +208,6 @@ const AuthModal = ({ open, onOpenChange, onAuthenticated, onBeforeRedirect }: Au
             </span>
             <div className="h-px flex-1 bg-border" />
           </div>
-          </>
-          )}
 
           {/* Email/password */}
           <form onSubmit={handleAuth} className="space-y-3">

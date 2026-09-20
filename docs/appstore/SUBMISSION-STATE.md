@@ -116,10 +116,24 @@ Aug 9, the day build 18 was created.
    screenshotted.
 3. **Demo account** `eljaguaro+appreview@gmail.com` — create AND confirm on
    build 21 or later; those are the builds where native email confirmation
-   works. Missing credentials is a near-automatic 2.1 rejection. Note that
-   Google and Apple sign-in are deliberately disabled inside the iOS shell
-   (`Auth.tsx` shows an "Open in Safari" fallback), so **email is the only
-   in-app sign-in path** — the reviewer's credentials must be email ones.
+   works. Missing credentials is a near-automatic 2.1 rejection. Give the
+   reviewer **email credentials** regardless of what else the sign-in screen
+   offers — a reviewer cannot be asked to own a Google or Apple account.
+
+   **Changed after build 22:** Google and Apple sign-in now work inside the
+   iOS app, via `ASWebAuthenticationSession` (`ios/App/App/WebAuthPlugin.swift`
+   + `src/lib/oauthSignIn.ts`). They were hidden before because Google refuses
+   OAuth in an embedded web view and a WKWebView redirect cannot round-trip
+   back. Two consequences for the submission:
+   - **Guideline 4.8 now applies.** Offering Google means Sign in with Apple
+     must be offered too — it is, on the same screen. Do not ship a build that
+     offers one without the other.
+   - **Supabase must allow-list `org.deadset.app://auth-callback`** (Lovable →
+     project → Cloud → Users → Auth settings → Redirect URLs). It is the same
+     entry email confirmation already depends on, and OAuth deliberately sends
+     the bare callback with no query string so both legs match one allow-list
+     entry. Nothing changes on the Google or Apple developer console side —
+     those still redirect to Supabase's own `/auth/v1/callback`.
 4. **Description** — paste from `metadata.md`; the field was still empty as of
    2026-09-17. Subtitle goes under **App Information**, not the version page.
 5. **Age Rating** — under **App Information** (not "Ratings and Reviews", which

@@ -9,8 +9,12 @@ import Capacitor
  * device that has to be `org.deadset.app://auth-callback` — `capacitor://localhost`
  * is neither allow-listable in Supabase nor registered with iOS, so those links
  * used to fall through to the project's Site URL and open the website in Safari
- * while the app stayed signed out. Since OAuth is hidden on native, email is the
- * only way in, so there was effectively no way in.
+ * while the app stayed signed out.
+ *
+ * This covers links opened from OUTSIDE the app only. An OAuth round trip the
+ * app started itself is captured by ASWebAuthenticationSession before iOS can
+ * route it here — see WebAuthPlugin.swift. Different legs, one parser on the
+ * web side (src/lib/nativeAuthSession.ts).
  *
  * This is deliberately NOT @capacitor/app. That plugin does the same job, but
  * adding it means a lockfile update, and this repo's bun.lock resolves through
