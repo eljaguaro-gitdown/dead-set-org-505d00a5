@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { CheckCircle2, AlertTriangle, GitBranch, RefreshCw, Loader2 } from "lucide-react";
+import { classifyCompare, type SyncVerdict } from "@/lib/githubSync";
 
 declare const __BUILD_SHA__: string;
 declare const __BUILD_SHA_SHORT__: string;
@@ -8,7 +9,7 @@ declare const __BUILD_TIME__: string;
 const REPO = "eljaguaro-gitdown/dead-set-org-505d00a5";
 const BRANCH = "main";
 
-type Status = "loading" | "in-sync" | "behind" | "ahead" | "error";
+type Status = "loading" | "in-sync" | "behind" | "ahead" | "diverged" | "error";
 
 interface RemoteInfo {
   sha: string;
@@ -34,12 +35,16 @@ const timeAgo = (iso: string): string => {
   return new Date(iso).toLocaleDateString();
 };
 
+const plural = (n: number, noun: string): string =>
+  `${n} ${noun}${n === 1 ? "" : "s"}`;
+
 const GitHubSyncBadge = () => {
   const localSha = typeof __BUILD_SHA__ !== "undefined" ? __BUILD_SHA__ : "unknown";
   const localShort = typeof __BUILD_SHA_SHORT__ !== "undefined" ? __BUILD_SHA_SHORT__ : "unknown";
   const buildTime = typeof __BUILD_TIME__ !== "undefined" ? __BUILD_TIME__ : "";
 
   const [remote, setRemote] = useState<RemoteInfo | null>(null);
+  const [verdict, setVerdict] = useState<SyncVerdict | null>(null);
   const [status, setStatus] = useState<Status>("loading");
   const [checkedAt, setCheckedAt] = useState<string>("");
   const [error, setError] = useState<string>("");
@@ -48,27 +53,48 @@ const GitHubSyncBadge = () => {
     setStatus("loading");
     setError("");
     try {
+      if (!localSha || localSha === "unknown") {
+        setError("this build carries no commit sha");
+        setStatus("error");
+        setCheckedAt(new Date().toISOString());
+        return;
+      }
+
+      // One request, not two: compare carries the branch's own commit in
+      // base_commit, plus the file list that separates docs drift from app
+      // drift. Unauthenticated GitHub allows 60 calls an hour per IP, and this
+      // badge re-checks on every Refresh.
       const res = await fetch(
-        `https://api.github.com/repos/${REPO}/branches/${BRANCH}`,
+        `https://api.github.com/repos/${REPO}/compare/${BRANCH}...${localSha}`,
         { headers: { Accept: "application/vnd.github+json" } }
       );
-      if (!res.ok) throw new Error(`GitHub ${res.status}`);
+      if (!res.ok) {
+        throw new Error(
+          res.status === 404
+            ? `${localShort} is not on GitHub`
+            : `GitHub ${res.status}`
+        );
+      }
       const data = await res.json();
-      const sha: string = data?.commit?.sha ?? "";
-      const info: RemoteInfo = {
+
+      const base = data?.base_commit;
+      const sha: string = base?.sha ?? "";
+      setRemote({
         sha,
         shortSha: sha.slice(0, 7),
-        committedAt: data?.commit?.commit?.committer?.date ?? "",
-        message: (data?.commit?.commit?.message ?? "").split("\n")[0],
-        url: data?.commit?.html_url ?? `https://github.com/${REPO}/commits/${BRANCH}`,
-      };
-      setRemote(info);
+        committedAt: base?.commit?.committer?.date ?? "",
+        message: (base?.commit?.message ?? "").split("\n")[0],
+        url: base?.html_url ?? `https://github.com/${REPO}/commits/${BRANCH}`,
+      });
+
+      const next = classifyCompare(data);
+      setVerdict(next);
       setCheckedAt(new Date().toISOString());
-      if (!localSha || localSha === "unknown") setStatus("error");
-      else if (info.sha === localSha) setStatus("in-sync");
-      else setStatus("behind");
-    } catch (e: any) {
-      setError(e?.message ?? "Failed to reach GitHub");
+      // Docs moved on main but nothing shipped did: the app running here IS
+      // main's app code, so this is not a warning.
+      setStatus(next.docsOnly ? "in-sync" : next.status);
+    } catch (e) {
+      setError((e as Error)?.message ?? "Failed to reach GitHub");
       setStatus("error");
       setCheckedAt(new Date().toISOString());
     }
@@ -87,7 +113,7 @@ const GitHubSyncBadge = () => {
       spin: true,
     },
     "in-sync": {
-      label: "In sync with main",
+      label: verdict?.docsOnly ? "App code in sync" : "In sync with main",
       Icon: CheckCircle2,
       tone: "text-emerald-600 border-emerald-600/40 bg-emerald-500/5",
       spin: false,
@@ -102,6 +128,12 @@ const GitHubSyncBadge = () => {
       label: "Ahead of main",
       Icon: GitBranch,
       tone: "text-sky-700 border-sky-600/40 bg-sky-500/10",
+      spin: false,
+    },
+    diverged: {
+      label: "Diverged from main",
+      Icon: AlertTriangle,
+      tone: "text-amber-700 border-amber-600/40 bg-amber-500/10",
       spin: false,
     },
     error: {
@@ -170,6 +202,20 @@ const GitHubSyncBadge = () => {
           </div>
         </div>
       </div>
+
+      {verdict && (verdict.ahead > 0 || verdict.behind > 0) && (
+        <div className="text-[11px] font-mono opacity-70">
+          {verdict.ahead > 0 && verdict.behind === 0
+            ? `this build is ${plural(verdict.ahead, "commit")} ahead of ${BRANCH}`
+            : verdict.behind > 0 && verdict.ahead === 0
+              ? `${BRANCH} is ${plural(verdict.behind, "commit")} ahead — ${
+                  verdict.docsOnly
+                    ? "nothing that ships"
+                    : `${plural(verdict.appFiles.length, "app file")} changed`
+                }`
+              : `diverged — ${plural(verdict.ahead, "commit")} ahead, ${verdict.behind} behind`}
+        </div>
+      )}
 
       {remote?.message && (
         <div className="text-[11px] font-mono opacity-70 truncate">
