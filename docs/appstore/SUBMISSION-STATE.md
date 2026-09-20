@@ -128,12 +128,17 @@ Aug 9, the day build 18 was created.
    - **Guideline 4.8 now applies.** Offering Google means Sign in with Apple
      must be offered too — it is, on the same screen. Do not ship a build that
      offers one without the other.
-   - **Supabase must allow-list `org.deadset.app://auth-callback`** (Lovable →
-     project → Cloud → Users → Auth settings → Redirect URLs). It is the same
-     entry email confirmation already depends on, and OAuth deliberately sends
-     the bare callback with no query string so both legs match one allow-list
-     entry. Nothing changes on the Google or Apple developer console side —
-     those still redirect to Supabase's own `/auth/v1/callback`.
+   - **Supabase allow-list: already done, verified 2026-09-20.** Lovable →
+     project → Cloud → Users → Auth settings → Redirect URLs holds BOTH
+     `org.deadset.app://auth-callback` and `org.deadset.app://auth-callback**`
+     (12 of 50 entries used; Site URL is `https://www.dead-set.org/`). The
+     wildcard entry is what covers a callback carrying a query string, so the
+     password-reset deep link (`?next=%2Freset-password`) is allow-listed too.
+     OAuth still sends the bare callback — `signInWithProvider` passes no
+     `next`, because `smartRedirect` already handles where to land — but that
+     is now a simplicity choice, not a constraint the allow-list imposes.
+     Nothing changes on the Google or Apple developer console side: those
+     still redirect to Supabase's own `/auth/v1/callback`.
 4. **Description** — paste from `metadata.md`; the field was still empty as of
    2026-09-17. Subtitle goes under **App Information**, not the version page.
 5. **Age Rating** — under **App Information** (not "Ratings and Reviews", which
