@@ -6,7 +6,7 @@ Connect, Lovable Cloud, and the Supabase auth config, and a session that reads
 only the repo will draw confident wrong conclusions. That happened repeatedly on
 2026-09-17; the corrections are banked in `CLAUDE.md`.
 
-**Last updated:** 2026-09-20, after run 22 uploaded build 23 from `b4cfc2f`.
+**Last updated:** 2026-09-20, after run 23 uploaded build 24 from `d9aa820`.
 
 Paths beginning `claude/` below are docs in the **Dead Set Claude project**, not
 files in this repo — don't go looking for them on disk. Everything else is
@@ -21,9 +21,9 @@ doc is worse than no doc, because it will be believed.
 | | |
 |---|---|
 | App Store Connect | Record exists — **Apple ID 6799269210**, "Dead Set: Wake Now Discover", iOS App 1.0 at *Prepare for Submission* |
-| Builds | **22 uploaded.** Builds 1–19 are from 2026-08-07 to 2026-08-21. Build 21 went up 2026-09-17 (run 20), build 22 on 2026-09-20 (run 21). **Build 23 was uploaded 2026-09-20 by run 22** and is the newest |
+| Builds | **23 uploaded.** Builds 1–19 are from 2026-08-07 to 2026-08-21. Builds 21, 22 and 23 followed on 2026-09-17 to 09-20. **Build 24 was uploaded 2026-09-20 by run 23** and is the newest. Build 23's OAuth is broken — see below |
 | Build pipeline | Works, and it is CI. **Every build came from `ios-testflight.yml`** |
-| CI workflow | `.github/workflows/ios-testflight.yml`, `workflow_dispatch`, **run 22 times, every run succeeded**, 2026-08-07 to 2026-09-20 |
+| CI workflow | `.github/workflows/ios-testflight.yml`, `workflow_dispatch`, **run 23 times, every run succeeded**, 2026-08-07 to 2026-09-20 |
 | Code | PR #35's submission-blocking fixes are on `main`; build 22 adds 43 further commits |
 
 **Builds 1–19 all predate the fixes — do not submit any of them.** Build 19 still
@@ -32,8 +32,12 @@ redirect. Submitting it would ship the IP exposure that PR #35 removed, and
 screenshots taken from it would put a Grateful Dead Productions mark on the
 store page.
 
-**Build 23 is the current submission candidate.** Uploaded 2026-09-20 by run
-22 (run id 35537759220) from `b4cfc2f` on
+**Build 24 is the current submission candidate.** Uploaded 2026-09-20 by run
+23 (run id 35538389237) from `d9aa820`, `Upload succeeded` at 21:23:13 UTC. It
+is build 23 plus the one line that makes the OAuth plugin exist at runtime.
+
+**Build 23 is superseded and its OAuth is broken** — details below. Uploaded by
+run 22 (run id 35537759220) from `b4cfc2f` on
 `claude/ios-testflight-build-update-13rsaa` — **not from `main`**, so merge
 that branch before anyone reasons about `main` as the shipping code. Log ends
 `Upload succeeded` / `** EXPORT SUCCEEDED **` at 21:11:10 UTC. Build number
