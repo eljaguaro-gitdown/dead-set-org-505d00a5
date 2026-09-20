@@ -45,13 +45,22 @@ web view; the app now runs the flow through `ASWebAuthenticationSession`
 (`ios/App/App/WebAuthPlugin.swift` + `src/lib/oauthSignIn.ts`). **Guideline 4.8
 now applies** — Google and Apple must both be offered, and both are.
 
-The Archive step compiled in 49s and succeeded, which rules out a Swift
-compile error. It does **not** by itself prove `WebAuthPlugin.swift` was
-included in the target — a file missing from `project.pbxproj` is silently
-skipped, and the archive still succeeds. The four pbxproj entries were added
-mirroring `DeepLinkPlugin.swift` and verified by grep, but the conclusive
-check is on device: if the plugin is missing, tapping Continue with Google
-raises an unimplemented-method error instead of opening a Safari sheet.
+**Build 23's OAuth does not work — do not test or submit it for that.** The
+buttons render, and tapping one raises `"WebAuth" plugin is not implemented on
+ios`. The Swift compiled fine and was in the target; it was never *registered*.
+App-embedded Capacitor plugins are not auto-discovered — they must be added to
+`bridge?.registerPluginInstance(...)` in
+[`MainViewController.swift`](../../ios/App/App/MainViewController.swift), whose
+own comment says so. `WebAuthPlugin` was missing from that list.
+
+Nothing in CI can catch this, which is the point worth keeping: a plugin
+missing from the registration list compiles, archives, uploads and installs,
+and fails only when a finger touches the button. A plugin missing from
+`project.pbxproj` fails the same way — an unreferenced source is skipped
+silently. Both listings are now asserted by
+[`nativePluginsRegistered.test.ts`](../../src/lib/__tests__/nativePluginsRegistered.test.ts),
+which was confirmed to fail when the registration line is removed. **Any new
+`*Plugin.swift` needs both listings, and that test is what remembers.**
 
 ---
 

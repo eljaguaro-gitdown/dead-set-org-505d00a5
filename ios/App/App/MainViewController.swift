@@ -8,5 +8,6 @@ class MainViewController: CAPBridgeViewController {
     override open func capacitorDidLoad() {
         bridge?.registerPluginInstance(NativeAudioPlugin())
         bridge?.registerPluginInstance(DeepLinkPlugin())
+        bridge?.registerPluginInstance(WebAuthPlugin())
     }
 }
