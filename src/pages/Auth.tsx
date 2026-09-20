@@ -14,7 +14,8 @@ import CharlieMark from "@/components/CharlieMark";
 import { getPostAuthRedirect } from "@/lib/postAuthRedirect";
 import { detectInAppBrowser } from "@/lib/inAppBrowser";
 import { isNativeApp } from "@/lib/nativeApp";
-import { trackAuthEvent, markOAuthRedirect } from "@/lib/authFunnel";
+import { trackAuthEvent } from "@/lib/authFunnel";
+import { signInWithProvider, type OAuthProvider } from "@/lib/oauthSignIn";
 
 
 const Auth = () => {
@@ -27,9 +28,10 @@ const Auth = () => {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const { isInApp, appName } = useMemo(() => detectInAppBrowser(), []);
-  // In the Capacitor shell, browser-redirect OAuth can't round-trip back into
-  // the app (Google also blocks embedded webviews outright), so the native
-  // app is email-only until system-browser OAuth with deep-link return ships.
+  // Native runs OAuth through ASWebAuthenticationSession (see
+  // src/lib/oauthSignIn.ts), so Google and Apple work in the app. What stays
+  // native-specific is the copy below: the session lands in-process instead
+  // of via a redirect, so there is nothing to "come back" from.
   const isNative = useMemo(() => isNativeApp(), []);
 
   useEffect(() => {
@@ -112,38 +114,43 @@ const Auth = () => {
     }
   };
 
-  const handleGoogleLogin = async () => {
+  const handleOAuthLogin = async (provider: OAuthProvider) => {
+    // An in-app browser (Instagram, Facebook) is a different problem from the
+    // Capacitor shell: there is no plugin to reach for, and the provider will
+    // refuse the embedded user agent. Safari is the only way out.
     if (isInApp) {
+      const label = provider === "google" ? "Google" : "Apple";
       toast.error(
-        `Google sign-in doesn't work inside ${appName}. Tap the ⋯ menu and choose "Open in Safari" — or use email below.`,
+        `${label} sign-in doesn't work inside ${appName}. Tap the ⋯ menu and choose "Open in Safari" — or use email below.`,
         { duration: 7000 }
       );
       return;
     }
-    markOAuthRedirect("google");
-    sessionStorage.setItem("post_oauth_redirect", "1");
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: authRedirectTo() },
-    });
-    if (error) toast.error(error.message);
-  };
 
-  const handleAppleLogin = async () => {
-    if (isInApp) {
-      toast.error(
-        `Apple sign-in doesn't work inside ${appName}. Tap the ⋯ menu and choose "Open in Safari" — or use email below.`,
-        { duration: 7000 }
-      );
-      return;
+    setLoading(true);
+    try {
+      // No `next`: that would change the redirectTo string, and Supabase
+      // matches redirect URLs against an allow-list where the known-good
+      // entry is the bare callback. Where to land afterwards is smartRedirect's
+      // job anyway — it already honours ?redirect=.
+      const result = await signInWithProvider(provider);
+      if (result.status === "error") {
+        toast.error(result.message);
+        return;
+      }
+      // "cancelled" is the fan closing the sheet; "redirecting" is the web
+      // tab on its way out. Neither wants a message.
+      if (result.status !== "signed-in") return;
+
+      setActiveSessionFlag();
+      if (result.userId) {
+        await smartRedirect(result.userId);
+      } else {
+        navigate(result.next);
+      }
+    } finally {
+      setLoading(false);
     }
-    markOAuthRedirect("apple");
-    sessionStorage.setItem("post_oauth_redirect", "1");
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "apple",
-      options: { redirectTo: authRedirectTo() },
-    });
-    if (error) toast.error(error.message);
   };
 
   return (
@@ -192,12 +199,11 @@ const Auth = () => {
           )}
 
           {/* OAuth — one-tap, kept above the email form so the fastest path is first */}
-          {!isNative && (
           <div className="space-y-3">
             <Button
               variant="outline"
               className="w-full h-12 text-base border-border/60 text-foreground hover:bg-foreground/5 font-body gap-2"
-              onClick={handleGoogleLogin}
+              onClick={() => void handleOAuthLogin("google")}
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24">
                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
@@ -211,7 +217,7 @@ const Auth = () => {
             <Button
               variant="outline"
               className="w-full h-12 text-base border-border/60 text-foreground hover:bg-foreground/5 font-body gap-2"
-              onClick={handleAppleLogin}
+              onClick={() => void handleOAuthLogin("apple")}
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
@@ -219,15 +225,12 @@ const Auth = () => {
               Continue with Apple
             </Button>
           </div>
-          )}
 
-          {!isNative && (
           <div className="flex items-center gap-3">
             <div className="h-px flex-1 bg-border" />
             <span className="font-mono text-[10px] text-foreground/70 tracking-widest uppercase">or use your email</span>
             <div className="h-px flex-1 bg-border" />
           </div>
-          )}
 
           <form onSubmit={handleAuth} className="space-y-4">
             <div className="space-y-2">
@@ -273,9 +276,8 @@ const Auth = () => {
             )}
             {isNative && !isSignUp && !isForgot && (
               <p className="text-center text-xs text-foreground/60 font-body">
-                Joined with Google or Apple on the web? Tap "Forgot your
-                password?" with the same email and we'll set you up with one
-                for the app — same account, same setlists.
+                Joined with Google or Apple on the web? Use the same button up
+                top — same account, same setlists.
               </p>
             )}
           </form>

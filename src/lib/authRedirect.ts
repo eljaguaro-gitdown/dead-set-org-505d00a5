@@ -8,8 +8,12 @@ import { isNativeApp } from "@/lib/nativeApp";
  * `window.location.origin` is `capacitor://localhost` — a scheme Supabase
  * will not accept as a redirect target and iOS had no handler for, so every
  * confirmation and reset link fell through to the project's Site URL and
- * opened the website in Safari while the app stayed signed out. Since OAuth
- * is hidden on native, email was the only way in, and it never completed.
+ * opened the website in Safari while the app stayed signed out.
+ *
+ * Every native auth route now ends here: email confirmation and password
+ * reset come back through DeepLinkPlugin, and OAuth comes back through
+ * ASWebAuthenticationSession (src/lib/oauthSignIn.ts). Both hand the URL to
+ * the same parser, src/lib/nativeAuthSession.ts.
  *
  * Both of these must agree with this scheme:
  *   - ios/App/App/Info.plist          → CFBundleURLTypes

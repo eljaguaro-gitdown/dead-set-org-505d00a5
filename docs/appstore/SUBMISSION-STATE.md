@@ -6,8 +6,7 @@ Connect, Lovable Cloud, and the Supabase auth config, and a session that reads
 only the repo will draw confident wrong conclusions. That happened repeatedly on
 2026-09-17; the corrections are banked in `CLAUDE.md`.
 
-**Last updated:** 2026-09-17, after merging PR #35 and correcting this doc's
-claims about the build pipeline.
+**Last updated:** 2026-09-20, after run 23 uploaded build 24 from `d9aa820`.
 
 Paths beginning `claude/` below are docs in the **Dead Set Claude project**, not
 files in this repo — don't go looking for them on disk. Everything else is
@@ -22,10 +21,10 @@ doc is worse than no doc, because it will be believed.
 | | |
 |---|---|
 | App Store Connect | Record exists — **Apple ID 6799269210**, "Dead Set: Wake Now Discover", iOS App 1.0 at *Prepare for Submission* |
-| Builds | **20 uploaded.** Builds 1–19 are from 2026-08-07 to 2026-08-21. **Build 21 was uploaded 2026-09-17 by run 20** and is the first build carrying the PR #35 fixes |
-| Build pipeline | Works, and it is CI. **All 19 builds came from `ios-testflight.yml`** |
-| CI workflow | `.github/workflows/ios-testflight.yml`, `workflow_dispatch`, **run 20 times, every run succeeded**, 2026-08-07 to 2026-09-17 |
-| Code | All submission-blocking fixes merged to `main` in PR #35 (5 commits) |
+| Builds | **23 uploaded.** Builds 1–19 are from 2026-08-07 to 2026-08-21. Builds 21, 22 and 23 followed on 2026-09-17 to 09-20. **Build 24 was uploaded 2026-09-20 by run 23** and is the newest. Build 23's OAuth is broken — see below |
+| Build pipeline | Works, and it is CI. **Every build came from `ios-testflight.yml`** |
+| CI workflow | `.github/workflows/ios-testflight.yml`, `workflow_dispatch`, **run 23 times, every run succeeded**, 2026-08-07 to 2026-09-20 |
+| Code | PR #35's submission-blocking fixes are on `main`; build 22 adds 43 further commits |
 
 **Builds 1–19 all predate the fixes — do not submit any of them.** Build 19 still
 renders Steal Your Face in the header and still has the broken native auth
@@ -33,12 +32,73 @@ redirect. Submitting it would ship the IP exposure that PR #35 removed, and
 screenshots taken from it would put a Grateful Dead Productions mark on the
 store page.
 
-**Build 21 is the first submittable build.** Uploaded 2026-09-17 by run 20 of
-the CI workflow, from `23cc133`, whose app code is identical to `main` at
-`e47817d`. Confirmed in App Store Connect as **1.0 (21), created Sep 17 2026
-4:55 PM**, *Processing* at the time of writing — check it reached *Ready to
-Submit* before building anything else on it. While a build is Processing, ASC
-shows a placeholder tile instead of the app icon; that is not a missing asset.
+**Build 24 is the current submission candidate.** Uploaded 2026-09-20 by run
+23 (run id 35538389237) from `d9aa820`, `Upload succeeded` at 21:23:13 UTC. It
+is build 23 plus the one line that makes the OAuth plugin exist at runtime.
+
+**Build 23 is superseded and its OAuth is broken** — details below. Uploaded by
+run 22 (run id 35537759220) from `b4cfc2f` on
+`claude/ios-testflight-build-update-13rsaa` — **not from `main`**, so merge
+that branch before anyone reasons about `main` as the shipping code. Log ends
+`Upload succeeded` / `** EXPORT SUCCEEDED **` at 21:11:10 UTC. Build number
+derived the same way as below: run_number 22 + offset 1.
+
+**What build 23 adds over 22: Google and Apple sign-in work inside the iOS
+app.** They were hidden on native because Google refuses OAuth in an embedded
+web view; the app now runs the flow through `ASWebAuthenticationSession`
+(`ios/App/App/WebAuthPlugin.swift` + `src/lib/oauthSignIn.ts`). **Guideline 4.8
+now applies** — Google and Apple must both be offered, and both are.
+
+**Build 23's OAuth does not work — do not test or submit it for that.** The
+buttons render, and tapping one raises `"WebAuth" plugin is not implemented on
+ios`. The Swift compiled fine and was in the target; it was never *registered*.
+App-embedded Capacitor plugins are not auto-discovered — they must be added to
+`bridge?.registerPluginInstance(...)` in
+[`MainViewController.swift`](../../ios/App/App/MainViewController.swift), whose
+own comment says so. `WebAuthPlugin` was missing from that list.
+
+Nothing in CI can catch this, which is the point worth keeping: a plugin
+missing from the registration list compiles, archives, uploads and installs,
+and fails only when a finger touches the button. A plugin missing from
+`project.pbxproj` fails the same way — an unreferenced source is skipped
+silently. Both listings are now asserted by
+[`nativePluginsRegistered.test.ts`](../../src/lib/__tests__/nativePluginsRegistered.test.ts),
+which was confirmed to fail when the registration line is removed. **Any new
+`*Plugin.swift` needs both listings, and that test is what remembers.**
+
+---
+
+**Build 22** (the previous candidate) remains valid. Uploaded 2026-09-20 by run 21
+of the CI workflow (run id 35535662846), from `main` at `3bcde32` — the same sha
+the QA gate graded. The run's own log ends `Upload succeeded.` / `Uploaded App` /
+`** EXPORT SUCCEEDED **` at 20:31:14 UTC.
+
+**The build number 22 is derived, not read off a log.** `run_number` was 21
+(GitHub API) and `BUILD_NUMBER_OFFSET` is 1 in the workflow file at the sha that
+was checked out, so the archive step computed 22. The step's log echo shows
+`$(( 21 + ${BUILD_NUMBER_OFFSET} ))` unevaluated, so the literal string "22"
+appears nowhere in the run log — **App Store Connect is the confirming
+authority.** Check it there, and expect a creation time of roughly 20:31 UTC
+(build creation lands one workflow-duration, 3 min here, after the run start).
+While a build is Processing, ASC shows a placeholder tile instead of the app
+icon; that is not a missing asset.
+
+Build 21 (2026-09-17, from `23cc133`) remains valid and submittable — it is
+simply older. Build 22 carries everything in it plus 43 commits.
+
+**What build 22 adds over build 21:** PostHog instrumentation (genuinely
+initialized now, with session replay, autocapture, heatmaps and surveys
+explicitly disabled), guest-funnel events, the "Play the N sleepers" button fix,
+a share-metric correction (CTA clicks no longer counted as shares), Songbook
+Issue 002, era-aware liner notes, the `encodeArchiveNotes` dedupe, and a
+typecheck/lockfile cleanup. **Nothing under `ios/` or `capacitor.config.ts`
+changed**, so the native shell is byte-for-byte the build-21 configuration.
+
+**Gate status:** `qa-release` returned **PASS WITH NOTES** on `3bcde32` — no
+blocks, 8 items passed, 3 unobservable in a sandbox with no browser and no
+egress (on-device email confirmation, `/setlist/:id` for a logged-out viewer,
+live PostHog delivery). Those three are exactly what this TestFlight build
+exists to let a real device settle.
 
 The ASC timestamps also settle where the earlier builds came from. Each build's
 creation time is one workflow-duration after its run started: run 18 (Aug 9
@@ -73,24 +133,76 @@ Aug 9, the day build 18 was created.
 
 ## What is left, in dependency order
 
-1. ~~**Run the CI workflow** → uploads build 21.~~ **Done 2026-09-17** (run 20,
-   `Upload succeeded`). The offset was briefly 20, set on the mistaken belief
-   that Xcode had uploaded builds 1–19 and this workflow had never run — that
-   would have uploaded build 40. Corrected to 1 before the run; see `CLAUDE.md`.
-   **The offset fix is still only on `claude/wonderful-hawking-qav0uh` (PR #36)
-   — merge it, or the next run dispatched from `main` reverts to offset 20.**
+1. ~~**Run the CI workflow.**~~ **Done twice** — run 20 → build 21
+   (2026-09-17), run 21 → build 22 (2026-09-20), both `Upload succeeded`.
+   The offset fix **is now merged to `main`** (verified: `BUILD_NUMBER_OFFSET: 1`
+   on `origin/main`), so this doc's former warning that it was stranded on
+   `claude/wonderful-hawking-qav0uh` (PR #36) is obsolete — a dispatch from
+   `main` is safe. The offset was briefly 20, on the mistaken belief that Xcode
+   had uploaded builds 1–19 and this workflow had never run; that would have
+   uploaded build 40. See `CLAUDE.md`.
 2. **Screenshots** — iPhone **6.5"** only (1242x2688, 2688x1242, 1284x2778,
    2778x1284). ASC uses only the first three on the install sheet. Must come
-   from build 21 or later so Cosmic Charlie appears, not Steal Your Face.
+   from build 21 or later so Cosmic Charlie appears, not Steal Your Face;
+   prefer **build 22**, the newest. One caveat if the share poster is among
+   them: `SetlistPoster.tsx:819` styles the new version-note caption
+   `hsl(28 20% 44%)`, which computes to **4.18:1** on `#0a0a0a` — under AA's
+   4.5:1 for small italic text. The `dead.gold` token would give 6.49:1. Not a
+   rejection risk, but it is in the frame on the surface most likely to be
+   screenshotted.
 3. **Demo account** `eljaguaro+appreview@gmail.com` — create AND confirm on
-   build 21, which is the first build where native email confirmation works.
-   Missing credentials is a near-automatic 2.1 rejection.
+   build 21 or later; those are the builds where native email confirmation
+   works. Missing credentials is a near-automatic 2.1 rejection. Give the
+   reviewer **email credentials** regardless of what else the sign-in screen
+   offers — a reviewer cannot be asked to own a Google or Apple account.
+
+   **Changed after build 22:** Google and Apple sign-in now work inside the
+   iOS app, via `ASWebAuthenticationSession` (`ios/App/App/WebAuthPlugin.swift`
+   + `src/lib/oauthSignIn.ts`). They were hidden before because Google refuses
+   OAuth in an embedded web view and a WKWebView redirect cannot round-trip
+   back. Two consequences for the submission:
+   - **Guideline 4.8 now applies.** Offering Google means Sign in with Apple
+     must be offered too — it is, on the same screen. Do not ship a build that
+     offers one without the other.
+   - **Supabase allow-list: already done, verified 2026-09-20.** Lovable →
+     project → Cloud → Users → Auth settings → Redirect URLs holds BOTH
+     `org.deadset.app://auth-callback` and `org.deadset.app://auth-callback**`
+     (12 of 50 entries used; Site URL is `https://www.dead-set.org/`). The
+     wildcard entry is what covers a callback carrying a query string, so the
+     password-reset deep link (`?next=%2Freset-password`) is allow-listed too.
+     OAuth still sends the bare callback — `signInWithProvider` passes no
+     `next`, because `smartRedirect` already handles where to land — but that
+     is now a simplicity choice, not a constraint the allow-list imposes.
+     Nothing changes on the Google or Apple developer console side: those
+     still redirect to Supabase's own `/auth/v1/callback`.
 4. **Description** — paste from `metadata.md`; the field was still empty as of
    2026-09-17. Subtitle goes under **App Information**, not the version page.
 5. **Age Rating** — under **App Information** (not "Ratings and Reviews", which
    is customer reviews). See the open decision below.
 6. **App Privacy** — Privacy Policy URL lives here, not on the version page.
    Declare Product Interaction *linked*, Device ID *linked*, neither tracking.
+   **Needs a reconciliation pass before submission (new with build 22).** A
+   third-party analytics SDK now genuinely ships inside the bundle: `posthog-js`
+   is in `dist/` and `.init()`s inside the WKWebView, sending events straight to
+   `VITE_PUBLIC_POSTHOG_HOST` rather than through Supabase. Three consequences:
+   - `PrivacyInfo.xcprivacy`'s header comment still claims "No third-party
+     analytics, attribution, or tracking SDKs are bundled" and "All backend
+     calls hit our own backend" — both now false.
+   - `identifyUser()` (`src/hooks/useAuth.ts`) sends **email address and display
+     name** to PostHog, but those two `NSPrivacyCollectedDataType` entries list
+     only AppFunctionality/Authentication purposes. The Analytics purpose is
+     missing — an undercount, not just stale prose.
+   - `NSPrivacyTracking=false` / empty `NSPrivacyTrackingDomains` still look
+     defensible: this is first-party product analytics, not cross-app ad
+     tracking under ATT, and replay/autocapture/heatmaps/surveys are explicitly
+     off in `src/lib/posthog.ts`.
+   `metadata.md`'s App Privacy section (written 2026-09-17, pre-PostHog) happens
+   to cover Product Interaction and Device ID already, but names no third-party
+   processor. A manifest that disagrees with the ASC questionnaire is a known
+   rejection trigger — fix before **submission**, not before TestFlight.
+   (Correcting a stale claim in the other direction: the comment in
+   `src/lib/posthog.ts` says the manifest "does not declare ProductInteraction".
+   It does — linked, for AppFunctionality+Analytics.)
 7. **App Review** — demo credentials + paste `reviewer-notes.md`.
 8. **Pricing and Availability** → Free.
 
@@ -113,9 +225,11 @@ Aug 9, the day build 18 was created.
 - **Age rating.** The Indica/Sativa vibe labels read as drug references, pushing
   to 12+/17+. Renaming the two chips is cheaper than the badge.
 - **Diagnostics declarations.** `PrivacyInfo.xcprivacy` declares CrashData and
-  PerformanceData, but no crash/performance SDK ships anywhere in the project.
-  Over-declaring is not a rejection risk but puts "Diagnostics" on the public
-  privacy label for data never collected.
+  PerformanceData. **This changed with build 22:** PostHog's exception capture
+  is deliberately left ON (`src/lib/posthog.ts` explains why — it reports errors,
+  not behaviour), so CrashData is no longer a declaration for data never
+  collected. PerformanceData still is. The open question narrows to whether to
+  drop the PerformanceData entry.
 - **`EraArt.tsx` motifs.** It draws hand-line `syf` and `bolt` shapes. Much
   weaker exposure than the exact logo, and `DESIGN.md` governs that system.
 - **Counsel questions** — the "Dead Set" name (a 1981 GD album title), whether
