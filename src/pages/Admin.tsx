@@ -287,6 +287,24 @@ const Admin = () => {
 
   const progress = Math.min(1, pull / threshold);
 
+  /**
+   * Users whose LAST SIGN-IN falls in the window.
+   *
+   * Not the same thing as "active", which is what these tiles used to claim.
+   * `last_sign_in_at` moves when someone signs in, not when they use the app:
+   * the client runs persistSession + autoRefreshToken, so a fan returning on a
+   * saved session never re-signs-in and never counts here. It is a floor on
+   * signed-in activity, never a measure of it — hence the label.
+   */
+  const signedInWithin = (windowMs: number) =>
+    users.filter(
+      (u) =>
+        u.lastSignInAt &&
+        Date.now() - new Date(u.lastSignInAt).getTime() < windowMs
+    ).length;
+  const signedIn24h = signedInWithin(86_400_000);
+  const signedIn7d = signedInWithin(604_800_000);
+
   return (
     <div className="grain-overlay min-h-screen bg-background overscroll-y-contain">
       {/* Pull-to-refresh indicator */}
@@ -348,28 +366,31 @@ const Admin = () => {
               {loading ? "—" : users.length}
             </p>
           </div>
+          {/* Visitors lead, signed-in rides underneath: nearly everyone here
+              is anonymous, and a tile that counted only sign-ins made a site
+              with 91 visitors a week read as a site with one. */}
           <div className="bg-card border border-border rounded-lg p-4">
-            <p className="text-xs text-muted-foreground font-body uppercase tracking-wider">Active (24h)</p>
+            <p className="text-xs text-muted-foreground font-body uppercase tracking-wider">Visitors (24h)</p>
             <p className="font-display text-2xl text-card-foreground mt-1">
-              {loading
-                ? "—"
-                : users.filter(
-                    (u) =>
-                      u.lastSignInAt &&
-                      Date.now() - new Date(u.lastSignInAt).getTime() < 86400000
-                  ).length}
+              {loading ? "—" : traffic?.unique24h ?? 0}
+            </p>
+            <p
+              className="text-[11px] text-muted-foreground font-body mt-0.5"
+              title="Users whose last sign-in was in this window. A fan returning on a saved session never re-signs-in, so this is a floor, not a count of active users."
+            >
+              {loading ? "—" : `${signedIn24h} signed in`}
             </p>
           </div>
           <div className="bg-card border border-border rounded-lg p-4">
-            <p className="text-xs text-muted-foreground font-body uppercase tracking-wider">Active (7d)</p>
+            <p className="text-xs text-muted-foreground font-body uppercase tracking-wider">Visitors (7d)</p>
             <p className="font-display text-2xl text-card-foreground mt-1">
-              {loading
-                ? "—"
-                : users.filter(
-                    (u) =>
-                      u.lastSignInAt &&
-                      Date.now() - new Date(u.lastSignInAt).getTime() < 604800000
-                  ).length}
+              {loading ? "—" : traffic?.unique7d ?? 0}
+            </p>
+            <p
+              className="text-[11px] text-muted-foreground font-body mt-0.5"
+              title="Users whose last sign-in was in this window. A fan returning on a saved session never re-signs-in, so this is a floor, not a count of active users."
+            >
+              {loading ? "—" : `${signedIn7d} signed in`}
             </p>
           </div>
           <div className="bg-card border border-border rounded-lg p-4">
