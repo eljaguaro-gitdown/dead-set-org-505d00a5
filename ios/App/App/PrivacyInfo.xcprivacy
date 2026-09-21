@@ -170,7 +170,11 @@
       </array>
     </dict>
 
-    <!-- Crash & performance data (Apple-collected via Xcode Organizer) -->
+    <!-- Crash data. PostHog's exception capture is deliberately left on (see
+         src/lib/posthog.ts), so this is collected in practice. PerformanceData
+         used to be declared beside it and was removed 2026-09-21: no
+         performance SDK ships anywhere in the project, and declaring it put
+         "Diagnostics" on the public privacy label for data never gathered. -->
     <dict>
       <key>NSPrivacyCollectedDataType</key>
       <string>NSPrivacyCollectedDataTypeCrashData</string>
@@ -181,18 +185,6 @@
       <key>NSPrivacyCollectedDataTypePurposes</key>
       <array>
         <string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
-      </array>
-    </dict>
-    <dict>
-      <key>NSPrivacyCollectedDataType</key>
-      <string>NSPrivacyCollectedDataTypePerformanceData</string>
-      <key>NSPrivacyCollectedDataTypeLinked</key>
-      <false/>
-      <key>NSPrivacyCollectedDataTypeTracking</key>
-      <false/>
-      <key>NSPrivacyCollectedDataTypePurposes</key>
-      <array>
-        <string>NSPrivacyCollectedDataTypePurposeAnalytics</string>
       </array>
     </dict>
   </array>

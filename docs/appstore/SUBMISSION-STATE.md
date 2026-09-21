@@ -265,8 +265,12 @@ Aug 9, the day build 18 was created.
 
 ## Decisions still open (Jay)
 
-- **Age rating.** The Indica/Sativa vibe labels read as drug references, pushing
-  to 12+/17+. Renaming the two chips is cheaper than the badge.
+- ~~**Age rating.**~~ **Decided 2026-09-21 (Jay): renamed, not accepted.** The
+  three strain-named chips are now Late Night, Daytime Show and Day Into Night.
+  Answer "none" to drug references — against build 26 or later, which is where
+  the rename ships. The chip **ids** are unchanged (`indica`/`sativa`/`hybrid`)
+  because they are persisted to `vibe_ids` and never rendered; renaming them
+  would orphan existing rows for no user-visible gain.
 - **Diagnostics declarations.** `PrivacyInfo.xcprivacy` declares CrashData and
   PerformanceData. **This changed with build 22:** PostHog's exception capture
   is deliberately left ON (`src/lib/posthog.ts` explains why — it reports errors,
