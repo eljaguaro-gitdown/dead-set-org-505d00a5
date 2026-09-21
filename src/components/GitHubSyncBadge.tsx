@@ -69,6 +69,13 @@ const GitHubSyncBadge = () => {
         { headers: { Accept: "application/vnd.github+json" } }
       );
       if (!res.ok) {
+        // A 403 with no quota left is the unauthenticated 60-per-hour limit,
+        // which the Check button actively invites people into — worth naming
+        // rather than surfacing as a bare status code. Ported from PR #37,
+        // which diagnosed this same badge independently.
+        if (res.status === 403 && res.headers.get("X-RateLimit-Remaining") === "0") {
+          throw new Error("GitHub rate limit reached — try again in an hour");
+        }
         throw new Error(
           res.status === 404
             ? `${localShort} is not on GitHub`
