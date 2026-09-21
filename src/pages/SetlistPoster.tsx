@@ -816,7 +816,10 @@ const SetlistPoster = () => {
                                 {slot.version?.description && (
                                   <span
                                     className="font-hand text-xs sm:text-sm leading-snug mt-1 italic"
-                                    style={{ color: "hsl(28 20% 44%)" }}
+                                    // 39% is the lightest lightness that clears AA (4.59:1) against
+                                    // the .jcard-paper cream this sits on; 44% was 3.79:1. Asserted
+                                    // in src/lib/__tests__/posterContrast.test.ts.
+                                    style={{ color: "hsl(28 20% 39%)" }}
                                   >
                                     {slot.version.description}
                                   </span>
