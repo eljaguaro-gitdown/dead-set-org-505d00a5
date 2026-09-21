@@ -43,7 +43,7 @@ true**, which is why earlier builds should not be substituted for it:
 | Claim | True since |
 |---|---|
 | Cosmic Charlie, no Steal Your Face | build 21 |
-| Native email confirmation works | build 21 |
+| Native deep link handles password reset | build 21 |
 | Google and Apple sign-in in the app | build 24 |
 | Share-poster caption clears AA contrast | build 25 |
 | Privacy manifest declares Analytics on Email and Name | **build 26** |
@@ -208,11 +208,26 @@ Aug 9, the day build 18 was created.
    colour. A contrast ratio is a property of a pair, and
    [`posterContrast.test.ts`](../../src/lib/__tests__/posterContrast.test.ts)
    now reads the background out of `index.css` rather than restating it.
-3. **Demo account** `eljaguaro+appreview@gmail.com` — create AND confirm on
-   build 21 or later; those are the builds where native email confirmation
-   works. Missing credentials is a near-automatic 2.1 rejection. Give the
-   reviewer **email credentials** regardless of what else the sign-in screen
-   offers — a reviewer cannot be asked to own a Google or Apple account.
+3. ~~**Demo account**~~ **Done 2026-09-21.** `eljaguaro+appreview@gmail.com`
+   exists, email provider, signs in, handle `deadset_review`. The password is
+   NOT recorded in this repo — it goes straight into App Store Connect (item 7).
+   Give the reviewer **email credentials** regardless of what else the sign-in
+   screen offers: a reviewer cannot be asked to own a Google or Apple account.
+   Missing credentials is a near-automatic 2.1 rejection.
+
+   **Correction, because this doc had it wrong:** it said to "create AND
+   confirm" the account, and called build 21 "the first build where native
+   email confirmation works". **Email confirmation is switched off for this
+   project.** The account was created and confirmed 27 milliseconds apart, and
+   29 of 30 email signups since March were auto-confirmed the same way. There
+   is no confirmation email and nothing to click.
+
+   The code claim was not wrong, only irrelevant: `authRedirectTo()` +
+   `DeepLinkPlugin.swift` do work, and **password reset still depends on
+   them** — that is the flow to test on device if you want the deep link
+   exercised, not signup. Worth knowing separately: with confirmations off,
+   anyone can register with an address they do not own. That is a product
+   choice, not a submission blocker.
 
    **Changed after build 22:** Google and Apple sign-in now work inside the
    iOS app, via `ASWebAuthenticationSession` (`ios/App/App/WebAuthPlugin.swift`

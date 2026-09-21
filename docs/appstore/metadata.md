@@ -102,12 +102,13 @@ checks for.
 ## App Review Information
 
 - **Contact:** Jay Cohen · eljaguaro@gmail.com · phone TBD
-- **Demo account:** eljaguaro+appreview@gmail.com — must be created through the
-  app's email signup AND confirmed before submitting. **No longer blocked:**
-  native email confirmation has worked since build 21 (`authRedirectTo()` +
-  `DeepLinkPlugin.swift`, shipped in PR #35). Give the reviewer email
-  credentials even though the app now offers Google and Apple too — a reviewer
-  cannot be asked to own either account.
+- **Demo account:** `eljaguaro+appreview@gmail.com` — **created 2026-09-21**,
+  email provider, handle `deadset_review`. Signs in; no confirmation step
+  exists, because email confirmation is switched off for this project (the
+  account was created and confirmed 27ms apart). Put the password in the App
+  Review sign-in fields; it is deliberately not written down in this repo.
+  Give the reviewer email credentials even though the app now offers Google
+  and Apple too — a reviewer cannot be asked to own either account.
 - **Notes:** paste `docs/appstore/reviewer-notes.md`.
 
 ## App Privacy (data collection questionnaire)
