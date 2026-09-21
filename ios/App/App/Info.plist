@@ -14,8 +14,13 @@
 	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
+	<!-- Not $(PRODUCT_NAME). That expands to the Xcode target name, "App", and
+	     CFBundleName is what iOS puts in system dialogs — so the sign-in consent
+	     sheet read: "App" Wants to Use "…supabase.co" to Sign In. Two unfamiliar
+	     names in the one alert standing between a fan and an account.
+	     CFBundleDisplayName ("Dead Set") only covers the home screen. -->
 	<key>CFBundleName</key>
-	<string>$(PRODUCT_NAME)</string>
+	<string>Dead Set</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
