@@ -8,7 +8,8 @@ Paste-ready metadata for App Store Connect. Voice per dead-set-field-guide.md
 - **App Store Connect record:** already created — Apple ID `6799269210`,
   iOS App 1.0 at "Prepare for Submission"
 - **Name:** Dead Set: Wake Now Discover
-- **Subtitle** (30 chars max, currently 29): `Build the Dead show you crave`
+- **Subtitle** (30 chars max, currently 29) — **App Information page, NOT the
+  version page**: `Build the Dead show you crave`
 - **Category:** Music (primary); Entertainment (secondary)
 - **Bundle ID:** org.deadset.app
 - **Price:** Free
@@ -19,6 +20,8 @@ Paste-ready metadata for App Store Connect. Voice per dead-set-field-guide.md
 
 ## Promotional Text (170 chars max, editable without review)
 
+**Paste into:** version page → Promotional Text.
+
 Currently 166. The previous draft was 175 and Apple would have rejected the
 paste — count this field after any edit.
 
@@ -26,44 +29,37 @@ paste — count this field after any edit.
 Every setlist is a reconstructed night — the Althea from Boston '93 next to the one from Red Rocks '82. Built by Deadheads, from tapes that never stopped circulating.
 ```
 
-## Description
+## Description (4000 chars max — currently 1493)
+
+**Paste into:** version page → Description.
+
+Stored UNWRAPPED on purpose: App Store Connect preserves newlines exactly, so the hard wraps this block used to carry would have printed ragged mid-sentence breaks on the live listing. One line per paragraph, one per bullet. Keep it that way — do not re-wrap for readability.
 
 ```
-Every Deadhead knows the feeling. That song. That night. That version you'll
-never forget — and the next one waiting to be found.
+Every Deadhead knows the feeling. That song. That night. That version you'll never forget — and the next one waiting to be found.
 
-Dead Set is a setlist workshop for Grateful Dead fans. Build the show you
-always wished you'd seen: pull the Scarlet from one night, the Fire from
-another, and press play — every track streams from live recordings that
-circulate on the Internet Archive's Live Music Archive, kept alive for
-decades by tapers and tape traders.
+Dead Set is a setlist workshop for Grateful Dead fans. Build the show you always wished you'd seen: pull the Scarlet from one night, the Fire from another, and press play — every track streams from live recordings that circulate on the Internet Archive's Live Music Archive, kept alive for decades by tapers and tape traders.
 
 WHAT YOU CAN DO
 • Build setlists song by song — Set I, Set II, Encore, with segues
 • Choose the exact night: browse versions by date, venue, and era
-• Press play and let the whole set roll — through your pocket, your commute,
-  your lock screen
+• Press play and let the whole set roll — through your pocket, your commute, your lock screen
 • Wander setlists other Deadheads built, and leave your take
 • Keep your favorites — songs, versions, whole nights
 
 THE FINE PRINT WE'RE PROUD OF
-Dead Set is free, carries no ads, and sells nothing. The Grateful Dead
-allowed taping and trading of their live shows for decades, and those
-recordings circulate on the Internet Archive — we simply give you a new way
-to listen and to find each other through the music. Deep respect to the
-tapers, the traders, and the Archive itself.
+Dead Set is free, carries no ads, and sells nothing. The Grateful Dead allowed taping and trading of their live shows for decades, and those recordings circulate on the Internet Archive — we simply give you a new way to listen and to find each other through the music. Deep respect to the tapers, the traders, and the Archive itself.
 
 The music never stopped. Come dig with us.
 
 Wake. Now. Discover.
 
-Dead Set is an independent fan project. It is not affiliated with, endorsed
-by, or sponsored by the Grateful Dead, Grateful Dead Productions, Rhino
-Entertainment, or Warner Music Group. All trademarks are the property of
-their respective owners.
+Dead Set is an independent fan project. It is not affiliated with, endorsed by, or sponsored by the Grateful Dead, Grateful Dead Productions, Rhino Entertainment, or Warner Music Group. All trademarks are the property of their respective owners.
 ```
 
 ## Keywords (100 chars max, comma-separated — currently 86)
+
+**Paste into:** version page → Keywords. No spaces after commas — they count.
 
 ```
 grateful dead,setlist,jerry garcia,live music,tapes,concert,archive,jam,taper,deadhead
@@ -106,12 +102,13 @@ checks for.
 ## App Review Information
 
 - **Contact:** Jay Cohen · eljaguaro@gmail.com · phone TBD
-- **Demo account:** eljaguaro+appreview@gmail.com — must be created through the
-  app's email signup AND confirmed before submitting. **No longer blocked:**
-  native email confirmation has worked since build 21 (`authRedirectTo()` +
-  `DeepLinkPlugin.swift`, shipped in PR #35). Give the reviewer email
-  credentials even though the app now offers Google and Apple too — a reviewer
-  cannot be asked to own either account.
+- **Demo account:** `eljaguaro+appreview@gmail.com` — **created 2026-09-21**,
+  email provider, handle `deadset_review`. Signs in; no confirmation step
+  exists, because email confirmation is switched off for this project (the
+  account was created and confirmed 27ms apart). Put the password in the App
+  Review sign-in fields; it is deliberately not written down in this repo.
+  Give the reviewer email credentials even though the app now offers Google
+  and Apple too — a reviewer cannot be asked to own either account.
 - **Notes:** paste `docs/appstore/reviewer-notes.md`.
 
 ## App Privacy (data collection questionnaire)

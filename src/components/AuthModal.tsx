@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { trackAuthEvent } from "@/lib/authFunnel";
+import { describeAuthError } from "@/lib/authErrors";
 import { signInWithProvider, type OAuthProvider } from "@/lib/oauthSignIn";
 import {
   Sheet,
@@ -101,7 +102,9 @@ const AuthModal = ({ open, onOpenChange, onAuthenticated, onBeforeRedirect }: Au
         isSignUp ? "signup_email_failed" : "signin_email_failed",
         { provider: "email", metadata: { message: err?.message } },
       );
-      toast.error(err.message);
+      const { message, action } = describeAuthError(err?.message);
+      toast.error(message);
+      if (action === "switch-to-signin") setIsSignUp(false);
     } finally {
       setLoading(false);
     }

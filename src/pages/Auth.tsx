@@ -15,6 +15,7 @@ import { getPostAuthRedirect } from "@/lib/postAuthRedirect";
 import { detectInAppBrowser } from "@/lib/inAppBrowser";
 import { isNativeApp } from "@/lib/nativeApp";
 import { trackAuthEvent } from "@/lib/authFunnel";
+import { describeAuthError } from "@/lib/authErrors";
 import { signInWithProvider, type OAuthProvider } from "@/lib/oauthSignIn";
 
 
@@ -108,7 +109,13 @@ const Auth = () => {
         }
       }
     } catch (err: any) {
-      toast.error(err.message);
+      const { message, action } = describeAuthError(err?.message);
+      toast.error(message);
+      if (action === "switch-to-signin") {
+        // Keep the email they typed; they only need the password now.
+        setIsSignUp(false);
+        setIsForgot(false);
+      }
     } finally {
       setLoading(false);
     }
@@ -256,6 +263,14 @@ const Auth = () => {
                   minLength={6}
                   className="h-12 text-base bg-card/80 backdrop-blur-sm border-border text-card-foreground"
                 />
+                {isSignUp && (
+                  // Said before they submit, because the breached-password
+                  // check turned nine people away after the fact.
+                  <p className="font-body text-xs text-foreground/60">
+                    Six characters or more. Passwords found in known breach
+                    lists get turned away — a few unrelated words works well.
+                  </p>
+                )}
               </div>
             )}
             <Button
