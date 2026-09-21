@@ -1,6 +1,8 @@
 # App Review notes — Dead Set: Wake Now Discover
 
 Paste into App Store Connect → App Review Information → Notes.
+The block below is **2834 characters** against that field's 4000 limit
+(counted 2026-09-18, not estimated — recount it if you edit the block).
 Demo account credentials go in the sign-in fields next to it (Jay: create
 `eljaguaro+appreview@gmail.com` via the app's email signup and confirm it
 before submitting).
@@ -46,9 +48,11 @@ Precedent: this is the same content source and rights model as Relisten
 
 USER-GENERATED CONTENT (guideline 1.2)
 Users can publish setlists and comments. The app includes: a report flow
-on shared content (flag icon), user blocking, a moderation queue reviewed
-by the team, and in-app account deletion (Profile → Danger Zone). Terms of
-Service and Privacy Policy are linked at signup and in-app.
+on shared content — tap the flag on any setlist (setlist page), comment,
+or direct message; user blocking — the block icon beside any other
+person's comment; a moderation queue reviewed by the team; and in-app
+account deletion (Profile → Danger Zone). Terms of Service and Privacy
+Policy are linked at signup and in-app.
 
 ACCOUNT & DEMO
 Email/password sign-in only (no third-party login in the app). A demo
