@@ -35,10 +35,11 @@ store page.
 **Build 27 is the submission candidate — submit this one.** Uploaded
 2026-09-21 by run 26 (run id 35573327254) from `main` at `0353397`, `Upload
 succeeded` at 07:34:02 UTC. Build number derived as always: run_number 26 +
-offset 1; App Store Connect is the confirming authority. The number is
-**derived, not observed** — the run's own log could not be read from this
-environment (the Actions log-archive host is blocked by egress policy), so
-confirm it in App Store Connect before selecting the build.
+offset 1. The number was **derived, then confirmed**: the run's own log
+could not be read from this environment (the Actions log-archive host is
+blocked by egress policy), so the arithmetic stood alone until the build
+installed from TestFlight onto Jay's phone showing **27**. Derivation and
+device agree.
 
 **Build 26 was the candidate for about three hours and is superseded.** It
 was cut from `edb7d5c`, one commit before the two fixes below landed, so it
