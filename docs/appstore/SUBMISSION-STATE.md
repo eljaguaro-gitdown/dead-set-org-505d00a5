@@ -6,7 +6,7 @@ Connect, Lovable Cloud, and the Supabase auth config, and a session that reads
 only the repo will draw confident wrong conclusions. That happened repeatedly on
 2026-09-17; the corrections are banked in `CLAUDE.md`.
 
-**Last updated:** 2026-09-21, after run 25 uploaded **build 26** from `edb7d5c` — the first build on which every submission claim is true at once.
+**Last updated:** 2026-09-21, after run 26 uploaded **build 27** from `0353397` — the first build on which every submission claim is true at once.
 
 Paths beginning `claude/` below are docs in the **Dead Set Claude project**, not
 files in this repo — don't go looking for them on disk. Everything else is
@@ -21,9 +21,9 @@ doc is worse than no doc, because it will be believed.
 | | |
 |---|---|
 | App Store Connect | Record exists — **Apple ID 6799269210**, "Dead Set: Wake Now Discover", iOS App 1.0 at *Prepare for Submission* |
-| Builds | **25 uploaded.** Builds 1–19 are from 2026-08-07 to 2026-08-21; builds 21–25 on 2026-09-17 to 09-21. **Build 26 was uploaded 2026-09-21 by run 25, from `main` at `edb7d5c`,** and is the submission candidate. Build 23's OAuth is broken — see below |
+| Builds | **26 uploaded.** Builds 1–19 are from 2026-08-07 to 2026-08-21; builds 21–27 on 2026-09-17 to 09-21. **Build 27 was uploaded 2026-09-21 by run 26, from `main` at `0353397`,** and is the submission candidate. Build 23's OAuth is broken — see below |
 | Build pipeline | Works, and it is CI. **Every build came from `ios-testflight.yml`** |
-| CI workflow | `.github/workflows/ios-testflight.yml`, `workflow_dispatch`, **run 25 times, every run succeeded**, 2026-08-07 to 2026-09-21 |
+| CI workflow | `.github/workflows/ios-testflight.yml`, `workflow_dispatch`, **run 26 times, every run succeeded**, 2026-08-07 to 2026-09-21 |
 | Code | PR #35's submission-blocking fixes are on `main`; build 22 adds 43 further commits |
 
 **Builds 1–19 all predate the fixes — do not submit any of them.** Build 19 still
@@ -32,10 +32,18 @@ redirect. Submitting it would ship the IP exposure that PR #35 removed, and
 screenshots taken from it would put a Grateful Dead Productions mark on the
 store page.
 
-**Build 26 is the submission candidate — submit this one.** Uploaded
-2026-09-21 by run 25 (run id 35561559583) from `main` at `edb7d5c`, `Upload
-succeeded` at 04:37:21 UTC. Build number derived as always: run_number 25 +
-offset 1; App Store Connect is the confirming authority.
+**Build 27 is the submission candidate — submit this one.** Uploaded
+2026-09-21 by run 26 (run id 35573327254) from `main` at `0353397`, `Upload
+succeeded` at 07:34:02 UTC. Build number derived as always: run_number 26 +
+offset 1; App Store Connect is the confirming authority. The number is
+**derived, not observed** — the run's own log could not be read from this
+environment (the Actions log-archive host is blocked by egress policy), so
+confirm it in App Store Connect before selecting the build.
+
+**Build 26 was the candidate for about three hours and is superseded.** It
+was cut from `edb7d5c`, one commit before the two fixes below landed, so it
+ships the consent alert naming the app "App" and the signup dead end. Do not
+substitute it.
 
 **It is the first build on which every submission claim is simultaneously
 true**, which is why earlier builds should not be substituted for it:
@@ -48,11 +56,18 @@ true**, which is why earlier builds should not be substituted for it:
 | Share-poster caption clears AA contrast | build 25 |
 | Privacy manifest declares Analytics on Email and Name | **build 26** |
 | No phantom `PerformanceData` on the privacy label | **build 26** |
-| No cannabis strain names in the vibe chips | **build 26** |
+| No cannabis strain names in the vibe chips | build 26 |
+| Sign-in consent alert names "Dead Set", not "App" | **build 27** |
+| Signup failures get an actionable message | **build 27** |
+| OAuth start event actually reaches `auth_events` | **build 27** |
 
 Answer the age-rating questionnaire and the App Privacy questionnaire against
 **this** build. Against build 25 the strain labels are still present and the
 manifest still understates what PostHog receives.
+
+The version-record fields — Age Ratings, Content Rights, App Review
+Information, pricing, screenshots — attach to version 1.0, not to a build.
+Swapping the selected build from 26 to 27 does not reset any of them.
 
 ---
 
@@ -311,10 +326,27 @@ Aug 9, the day build 18 was created.
 
 - ~~**Age rating.**~~ **Decided 2026-09-21 (Jay): renamed, not accepted.** The
   three strain-named chips are now Late Night, Daytime Show and Day Into Night.
-  Answer "none" to drug references — against build 26 or later, which is where
-  the rename ships. The chip **ids** are unchanged (`indica`/`sativa`/`hybrid`)
+  The chip **ids** are unchanged (`indica`/`sativa`/`hybrid`)
   because they are persisted to `vibe_ids` and never rendered; renaming them
   would orphan existing rows for no user-visible gain.
+
+  **Correction, 2026-09-21: the drug-reference answer is not "none".** This
+  doc and the advice given from it both said to answer NONE once the chips
+  were renamed. Grepping the copy afterwards found three first-party
+  references that have nothing to do with the chips and still ship in build
+  27: the hero line "found, inhaled, and passed on"
+  (`src/components/landing/HeroSection.tsx:893`, also `public/podcast.html:169`),
+  the era name "The Acid Years" (`src/components/ShowPlate.tsx:5`), and
+  "Acid Tests" in the era blurb (`src/components/EraTooltip.tsx:13`). The
+  honest answer to *Alcohol, Tobacco, or Drug Use or References* is
+  **INFREQUENT**, which is expected to move the rating off 13+. The hero line
+  is visible in the App Store screenshots, so the questionnaire and the
+  submitted artwork have to agree. Not recommended: cutting the copy to win
+  the lower band — the Acid Tests are a documented 1965–66 event series and
+  the era name is accurate.
+
+  Profanity NONE and Horror/Fear NONE both hold. The only profanity-adjacent
+  hit anywhere is the song title "Hell in a Bucket" in `EraTooltip.tsx`.
 - **Diagnostics declarations.** `PrivacyInfo.xcprivacy` declares CrashData and
   PerformanceData. **This changed with build 22:** PostHog's exception capture
   is deliberately left ON (`src/lib/posthog.ts` explains why — it reports errors,
