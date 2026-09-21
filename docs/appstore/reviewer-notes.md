@@ -1,8 +1,8 @@
 # App Review notes — Dead Set: Wake Now Discover
 
 Paste into App Store Connect → App Review Information → Notes.
-The block below is **2834 characters** against that field's 4000 limit
-(counted 2026-09-18, not estimated — recount it if you edit the block).
+The block below is **3002 characters** against that field's 4000 limit
+(counted 2026-09-21, not estimated — recount it if you edit the block).
 Demo account credentials go in the sign-in fields next to it (Jay: create
 `eljaguaro+appreview@gmail.com` via the app's email signup and confirm it
 before submitting).
@@ -55,10 +55,12 @@ account deletion (Profile → Danger Zone). Terms of Service and Privacy
 Policy are linked at signup and in-app.
 
 ACCOUNT & DEMO
-Email/password sign-in only (no third-party login in the app). A demo
-account is provided in the review credentials. Core browsing and listening
-work without an account; the account unlocks building, favorites, and
-comments.
+Sign in with Apple, Google, or an email address and password. Sign in with
+Apple is offered alongside Google on the same screen, so the requirement in
+guideline 4.8 is met. The demo account in the review credentials is an
+email/password account and needs no Google or Apple ID to use. Core browsing
+and listening work without an account; the account unlocks building,
+favorites, and comments.
 
 BACKGROUND AUDIO
 The app declares the audio background mode and plays music with lock-screen
