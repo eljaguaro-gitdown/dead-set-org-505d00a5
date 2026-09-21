@@ -9,12 +9,25 @@
   Scope of this manifest covers ONLY what is shipped inside the iOS app bundle.
   - Google AdSense is web-only (desktop ≥1280px) and is NOT loaded in the
     native iOS WebView, so no advertising data category is declared.
-  - All backend calls hit our own backend (Lovable Cloud / Supabase).
-  - No third-party analytics, attribution, or tracking SDKs are bundled.
+  - Most backend calls hit our own backend (Lovable Cloud / Supabase). ONE
+    third-party processor is bundled: PostHog. `posthog-js` ships in the web
+    assets and .init()s inside the WKWebView, posting events to
+    VITE_PUBLIC_POSTHOG_HOST directly. identifyUser() in src/hooks/useAuth.ts
+    sends email address and display name to it on sign-in, which is why those
+    two entries below carry the Analytics purpose as well as Authentication.
+  - Session replay, autocapture, heatmaps and surveys are explicitly disabled
+    in src/lib/posthog.ts. Exception capture is deliberately left ON, which is
+    what the CrashData entry below covers.
+  - Still no cross-app tracking: NSPrivacyTracking stays false and
+    NSPrivacyTrackingDomains stays empty. PostHog here is first-party product
+    analytics, not advertising attribution.
 
-  Keep this file in sync with src/pages/PrivacyPolicy.tsx and the App Store
-  Connect "App Privacy" questionnaire. If you add a new SDK, geolocation,
-  push notifications, IDFA, or third-party analytics, update BOTH places.
+  Keep this file in sync with src/pages/PrivacyPolicy.tsx, the App Store
+  Connect "App Privacy" questionnaire, and docs/appstore/metadata.md, which
+  records the answers to paste into it. If you add a new SDK, geolocation,
+  push notifications, IDFA, or third-party analytics, update ALL THREE — this
+  file's "no third-party analytics" claim survived PostHog shipping because
+  only the code was reviewed.
 -->
 <plist version="1.0">
 <dict>
@@ -34,7 +47,8 @@
   <key>NSPrivacyCollectedDataTypes</key>
   <array>
 
-    <!-- Email Address — required for account creation & sign-in -->
+    <!-- Email Address — account creation & sign-in, and sent to PostHog by
+         identifyUser() to attach analytics events to an account. -->
     <dict>
       <key>NSPrivacyCollectedDataType</key>
       <string>NSPrivacyCollectedDataTypeEmailAddress</string>
@@ -46,10 +60,12 @@
       <array>
         <string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
         <string>NSPrivacyCollectedDataTypePurposeAuthentication</string>
+        <string>NSPrivacyCollectedDataTypePurposeAnalytics</string>
       </array>
     </dict>
 
-    <!-- Name / Handle — display name on profile & shared setlists -->
+    <!-- Name / Handle — display name on profile & shared setlists, and sent
+         to PostHog by identifyUser() alongside the email address. -->
     <dict>
       <key>NSPrivacyCollectedDataType</key>
       <string>NSPrivacyCollectedDataTypeName</string>
@@ -60,6 +76,7 @@
       <key>NSPrivacyCollectedDataTypePurposes</key>
       <array>
         <string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+        <string>NSPrivacyCollectedDataTypePurposeAnalytics</string>
       </array>
     </dict>
 

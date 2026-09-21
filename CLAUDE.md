@@ -164,6 +164,14 @@ Cloud, the Supabase auth config — and a repo-only read produces confident wron
 answers about it. That doc records what is actually done, what is left, and
 which decisions are still open.
 
+## Releasing
+
+One `main`, three deploy surfaces, no link between them: the web publishes from
+Lovable, iOS builds from `.github/workflows/ios-testflight.yml`, and edge
+functions deploy only when the Lovable agent is asked. Merging ships nothing.
+**[`docs/RELEASING.md`](docs/RELEASING.md) has the order, the verification for
+each surface, and the failure modes** — read it before shipping anything.
+
 ## Conventions
 
 - **Import alias:** `@/` → `src/` (configured in `vite.config.ts`, `vitest.config.ts`, `tsconfig`, `components.json`). Always import via `@/components/...`, `@/lib/...`, etc.

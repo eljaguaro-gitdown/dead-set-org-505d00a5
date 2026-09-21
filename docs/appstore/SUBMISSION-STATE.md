@@ -215,10 +215,17 @@ Aug 9, the day build 18 was created.
    is customer reviews). See the open decision below.
 6. **App Privacy** — Privacy Policy URL lives here, not on the version page.
    Declare Product Interaction *linked*, Device ID *linked*, neither tracking.
-   **Needs a reconciliation pass before submission (new with build 22).** A
-   third-party analytics SDK now genuinely ships inside the bundle: `posthog-js`
-   is in `dist/` and `.init()`s inside the WKWebView, sending events straight to
-   `VITE_PUBLIC_POSTHOG_HOST` rather than through Supabase. Three consequences:
+   ~~**Needs a reconciliation pass before submission (new with build 22).**~~
+   **Done 2026-09-21** — but **not yet in a build**: `PrivacyInfo.xcprivacy` is
+   a bundled resource, so the corrected manifest reaches Apple only in a
+   TestFlight build cut after this commit. Build 25 and earlier carry the old
+   one. Cut a build before submitting, or the manifest Apple reads is the wrong
+   one.
+
+   What was wrong, kept for the record: a third-party analytics SDK genuinely
+   ships inside the bundle — `posthog-js` is in `dist/` and `.init()`s inside
+   the WKWebView, sending events straight to `VITE_PUBLIC_POSTHOG_HOST` rather
+   than through Supabase. Three consequences, all now fixed:
    - `PrivacyInfo.xcprivacy`'s header comment still claims "No third-party
      analytics, attribution, or tracking SDKs are bundled" and "All backend
      calls hit our own backend" — both now false.
@@ -230,10 +237,12 @@ Aug 9, the day build 18 was created.
      defensible: this is first-party product analytics, not cross-app ad
      tracking under ATT, and replay/autocapture/heatmaps/surveys are explicitly
      off in `src/lib/posthog.ts`.
-   `metadata.md`'s App Privacy section (written 2026-09-17, pre-PostHog) happens
-   to cover Product Interaction and Device ID already, but names no third-party
-   processor. A manifest that disagrees with the ASC questionnaire is a known
-   rejection trigger — fix before **submission**, not before TestFlight.
+   Fixed: the manifest header no longer claims no third-party analytics is
+   bundled, Email Address and Name carry the Analytics purpose, and
+   `metadata.md`'s App Privacy section now names PostHog as a processor and
+   says which fields reach it. A manifest that disagrees with the ASC
+   questionnaire is a known rejection trigger, so **answer the questionnaire
+   from `metadata.md`, not from memory**.
    (Correcting a stale claim in the other direction: the comment in
    `src/lib/posthog.ts` says the manifest "does not declare ProductInteraction".
    It does — linked, for AppFunctionality+Analytics.)

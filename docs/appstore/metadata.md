@@ -68,7 +68,8 @@ their respective owners.
 ```
 grateful dead,setlist,jerry garcia,live music,tapes,concert,archive,jam,taper,deadhead
 ```
-(97 chars)
+(86 characters, recounted 2026-09-21 — an earlier "(97 chars)" line here
+contradicted the heading; the heading was right.)
 
 ## Screenshots (Jay takes on iPhone)
 
@@ -102,8 +103,11 @@ which is what Apple checks for.
 
 - **Contact:** Jay Cohen · eljaguaro@gmail.com · phone TBD
 - **Demo account:** eljaguaro+appreview@gmail.com — must be created through the
-  app's email signup AND confirmed before submitting. Blocked until the native
-  redirect fix ships; email confirmation does not currently complete on device.
+  app's email signup AND confirmed before submitting. **No longer blocked:**
+  native email confirmation has worked since build 21 (`authRedirectTo()` +
+  `DeepLinkPlugin.swift`, shipped in PR #35). Give the reviewer email
+  credentials even though the app now offers Google and Apple too — a reviewer
+  cannot be asked to own either account.
 - **Notes:** paste `docs/appstore/reviewer-notes.md`.
 
 ## App Privacy (data collection questionnaire)
@@ -120,10 +124,20 @@ which is what Apple checks for.
   as the x-visitor-id header. Not an IDFA or IDFV, but persistent, and joined to
   a user_id in visitor_attribution once someone signs up.
 - **Tracking (ATT):** NO — no cross-app tracking, no ads
+- **Third-party processor — PostHog (new with build 22):** `posthog-js` ships
+  inside the bundle and `.init()`s in the WKWebView, posting to
+  `VITE_PUBLIC_POSTHOG_HOST` rather than through Supabase. `identifyUser()`
+  (`src/hooks/useAuth.ts`) sends **email address and display name** to it on
+  sign-in, alongside product-interaction events. Answer the questionnaire for
+  Email Address, Name, Product Interaction and Device ID as collected and
+  **used for Analytics as well as App Functionality**. Still NOT tracking under
+  ATT: this is first-party product analytics, not cross-app advertising, and
+  session replay, autocapture, heatmaps and surveys are all explicitly disabled
+  in `src/lib/posthog.ts`.
 
-> Diagnostics: PrivacyInfo.xcprivacy currently declares CrashData and
-> PerformanceData (unlinked). No crash or performance SDK actually ships — there
-> is no Sentry, Bugsnag, Crashlytics or Datadog anywhere in the project. Over-
-> declaring is not a rejection risk, but it does put "Diagnostics" on the public
-> privacy label for data the app never collects. Decide whether to drop those two
-> entries before submitting.
+> Diagnostics: PrivacyInfo.xcprivacy declares CrashData and PerformanceData
+> (unlinked). **This changed with build 22.** PostHog's exception capture is
+> deliberately left on (`src/lib/posthog.ts` explains why), so CrashData is no
+> longer a declaration for data never collected. PerformanceData still is — no
+> performance SDK ships. The open question narrows to whether to drop that one
+> entry before submitting.
