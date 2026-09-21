@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Loader2, Bell, MessageCircle } from "lucide-react";
+import { ArrowLeft, Loader2, Bell, MessageCircle, User } from "lucide-react";
 import {
   ResponsiveContainer,
   LineChart,
@@ -15,6 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { groupClickers } from "@/lib/notificationClickers";
 
 interface ClickRow {
   created_at: string;
@@ -34,6 +35,7 @@ const AdminNotificationClicks = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
   const [rows, setRows] = useState<ClickRow[]>([]);
+  const [names, setNames] = useState<Record<string, string | null>>({});
   const [range, setRange] = useState<RangeKey>("30d");
 
   useEffect(() => {
@@ -70,15 +72,34 @@ const AdminNotificationClicks = () => {
       if (error) {
         console.error(error);
         setRows([]);
+        setNames({});
       } else {
-        setRows(
-          (data || []).filter(
-            (r: any) =>
-              typeof r.channel === "string" &&
-              (r.channel.startsWith("announcement:") ||
-                r.channel.startsWith("comment_notif:"))
-          ) as ClickRow[]
-        );
+        const clicks = (data || []).filter(
+          (r: any) =>
+            typeof r.channel === "string" &&
+            (r.channel.startsWith("announcement:") ||
+              r.channel.startsWith("comment_notif:"))
+        ) as ClickRow[];
+        setRows(clicks);
+
+        // Resolve the ids the rows already carry. `profiles` grants
+        // display_name to authenticated clients; email lives in auth.users and
+        // is not readable from the browser, so it is deliberately not shown.
+        const ids = [...new Set(clicks.map((r) => r.user_id).filter(Boolean))] as string[];
+        if (ids.length === 0) {
+          setNames({});
+        } else {
+          const { data: profiles, error: profileError } = await supabase
+            .from("profiles")
+            .select("user_id, display_name")
+            .in("user_id", ids);
+          if (profileError) console.error(profileError);
+          setNames(
+            Object.fromEntries(
+              (profiles || []).map((p) => [p.user_id, p.display_name])
+            )
+          );
+        }
       }
       setLoading(false);
     };
@@ -144,6 +165,8 @@ const AdminNotificationClicks = () => {
       .sort((a, b) => b.clicks - a.clicks)
       .slice(0, 25);
   }, [rows]);
+
+  const clickers = useMemo(() => groupClickers(rows, names), [rows, names]);
 
   if (authLoading || loading) {
     return (
@@ -256,6 +279,71 @@ const AdminNotificationClicks = () => {
               </LineChart>
             </ResponsiveContainer>
           </div>
+        </section>
+
+        {/* Who clicked */}
+        <section className="bg-card border border-border rounded-xl p-6 mb-8">
+          <h2 className="font-display text-lg text-card-foreground mb-6">
+            Who clicked
+          </h2>
+          {clickers.length === 0 ? (
+            <p className="font-body text-sm text-muted-foreground">
+              No clicks tracked in this range yet.
+            </p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left font-mono text-[10px] tracking-wider uppercase text-muted-foreground border-b border-border">
+                    <th className="py-2 pr-4">Person</th>
+                    <th className="py-2 pr-4 text-right">Announcements</th>
+                    <th className="py-2 pr-4 text-right">Comments</th>
+                    <th className="py-2 pr-4 text-right">Total</th>
+                    <th className="py-2 text-right">Last click</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {clickers.map((c) => (
+                    <tr key={c.key} className="border-b border-border/40 last:border-0">
+                      <td className="py-3 pr-4">
+                        <span className="flex items-center gap-2">
+                          <User
+                            className={`w-3.5 h-3.5 shrink-0 ${
+                              c.isAnonymous ? "text-muted-foreground" : "text-primary"
+                            }`}
+                          />
+                          <span
+                            className={
+                              c.isAnonymous
+                                ? "font-mono text-xs text-muted-foreground"
+                                : "text-card-foreground"
+                            }
+                          >
+                            {c.label}
+                          </span>
+                        </span>
+                      </td>
+                      <td className="py-3 pr-4 text-right text-card-foreground">
+                        {c.announcements}
+                      </td>
+                      <td className="py-3 pr-4 text-right text-card-foreground">
+                        {c.comments}
+                      </td>
+                      <td className="py-3 pr-4 text-right text-card-foreground">{c.total}</td>
+                      <td className="py-3 text-right text-muted-foreground whitespace-nowrap">
+                        {new Date(c.lastClick).toLocaleString(undefined, {
+                          month: "short",
+                          day: "numeric",
+                          hour: "numeric",
+                          minute: "2-digit",
+                        })}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </section>
 
         {/* Per-channel breakdown */}
