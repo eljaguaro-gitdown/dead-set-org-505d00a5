@@ -62,8 +62,13 @@ manifest still understates what PostHog receives.
 "the newest build is `main`" is true again. It is build 24 plus the share-poster
 caption contrast fix and the two admin-dashboard fixes (PRs #55 and #56).
 
-**Google and Apple sign-in are confirmed working on device** as of build 24 — the
-last unverified step in that chain. Builds 24 and 25 both carry it.
+**Google and Apple sign-in are both confirmed working on device.** Google on
+build 24; **Apple confirmed separately on build 26, 2026-09-21 06:06 UTC** —
+`auth.identities` shows the `apple` provider signing in at that moment, so
+guideline 4.8 rests on a completed round trip rather than on a reading of the
+code. The two had only ever been confirmed together before, which left open
+the one thing no static check could close: whether the Apple provider was
+actually enabled in Lovable Cloud. It is.
 
 **Gate status, stated plainly:** `qa-release` last ran against `3bcde32`
 (build 22), returning PASS WITH NOTES. Builds 23, 24 and 25 were dispatched on
