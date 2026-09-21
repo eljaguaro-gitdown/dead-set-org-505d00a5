@@ -1,11 +1,13 @@
 # App Review notes — Dead Set: Wake Now Discover
 
 Paste into App Store Connect → App Review Information → Notes.
-The block below is **3002 characters** against that field's 4000 limit
+The block below is **3014 characters** against that field's 4000 limit
 (counted 2026-09-21, not estimated — recount it if you edit the block).
-Demo account credentials go in the sign-in fields next to it (Jay: create
-`eljaguaro+appreview@gmail.com` via the app's email signup and confirm it
-before submitting).
+Demo account credentials go in the sign-in fields next to it:
+`eljaguaro+appreview@gmail.com`, created 2026-09-21 via the app's email
+signup. There is no confirmation step to complete — email confirmation is
+off for this project, so the account was confirmed on creation. The password
+is deliberately not recorded here; type it straight into App Store Connect.
 
 ---
 
