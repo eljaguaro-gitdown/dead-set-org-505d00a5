@@ -76,9 +76,19 @@ const VIBES = [
   { id: "emotional", emoji: "💔", label: "Emotional & Raw" },
   { id: "country", emoji: "🤠", label: "Country & Folk Roots" },
   { id: "blues", emoji: "🎸", label: "Blues & Grit" },
-  { id: "indica", emoji: "🌙", label: "Indica" },
-  { id: "sativa", emoji: "☀️", label: "Sativa" },
-  { id: "hybrid", emoji: "🌿", label: "Hybrid" },
+  // These three were Indica / Sativa / Hybrid. Strain names read as drug
+  // references to App Review and push the rating to 12+/17+ for three chips —
+  // and they were the one place the vibe list reached for stoner shorthand
+  // instead of describing a show. Day and night shows are a real distinction
+  // to anyone who has stood in both, and an outdoor run that starts in
+  // daylight and ends in the dark has an arc worth asking for by name.
+  //
+  // The ids stay as they are on purpose: they are persisted to vibe_ids and
+  // never rendered, so renaming them would orphan existing rows to no
+  // user-visible end.
+  { id: "indica", emoji: "🌙", label: "Late Night" },
+  { id: "sativa", emoji: "☀️", label: "Daytime Show" },
+  { id: "hybrid", emoji: "🌗", label: "Day Into Night" },
 ];
 
 const PRIORITIES = [

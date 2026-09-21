@@ -90,14 +90,18 @@ Suggested order (first three are the ones that count):
 
 No text overlays needed for v1 — the app's own surfaces carry the aesthetic.
 
-## Age rating questionnaire — decision needed (Jay)
+## Age rating questionnaire
 
-Answer honestly. The one flag: vibe labels using cannabis strain names
-(Indica/Sativa) count as "drug references" → likely 12+/17+. Options:
-(a) accept the rating; (b) rename the labels before submission and answer
-"none". Everything else is None/No (no violence, gambling, etc.). UGC:
-answer YES to user-generated content — we have report/block + moderation,
-which is what Apple checks for.
+**Decided 2026-09-21: option (b), renamed.** The vibe chips that used cannabis
+strain names are now **Late Night** 🌙, **Daytime Show** ☀️ and **Day Into
+Night** 🌗 (`src/components/CosmicCharlieDialog.tsx`). Nothing user-facing in
+the app references a strain, so **answer "none" to drug references** — but
+answer it against the build you are submitting: the rename ships in build 26
+and later. Build 25 and earlier still show the old labels.
+
+Everything else is None/No (no violence, gambling, etc.). UGC: answer YES to
+user-generated content — we have report/block + moderation, which is what Apple
+checks for.
 
 ## App Review Information
 
