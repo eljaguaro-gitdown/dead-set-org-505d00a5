@@ -124,6 +124,15 @@ checks for.
   tracking. This is `ds_visitor_id`, a random UUID kept in localStorage and sent
   as the x-visitor-id header. Not an IDFA or IDFV, but persistent, and joined to
   a user_id in visitor_attribution once someone signs up.
+- **User content → Photos or Videos:** collected, linked. Avatar uploads to the
+  `avatars` storage bucket (`src/pages/Profile.tsx`). App Functionality only.
+- **User content → Customer Support:** collected, linked. Backstage bug and
+  wishlist submissions (`src/pages/Backstage.tsx` → `insider_bugs`,
+  `insider_wishlist`). App Functionality only.
+- **Diagnostics → Crash Data:** collected, **NOT linked** — the only unlinked
+  entry in the whole questionnaire. PostHog exception capture. App Functionality
+  only. Do **not** also check Performance Data: it was removed from the manifest
+  in build 26 and checking it here re-creates the mismatch that removal fixed.
 - **Tracking (ATT):** NO — no cross-app tracking, no ads
 - **Third-party processor — PostHog (new with build 22):** `posthog-js` ships
   inside the bundle and `.init()`s in the WKWebView, posting to
@@ -136,9 +145,21 @@ checks for.
   session replay, autocapture, heatmaps and surveys are all explicitly disabled
   in `src/lib/posthog.ts`.
 
-> Diagnostics: PrivacyInfo.xcprivacy declares CrashData and PerformanceData
-> (unlinked). **This changed with build 22.** PostHog's exception capture is
-> deliberately left on (`src/lib/posthog.ts` explains why), so CrashData is no
-> longer a declaration for data never collected. PerformanceData still is — no
-> performance SDK ships. The open question narrows to whether to drop that one
-> entry before submitting.
+> **Answer the questionnaire from `ios/App/App/PrivacyInfo.xcprivacy`, not from
+> this list.** The manifest is the one both Apple and the reviewer can read, and
+> the two must agree exactly — a disagreement is a known rejection trigger. This
+> section once listed only five of the nine declared types; Photos or Videos,
+> Customer Support and Crash Data were missing, which would have produced that
+> exact mismatch. Nine types are declared: Email Address, Name, User ID, Device
+> ID, Photos or Videos, Customer Support, Other User Content, Product
+> Interaction, Crash Data.
+>
+> Two notes on translating the manifest into the ASC form. ASC offers no
+> **Authentication** purpose — the manifest uses it on Email Address and User
+> ID, and it maps to App Functionality. And direct messages are declared under
+> **Other User Content**, not "Emails or Text Messages": that Apple category is
+> for apps reading the device's own mail and SMS.
+>
+> Verified 2026-09-21 against build 27: no geolocation anywhere, and no search
+> query ever leaves the device — all ten PostHog events are product interaction,
+> so neither Location nor Search History is collected.
