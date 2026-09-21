@@ -6,7 +6,7 @@ Connect, Lovable Cloud, and the Supabase auth config, and a session that reads
 only the repo will draw confident wrong conclusions. That happened repeatedly on
 2026-09-17; the corrections are banked in `CLAUDE.md`.
 
-**Last updated:** 2026-09-20, after run 23 uploaded build 24 from `d9aa820`.
+**Last updated:** 2026-09-21, after run 24 uploaded build 25 from `df1497e` — the first build cut from `main` since build 22.
 
 Paths beginning `claude/` below are docs in the **Dead Set Claude project**, not
 files in this repo — don't go looking for them on disk. Everything else is
@@ -21,9 +21,9 @@ doc is worse than no doc, because it will be believed.
 | | |
 |---|---|
 | App Store Connect | Record exists — **Apple ID 6799269210**, "Dead Set: Wake Now Discover", iOS App 1.0 at *Prepare for Submission* |
-| Builds | **23 uploaded.** Builds 1–19 are from 2026-08-07 to 2026-08-21. Builds 21, 22 and 23 followed on 2026-09-17 to 09-20. **Build 24 was uploaded 2026-09-20 by run 23** and is the newest. Build 23's OAuth is broken — see below |
+| Builds | **24 uploaded.** Builds 1–19 are from 2026-08-07 to 2026-08-21. Builds 21–24 followed on 2026-09-17 to 09-20. **Build 25 was uploaded 2026-09-21 by run 24, from `main`,** and is the newest. Build 23's OAuth is broken — see below |
 | Build pipeline | Works, and it is CI. **Every build came from `ios-testflight.yml`** |
-| CI workflow | `.github/workflows/ios-testflight.yml`, `workflow_dispatch`, **run 23 times, every run succeeded**, 2026-08-07 to 2026-09-20 |
+| CI workflow | `.github/workflows/ios-testflight.yml`, `workflow_dispatch`, **run 24 times, every run succeeded**, 2026-08-07 to 2026-09-21 |
 | Code | PR #35's submission-blocking fixes are on `main`; build 22 adds 43 further commits |
 
 **Builds 1–19 all predate the fixes — do not submit any of them.** Build 19 still
@@ -32,7 +32,33 @@ redirect. Submitting it would ship the IP exposure that PR #35 removed, and
 screenshots taken from it would put a Grateful Dead Productions mark on the
 store page.
 
-**Build 24 is the current submission candidate.** Uploaded 2026-09-20 by run
+**Build 25 is the current submission candidate.** Uploaded 2026-09-21 by run
+24 (run id 35551481149) from **`main`** at `df1497e`, `Upload succeeded` at
+01:40:53 UTC. The first build since 22 cut from `main` rather than a branch, so
+"the newest build is `main`" is true again. It is build 24 plus the share-poster
+caption contrast fix and the two admin-dashboard fixes (PRs #55 and #56).
+
+**Google and Apple sign-in are confirmed working on device** as of build 24 — the
+last unverified step in that chain. Builds 24 and 25 both carry it.
+
+**Gate status, stated plainly:** `qa-release` last ran against `3bcde32`
+(build 22), returning PASS WITH NOTES. Builds 23, 24 and 25 were dispatched on
+Jay's direct instruction without re-running it. Every change since went through
+a PR with CI green (typecheck, tests, build), so this is not an unreviewed
+build — but `CLAUDE.md` calls that gate mandatory before an App Store build,
+and **it should be run against whatever sha is actually submitted**, so the
+verdict names the shipping commit.
+
+**TestFlight distribution note:** `ITSAppUsesNonExemptEncryption` is `false` in
+`Info.plist`, so no export-compliance question blocks a build from reaching
+testers once it finishes processing. Internal testers need an App Store Connect
+account (Users and Access) and get builds with no review; external testers need
+**Beta App Review**, which requires the demo account in item 3 below — so that
+item gates beta testing, not just submission.
+
+---
+
+**Build 24** (the previous candidate). Uploaded 2026-09-20 by run
 23 (run id 35538389237) from `d9aa820`, `Upload succeeded` at 21:23:13 UTC. It
 is build 23 plus the one line that makes the OAuth plugin exist at runtime.
 
