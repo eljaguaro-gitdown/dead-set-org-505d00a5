@@ -9,6 +9,35 @@ signup. There is no confirmation step to complete — email confirmation is
 off for this project, so the account was confirmed on creation. The password
 is deliberately not recorded here; type it straight into App Store Connect.
 
+## The 1.2 claims, verified against build 27 (2026-09-21)
+
+The block below tells Apple the app has a report flow, user blocking, a
+moderation queue and in-app account deletion. A reviewer who taps a flag icon
+and finds nothing rejects on the spot, so each was checked for a **caller**,
+not a definition:
+
+| Claim | Where it actually runs |
+|---|---|
+| Report a setlist | `src/pages/SetlistPoster.tsx:1052` |
+| Report a comment | `src/components/SetlistComments.tsx:260` |
+| Report a direct message | `src/pages/Messages.tsx:450` |
+| Reports are insertable | RLS `"Users can file reports"` — `INSERT TO authenticated WITH CHECK (auth.uid() = reporter_id)` |
+| Block a user | `src/components/SetlistComments.tsx:269`, `src/pages/Messages.tsx:107` |
+| Blocking is enforced | RESTRICTIVE policy `"Blocked senders cannot message blockers"` on `direct_messages` — blocked senders are stopped in the database, not just hidden in the UI |
+| Moderation queue | `src/pages/Admin.tsx:495`, admin-gated — **the reviewer cannot see this one**, and the notes phrase it as process rather than a feature they can tap |
+| Account deletion | `src/pages/Profile.tsx:48` → `delete-account` edge function; Danger Zone UI at `Profile.tsx:234-266` |
+
+`delete-account` was also probed **in production**, because a merged-but-
+undeployed edge function is indistinguishable from a working one when read
+from the repo — the banked correction in `CLAUDE.md` is that Lovable Publish
+does not deploy functions. `net.http_post` from the production database
+returns **401 `UNAUTHORIZED_NO_AUTH_HEADER`**, not 404, so the function is
+deployed and `verify_jwt` is doing its job.
+
+Not verified: that deletion *succeeds*. Confirming that means destroying a
+real account. If the reviewer tests 5.1.1(v) on the demo account, that account
+is gone and they cannot sign back in.
+
 ---
 
 ```
