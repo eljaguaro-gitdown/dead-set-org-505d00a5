@@ -6,7 +6,23 @@ Connect, Lovable Cloud, and the Supabase auth config, and a session that reads
 only the repo will draw confident wrong conclusions. That happened repeatedly on
 2026-09-17; the corrections are banked in `CLAUDE.md`.
 
-**Last updated:** 2026-09-21, after run 26 uploaded **build 27** from `0353397` — the first build on which every submission claim is true at once.
+**Last updated:** 2026-09-22 — **iOS App 1.0 (build 27) was submitted to App
+Review at 01:12 PDT** and is *Waiting for Review*. Submission ID
+`f8593d8a-e9fc-4a91-a4b5-dabad5b63632`.
+
+Three things submission did **not** settle, because App Store Connect does not
+enforce them at submit time:
+
+1. **EU DSA trader status is still undeclared.** It is not a submission-blocking
+   field; it is enforced separately, and an app without a verified declaration
+   is removed from the EU App Store. Declare **non-trader** (free, no ads, no
+   IAP, no subscriptions; the only donate link points at archive.org, not the
+   developer). Declaring trader would publish a home address, phone and email
+   on the EU product page.
+2. **Whether the release is manual.** If "Automatically release this version"
+   was left selected, approval ships the app at whatever hour Apple approves it,
+   with no chance to line up the web publish or the dispatch.
+3. **The published web is probably a publish behind `main`.** See below.
 
 Paths beginning `claude/` below are docs in the **Dead Set Claude project**, not
 files in this repo — don't go looking for them on disk. Everything else is
@@ -322,6 +338,44 @@ Aug 9, the day build 18 was created.
   `claude/deadset_security_findings_triage.md` (Claude project). Do **not** use
   "Try to fix all":
   the Critical's obvious fix breaks anonymous play telemetry.
+
+## The published web is probably behind `main` (open, 2026-09-22)
+
+`main` is at `0353397`, and Lovable's project reports `latest_commit_sha` of
+the same sha — so the **sync** is current. That is not the same as a publish,
+which is the banked correction in `CLAUDE.md`: Lovable's tools expose no
+`published_commit_sha`, so "is_published: true" only says a published URL
+exists, not which commit serves it.
+
+The evidence that it is behind is behavioural, from `auth_events`:
+
+```
+2026-09-22 05:21:13   auth_modal_opened    surface: auth_page   visitor ffcd97f5
+2026-09-22 05:21:16   oauth_returned       provider: google     visitor ffcd97f5
+```
+
+A return with **no `oauth_redirect_started`** — the exact bug `75b58fa` fixed by
+posting auth events with `keepalive`. It has to be a browser: in the native app
+`signInWithProvider` passes `skipBrowserRedirect: true` and hands off to
+`ASWebAuthenticationSession`, so the page never navigates and the start event
+survives with or without `keepalive`. Only a tab that navigates can lose one.
+
+Aggregates agree in direction but are underpowered — 56 starts against 61
+returns before the merge (impossible, starts being dropped) versus 5 against 4
+after, and all five after-events are two visitors on 2026-09-21, almost
+certainly Jay's own device on build 27, which does have the fix. App and web
+events land in the same table, so the totals cannot separate them.
+
+**Not proven.** One dropped event is consistent with the old race, and
+`keepalive` is not a mathematical guarantee. The deterministic test is to
+attempt a signup at `dead-set.org/auth` with an already-registered address:
+"You're already on the list — sign in with that email instead." plus the form
+flipping to sign-in means the fix is live; a raw "User already registered" toast
+with no way forward means it is not.
+
+If it is behind, publishing requires a current PASS from `qa-release` first
+(`/pre-release`). That gate is not waivable for a "small" publish.
+
 
 ## Decisions still open (Jay)
 
