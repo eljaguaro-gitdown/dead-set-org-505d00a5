@@ -43,6 +43,22 @@ that target lands cannot carry the clip, whatever its number. Before
 dispatching the resubmission build, check that the App Clip target is on the
 ref being built and that the workflow archives and exports it.
 
+**On `main` since build 27, not yet in any build** (as of `f89a90b`,
+2026-09-23). Build 28 was deliberately held for the resubmission, so no run
+has been dispatched since run 26. The resubmission build will carry:
+
+- The builder's collaborator link is `https://dead-set.org/join/…` (PR #62).
+  In build 27 it is `capacitor://localhost/join/…`, which opens nothing for
+  whoever receives it — do not share collaborator links from build 27.
+- The landing-footer "Updated N times this week" badge counts the last seven
+  days and hides when empty (PR #64). Build 27 still says "Updated 2 times
+  this week", from April's notes.
+- `vite.config.ts` reads the build sha from `.git` when git is unavailable
+  (PR #63) — build tooling, no user-visible change.
+
+The web was published from `2a94e45` and then `f89a90b` on 2026-09-23, each
+gated PASS WITH NOTES, so the web is ahead of build 27 by exactly these.
+
 **Build 27** — uploaded 2026-09-21 by run 26 (run id 35573327254) from `main`
 at `0353397` (PR #61), dispatched 07:30:59 UTC, finished 07:34:06. Build number
 derived as always: run_number 26 + offset 1; App Store Connect confirms. It went
