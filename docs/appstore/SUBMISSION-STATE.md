@@ -6,7 +6,7 @@ Connect, Lovable Cloud, and the Supabase auth config, and a session that reads
 only the repo will draw confident wrong conclusions. That happened repeatedly on
 2026-09-17; the corrections are banked in `CLAUDE.md`.
 
-**Last updated:** 2026-09-21, after run 25 uploaded **build 26** from `edb7d5c` — the first build on which every submission claim is true at once.
+**Last updated:** 2026-09-23. **Build 27 (run 26, `0353397`) is the build that was submitted** (Jay, 2026-09-23). A resubmission with an **App Clip** is planned — see below.
 
 Paths beginning `claude/` below are docs in the **Dead Set Claude project**, not
 files in this repo — don't go looking for them on disk. Everything else is
@@ -21,9 +21,9 @@ doc is worse than no doc, because it will be believed.
 | | |
 |---|---|
 | App Store Connect | Record exists — **Apple ID 6799269210**, "Dead Set: Wake Now Discover", iOS App 1.0 at *Prepare for Submission* |
-| Builds | **25 uploaded.** Builds 1–19 are from 2026-08-07 to 2026-08-21; builds 21–25 on 2026-09-17 to 09-21. **Build 26 was uploaded 2026-09-21 by run 25, from `main` at `edb7d5c`,** and is the submission candidate. Build 23's OAuth is broken — see below |
+| Builds | **26 uploaded.** Builds 1–19 are from 2026-08-07 to 2026-08-21; builds 21–27 on 2026-09-17 to 09-21. **Build 26 was uploaded 2026-09-21 by run 25, from `main` at `edb7d5c`,** and was the candidate until **build 27** (run 26, `main` at `0353397`), three hours later, **which is what was submitted**. Build 23's OAuth is broken |
 | Build pipeline | Works, and it is CI. **Every build came from `ios-testflight.yml`** |
-| CI workflow | `.github/workflows/ios-testflight.yml`, `workflow_dispatch`, **run 25 times, every run succeeded**, 2026-08-07 to 2026-09-21 |
+| CI workflow | `.github/workflows/ios-testflight.yml`, `workflow_dispatch`, **run 26 times, every run succeeded**, 2026-08-07 to 2026-09-21 |
 | Code | PR #35's submission-blocking fixes are on `main`; build 22 adds 43 further commits |
 
 **Builds 1–19 all predate the fixes — do not submit any of them.** Build 19 still
@@ -32,7 +32,57 @@ redirect. Submitting it would ship the IP exposure that PR #35 removed, and
 screenshots taken from it would put a Grateful Dead Productions mark on the
 store page.
 
-**Build 26 is the submission candidate — submit this one.** Uploaded
+**Build 27 was submitted — it is the build under review.** Recorded 2026-09-23
+from Jay; the submission date and review status live in App Store Connect and
+are not copied here. Any resubmission is a new build, not an edit to this one.
+
+**Resubmission planned, with an App Clip.** As of `2a94e45` there is **no App
+Clip target in this repo** — no second target in `ios/App/App.xcodeproj`, no
+`*.entitlements` for it, nothing in `ios-testflight.yml`. A build cut before
+that target lands cannot carry the clip, whatever its number. Before
+dispatching the resubmission build, check that the App Clip target is on the
+ref being built and that the workflow archives and exports it.
+
+**On `main` since build 27, not yet in any build** (as of `f89a90b`,
+2026-09-23). Build 28 was deliberately held for the resubmission, so no run
+has been dispatched since run 26. The resubmission build will carry:
+
+- The builder's collaborator link is `https://dead-set.org/join/…` (PR #62).
+  In build 27 it is `capacitor://localhost/join/…`, which opens nothing for
+  whoever receives it — do not share collaborator links from build 27.
+- The landing-footer "Updated N times this week" badge counts the last seven
+  days and hides when empty (PR #64). Build 27 still says "Updated 2 times
+  this week", from April's notes.
+- `vite.config.ts` reads the build sha from `.git` when git is unavailable
+  (PR #63) — build tooling, no user-visible change.
+
+The web was published from `2a94e45` and then `f89a90b` on 2026-09-23, each
+gated PASS WITH NOTES, so the web is ahead of build 27 by exactly these.
+
+**Build 27** — uploaded 2026-09-21 by run 26 (run id 35573327254) from `main`
+at `0353397` (PR #61), dispatched 07:30:59 UTC, finished 07:34:06. Build number
+derived as always: run_number 26 + offset 1; App Store Connect confirms. It went
+unrecorded here until 2026-09-23, and in that gap it was misnumbered "build 26"
+in conversation — the run number, not the build number. Read the arithmetic,
+not the run.
+
+It is build 26 plus:
+
+| Change | Why it matters for submission |
+|---|---|
+| `CFBundleName` is "Dead Set" (was `$(PRODUCT_NAME)` → "App") | The native sign-in consent alert read **"App" Wants to Use "…supabase.co" to Sign In**. Now it names the app. The supabase.co half needs a custom auth domain and is not fixed |
+| Signup/sign-in errors mapped to plain guidance (`src/lib/authErrors.ts`) | Breached-password, already-registered and bad-credential failures no longer show a raw Supabase string |
+| Auth funnel events POST with `keepalive` | `oauth_redirect_started` was dropped as the page navigated away |
+
+**Gate:** `qa-release` ran against `0353397` on 2026-09-23 and returned **PASS
+WITH NOTES** — the first verdict since build 22 that names the commit a build
+was cut from. Its NEEDS-VERIFICATION items were live OAuth and a live share
+render, which that sandbox could not reach; nothing blocked. The web was
+published from the same commit the same day, so web and build 27 matched.
+
+---
+
+**Build 26** (superseded by 27, not submitted). Uploaded
 2026-09-21 by run 25 (run id 35561559583) from `main` at `edb7d5c`, `Upload
 succeeded` at 04:37:21 UTC. Build number derived as always: run_number 25 +
 offset 1; App Store Connect is the confirming authority.
@@ -49,9 +99,10 @@ true**, which is why earlier builds should not be substituted for it:
 | Privacy manifest declares Analytics on Email and Name | **build 26** |
 | No phantom `PerformanceData` on the privacy label | **build 26** |
 | No cannabis strain names in the vibe chips | **build 26** |
+| Sign-in consent alert names "Dead Set", not "App" | **build 27** |
 
-Answer the age-rating questionnaire and the App Privacy questionnaire against
-**this** build. Against build 25 the strain labels are still present and the
+Every row holds for build 27, the submitted build. Answer the age-rating and
+App Privacy questionnaires against **build 26 or later**. Against build 25 the strain labels are still present and the
 manifest still understates what PostHog receives.
 
 ---
