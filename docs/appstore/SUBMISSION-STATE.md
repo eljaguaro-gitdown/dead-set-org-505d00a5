@@ -6,7 +6,7 @@ Connect, Lovable Cloud, and the Supabase auth config, and a session that reads
 only the repo will draw confident wrong conclusions. That happened repeatedly on
 2026-09-17; the corrections are banked in `CLAUDE.md`.
 
-**Last updated:** 2026-09-21, after run 25 uploaded **build 26** from `edb7d5c` — the first build on which every submission claim is true at once.
+**Last updated:** 2026-09-23, recording build 27 (run 26, `0353397`), which had gone unrecorded for two days.
 
 Paths beginning `claude/` below are docs in the **Dead Set Claude project**, not
 files in this repo — don't go looking for them on disk. Everything else is
@@ -21,9 +21,9 @@ doc is worse than no doc, because it will be believed.
 | | |
 |---|---|
 | App Store Connect | Record exists — **Apple ID 6799269210**, "Dead Set: Wake Now Discover", iOS App 1.0 at *Prepare for Submission* |
-| Builds | **25 uploaded.** Builds 1–19 are from 2026-08-07 to 2026-08-21; builds 21–25 on 2026-09-17 to 09-21. **Build 26 was uploaded 2026-09-21 by run 25, from `main` at `edb7d5c`,** and is the submission candidate. Build 23's OAuth is broken — see below |
+| Builds | **26 uploaded.** Builds 1–19 are from 2026-08-07 to 2026-08-21; builds 21–27 on 2026-09-17 to 09-21. **Build 26 was uploaded 2026-09-21 by run 25, from `main` at `edb7d5c`,** and is the submission candidate. **Build 27** (run 26, `main` at `0353397`) followed three hours later — see below. Build 23's OAuth is broken |
 | Build pipeline | Works, and it is CI. **Every build came from `ios-testflight.yml`** |
-| CI workflow | `.github/workflows/ios-testflight.yml`, `workflow_dispatch`, **run 25 times, every run succeeded**, 2026-08-07 to 2026-09-21 |
+| CI workflow | `.github/workflows/ios-testflight.yml`, `workflow_dispatch`, **run 26 times, every run succeeded**, 2026-08-07 to 2026-09-21 |
 | Code | PR #35's submission-blocking fixes are on `main`; build 22 adds 43 further commits |
 
 **Builds 1–19 all predate the fixes — do not submit any of them.** Build 19 still
@@ -31,6 +31,29 @@ renders Steal Your Face in the header and still has the broken native auth
 redirect. Submitting it would ship the IP exposure that PR #35 removed, and
 screenshots taken from it would put a Grateful Dead Productions mark on the
 store page.
+
+**Build 27** — uploaded 2026-09-21 by run 26 (run id 35573327254) from `main`
+at `0353397` (PR #61), dispatched 07:30:59 UTC, finished 07:34:06. Build number
+derived as always: run_number 26 + offset 1; App Store Connect confirms. It went
+unrecorded here until 2026-09-23, and in that gap it was misnumbered "build 26"
+in conversation — the run number, not the build number. Read the arithmetic,
+not the run.
+
+It is build 26 plus:
+
+| Change | Why it matters for submission |
+|---|---|
+| `CFBundleName` is "Dead Set" (was `$(PRODUCT_NAME)` → "App") | The native sign-in consent alert read **"App" Wants to Use "…supabase.co" to Sign In**. Now it names the app. The supabase.co half needs a custom auth domain and is not fixed |
+| Signup/sign-in errors mapped to plain guidance (`src/lib/authErrors.ts`) | Breached-password, already-registered and bad-credential failures no longer show a raw Supabase string |
+| Auth funnel events POST with `keepalive` | `oauth_redirect_started` was dropped as the page navigated away |
+
+**Gate:** `qa-release` ran against `0353397` on 2026-09-23 and returned **PASS
+WITH NOTES** — the first verdict since build 22 that names the commit a build
+was cut from. Its NEEDS-VERIFICATION items were live OAuth and a live share
+render, which that sandbox could not reach; nothing blocked. The web was
+published from the same commit the same day, so web and build 27 matched.
+
+---
 
 **Build 26 is the submission candidate — submit this one.** Uploaded
 2026-09-21 by run 25 (run id 35561559583) from `main` at `edb7d5c`, `Upload
