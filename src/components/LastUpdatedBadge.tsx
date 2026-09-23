@@ -1,33 +1,26 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { fetchReleaseActivity, type ReleaseActivity } from "@/lib/webReleases";
 
-const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+const formatDay = (iso: string) =>
+  new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 
 const LastUpdatedBadge = () => {
   const navigate = useNavigate();
-  const [count, setCount] = useState<number | null>(null);
+  const [activity, setActivity] = useState<ReleaseActivity | null>(null);
 
   useEffect(() => {
-    const fetch = async () => {
-      // Count notes published in the last seven days. This used to count the
-      // entries in the latest published week, whatever its date, so the
-      // footer said "Updated 2 times this week" from April to September on
-      // the strength of Week 2's two notes. Entries are inserted at publish
-      // time, so created_at is when a fan could first read them.
-      const since = new Date(Date.now() - WEEK_MS).toISOString();
-      const { count: entryCount } = await supabase
-        .from("changelog_entries")
-        .select("id", { count: "exact", head: true })
-        .eq("published", true)
-        .gte("created_at", since);
-
-      if (entryCount !== null) setCount(entryCount);
-    };
-    fetch();
+    // Counts web releases, not Build Notes entries. Notes stopped in April and
+    // the badge either claimed an April week as "this week" or disappeared;
+    // a release is what fans actually get, and one is recorded every publish.
+    fetchReleaseActivity().then(setActivity);
   }, []);
 
-  if (count === null || count === 0) return null;
+  if (!activity || (!activity.thisWeek && !activity.lastReleasedAt)) return null;
+
+  const label = activity.thisWeek
+    ? `Updated ${activity.thisWeek} ${activity.thisWeek === 1 ? "time" : "times"} this week`
+    : `Last updated ${formatDay(activity.lastReleasedAt!)}`;
 
   return (
     <button
@@ -36,7 +29,7 @@ const LastUpdatedBadge = () => {
       title="View build notes"
     >
       <span className="w-1.5 h-1.5 rounded-full bg-[#7ab87a] animate-pulse" />
-      Updated {count} {count === 1 ? "time" : "times"} this week
+      {label}
     </button>
   );
 };
