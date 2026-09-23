@@ -28,6 +28,13 @@ const TAG_STYLES: Record<ChangelogTag, { label: string; bg: string; text: string
 
 const TAGS: ChangelogTag[] = ["fix", "new", "improved", "beta"];
 
+interface DraftWeek {
+  week_number: number;
+  week_label: string;
+  edition_title: string;
+  items: { title: string; detail: string }[];
+}
+
 const AdminChangelog = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
@@ -50,6 +57,56 @@ const AdminChangelog = () => {
     { id: crypto.randomUUID(), tag: "fix", set_number: 1, title: "", detail: "", credit: "" },
   ]);
 
+  // Unpublished weeks. The weekly routine saves its drafts here, and so does
+  // "Save draft" below; before this list existed a saved draft could not be
+  // seen or published again from the UI.
+  const [drafts, setDrafts] = useState<DraftWeek[]>([]);
+  const [busyWeek, setBusyWeek] = useState<number | null>(null);
+
+  const loadDrafts = async () => {
+    const { data, error } = await supabase
+      .from("changelog_entries")
+      .select("week_number, week_label, edition_title, title, detail, set_number")
+      .eq("published", false)
+      .order("week_number", { ascending: false })
+      .order("set_number", { ascending: true });
+    if (error || !data) return;
+    const weeks = new Map<number, DraftWeek>();
+    for (const row of data) {
+      if (!weeks.has(row.week_number)) {
+        weeks.set(row.week_number, { week_number: row.week_number, week_label: row.week_label, edition_title: row.edition_title, items: [] });
+      }
+      weeks.get(row.week_number)!.items.push({ title: row.title, detail: row.detail });
+    }
+    setDrafts(Array.from(weeks.values()));
+  };
+
+  const publishDraft = async (week: DraftWeek) => {
+    setBusyWeek(week.week_number);
+    const { error } = await supabase
+      .from("changelog_entries")
+      .update({ published: true })
+      .eq("week_number", week.week_number)
+      .eq("published", false);
+    setBusyWeek(null);
+    if (error) { toast.error(error.message || "Failed to publish"); return; }
+    toast.success(`Week ${week.week_number} is live`);
+    loadDrafts();
+  };
+
+  const discardDraft = async (week: DraftWeek) => {
+    if (!window.confirm(`Discard the Week ${week.week_number} draft (${week.items.length} items)? This can't be undone.`)) return;
+    setBusyWeek(week.week_number);
+    const { error } = await supabase
+      .from("changelog_entries")
+      .delete()
+      .eq("week_number", week.week_number)
+      .eq("published", false);
+    setBusyWeek(null);
+    if (error) { toast.error(error.message || "Failed to discard"); return; }
+    loadDrafts();
+  };
+
   useEffect(() => {
     if (authLoading) return;
     if (!user) { navigate("/auth"); return; }
@@ -57,6 +114,7 @@ const AdminChangelog = () => {
       if (!data) { navigate("/"); return; }
       setIsAdmin(true);
       setLoading(false);
+      loadDrafts();
     });
   }, [user, authLoading, navigate]);
 
@@ -104,6 +162,7 @@ const AdminChangelog = () => {
       if (error) throw error;
       toast.success(publish ? "Published!" : "Draft saved!");
       if (publish) navigate("/updates");
+      else loadDrafts();
     } catch (e: any) {
       toast.error(e.message || "Failed to save");
     } finally {
@@ -132,6 +191,36 @@ const AdminChangelog = () => {
           <ArrowLeft className="w-4 h-4" /> Back to Admin
         </button>
         <h1 className="font-display text-3xl md:text-4xl text-[#c9a84c] mb-8 italic">Build Notes Editor</h1>
+
+        {drafts.length > 0 && (
+          <div className="mb-8 space-y-3">
+            <h2 className="font-mono text-sm text-[#c9a84c] uppercase tracking-wider">Drafts waiting to publish</h2>
+            {drafts.map(week => (
+              <div key={week.week_number} className="bg-[#0d0d0d] border border-[#c9a84c]/30 rounded-lg p-4 space-y-3">
+                <div>
+                  <p className="font-mono text-xs text-[#a09880]">Week {week.week_number} · {week.week_label} · {week.items.length} {week.items.length === 1 ? "item" : "items"}</p>
+                  <p className="font-display text-lg text-[#c9a84c] italic">{week.edition_title}</p>
+                </div>
+                <ul className="list-disc pl-5 text-sm text-[#b0ac9a] space-y-1">
+                  {week.items.map((item, i) => (
+                    <li key={i}>
+                      <span className="font-semibold">{item.title}</span>
+                      {item.detail && <span className="text-[#a09880]"> — {item.detail}</span>}
+                    </li>
+                  ))}
+                </ul>
+                <div className="flex gap-3">
+                  <Button onClick={() => publishDraft(week)} disabled={busyWeek !== null} className="flex-1 bg-[#c9a84c] text-[#0a0a0a] hover:bg-[#d4b050]">
+                    <Send className="w-4 h-4 mr-1" /> {busyWeek === week.week_number ? "Working..." : "Publish"}
+                  </Button>
+                  <Button onClick={() => discardDraft(week)} disabled={busyWeek !== null} variant="outline" className="border-[#2a2410] text-[#a09880] hover:text-red-400">
+                    <Trash2 className="w-4 h-4 mr-1" /> Discard
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* LEFT: Entry form */}
