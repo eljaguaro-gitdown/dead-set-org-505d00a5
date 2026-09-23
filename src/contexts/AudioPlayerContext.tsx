@@ -243,6 +243,9 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     duration: number;
     playbackType?: ProgressSnapshot["playbackType"];
   }>({ slotId: null, currentTime: 0, duration: 0 });
+  /** Tracks that failed in a row. Reset only by real playback (see the
+   *  progress subscriber) or an explicit retry — never by merely moving to the
+   *  next slot, or a dead source could never reach the cap. */
   const consecutiveErrorsRef = useRef(0);
   /** advancePlaylist is defined below playSingle; reach it through a ref. */
   const advancePlaylistRef = useRef<(dir: number) => Promise<void>>(async () => {});
@@ -324,6 +327,8 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
       // Track duration + per-slot progress for analytics at the throttled rate.
       engine.subscribeProgress((p) => {
         lastProgressRef.current = { slotId: engineSlotIdRef.current, ...p };
+        // Audio is actually coming out: the run of failures is over.
+        if (p.currentTime > 0 && p.duration > 0) consecutiveErrorsRef.current = 0;
         if (p.duration > 0) setPlayEventTrackDuration(p.duration * 1000);
       });
       engineRef.current = engine;
@@ -645,7 +650,6 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
   engineCbRef.current = {
     onTrackStarted: (slotId) => {
       if (engineMode !== "gapless") return;
-      consecutiveErrorsRef.current = 0;
       if (engineSlotIdRef.current === slotId) return; // the slot we just anchored on
       const outgoingSlotId = engineSlotIdRef.current;
       const wasUserJump = userJumpRef.current;
@@ -802,11 +806,10 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     advancePlaylistRef.current = advancePlaylist;
   }, [advancePlaylist]);
 
-  // A new song starts its error budget over. The error itself needs no
-  // clearing here — it is scoped to a slot id and simply stops being exposed.
-  useEffect(() => {
-    consecutiveErrorsRef.current = 0;
-  }, [state.playingSlot?.id]);
+  // No reset on slot change. It used to live here, and since every error
+  // advances to a new slot it zeroed the count each time: on 2026-09-23 a
+  // phone that could not load anything ran all 13 tracks of a setlist in six
+  // seconds instead of stopping at three with "That tape won't play".
 
   // Resolution watchdog. The determinate case is handled inline in playSingle,
   // but none of the archive.org fetches carry an AbortController, so a hung

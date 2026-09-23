@@ -56,7 +56,7 @@ const isCompleted = (listenedMs: number, trackDurationMs: number | null): boolea
 export const startPlayEvent = async (input: PlayEventStartInput): Promise<void> => {
   const run = async (): Promise<void> => {
   if (active) {
-    await finalizePlayEvent("skipped");
+    await finalizeActive("skipped");
   }
 
   try {
@@ -122,8 +122,23 @@ export const setPlayEventTrackDuration = (trackDurationMs: number): void => {
   active.trackDurationMs = Math.round(trackDurationMs);
 };
 
-/** Finalize the active event with the given reason. */
-export const finalizePlayEvent = async (reason: EndedReason): Promise<void> => {
+/**
+ * Finalize the active event with the given reason.
+ *
+ * Queued behind any start still in flight. A track that fails in the first
+ * few milliseconds calls this before its own row has been inserted; unqueued,
+ * it found `active` empty and did nothing, and the next start then closed the
+ * row as "skipped". That is how 13 load errors on 2026-09-23 were logged as
+ * 13 skips.
+ */
+export const finalizePlayEvent = (reason: EndedReason): Promise<void> => {
+  const run = () => finalizeActive(reason);
+  startChain = startChain.then(run, run);
+  return startChain;
+};
+
+/** Close out whatever is active right now. Not queued — callers are. */
+const finalizeActive = async (reason: EndedReason): Promise<void> => {
   const e = active;
   if (!e) return;
   active = null;
@@ -153,7 +168,7 @@ if (typeof window !== "undefined") {
   const flushOnExit = () => {
     if (active) {
       // Fire-and-forget; browsers may cut us off.
-      void finalizePlayEvent("navigated_away");
+      void finalizeActive("navigated_away");
     }
   };
   window.addEventListener("pagehide", flushOnExit);
