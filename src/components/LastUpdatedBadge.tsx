@@ -2,29 +2,25 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
+const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+
 const LastUpdatedBadge = () => {
   const navigate = useNavigate();
   const [count, setCount] = useState<number | null>(null);
 
   useEffect(() => {
     const fetch = async () => {
-      // Get the most recent published week
-      const { data: latest } = await supabase
-        .from("changelog_entries")
-        .select("week_number")
-        .eq("published", true)
-        .order("week_number", { ascending: false })
-        .limit(1);
-
-      if (!latest || latest.length === 0) return;
-      const latestWeek = latest[0].week_number;
-
-      // Count actual entries in that week (live count, not stored stat)
+      // Count notes published in the last seven days. This used to count the
+      // entries in the latest published week, whatever its date, so the
+      // footer said "Updated 2 times this week" from April to September on
+      // the strength of Week 2's two notes. Entries are inserted at publish
+      // time, so created_at is when a fan could first read them.
+      const since = new Date(Date.now() - WEEK_MS).toISOString();
       const { count: entryCount } = await supabase
         .from("changelog_entries")
         .select("id", { count: "exact", head: true })
         .eq("published", true)
-        .eq("week_number", latestWeek);
+        .gte("created_at", since);
 
       if (entryCount !== null) setCount(entryCount);
     };
