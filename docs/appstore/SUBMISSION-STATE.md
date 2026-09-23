@@ -6,7 +6,7 @@ Connect, Lovable Cloud, and the Supabase auth config, and a session that reads
 only the repo will draw confident wrong conclusions. That happened repeatedly on
 2026-09-17; the corrections are banked in `CLAUDE.md`.
 
-**Last updated:** 2026-09-23, recording build 27 (run 26, `0353397`), which had gone unrecorded for two days.
+**Last updated:** 2026-09-23. **Build 27 (run 26, `0353397`) is the build that was submitted** (Jay, 2026-09-23). A resubmission with an **App Clip** is planned — see below.
 
 Paths beginning `claude/` below are docs in the **Dead Set Claude project**, not
 files in this repo — don't go looking for them on disk. Everything else is
@@ -21,7 +21,7 @@ doc is worse than no doc, because it will be believed.
 | | |
 |---|---|
 | App Store Connect | Record exists — **Apple ID 6799269210**, "Dead Set: Wake Now Discover", iOS App 1.0 at *Prepare for Submission* |
-| Builds | **26 uploaded.** Builds 1–19 are from 2026-08-07 to 2026-08-21; builds 21–27 on 2026-09-17 to 09-21. **Build 26 was uploaded 2026-09-21 by run 25, from `main` at `edb7d5c`,** and is the submission candidate. **Build 27** (run 26, `main` at `0353397`) followed three hours later — see below. Build 23's OAuth is broken |
+| Builds | **26 uploaded.** Builds 1–19 are from 2026-08-07 to 2026-08-21; builds 21–27 on 2026-09-17 to 09-21. **Build 26 was uploaded 2026-09-21 by run 25, from `main` at `edb7d5c`,** and was the candidate until **build 27** (run 26, `main` at `0353397`), three hours later, **which is what was submitted**. Build 23's OAuth is broken |
 | Build pipeline | Works, and it is CI. **Every build came from `ios-testflight.yml`** |
 | CI workflow | `.github/workflows/ios-testflight.yml`, `workflow_dispatch`, **run 26 times, every run succeeded**, 2026-08-07 to 2026-09-21 |
 | Code | PR #35's submission-blocking fixes are on `main`; build 22 adds 43 further commits |
@@ -31,6 +31,17 @@ renders Steal Your Face in the header and still has the broken native auth
 redirect. Submitting it would ship the IP exposure that PR #35 removed, and
 screenshots taken from it would put a Grateful Dead Productions mark on the
 store page.
+
+**Build 27 was submitted — it is the build under review.** Recorded 2026-09-23
+from Jay; the submission date and review status live in App Store Connect and
+are not copied here. Any resubmission is a new build, not an edit to this one.
+
+**Resubmission planned, with an App Clip.** As of `2a94e45` there is **no App
+Clip target in this repo** — no second target in `ios/App/App.xcodeproj`, no
+`*.entitlements` for it, nothing in `ios-testflight.yml`. A build cut before
+that target lands cannot carry the clip, whatever its number. Before
+dispatching the resubmission build, check that the App Clip target is on the
+ref being built and that the workflow archives and exports it.
 
 **Build 27** — uploaded 2026-09-21 by run 26 (run id 35573327254) from `main`
 at `0353397` (PR #61), dispatched 07:30:59 UTC, finished 07:34:06. Build number
@@ -55,7 +66,7 @@ published from the same commit the same day, so web and build 27 matched.
 
 ---
 
-**Build 26 is the submission candidate — submit this one.** Uploaded
+**Build 26** (superseded by 27, not submitted). Uploaded
 2026-09-21 by run 25 (run id 35561559583) from `main` at `edb7d5c`, `Upload
 succeeded` at 04:37:21 UTC. Build number derived as always: run_number 25 +
 offset 1; App Store Connect is the confirming authority.
@@ -72,9 +83,10 @@ true**, which is why earlier builds should not be substituted for it:
 | Privacy manifest declares Analytics on Email and Name | **build 26** |
 | No phantom `PerformanceData` on the privacy label | **build 26** |
 | No cannabis strain names in the vibe chips | **build 26** |
+| Sign-in consent alert names "Dead Set", not "App" | **build 27** |
 
-Answer the age-rating questionnaire and the App Privacy questionnaire against
-**this** build. Against build 25 the strain labels are still present and the
+Every row holds for build 27, the submitted build. Answer the age-rating and
+App Privacy questionnaires against **build 26 or later**. Against build 25 the strain labels are still present and the
 manifest still understates what PostHog receives.
 
 ---
