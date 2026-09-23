@@ -303,10 +303,12 @@ export const useSetlist = (user: User | null, setlistId?: string | null) => {
     return updatedSetlist;
   }, [setlist]);
 
-  // Generate share link
+  // Generate share link. Always the public site, like every other share
+  // surface: inside the iOS app window.location.origin is capacitor://localhost,
+  // which gave the recipient a link that opens nothing.
   const getShareLink = useCallback(() => {
     if (!setlist?.share_token) return "";
-    return `${window.location.origin}/join/${setlist.share_token}`;
+    return `https://dead-set.org/join/${setlist.share_token}`;
   }, [setlist]);
 
   // Subscribe to realtime changes on slots
