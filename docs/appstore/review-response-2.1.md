@@ -152,6 +152,36 @@ Shot list, in order:
 Nothing to record for paid content — say so in the reply rather than leaving
 the item unanswered, which is what the draft above does.
 
+### Before you press record
+
+- **Confirm the installed build is 27.** TestFlight shows the build number on
+  the app's page. Recording an older build risks showing the consent alert
+  saying "App" instead of "Dead Set", which is the thing build 27 fixed.
+- **Create the throwaway account's address first** so you are not inventing one
+  on camera. A `+` alias on your own inbox is fine.
+- **Turn on a Focus mode.** A notification banner sliding over the setlist is
+  the kind of thing that makes a reviewer re-request.
+- **Take the phone off silent, and verify audio actually records.** iOS screen
+  recording captures in-app audio, but rather than trust that, shoot fifteen
+  seconds of a setlist playing and play it back before committing to the full
+  take. The reviewer needs to hear that streaming works — it is the core
+  function and the one Apple's item 1 calls "the typical user flow".
+- **Add Screen Recording to Control Centre** if it is not there: Settings →
+  Control Centre → Screen Recording. The microphone toggle (long-press the
+  record button) stays OFF; no narration is wanted.
+
+### After
+
+- Recordings land in Photos. **Trim the start and end** so it opens on the home
+  screen and does not close on the Control Centre fumble.
+- Keep it short — two to three minutes covers every item on the list. A long
+  file is more likely to run into the attachment limit on the App Review reply.
+- If the file is too large to attach, put a link in the reply text instead
+  (unlisted cloud link). Apple accepts a URL, but an attachment is simpler.
+- Watch it back once against the nine shots before attaching. The expensive
+  failure is discovering afterwards that the flag tap did not register on one
+  of the three surfaces.
+
 ---
 
 ## Part 3 — The Notes field
