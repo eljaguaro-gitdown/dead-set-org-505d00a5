@@ -1,9 +1,10 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { GaplessEngine, type EngineCallbacks } from "../gaplessEngine";
 
 // Capture every FakeQueue the engine constructs so tests can drive callbacks.
-const { instances } = vi.hoisted(() => ({
+const { instances, hooks } = vi.hoisted(() => ({
   instances: [] as Array<Record<string, unknown>>,
+  hooks: { onResume: null as null | (() => void) },
 }));
 
 vi.mock("gapless", () => {
@@ -18,7 +19,9 @@ vi.mock("gapless", () => {
     seek = vi.fn();
     setVolume = vi.fn();
     destroy = vi.fn();
-    resumeAudioContext = vi.fn(async () => undefined);
+    resumeAudioContext = vi.fn(async () => {
+      hooks.onResume?.();
+    });
     currentTrackIndex = 0;
     isPlaying = false;
     constructor(opts: Record<string, unknown>) {
@@ -191,5 +194,45 @@ describe("GaplessEngine", () => {
     await flush();
     expect(lastQueue().destroy).toHaveBeenCalled();
     expect(engine.queueLength).toBe(0);
+  });
+});
+
+// iOS Safari mutes an "ambient" page when the phone is on silent, and the
+// gapless library's AudioContext makes the page ambient. The session has to be
+// "playback" before the context is resumed, on both entry points.
+describe("GaplessEngine audio session", () => {
+  const nav = navigator as Navigator & { audioSession?: { type: string } };
+
+  beforeEach(() => {
+    instances.length = 0;
+  });
+  afterEach(() => {
+    hooks.onResume = null;
+    delete (nav as { audioSession?: unknown }).audioSession;
+  });
+
+  for (const entry of ["unlock", "play"] as const) {
+    it(`${entry}() sets the audio session to playback before resuming audio`, async () => {
+      Object.defineProperty(nav, "audioSession", { configurable: true, value: { type: "auto" } });
+      const engine = new GaplessEngine(makeCallbacks());
+      if (entry === "play") {
+        engine.load(tracks, 0, false);
+        await flush();
+      }
+      const seenAtResume: string[] = [];
+      hooks.onResume = () => seenAtResume.push(nav.audioSession!.type);
+
+      engine[entry]();
+      await flush();
+
+      expect(seenAtResume.length).toBeGreaterThan(0);
+      expect(seenAtResume.every((t) => t === "playback")).toBe(true);
+    });
+  }
+
+  it("is a no-op where Safari has no audioSession API", () => {
+    expect("audioSession" in navigator).toBe(false);
+    const engine = new GaplessEngine(makeCallbacks());
+    expect(() => engine.unlock()).not.toThrow();
   });
 });

@@ -16,6 +16,7 @@
 
 import type { Queue as GaplessQueue, TrackInfo, TrackMetadata, PlaybackType } from "gapless";
 import { audioDebug } from "@/lib/audioDebug";
+import { preferPlaybackAudioSession } from "@/lib/player/audioSession";
 
 // True on any iOS runtime: Safari, a home-screen PWA, or the Capacitor
 // WKWebView shell. iPadOS ≥13 masquerades as MacIntel but exposes touch.
@@ -134,6 +135,8 @@ export class GaplessEngine {
   // ── transport ──────────────────────────────────────────────────────
 
   play(): void {
+    // Before anything can create the AudioContext — see audioSession.ts.
+    preferPlaybackAudioSession();
     this.desiredTransportState = "playing";
     this.enqueueOp(async () => {
       if (this.desiredTransportState !== "playing") return;
@@ -200,6 +203,7 @@ export class GaplessEngine {
    * "tap to start" state remains the safety net.
    */
   unlock(): void {
+    preferPlaybackAudioSession();
     this.enqueueOp(async () => {
       if (this.destroyed) return;
       if (!this.queue) this.queue = await this.createQueue();
