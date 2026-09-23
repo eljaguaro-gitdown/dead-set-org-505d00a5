@@ -6,12 +6,37 @@ Connect, Lovable Cloud, and the Supabase auth config, and a session that reads
 only the repo will draw confident wrong conclusions. That happened repeatedly on
 2026-09-17; the corrections are banked in `CLAUDE.md`.
 
-**Last updated:** 2026-09-22 — **iOS App 1.0 (build 27) was submitted to App
-Review at 01:12 PDT** and is *Waiting for Review*. Submission ID
-`f8593d8a-e9fc-4a91-a4b5-dabad5b63632`.
+**Last updated:** 2026-09-23 — **iOS App 1.0 (build 27) was REJECTED on
+2026-09-22 at 17:02 PT under Guideline 2.1, Information Needed.** Submission ID
+`f8593d8a-e9fc-4a91-a4b5-dabad5b63632`, submitted 01:12 PT the same day.
 
-Three things submission did **not** settle, because App Store Connect does not
-enforce them at submit time:
+**Read the rejection before reacting to it.** Apple's own first line is that the
+app "has been submitted by a developer account that has a limited App Review
+history" and they "need additional information to better understand the app".
+No defect, no crash, no policy finding, and nothing cited against the binary.
+The "Prevent Common Issues" list at the foot of the message is boilerplate
+attached to every 2.1 — it is not a list of findings against this app, and
+reading it as one will send someone rebuilding things that were never wrong.
+
+**No new build is required.** Build 27 is unchanged and still the right binary.
+The response is a reply, a replaced Notes field, and a screen recording, then
+Resubmit on the same submission. Everything needed is drafted in
+[`review-response-2.1.md`](review-response-2.1.md), with the 4000-character
+Notes replacement in [`reviewer-notes-v2.txt`](reviewer-notes-v2.txt) (3952
+characters, counted, 48 spare).
+
+Apple asked for six things: a screen recording from a physical device, purpose
+and audience, setup and access, external services, regional differences, and
+evidence of rights to protected third-party material.
+
+**The trap in the recording, which is worth more than the rest of it:** Apple
+requires account deletion to be demonstrated. Recording that on
+`eljaguaro+appreview@gmail.com` destroys the credentials the reviewer needs and
+earns a second 2.1, this time on "Accessing the app". Create a throwaway
+account on camera, use it throughout, and delete that one.
+
+Three things the earlier submission did **not** settle, unchanged by the
+rejection:
 
 1. **EU DSA trader status is still undeclared.** It is not a submission-blocking
    field; it is enforced separately, and an app without a verified declaration
@@ -22,7 +47,8 @@ enforce them at submit time:
 2. **Whether the release is manual.** If "Automatically release this version"
    was left selected, approval ships the app at whatever hour Apple approves it,
    with no chance to line up the web publish or the dispatch.
-3. **The published web is probably a publish behind `main`.** See below.
+3. **The published web IS behind `main` — now confirmed, not inferred.** See
+   below.
 
 Paths beginning `claude/` below are docs in the **Dead Set Claude project**, not
 files in this repo — don't go looking for them on disk. Everything else is
@@ -339,39 +365,52 @@ Aug 9, the day build 18 was created.
   "Try to fix all":
   the Critical's obvious fix breaks anonymous play telemetry.
 
-## The published web is probably behind `main` (open, 2026-09-22)
+## The published web is behind `main` — confirmed 2026-09-22
 
-`main` is at `0353397`, and Lovable's project reports `latest_commit_sha` of
-the same sha — so the **sync** is current. That is not the same as a publish,
-which is the banked correction in `CLAUDE.md`: Lovable's tools expose no
-`published_commit_sha`, so "is_published: true" only says a published URL
-exists, not which commit serves it.
-
-The evidence that it is behind is behavioural, from `auth_events`:
+**Answered by the badge, not by inference.** `/admin` on a phone reports:
 
 ```
-2026-09-22 05:21:13   auth_modal_opened    surface: auth_page   visitor ffcd97f5
-2026-09-22 05:21:16   oauth_returned       provider: google     visitor ffcd97f5
+APP CODE IN SYNC            <- wrong, see below
+THIS BUILD    5387c6c       built 1d ago
+GITHUB MAIN   0353397       pushed 1d ago
+main is 11 commits ahead - nothing that ships
 ```
 
-A return with **no `oauth_redirect_started`** — the exact bug `75b58fa` fixed by
-posting auth events with `keepalive`. It has to be a browser: in the native app
-`signInWithProvider` passes `skipBrowserRedirect: true` and hands off to
-`ASWebAuthenticationSession`, so the page never navigates and the start event
-survives with or without `keepalive`. Only a tab that navigates can lose one.
+The deployed build is **`5387c6c`**. `main` is `0353397`. Six of the eleven
+intervening commits are source files — `src/lib/authFunnel.ts`,
+`src/lib/authErrors.ts`, `src/pages/Auth.tsx`, `src/components/AuthModal.tsx`,
+`src/components/CosmicCharlieDialog.tsx` and the two test files. So `75b58fa`
+is **not** live, and neither is the strain-chip rename.
 
-Aggregates agree in direction but are underpowered — 56 starts against 61
-returns before the merge (impossible, starts being dropped) versus 5 against 4
-after, and all five after-events are two visitors on 2026-09-21, almost
-certainly Jay's own device on build 27, which does have the fix. App and web
-events land in the same table, so the totals cannot separate them.
+Two earlier attempts to establish this by inference — Lovable's
+`latest_commit_sha` (which describes the project's code, not the deployment)
+and the shape of `auth_events` rows — both pointed the right way and neither
+could prove it. The badge answered it in one page load. That is now a banked
+correction in `CLAUDE.md`.
 
-**Not proven.** One dropped event is consistent with the old race, and
-`keepalive` is not a mathematical guarantee. The deterministic test is to
-attempt a signup at `dead-set.org/auth` with an already-registered address:
-"You're already on the list — sign in with that email instead." plus the form
-flipping to sign-in means the fix is live; a raw "User already registered" toast
-with no way forward means it is not.
+**The badge was also lying, and had always been lying.** "nothing that ships"
+over six changed source files was not bad luck: GitHub's compare `files` is the
+diff from the merge base to HEAD, and the badge asked
+`compare/main...{buildSha}`, which puts the build at HEAD. A build that is
+behind is an ancestor of `main`, so the merge base IS the build and `files`
+comes back empty — making `appFiles` empty and `docsOnly` structurally true for
+every behind build that has ever existed. The one state the badge exists to
+catch was the one state it could not see.
+
+Fixed in `cfcf99e`: the call is now `compare/{buildSha}...{branch}`, with
+status and counts inverted to stay build-relative, and `docsOnly` claimable
+only when status is `behind` — for an ahead or diverged build an empty `files`
+means "cannot see", not "nothing changed". The tests had passed throughout
+because they used the old direction AND populated `files` on a behind response,
+a shape the API cannot emit; every fixture is now real and the 2026-09-22 state
+is a named regression test.
+
+**So the badge fix is itself only on `main`.** Until the web is published, the
+instrument stays blind. Publishing needs a current PASS from `qa-release`
+(`/pre-release`), and that gate cannot pass from an environment without browser
+reachability — the 2026-09-22 run returned BLOCK for exactly that reason, with
+no code defects found: `npm ci` clean, `tsc` 0 errors on both projects, 181/188
+tests passing (the 7 are `anonDraftRls.test.ts` needing Supabase egress).
 
 If it is behind, publishing requires a current PASS from `qa-release` first
 (`/pre-release`). That gate is not waivable for a "small" publish.
