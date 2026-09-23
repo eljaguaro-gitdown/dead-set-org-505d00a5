@@ -161,11 +161,15 @@ the item unanswered, which is what the draft above does.
   on camera. A `+` alias on your own inbox is fine.
 - **Turn on a Focus mode.** A notification banner sliding over the setlist is
   the kind of thing that makes a reviewer re-request.
-- **Take the phone off silent, and verify audio actually records.** iOS screen
-  recording captures in-app audio, but rather than trust that, shoot fifteen
-  seconds of a setlist playing and play it back before committing to the full
-  take. The reviewer needs to hear that streaming works — it is the core
-  function and the one Apple's item 1 calls "the typical user flow".
+- **Leave the phone ON silent, and verify audio actually records.** The
+  Ring/Silent switch does not mute media playback on iOS — it silences ringers
+  and alerts only — so silent mode kills the notification sounds that would
+  otherwise intrude on a take while a streaming setlist still plays and still
+  records. (An earlier version of this file said to take the phone off silent.
+  That was wrong and backwards.) Verify regardless: shoot fifteen seconds of a
+  setlist playing, play it back, confirm you hear it. The reviewer needs to
+  hear that streaming works — it is the core function and the one Apple's item
+  1 calls "the typical user flow".
 - **Add Screen Recording to Control Centre** if it is not there: Settings →
   Control Centre → Screen Recording. The microphone toggle (long-press the
   record button) stays OFF; no narration is wanted.
