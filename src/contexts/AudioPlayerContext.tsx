@@ -272,6 +272,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
   const RESOLVE_TIMEOUT_MS = 25_000;
   /** How long playback may report the same position before we call it stalled. */
   const STALL_TIMEOUT_MS = 25_000;
+  const STALL_MESSAGE = "The tape stopped feeding. Check your connection.";
 
   /**
    * @param forSlotId pass explicitly whenever the caller knows which slot the
@@ -832,25 +833,47 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
   // AudioPlayer.tsx and never runs on this path. Deliberately passive: it
   // surfaces a retry and never pauses or tears down playback, because a false
   // positive that killed a good stream would be worse than a missed stall.
+  //
+  // The clock it watches only moves while the page is on screen: progress is
+  // driven by the library's animation-frame loop, which iOS stops when Safari
+  // is backgrounded — while the <audio> keeps playing. So a hidden page proves
+  // nothing, and coming back must not count the time away as a stall. Before
+  // this, every trip to another app ended in "The tape stopped feeding" over a
+  // tape that was still playing (2026-09-23).
   useEffect(() => {
     if (engineMode !== "gapless") return;
     if (!transportState.isPlaying) return;
     let lastTime = lastProgressRef.current.currentTime;
     let lastMovedAt = Date.now();
+    const restartClock = () => {
+      lastTime = lastProgressRef.current.currentTime;
+      lastMovedAt = Date.now();
+    };
     const id = window.setInterval(() => {
+      if (document.visibilityState === "hidden") {
+        restartClock();
+        return;
+      }
       const p = lastProgressRef.current;
       if (p.currentTime !== lastTime) {
-        lastTime = p.currentTime;
-        lastMovedAt = Date.now();
+        restartClock();
+        // Moving again, so a stall warning already on screen is wrong now.
+        setTransportState((prev) =>
+          prev.error?.message === STALL_MESSAGE ? { ...prev, error: null } : prev,
+        );
         return;
       }
       // Sitting at the very end is an ending, not a stall.
       if (p.duration > 0 && p.currentTime / p.duration >= 0.99) return;
       if (Date.now() - lastMovedAt < STALL_TIMEOUT_MS) return;
       audioDebug.log("context", "playback stalled", { at: p.currentTime }, "warn");
-      setPlaybackError("The tape stopped feeding. Check your connection.");
+      setPlaybackError(STALL_MESSAGE);
     }, 5_000);
-    return () => window.clearInterval(id);
+    document.addEventListener("visibilitychange", restartClock);
+    return () => {
+      window.clearInterval(id);
+      document.removeEventListener("visibilitychange", restartClock);
+    };
   }, [engineMode, transportState.isPlaying, state.playingSlot?.id, setPlaybackError]);
 
   // Tear the engine down with the provider.
