@@ -1,4 +1,4 @@
-const CACHE_NAME = 'dead-set-shell-v4';
+const CACHE_NAME = 'dead-set-shell-v5';
 const SHELL_URLS = [
   '/',
   '/manifest.json',
