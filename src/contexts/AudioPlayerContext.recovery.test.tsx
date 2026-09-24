@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 import type { ReactNode } from "react";
 
@@ -233,6 +233,71 @@ describe("AudioPlayerContext — consecutive-error cap", () => {
     for (let i = 0; i < 3; i++) await failAndSettle(result); // three more skips allowed
 
     expect(result.current.playingSlot?.id).toBe("slot-5");
+    expect(result.current.transport.error).toBeNull();
+  });
+});
+
+// 2026-09-23: with background playback working on iPhone, every trip to
+// another app ended in "The tape stopped feeding" over a tape that was still
+// playing. The watchdog's clock is driven by animation frames, which iOS stops
+// for a hidden page while the <audio> plays on.
+describe("AudioPlayerContext — stall watchdog and a hidden page", () => {
+  const STALL = "The tape stopped feeding. Check your connection.";
+  let visibility: DocumentVisibilityState = "visible";
+
+  const setVisibility = (v: DocumentVisibilityState) => {
+    visibility = v;
+    document.dispatchEvent(new Event("visibilitychange"));
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    queues.length = 0;
+    visibility = "visible";
+    Object.defineProperty(document, "visibilityState", { configurable: true, get: () => visibility });
+    mockPlayabilityRow.mockResolvedValue({ data: null, error: null });
+    vi.mocked(findTrackInRecording).mockImplementation(DEFAULT_TRACK);
+  });
+
+  const playAt = async (currentTime: number) => {
+    await act(async () => {
+      queues[queues.length - 1].opts.onProgress({ index: 0, isPlaying: true, currentTime, duration: 542 });
+    });
+  };
+
+  const startPlaying = async () => {
+    const hook = renderHook(() => useAudioPlayer(), { wrapper });
+    await act(async () => { await hook.result.current.playSetlist([makeSlot(0), makeSlot(1)], "setlist-1"); });
+    await waitFor(() => expect(queues.length).toBeGreaterThan(0));
+    vi.useFakeTimers();
+    await playAt(300);
+    await waitFor(() => expect(hook.result.current.transport.isPlaying).toBe(true));
+    return hook;
+  };
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("does not call a backgrounded, still-playing tape stalled", async () => {
+    const { result } = await startPlaying();
+
+    await act(async () => { setVisibility("hidden"); });
+    await act(async () => { vi.advanceTimersByTime(120_000); }); // two minutes in Maps, no progress ticks
+    await act(async () => { setVisibility("visible"); });
+    await act(async () => { vi.advanceTimersByTime(10_000); }); // back, first ticks not in yet
+
+    expect(result.current.transport.error).toBeNull();
+  });
+
+  it("still catches a real stall on screen, and clears it once the tape moves again", async () => {
+    const { result } = await startPlaying();
+
+    await act(async () => { vi.advanceTimersByTime(30_000); }); // visible, clock frozen
+    expect(result.current.transport.error).toBe(STALL);
+
+    await playAt(331);
+    await act(async () => { vi.advanceTimersByTime(5_000); });
     expect(result.current.transport.error).toBeNull();
   });
 });
