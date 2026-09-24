@@ -1,4 +1,4 @@
-import { useCallback, useState, useEffect } from "react";
+import { useCallback, useState, useEffect, useLayoutEffect, useRef } from "react";
 import {
   DndContext,
   closestCenter,
@@ -28,6 +28,32 @@ import type { Database } from "@/integrations/supabase/types";
 import { SYNTHETIC_VERSION_DEFAULTS } from "@/lib/syntheticVersion";
 
 type Song = Database["public"]["Tables"]["songs"]["Row"];
+
+/**
+ * The slot's notes field, sized to its text. It was a fixed one-line box
+ * (h-7, resize-none), so Charlie's liner notes — usually a full sentence —
+ * read "A high-energy, driving closer to leave the" on a phone, with the rest
+ * reachable only by tapping in and scrolling. Empty, it is still one line.
+ */
+export function SlotNotes({ value, onChange }: { value: string; onChange: (value: string) => void }) {
+  const ref = useRef<HTMLTextAreaElement>(null);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${el.scrollHeight}px`;
+  }, [value]);
+  return (
+    <Textarea
+      ref={ref}
+      rows={1}
+      placeholder="Notes..."
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      className="mt-2 min-h-[28px] py-1 text-xs leading-snug bg-transparent border-border resize-none overflow-hidden font-mono text-muted-foreground focus:text-card-foreground"
+    />
+  );
+}
 type NotableVersion = Database["public"]["Tables"]["notable_versions"]["Row"];
 
 export interface SetlistSlotData {
@@ -292,12 +318,7 @@ const SortableSlotItem = ({
                 {slot.version.description}
               </p>
             )}
-            <Textarea
-              placeholder="Notes..."
-              value={slot.notes}
-              onChange={(e) => onUpdateNotes(slot.id, e.target.value)}
-              className="mt-2 min-h-[28px] h-7 text-xs bg-transparent border-border resize-none font-mono text-muted-foreground focus:text-card-foreground"
-            />
+            <SlotNotes value={slot.notes} onChange={(notes) => onUpdateNotes(slot.id, notes)} />
           </div>
         </div>
       </div>
