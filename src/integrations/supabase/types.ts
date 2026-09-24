@@ -1745,6 +1745,27 @@ export type Database = {
         }
         Relationships: []
       }
+      web_releases: {
+        Row: {
+          commit_sha: string
+          id: string
+          note: string | null
+          published_at: string
+        }
+        Insert: {
+          commit_sha: string
+          id?: string
+          note?: string | null
+          published_at?: string
+        }
+        Update: {
+          commit_sha?: string
+          id?: string
+          note?: string | null
+          published_at?: string
+        }
+        Relationships: []
+      }
       wizard_events: {
         Row: {
           created_at: string
