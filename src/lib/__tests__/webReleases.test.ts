@@ -26,7 +26,7 @@ vi.mock("@/integrations/supabase/client", () => ({
   },
 }));
 
-import { fetchReleaseActivity } from "@/lib/webReleases";
+import { fetchReleaseActivity, releaseCoversBuild } from "@/lib/webReleases";
 
 describe("fetchReleaseActivity", () => {
   it("counts releases in the seven days before now, and reads the latest", async () => {
@@ -46,5 +46,23 @@ describe("fetchReleaseActivity", () => {
   it("returns null when the table cannot be read", async () => {
     fail = true;
     expect(await fetchReleaseActivity()).toBeNull();
+  });
+});
+
+
+describe("releaseCoversBuild", () => {
+  const release = { commitSha: "7acddcfa39f9a9f9e7e09b47e9e210a99f324ba5", publishedAt: "2026-09-24T00:55:36Z" };
+
+  it("accepts the release recorded after this build went live", () => {
+    // 2026-09-24: built 00:54:50, confirmed live and recorded 00:55:36.
+    expect(releaseCoversBuild(release, "2026-09-24T00:54:50.984Z")).toBe(true);
+  });
+
+  it("refuses a release older than the build — that build was never recorded", () => {
+    expect(releaseCoversBuild(release, "2026-09-24T02:10:00Z")).toBe(false);
+  });
+
+  it("refuses when the build time is unknown", () => {
+    expect(releaseCoversBuild(release, "")).toBe(false);
   });
 });

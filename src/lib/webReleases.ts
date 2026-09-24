@@ -31,3 +31,33 @@ export async function fetchReleaseActivity(now: number = Date.now()): Promise<Re
     lastReleasedAt: latest.data?.[0]?.published_at ?? null,
   };
 }
+
+export interface RecordedRelease {
+  commitSha: string;
+  publishedAt: string;
+}
+
+/** The most recent web release in the log, or null if none / unreadable. */
+export async function fetchLatestRelease(): Promise<RecordedRelease | null> {
+  const { data, error } = await db
+    .from("web_releases")
+    .select("commit_sha, published_at")
+    .order("published_at", { ascending: false })
+    .limit(1);
+  const row = data?.[0];
+  if (error || !row) return null;
+  return { commitSha: row.commit_sha, publishedAt: row.published_at };
+}
+
+/**
+ * A recorded release can stand in for a build's missing sha only if it is
+ * this build. It is recorded after the build goes live, so it must not be
+ * older than the build itself; a build newer than the last recorded release
+ * means a publish went out without step 2a (docs/RELEASING.md).
+ */
+export function releaseCoversBuild(release: RecordedRelease, buildTimeIso: string): boolean {
+  const built = Date.parse(buildTimeIso);
+  const recorded = Date.parse(release.publishedAt);
+  if (Number.isNaN(built) || Number.isNaN(recorded)) return false;
+  return recorded >= built;
+}

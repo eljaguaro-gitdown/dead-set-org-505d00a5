@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { CheckCircle2, AlertTriangle, GitBranch, RefreshCw, Loader2 } from "lucide-react";
 import { classifyCompare, type SyncVerdict } from "@/lib/githubSync";
+import { fetchLatestRelease, releaseCoversBuild, type RecordedRelease } from "@/lib/webReleases";
 
 declare const __BUILD_SHA__: string;
 declare const __BUILD_SHA_SHORT__: string;
@@ -48,16 +49,33 @@ const GitHubSyncBadge = () => {
   const [status, setStatus] = useState<Status>("loading");
   const [checkedAt, setCheckedAt] = useState<string>("");
   const [error, setError] = useState<string>("");
+  /** Set when the build has no stamped sha and the release log stood in for it. */
+  const [fromLog, setFromLog] = useState<RecordedRelease | null>(null);
 
   const check = async () => {
     setStatus("loading");
     setError("");
+    setFromLog(null);
     try {
-      if (!localSha || localSha === "unknown") {
-        setError("this build carries no commit sha");
-        setStatus("error");
-        setCheckedAt(new Date().toISOString());
-        return;
+      let sha = localSha;
+      let short = localShort;
+      if (!sha || sha === "unknown") {
+        // Lovable sometimes builds without the repo's .git, so neither
+        // `git rev-parse` nor readGitSha() can stamp a sha. The release log
+        // (web_releases, written after each publish is confirmed live) knows
+        // what shipped — but only use it if it covers THIS build.
+        const release = await fetchLatestRelease();
+        if (!release) {
+          throw new Error("this build carries no commit sha, and no release is recorded");
+        }
+        if (!releaseCoversBuild(release, buildTime)) {
+          throw new Error(
+            `this build is newer than the last recorded release (${release.commitSha.slice(0, 7)}) — record it (RELEASING.md 2a)`
+          );
+        }
+        setFromLog(release);
+        sha = release.commitSha;
+        short = sha.slice(0, 7);
       }
 
       // One request, not two: compare carries the branch's own commit in
@@ -65,7 +83,7 @@ const GitHubSyncBadge = () => {
       // drift. Unauthenticated GitHub allows 60 calls an hour per IP, and this
       // badge re-checks on every Refresh.
       const res = await fetch(
-        `https://api.github.com/repos/${REPO}/compare/${BRANCH}...${localSha}`,
+        `https://api.github.com/repos/${REPO}/compare/${BRANCH}...${sha}`,
         { headers: { Accept: "application/vnd.github+json" } }
       );
       if (!res.ok) {
@@ -78,17 +96,17 @@ const GitHubSyncBadge = () => {
         }
         throw new Error(
           res.status === 404
-            ? `${localShort} is not on GitHub`
+            ? `${short} is not on GitHub`
             : `GitHub ${res.status}`
         );
       }
       const data = await res.json();
 
       const base = data?.base_commit;
-      const sha: string = base?.sha ?? "";
+      const mainSha: string = base?.sha ?? "";
       setRemote({
-        sha,
-        shortSha: sha.slice(0, 7),
+        sha: mainSha,
+        shortSha: mainSha.slice(0, 7),
         committedAt: base?.commit?.committer?.date ?? "",
         message: (base?.commit?.message ?? "").split("\n")[0],
         url: base?.html_url ?? `https://github.com/${REPO}/commits/${BRANCH}`,
@@ -179,9 +197,13 @@ const GitHubSyncBadge = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs font-mono">
         <div className="rounded border border-current/20 bg-background/40 p-2">
           <div className="opacity-60 uppercase tracking-wider text-[10px]">This build</div>
-          <div className="mt-0.5 tabular-nums">{localShort}</div>
+          <div className="mt-0.5 tabular-nums">
+            {fromLog ? fromLog.commitSha.slice(0, 7) : localShort}
+          </div>
           <div className="opacity-60 text-[10px] mt-1">
-            built {timeAgo(buildTime)}
+            {fromLog
+              ? `not stamped — from release log, live ${timeAgo(fromLog.publishedAt)}`
+              : `built ${timeAgo(buildTime)}`}
           </div>
         </div>
         <div className="rounded border border-current/20 bg-background/40 p-2">
