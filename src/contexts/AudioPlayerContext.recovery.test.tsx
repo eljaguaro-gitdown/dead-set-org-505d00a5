@@ -38,8 +38,19 @@ class FakeAudioContext {
 }
 vi.stubGlobal("AudioContext", FakeAudioContext);
 
+// Every queue the engine builds, with the callbacks it was given, so a test
+// can fire engine errors and progress the way the real library would.
+const { queues } = vi.hoisted(() => ({
+  queues: [] as Array<{ opts: Record<string, (info?: unknown) => void> }>,
+}));
+
 vi.mock("gapless", () => {
   class FakeQueue {
+    opts: Record<string, (info?: unknown) => void>;
+    constructor(opts: Record<string, (info?: unknown) => void>) {
+      this.opts = opts;
+      queues.push(this);
+    }
     addTrack = vi.fn();
     gotoTrack = vi.fn();
     play = vi.fn();
@@ -165,6 +176,63 @@ describe("AudioPlayerContext — gapless recovery", () => {
     await waitFor(() => {
       expect(result.current.playingSlot?.directTrackUrl).toContain("Song%200.mp3");
     });
+    expect(result.current.transport.error).toBeNull();
+  });
+});
+
+// 2026-09-23: a phone that could not load any track ran all 13 slots of a
+// setlist in six seconds. The cap (skip up to 3 broken tracks, then stop on an
+// error) never tripped, because the count was reset on every slot change —
+// and every error causes a slot change.
+describe("AudioPlayerContext — consecutive-error cap", () => {
+  const slots = Array.from({ length: 13 }, (_, i) => makeSlot(i));
+  const fail = () => queues[queues.length - 1].opts.onError(new Error("MEDIA_ERR_SRC_NOT_SUPPORTED") as unknown);
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    queues.length = 0;
+    mockPlayabilityRow.mockResolvedValue({ data: null, error: null });
+    vi.mocked(findTrackInRecording).mockImplementation(DEFAULT_TRACK);
+  });
+
+  const startSetlist = async () => {
+    const hook = renderHook(() => useAudioPlayer(), { wrapper });
+    await act(async () => { await hook.result.current.playSetlist(slots, "setlist-1"); });
+    await waitFor(() => expect(queues.length).toBeGreaterThan(0));
+    return hook;
+  };
+
+  const failAndSettle = async (result: { current: ReturnType<typeof useAudioPlayer> }) => {
+    const before = result.current.playingSlot?.id;
+    await act(async () => { fail(); });
+    await waitFor(() => {
+      const moved = result.current.playingSlot?.id !== before;
+      expect(moved || result.current.transport.error !== null).toBe(true);
+    });
+  };
+
+  it("stops on an error after skipping three dead tracks, instead of running the setlist", async () => {
+    const { result } = await startSetlist();
+    expect(result.current.playingSlot?.id).toBe("slot-0");
+
+    for (let i = 0; i < 4; i++) await failAndSettle(result);
+
+    expect(result.current.playingSlot?.id).toBe("slot-3");
+    expect(result.current.transport.error).toBe("That tape won't play. The source may be offline.");
+  });
+
+  it("starts the count over once a track actually plays", async () => {
+    const { result } = await startSetlist();
+
+    await failAndSettle(result); // slot-0 → slot-1
+    await failAndSettle(result); // slot-1 → slot-2
+    // slot-2 plays for real
+    await act(async () => {
+      queues[queues.length - 1].opts.onProgress({ index: 0, isPlaying: true, currentTime: 12, duration: 300 });
+    });
+    for (let i = 0; i < 3; i++) await failAndSettle(result); // three more skips allowed
+
+    expect(result.current.playingSlot?.id).toBe("slot-5");
     expect(result.current.transport.error).toBeNull();
   });
 });
