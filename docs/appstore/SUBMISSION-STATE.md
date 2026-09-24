@@ -55,12 +55,18 @@ account on camera, use it throughout, and delete that one.
 Three things the earlier submission did **not** settle, unchanged by the
 rejection:
 
-1. **EU DSA trader status is still undeclared.** It is not a submission-blocking
-   field; it is enforced separately, and an app without a verified declaration
-   is removed from the EU App Store. Declare **non-trader** (free, no ads, no
-   IAP, no subscriptions; the only donate link points at archive.org, not the
-   developer). Declaring trader would publish a home address, phone and email
-   on the EU product page.
+1. ~~**EU DSA trader status is still undeclared.**~~ **Declared 2026-09-24.**
+   The recommendation was **non-trader**: Dead Set is free with no ads, no IAP
+   and no subscriptions, and the only donate link points at archive.org rather
+   than the developer, which matches Apple's own "unlikely to be a trader"
+   test. Declaring trader instead publishes an address, phone and email
+   publicly on the EU product page.
+
+   **Declaring is not the same as being verified.** Apple validates the email
+   and phone by two-factor, and a trader declaration also needs documentation
+   uploaded and reviewed. Until the status reaches verified, the EU removal
+   rule still applies. Check it shows as verified rather than pending before
+   treating this as closed.
 2. **Whether the release is manual.** If "Automatically release this version"
    was left selected, approval ships the app at whatever hour Apple approves it,
    with no chance to line up the web publish or the dispatch.
