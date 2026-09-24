@@ -603,7 +603,7 @@ const SetlistPoster = () => {
 
               {/* ===== TOP FLAP — Band + Title ===== */}
               <div className="relative px-6 sm:px-14 pt-8 pb-6">
-                {/* Hand-drawn SYF in corner */}
+                {/* Cosmic Charlie in corner */}
                 <motion.div
                   className="absolute top-3 right-3 sm:top-4 sm:right-4 opacity-70"
                   initial={{ scale: 0, rotate: -20 }}
