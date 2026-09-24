@@ -1,0 +1,72 @@
+Thank you for the review. Answers in your numbering, also added to the
+Notes field of App Review Information.
+
+1. SCREEN RECORDING
+Attached. Captured on a physical iPhone running the current iOS release,
+beginning at launch. It shows the typical flow - browsing setlists,
+opening one, pressing play and hearing a recording stream, building a
+setlist - plus each item you listed: account registration, sign-in and
+deletion, and user-generated content with the reporting and blocking
+mechanisms exercised on screen. The app has no paid content, so there is nothing
+to show for that item. Deletion is performed on a throwaway account created
+on camera, so the demo credentials remain usable.
+
+2. PURPOSE AND TARGET AUDIENCE
+Dead Set is for Grateful Dead fans. The band played roughly 2,300 concerts
+between 1965 and 1995 and let audiences record and freely trade them, so
+tens of thousands of concert recordings sit in the public Internet Archive.
+It is organised by date, which makes finding a particular performance of a
+particular song hard and comparing performances across years nearly
+impossible. Dead Set lets a fan assemble a "dream setlist" - a specific
+night's performance of each song, arranged as a real concert with Set I, Set
+II and an Encore - then play it back and share it. The audience is adult
+music fans. The app is free, with no ads, no purchases and no monetisation.
+
+3. SETUP AND ACCESS
+No setup required. Browsing and listening need no account; an account
+unlocks building, favourites and comments. The demo credentials are an
+email/password account needing no Google or Apple ID; Sign in with Apple and
+Google are offered on the same screen. Home shows setlists: tap one, press play. Browse or "Build with Cosmic
+Charlie" starts a setlist; the version browser picks the exact night per
+song. Reporting is the flag on any setlist, comment or direct message;
+blocking is the icon beside another person's comment; deletion is Profile >
+Danger Zone.
+
+4. EXTERNAL SERVICES
+- Internet Archive (archive.org): source of all audio, streamed from their
+  public endpoints. See item 6.
+- Relisten (api.relisten.net): public concert database, used for song order.
+- Supabase, via Lovable Cloud: accounts, database, storage, server functions.
+- Lovable AI Gateway: the language model behind our in-app setlist
+  assistant, which suggests songs when a user asks for help building a set.
+  It receives the user's typed request and setlist contents.
+- PostHog: first-party product analytics. No advertising and no cross-app
+  tracking, so App Tracking Transparency does not apply.
+- Resend: transactional and opt-in email.
+No payment processors, as nothing is sold.
+
+5. REGIONAL DIFFERENCES
+None. Identical in every region: no geographic gating, no region-specific
+content, free everywhere.
+
+6. PROTECTED THIRD-PARTY MATERIAL
+Dead Set is an independent, non-commercial fan project, not affiliated with,
+endorsed by or sponsored by the Grateful Dead, Grateful Dead Productions,
+Rhino Entertainment or Warner Music Group. All trademarks belong to their
+owners. Stated in the app footer and at https://dead-set.org/about.
+
+The Grateful Dead explicitly permitted audience taping and free
+non-commercial trading of their live performances throughout their career,
+which is why the Internet Archive's Live Music Archive hosts these
+recordings publicly. We honour the non-commercial terms: we host no audio,
+we stream from the Archive's public endpoints, we carry no advertising, we
+sell nothing. The Archive offers audience tapes as downloads but, at the
+band's request, makes soundboards stream-only. Dead Set offers no download
+anywhere, and on items marked access-restricted or stream-only it plays the
+Archive's own streaming derivative, never the restricted original. The
+band's policy is reproduced verbatim in-app at the same URL.
+
+Same model as Relisten (App Store ID 715886886), on the App Store since
+2014. We are not in a regulated industry.
+
+Happy to clarify anything further.
