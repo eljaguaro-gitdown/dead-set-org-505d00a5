@@ -6,9 +6,16 @@ Connect, Lovable Cloud, and the Supabase auth config, and a session that reads
 only the repo will draw confident wrong conclusions. That happened repeatedly on
 2026-09-17; the corrections are banked in `CLAUDE.md`.
 
-**Last updated:** 2026-09-23 — **iOS App 1.0 (build 27) was REJECTED on
-2026-09-22 at 17:02 PT under Guideline 2.1, Information Needed.** Submission ID
-`f8593d8a-e9fc-4a91-a4b5-dabad5b63632`, submitted 01:12 PT the same day.
+**Last updated:** 2026-09-24 — **build 27 was RESUBMITTED to App Review** after
+a Guideline 2.1 rejection on 2026-09-22 at 17:02 PT. Submission ID
+`f8593d8a-e9fc-4a91-a4b5-dabad5b63632`.
+
+The resubmission carried: the reply from
+[`review-reply-2.1.txt`](review-reply-2.1.txt) (3988 chars), a 5-minute screen
+recording shot on a physical iPhone covering all nine required beats, and the
+Notes field replaced wholesale with
+[`reviewer-notes-v2.txt`](reviewer-notes-v2.txt) (3952 chars). **No new build**
+— 27 was never the problem.
 
 **Read the rejection before reacting to it.** Apple's own first line is that the
 app "has been submitted by a developer account that has a limited App Review
@@ -18,12 +25,22 @@ The "Prevent Common Issues" list at the foot of the message is boilerplate
 attached to every 2.1 — it is not a list of findings against this app, and
 reading it as one will send someone rebuilding things that were never wrong.
 
-**No new build is required.** Build 27 is unchanged and still the right binary.
-The response is a reply, a replaced Notes field, and a screen recording, then
-Resubmit on the same submission. Everything needed is drafted in
-[`review-response-2.1.md`](review-response-2.1.md), with the 4000-character
-Notes replacement in [`reviewer-notes-v2.txt`](reviewer-notes-v2.txt) (3952
-characters, counted, 48 spare).
+**No new build was required.** Build 27 was unchanged and still the right
+binary. [`review-response-2.1.md`](review-response-2.1.md) holds the full
+playbook, including the recording shot list, for the next time this happens.
+
+**Three things learned in the doing, all of them about character limits and
+file formats rather than the app:**
+
+- **The App Review reply field is capped at 4000 too**, not just Notes. The
+  first draft ran 5548 and App Store Connect refused it at -1548 — at the
+  moment of pasting, after the recording was already shot.
+- That -1548 is a free measurement: 4000 + 1548 = 5548, exactly the local count
+  with LF newlines. **App Store Connect counts a newline as one character** and
+  does not inflate to CRLF, so a locally counted field can be trusted exactly.
+- **iOS screen recordings are `.mov`, which Apple does not accept** as a review
+  attachment (.mp4, .avi and .zip are on the list; .mov is not). Export or
+  convert before uploading, or zip it.
 
 Apple asked for six things: a screen recording from a physical device, purpose
 and audience, setup and access, external services, regional differences, and
