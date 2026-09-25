@@ -6,9 +6,28 @@ Connect, Lovable Cloud, and the Supabase auth config, and a session that reads
 only the repo will draw confident wrong conclusions. That happened repeatedly on
 2026-09-17; the corrections are banked in `CLAUDE.md`.
 
-**Last updated:** 2026-09-24 — **build 27 was RESUBMITTED to App Review** after
-a Guideline 2.1 rejection on 2026-09-22 at 17:02 PT. Submission ID
-`f8593d8a-e9fc-4a91-a4b5-dabad5b63632`.
+**Last updated:** 2026-09-25 — **build 28 is uploaded**, and **build 27 is under
+review** after a Guideline 2.1 rejection on 2026-09-22 and a resubmission on
+2026-09-24. Submission ID `f8593d8a-e9fc-4a91-a4b5-dabad5b63632`.
+
+**Build 28** — uploaded 2026-09-25 by run 27 (run id 36076388482) from `main`
+at `9542efd`, dispatched 00:11:33 UTC, `Upload succeeded` 00:14:18, read out of
+the run's own log rather than assumed from the green tick. Build number derived
+as always: run_number 27 + `BUILD_NUMBER_OFFSET` 1; App Store Connect is the
+confirming authority.
+
+**The hold is lifted.** Build 28 is the first build since 27, and the reason
+nothing was cut for four days was an App Clip that does not exist — see below.
+It carries three things build 27 does not:
+
+| Change | Why it matters |
+|---|---|
+| Collaborator links are `https://dead-set.org/join/…` (PR #62) | In build 27 they are `capacitor://localhost/join/…`, which **opens nothing for whoever receives it**. Verified on `main` at `src/hooks/useSetlist.ts:311` before dispatching |
+| Landing-footer "Updated N times this week" counts the last seven days and hides when empty (PR #64) | Build 27 still reports April's number |
+| The admin sync badge asks GitHub the right way round (PR #74) | The badge could not see shipping drift at all — it printed a green "nothing that ships" over six changed source files |
+
+**Build 28 is not submitted.** Build 27 is in review and must resolve first.
+Submit 28 after 27 is approved, or swap it in if Apple comes back again.
 
 The resubmission carried: the reply from
 [`review-reply-2.1.txt`](review-reply-2.1.txt) (3988 chars), a 5-minute screen
