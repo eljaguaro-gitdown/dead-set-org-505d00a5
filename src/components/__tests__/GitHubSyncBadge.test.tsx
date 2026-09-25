@@ -49,7 +49,10 @@ describe("GitHubSyncBadge without a stamped sha", () => {
     render(<GitHubSyncBadge />);
 
     await screen.findByText("In sync with main");
-    expect(fetchMock.mock.calls[0][0]).toContain(`compare/main...${SHA}`);
+    // The borrowed sha is the BASE, main is the head — see the direction note
+    // in GitHubSyncBadge. What this test is really asserting is that the sha
+    // taken from the release log is the one compared, whichever side it sits.
+    expect(fetchMock.mock.calls[0][0]).toContain(`compare/${SHA}...main`);
     expect(screen.getByText(/from release log/)).toBeInTheDocument();
   });
 

@@ -78,12 +78,23 @@ const GitHubSyncBadge = () => {
         short = sha.slice(0, 7);
       }
 
-      // One request, not two: compare carries the branch's own commit in
-      // base_commit, plus the file list that separates docs drift from app
-      // drift. Unauthenticated GitHub allows 60 calls an hour per IP, and this
-      // badge re-checks on every Refresh.
+      // Build first, branch second. This direction is required, not stylistic:
+      // GitHub's `files` is the diff from the merge base to HEAD, so the side
+      // you want the file list FOR has to be HEAD. Asking
+      // `compare/${BRANCH}...${sha}` — which this badge did until
+      // 2026-09-22 — makes the build HEAD, and a behind build is an ancestor
+      // of the branch, so the merge base is the build itself and `files` is
+      // empty. That printed a green "nothing that ships" over six changed
+      // source files. See the header comment in lib/githubSync.ts.
+      //
+      // `sha` is this build's commit, which the release-log fallback above may
+      // have supplied in place of a missing stamp — either way it is the side
+      // being asked about, so it stays the base.
+      //
+      // Still one request. Unauthenticated GitHub allows 60 an hour per IP and
+      // this badge re-checks on every Refresh.
       const res = await fetch(
-        `https://api.github.com/repos/${REPO}/compare/${BRANCH}...${sha}`,
+        `https://api.github.com/repos/${REPO}/compare/${sha}...${BRANCH}`,
         { headers: { Accept: "application/vnd.github+json" } }
       );
       if (!res.ok) {
@@ -102,7 +113,14 @@ const GitHubSyncBadge = () => {
       }
       const data = await res.json();
 
-      const base = data?.base_commit;
+      // The branch is HEAD now, so it is no longer `base_commit` — that is this
+      // build. The comparison lists commits oldest-first, so the branch tip is
+      // the last one; when the two are identical there are no commits at all
+      // and the merge base is the branch tip.
+      const commits = Array.isArray(data?.commits) ? data.commits : [];
+      const base = commits.length > 0
+        ? commits[commits.length - 1]
+        : data?.merge_base_commit ?? data?.base_commit;
       const mainSha: string = base?.sha ?? "";
       setRemote({
         sha: mainSha,

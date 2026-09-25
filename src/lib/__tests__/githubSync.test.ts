@@ -30,27 +30,39 @@ describe("shipsInApp", () => {
 });
 
 describe("classifyCompare", () => {
-  it("reports a build cut from a branch as ahead, not behind", () => {
-    // The build-24 case: the state the old badge could never reach.
+  // Every fixture below is a `compare/{buildSha}...{branch}` response, so its
+  // status/ahead_by/behind_by describe the BRANCH and `files` is merge base →
+  // branch. The tests this replaced used the opposite direction AND populated
+  // `files` on a response where GitHub returns none — they asserted against a
+  // shape the API cannot emit, which is why they passed while the badge lied.
+
+  it("reports shipped drift when the branch is ahead — the 2026-09-22 case", () => {
+    // Deployed 5387c6c, main 0353397, eleven commits, six of them source.
+    // The badge showed a green "nothing that ships" over exactly this.
+    const verdict = classifyCompare({
+      status: "ahead",
+      ahead_by: 11,
+      behind_by: 0,
+      files: [
+        { filename: "CLAUDE.md" },
+        { filename: "docs/RELEASING.md" },
+        { filename: "src/lib/authFunnel.ts" },
+        { filename: "src/pages/Auth.tsx" },
+      ],
+    });
+
+    expect(verdict.status).toBe("behind");
+    expect(verdict.behind).toBe(11);
+    expect(verdict.ahead).toBe(0);
+    expect(verdict.appFiles).toEqual(["src/lib/authFunnel.ts", "src/pages/Auth.tsx"]);
+    expect(verdict.docsOnly).toBe(false);
+  });
+
+  it("stays quiet when the branch moved only in docs", () => {
     const verdict = classifyCompare({
       status: "ahead",
       ahead_by: 2,
       behind_by: 0,
-      files: [{ filename: "src/lib/oauthSignIn.ts" }],
-    });
-
-    expect(verdict.status).toBe("ahead");
-    expect(verdict.ahead).toBe(2);
-    expect(verdict.docsOnly).toBe(false);
-  });
-
-  it("flags docs-only drift as docs-only", () => {
-    // Exactly what main looked like after PR #54 merged: one doc commit and a
-    // merge commit, nothing shipped.
-    const verdict = classifyCompare({
-      status: "behind",
-      ahead_by: 0,
-      behind_by: 2,
       files: [{ filename: "docs/appstore/SUBMISSION-STATE.md" }],
     });
 
@@ -59,19 +71,31 @@ describe("classifyCompare", () => {
     expect(verdict.appFiles).toEqual([]);
   });
 
-  it("does not excuse drift once one shipped file moves", () => {
-    const verdict = classifyCompare({
-      status: "behind",
-      ahead_by: 0,
-      behind_by: 3,
-      files: [
-        { filename: "docs/appstore/SUBMISSION-STATE.md" },
-        { filename: "src/pages/Auth.tsx" },
-      ],
-    });
+  it("reports a build cut from a branch as ahead, not behind", () => {
+    // The build-24 case: branch behind the build, so GitHub says "behind".
+    const verdict = classifyCompare({ status: "behind", ahead_by: 0, behind_by: 2, files: [] });
 
+    expect(verdict.status).toBe("ahead");
+    expect(verdict.ahead).toBe(2);
+    expect(verdict.behind).toBe(0);
+  });
+
+  it("never calls an ahead build docs-only, because `files` cannot see that side", () => {
+    // `files` is merge base → branch, so it is empty here BY CONSTRUCTION and
+    // says nothing about what the build carries. Empty must not read as quiet.
+    const verdict = classifyCompare({ status: "behind", ahead_by: 0, behind_by: 4, files: [] });
     expect(verdict.docsOnly).toBe(false);
-    expect(verdict.appFiles).toEqual(["src/pages/Auth.tsx"]);
+  });
+
+  it("never calls a diverged build docs-only — half the drift is invisible", () => {
+    const verdict = classifyCompare({
+      status: "diverged",
+      ahead_by: 4,
+      behind_by: 1,
+      files: [{ filename: "docs/RELEASING.md" }],
+    });
+    expect(verdict).toMatchObject({ status: "diverged", behind: 4, ahead: 1 });
+    expect(verdict.docsOnly).toBe(false);
   });
 
   it("treats identical as in sync, with no drift to report", () => {
@@ -85,20 +109,11 @@ describe("classifyCompare", () => {
     });
   });
 
-  it("carries both counts when history diverged", () => {
-    const verdict = classifyCompare({
-      status: "diverged",
-      ahead_by: 1,
-      behind_by: 4,
-      files: [{ filename: "src/App.tsx" }],
-    });
-    expect(verdict).toMatchObject({ status: "diverged", ahead: 1, behind: 4 });
-  });
-
   it("over-reports rather than under-reports on a malformed response", () => {
     // A sync badge that silently says "in sync" when it cannot tell is worse
     // than one that says "diverged".
     expect(classifyCompare({}).status).toBe("diverged");
     expect(classifyCompare({ status: "something-new" }).status).toBe("diverged");
+    expect(classifyCompare({}).docsOnly).toBe(false);
   });
 });

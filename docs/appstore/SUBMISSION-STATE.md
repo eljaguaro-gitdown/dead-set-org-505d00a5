@@ -6,7 +6,77 @@ Connect, Lovable Cloud, and the Supabase auth config, and a session that reads
 only the repo will draw confident wrong conclusions. That happened repeatedly on
 2026-09-17; the corrections are banked in `CLAUDE.md`.
 
-**Last updated:** 2026-09-23. **Build 27 (run 26, `0353397`) is the build that was submitted** (Jay, 2026-09-23). A resubmission with an **App Clip** is planned — see below.
+**Last updated:** 2026-09-24 — **build 27 was RESUBMITTED to App Review** after
+a Guideline 2.1 rejection on 2026-09-22 at 17:02 PT. Submission ID
+`f8593d8a-e9fc-4a91-a4b5-dabad5b63632`.
+
+The resubmission carried: the reply from
+[`review-reply-2.1.txt`](review-reply-2.1.txt) (3988 chars), a 5-minute screen
+recording shot on a physical iPhone covering all nine required beats, and the
+Notes field replaced wholesale with
+[`reviewer-notes-v2.txt`](reviewer-notes-v2.txt) (3952 chars). **No new build**
+— 27 was never the problem.
+
+**Read the rejection before reacting to it.** Apple's own first line is that the
+app "has been submitted by a developer account that has a limited App Review
+history" and they "need additional information to better understand the app".
+No defect, no crash, no policy finding, and nothing cited against the binary.
+The "Prevent Common Issues" list at the foot of the message is boilerplate
+attached to every 2.1 — it is not a list of findings against this app, and
+reading it as one will send someone rebuilding things that were never wrong.
+
+**No new build was required.** Build 27 was unchanged and still the right
+binary. [`review-response-2.1.md`](review-response-2.1.md) holds the full
+playbook, including the recording shot list, for the next time this happens.
+
+**Three things learned in the doing, all of them about character limits and
+file formats rather than the app:**
+
+- **The App Review reply field is capped at 4000 too**, not just Notes. The
+  first draft ran 5548 and App Store Connect refused it at -1548 — at the
+  moment of pasting, after the recording was already shot.
+- That -1548 is a free measurement: 4000 + 1548 = 5548, exactly the local count
+  with LF newlines. **App Store Connect counts a newline as one character** and
+  does not inflate to CRLF, so a locally counted field can be trusted exactly.
+- **iOS screen recordings are `.mov`, which Apple does not accept** as a review
+  attachment (.mp4, .avi and .zip are on the list; .mov is not). Export or
+  convert before uploading, or zip it.
+
+Apple asked for six things: a screen recording from a physical device, purpose
+and audience, setup and access, external services, regional differences, and
+evidence of rights to protected third-party material.
+
+**The trap in the recording, which is worth more than the rest of it:** Apple
+requires account deletion to be demonstrated. Recording that on
+`eljaguaro+appreview@gmail.com` destroys the credentials the reviewer needs and
+earns a second 2.1, this time on "Accessing the app". Create a throwaway
+account on camera, use it throughout, and delete that one.
+
+Three things the earlier submission did **not** settle, unchanged by the
+rejection:
+
+1. ~~**EU DSA trader status is still undeclared.**~~ **Declared 2026-09-24.**
+   The recommendation was **non-trader**: Dead Set is free with no ads, no IAP
+   and no subscriptions, and the only donate link points at archive.org rather
+   than the developer, which matches Apple's own "unlikely to be a trader"
+   test. Declaring trader instead publishes an address, phone and email
+   publicly on the EU product page.
+
+   **Declaring is not the same as being verified.** Apple validates the email
+   and phone by two-factor, and a trader declaration also needs documentation
+   uploaded and reviewed. Until the status reaches verified, the EU removal
+   rule still applies. Check it shows as verified rather than pending before
+   treating this as closed.
+2. **Whether the release is manual.** If "Automatically release this version"
+   was left selected, approval ships the app at whatever hour Apple approves it,
+   with no chance to line up the web publish or the dispatch.
+3. ~~**The published web IS behind `main`.**~~ **Corrected 2026-09-25.** That
+   reading came from the admin badge on 2026-09-22 and was already stale: the
+   web was published twice on 2026-09-23, from `2a94e45` and then `f89a90b`,
+   each gated PASS WITH NOTES. `75b58fa`, `c19a1e7` and `c98ab43` are all
+   ancestors of `f89a90b`, so the signup fixes, the consent-alert name and the
+   chip rename **are live**. The remaining gap is `f89a90b..c4d0c6f` — the
+   player and icon work of 09-24/25 — which is routine rather than urgent.
 
 Paths beginning `claude/` below are docs in the **Dead Set Claude project**, not
 files in this repo — don't go looking for them on disk. Everything else is
@@ -21,7 +91,7 @@ doc is worse than no doc, because it will be believed.
 | | |
 |---|---|
 | App Store Connect | Record exists — **Apple ID 6799269210**, "Dead Set: Wake Now Discover", iOS App 1.0 at *Prepare for Submission* |
-| Builds | **26 uploaded.** Builds 1–19 are from 2026-08-07 to 2026-08-21; builds 21–27 on 2026-09-17 to 09-21. **Build 26 was uploaded 2026-09-21 by run 25, from `main` at `edb7d5c`,** and was the candidate until **build 27** (run 26, `main` at `0353397`), three hours later, **which is what was submitted**. Build 23's OAuth is broken |
+| Builds | **26 uploaded.** Builds 1–19 are from 2026-08-07 to 2026-08-21; builds 21–27 on 2026-09-17 to 09-21. **Build 26 was uploaded 2026-09-21 by run 25, from `main` at `edb7d5c`,** and was the candidate until **build 27** (run 26, `main` at `0353397`), three hours later, **which is what was submitted, rejected under 2.1, and resubmitted unchanged**. Build 23's OAuth is broken |
 | Build pipeline | Works, and it is CI. **Every build came from `ios-testflight.yml`** |
 | CI workflow | `.github/workflows/ios-testflight.yml`, `workflow_dispatch`, **run 26 times, every run succeeded**, 2026-08-07 to 2026-09-21 |
 | Code | PR #35's submission-blocking fixes are on `main`; build 22 adds 43 further commits |
@@ -36,12 +106,34 @@ store page.
 from Jay; the submission date and review status live in App Store Connect and
 are not copied here. Any resubmission is a new build, not an edit to this one.
 
-**Resubmission planned, with an App Clip.** As of `2a94e45` there is **no App
-Clip target in this repo** — no second target in `ios/App/App.xcodeproj`, no
-`*.entitlements` for it, nothing in `ios-testflight.yml`. A build cut before
-that target lands cannot carry the clip, whatever its number. Before
-dispatching the resubmission build, check that the App Clip target is on the
-ref being built and that the workflow archives and exports it.
+**There is no App Clip, none was submitted, and none is planned. The hold on
+build 28 rested on a misreading and should be lifted.**
+
+The phrase entered this doc as "Resubmission planned, with an App Clip". It
+came from a collision between two meanings of the same words. Jay recorded the
+screen recording Apple requested under guideline 2.1 as
+`Dead_Set_Submission_App_Clip.mp4` — *a clip of the app* — and that is what was
+submitted, correctly. Apple's **App Clip** is a separate installable mini-app
+with its own Xcode target and bundle id. They are unrelated.
+
+Checked 2026-09-25, and the answer is not close:
+
+- `ios/App/App.xcodeproj/project.pbxproj` — zero App Clip references, and
+  exactly one target, `App`
+- no `*.entitlements` file anywhere under `ios/`
+- `.github/workflows/ios-testflight.yml` — zero mentions of a clip
+- App Store Connect shows build 27 as **HAS APP CLIP: NO**
+
+An App Clip cannot be submitted without a target that builds one, so none was.
+**Build 28 has been held since 2026-09-21 for an artifact that does not exist**,
+and that hold is blocking the collaborator-link fix below from reaching any
+build. Cut build 28 when convenient.
+
+The standing recommendation against building one is unchanged: Capacitor cannot
+produce an App Clip, so it would mean a second native implementation of the
+highest-traffic surface, and the prerequisite `apple-app-site-association` file
+does not exist either. Universal Links is the cheaper version of the same idea
+and is the queued work.
 
 **On `main` since build 27, not yet in any build** (as of `f89a90b`,
 2026-09-23). Build 28 was deliberately held for the resubmission, so no run
@@ -98,12 +190,18 @@ true**, which is why earlier builds should not be substituted for it:
 | Share-poster caption clears AA contrast | build 25 |
 | Privacy manifest declares Analytics on Email and Name | **build 26** |
 | No phantom `PerformanceData` on the privacy label | **build 26** |
-| No cannabis strain names in the vibe chips | **build 26** |
+| No cannabis strain names in the vibe chips | build 26 |
 | Sign-in consent alert names "Dead Set", not "App" | **build 27** |
+| Signup failures get an actionable message | **build 27** |
+| OAuth start event actually reaches `auth_events` | **build 27** |
 
 Every row holds for build 27, the submitted build. Answer the age-rating and
 App Privacy questionnaires against **build 26 or later**. Against build 25 the strain labels are still present and the
 manifest still understates what PostHog receives.
+
+The version-record fields — Age Ratings, Content Rights, App Review
+Information, pricing, screenshots — attach to version 1.0, not to a build.
+Swapping the selected build from 26 to 27 does not reset any of them.
 
 ---
 
@@ -113,8 +211,13 @@ manifest still understates what PostHog receives.
 "the newest build is `main`" is true again. It is build 24 plus the share-poster
 caption contrast fix and the two admin-dashboard fixes (PRs #55 and #56).
 
-**Google and Apple sign-in are confirmed working on device** as of build 24 — the
-last unverified step in that chain. Builds 24 and 25 both carry it.
+**Google and Apple sign-in are both confirmed working on device.** Google on
+build 24; **Apple confirmed separately on build 26, 2026-09-21 06:06 UTC** —
+`auth.identities` shows the `apple` provider signing in at that moment, so
+guideline 4.8 rests on a completed round trip rather than on a reading of the
+code. The two had only ever been confirmed together before, which left open
+the one thing no static check could close: whether the Apple provider was
+actually enabled in Lovable Cloud. It is.
 
 **Gate status, stated plainly:** `qa-release` last ran against `3bcde32`
 (build 22), returning PASS WITH NOTES. Builds 23, 24 and 25 were dispatched on
@@ -353,14 +456,82 @@ Aug 9, the day build 18 was created.
   "Try to fix all":
   the Critical's obvious fix breaks anonymous play telemetry.
 
+## The published web is behind `main` — confirmed 2026-09-22
+
+**Answered by the badge, not by inference.** `/admin` on a phone reports:
+
+```
+APP CODE IN SYNC            <- wrong, see below
+THIS BUILD    5387c6c       built 1d ago
+GITHUB MAIN   0353397       pushed 1d ago
+main is 11 commits ahead - nothing that ships
+```
+
+The deployed build is **`5387c6c`**. `main` is `0353397`. Six of the eleven
+intervening commits are source files — `src/lib/authFunnel.ts`,
+`src/lib/authErrors.ts`, `src/pages/Auth.tsx`, `src/components/AuthModal.tsx`,
+`src/components/CosmicCharlieDialog.tsx` and the two test files. So `75b58fa`
+is **not** live, and neither is the strain-chip rename.
+
+Two earlier attempts to establish this by inference — Lovable's
+`latest_commit_sha` (which describes the project's code, not the deployment)
+and the shape of `auth_events` rows — both pointed the right way and neither
+could prove it. The badge answered it in one page load. That is now a banked
+correction in `CLAUDE.md`.
+
+**The badge was also lying, and had always been lying.** "nothing that ships"
+over six changed source files was not bad luck: GitHub's compare `files` is the
+diff from the merge base to HEAD, and the badge asked
+`compare/main...{buildSha}`, which puts the build at HEAD. A build that is
+behind is an ancestor of `main`, so the merge base IS the build and `files`
+comes back empty — making `appFiles` empty and `docsOnly` structurally true for
+every behind build that has ever existed. The one state the badge exists to
+catch was the one state it could not see.
+
+Fixed in `cfcf99e`: the call is now `compare/{buildSha}...{branch}`, with
+status and counts inverted to stay build-relative, and `docsOnly` claimable
+only when status is `behind` — for an ahead or diverged build an empty `files`
+means "cannot see", not "nothing changed". The tests had passed throughout
+because they used the old direction AND populated `files` on a behind response,
+a shape the API cannot emit; every fixture is now real and the 2026-09-22 state
+is a named regression test.
+
+**So the badge fix is itself only on `main`.** Until the web is published, the
+instrument stays blind. Publishing needs a current PASS from `qa-release`
+(`/pre-release`), and that gate cannot pass from an environment without browser
+reachability — the 2026-09-22 run returned BLOCK for exactly that reason, with
+no code defects found: `npm ci` clean, `tsc` 0 errors on both projects, 181/188
+tests passing (the 7 are `anonDraftRls.test.ts` needing Supabase egress).
+
+If it is behind, publishing requires a current PASS from `qa-release` first
+(`/pre-release`). That gate is not waivable for a "small" publish.
+
+
 ## Decisions still open (Jay)
 
 - ~~**Age rating.**~~ **Decided 2026-09-21 (Jay): renamed, not accepted.** The
   three strain-named chips are now Late Night, Daytime Show and Day Into Night.
-  Answer "none" to drug references — against build 26 or later, which is where
-  the rename ships. The chip **ids** are unchanged (`indica`/`sativa`/`hybrid`)
+  The chip **ids** are unchanged (`indica`/`sativa`/`hybrid`)
   because they are persisted to `vibe_ids` and never rendered; renaming them
   would orphan existing rows for no user-visible gain.
+
+  **Correction, 2026-09-21: the drug-reference answer is not "none".** This
+  doc and the advice given from it both said to answer NONE once the chips
+  were renamed. Grepping the copy afterwards found three first-party
+  references that have nothing to do with the chips and still ship in build
+  27: the hero line "found, inhaled, and passed on"
+  (`src/components/landing/HeroSection.tsx:893`, also `public/podcast.html:169`),
+  the era name "The Acid Years" (`src/components/ShowPlate.tsx:5`), and
+  "Acid Tests" in the era blurb (`src/components/EraTooltip.tsx:13`). The
+  honest answer to *Alcohol, Tobacco, or Drug Use or References* is
+  **INFREQUENT**, which is expected to move the rating off 13+. The hero line
+  is visible in the App Store screenshots, so the questionnaire and the
+  submitted artwork have to agree. Not recommended: cutting the copy to win
+  the lower band — the Acid Tests are a documented 1965–66 event series and
+  the era name is accurate.
+
+  Profanity NONE and Horror/Fear NONE both hold. The only profanity-adjacent
+  hit anywhere is the song title "Hell in a Bucket" in `EraTooltip.tsx`.
 - **Diagnostics declarations.** `PrivacyInfo.xcprivacy` declares CrashData and
   PerformanceData. **This changed with build 22:** PostHog's exception capture
   is deliberately left ON (`src/lib/posthog.ts` explains why — it reports errors,

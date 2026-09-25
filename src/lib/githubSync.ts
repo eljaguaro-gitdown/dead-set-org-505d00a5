@@ -11,8 +11,23 @@
  *
  * `GET /repos/{repo}/compare/{base}...{head}` answers both properly: `status`
  * distinguishes identical / ahead / behind / diverged, and `files` says what
- * actually differs. It also carries `base_commit`, so one request replaces the
- * branch lookup the badge used to make separately.
+ * actually differs.
+ *
+ * The direction of that call is load-bearing, and the badge had it backwards.
+ * GitHub's `files` is the diff from the **merge base to HEAD** — not a
+ * symmetric difference. Calling `compare/main...{buildSha}` to ask "is this
+ * build behind main" puts the build at HEAD, and a build that is behind is an
+ * ancestor of main, so the merge base IS the build and `files` comes back
+ * EMPTY. `appFiles` was therefore always `[]` whenever the build was behind,
+ * `docsOnly` was structurally always true, and the badge showed a green
+ * "nothing that ships" over six changed source files. It did this on
+ * 2026-09-22 while `main` carried the OAuth funnel fix the web was missing.
+ *
+ * So the call is `compare/{buildSha}...{branch}`: the branch is HEAD, the
+ * merge base is the build, and `files` is exactly "what the branch has that
+ * this build does not". The trade is that `status`, `ahead_by` and `behind_by`
+ * now describe the BRANCH relative to the build, so they are inverted below to
+ * stay build-relative — which is what the badge reads.
  */
 
 export type SyncStatus = "in-sync" | "ahead" | "behind" | "diverged";
@@ -29,10 +44,18 @@ export interface SyncVerdict {
   docsOnly: boolean;
 }
 
+/**
+ * A `compare/{buildSha}...{branch}` response. Every field here describes the
+ * BRANCH relative to the build, because the branch is HEAD in that call.
+ */
 export interface CompareResponse {
+  /** The branch's relation to the build: identical / ahead / behind / diverged. */
   status?: string;
+  /** Commits the BRANCH has beyond the merge base. */
   ahead_by?: number;
+  /** Commits the BUILD has beyond the merge base. */
   behind_by?: number;
+  /** Merge base → branch. What the branch has that this build does not. */
   files?: { filename?: string }[];
 }
 
@@ -49,10 +72,13 @@ export const shipsInApp = (path: string): boolean =>
     path,
   );
 
+// Inverted on purpose. The key is the branch's status relative to the build;
+// the value is the build's status relative to the branch, which is what the
+// badge says out loud. A branch that is "ahead" means this build is behind.
 const STATUSES: Record<string, SyncStatus> = {
   identical: "in-sync",
-  ahead: "ahead",
-  behind: "behind",
+  ahead: "behind",
+  behind: "ahead",
   diverged: "diverged",
 };
 
@@ -61,8 +87,9 @@ export function classifyCompare(compare: CompareResponse): SyncVerdict {
   // honest failure for a sync badge is to over-report drift, not under-report
   // it.
   const status = STATUSES[compare.status ?? ""] ?? "diverged";
-  const ahead = compare.ahead_by ?? 0;
-  const behind = compare.behind_by ?? 0;
+  // Also inverted: the branch's ahead_by is how far this build is BEHIND.
+  const behind = compare.ahead_by ?? 0;
+  const ahead = compare.behind_by ?? 0;
 
   const appFiles = (compare.files ?? [])
     .map((f) => f?.filename ?? "")
@@ -73,6 +100,11 @@ export function classifyCompare(compare: CompareResponse): SyncVerdict {
     ahead,
     behind,
     appFiles,
-    docsOnly: status !== "in-sync" && behind > 0 && appFiles.length === 0,
+    // Only claimable when the file list actually covers the gap, which is the
+    // behind-and-not-also-ahead case: `files` describes merge base → branch,
+    // so it says nothing about commits this build has that the branch lacks.
+    // A diverged build has drift in both directions and only one is visible,
+    // so it never gets the quiet verdict.
+    docsOnly: status === "behind" && behind > 0 && appFiles.length === 0,
   };
 }
