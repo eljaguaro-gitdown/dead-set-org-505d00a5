@@ -61,6 +61,8 @@ public class NativeAudioPlugin: CAPPlugin, CAPBridgedPlugin {
     /// URL — the webview hands us capacitor://localhost/... paths, which
     /// URLSession can't resolve.
     private lazy var bundledArtwork: MPMediaItemArtwork? = {
+        // The icon-512/192 fallbacks were Steal Your Face until 2026-09-24;
+        // they are Cosmic Charlie now too, so every candidate is brand art.
         let candidates = [
             Bundle.main.url(forResource: "cosmic-charlie", withExtension: "jpg", subdirectory: "public"),
             Bundle.main.url(forResource: "icon-512", withExtension: "png", subdirectory: "public/icons"),

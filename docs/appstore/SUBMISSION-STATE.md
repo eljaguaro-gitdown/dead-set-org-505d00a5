@@ -70,8 +70,13 @@ rejection:
 2. **Whether the release is manual.** If "Automatically release this version"
    was left selected, approval ships the app at whatever hour Apple approves it,
    with no chance to line up the web publish or the dispatch.
-3. **The published web IS behind `main` — now confirmed, not inferred.** See
-   below.
+3. ~~**The published web IS behind `main`.**~~ **Corrected 2026-09-25.** That
+   reading came from the admin badge on 2026-09-22 and was already stale: the
+   web was published twice on 2026-09-23, from `2a94e45` and then `f89a90b`,
+   each gated PASS WITH NOTES. `75b58fa`, `c19a1e7` and `c98ab43` are all
+   ancestors of `f89a90b`, so the signup fixes, the consent-alert name and the
+   chip rename **are live**. The remaining gap is `f89a90b..c4d0c6f` — the
+   player and icon work of 09-24/25 — which is routine rather than urgent.
 
 Paths beginning `claude/` below are docs in the **Dead Set Claude project**, not
 files in this repo — don't go looking for them on disk. Everything else is
@@ -86,7 +91,7 @@ doc is worse than no doc, because it will be believed.
 | | |
 |---|---|
 | App Store Connect | Record exists — **Apple ID 6799269210**, "Dead Set: Wake Now Discover", iOS App 1.0 at *Prepare for Submission* |
-| Builds | **26 uploaded.** Builds 1–19 are from 2026-08-07 to 2026-08-21; builds 21–27 on 2026-09-17 to 09-21. **Build 27 was uploaded 2026-09-21 by run 26, from `main` at `0353397`,** and is the submission candidate. Build 23's OAuth is broken — see below |
+| Builds | **26 uploaded.** Builds 1–19 are from 2026-08-07 to 2026-08-21; builds 21–27 on 2026-09-17 to 09-21. **Build 26 was uploaded 2026-09-21 by run 25, from `main` at `edb7d5c`,** and was the candidate until **build 27** (run 26, `main` at `0353397`), three hours later, **which is what was submitted, rejected under 2.1, and resubmitted unchanged**. Build 23's OAuth is broken |
 | Build pipeline | Works, and it is CI. **Every build came from `ios-testflight.yml`** |
 | CI workflow | `.github/workflows/ios-testflight.yml`, `workflow_dispatch`, **run 26 times, every run succeeded**, 2026-08-07 to 2026-09-21 |
 | Code | PR #35's submission-blocking fixes are on `main`; build 22 adds 43 further commits |
@@ -97,19 +102,82 @@ redirect. Submitting it would ship the IP exposure that PR #35 removed, and
 screenshots taken from it would put a Grateful Dead Productions mark on the
 store page.
 
-**Build 27 is the submission candidate — submit this one.** Uploaded
-2026-09-21 by run 26 (run id 35573327254) from `main` at `0353397`, `Upload
-succeeded` at 07:34:02 UTC. Build number derived as always: run_number 26 +
-offset 1. The number was **derived, then confirmed**: the run's own log
-could not be read from this environment (the Actions log-archive host is
-blocked by egress policy), so the arithmetic stood alone until the build
-installed from TestFlight onto Jay's phone showing **27**. Derivation and
-device agree.
+**Build 27 was submitted — it is the build under review.** Recorded 2026-09-23
+from Jay; the submission date and review status live in App Store Connect and
+are not copied here. Any resubmission is a new build, not an edit to this one.
 
-**Build 26 was the candidate for about three hours and is superseded.** It
-was cut from `edb7d5c`, one commit before the two fixes below landed, so it
-ships the consent alert naming the app "App" and the signup dead end. Do not
-substitute it.
+**There is no App Clip, none was submitted, and none is planned. The hold on
+build 28 rested on a misreading and should be lifted.**
+
+The phrase entered this doc as "Resubmission planned, with an App Clip". It
+came from a collision between two meanings of the same words. Jay recorded the
+screen recording Apple requested under guideline 2.1 as
+`Dead_Set_Submission_App_Clip.mp4` — *a clip of the app* — and that is what was
+submitted, correctly. Apple's **App Clip** is a separate installable mini-app
+with its own Xcode target and bundle id. They are unrelated.
+
+Checked 2026-09-25, and the answer is not close:
+
+- `ios/App/App.xcodeproj/project.pbxproj` — zero App Clip references, and
+  exactly one target, `App`
+- no `*.entitlements` file anywhere under `ios/`
+- `.github/workflows/ios-testflight.yml` — zero mentions of a clip
+- App Store Connect shows build 27 as **HAS APP CLIP: NO**
+
+An App Clip cannot be submitted without a target that builds one, so none was.
+**Build 28 has been held since 2026-09-21 for an artifact that does not exist**,
+and that hold is blocking the collaborator-link fix below from reaching any
+build. Cut build 28 when convenient.
+
+The standing recommendation against building one is unchanged: Capacitor cannot
+produce an App Clip, so it would mean a second native implementation of the
+highest-traffic surface, and the prerequisite `apple-app-site-association` file
+does not exist either. Universal Links is the cheaper version of the same idea
+and is the queued work.
+
+**On `main` since build 27, not yet in any build** (as of `f89a90b`,
+2026-09-23). Build 28 was deliberately held for the resubmission, so no run
+has been dispatched since run 26. The resubmission build will carry:
+
+- The builder's collaborator link is `https://dead-set.org/join/…` (PR #62).
+  In build 27 it is `capacitor://localhost/join/…`, which opens nothing for
+  whoever receives it — do not share collaborator links from build 27.
+- The landing-footer "Updated N times this week" badge counts the last seven
+  days and hides when empty (PR #64). Build 27 still says "Updated 2 times
+  this week", from April's notes.
+- `vite.config.ts` reads the build sha from `.git` when git is unavailable
+  (PR #63) — build tooling, no user-visible change.
+
+The web was published from `2a94e45` and then `f89a90b` on 2026-09-23, each
+gated PASS WITH NOTES, so the web is ahead of build 27 by exactly these.
+
+**Build 27** — uploaded 2026-09-21 by run 26 (run id 35573327254) from `main`
+at `0353397` (PR #61), dispatched 07:30:59 UTC, finished 07:34:06. Build number
+derived as always: run_number 26 + offset 1; App Store Connect confirms. It went
+unrecorded here until 2026-09-23, and in that gap it was misnumbered "build 26"
+in conversation — the run number, not the build number. Read the arithmetic,
+not the run.
+
+It is build 26 plus:
+
+| Change | Why it matters for submission |
+|---|---|
+| `CFBundleName` is "Dead Set" (was `$(PRODUCT_NAME)` → "App") | The native sign-in consent alert read **"App" Wants to Use "…supabase.co" to Sign In**. Now it names the app. The supabase.co half needs a custom auth domain and is not fixed |
+| Signup/sign-in errors mapped to plain guidance (`src/lib/authErrors.ts`) | Breached-password, already-registered and bad-credential failures no longer show a raw Supabase string |
+| Auth funnel events POST with `keepalive` | `oauth_redirect_started` was dropped as the page navigated away |
+
+**Gate:** `qa-release` ran against `0353397` on 2026-09-23 and returned **PASS
+WITH NOTES** — the first verdict since build 22 that names the commit a build
+was cut from. Its NEEDS-VERIFICATION items were live OAuth and a live share
+render, which that sandbox could not reach; nothing blocked. The web was
+published from the same commit the same day, so web and build 27 matched.
+
+---
+
+**Build 26** (superseded by 27, not submitted). Uploaded
+2026-09-21 by run 25 (run id 35561559583) from `main` at `edb7d5c`, `Upload
+succeeded` at 04:37:21 UTC. Build number derived as always: run_number 25 +
+offset 1; App Store Connect is the confirming authority.
 
 **It is the first build on which every submission claim is simultaneously
 true**, which is why earlier builds should not be substituted for it:
@@ -127,8 +195,8 @@ true**, which is why earlier builds should not be substituted for it:
 | Signup failures get an actionable message | **build 27** |
 | OAuth start event actually reaches `auth_events` | **build 27** |
 
-Answer the age-rating questionnaire and the App Privacy questionnaire against
-**this** build. Against build 25 the strain labels are still present and the
+Every row holds for build 27, the submitted build. Answer the age-rating and
+App Privacy questionnaires against **build 26 or later**. Against build 25 the strain labels are still present and the
 manifest still understates what PostHog receives.
 
 The version-record fields — Age Ratings, Content Rights, App Review

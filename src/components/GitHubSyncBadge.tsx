@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { CheckCircle2, AlertTriangle, GitBranch, RefreshCw, Loader2 } from "lucide-react";
 import { classifyCompare, type SyncVerdict } from "@/lib/githubSync";
+import { fetchLatestRelease, releaseCoversBuild, type RecordedRelease } from "@/lib/webReleases";
 
 declare const __BUILD_SHA__: string;
 declare const __BUILD_SHA_SHORT__: string;
@@ -48,31 +49,52 @@ const GitHubSyncBadge = () => {
   const [status, setStatus] = useState<Status>("loading");
   const [checkedAt, setCheckedAt] = useState<string>("");
   const [error, setError] = useState<string>("");
+  /** Set when the build has no stamped sha and the release log stood in for it. */
+  const [fromLog, setFromLog] = useState<RecordedRelease | null>(null);
 
   const check = async () => {
     setStatus("loading");
     setError("");
+    setFromLog(null);
     try {
-      if (!localSha || localSha === "unknown") {
-        setError("this build carries no commit sha");
-        setStatus("error");
-        setCheckedAt(new Date().toISOString());
-        return;
+      let sha = localSha;
+      let short = localShort;
+      if (!sha || sha === "unknown") {
+        // Lovable sometimes builds without the repo's .git, so neither
+        // `git rev-parse` nor readGitSha() can stamp a sha. The release log
+        // (web_releases, written after each publish is confirmed live) knows
+        // what shipped — but only use it if it covers THIS build.
+        const release = await fetchLatestRelease();
+        if (!release) {
+          throw new Error("this build carries no commit sha, and no release is recorded");
+        }
+        if (!releaseCoversBuild(release, buildTime)) {
+          throw new Error(
+            `this build is newer than the last recorded release (${release.commitSha.slice(0, 7)}) — record it (RELEASING.md 2a)`
+          );
+        }
+        setFromLog(release);
+        sha = release.commitSha;
+        short = sha.slice(0, 7);
       }
 
       // Build first, branch second. This direction is required, not stylistic:
       // GitHub's `files` is the diff from the merge base to HEAD, so the side
       // you want the file list FOR has to be HEAD. Asking
-      // `compare/${BRANCH}...${localSha}` — which this badge did until
+      // `compare/${BRANCH}...${sha}` — which this badge did until
       // 2026-09-22 — makes the build HEAD, and a behind build is an ancestor
       // of the branch, so the merge base is the build itself and `files` is
       // empty. That printed a green "nothing that ships" over six changed
       // source files. See the header comment in lib/githubSync.ts.
       //
+      // `sha` is this build's commit, which the release-log fallback above may
+      // have supplied in place of a missing stamp — either way it is the side
+      // being asked about, so it stays the base.
+      //
       // Still one request. Unauthenticated GitHub allows 60 an hour per IP and
       // this badge re-checks on every Refresh.
       const res = await fetch(
-        `https://api.github.com/repos/${REPO}/compare/${localSha}...${BRANCH}`,
+        `https://api.github.com/repos/${REPO}/compare/${sha}...${BRANCH}`,
         { headers: { Accept: "application/vnd.github+json" } }
       );
       if (!res.ok) {
@@ -85,24 +107,24 @@ const GitHubSyncBadge = () => {
         }
         throw new Error(
           res.status === 404
-            ? `${localShort} is not on GitHub`
+            ? `${short} is not on GitHub`
             : `GitHub ${res.status}`
         );
       }
       const data = await res.json();
 
-      // The branch is HEAD now, so it is no longer `base_commit` (that is this
-      // build). The comparison lists commits oldest-first, so the branch tip is
+      // The branch is HEAD now, so it is no longer `base_commit` — that is this
+      // build. The comparison lists commits oldest-first, so the branch tip is
       // the last one; when the two are identical there are no commits at all
       // and the merge base is the branch tip.
       const commits = Array.isArray(data?.commits) ? data.commits : [];
       const base = commits.length > 0
         ? commits[commits.length - 1]
         : data?.merge_base_commit ?? data?.base_commit;
-      const sha: string = base?.sha ?? "";
+      const mainSha: string = base?.sha ?? "";
       setRemote({
-        sha,
-        shortSha: sha.slice(0, 7),
+        sha: mainSha,
+        shortSha: mainSha.slice(0, 7),
         committedAt: base?.commit?.committer?.date ?? "",
         message: (base?.commit?.message ?? "").split("\n")[0],
         url: base?.html_url ?? `https://github.com/${REPO}/commits/${BRANCH}`,
@@ -193,9 +215,13 @@ const GitHubSyncBadge = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs font-mono">
         <div className="rounded border border-current/20 bg-background/40 p-2">
           <div className="opacity-60 uppercase tracking-wider text-[10px]">This build</div>
-          <div className="mt-0.5 tabular-nums">{localShort}</div>
+          <div className="mt-0.5 tabular-nums">
+            {fromLog ? fromLog.commitSha.slice(0, 7) : localShort}
+          </div>
           <div className="opacity-60 text-[10px] mt-1">
-            built {timeAgo(buildTime)}
+            {fromLog
+              ? `not stamped — from release log, live ${timeAgo(fromLog.publishedAt)}`
+              : `built ${timeAgo(buildTime)}`}
           </div>
         </div>
         <div className="rounded border border-current/20 bg-background/40 p-2">

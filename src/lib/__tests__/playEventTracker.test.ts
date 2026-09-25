@@ -147,3 +147,30 @@ describe("playEventTracker — concurrent starts", () => {
     expect(secondClosed!.patch.ended_reason).toBe("finished");
   });
 });
+
+describe("playEventTracker — a track that fails before its row exists", () => {
+  // 2026-09-23: 13 tracks failed ~50ms after starting, before their inserts
+  // landed. finalizePlayEvent("error") found nothing active and no-op'd, and
+  // each row was then closed as "skipped" by the next start.
+  it("records the failure as an error, not as the next start's skip", async () => {
+    const start = tracker.startPlayEvent({ songTitle: "Sugaree" });
+    const failed = tracker.finalizePlayEvent("error"); // before the insert resolves
+    await Promise.all([start, failed]);
+    await tracker.startPlayEvent({ songTitle: "Little Red Rooster" });
+
+    expect(inserted).toHaveLength(2);
+    const firstRowUpdates = updates.filter((u) => u.id === inserted[0].id);
+    expect(firstRowUpdates).toHaveLength(1);
+    expect(firstRowUpdates[0].patch.ended_reason).toBe("error");
+  });
+
+  it("keeps a run of instant failures distinct", async () => {
+    for (const songTitle of ["Sugaree", "Little Red Rooster", "Peggy-O"]) {
+      void tracker.startPlayEvent({ songTitle });
+      void tracker.finalizePlayEvent("error");
+    }
+    await tracker.finalizePlayEvent("skipped"); // drains the queue; nothing active
+    expect(inserted).toHaveLength(3);
+    expect(updates.map((u) => u.patch.ended_reason)).toEqual(["error", "error", "error"]);
+  });
+});

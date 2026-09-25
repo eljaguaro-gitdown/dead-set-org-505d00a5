@@ -133,9 +133,9 @@ const Updates = () => {
                     <div className="px-5 pb-5 space-y-5">
                       {/* Stats */}
                       <div className="flex gap-2 flex-wrap">
-                        <span className="font-mono text-xs border border-[#c9a84c]/30 text-[#c9a84c] rounded-full px-2.5 py-0.5">{week.stats.updates} updates shipped</span>
+                        <span className="font-mono text-xs border border-[#c9a84c]/30 text-[#c9a84c] rounded-full px-2.5 py-0.5">{week.stats.updates} {week.stats.updates === 1 ? "update" : "updates"} shipped</span>
                         <span className="font-mono text-xs border border-[#c9a84c]/30 text-[#c9a84c] rounded-full px-2.5 py-0.5">{week.stats.feedback} from your feedback</span>
-                        <span className="font-mono text-xs border border-[#c9a84c]/30 text-[#c9a84c] rounded-full px-2.5 py-0.5">{week.stats.bugs} bugs squashed</span>
+                        <span className="font-mono text-xs border border-[#c9a84c]/30 text-[#c9a84c] rounded-full px-2.5 py-0.5">{week.stats.bugs} {week.stats.bugs === 1 ? "bug" : "bugs"} squashed</span>
                       </div>
 
                       {/* Set I */}

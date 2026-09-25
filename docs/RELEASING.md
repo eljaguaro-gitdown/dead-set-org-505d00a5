@@ -36,6 +36,19 @@ verdict must name the commit — a verdict that does not is not a verdict.
 **2. Publish the web.** Lovable `deploy_project`. Requires a current pass-class
 verdict from step 1.
 
+**2a. Record it — once the live site is confirmed serving the sha** (see
+*Verifying each one landed*). The landing footer's "Updated N times this week"
+counts these rows, so a release that is not recorded is invisible to fans, and
+one recorded before it is live is a claim about something they did not get:
+
+```sql
+insert into public.web_releases (commit_sha, note)
+values ('<full 40-char sha>', '<one line: what fans got>');
+```
+
+Run it through Lovable `query_database`. A Lovable **preview** is not a
+release; neither is a merge. Only a publish that went live gets a row.
+
 **3. Dispatch the iOS build**, if the change reaches the app — which is almost
 anything in `src/`, since Capacitor bundles the same web assets. Run it against
 `main` unless you have a reason not to.
@@ -54,6 +67,14 @@ probing the live function for behaviour the change altered — a `pg_net`
 ---
 
 ## Verifying each one landed
+
+If `/admin` can't be opened from where you are, read the sha straight out of
+the live bundle: fetch `https://dead-set.org/`, find `assets/index-*.js`, find
+`assets/Admin-*.js` inside it, and grep that for a 40-hex string. A sandbox
+whose proxy blocks dead-set.org can do this through `pg_net`
+(`select net.http_get(url)`, then read `net._http_response`) via Lovable
+`query_database`. `unknown` there means the build could not read git; see
+`readGitSha()` in `vite.config.ts`.
 
 - **Web** — open `/admin` and read the sync badge. It compares this build's
   commit to `main` through GitHub's compare API: *In sync*, *Ahead of main*,
