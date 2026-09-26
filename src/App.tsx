@@ -46,6 +46,7 @@ const AudioDiagnostics = lazy(() => import("./pages/AudioDiagnostics"));
 const SongPage = lazy(() => import("./pages/Song"));
 const Songbook = lazy(() => import("./pages/Songbook"));
 const SongFeature = lazy(() => import("./pages/SongFeature"));
+const LabSleepers = lazy(() => import("./pages/LabSleepers"));
 
 const queryClient = new QueryClient();
 
@@ -86,6 +87,7 @@ const App = () => (
                 <Route path="/song/:songId" element={<SongPage />} />
                 <Route path="/songbook" element={<Songbook />} />
                 <Route path="/songbook/:slug" element={<SongFeature />} />
+                <Route path="/lab/sleepers" element={<LabSleepers />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>

@@ -23,8 +23,9 @@ const corsHeaders = {
 
 import { z } from "npm:zod@3.25.76";
 import {
+  buildArchiveSearchUrl,
   scoreSleepers,
-  type ArchiveRecording,
+  toRecordings,
 } from "../_shared/sleeperScore.ts";
 
 const RequestSchema = z.object({
@@ -35,38 +36,6 @@ const RequestSchema = z.object({
   /** How many recordings to weigh. The Archive caps a page at a few hundred. */
   rows: z.number().int().min(1).max(200).default(100),
 });
-
-/**
- * The same query `src/lib/archiveOrg.ts` has used for months, plus the three
- * fields the sleeper rule needs. `publicdate` is when the item went up on the
- * Archive, not the show date — the rule divides downloads by it so a 2004
- * upload is not mistaken for a more popular one than a 2019 upload.
- */
-function buildSearchUrl(
-  title: string,
-  rows: number,
-  yearStart?: number,
-  yearEnd?: number,
-): string {
-  const era =
-    yearStart && yearEnd ? ` AND date:[${yearStart}-01-01 TO ${yearEnd}-12-31]` : "";
-  const clean = title.replace(/["!?.,;:()\[\]]/g, "").trim();
-  const q = encodeURIComponent(`collection:GratefulDead "${clean}"${era}`);
-  const fl = ["identifier", "date", "avg_rating", "num_reviews", "downloads", "publicdate"]
-    .map((f) => `fl[]=${f}`)
-    .join("&");
-  return `https://archive.org/advancedsearch.php?q=${q}&${fl}&rows=${rows}&page=1&output=json`;
-}
-
-/** The Archive returns numbers as strings often enough to be worth coercing. */
-const num = (v: unknown): number | null => {
-  if (v == null || v === "") return null;
-  const n = Number(v);
-  return Number.isFinite(n) ? n : null;
-};
-
-const str = (v: unknown): string | null =>
-  typeof v === "string" && v.length > 0 ? v : null;
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
@@ -83,7 +52,7 @@ Deno.serve(async (req: Request) => {
     }
     const { songTitle, yearStart, yearEnd, rows } = parsed.data;
 
-    const url = buildSearchUrl(songTitle, rows, yearStart, yearEnd);
+    const url = buildArchiveSearchUrl(songTitle, { rows, yearStart, yearEnd });
     const res = await fetch(url, { headers: { Accept: "application/json" } });
     if (!res.ok) {
       // Surfaced rather than swallowed: a rate limit or an outage here means
@@ -94,17 +63,7 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    const body = await res.json();
-    const docs: Record<string, unknown>[] = body?.response?.docs ?? [];
-
-    const recordings: ArchiveRecording[] = docs.map((d) => ({
-      identifier: String(d.identifier ?? ""),
-      date: str(d.date),
-      avgRating: num(d.avg_rating),
-      numReviews: num(d.num_reviews),
-      downloads: num(d.downloads),
-      publicDate: str(d.publicdate),
-    })).filter((r) => r.identifier !== "");
+    const recordings = toRecordings(await res.json());
 
     const report = scoreSleepers(recordings);
 

@@ -32,6 +32,28 @@ export const RATING_TOLERANCE = 0.5;
 /** Guards against a brand-new upload reading as undiscovered. */
 export const MIN_MONTHS_ONLINE = 1;
 
+/**
+ * The four numbers above, bundled so a caller can vary them.
+ *
+ * The edge function and the app never pass this — they get the defaults, which
+ * ARE the constants, so there is exactly one set of shipping thresholds. It
+ * exists for /lab/sleepers, where the point is to try a value across many
+ * songs before deciding whether it should become the default.
+ */
+export interface SleeperThresholds {
+  sleeperRatio: number;
+  minReviews: number;
+  ratingTolerance: number;
+  minMonthsOnline: number;
+}
+
+export const DEFAULT_THRESHOLDS: SleeperThresholds = {
+  sleeperRatio: SLEEPER_RATIO,
+  minReviews: MIN_REVIEWS,
+  ratingTolerance: RATING_TOLERANCE,
+  minMonthsOnline: MIN_MONTHS_ONLINE,
+};
+
 export interface ArchiveRecording {
   identifier: string;
   /** Performance date, as the Archive reports it. Not used for scoring. */
@@ -75,13 +97,17 @@ export interface SleeperReport {
  * posted" for "undiscovered". Dividing by time online also happens to be the
  * more honest phrase — how often does anyone pull this down.
  */
-export function monthsOnline(publicDate: string | null, now: Date): number | null {
+export function monthsOnline(
+  publicDate: string | null,
+  now: Date,
+  minMonthsOnline: number = MIN_MONTHS_ONLINE,
+): number | null {
   if (!publicDate) return null;
   const up = Date.parse(publicDate);
   if (Number.isNaN(up)) return null;
   const months = (now.getTime() - up) / (1000 * 60 * 60 * 24 * 30.44);
   if (months < 0) return null;
-  return Math.max(months, MIN_MONTHS_ONLINE);
+  return Math.max(months, minMonthsOnline);
 }
 
 /**
@@ -95,9 +121,12 @@ export function monthsOnline(publicDate: string | null, now: Date): number | nul
 export function scoreSleepers(
   recordings: ArchiveRecording[],
   now: Date = new Date(),
+  thresholds: SleeperThresholds = DEFAULT_THRESHOLDS,
 ): SleeperReport {
+  const { sleeperRatio, minReviews, ratingTolerance, minMonthsOnline } = thresholds;
+
   const scored: ScoredRecording[] = recordings.map((r) => {
-    const months = monthsOnline(r.publicDate, now);
+    const months = monthsOnline(r.publicDate, now, minMonthsOnline);
     const pullsPerMonth =
       months == null || r.downloads == null ? null : r.downloads / months;
     return { ...r, pullsPerMonth, isSleeper: false, verdict: "undateable" };
@@ -105,7 +134,7 @@ export function scoreSleepers(
 
   // Only recordings with enough reviews get a say in what "good" means here.
   const credible = scored.filter(
-    (r) => r.avgRating != null && (r.numReviews ?? 0) >= MIN_REVIEWS,
+    (r) => r.avgRating != null && (r.numReviews ?? 0) >= minReviews,
   );
   const bestRating = credible.length
     ? Math.max(...credible.map((r) => r.avgRating as number))
@@ -120,7 +149,7 @@ export function scoreSleepers(
   // versions are all pulled equally has no sleepers. Both leave the list empty
   // rather than promoting something on a comparison that was never made.
   const comparable = leaderPullsPerMonth != null && leaderPullsPerMonth > 0;
-  const cutoff = comparable ? (leaderPullsPerMonth as number) * SLEEPER_RATIO : 0;
+  const cutoff = comparable ? (leaderPullsPerMonth as number) * sleeperRatio : 0;
 
   for (const r of scored) {
     if (r.pullsPerMonth == null) {
@@ -131,11 +160,11 @@ export function scoreSleepers(
       r.verdict = "leader";
       continue;
     }
-    if (r.avgRating == null || (r.numReviews ?? 0) < MIN_REVIEWS) {
+    if (r.avgRating == null || (r.numReviews ?? 0) < minReviews) {
       r.verdict = "too-few-reviews";
       continue;
     }
-    if (bestRating != null && r.avgRating < bestRating - RATING_TOLERANCE) {
+    if (bestRating != null && r.avgRating < bestRating - ratingTolerance) {
       r.verdict = "rated-below-peers";
       continue;
     }
@@ -152,4 +181,77 @@ export function scoreSleepers(
     .sort((a, b) => (b.avgRating ?? 0) - (a.avgRating ?? 0));
 
   return { scored, sleepers, leaderPullsPerMonth, bestRating };
+}
+
+/* ------------------------------------------------------------------ *
+ * Talking to the Archive.
+ *
+ * The URL builder and the row mapper live here, beside the rule, because
+ * three callers need them and a second copy is how they drift: the
+ * score-sleepers edge function, /lab/sleepers in the browser, and the tests.
+ * Still pure — buildArchiveSearchUrl returns a string and toRecordings maps
+ * a parsed body. Neither performs the fetch; the caller does.
+ * ------------------------------------------------------------------ */
+
+/** Everything the rule needs, in the order the Archive documents them. */
+export const ARCHIVE_FIELDS = [
+  "identifier",
+  "date",
+  "avg_rating",
+  "num_reviews",
+  "downloads",
+  "publicdate",
+] as const;
+
+export interface ArchiveQuery {
+  rows?: number;
+  yearStart?: number;
+  yearEnd?: number;
+}
+
+/**
+ * The same search `src/lib/archiveOrg.ts` has used for months, plus the three
+ * fields the sleeper rule needs. `publicdate` is when the ITEM went up, not
+ * when the show happened — the rule divides downloads by it.
+ *
+ * Caveat worth remembering: Archive items are shows, not song performances,
+ * so this full-text match finds shows whose description mentions the title.
+ * That is the known ceiling on accuracy (see docs/sleeper-methodology.md),
+ * not a bug in the scoring.
+ */
+export function buildArchiveSearchUrl(title: string, opts: ArchiveQuery = {}): string {
+  const { rows = 100, yearStart, yearEnd } = opts;
+  const era =
+    yearStart && yearEnd ? ` AND date:[${yearStart}-01-01 TO ${yearEnd}-12-31]` : "";
+  const clean = title.replace(/["!?.,;:()\[\]]/g, "").trim();
+  const q = encodeURIComponent(`collection:GratefulDead "${clean}"${era}`);
+  const fl = ARCHIVE_FIELDS.map((f) => `fl[]=${f}`).join("&");
+  return `https://archive.org/advancedsearch.php?q=${q}&${fl}&rows=${rows}&page=1&output=json`;
+}
+
+/** The Archive returns numbers as strings often enough to be worth coercing. */
+function num(v: unknown): number | null {
+  if (v == null || v === "") return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+}
+
+function str(v: unknown): string | null {
+  return typeof v === "string" && v.length > 0 ? v : null;
+}
+
+/** Map a parsed advancedsearch body to the rule's input. Tolerates junk. */
+export function toRecordings(body: unknown): ArchiveRecording[] {
+  const docs: Record<string, unknown>[] =
+    (body as { response?: { docs?: Record<string, unknown>[] } })?.response?.docs ?? [];
+  return docs
+    .map((d) => ({
+      identifier: String(d.identifier ?? ""),
+      date: str(d.date),
+      avgRating: num(d.avg_rating),
+      numReviews: num(d.num_reviews),
+      downloads: num(d.downloads),
+      publicDate: str(d.publicdate),
+    }))
+    .filter((r) => r.identifier !== "");
 }

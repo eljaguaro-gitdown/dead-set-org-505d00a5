@@ -2,8 +2,14 @@ import { describe, it, expect } from "vitest";
 import {
   scoreSleepers,
   monthsOnline,
+  buildArchiveSearchUrl,
+  toRecordings,
+  ARCHIVE_FIELDS,
+  DEFAULT_THRESHOLDS,
   SLEEPER_RATIO,
   MIN_REVIEWS,
+  RATING_TOLERANCE,
+  MIN_MONTHS_ONLINE,
   type ArchiveRecording,
 } from "../../../supabase/functions/_shared/sleeperScore";
 
@@ -165,5 +171,99 @@ describe("scoreSleepers", () => {
     );
 
     expect(report.sleepers.map((r) => r.identifier)).toEqual(["just-under"]);
+  });
+});
+
+describe("buildArchiveSearchUrl", () => {
+  it("asks for every field the rule reads", () => {
+    const url = buildArchiveSearchUrl("Scarlet Begonias");
+    for (const f of ARCHIVE_FIELDS) {
+      expect(url).toContain(`fl[]=${f}`);
+    }
+  });
+
+  it("scopes to the Grateful Dead collection and quotes the title", () => {
+    const q = decodeURIComponent(buildArchiveSearchUrl("Dark Star"));
+    expect(q).toContain('collection:GratefulDead "Dark Star"');
+  });
+
+  it("strips punctuation that would break the query", () => {
+    const q = decodeURIComponent(buildArchiveSearchUrl('Cryptical "Envelopment" (reprise)?'));
+    expect(q).not.toContain('"Envelopment"');
+    expect(q).toContain("Cryptical Envelopment reprise");
+  });
+
+  it("clamps to an era only when both years are given", () => {
+    expect(decodeURIComponent(buildArchiveSearchUrl("Sugaree", { yearStart: 1972, yearEnd: 1974 })))
+      .toContain("date:[1972-01-01 TO 1974-12-31]");
+    expect(decodeURIComponent(buildArchiveSearchUrl("Sugaree", { yearStart: 1972 })))
+      .not.toContain("date:[");
+  });
+});
+
+describe("toRecordings", () => {
+  it("coerces the strings the Archive sends for numbers", () => {
+    const [r] = toRecordings({
+      response: {
+        docs: [
+          {
+            identifier: "gd1977-05-08",
+            date: "1977-05-08T00:00:00Z",
+            avg_rating: "4.9",
+            num_reviews: "62",
+            downloads: "120000",
+            publicdate: "2004-01-01T00:00:00Z",
+          },
+        ],
+      },
+    });
+    expect(r.avgRating).toBe(4.9);
+    expect(r.numReviews).toBe(62);
+    expect(r.downloads).toBe(120000);
+  });
+
+  it("drops rows with no identifier and survives a junk body", () => {
+    expect(toRecordings({ response: { docs: [{ date: "1977-05-08" }] } })).toHaveLength(0);
+    expect(toRecordings(null)).toEqual([]);
+    expect(toRecordings({})).toEqual([]);
+  });
+
+  it("leaves absent metrics null rather than zero", () => {
+    // Zero would read as "nobody pulls this", which is a sleeper. Absent must not.
+    const [r] = toRecordings({
+      response: { docs: [{ identifier: "x", avg_rating: "", downloads: null }] },
+    });
+    expect(r.avgRating).toBeNull();
+    expect(r.downloads).toBeNull();
+  });
+});
+
+describe("threshold overrides", () => {
+  const rec = (id: string, rating: number, reviews: number, downloads: number) => ({
+    identifier: id,
+    date: "1977-05-08",
+    avgRating: rating,
+    numReviews: reviews,
+    downloads,
+    publicDate: "2010-01-01T00:00:00Z",
+  });
+
+  it("defaults are exactly the shipping constants", () => {
+    expect(DEFAULT_THRESHOLDS).toEqual({
+      sleeperRatio: SLEEPER_RATIO,
+      minReviews: MIN_REVIEWS,
+      ratingTolerance: RATING_TOLERANCE,
+      minMonthsOnline: MIN_MONTHS_ONLINE,
+    });
+  });
+
+  it("a stricter ratio promotes fewer recordings", () => {
+    const now = new Date("2020-01-01T00:00:00Z");
+    const recs = [rec("leader", 4.9, 10, 10000), rec("mid", 4.9, 10, 2500)];
+    // 2500/10000 = 0.25 — a sleeper at the default 0.3, not at 0.2.
+    expect(scoreSleepers(recs, now).sleepers.map((s) => s.identifier)).toEqual(["mid"]);
+    expect(
+      scoreSleepers(recs, now, { ...DEFAULT_THRESHOLDS, sleeperRatio: 0.2 }).sleepers,
+    ).toHaveLength(0);
   });
 });
