@@ -35,3 +35,5 @@ project_id = "dplrumaqrdnzwzqmatqr"
     verify_jwt = false
   [functions.delete-account]
     verify_jwt = true
+  [functions.score-sleepers]
+    verify_jwt = true
