@@ -23,20 +23,25 @@ interface WeeklyInsightsProps {
   newUsersThisWeek: number
   totalSetlists: number
   newSetlistsThisWeek: number
-  unique7d: number
-  unique30d: number
-  totalPageViews: number
+  // Traffic comes from PostHog (production host, internal accounts and bots
+  // excluded). null = PostHog was unreachable this week; shown as "—".
+  unique7d: number | null
+  unique30d: number | null
+  pageViews7d: number | null
   topPages: { path: string; count: number }[]
   // Comparison
   prevWeekUsers: number
   prevWeekSetlists: number
-  prevWeekVisitors: number
+  prevWeekVisitors: number | null
   // AI insights
   aiAnalysis: string
   aiRecommendations: string[]
 }
 
-const delta = (curr: number, prev: number) => {
+const show = (n: number | null) => (n === null ? '—' : n)
+
+const delta = (curr: number | null, prev: number | null) => {
+  if (curr === null || prev === null) return '—'
   if (prev === 0) return curr > 0 ? '+∞' : '—'
   const pct = Math.round(((curr - prev) / prev) * 100)
   return pct >= 0 ? `+${pct}%` : `${pct}%`
@@ -48,13 +53,13 @@ const WeeklyInsights = ({
   newUsersThisWeek = 0,
   totalSetlists = 0,
   newSetlistsThisWeek = 0,
-  unique7d = 0,
-  unique30d = 0,
-  totalPageViews = 0,
+  unique7d = null,
+  unique30d = null,
+  pageViews7d = null,
   topPages = [],
   prevWeekUsers = 0,
   prevWeekSetlists = 0,
-  prevWeekVisitors = 0,
+  prevWeekVisitors = null,
   aiAnalysis = '',
   aiRecommendations = [],
 }: WeeklyInsightsProps) => (
@@ -99,8 +104,8 @@ const WeeklyInsights = ({
           </tr>
           <tr>
             <td style={{ color: '#ccd6f6', fontSize: '14px', padding: '8px 0' }}>Unique Visitors (7d)</td>
-            <td style={{ color: '#ccd6f6', fontSize: '14px', padding: '8px 0', textAlign: 'right' as const, fontFamily: 'Courier New, monospace' }}>{unique7d}</td>
-            <td style={{ color: unique7d >= prevWeekVisitors ? '#64ffda' : '#e94560', fontSize: '14px', padding: '8px 0', textAlign: 'right' as const, fontFamily: 'Courier New, monospace' }}>
+            <td style={{ color: '#ccd6f6', fontSize: '14px', padding: '8px 0', textAlign: 'right' as const, fontFamily: 'Courier New, monospace' }}>{show(unique7d)}</td>
+            <td style={{ color: (unique7d ?? 0) >= (prevWeekVisitors ?? 0) ? '#64ffda' : '#e94560', fontSize: '14px', padding: '8px 0', textAlign: 'right' as const, fontFamily: 'Courier New, monospace' }}>
               {delta(unique7d, prevWeekVisitors)}
             </td>
           </tr>
@@ -119,13 +124,18 @@ const WeeklyInsights = ({
             </tr>
             <tr>
               <td style={{ color: '#8892b0', fontSize: '13px', padding: '4px 0' }}>30d Unique Visitors</td>
-              <td style={{ color: '#ccd6f6', fontSize: '13px', padding: '4px 0', textAlign: 'right' as const, fontFamily: 'Courier New, monospace' }}>{unique30d}</td>
+              <td style={{ color: '#ccd6f6', fontSize: '13px', padding: '4px 0', textAlign: 'right' as const, fontFamily: 'Courier New, monospace' }}>{show(unique30d)}</td>
             </tr>
             <tr>
-              <td style={{ color: '#8892b0', fontSize: '13px', padding: '4px 0' }}>All-time Page Views</td>
-              <td style={{ color: '#ccd6f6', fontSize: '13px', padding: '4px 0', textAlign: 'right' as const, fontFamily: 'Courier New, monospace' }}>{totalPageViews}</td>
+              <td style={{ color: '#8892b0', fontSize: '13px', padding: '4px 0' }}>Page Views (7d)</td>
+              <td style={{ color: '#ccd6f6', fontSize: '13px', padding: '4px 0', textAlign: 'right' as const, fontFamily: 'Courier New, monospace' }}>{show(pageViews7d)}</td>
             </tr>
           </table>
+          <Text style={{ color: '#8892b0', fontSize: '11px', margin: '8px 0 0' }}>
+            {unique7d === null
+              ? 'Traffic unavailable this week — the PostHog query failed.'
+              : 'Traffic via PostHog: dead-set.org only, internal accounts, Lovable previews and bots excluded.'}
+          </Text>
         </Section>
 
         {/* Top Pages */}
@@ -193,7 +203,7 @@ export const template: TemplateEntry = {
     newSetlistsThisWeek: 14,
     unique7d: 312,
     unique30d: 890,
-    totalPageViews: 5200,
+    pageViews7d: 1240,
     topPages: [
       { path: '/', count: 1200 },
       { path: '/browse', count: 430 },
