@@ -1,4 +1,5 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
+import { POSTHOG_EXTERNAL_TRAFFIC_WHERE, queryPostHog } from '../_shared/posthogQuery.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -17,7 +18,6 @@ Deno.serve(async (req) => {
 
     const now = new Date()
     const oneDayAgo = new Date(now.getTime() - 86400000).toISOString()
-    const sevenDaysAgo = new Date(now.getTime() - 604800000).toISOString()
     const reportDate = now.toISOString().split('T')[0]
 
     // Total users
@@ -51,22 +51,24 @@ Deno.serve(async (req) => {
       .select('*', { count: 'exact', head: true })
       .gte('created_at', oneDayAgo)
 
-    // Traffic
-    const { count: totalPageViews } = await supabase
-      .from('page_visits')
-      .select('*', { count: 'exact', head: true })
-
-    const { data: visitors24h } = await supabase
-      .from('page_visits')
-      .select('visitor_id')
-      .gte('created_at', oneDayAgo)
-    const unique24h = new Set((visitors24h || []).map(v => v.visitor_id)).size
-
-    const { data: visitors7d } = await supabase
-      .from('page_visits')
-      .select('visitor_id')
-      .gte('created_at', sevenDaysAgo)
-    const unique7d = new Set((visitors7d || []).map(v => v.visitor_id)).size
+    // Traffic — from PostHog, not page_visits, for the same reason as
+    // weekly-insights-report: page_visits counts Lovable preview reloads and
+    // admin sessions as visitors. Null (shown as "—") if PostHog is unreachable.
+    const trafficRows = await queryPostHog<{
+      unique24h: number; unique7d: number; pageViews24h: number
+    }>('daily-user-report traffic', `
+      SELECT
+        uniqIf(person_id, timestamp >= now() - INTERVAL 1 DAY) AS unique24h,
+        uniq(person_id) AS unique7d,
+        countIf(timestamp >= now() - INTERVAL 1 DAY) AS pageViews24h
+      FROM events
+      WHERE event = '$pageview'
+        AND timestamp >= now() - INTERVAL 7 DAY
+        AND ${POSTHOG_EXTERNAL_TRAFFIC_WHERE}`)
+    const traffic = trafficRows?.[0] ?? null
+    const unique24h = traffic?.unique24h ?? null
+    const unique7d = traffic?.unique7d ?? null
+    const pageViews24h = traffic?.pageViews24h ?? null
 
     // Send via transactional email
     const { error } = await supabase.functions.invoke('send-transactional-email', {
@@ -82,7 +84,7 @@ Deno.serve(async (req) => {
           newSetlistsToday: newSetlistsToday || 0,
           unique24h,
           unique7d,
-          totalPageViews: totalPageViews || 0,
+          pageViews24h,
           reportDate,
         },
       },

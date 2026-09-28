@@ -24,11 +24,15 @@ interface DailyUserReportProps {
   newUserNames: string[]
   totalSetlists: number
   newSetlistsToday: number
-  unique24h: number
-  unique7d: number
-  totalPageViews: number
+  // Traffic comes from PostHog (production host, internal accounts and bots
+  // excluded). null = PostHog was unreachable; shown as "—".
+  unique24h: number | null
+  unique7d: number | null
+  pageViews24h: number | null
   reportDate: string
 }
+
+const show = (n: number | null) => (n === null ? '—' : n)
 
 const DailyUserReport = ({
   totalUsers = 0,
@@ -36,9 +40,9 @@ const DailyUserReport = ({
   newUserNames = [],
   totalSetlists = 0,
   newSetlistsToday = 0,
-  unique24h = 0,
-  unique7d = 0,
-  totalPageViews = 0,
+  unique24h = null,
+  unique7d = null,
+  pageViews24h = null,
   reportDate = new Date().toLocaleDateString(),
 }: DailyUserReportProps) => (
   <Html>
@@ -114,17 +118,22 @@ const DailyUserReport = ({
         <table style={{ width: '100%', borderCollapse: 'collapse' as const, marginBottom: '16px' }}>
           <tr>
             <td style={{ color: '#ccd6f6', fontSize: '14px', padding: '6px 0' }}>Unique Visitors (24h)</td>
-            <td style={{ color: '#ccd6f6', fontSize: '14px', padding: '6px 0', textAlign: 'right' as const, fontFamily: 'Courier New, monospace' }}>{unique24h}</td>
+            <td style={{ color: '#ccd6f6', fontSize: '14px', padding: '6px 0', textAlign: 'right' as const, fontFamily: 'Courier New, monospace' }}>{show(unique24h)}</td>
           </tr>
           <tr>
             <td style={{ color: '#ccd6f6', fontSize: '14px', padding: '6px 0' }}>Unique Visitors (7d)</td>
-            <td style={{ color: '#ccd6f6', fontSize: '14px', padding: '6px 0', textAlign: 'right' as const, fontFamily: 'Courier New, monospace' }}>{unique7d}</td>
+            <td style={{ color: '#ccd6f6', fontSize: '14px', padding: '6px 0', textAlign: 'right' as const, fontFamily: 'Courier New, monospace' }}>{show(unique7d)}</td>
           </tr>
           <tr>
-            <td style={{ color: '#ccd6f6', fontSize: '14px', padding: '6px 0' }}>Total Page Views</td>
-            <td style={{ color: '#ccd6f6', fontSize: '14px', padding: '6px 0', textAlign: 'right' as const, fontFamily: 'Courier New, monospace' }}>{totalPageViews}</td>
+            <td style={{ color: '#ccd6f6', fontSize: '14px', padding: '6px 0' }}>Page Views (24h)</td>
+            <td style={{ color: '#ccd6f6', fontSize: '14px', padding: '6px 0', textAlign: 'right' as const, fontFamily: 'Courier New, monospace' }}>{show(pageViews24h)}</td>
           </tr>
         </table>
+        <Text style={{ color: '#8892b0', fontSize: '11px', margin: '4px 0 0' }}>
+          {unique24h === null
+            ? 'Traffic unavailable — the PostHog query failed.'
+            : 'Traffic via PostHog: dead-set.org only, internal accounts, Lovable previews and bots excluded.'}
+        </Text>
 
         <Hr style={{ borderColor: '#2a2a4a', margin: '20px 0' }} />
 
@@ -148,7 +157,7 @@ export const template: TemplateEntry = {
     newSetlistsToday: 5,
     unique24h: 67,
     unique7d: 312,
-    totalPageViews: 4200,
+    pageViews24h: 180,
     reportDate: '2026-04-13',
   },
 }
