@@ -1,4 +1,5 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
+import { POSTHOG_EXTERNAL_TRAFFIC_WHERE, queryPostHog } from '../_shared/posthogQuery.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -49,41 +50,48 @@ Deno.serve(async (req) => {
       .gte('created_at', twoWeeksAgo.toISOString())
       .lt('created_at', oneWeekAgo.toISOString())
 
-    // Traffic - this week
-    const { data: visitors7d } = await supabase
-      .from('page_visits').select('visitor_id')
-      .gte('created_at', oneWeekAgo.toISOString())
-    const unique7d = new Set((visitors7d || []).map(v => v.visitor_id)).size
+    // Traffic — from PostHog, not page_visits.
+    //
+    // page_visits has no hostname and no notion of "internal", so every Lovable
+    // editor/preview reload and every admin session counted as a visitor. On
+    // the Sep 23, 2026 spike that was ~25 of 35 "visitors". PostHog can filter
+    // all three (preview host, internal cohort, bots) — see
+    // POSTHOG_EXTERNAL_TRAFFIC_WHERE. PostHog capture started 2026-09-18, so
+    // there is no history before that.
+    //
+    // If PostHog is unreachable the traffic fields go out as null and the
+    // email says so, rather than silently falling back to the inflated table.
+    const trafficRows = await queryPostHog<{
+      unique7d: number; prevWeekVisitors: number; unique30d: number; pageViews7d: number
+    }>('weekly-insights traffic totals', `
+      SELECT
+        uniqIf(person_id, timestamp >= now() - INTERVAL 7 DAY) AS unique7d,
+        uniqIf(person_id, timestamp < now() - INTERVAL 7 DAY AND timestamp >= now() - INTERVAL 14 DAY) AS prevWeekVisitors,
+        uniq(person_id) AS unique30d,
+        countIf(timestamp >= now() - INTERVAL 7 DAY) AS pageViews7d
+      FROM events
+      WHERE event = '$pageview'
+        AND timestamp >= now() - INTERVAL 30 DAY
+        AND ${POSTHOG_EXTERNAL_TRAFFIC_WHERE}`)
+    const traffic = trafficRows?.[0] ?? null
 
-    // Traffic - prev week
-    const { data: visitorsPrev } = await supabase
-      .from('page_visits').select('visitor_id')
-      .gte('created_at', twoWeeksAgo.toISOString())
-      .lt('created_at', oneWeekAgo.toISOString())
-    const prevWeekVisitors = new Set((visitorsPrev || []).map(v => v.visitor_id)).size
+    const topPageRows = await queryPostHog<{ path: string; count: number }>('weekly-insights top pages', `
+      SELECT
+        replaceRegexpAll(properties.$pathname, '/[0-9a-fA-F-]{8,}.*$', '/:id') AS path,
+        count() AS count
+      FROM events
+      WHERE event = '$pageview'
+        AND timestamp >= now() - INTERVAL 7 DAY
+        AND ${POSTHOG_EXTERNAL_TRAFFIC_WHERE}
+      GROUP BY path
+      ORDER BY count DESC
+      LIMIT 5`)
+    const topPages = topPageRows ?? []
 
-    // 30d visitors
-    const { data: visitors30d } = await supabase
-      .from('page_visits').select('visitor_id')
-      .gte('created_at', thirtyDaysAgo.toISOString())
-    const unique30d = new Set((visitors30d || []).map(v => v.visitor_id)).size
-
-    // Total page views
-    const { count: totalPageViews } = await supabase
-      .from('page_visits').select('*', { count: 'exact', head: true })
-
-    // Top pages this week
-    const { data: pageVisits7d } = await supabase
-      .from('page_visits').select('page_path')
-      .gte('created_at', oneWeekAgo.toISOString())
-    const pathCounts = new Map<string, number>()
-    for (const v of (pageVisits7d || [])) {
-      pathCounts.set(v.page_path, (pathCounts.get(v.page_path) || 0) + 1)
-    }
-    const topPages = [...pathCounts.entries()]
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 5)
-      .map(([path, count]) => ({ path, count }))
+    const unique7d = traffic?.unique7d ?? null
+    const prevWeekVisitors = traffic?.prevWeekVisitors ?? null
+    const unique30d = traffic?.unique30d ?? null
+    const pageViews7d = traffic?.pageViews7d ?? null
 
     // Auth provider breakdown
     const providerCounts = new Map<string, number>()
@@ -122,10 +130,13 @@ Deno.serve(async (req) => {
       totalSetlists: totalSetlists || 0,
       newSetlistsThisWeek: newSetlistsThisWeek || 0,
       prevWeekSetlists: prevWeekSetlists || 0,
+      trafficSource: traffic
+        ? 'PostHog; production host only, internal/test accounts and bots excluded; capture began 2026-09-18'
+        : 'UNAVAILABLE this week (PostHog query failed) — do not comment on traffic',
       unique7d,
       prevWeekVisitors,
       unique30d,
-      totalPageViews: totalPageViews || 0,
+      pageViews7d,
       topPages,
       providerBreakdown,
       sharesThisWeek: sharesThisWeek || 0,
@@ -194,7 +205,7 @@ Be specific, data-driven, and actionable. Reference actual numbers. If growth is
           newSetlistsThisWeek: newSetlistsThisWeek || 0,
           unique7d,
           unique30d,
-          totalPageViews: totalPageViews || 0,
+          pageViews7d,
           topPages,
           prevWeekUsers: newPrevWeek.length,
           prevWeekSetlists: prevWeekSetlists || 0,
