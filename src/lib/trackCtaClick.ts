@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { captureEvent } from "@/lib/posthog";
 
 /**
  * Logs a landing-page CTA click into `share_events` so the funnel
@@ -14,8 +15,25 @@ import { supabase } from "@/integrations/supabase/client";
  * the weekly insights email and the admin "sharers" segment. Both now
  * filter. If you add a reader, filter — or move these rows to their own
  * table and take the migration this shortcut avoided.
+ *
+ * Also sent to PostHog as `landing_cta_clicked`, so the landing → builder
+ * step can be read against `$pageview` and the guest-builder events with the
+ * external-traffic filter (share_events has no host or internal flag). The
+ * name follows the landing hero, but poster and notification CTAs route
+ * through here too — segment by `page` / `cta_id`. Captured before the first
+ * await: callers navigate on the same click, and posthog-js queues
+ * synchronously, whereas the Supabase insert may not finish.
  */
 export const trackCtaClick = async (ctaId: string, destination: string) => {
+  try {
+    captureEvent("landing_cta_clicked", {
+      cta_id: ctaId,
+      destination,
+      page: window.location.pathname,
+    });
+  } catch {
+    // Analytics must never block UX
+  }
   try {
     const visitorId = localStorage.getItem("ds_visitor_id");
     const { data: { user } } = await supabase.auth.getUser();
