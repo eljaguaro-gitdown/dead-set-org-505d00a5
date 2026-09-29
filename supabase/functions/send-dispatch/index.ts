@@ -1,7 +1,9 @@
 // send-dispatch — editorial dispatch sender using the project email queue.
 // POST { dispatch_id, subject, html_path, test_mode, test_recipient }
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+
+type DbClient = SupabaseClient<any, "public", any>;
 import { DISPATCH_002_HTML_B64 } from "./dispatch_002.ts";
 import { DISPATCH_003_HTML } from "./dispatch_003.ts";
 import { DISPATCH_004_HTML } from "./dispatch_004.ts";
@@ -108,7 +110,7 @@ function generateToken(): string {
 }
 
 async function getTransactionalUnsubscribeToken(
-  supabase: ReturnType<typeof createClient>,
+  supabase: DbClient,
   email: string,
 ): Promise<{ token?: string; error?: string }> {
   const normalizedEmail = email.toLowerCase();
@@ -119,7 +121,7 @@ async function getTransactionalUnsubscribeToken(
     .maybeSingle();
 
   if (lookupError) return { error: `Unsubscribe lookup failed: ${lookupError.message}` };
-  if (existingToken?.token) return { token: existingToken.token };
+  if (existingToken?.token) return { token: existingToken.token as string };
 
   const token = generateToken();
   const { error: tokenError } = await supabase
@@ -136,11 +138,11 @@ async function getTransactionalUnsubscribeToken(
     return { error: "Unsubscribe token could not be confirmed" };
   }
 
-  return { token: storedToken.token };
+  return { token: storedToken.token as string };
 }
 
 async function enqueueDispatchEmail(args: {
-  supabase: ReturnType<typeof createClient>;
+  supabase: DbClient;
   to: string;
   subject: string;
   html: string;
