@@ -1,5 +1,14 @@
 # App Review notes — Dead Set: Wake Now Discover
 
+> **Superseded — do not paste this block.** The current Notes text is
+> [`reviewer-notes-v3.txt`](reviewer-notes-v3.txt), for build 29. This
+> block and the claims table below describe build 27, which App Review rejected
+> under 1.2 and 5.1.1(v) on 2026-09-30. Several of the claims below were wrong
+> about what a reviewer could actually find. "The flag on any setlist" was a
+> 10px text link, and "Profile → Danger Zone" was not found at all. See
+> [`review-response-1.2-5.1.1v.md`](review-response-1.2-5.1.1v.md). The
+> demo-account paragraph below still holds.
+
 Paste into App Store Connect → App Review Information → Notes.
 The block below is **3014 characters** against that field's 4000 limit
 (counted 2026-09-21, not estimated — recount it if you edit the block).

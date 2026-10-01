@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import PageLayout from "@/components/PageLayout";
 import SiteHeader from "@/components/SiteHeader";
+import SafetyMenu from "@/components/SafetyMenu";
 import DancingBearButton from "@/components/DancingBearButton";
 import EraTooltip from "@/components/EraTooltip";
 import FavoriteButton from "@/components/FavoriteButton";
@@ -181,7 +182,7 @@ const UserLibrary = () => {
               {displayName.charAt(0).toUpperCase()}
             </AvatarFallback>
           </Avatar>
-          <div>
+          <div className="sm:flex-1">
             <h1 className="font-display text-3xl sm:text-2xl text-foreground">{displayName}</h1>
             <p className="font-body text-sm text-foreground/75">
               {loading ? "Loading..." : isAdmin
@@ -190,6 +191,17 @@ const UserLibrary = () => {
               }
             </p>
           </div>
+          {userId && user?.id !== userId && (
+            <SafetyMenu
+              contentType="profile"
+              contentId={userId}
+              reportLabel={displayName}
+              ownerId={userId}
+              ownerName={displayName}
+              onBlocked={() => navigate("/browse")}
+              className="border border-border"
+            />
+          )}
         </div>
 
         {/* Setlist grid */}

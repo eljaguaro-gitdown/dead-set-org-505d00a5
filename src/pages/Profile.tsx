@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Camera, ArrowLeft, Check, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { passesContentFilter } from "@/hooks/useModeration";
 import PageLayout from "@/components/PageLayout";
 import SiteHeader from "@/components/SiteHeader";
 import ShowPlate from "@/components/ShowPlate";
@@ -35,6 +36,7 @@ const US_STATES = [
 
 const Profile = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, loading: authLoading } = useAuth();
   const [displayName, setDisplayName] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
@@ -79,8 +81,16 @@ const Profile = () => {
     fetchProfile();
   }, [user]);
 
+  // The menu's "Delete Account" lands here with #delete-account. The section
+  // only exists once the profile has loaded, so scroll after that.
+  useEffect(() => {
+    if (loading || location.hash !== "#delete-account") return;
+    document.getElementById("delete-account")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [loading, location.hash]);
+
   const handleSave = async () => {
     if (!user) return;
+    if (!passesContentFilter(displayName)) return;
     setSaving(true);
     const { error } = await supabase
       .from("profiles")
@@ -231,10 +241,13 @@ const Profile = () => {
             Save Changes
           </Button>
 
-          {/* Danger zone */}
-          <div className="mt-10 pt-6 border-t border-border/50 space-y-3">
+          {/* Account deletion — App Store guideline 5.1.1(v). Reachable in one
+              tap from the menu ("Delete Account" → /profile#delete-account).
+              It was titled "Danger Zone" at the foot of this page, and an App
+              Review pass on 2026-09-30 reported the app had no deletion at all. */}
+          <div id="delete-account" className="mt-10 pt-6 border-t border-border/50 space-y-3 scroll-mt-24">
             <h2 className="font-display text-sm tracking-[0.15em] uppercase text-foreground/60">
-              Danger Zone
+              Delete Account
             </h2>
             <p className="text-xs text-foreground/70 font-body">
               Deleting your account removes your profile, setlists, comments, messages, and

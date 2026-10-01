@@ -64,6 +64,15 @@ Empty means skip. Otherwise ask the Lovable agent, then **verify it landed** by
 probing the live function for behaviour the change altered — a `pg_net`
 `http_get` from the production DB works.
 
+**4a. Apply migrations IF `supabase/migrations/` changed — before step 2.** The
+same check, against `supabase/migrations`. Do not assume a merge or a Publish
+applied anything. A migration written in this repo reaches production only when
+someone runs it: the Lovable agent, or its SQL through Lovable `query_database`.
+**Verify it with a query** against something the migration created (a
+function, a trigger in `pg_trigger`, a policy in `pg_policies`). Order matters:
+frontend that calls a function or depends on a policy must not publish before
+the schema it needs exists.
+
 ---
 
 ## Verifying each one landed

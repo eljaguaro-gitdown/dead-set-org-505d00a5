@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Flag, MessageCircle, Send, Trash2, UserX } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { useBlockedUsers } from "@/hooks/useModeration";
+import { useBlockedUsers, passesContentFilter } from "@/hooks/useModeration";
 import ReportDialog from "@/components/ReportDialog";
 import { captureEvent, captureException } from "@/lib/posthog";
 import { toast } from "sonner";
@@ -87,6 +87,7 @@ const SetlistComments = ({ setlistId, isPublic }: SetlistCommentsProps) => {
       toast.error("Comment must be under 500 characters");
       return;
     }
+    if (!passesContentFilter(trimmed)) return;
 
     setPosting(true);
     const newId = crypto.randomUUID();

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { User } from "@supabase/supabase-js";
+import { passesContentFilter } from "@/hooks/useModeration";
 
 interface ConversationMember {
   userId: string;
@@ -393,6 +394,7 @@ export const useDirectMessages = (user: User | null) => {
   const sendMessage = useCallback(async (content: string) => {
     if (!user || !activeConversationId || !content.trim()) return;
     if (sendingRef.current) return;
+    if (!passesContentFilter(content)) return;
     sendingRef.current = true;
 
     try {

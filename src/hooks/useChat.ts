@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { User } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
+import { passesContentFilter } from "@/hooks/useModeration";
 
 interface ChatMessage {
   id: string;
@@ -97,6 +98,7 @@ export const useChat = (setlistId: string | null, user: User | null) => {
 
   const sendMessage = useCallback(async (content: string) => {
     if (!setlistId || !user || !content.trim()) return;
+    if (!passesContentFilter(content)) return;
     await supabase.from("chat_messages").insert({
       setlist_id: setlistId,
       user_id: user.id,
