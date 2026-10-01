@@ -36,9 +36,9 @@ The short version: unlike the 2.1 round, these findings were real.
 
 | Step | State |
 |---|---|
-| Code: filter, Terms gate, flag/block on setlists and profiles, block-hides-content RLS, report alerts, remove/ban queue, Delete Account in menu | **Done on branch.** tsc 0, 234/234 tests, build OK. Not merged |
-| Migration `20260930120000_ugc_safety_pass.sql` applied to production | Not done |
-| Edge functions `admin-users`, `delete-account`, `send-transactional-email` deployed | Not done |
+| Code: filter, Terms gate, flag/block on setlists and profiles, block-hides-content RLS, report alerts, remove/ban queue, Delete Account in menu | **Merged** in PR #79 (`93a894c`). Lovable then regenerated `types.ts` (`a1fe3d8`, `2628b84`); `main` at `2628b84` typechecks with 0 errors |
+| Migration `20260930120000_ugc_safety_pass.sql` applied to production | **Done 2026-10-01**, via `query_database`. Verified: the term list equals the repo's, `is_objectionable` gives correct results, 7 triggers and 2 RESTRICTIVE policies exist, and a signed-in user with no blocks still sees all 240 public setlists and 37 comments. The regex was proven in Postgres with a read-only query before any trigger was created |
+| Edge functions `admin-users`, `delete-account`, `send-transactional-email` deployed | **Done 2026-10-01** by the Lovable agent; no code edits. `send-transactional-email` is **verified live**: it now knows `moderation-report`, returning 400 "recipient required" where the old code returned 404 "not found". `admin-users` and `delete-account` are **deploy-confirmed only**. A probe of `admin-users` with the vault service key returns 401 before reaching any new code, because that key does not match the function's env key, and nothing still uses that path. Opening the Moderation Queue as admin proves `admin-users` |
 | Web end-to-end check (report → email → queue; block → feed; filter) | Not done; needs the migration and functions first |
 | Settle the 2026-09-24 open report | Not done |
 | `/pre-release` gate, web publish | Not done |
