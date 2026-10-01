@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { passesContentFilter } from "@/hooks/useModeration";
 import { trackShare } from "@/lib/trackShare";
 
 interface Recipient {
@@ -161,6 +162,7 @@ const SendToFriendDialog = ({
   const sendToRecipient = async (recipient: Recipient) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
+    if (!passesContentFilter(note)) return;
 
     const conversationId = await ensureConversation(recipient, user.id);
     if (!conversationId) {

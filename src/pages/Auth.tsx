@@ -17,6 +17,8 @@ import { isNativeApp } from "@/lib/nativeApp";
 import { trackAuthEvent } from "@/lib/authFunnel";
 import { describeAuthError } from "@/lib/authErrors";
 import { signInWithProvider, type OAuthProvider } from "@/lib/oauthSignIn";
+import TermsAgreement from "@/components/TermsAgreement";
+import { useTermsAgreement } from "@/hooks/useTermsAgreement";
 
 
 const Auth = () => {
@@ -34,6 +36,7 @@ const Auth = () => {
   // native-specific is the copy below: the session lands in-process instead
   // of via a redirect, so there is nothing to "come back" from.
   const isNative = useMemo(() => isNativeApp(), []);
+  const terms = useTermsAgreement();
 
   useEffect(() => {
     void trackAuthEvent("auth_modal_opened", { metadata: { surface: "auth_page" } });
@@ -50,6 +53,7 @@ const Auth = () => {
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isForgot && !terms.requireAgreement()) return;
     setLoading(true);
     try {
       if (isForgot) {
@@ -122,6 +126,7 @@ const Auth = () => {
   };
 
   const handleOAuthLogin = async (provider: OAuthProvider) => {
+    if (!terms.requireAgreement()) return;
     // An in-app browser (Instagram, Facebook) is a different problem from the
     // Capacitor shell: there is no plugin to reach for, and the provider will
     // refuse the embedded user agent. Safari is the only way out.
@@ -203,6 +208,15 @@ const Auth = () => {
                 </p>
               </div>
             </div>
+          )}
+
+          {/* Before any way in — App Store guideline 1.2 */}
+          {!isForgot && (
+            <TermsAgreement
+              agreed={terms.agreed}
+              onAgreedChange={terms.setAgreed}
+              nudged={terms.nudged}
+            />
           )}
 
           {/* OAuth — one-tap, kept above the email form so the fastest path is first */}
@@ -296,18 +310,6 @@ const Auth = () => {
               </p>
             )}
           </form>
-
-          <p className="text-[11px] font-body text-muted-foreground text-center pt-3">
-            By continuing you agree to our{" "}
-            <a href="/terms" className="underline underline-offset-2 hover:text-foreground">
-              Terms
-            </a>{" "}
-            and{" "}
-            <a href="/privacy" className="underline underline-offset-2 hover:text-foreground">
-              Privacy Policy
-            </a>
-            .
-          </p>
 
           <div className="flex flex-col items-center gap-3">
             {isForgot ? (

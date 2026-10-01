@@ -12,6 +12,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { passesContentFilter } from "@/hooks/useModeration";
 import { Sparkles } from "lucide-react";
 
 const DISMISS_KEY = "ds_handle_prompt_dismissed";
@@ -81,6 +82,7 @@ const PickHandleModal = () => {
       toast.error("Pick a name between 2 and 40 characters");
       return;
     }
+    if (!passesContentFilter(handle)) return;
     setSaving(true);
     const { error } = await supabase
       .from("profiles")

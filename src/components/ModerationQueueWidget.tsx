@@ -1,43 +1,50 @@
 import { useCallback, useEffect, useState } from "react";
-import { Flag, Check, X } from "lucide-react";
+import { Flag, Trash2, Ban, X, Loader2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-// content_reports is newer than the generated Database types — regenerate
-// src/integrations/supabase/types.ts via the Supabase CLI to drop this cast.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const db = supabase as any;
+// Reports come through the admin-users edge function (action=reports) rather
+// than straight from content_reports: the queue needs the reported text and
+// its author, and a direct message is not readable through RLS by anyone
+// outside the conversation. Removing and banning go through the same function
+// (action=moderate), because a ban needs the auth admin API.
+//
+// App Store guideline 1.2: act within 24 hours of a report by removing the
+// content and ejecting the user. Every report also emails the admins the
+// moment it is filed (notify_moderation_report trigger).
 
 interface Report {
   id: string;
-  reporter_id: string;
-  content_type: string;
-  content_id: string;
+  contentType: string;
+  contentId: string;
   reason: string | null;
-  status: string;
-  created_at: string;
+  createdAt: string;
+  ownerId: string | null;
+  ownerName: string | null;
+  excerpt: string | null;
+  link: string | null;
+  gone: boolean;
 }
 
-const contentLink = (r: Report): string | null => {
-  if (r.content_type === "setlist") return `/setlist/${r.content_id}`;
-  if (r.content_type === "profile") return `/user/${r.content_id}`;
-  return null;
-};
+type Decision = "dismiss" | "remove" | "remove_and_ban";
 
-/** Admin-only: open content reports with resolve/dismiss actions. */
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/** Admin-only: open content reports, with remove / ban / dismiss. */
 const ModerationQueueWidget = ({ enabled }: { enabled: boolean }) => {
   const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
+  const [busyId, setBusyId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    const { data, error } = await db
-      .from("content_reports")
-      .select("*")
-      .eq("status", "open")
-      .order("created_at", { ascending: true })
-      .limit(50);
-    if (!error) setReports(data ?? []);
+    const { data, error } = await supabase.functions.invoke("admin-users?action=reports");
+    if (error || data?.error) {
+      console.error("[moderation] load failed:", error ?? data?.error);
+      toast.error("Couldn't load the moderation queue");
+    } else {
+      setReports(data.reports ?? []);
+    }
     setLoading(false);
   }, []);
 
@@ -45,19 +52,31 @@ const ModerationQueueWidget = ({ enabled }: { enabled: boolean }) => {
     if (enabled) load();
   }, [enabled, load]);
 
-  const settle = async (id: string, status: "resolved" | "dismissed") => {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    const { error } = await db
-      .from("content_reports")
-      .update({ status, resolved_at: new Date().toISOString(), resolved_by: user?.id ?? null })
-      .eq("id", id);
-    if (error) {
-      toast.error("Couldn't update the report");
+  const decide = async (report: Report, decision: Decision) => {
+    if (
+      decision === "remove_and_ban" &&
+      !window.confirm(
+        `Remove this ${report.contentType} and ban ${report.ownerName || "this account"}? ` +
+          "They won't be able to sign in, and all their setlists come off the feeds.",
+      )
+    ) {
       return;
     }
-    setReports((prev) => prev.filter((r) => r.id !== id));
+    setBusyId(report.id);
+    const { data, error } = await supabase.functions.invoke("admin-users?action=moderate", {
+      body: { reportId: report.id, decision },
+    });
+    setBusyId(null);
+    if (error || data?.error) {
+      toast.error(data?.error || "Couldn't apply that decision");
+      return;
+    }
+    toast.success(
+      decision === "dismiss" ? "Dismissed" : decision === "remove" ? "Removed" : "Removed and banned",
+    );
+    // Settling one report settles every open report on the same content, and
+    // a ban settles the reports on that account — reload rather than guess.
+    load();
   };
 
   return (
@@ -81,46 +100,91 @@ const ModerationQueueWidget = ({ enabled }: { enabled: boolean }) => {
       ) : (
         <div className="divide-y divide-border">
           {reports.map((r) => {
-            const link = contentLink(r);
+            const overdue = Date.now() - new Date(r.createdAt).getTime() > DAY_MS;
+            const busy = busyId === r.id;
             return (
-              <div key={r.id} className="px-4 py-3 flex items-start gap-3">
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-body text-card-foreground">
-                    <span className="font-mono text-xs uppercase tracking-wider text-dead-gold">
-                      {r.content_type}
-                    </span>{" "}
-                    {link ? (
-                      <a href={link} target="_blank" rel="noreferrer" className="underline underline-offset-2 hover:text-primary">
-                        view content
+              <div key={r.id} className="px-4 py-3 space-y-2">
+                <div className="flex items-baseline gap-2 flex-wrap">
+                  <span className="font-mono text-xs uppercase tracking-wider text-dead-gold">
+                    {r.contentType}
+                  </span>
+                  <span className="text-xs font-body text-card-foreground">
+                    by{" "}
+                    {r.ownerId ? (
+                      <a
+                        href={`/user/${r.ownerId}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="underline underline-offset-2 hover:text-primary"
+                      >
+                        {r.ownerName || "Unknown Head"}
                       </a>
                     ) : (
-                      <span className="font-mono text-[10px] text-muted-foreground">{r.content_id}</span>
+                      "—"
+                    )}
+                  </span>
+                  <span
+                    className={`text-[10px] font-mono ml-auto ${overdue ? "text-destructive" : "text-muted-foreground"}`}
+                  >
+                    {formatDistanceToNow(new Date(r.createdAt), { addSuffix: true })}
+                    {overdue && " · past 24h"}
+                  </span>
+                </div>
+
+                {r.gone ? (
+                  <p className="text-xs font-body italic text-muted-foreground">
+                    Already gone — deleted by its author or removed earlier.
+                  </p>
+                ) : r.excerpt ? (
+                  <p className="text-sm font-body text-card-foreground border-l-2 border-border pl-2 break-words">
+                    {r.link ? (
+                      <a href={r.link} target="_blank" rel="noreferrer" className="hover:underline">
+                        {r.excerpt}
+                      </a>
+                    ) : (
+                      r.excerpt
                     )}
                   </p>
-                  {r.reason && (
-                    <p className="text-xs font-body text-muted-foreground mt-0.5 break-words">
-                      "{r.reason}"
-                    </p>
-                  )}
-                  <p className="text-[10px] font-mono text-muted-foreground mt-0.5">
-                    {formatDistanceToNow(new Date(r.created_at), { addSuffix: true })}
+                ) : null}
+
+                {r.reason && (
+                  <p className="text-xs font-body text-muted-foreground break-words">
+                    Reporter: "{r.reason}"
                   </p>
-                </div>
-                <div className="shrink-0 flex items-center gap-1">
-                  <button
-                    onClick={() => settle(r.id, "resolved")}
-                    className="p-2 min-h-[36px] min-w-[36px] flex items-center justify-center text-emerald-600 hover:bg-emerald-600/10 rounded"
-                    title="Mark resolved (action taken)"
-                  >
-                    <Check className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => settle(r.id, "dismissed")}
-                    className="p-2 min-h-[36px] min-w-[36px] flex items-center justify-center text-muted-foreground hover:bg-muted/40 rounded"
-                    title="Dismiss (no action needed)"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
+                )}
+
+                <div className="flex items-center gap-2 pt-1">
+                  {busy ? (
+                    <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+                  ) : (
+                    <>
+                      {!r.gone && (
+                        <button
+                          onClick={() => decide(r, "remove")}
+                          className="min-h-[36px] px-2.5 flex items-center gap-1.5 text-xs font-body rounded border border-border hover:bg-muted/40"
+                          title="Remove the content, keep the account"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" /> Remove
+                        </button>
+                      )}
+                      {r.ownerId && (
+                        <button
+                          onClick={() => decide(r, "remove_and_ban")}
+                          className="min-h-[36px] px-2.5 flex items-center gap-1.5 text-xs font-body rounded border border-destructive/50 text-destructive hover:bg-destructive/10"
+                          title="Remove the content and ban the account"
+                        >
+                          <Ban className="w-3.5 h-3.5" /> Remove + ban
+                        </button>
+                      )}
+                      <button
+                        onClick={() => decide(r, "dismiss")}
+                        className="min-h-[36px] px-2.5 flex items-center gap-1.5 text-xs font-body rounded text-muted-foreground hover:bg-muted/40 ml-auto"
+                        title="No action needed"
+                      >
+                        <X className="w-3.5 h-3.5" /> Dismiss
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
             );

@@ -6,9 +6,54 @@ Connect, Lovable Cloud, and the Supabase auth config, and a session that reads
 only the repo will draw confident wrong conclusions. That happened repeatedly on
 2026-09-17; the corrections are banked in `CLAUDE.md`.
 
-**Last updated:** 2026-09-25 — **build 28 is uploaded**, and **build 27 is under
-review** after a Guideline 2.1 rejection on 2026-09-22 and a resubmission on
-2026-09-24. Submission ID `f8593d8a-e9fc-4a91-a4b5-dabad5b63632`.
+**Last updated:** 2026-09-30. **Build 27 was rejected a second time**, under
+**5.1.1(v)** (account deletion) and **1.2** (user-generated content). The fixes
+are on branch `fix/appstore-deletion-ugc`. **The next submission is build 29**,
+which nothing has built yet. Submission ID
+`f8593d8a-e9fc-4a91-a4b5-dabad5b63632`.
+
+## Rejection 2 — 2026-09-30: start here
+
+Reviewed on an **iPad Air 11-inch (M3)**, which shows the iPhone layout in
+compatibility mode. **Read
+[`review-response-1.2-5.1.1v.md`](review-response-1.2-5.1.1v.md)**; it holds the
+diagnosis, the change list, the release order and the recording shot list.
+
+The short version: unlike the 2.1 round, these findings were real.
+
+- **5.1.1(v):** deletion existed but was buried under "Danger Zone" at the foot
+  of Profile, and the reviewer did not find it. Now: Menu → **Delete Account**.
+- **1.2:** Apple's checklist has five parts and build 27 met about one and a
+  half: there was no filter, no agreement before sign-in (only a passive line
+  *below* the buttons), and no way to block a setlist's curator. Blocking hid
+  nothing but comments, never notified us, and nothing could remove content or
+  ban anyone. **The reviewer notes claimed all of it**, including "the flag on
+  any setlist", which was a 10px text link under the comments.
+- **The one report filed during the 2.1 recording (2026-09-24) was still
+  `open` six days later.** Reports now email the admins the moment they land.
+
+**Status of each step** (full order in the playbook):
+
+| Step | State |
+|---|---|
+| Code: filter, Terms gate, flag/block on setlists and profiles, block-hides-content RLS, report alerts, remove/ban queue, Delete Account in menu | **Done on branch.** tsc 0, 234/234 tests, build OK. Not merged |
+| Migration `20260930120000_ugc_safety_pass.sql` applied to production | Not done |
+| Edge functions `admin-users`, `delete-account`, `send-transactional-email` deployed | Not done |
+| Web end-to-end check (report → email → queue; block → feed; filter) | Not done; needs the migration and functions first |
+| Settle the 2026-09-24 open report | Not done |
+| `/pre-release` gate, web publish | Not done |
+| Build 29 (run 28 + offset 1) | Not dispatched |
+| Recording on build 29; Notes → [`reviewer-notes-v3.txt`](reviewer-notes-v3.txt) (3719 chars); reply → [`review-reply-2026-09-30.txt`](review-reply-2026-09-30.txt) (2999 chars); resubmit | Not done |
+
+**Build 28 is superseded for submission.** It predates every fix above. Build
+29 carries everything 28 does.
+
+---
+
+*Below: the state as of 2026-09-25, kept for the record.*
+
+Build 27 was under review after a Guideline 2.1 rejection on 2026-09-22 and a
+resubmission on 2026-09-24.
 
 **Build 28** — uploaded 2026-09-25 by run 27 (run id 36076388482) from `main`
 at `9542efd`, dispatched 00:11:33 UTC, `Upload succeeded` 00:14:18, read out of

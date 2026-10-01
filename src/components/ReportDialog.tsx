@@ -17,12 +17,24 @@ interface ReportDialogProps {
   contentId: string;
   /** What the user is reporting, for the dialog copy — e.g. "this setlist" */
   label?: string;
-  children: ReactNode;
+  /** The trigger. Omit it and pass open/onOpenChange to drive the dialog from elsewhere (a menu item). */
+  children?: ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 /** Wrap any trigger element; opens a report dialog for the given content. */
-const ReportDialog = ({ contentType, contentId, label = "this", children }: ReportDialogProps) => {
-  const [open, setOpen] = useState(false);
+const ReportDialog = ({
+  contentType,
+  contentId,
+  label = "this",
+  children,
+  open: controlledOpen,
+  onOpenChange,
+}: ReportDialogProps) => {
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
+  const open = controlledOpen ?? uncontrolledOpen;
+  const setOpen = onOpenChange ?? setUncontrolledOpen;
   const [reason, setReason] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -38,13 +50,14 @@ const ReportDialog = ({ contentType, contentId, label = "this", children }: Repo
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>{children}</DialogTrigger>
+      {children && <DialogTrigger asChild>{children}</DialogTrigger>}
       <DialogContent className="bg-card border-border max-w-md">
         <DialogHeader>
           <DialogTitle className="font-display">Report {label}</DialogTitle>
           <DialogDescription className="font-body">
-            Tell us what's wrong and we'll take a look. Reports are reviewed promptly, and
-            content that breaks the house rules gets removed.
+            Tell us what's wrong. Every report reaches us right away and gets acted on within
+            24 hours — content that breaks the house rules comes down, and so does whoever
+            posted it.
           </DialogDescription>
         </DialogHeader>
         <Textarea

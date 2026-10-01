@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Share2, Zap, Play, Heart, RefreshCw, Loader2, Headphones, VolumeX } from "lucide-react";
 import SetlistComments from "@/components/SetlistComments";
 import ReportDialog from "@/components/ReportDialog";
+import SafetyMenu from "@/components/SafetyMenu";
 import { useFavorites } from "@/hooks/useFavorites";
 import EraTooltip from "@/components/EraTooltip";
 import { EraBorder } from "@/components/EraArt";
@@ -644,6 +645,21 @@ const SetlistPoster = () => {
                   style={{ color: "hsl(28 20% 35%)" }}
                 >
                   curated by <Link to={`/user/${setlist.creator_id}`} className="underline decoration-wavy decoration-1 underline-offset-2 hover:opacity-70 transition-opacity">{creatorName}</Link>
+                  {/* Report the setlist or block its curator. Beside the name
+                      rather than in the top bar, which already wraps at 375px
+                      for signed-out visitors. */}
+                  {!isOwner && (
+                    <SafetyMenu
+                      contentType="setlist"
+                      contentId={setlist.id}
+                      reportLabel="this setlist"
+                      ownerId={setlist.creator_id}
+                      ownerName={creatorName}
+                      // Blocking hides this setlist from the blocker, so stay off it.
+                      onBlocked={() => navigate("/browse")}
+                      className="inline-flex align-middle -my-2 ml-1 min-h-[36px] min-w-[36px] text-[hsl(28_20%_35%)] hover:text-[hsl(28_20%_20%)]"
+                    />
+                  )}
                   {eraName && (
                     <>
                       {" · "}

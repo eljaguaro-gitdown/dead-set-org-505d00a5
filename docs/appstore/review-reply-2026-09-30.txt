@@ -1,0 +1,25 @@
+Thank you for the review. Both issues are addressed in build 29. A new screen recording captured on a physical iPhone is attached, and the Notes field of App Review Information is updated to match.
+
+GUIDELINE 5.1.1(v) - ACCOUNT DELETION
+Deletion existed in the reviewed build but was hard to find, under a "Danger Zone" heading at the foot of the Profile screen. In build 29 it is one tap from the menu:
+- Tap the menu icon (top right), then "Delete Account". This opens the deletion section of Profile directly.
+- Tap "Delete My Account", then confirm with "Delete Everything". The account and its data (profile, setlists, comments, messages, favorites, block list) are permanently deleted and the user is signed out.
+No website, email or support contact is involved. The recording creates a new account and deletes it end to end.
+
+GUIDELINE 1.2 - USER-GENERATED CONTENT
+Each precaution you listed, and where to find it:
+
+1. Terms agreement before registering or logging in. The sign-in screen requires ticking "I agree to the Terms of Use and Privacy Policy. Dead Set has zero tolerance for objectionable content or abusive users." before Sign in with Apple, Google or email will proceed. Section 5 of the Terms of Use states zero tolerance for objectionable content and abusive users.
+
+2. Filtering objectionable content. Setlist titles and descriptions, comments, direct messages and display names pass through an objectionable-language filter before they are published. The filter runs in the app and again on our server, so filtered text cannot be posted by any route.
+
+3. Flagging objectionable content. On any setlist, the flag icon beside the curator's name opens "Report this setlist". Every comment has a flag, every direct-message conversation has a flag, and the flag on a user's profile reports the user.
+
+4. Blocking abusive users. The same flag offers "Block [name]" on any setlist or profile, and a block icon sits beside every other person's comment. Blocking immediately removes that user's setlists and comments from the blocker's feeds (enforced on our server, not only hidden in the app), stops them messaging the blocker, and notifies us by filing a report on the blocked account.
+
+5. Acting within 24 hours. Every report, including every block, emails our moderation team the moment it is filed. From the moderation queue we remove the reported content and ban the account that posted it, which also takes all of that user's setlists out of public view. We act on every report within 24 hours, and the Terms of Use say so.
+
+THE RECORDING, IN ORDER
+The Terms agreement on the sign-in screen, before any sign-in button works; creating a new account; a comment containing objectionable language being refused; reporting a setlist; blocking a user and their content disappearing; then Menu > Delete Account through to confirmation. Deletion is performed on the throwaway account created in the recording, so the demo credentials remain usable.
+
+Happy to clarify anything further.

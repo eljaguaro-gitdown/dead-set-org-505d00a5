@@ -10,6 +10,8 @@ import { toast } from "sonner";
 import { trackAuthEvent } from "@/lib/authFunnel";
 import { describeAuthError } from "@/lib/authErrors";
 import { signInWithProvider, type OAuthProvider } from "@/lib/oauthSignIn";
+import TermsAgreement from "@/components/TermsAgreement";
+import { useTermsAgreement } from "@/hooks/useTermsAgreement";
 import {
   Sheet,
   SheetContent,
@@ -32,6 +34,7 @@ const AuthModal = ({ open, onOpenChange, onAuthenticated, onBeforeRedirect }: Au
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const terms = useTermsAgreement();
 
   useEffect(() => {
     if (open) void trackAuthEvent("auth_modal_opened");
@@ -39,6 +42,7 @@ const AuthModal = ({ open, onOpenChange, onAuthenticated, onBeforeRedirect }: Au
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!terms.requireAgreement()) return;
     setLoading(true);
     void trackAuthEvent(
       isSignUp ? "signup_email_attempted" : "signin_email_attempted",
@@ -111,6 +115,7 @@ const AuthModal = ({ open, onOpenChange, onAuthenticated, onBeforeRedirect }: Au
   };
 
   const handleOAuthLogin = async (provider: OAuthProvider) => {
+    if (!terms.requireAgreement()) return;
     // Still called on native even though nothing redirects: the caller uses it
     // to persist in-progress builder state, and an OAuth sheet that the fan
     // cancels should not be the thing that loses their setlist.
@@ -176,6 +181,14 @@ const AuthModal = ({ open, onOpenChange, onAuthenticated, onBeforeRedirect }: Au
               Sign in
             </button>
           </div>
+
+          {/* Before any way in — App Store guideline 1.2 */}
+          <TermsAgreement
+            agreed={terms.agreed}
+            onAgreedChange={terms.setAgreed}
+            nudged={terms.nudged}
+            onCard
+          />
 
           {/* Google OAuth — native Supabase */}
           <Button
@@ -249,18 +262,6 @@ const AuthModal = ({ open, onOpenChange, onAuthenticated, onBeforeRedirect }: Au
               {loading ? "..." : isSignUp ? "Create Account" : "Sign In"}
             </Button>
           </form>
-
-          <p className="text-[11px] font-body text-muted-foreground text-center pt-3">
-            By continuing you agree to our{" "}
-            <a href="/terms" className="underline underline-offset-2 hover:text-foreground">
-              Terms
-            </a>{" "}
-            and{" "}
-            <a href="/privacy" className="underline underline-offset-2 hover:text-foreground">
-              Privacy Policy
-            </a>
-            .
-          </p>
 
           <div className="pb-4" />
         </div>

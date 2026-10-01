@@ -1,7 +1,23 @@
 import { useCallback, useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { isObjectionable, OBJECTIONABLE_MESSAGE } from "@/lib/contentFilter";
 import { toast } from "sonner";
+
+/**
+ * Run the objectionable-language filter over what a fan is about to post.
+ * Returns true when it is clean; otherwise says why and returns false. The
+ * database triggers enforce the same list, so this is the friendly half —
+ * it stops the post before a bare error can.
+ */
+export const passesContentFilter = (...texts: Array<string | null | undefined>): boolean => {
+  if (texts.some(isObjectionable)) {
+    toast.error(OBJECTIONABLE_MESSAGE);
+    return false;
+  }
+  return true;
+};
 
 // content_reports / blocked_users are newer than the generated Database
 // types — regenerate src/integrations/supabase/types.ts via the Supabase
@@ -39,9 +55,20 @@ export const submitReport = async (
   return true;
 };
 
-/** The current user's block list, plus block/unblock actions. */
+/**
+ * The current user's block list, plus block/unblock actions.
+ *
+ * A block does three things, which is what App Store guideline 1.2 asks of it:
+ * - the blocked user's setlists and comments disappear from every feed — RLS
+ *   hides them server-side, and every cached query is refetched so nothing
+ *   stale lingers on screen;
+ * - they can no longer message the blocker (RLS on direct_messages);
+ * - the team is notified: a trigger files a report on the blocked account,
+ *   which emails the admins and lands in the moderation queue.
+ */
 export const useBlockedUsers = () => {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [blockedIds, setBlockedIds] = useState<Set<string>>(new Set());
 
   const reload = useCallback(async () => {
@@ -74,10 +101,11 @@ export const useBlockedUsers = () => {
         return false;
       }
       setBlockedIds((prev) => new Set(prev).add(userId));
-      toast.success("Blocked. You won't see them, they can't message you.");
+      void queryClient.invalidateQueries();
+      toast.success("Blocked. Their setlists and comments are gone from your view, they can't message you, and we'll review their content.");
       return true;
     },
-    [user],
+    [user, queryClient],
   );
 
   const unblock = useCallback(
@@ -97,10 +125,11 @@ export const useBlockedUsers = () => {
         next.delete(userId);
         return next;
       });
+      void queryClient.invalidateQueries();
       toast.success("Unblocked");
       return true;
     },
-    [user],
+    [user, queryClient],
   );
 
   return { blockedIds, block, unblock, reload };

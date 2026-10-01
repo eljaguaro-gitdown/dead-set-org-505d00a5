@@ -40,7 +40,10 @@ cannot sign in — which is a second rejection, on 2.1 "Accessing the app".
 Create a second account on camera, use it for the whole recording, and delete
 that one at the end.
 
-Shot list, in order:
+Shot list, in order. **Superseded for build 29:** the 1.2 and 5.1.1(v) beats
+changed. Use the shot list in
+[`review-response-1.2-5.1.1v.md`](review-response-1.2-5.1.1v.md). This one is kept
+as the record of the 2.1 take.
 
 1. Tap the icon from the home screen. Let the launch screen play through.
 2. Home: scroll the community setlists.

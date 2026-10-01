@@ -6,6 +6,48 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-visitor-id",
 };
 
+interface ReportedTarget {
+  ownerId: string | null;
+  excerpt: string | null;
+  link: string | null;
+  /** The content no longer exists — deleted by its author, or already removed. */
+  gone: boolean;
+}
+
+/** Who posted a reported item, what it said, and where it lives. */
+// deno-lint-ignore no-explicit-any
+const resolveReported = async (admin: any, type: string, id: string): Promise<ReportedTarget> => {
+  if (type === "setlist") {
+    const { data } = await admin.from("setlists").select("title, creator_id").eq("id", id).maybeSingle();
+    return data
+      ? { ownerId: data.creator_id, excerpt: data.title, link: `/setlist/${id}`, gone: false }
+      : { ownerId: null, excerpt: null, link: null, gone: true };
+  }
+  if (type === "comment") {
+    const { data } = await admin
+      .from("setlist_comments")
+      .select("content, user_id, setlist_id")
+      .eq("id", id)
+      .maybeSingle();
+    return data
+      ? { ownerId: data.user_id, excerpt: data.content, link: `/setlist/${data.setlist_id}`, gone: false }
+      : { ownerId: null, excerpt: null, link: null, gone: true };
+  }
+  if (type === "message") {
+    const { data } = await admin
+      .from("direct_messages")
+      .select("content, sender_id")
+      .eq("id", id)
+      .maybeSingle();
+    return data
+      ? { ownerId: data.sender_id, excerpt: data.content, link: null, gone: false }
+      : { ownerId: null, excerpt: null, link: null, gone: true };
+  }
+  // profile: the report is about the account itself, so the owner is the id.
+  const { data } = await admin.from("profiles").select("display_name").eq("user_id", id).maybeSingle();
+  return { ownerId: id, excerpt: data?.display_name ?? null, link: `/user/${id}`, gone: !data };
+};
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -28,6 +70,7 @@ Deno.serve(async (req) => {
     // Allow service role key as bearer token (for internal calls)
     const token = authHeader.replace("Bearer ", "");
     const isServiceRole = token === serviceRoleKey;
+    let callerId: string | null = null;
 
     if (!isServiceRole) {
       // Create client with user's token to check role
@@ -60,6 +103,7 @@ Deno.serve(async (req) => {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
+      callerId = user.id;
     }
 
     // Use service role to manage auth users
@@ -116,6 +160,138 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ results }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+
+    // Moderation — App Store guideline 1.2 requires acting on a report within
+    // 24 hours by removing the content and ejecting the user who posted it.
+    // Both actions live here because banning goes through the auth admin API,
+    // and because the queue needs the reported text and its author: a direct
+    // message is not readable through RLS by anyone outside the conversation.
+    const json = (body: unknown, status = 200) =>
+      new Response(JSON.stringify(body), {
+        status,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+
+    if (action === "reports") {
+      const { data: reports, error } = await adminClient
+        .from("content_reports")
+        .select("id, content_type, content_id, reason, created_at")
+        .eq("status", "open")
+        .order("created_at", { ascending: true })
+        .limit(50);
+      if (error) throw error;
+
+      const withTargets = await Promise.all(
+        (reports ?? []).map(async (r: any) => ({
+          id: r.id,
+          contentType: r.content_type,
+          contentId: r.content_id,
+          reason: r.reason,
+          createdAt: r.created_at,
+          ...(await resolveReported(adminClient, r.content_type, r.content_id)),
+        })),
+      );
+
+      const ownerIds = [...new Set(withTargets.map((r) => r.ownerId).filter(Boolean))];
+      const { data: owners } = ownerIds.length
+        ? await adminClient.from("profiles").select("user_id, display_name").in("user_id", ownerIds)
+        : { data: [] };
+      const nameOf = new Map((owners ?? []).map((p: any) => [p.user_id, p.display_name]));
+
+      return json({
+        reports: withTargets.map((r) => ({
+          ...r,
+          ownerName: (r.ownerId && nameOf.get(r.ownerId)) || null,
+        })),
+      });
+    }
+
+    if (action === "moderate") {
+      const { reportId, decision } = await req.json();
+      if (!["dismiss", "remove", "remove_and_ban"].includes(decision)) {
+        return json({ error: "decision must be dismiss, remove or remove_and_ban" }, 400);
+      }
+
+      const { data: report } = await adminClient
+        .from("content_reports")
+        .select("id, content_type, content_id")
+        .eq("id", reportId)
+        .maybeSingle();
+      if (!report) return json({ error: "Report not found" }, 404);
+
+      const target = await resolveReported(adminClient, report.content_type, report.content_id);
+      const banning = decision === "remove_and_ban";
+
+      // Refuse before touching anything, so a refused ban never half-applies.
+      if (banning) {
+        if (!target.ownerId) return json({ error: "No account to ban — the content is already gone" }, 409);
+        if (target.ownerId === callerId) return json({ error: "That's your own account" }, 400);
+        const { data: ownerIsAdmin } = await adminClient
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", target.ownerId)
+          .eq("role", "admin")
+          .maybeSingle();
+        if (ownerIsAdmin) return json({ error: "Won't ban an admin account from here" }, 400);
+      }
+
+      const done: string[] = [];
+
+      if (decision !== "dismiss" && !target.gone) {
+        // Foreign keys to setlists and setlist_comments cascade, so one delete
+        // takes the slots, votes, comments and notifications with it.
+        const removal =
+          report.content_type === "setlist"
+            ? adminClient.from("setlists").delete().eq("id", report.content_id)
+            : report.content_type === "comment"
+              ? adminClient.from("setlist_comments").delete().eq("id", report.content_id)
+              : report.content_type === "message"
+                ? adminClient.from("direct_messages").delete().eq("id", report.content_id)
+                : adminClient
+                    .from("profiles")
+                    .update({ display_name: null, avatar_url: null })
+                    .eq("user_id", report.content_id);
+        const { error } = await removal;
+        if (error) throw new Error(`remove ${report.content_type} failed: ${error.message}`);
+        done.push("removed");
+      }
+
+      if (banning) {
+        // ~100 years. A ban stops sign-in and token refresh; the account and
+        // its data stay, so a mistaken ban can be lifted.
+        const { error } = await adminClient.auth.admin.updateUserById(target.ownerId!, {
+          ban_duration: "876000h",
+        });
+        if (error) throw new Error(`ban failed: ${error.message}`);
+        // And off every feed: unpublish, rather than delete, the rest of their setlists.
+        await adminClient.from("setlists").update({ is_public: false }).eq("creator_id", target.ownerId!);
+        done.push("banned");
+      }
+
+      // One incident, however many people reported it: settle every open
+      // report on the same content, and on the account when it was banned.
+      const settled = {
+        status: decision === "dismiss" ? "dismissed" : "resolved",
+        resolved_at: new Date().toISOString(),
+        resolved_by: callerId,
+      };
+      await adminClient
+        .from("content_reports")
+        .update(settled)
+        .eq("content_type", report.content_type)
+        .eq("content_id", report.content_id)
+        .eq("status", "open");
+      if (banning) {
+        await adminClient
+          .from("content_reports")
+          .update(settled)
+          .eq("content_type", "profile")
+          .eq("content_id", target.ownerId!)
+          .eq("status", "open");
+      }
+
+      return json({ ok: true, done });
     }
 
     // Default: list users — fetch users, profiles, setlist counts, and

@@ -85,6 +85,9 @@ Deno.serve(async (req) => {
       ["insider_shares", "user_id"],
       ["insider_wishlist", "user_id"],
       ["announcement_reads", "user_id"],
+      // Both sides: a block list is personal data, and so is being on one.
+      ["blocked_users", "blocker_id"],
+      ["blocked_users", "blocked_id"],
       ["comment_notifications", "recipient_user_id"],
       ["comment_notifications", "commenter_user_id"],
       ["user_roles", "user_id"],

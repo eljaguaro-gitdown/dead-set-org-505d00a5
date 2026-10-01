@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { passesContentFilter } from "@/hooks/useModeration";
 import type { Database } from "@/integrations/supabase/types";
 import type { SetlistSlotData } from "@/components/SetlistDisplay";
 import type { User } from "@supabase/supabase-js";
@@ -77,6 +78,7 @@ export const useSetlist = (user: User | null, setlistId?: string | null) => {
   // Create a new setlist
   const createSetlist = useCallback(async (title: string, eraId?: string | null) => {
     if (!user) return null;
+    if (!passesContentFilter(title)) return null;
     const shareToken = crypto.randomUUID();
     const { data, error } = await supabase
       .from("setlists")
@@ -283,6 +285,7 @@ export const useSetlist = (user: User | null, setlistId?: string | null) => {
 
   const updateTitle = useCallback(async (newTitle: string) => {
     if (!setlist) return;
+    if (!passesContentFilter(newTitle)) return;
     await supabase.from("setlists").update({ title: newTitle }).eq("id", setlist.id);
     setSetlist((prev) => prev ? { ...prev, title: newTitle } : prev);
   }, [setlist]);

@@ -18,10 +18,10 @@ const Terms = () => {
 
       <main className="flex-1 px-4 sm:px-8 py-8 sm:py-12 max-w-3xl mx-auto w-full">
         <h1 className="font-display text-3xl sm:text-4xl text-foreground mb-2 leading-tight">
-          Terms of Service
+          Terms of Use
         </h1>
         <p className="font-mono text-xs text-foreground/75 mb-8 tracking-wider uppercase">
-          Last updated: August 7, 2026
+          Last updated: September 30, 2026
         </p>
 
         <div className="space-y-8 font-body text-foreground/90 text-sm leading-relaxed">
@@ -64,8 +64,8 @@ const Terms = () => {
             <p>
               Keep your credentials to yourself and give us accurate information. You're
               responsible for what happens under your account. You can delete your account at any
-              time from your profile; deletion removes your personal data as described in the
-              Privacy Policy.
+              time — Delete Account is in the menu — and deletion removes your personal data as
+              described in the Privacy Policy.
             </p>
           </section>
 
@@ -88,9 +88,14 @@ const Terms = () => {
               material, spam, impersonation, or posting anyone's private information.
             </p>
             <p>
-              You can report any setlist, comment, or message in the app, and you can block any
-              user. We review reports promptly, and we may remove content or suspend accounts that
-              break these rules — swiftly and without ceremony.
+              Posts containing objectionable language are filtered out before they're published.
+              You can report any setlist, comment, message, or person in the app, and you can block
+              any user — their setlists and comments disappear from your view at once, they can no
+              longer message you, and we're notified to review what they've posted.
+            </p>
+            <p>
+              We act on every report within 24 hours. Content that breaks these rules is removed,
+              and the account that posted it is banned — swiftly and without ceremony.
             </p>
           </section>
 

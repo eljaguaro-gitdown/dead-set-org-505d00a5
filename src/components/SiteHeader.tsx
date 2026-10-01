@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Menu, Shield, MessageCircle, LogOut, User, Download, ListMusic, Home, Sparkles } from "lucide-react";
+import { Menu, Shield, MessageCircle, LogOut, User, UserX, Download, ListMusic, Home, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 import CharlieMark from "@/components/CharlieMark";
 import ShareAppButton from "@/components/ShareAppButton";
@@ -329,6 +329,17 @@ const SiteHeader = ({ children, large = false }: SiteHeaderProps) => {
                         >
                           <User className="w-3.5 h-3.5" />
                           Profile
+                        </button>
+                      </SheetClose>
+                      {/* App Store guideline 5.1.1(v): one tap from the menu,
+                          named for what it does. */}
+                      <SheetClose asChild>
+                        <button
+                          onClick={() => navigate("/profile#delete-account")}
+                          className="min-h-[44px] flex items-center gap-1.5 text-xs font-mono text-foreground/75 hover:text-destructive transition-colors tracking-wider uppercase"
+                        >
+                          <UserX className="w-3.5 h-3.5" />
+                          Delete Account
                         </button>
                       </SheetClose>
                       <SheetClose asChild>

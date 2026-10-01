@@ -8,6 +8,8 @@ import PageLayout from "@/components/PageLayout";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
+import { passesContentFilter } from "@/hooks/useModeration";
+import { isObjectionable } from "@/lib/contentFilter";
 import SongVault from "@/components/SongVault";
 import SetlistDisplay, { type SetlistSlotData } from "@/components/SetlistDisplay";
 import CollaboratorAvatars from "@/components/CollaboratorAvatars";
@@ -398,6 +400,10 @@ const Builder = () => {
   }, [user]);
 
   const handleTitleBlur = useCallback(() => {
+    if (!passesContentFilter(title)) {
+      setTitle(setlist?.title ?? "Untitled Setlist");
+      return;
+    }
     if (!isGuestMode && title !== setlist?.title) {
       updateTitle(title);
     }
@@ -587,7 +593,10 @@ const Builder = () => {
         .from("setlists")
         .insert({
           creator_id: user.id,
-          title: titleToSave,
+          // A guest can type a title and sign in without ever leaving the
+          // field, skipping handleTitleBlur's check; the database would then
+          // refuse the whole save. Keep the songs, drop the title.
+          title: isObjectionable(titleToSave) ? "Untitled Setlist" : titleToSave,
           era_id: eraToSave || null,
           share_token: shareToken,
           is_public: true,
