@@ -1886,6 +1886,7 @@ export type Database = {
         Args: { _conversation_id: string; _user_id: string }
         Returns: boolean
       }
+      is_objectionable: { Args: { p_text: string }; Returns: boolean }
       is_setlist_collaborator: {
         Args: { _setlist_id: string; _user_id: string }
         Returns: boolean
@@ -1920,6 +1921,7 @@ export type Database = {
           song_title: string
         }[]
       }
+      objectionable_terms: { Args: never; Returns: string[] }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }
         Returns: {
