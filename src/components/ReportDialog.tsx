@@ -51,7 +51,7 @@ const ReportDialog = ({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       {children && <DialogTrigger asChild>{children}</DialogTrigger>}
-      <DialogContent className="bg-card border-border max-w-md">
+      <DialogContent className="bg-card text-card-foreground border-border max-w-md">
         <DialogHeader>
           <DialogTitle className="font-display">Report {label}</DialogTitle>
           <DialogDescription className="font-body">

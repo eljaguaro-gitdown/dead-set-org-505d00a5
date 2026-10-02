@@ -263,7 +263,7 @@ const Profile = () => {
                   {deleting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Delete My Account"}
                 </Button>
               </AlertDialogTrigger>
-              <AlertDialogContent className="bg-card border-border">
+              <AlertDialogContent className="bg-card text-card-foreground border-border">
                 <AlertDialogHeader>
                   <AlertDialogTitle className="font-display">
                     Fare you well, fare you well?
