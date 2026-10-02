@@ -6,9 +6,9 @@ Connect, Lovable Cloud, and the Supabase auth config, and a session that reads
 only the repo will draw confident wrong conclusions. That happened repeatedly on
 2026-09-17; the corrections are banked in `CLAUDE.md`.
 
-**Last updated:** 2026-09-30. **Build 27 was rejected a second time**, under
+**Last updated:** 2026-10-02. **Build 27 was rejected a second time**, under
 **5.1.1(v)** (account deletion) and **1.2** (user-generated content). The fixes
-are on branch `fix/appstore-deletion-ugc`. **The next submission is build 29**,
+merged to `main` in PR #79 (`93a894c`). **The next submission is build 29**,
 which nothing has built yet. Submission ID
 `f8593d8a-e9fc-4a91-a4b5-dabad5b63632`.
 
@@ -36,12 +36,12 @@ The short version: unlike the 2.1 round, these findings were real.
 
 | Step | State |
 |---|---|
-| Code: filter, Terms gate, flag/block on setlists and profiles, block-hides-content RLS, report alerts, remove/ban queue, Delete Account in menu | **Done on branch.** tsc 0, 234/234 tests, build OK. Not merged |
-| Migration `20260930120000_ugc_safety_pass.sql` applied to production | Not done |
-| Edge functions `admin-users`, `delete-account`, `send-transactional-email` deployed | Not done |
-| Web end-to-end check (report → email → queue; block → feed; filter) | Not done; needs the migration and functions first |
+| Code: filter, Terms gate, flag/block on setlists and profiles, block-hides-content RLS, report alerts, remove/ban queue, Delete Account in menu | **Merged** 2026-09-30, PR #79 → `93a894c`. tsc 0, 234/234 tests, build OK on the branch |
+| Migration `20260930120000_ugc_safety_pass.sql` applied to production | **Done, verified 2026-10-02** by query: 7 trigger rows; `is_objectionable` true for the profane line, false for "Dick's Picks Vol. 8" and "Cumberland Blues". The `Blocked%` policy query returns **3**, not 2: the two new ones plus "Blocked senders cannot message blockers" from `20260807053501` |
+| Edge functions `admin-users`, `delete-account`, `send-transactional-email` deployed | **Deployed** by the Lovable agent 2026-10-01 00:32 UTC, unchanged from `93a894c`. Its own reply says it did not verify the live code; the Moderation Queue check below is the verification |
+| Web end-to-end check (report → email → queue; block → feed; filter) | Not done; unblocked. As of 2026-10-02 `content_reports` holds no report newer than 2026-09-24 and `email_send_log` has no moderation email. The flag/block UI is not on dead-set.org yet, so run it in the Lovable preview (same production database) |
 | Settle the 2026-09-24 open report | Not done |
-| `/pre-release` gate, web publish | Not done |
+| `/pre-release` gate, web publish | Not done. dead-set.org still serves `ed1c1ec` (released 2026-09-26); the admin badge reads *Behind main*, 16 commits |
 | Build 29 (run 28 + offset 1) | Not dispatched |
 | Recording on build 29; Notes → [`reviewer-notes-v3.txt`](reviewer-notes-v3.txt) (3719 chars); reply → [`review-reply-2026-09-30.txt`](review-reply-2026-09-30.txt) (2999 chars); resubmit | Not done |
 
