@@ -162,10 +162,14 @@ const SiteHeader = ({ children, large = false }: SiteHeaderProps) => {
   // Flip to false to keep the link but drop the NEW treatment.
   const SONGBOOK_IS_NEW = true;
 
-  const songbookLink = (
+  // In the phone menu it fills its row like the other menu items, so a tap
+  // anywhere on the row opens the Songbook instead of just closing the menu.
+  const songbookLink = (inMenu = false) => (
     <button
       onClick={() => navigate("/songbook")}
-      className="relative flex items-center gap-1.5 font-mono tracking-wider uppercase transition-colors text-xs text-foreground/85 hover:text-primary"
+      className={`relative flex items-center gap-1.5 font-mono tracking-wider uppercase transition-colors text-xs text-foreground/85 hover:text-primary${
+        inMenu ? " min-h-[44px] w-full" : ""
+      }`}
       title="The Songbook — one song a week, by era"
     >
       <span>Songbook</span>
@@ -207,7 +211,7 @@ const SiteHeader = ({ children, large = false }: SiteHeaderProps) => {
           <div className="hidden sm:flex items-center gap-4 sm:gap-6">
             {nowPlaying}
             {!nowPlaying && returnToSetlistsPill}
-            {songbookLink}
+            {songbookLink()}
             {cosmicCharlieCta}
             <ShareAppButton />
             {user && <AnnouncementsBell variant="desktop" />}
@@ -270,9 +274,7 @@ const SiteHeader = ({ children, large = false }: SiteHeaderProps) => {
               <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
                 <nav className="flex flex-col gap-1 p-5 pt-14">
                   {nowPlaying && <div className="mb-2">{nowPlaying}</div>}
-                  <SheetClose asChild>
-                    <div className="min-h-[44px] flex items-center">{songbookLink}</div>
-                  </SheetClose>
+                  <SheetClose asChild>{songbookLink(true)}</SheetClose>
                   {React.Children.map(children, (child) =>
                     child ? (
                       <SheetClose asChild>
