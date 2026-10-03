@@ -53,6 +53,7 @@
  */
 
 import { writeFileSync, readFileSync, existsSync, mkdirSync } from "node:fs";
+import { pathToFileURL } from "node:url";
 import { join } from "node:path";
 
 const API = "https://api.setlist.fm/rest/1.0";
@@ -66,9 +67,12 @@ const KEY = process.env.SETLISTFM_API_KEY;
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL;
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-if (!KEY) die("SETLISTFM_API_KEY is not set. Request a key at https://www.setlist.fm/settings/api");
-if (!SUPABASE_URL) die("VITE_SUPABASE_URL is not set (it is in .env).");
-if (WRITE && !SERVICE_KEY) die("--write needs SUPABASE_SERVICE_ROLE_KEY; songs is admin-write.");
+/** Checked inside main(), not at import: the pure helpers below are tested. */
+function requireEnv() {
+  if (!KEY) die("SETLISTFM_API_KEY is not set. Request a key at https://www.setlist.fm/settings/api");
+  if (!SUPABASE_URL) die("VITE_SUPABASE_URL is not set (it is in .env).");
+  if (WRITE && !SERVICE_KEY) die("--write needs SUPABASE_SERVICE_ROLE_KEY; songs is admin-write.");
+}
 
 function die(msg) {
   console.error(`\n${msg}\n`);
@@ -138,7 +142,7 @@ async function crawlSetlists(mbid) {
  * Normalised equality only — see the header. Deliberately narrow: it folds
  * case, punctuation and the "playin'/playing" style variants, and nothing else.
  */
-const normalise = (title) =>
+export const normalise = (title) =>
   String(title ?? "")
     .toLowerCase()
     .replace(/['’]/g, "")
@@ -149,13 +153,13 @@ const normalise = (title) =>
     .trim();
 
 /** setlist.fm dates are dd-MM-yyyy; we store ISO. */
-const toIso = (eventDate) => {
+export const toIso = (eventDate) => {
   const m = /^(\d{2})-(\d{2})-(\d{4})$/.exec(String(eventDate ?? ""));
   return m ? `${m[3]}-${m[2]}-${m[1]}` : null;
 };
 
 /** Per-song history derived from the crawl. */
-function deriveStats(setlists) {
+export function deriveStats(setlists) {
   const bySong = new Map();
   for (const sl of setlists) {
     const date = toIso(sl.eventDate);
@@ -187,6 +191,7 @@ async function loadCatalog() {
 }
 
 async function main() {
+  requireEnv();
   const mbid = await resolveArtist();
   const setlists = await crawlSetlists(mbid);
   const stats = deriveStats(setlists);
@@ -296,4 +301,8 @@ async function main() {
   console.log(`Wrote ${written} rows. Source: ${SOURCE_NAME}`);
 }
 
-main().catch((e) => die(String(e?.stack ?? e)));
+// Only run when invoked directly — importing this module (the tests do) must
+// not start a crawl.
+const invokedDirectly =
+  process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
+if (invokedDirectly) main().catch((e) => die(String(e?.stack ?? e)));
