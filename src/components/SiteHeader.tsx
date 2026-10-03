@@ -162,14 +162,10 @@ const SiteHeader = ({ children, large = false }: SiteHeaderProps) => {
   // Flip to false to keep the link but drop the NEW treatment.
   const SONGBOOK_IS_NEW = true;
 
-  const songbookLink = (compact: boolean) => (
+  const songbookLink = (
     <button
       onClick={() => navigate("/songbook")}
-      className={`relative flex items-center gap-1.5 font-mono tracking-wider uppercase transition-colors ${
-        compact
-          ? "text-[10px] tracking-[0.12em] text-dead-gold border border-primary/40 rounded-md px-2.5 py-2 min-h-[44px] hover:bg-primary/10"
-          : "text-xs text-foreground/85 hover:text-primary"
-      }`}
+      className="relative flex items-center gap-1.5 font-mono tracking-wider uppercase transition-colors text-xs text-foreground/85 hover:text-primary"
       title="The Songbook — one song a week, by era"
     >
       <span>Songbook</span>
@@ -211,7 +207,7 @@ const SiteHeader = ({ children, large = false }: SiteHeaderProps) => {
           <div className="hidden sm:flex items-center gap-4 sm:gap-6">
             {nowPlaying}
             {!nowPlaying && returnToSetlistsPill}
-            {songbookLink(false)}
+            {songbookLink}
             {cosmicCharlieCta}
             <ShareAppButton />
             {user && <AnnouncementsBell variant="desktop" />}
@@ -230,10 +226,11 @@ const SiteHeader = ({ children, large = false }: SiteHeaderProps) => {
               </button>
             )}
           </div>
-          {/* Mobile: persistent top-level actions + hamburger */}
+          {/* Mobile: persistent top-level actions + hamburger. The Songbook
+              lives in the menu here: as a pill it pushed the hamburger, the
+              only route to Delete Account, off a 375–390px screen. */}
           <div className="sm:hidden flex items-center gap-2">
             {!nowPlaying && returnToSetlistsPill}
-            {songbookLink(true)}
             {cosmicCharlieCta}
             {/* Persistent mobile: Announcements + Messages for logged-in, Sign In for repeat guests */}
             {user ? (
@@ -273,6 +270,9 @@ const SiteHeader = ({ children, large = false }: SiteHeaderProps) => {
               <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
                 <nav className="flex flex-col gap-1 p-5 pt-14">
                   {nowPlaying && <div className="mb-2">{nowPlaying}</div>}
+                  <SheetClose asChild>
+                    <div className="min-h-[44px] flex items-center">{songbookLink}</div>
+                  </SheetClose>
                   {React.Children.map(children, (child) =>
                     child ? (
                       <SheetClose asChild>
