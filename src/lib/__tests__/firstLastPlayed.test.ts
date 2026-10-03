@@ -6,6 +6,7 @@ import {
   milestonePlace,
   MILESTONE_LABEL,
   NO_TAPE_LINE,
+  saysNoTape,
   type MilestoneCandidate,
   type MilestoneTape,
 } from "@/lib/firstLastPlayed";
@@ -118,5 +119,43 @@ describe("milestone prose", () => {
     const m = buildMilestones(rambleOnRose, [], new Map()).find((x) => x.kind === "ftp")!;
     expect(milestonePlace(m)).toBeNull();
     expect(milestoneNote(m)).not.toMatch(/unknown/i);
+  });
+});
+
+describe("a lookup that failed", () => {
+  // The gate on 2026-10-03 caught a 503 from archive.org printing "No tape of
+  // this night circulates". A failed request is not a miss: keep the date,
+  // claim nothing about the tape.
+  it("keeps the date and does not say no tape circulates", () => {
+    const out = buildMilestones(rambleOnRose, [], new Map([["1995-07-09", null]]), new Set(["1995-07-09"]));
+    const ltp = out.find((m) => m.kind === "ltp")!;
+    expect(ltp.date).toBe("1995-07-09");
+    expect(ltp.source).toBe("unchecked");
+    expect(ltp.tapeFound).toBe(false);
+    expect(saysNoTape(ltp)).toBe(false);
+    expect(milestoneNote(ltp)).not.toContain(NO_TAPE_LINE);
+    expect(milestoneNote(ltp)).toContain("1995-07-09");
+  });
+
+  it("only marks the dates that failed", () => {
+    const out = buildMilestones(
+      rambleOnRose,
+      [],
+      new Map([["1971-10-19", null], ["1995-07-09", null]]),
+      new Set(["1995-07-09"]),
+    );
+    const ftp = out.find((m) => m.kind === "ftp")!;
+    expect(ftp.source).toBe("none");
+    expect(saysNoTape(ftp)).toBe(true);
+    expect(milestoneNote(ftp)).toContain(NO_TAPE_LINE);
+  });
+
+  it("never overrides a tape that was found", () => {
+    const tape: MilestoneTape = { url: "https://archive.org/details/gd95-07-09", venue: "Soldier Field" };
+    const ltp = buildMilestones(rambleOnRose, [], new Map([["1995-07-09", tape]]), new Set(["1995-07-09"])).find(
+      (m) => m.kind === "ltp",
+    )!;
+    expect(ltp.tapeFound).toBe(true);
+    expect(ltp.source).toBe("archive");
   });
 });
