@@ -31,7 +31,7 @@ import { useAuth } from "@/hooks/useAuth";
 // used to keep its own copy, and when the slot-notes blob gained Charlie's
 // per-version note the copy was not updated — so a guest who picked a version
 // and then signed in saved the slot without its note.
-import { encodeArchiveNotes, useSetlist } from "@/hooks/useSetlist";
+import { decodeArchiveNotes, encodeArchiveNotes, useSetlist } from "@/hooks/useSetlist";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 import { emitCommunityFeedOptimisticInsert } from "@/lib/communityFeedEvents";
@@ -704,14 +704,22 @@ const Builder = () => {
             dropped++;
             continue;
           }
+          // Charlie's Version Explorer binds a specific tape to a slot by
+          // prefixing its notes with the archive blob. Decode here so the
+          // in-memory slots carry the version too — the guest path never
+          // round-trips through loadSetlist(), and the authed path renders
+          // these hydrated slots before the reload lands. Without it both
+          // showed the raw JSON and played whatever tape the song defaulted to.
+          const slotId = crypto.randomUUID();
+          const decoded = decodeArchiveNotes(slotId, song.id, suggestedSong.notes || "");
           builtSlots.push({
-            id: crypto.randomUUID(),
+            id: slotId,
             song,
-            version: null,
+            version: decoded.version,
             setNumber: set.setNumber,
             position: suggestedSong.position,
             segueToNext: suggestedSong.segueToNext,
-            notes: suggestedSong.notes || "",
+            notes: decoded.notes,
           });
         }
       }

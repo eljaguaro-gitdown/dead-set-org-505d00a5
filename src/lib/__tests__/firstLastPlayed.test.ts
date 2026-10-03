@@ -1,0 +1,122 @@
+import { describe, it, expect } from "vitest";
+import {
+  buildMilestones,
+  findMilestoneInList,
+  milestoneNote,
+  milestonePlace,
+  MILESTONE_LABEL,
+  NO_TAPE_LINE,
+  type MilestoneCandidate,
+  type MilestoneTape,
+} from "@/lib/firstLastPlayed";
+
+/**
+ * The guide that prompted this: "Ramble On Rose — Listening Guide" opened with
+ * prose calling the debut 1971-10-21 while the catalog says 1971-10-19. The
+ * dates here are read, never written, so the two can't drift apart again.
+ */
+const rambleOnRose = {
+  title: "Ramble On Rose",
+  first_played: "1971-10-19",
+  last_played: "1995-07-09",
+};
+
+const version = (showDate: string, over: Partial<MilestoneCandidate> = {}): MilestoneCandidate => ({
+  showDate,
+  venue: "Winterland Arena",
+  city: "San Francisco, CA",
+  archiveUrl: `https://archive.org/details/gd${showDate}`,
+  ...over,
+});
+
+const tape = (url: string, venue: string | null = null): MilestoneTape => ({ url, venue });
+
+describe("buildMilestones", () => {
+  it("returns both milestones, first played first and last played last", () => {
+    const out = buildMilestones(rambleOnRose, [], new Map());
+    expect(out.map((m) => m.kind)).toEqual(["ftp", "ltp"]);
+    expect(out[0].date).toBe("1971-10-19");
+    expect(out[1].date).toBe("1995-07-09");
+  });
+
+  it("labels a night Charlie already picked instead of repeating it", () => {
+    const versions = [version("1972-05-04"), version("1971-10-19"), version("1977-05-08")];
+    const out = buildMilestones(rambleOnRose, versions, new Map());
+    const ftp = out.find((m) => m.kind === "ftp")!;
+    expect(ftp.source).toBe("list");
+    expect(ftp.listIndex).toBe(1);
+    // It is a label on an existing card, so it must not also stand alone.
+    expect(out.filter((m) => m.listIndex === null).map((m) => m.kind)).toEqual(["ltp"]);
+  });
+
+  it("matches a list entry whose date carries an archive timestamp", () => {
+    const out = buildMilestones(rambleOnRose, [version("1971-10-19T00:00:00Z")], new Map());
+    expect(out.find((m) => m.kind === "ftp")!.source).toBe("list");
+  });
+
+  it("uses a circulating tape when the night is not in the list", () => {
+    const tapes = new Map([["1971-10-19", tape("https://archive.org/details/gd71-10-19", "Auditorium Theatre")]]);
+    const ftp = buildMilestones(rambleOnRose, [], tapes).find((m) => m.kind === "ftp")!;
+    expect(ftp.source).toBe("archive");
+    expect(ftp.tapeFound).toBe(true);
+    expect(ftp.archiveUrl).toBe("https://archive.org/details/gd71-10-19");
+    expect(ftp.venue).toBe("Auditorium Theatre");
+  });
+
+  it("KEEPS the milestone when no tape circulates, and says so", () => {
+    // The point of the feature: a night nobody taped is still a night, and the
+    // date is still worth printing. Dropping it is the failure mode.
+    const ftp = buildMilestones(rambleOnRose, [], new Map([["1971-10-19", null]])).find(
+      (m) => m.kind === "ftp",
+    )!;
+    expect(ftp.date).toBe("1971-10-19");
+    expect(ftp.tapeFound).toBe(false);
+    expect(ftp.archiveUrl).toBeNull();
+    expect(ftp.source).toBe("none");
+    expect(milestoneNote(ftp)).toContain(NO_TAPE_LINE);
+    expect(milestoneNote(ftp)).toContain("1971-10-19");
+  });
+
+  it("treats a date the lookup never ran for the same as a miss", () => {
+    const ftp = buildMilestones(rambleOnRose, [], new Map()).find((m) => m.kind === "ftp")!;
+    expect(ftp.tapeFound).toBe(false);
+    expect(ftp.date).toBe("1971-10-19");
+  });
+
+  it("says a one-off night once rather than twice under two labels", () => {
+    const oneOff = { title: "The Mighty Quinn", first_played: "1985-03-13", last_played: "1985-03-13" };
+    const out = buildMilestones(oneOff, [], new Map());
+    expect(out.map((m) => m.kind)).toEqual(["ftp"]);
+  });
+
+  it("omits a milestone the catalog has no date for", () => {
+    const partial = { title: "Untracked", first_played: null, last_played: "1995-07-09" };
+    expect(buildMilestones(partial, [], new Map()).map((m) => m.kind)).toEqual(["ltp"]);
+    const none = { title: "Untracked", first_played: null, last_played: null };
+    expect(buildMilestones(none, [], new Map())).toEqual([]);
+  });
+});
+
+describe("findMilestoneInList", () => {
+  it("is null for a date nobody picked, and for no date at all", () => {
+    expect(findMilestoneInList("1971-10-19", [version("1972-05-04")])).toBeNull();
+    expect(findMilestoneInList(null, [version("1971-10-19")])).toBeNull();
+  });
+});
+
+describe("milestone prose", () => {
+  it("names the milestone and the place when there is one", () => {
+    const m = buildMilestones(rambleOnRose, [version("1971-10-19")], new Map()).find(
+      (x) => x.kind === "ftp",
+    )!;
+    expect(milestonePlace(m)).toBe("Winterland Arena · San Francisco, CA");
+    expect(milestoneNote(m)).toContain(MILESTONE_LABEL.ftp);
+    expect(milestoneNote(m)).not.toContain(NO_TAPE_LINE);
+  });
+
+  it("leaves the place line out rather than printing 'Unknown venue'", () => {
+    const m = buildMilestones(rambleOnRose, [], new Map()).find((x) => x.kind === "ftp")!;
+    expect(milestonePlace(m)).toBeNull();
+    expect(milestoneNote(m)).not.toMatch(/unknown/i);
+  });
+});
