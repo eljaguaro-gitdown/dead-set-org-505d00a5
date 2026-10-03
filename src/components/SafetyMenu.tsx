@@ -79,7 +79,7 @@ const SafetyMenu = ({
       </button>
 
       <Dialog open={step === "choose"} onOpenChange={close}>
-        <DialogContent className="bg-card border-border max-w-sm">
+        <DialogContent className="bg-card text-card-foreground border-border max-w-sm">
           <DialogHeader>
             <DialogTitle className="font-display">Something wrong here?</DialogTitle>
             <DialogDescription className="font-body">
@@ -115,7 +115,7 @@ const SafetyMenu = ({
       />
 
       <AlertDialog open={step === "block"} onOpenChange={close}>
-        <AlertDialogContent className="bg-card border-border">
+        <AlertDialogContent className="bg-card text-card-foreground border-border">
           <AlertDialogHeader>
             <AlertDialogTitle className="font-display">Block {ownerName}?</AlertDialogTitle>
             <AlertDialogDescription className="font-body">
