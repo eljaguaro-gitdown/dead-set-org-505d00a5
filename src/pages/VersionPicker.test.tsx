@@ -75,6 +75,7 @@ const table = (rows: unknown[]) => {
     order: () => Promise.resolve({ data: rows, error: null }),
     insert: () => api,
     single: () => Promise.resolve({ data: { id: "new-setlist" }, error: null }),
+    maybeSingle: () => Promise.resolve({ data: null, error: null }),
     then: (res: (v: { data: unknown[]; error: null }) => unknown) => Promise.resolve({ data: rows, error: null }).then(res),
   };
   return api;
@@ -108,7 +109,9 @@ const openPage = async () => {
 describe("VersionPicker — signed out", () => {
   it("shows the versions without asking anyone to sign in", async () => {
     await openPage();
-    expect(await screen.findByText(/June 30, 1985/)).toBeInTheDocument();
+    // The leader shows twice now — once in the play-first hero, once in the
+    // list — so assert on the count rather than a single match.
+    expect((await screen.findAllByText(/June 30, 1985/)).length).toBeGreaterThan(0);
     expect(navigate).not.toHaveBeenCalled();
   });
 
@@ -131,15 +134,22 @@ describe("VersionPicker — signed out", () => {
 
   it("asks for sign-in when sharing", async () => {
     await openPage();
-    fireEvent.click(await screen.findByRole("button", { name: /share/i }));
-    await waitFor(() =>
-      expect(navigate).toHaveBeenCalledWith(expect.stringContaining("/auth?redirect=")),
-    );
+    // Two share affordances: the icon beside the play button and the one in
+    // the bottom bar. Both must ask.
+    const shares = await screen.findAllByRole("button", { name: /share/i });
+    expect(shares.length).toBeGreaterThanOrEqual(2);
+    for (const btn of shares) {
+      navigate.mockReset();
+      fireEvent.click(btn);
+      await waitFor(() =>
+        expect(navigate).toHaveBeenCalledWith(expect.stringContaining("/auth?redirect=")),
+      );
+    }
   });
 
   it("sends them back to the song they were on after signing in", async () => {
     await openPage();
-    fireEvent.click(await screen.findByRole("button", { name: /share/i }));
+    fireEvent.click((await screen.findAllByRole("button", { name: /share/i }))[0]);
     await waitFor(() => expect(navigate).toHaveBeenCalled());
     expect(decodeURIComponent(navigate.mock.calls[0][0] as string)).toContain("/versions/shakedown-street");
   });

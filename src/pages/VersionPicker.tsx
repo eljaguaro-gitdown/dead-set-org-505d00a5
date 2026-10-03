@@ -64,6 +64,16 @@ interface PickerVersion {
   archive_org_url: string | null;
 }
 
+/** The Songbook issue for this song, when one has been written. */
+interface PickerFeature {
+  slug: string;
+  issue_number: number | null;
+  headline: string | null;
+  dek: string | null;
+  ftp_venue: string | null; ftp_city: string | null;
+  ltp_venue: string | null; ltp_city: string | null;
+}
+
 interface PickerSong {
   id: string;
   title: string;
@@ -95,6 +105,7 @@ const VersionPicker = () => {
   const [methodOpen, setMethodOpen] = useState(false);
   const [resolving, setResolving] = useState<string | null>(null);
   const [milestones, setMilestones] = useState<MilestoneEntry[]>([]);
+  const [feature, setFeature] = useState<PickerFeature | null>(null);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -126,6 +137,19 @@ const VersionPicker = () => {
       if (cancelled) return;
       setVersions((v ?? []) as PickerVersion[]);
       setLoading(false);
+
+      // The Songbook issue, where one exists — the best writing we have about
+      // this song. Enrichment only: if it fails, the versions still render.
+      try {
+        const { data: f } = await songbookDb
+          .from("song_features")
+          .select("slug, issue_number, headline, dek, ftp_venue, ftp_city, ltp_venue, ltp_city")
+          .eq("song_id", match.id)
+          .maybeSingle();
+        if (!cancelled) setFeature((f ?? null) as PickerFeature | null);
+      } catch {
+        if (!cancelled) setFeature(null);
+      }
       captureEvent("version_picker_viewed", { song_id: match.id, song_title: match.title });
     })();
     return () => { cancelled = true; };
@@ -170,6 +194,35 @@ const VersionPicker = () => {
   const theSleepers = useMemo(() => sleeperList(versions), [versions]);
   const shown = sleepersOnly ? theSleepers : versions;
   const source = versions.find((v) => v.source_url);
+  /** Highest-voted night — what the big play button starts. */
+  const topVersion = versions[0] ?? null;
+
+  /**
+   * Every ranked night placed on the song's own lifespan. Three decades of a
+   * song compressed into one line is the fastest way to show that it kept
+   * changing — and each dot is playable, so looking is one gesture from
+   * listening.
+   */
+  const arc = useMemo(() => {
+    const dated = versions.filter((v) => v.show_date);
+    if (dated.length < 2) return null;
+    const years = dated.map((v) => Number(v.show_date!.slice(0, 4)));
+    const startYear = Math.min(...years, song?.first_played ? Number(song.first_played.slice(0, 4)) : Infinity);
+    const endYear = Math.max(...years, song?.last_played ? Number(song.last_played.slice(0, 4)) : -Infinity);
+    const span = Math.max(1, endYear - startYear);
+    const lead = leaderVotes(versions);
+    return {
+      startYear,
+      endYear,
+      points: dated.map((v) => ({
+        v,
+        // Inset so the end dots are not half off the rail.
+        pct: 3 + ((Number(v.show_date!.slice(0, 4)) - startYear) / span) * 94,
+        sleeper: isSleeperVersion(v, versions),
+        lead: v.votes != null && v.votes === lead,
+      })),
+    };
+  }, [versions, song]);
 
   /**
    * Play one version. Most ranked versions carry no archive_org_url — the
@@ -373,19 +426,155 @@ const VersionPicker = () => {
             card-surface tokens below render dark text on the maroon ground. */}
         <article className="bg-card text-card-foreground rounded-sm border border-border p-5 md:p-7">
 
-        {/* ── The song ─────────────────────────────────────────────── */}
+        {/* ── The song, and a way to hear it before reading a word ──── */}
         <header className="mb-7">
-          <p className="font-ticket text-[10px] uppercase tracking-[0.18em] text-primary mb-1">
+          <p className="font-ticket text-[10px] uppercase tracking-[0.18em] text-primary mb-1.5">
             Every version worth knowing
           </p>
-          <h1 className="font-title text-4xl md:text-5xl text-card-foreground leading-tight mb-2">
+          {/* font-header, not font-title: the blackletter is the logo's face and
+              is close to unreadable at a song title's size on a phone. */}
+          <h1 className="font-header text-[2.1rem] leading-[1.05] md:text-5xl text-card-foreground mb-3">
             {song.title}
           </h1>
-          <p className="font-mono text-[11px] text-muted-foreground tabular-nums">
-            {song.times_played ? `${song.times_played} times played` : "Play count unknown"}
-            {song.first_played && ` · ${fmtDate(song.first_played)} – ${fmtDate(song.last_played)}`}
-          </p>
+
+          {/* The life of the song, in three numbers, before anything is asked
+              of the reader. */}
+          <dl className="flex flex-wrap gap-x-5 gap-y-1 mb-5">
+            {song.times_played != null && (
+              <div>
+                <dt className="font-ticket text-[9px] uppercase tracking-[0.14em] text-muted-foreground">Played</dt>
+                <dd className="font-mono text-base font-medium text-card-foreground tabular-nums leading-tight">
+                  {song.times_played}<span className="text-[11px] text-muted-foreground"> times</span>
+                </dd>
+              </div>
+            )}
+            {song.first_played && (
+              <div>
+                <dt className="font-ticket text-[9px] uppercase tracking-[0.14em] text-muted-foreground">First</dt>
+                <dd className="font-mono text-base font-medium text-card-foreground tabular-nums leading-tight">
+                  {song.first_played.slice(0, 4)}
+                </dd>
+              </div>
+            )}
+            {song.last_played && (
+              <div>
+                <dt className="font-ticket text-[9px] uppercase tracking-[0.14em] text-muted-foreground">Last</dt>
+                <dd className="font-mono text-base font-medium text-card-foreground tabular-nums leading-tight">
+                  {song.last_played.slice(0, 4)}
+                </dd>
+              </div>
+            )}
+            {versions.length > 0 && (
+              <div>
+                <dt className="font-ticket text-[9px] uppercase tracking-[0.14em] text-muted-foreground">Ranked</dt>
+                <dd className="font-mono text-base font-medium text-card-foreground tabular-nums leading-tight">
+                  {versions.length}
+                </dd>
+              </div>
+            )}
+          </dl>
+
+          {/* One tap, no scrolling, no reading. The whole pitch is that the
+              music is one gesture away. */}
+          {topVersion && (
+            <div className="flex items-center gap-3.5 p-3 rounded-sm bg-gradient-to-r from-primary/[0.14] to-transparent border border-primary/30">
+              <button
+                type="button"
+                onClick={() => void playVersion(topVersion)}
+                disabled={resolving === topVersion.id}
+                aria-label={`Play ${song.title}, ${fmtDate(topVersion.show_date)}`}
+                className="shrink-0 w-[68px] h-[68px] rounded-full grid place-items-center text-[hsl(var(--dead-dark))] shadow-lg transition-transform active:scale-95 disabled:opacity-70"
+                style={{ background: "radial-gradient(circle at 34% 30%, hsl(var(--dead-gold)), hsl(38 62% 42%))" }}
+              >
+                {resolving === topVersion.id
+                  ? <Loader2 className="w-7 h-7 animate-spin" />
+                  : <Play className="w-8 h-8 fill-current translate-x-[2px]" />}
+              </button>
+              <div className="min-w-0">
+                <p className="font-ticket text-[10px] uppercase tracking-[0.14em] text-primary mb-0.5">
+                  {resolving === topVersion.id ? "Finding the tape…" : "Start with the one they all name"}
+                </p>
+                <p className="font-hand text-2xl leading-none text-[hsl(var(--dead-blue))]">
+                  {fmtDate(topVersion.show_date)}
+                </p>
+                <p className="font-ticket text-[11px] text-muted-foreground mt-0.5 truncate">
+                  {topVersion.venue}{topVersion.city ? ` · ${topVersion.city}` : ""}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => void share()}
+                aria-label={`Share ${song.title}`}
+                className="ml-auto shrink-0 grid place-items-center w-11 h-11 rounded-full border border-primary/40 text-primary hover:bg-primary/10 active:bg-primary/15 transition-colors"
+              >
+                <Share2 className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+
+          {/* Thirty years on one line — where every ranked night actually sits. */}
+          {arc && (
+            <figure className="mt-5">
+              <figcaption className="font-ticket text-[9px] uppercase tracking-[0.16em] text-muted-foreground mb-2">
+                {arc.startYear}–{arc.endYear} · every ranked night
+              </figcaption>
+              <div className="relative h-9">
+                <span className="absolute left-0 right-0 top-[17px] h-px bg-muted-foreground/30" />
+                {arc.points.map((pt) => (
+                  <button
+                    key={pt.v.id}
+                    type="button"
+                    onClick={() => void playVersion(pt.v)}
+                    title={`${fmtDate(pt.v.show_date)} — ${pt.v.venue ?? ""}`}
+                    aria-label={`Play ${fmtDate(pt.v.show_date)}`}
+                    className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 grid place-items-center w-9 h-9 rounded-full"
+                    style={{ left: `${pt.pct}%` }}
+                  >
+                    <span
+                      className="block rounded-full transition-transform hover:scale-125"
+                      style={{
+                        width: pt.lead ? 13 : pt.sleeper ? 9 : 11,
+                        height: pt.lead ? 13 : pt.sleeper ? 9 : 11,
+                        background: pt.sleeper
+                          ? "hsl(var(--dead-green))"
+                          : pt.v.is_benchmark
+                            ? "hsl(var(--dead-gold))"
+                            : "hsl(var(--dead-blue))",
+                        outline: pt.lead ? "2px solid hsl(var(--dead-gold))" : undefined,
+                        outlineOffset: 2,
+                      }}
+                    />
+                  </button>
+                ))}
+              </div>
+              <div className="flex justify-between font-mono text-[10px] text-muted-foreground tabular-nums -mt-1">
+                <span>{arc.startYear}</span>
+                <span>{arc.endYear}</span>
+              </div>
+            </figure>
+          )}
         </header>
+
+        {/* ── The Songbook, when this song has an issue ─────────────── */}
+        {feature && (feature.headline || feature.dek) && (
+          <section className="mb-6 p-4 rounded-sm border-l-[3px] border-[hsl(var(--dead-gold))] bg-[hsl(var(--dead-gold)/0.08)]">
+            <p className="font-ticket text-[10px] uppercase tracking-[0.18em] text-[hsl(var(--dead-gold))] mb-1.5">
+              The Songbook{feature.issue_number != null && ` · Issue ${String(feature.issue_number).padStart(3, "0")}`}
+            </p>
+            {feature.headline && (
+              <h2 className="font-header text-xl leading-tight text-card-foreground mb-1.5">{feature.headline}</h2>
+            )}
+            {feature.dek && (
+              <p className="font-body text-sm leading-relaxed text-muted-foreground max-w-[58ch]">{feature.dek}</p>
+            )}
+            <Link
+              to={`/songbook/${feature.slug}`}
+              className="inline-block mt-2.5 font-ticket text-[11px] uppercase tracking-[0.12em] text-primary underline underline-offset-4"
+            >
+              Read the whole issue →
+            </Link>
+          </section>
+        )}
 
         {/* ── Why these — the quiet disclosure ──────────────────────── */}
         <section className="mb-7 border-l-[3px] border-[hsl(var(--dead-blue))] bg-[hsl(var(--dead-blue)/0.06)] rounded-r-sm p-3.5">
