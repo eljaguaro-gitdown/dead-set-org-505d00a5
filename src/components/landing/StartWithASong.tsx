@@ -71,21 +71,79 @@ const StartWithASong = ({ variant = "section" }: Props) => {
 
   const hero = variant === "hero";
 
+  // The hero renders in its own palette (cream on maroon) via .ds-hero__pick*;
+  // the standalone section renders on the app surface with Tailwind tokens.
+  if (hero) {
+    return (
+      <section className="ds-hero__pick" aria-labelledby="ds-pick-title">
+        <span className="ds-hero__pick-burst" aria-hidden="true">New</span>
+        <p className="ds-hero__pick-eyebrow">Start with a song</p>
+        <h2 id="ds-pick-title" className="ds-hero__pick-title">
+          Which one do you argue about?
+        </h2>
+        <p className="ds-hero__pick-sub">
+          Every version worth knowing — including the ones nobody names.
+        </p>
+
+        <div ref={boxRef} style={{ position: "relative" }}>
+          <label className="ds-hero__pick-field">
+            <Search className="w-5 h-5 shrink-0" style={{ color: "rgba(58,3,3,0.55)" }} aria-hidden="true" />
+            <input
+              value={q}
+              onChange={(e) => { setQ(e.target.value); setOpen(true); }}
+              onFocus={() => setOpen(true)}
+              onKeyDown={(e) => { if (e.key === "Enter" && matches[0]) go(matches[0].title, "search_enter"); }}
+              placeholder="Dark Star, Shakedown Street…"
+              aria-label="Search for a song"
+              type="search"
+              enterKeyHint="go"
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="words"
+              spellCheck={false}
+              className="ds-hero__pick-input"
+            />
+          </label>
+
+          {open && matches.length > 0 && (
+            <ul className="ds-hero__pick-results">
+              {matches.map((s2) => (
+                <li key={s2.id}>
+                  <button type="button" onClick={() => go(s2.title, "search_pick")} className="ds-hero__pick-result">
+                    <span>{s2.title}</span>
+                    {READY.includes(s2.title) && <span className="ds-hero__pick-result-ready">mapped</span>}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        <p className="ds-hero__pick-ready-label">Mapped end to end</p>
+        <div className="ds-hero__pick-chips">
+          {READY.map((title) => (
+            <button key={title} type="button" onClick={() => go(title, "ready_chip")} className="ds-hero__pick-chip">
+              {title}
+              <span className="ds-hero__pick-chip-arrow" aria-hidden="true">→</span>
+            </button>
+          ))}
+        </div>
+      </section>
+    );
+  }
+
   return (
-    <section className={hero ? "w-full" : "mx-auto w-full max-w-2xl px-5 py-10"}>
-      <div className={hero ? "text-center mb-3" : "text-center mb-5"}>
+    <section className="mx-auto w-full max-w-2xl px-5 py-10">
+      <div className="text-center mb-5">
         <p className="font-ticket text-[10px] uppercase tracking-[0.18em] text-primary mb-2">
           Start with a song
         </p>
-        {!hero && (
-          <h2 className="font-title text-3xl md:text-4xl text-card-foreground leading-tight mb-2">
-            Which one do you argue about?
-          </h2>
-        )}
-        <p className={`font-body text-sm text-muted-foreground mx-auto ${hero ? "max-w-[34ch]" : "max-w-[46ch]"}`}>
-          {hero
-            ? "Every version worth knowing — including the ones nobody names."
-            : "Name it and we'll show you every version worth knowing — including the ones that never made anybody's shortlist."}
+        <h2 className="font-title text-3xl md:text-4xl text-card-foreground leading-tight mb-2">
+          Which one do you argue about?
+        </h2>
+        <p className="font-body text-sm text-muted-foreground max-w-[46ch] mx-auto">
+          Name it and we'll show you every version worth knowing — including the ones that never
+          made anybody's shortlist.
         </p>
       </div>
 
@@ -105,23 +163,21 @@ const StartWithASong = ({ variant = "section" }: Props) => {
             autoCorrect="off"
             autoCapitalize="words"
             spellCheck={false}
-            // 16px minimum: iOS zooms the viewport on focus for anything
-            // smaller, which shoves the results list off screen.
             className="flex-1 min-w-0 self-stretch min-h-[24px] bg-transparent font-body text-base text-card-foreground placeholder:text-muted-foreground/70 outline-none"
           />
         </label>
 
         {open && matches.length > 0 && (
           <ul className="absolute z-20 left-0 right-0 mt-1 rounded-sm border border-border bg-card shadow-lg overflow-hidden">
-            {matches.map((s) => (
-              <li key={s.id}>
+            {matches.map((s2) => (
+              <li key={s2.id}>
                 <button
                   type="button"
-                  onClick={() => go(s.title, "search_pick")}
+                  onClick={() => go(s2.title, "search_pick")}
                   className="w-full flex items-center justify-between gap-2 px-3 py-3 min-h-[48px] text-left hover:bg-muted/60 active:bg-muted transition-colors"
                 >
-                  <span className="font-body text-sm text-card-foreground">{s.title}</span>
-                  {READY.includes(s.title) && (
+                  <span className="font-body text-sm text-card-foreground">{s2.title}</span>
+                  {READY.includes(s2.title) && (
                     <span className="font-ticket text-[9px] uppercase tracking-[0.12em] text-primary whitespace-nowrap">
                       fully mapped
                     </span>

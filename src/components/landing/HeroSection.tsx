@@ -518,6 +518,159 @@ const HeroSection = (_props: HeroSectionProps) => {
           width: 100%;
           display: flex; flex-direction: column; align-items: center; gap: 12px;
         }
+        /* ── Song picker — the first move of the product. Styled in the
+              hero's own palette: the app's card tokens are built for the
+              cream card surface and vanish on this maroon. ── */
+        .ds-hero__pick {
+          position: relative;
+          margin: 26px 0 30px;
+          padding: 22px 16px 20px;
+          border: 1px solid var(--rule-gold-40);
+          border-radius: 10px;
+          background:
+            radial-gradient(120% 140% at 50% 0%, rgba(214, 178, 113, 0.14), transparent 62%),
+            var(--bg-plaque);
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.32);
+        }
+        .ds-hero__pick-burst {
+          position: absolute;
+          top: -16px;
+          right: -6px;
+          width: 62px;
+          height: 62px;
+          display: grid;
+          place-items: center;
+          background: var(--text-eyebrow);
+          color: #3a0303;
+          font-family: 'IBM Plex Mono', ui-monospace, monospace;
+          font-size: 11px;
+          font-weight: 700;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          transform: rotate(-12deg);
+          clip-path: polygon(
+            50% 0%, 60% 14%, 76% 7%, 78% 25%, 94% 24%, 88% 40%, 100% 50%,
+            88% 60%, 94% 76%, 78% 75%, 76% 93%, 60% 86%, 50% 100%, 40% 86%,
+            24% 93%, 22% 75%, 6% 76%, 12% 60%, 0% 50%, 12% 40%, 6% 24%,
+            22% 25%, 24% 7%, 40% 14%
+          );
+        }
+        .ds-hero__pick-eyebrow {
+          font-family: 'IBM Plex Mono', ui-monospace, monospace;
+          font-size: 11px;
+          letter-spacing: 0.26em;
+          text-transform: uppercase;
+          color: var(--text-eyebrow);
+          margin: 0 0 8px;
+        }
+        .ds-hero__pick-title {
+          font-family: 'Sancreek', 'Playfair Display', Georgia, serif;
+          font-size: clamp(27px, 7.4vw, 34px);
+          line-height: 1.1;
+          color: var(--text-primary);
+          margin: 0 0 8px;
+        }
+        .ds-hero__pick-sub {
+          font-size: 15px;
+          line-height: 1.5;
+          color: var(--text-soft);
+          margin: 0 0 16px;
+          max-width: 34ch;
+          margin-inline: auto;
+        }
+        .ds-hero__pick-field {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          min-height: 54px;
+          padding: 0 14px;
+          border-radius: 8px;
+          background: var(--text-primary);
+          border: 2px solid transparent;
+          cursor: text;
+          transition: border-color 140ms ease;
+        }
+        .ds-hero__pick-field:focus-within { border-color: var(--accent-warm); }
+        .ds-hero__pick-input {
+          flex: 1;
+          min-width: 0;
+          align-self: stretch;
+          border: 0;
+          outline: 0;
+          background: transparent;
+          /* 16px minimum or iOS zooms the page on focus. */
+          font-size: 16px;
+          font-family: 'DM Sans', system-ui, sans-serif;
+          color: #3a0303;
+        }
+        .ds-hero__pick-input::placeholder { color: rgba(58, 3, 3, 0.55); }
+        .ds-hero__pick-results {
+          list-style: none;
+          margin: 6px 0 0;
+          padding: 0;
+          border-radius: 8px;
+          overflow: hidden;
+          background: var(--text-primary);
+          text-align: left;
+        }
+        .ds-hero__pick-result {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 10px;
+          width: 100%;
+          min-height: 52px;
+          padding: 10px 14px;
+          background: transparent;
+          border: 0;
+          border-bottom: 1px solid rgba(58, 3, 3, 0.12);
+          font-family: 'DM Sans', system-ui, sans-serif;
+          font-size: 16px;
+          color: #3a0303;
+          text-align: left;
+          cursor: pointer;
+        }
+        .ds-hero__pick-result:last-child { border-bottom: 0; }
+        .ds-hero__pick-result-ready {
+          font-family: 'IBM Plex Mono', ui-monospace, monospace;
+          font-size: 10px;
+          letter-spacing: 0.14em;
+          text-transform: uppercase;
+          color: #9a3b26;
+          white-space: nowrap;
+        }
+        .ds-hero__pick-ready-label {
+          font-family: 'IBM Plex Mono', ui-monospace, monospace;
+          font-size: 10px;
+          letter-spacing: 0.2em;
+          text-transform: uppercase;
+          color: var(--text-eyebrow);
+          margin: 18px 0 9px;
+        }
+        .ds-hero__pick-chips {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+          justify-content: center;
+        }
+        .ds-hero__pick-chip {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          min-height: 50px;
+          padding: 0 16px;
+          border-radius: 8px;
+          border: 1.5px solid var(--rule-faint);
+          background: rgba(239, 231, 208, 0.06);
+          color: var(--text-primary);
+          font-family: 'DM Sans', system-ui, sans-serif;
+          font-size: 16px;
+          cursor: pointer;
+          transition: background 140ms ease, border-color 140ms ease;
+        }
+        .ds-hero__pick-chip:active { background: rgba(239, 231, 208, 0.16); }
+        .ds-hero__pick-chip-arrow { color: var(--text-eyebrow); font-size: 15px; }
+
         .ds-hero__cta-eyebrow {
           font-family: 'IBM Plex Mono', ui-monospace, monospace;
           font-size: 11px;
@@ -890,6 +1043,12 @@ const HeroSection = (_props: HeroSectionProps) => {
             the Internet Archive. Press play — no signup required.
           </p>
 
+          {/* PROTOTYPE — naming a song is the first move of the product, so it
+              sits above the Songbook card and lands in the first viewport on a
+              phone. Anyone can search, open and play what they find; signing in
+              is only asked for at save and share. */}
+          <StartWithASong variant="hero" />
+
           <p className="ds-hero__chase">
             That song. That night. That version you'll never forget —
             and the next one waiting to be found, inhaled, and passed on.
@@ -966,16 +1125,6 @@ const HeroSection = (_props: HeroSectionProps) => {
               "Build your Setlist" lands in the first viewport on a phone,
               before the large Charlie portrait. */}
           <div className="ds-hero__cta-wrap">
-            {/* PROTOTYPE — naming a song is the first move of the product, so
-                it sits above "Build your Setlist" and inside the first
-                viewport on a phone. Anyone can search, open and play what
-                they find; signing in is only asked for at save and share. */}
-            <StartWithASong variant="hero" />
-
-            <div className="ds-hero__cta-divider" aria-hidden="true">
-              <span>or</span>
-            </div>
-
             <div className="ds-hero__cta-eyebrow">Need a Miracle?</div>
             <a
               href={BUILDER_ROUTE}
