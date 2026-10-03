@@ -11,8 +11,6 @@ import PageLayout from "@/components/PageLayout";
 import SiteHeader from "@/components/SiteHeader";
 
 import HeroSection from "@/components/landing/HeroSection";
-// PROTOTYPE — song-first entry into the version picker.
-import StartWithASong from "@/components/landing/StartWithASong";
 import SetlistOfTheDay from "@/components/landing/SetlistOfTheDay";
 import HowItWorks from "@/components/landing/HowItWorks";
 import PersonalNote from "@/components/landing/PersonalNote";
@@ -311,9 +309,6 @@ const Index = () => {
 
       {/* Hero — headline, subhead, audio strip, CTAs */}
       <HeroSection showReturningSignIn={!user} featured={featured} />
-
-      {/* PROTOTYPE — the song-first front door, directly under the hero. */}
-      <StartWithASong />
 
       {/* Setlist of the Day — featured community pick.
           Hidden on mobile: the hero cassette already surfaces this same daily

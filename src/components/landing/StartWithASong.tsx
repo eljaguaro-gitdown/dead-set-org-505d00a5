@@ -26,7 +26,16 @@ interface SongRow {
 /** Songs with a full ranked version list. Hand-held while the corpus is two. */
 const READY = ["Shakedown Street", "Crazy Fingers"];
 
-const StartWithASong = () => {
+interface Props {
+  /**
+   * "hero" is the compact form that sits inside the hero's CTA block as the
+   * first thing a phone sees. "section" is the standalone block with its own
+   * headline, for anywhere further down the page.
+   */
+  variant?: "hero" | "section";
+}
+
+const StartWithASong = ({ variant = "section" }: Props) => {
   const navigate = useNavigate();
   const [songs, setSongs] = useState<SongRow[]>([]);
   const [q, setQ] = useState("");
@@ -60,32 +69,45 @@ const StartWithASong = () => {
     navigate(`/versions/${songSlug(title)}`);
   };
 
+  const hero = variant === "hero";
+
   return (
-    <section className="mx-auto w-full max-w-2xl px-5 py-10">
-      <div className="text-center mb-5">
+    <section className={hero ? "w-full" : "mx-auto w-full max-w-2xl px-5 py-10"}>
+      <div className={hero ? "text-center mb-3" : "text-center mb-5"}>
         <p className="font-ticket text-[10px] uppercase tracking-[0.18em] text-primary mb-2">
           Start with a song
         </p>
-        <h2 className="font-title text-3xl md:text-4xl text-card-foreground leading-tight mb-2">
-          Which one do you argue about?
-        </h2>
-        <p className="font-body text-sm text-muted-foreground max-w-[46ch] mx-auto">
-          Name it and we'll show you every version worth knowing — including the ones that never
-          made anybody's shortlist.
+        {!hero && (
+          <h2 className="font-title text-3xl md:text-4xl text-card-foreground leading-tight mb-2">
+            Which one do you argue about?
+          </h2>
+        )}
+        <p className={`font-body text-sm text-muted-foreground mx-auto ${hero ? "max-w-[34ch]" : "max-w-[46ch]"}`}>
+          {hero
+            ? "Every version worth knowing — including the ones nobody names."
+            : "Name it and we'll show you every version worth knowing — including the ones that never made anybody's shortlist."}
         </p>
       </div>
 
       <div ref={boxRef} className="relative">
-        <div className="flex items-center gap-2 rounded-sm border border-border bg-card px-3 py-2.5 focus-within:border-primary/50 transition-colors">
+        <div className="flex items-center gap-2 rounded-sm border border-border bg-card px-3 py-3 min-h-[48px] focus-within:border-primary/50 transition-colors">
           <Search className="w-4 h-4 text-muted-foreground shrink-0" />
           <input
             value={q}
             onChange={(e) => { setQ(e.target.value); setOpen(true); }}
             onFocus={() => setOpen(true)}
             onKeyDown={(e) => { if (e.key === "Enter" && matches[0]) go(matches[0].title, "search_enter"); }}
-            placeholder="Dark Star, Shakedown Street, Ramble On Rose…"
+            placeholder="Dark Star, Shakedown Street…"
             aria-label="Search for a song"
-            className="flex-1 bg-transparent font-body text-sm text-card-foreground placeholder:text-muted-foreground/70 outline-none"
+            type="search"
+            enterKeyHint="go"
+            autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="words"
+            spellCheck={false}
+            // 16px minimum: iOS zooms the viewport on focus for anything
+            // smaller, which shoves the results list off screen.
+            className="flex-1 min-w-0 bg-transparent font-body text-base text-card-foreground placeholder:text-muted-foreground/70 outline-none"
           />
         </div>
 
@@ -96,7 +118,7 @@ const StartWithASong = () => {
                 <button
                   type="button"
                   onClick={() => go(s.title, "search_pick")}
-                  className="w-full flex items-center justify-between gap-2 px-3 py-2.5 text-left hover:bg-muted/60 transition-colors"
+                  className="w-full flex items-center justify-between gap-2 px-3 py-3 min-h-[48px] text-left hover:bg-muted/60 active:bg-muted transition-colors"
                 >
                   <span className="font-body text-sm text-card-foreground">{s.title}</span>
                   {READY.includes(s.title) && (
@@ -121,7 +143,7 @@ const StartWithASong = () => {
               key={title}
               type="button"
               onClick={() => go(title, "ready_chip")}
-              className="inline-flex items-center gap-1.5 rounded-sm border border-primary/40 bg-primary/[0.07] px-3 py-2 font-body text-sm text-card-foreground hover:bg-primary/15 transition-colors"
+              className="inline-flex items-center gap-1.5 rounded-sm border border-primary/40 bg-primary/[0.07] px-3.5 py-3 min-h-[48px] font-body text-sm text-card-foreground hover:bg-primary/15 active:bg-primary/20 transition-colors"
             >
               {title}
               <ArrowRight className="w-3.5 h-3.5 text-primary" />

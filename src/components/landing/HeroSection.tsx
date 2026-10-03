@@ -6,6 +6,8 @@ import { songbookDb } from "@/lib/songbookDb";
 import { useAudioPlayer, type PlayableSlot } from "@/contexts/AudioPlayerContext";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
+// PROTOTYPE — song-first entry; see src/components/landing/StartWithASong.tsx
+import StartWithASong from "@/components/landing/StartWithASong";
 
 // Daily community spotlight — server picks one public setlist per UTC day,
 // rotating fairly so every public setlist gets a turn. See get_hero_spotlight().
@@ -964,6 +966,16 @@ const HeroSection = (_props: HeroSectionProps) => {
               "Build your Setlist" lands in the first viewport on a phone,
               before the large Charlie portrait. */}
           <div className="ds-hero__cta-wrap">
+            {/* PROTOTYPE — naming a song is the first move of the product, so
+                it sits above "Build your Setlist" and inside the first
+                viewport on a phone. Anyone can search, open and play what
+                they find; signing in is only asked for at save and share. */}
+            <StartWithASong variant="hero" />
+
+            <div className="ds-hero__cta-divider" aria-hidden="true">
+              <span>or</span>
+            </div>
+
             <div className="ds-hero__cta-eyebrow">Need a Miracle?</div>
             <a
               href={BUILDER_ROUTE}

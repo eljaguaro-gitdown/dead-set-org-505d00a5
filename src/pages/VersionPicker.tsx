@@ -312,6 +312,11 @@ const VersionPicker = () => {
   };
 
   const share = async () => {
+    if (!user) {
+      toast.info("Sign in to share this");
+      navigate(`/auth?redirect=${encodeURIComponent(`/versions/${slug}`)}`);
+      return;
+    }
     const url = `${window.location.origin}/versions/${slug}`;
     try {
       if (navigator.share) await navigator.share({ title: `${song?.title} — the versions`, url });
@@ -357,7 +362,7 @@ const VersionPicker = () => {
   return (
     <PageLayout>
       <SiteHeader />
-      <main className="mx-auto w-full max-w-3xl px-5 py-8 pb-32">
+      <main className="mx-auto w-full max-w-3xl px-5 py-8 pb-40">
         <Link
           to="/"
           className="inline-flex items-center gap-1.5 font-ticket text-[11px] uppercase tracking-[0.12em] text-foreground/60 hover:text-primary transition-colors mb-6"
@@ -536,7 +541,7 @@ const VersionPicker = () => {
                     size="sm"
                     disabled={resolving === v.id}
                     onClick={() => void playVersion(v)}
-                    className="h-7 mt-2.5 text-xs font-body gap-1 border-primary/30 text-dead-gold hover:bg-primary/10"
+                    className="h-9 min-h-[40px] mt-2.5 px-3 text-xs font-body gap-1.5 border-primary/30 text-dead-gold hover:bg-primary/10 active:bg-primary/15"
                   >
                     {resolving === v.id ? (
                       <><Loader2 className="w-3 h-3 animate-spin" /> Looking for the tape…</>
@@ -557,12 +562,12 @@ const VersionPicker = () => {
 
       {/* ── Keep it / send it ──────────────────────────────────────── */}
       {versions.length > 0 && (
-        <div className="fixed bottom-0 inset-x-0 z-40 border-t border-border bg-background/95 backdrop-blur px-5 py-3">
+        <div className="fixed bottom-0 inset-x-0 z-40 border-t border-border bg-background/95 backdrop-blur px-5 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
           <div className="mx-auto max-w-3xl flex items-center gap-2">
             <Button
               onClick={() => void saveAsGuide()}
               disabled={saving}
-              className="flex-1 bg-primary text-primary-foreground font-ticket text-[11px] uppercase tracking-[0.1em] gap-1.5"
+              className="flex-1 min-h-[48px] bg-primary text-primary-foreground font-ticket text-[11px] uppercase tracking-[0.1em] gap-1.5"
             >
               {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ListMusic className="w-3.5 h-3.5" />}
               Keep as a listening guide
@@ -570,7 +575,7 @@ const VersionPicker = () => {
             <Button
               variant="outline"
               onClick={() => void share()}
-              className="border-border font-ticket text-[11px] uppercase tracking-[0.1em] gap-1.5"
+              className="min-h-[48px] border-border font-ticket text-[11px] uppercase tracking-[0.1em] gap-1.5"
             >
               <Share2 className="w-3.5 h-3.5" /> Share
             </Button>
