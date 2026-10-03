@@ -33,6 +33,8 @@ const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const About = lazy(() => import("./pages/About"));
 const Terms = lazy(() => import("./pages/Terms"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+// PROTOTYPE — the version picker as a page (see src/pages/VersionPicker.tsx).
+const VersionPicker = lazy(() => import("./pages/VersionPicker"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const Messages = lazy(() => import("./pages/Messages"));
 const Backstage = lazy(() => import("./pages/Backstage"));
@@ -84,6 +86,7 @@ const App = () => (
                 <Route path="/user/:userId" element={<UserLibrary />} />
                 <Route path="/audio-diag" element={<AudioDiagnostics />} />
                 <Route path="/song/:songId" element={<SongPage />} />
+                <Route path="/versions/:slug" element={<VersionPicker />} />
                 <Route path="/songbook" element={<Songbook />} />
                 <Route path="/songbook/:slug" element={<SongFeature />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
