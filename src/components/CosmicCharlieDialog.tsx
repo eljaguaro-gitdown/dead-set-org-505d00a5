@@ -18,6 +18,17 @@ import {
 import { extractTasteMatches, type LengthHint } from "@/lib/charlie/tasteLexicon";
 import { trackWizardEvent } from "@/lib/wizardEvents";
 import { SYNTHETIC_VERSION_DEFAULTS } from "@/lib/syntheticVersion";
+import { findRecordingForDate } from "@/lib/archiveOrg";
+import { buildGuideSongs } from "@/lib/listeningGuide";
+import {
+  buildMilestones,
+  milestonePlace,
+  MILESTONE_LABEL,
+  MILESTONE_SHORT,
+  NO_TAPE_LINE,
+  type MilestoneEntry,
+  type MilestoneTape,
+} from "@/lib/firstLastPlayed";
 
 type Song = Database["public"]["Tables"]["songs"]["Row"];
 type Era = Database["public"]["Tables"]["eras"]["Row"];
@@ -144,6 +155,9 @@ const CosmicCharlieDialog = ({
   const [selectedEraIds, setSelectedEraIds] = useState<string[]>([]);
   const [surpriseMe, setSurpriseMe] = useState(false);
   const [exploreResult, setExploreResult] = useState<ExploreResult | null>(null);
+  // First/last time played, resolved from the catalog once the versions land.
+  const [milestones, setMilestones] = useState<MilestoneEntry[]>([]);
+  const [milestonesLoading, setMilestonesLoading] = useState(false);
 
   // Fire wizard_opened once per dialog opening.
   useEffect(() => {
@@ -330,6 +344,55 @@ const CosmicCharlieDialog = ({
       setLoading(false);
     }
   };
+
+  /**
+   * Resolve the song's first and last time played once Charlie's picks are in.
+   * The dates come from the catalog, not the prose; the tape is looked up per
+   * date. Runs after the result renders so the list is never held up by two
+   * Archive round-trips, and a miss is shown rather than hidden.
+   */
+  useEffect(() => {
+    if (!exploreResult || !selectedSong) {
+      setMilestones([]);
+      return;
+    }
+    const dates = [selectedSong.first_played, selectedSong.last_played].filter(
+      (d): d is string => !!d,
+    );
+    if (dates.length === 0) {
+      setMilestones([]);
+      return;
+    }
+
+    let cancelled = false;
+    setMilestonesLoading(true);
+    (async () => {
+      const needed = dates.filter(
+        (d) => !exploreResult.versions.some((v) => v.showDate?.slice(0, 10) === d.slice(0, 10)),
+      );
+      const found = await Promise.all(
+        Array.from(new Set(needed)).map(async (d) => {
+          const tape = await findRecordingForDate(exploreResult.songTitle, d);
+          return [d, tape as MilestoneTape | null] as const;
+        }),
+      );
+      if (cancelled) return;
+      setMilestones(
+        buildMilestones(selectedSong, exploreResult.versions, new Map(found)),
+      );
+      setMilestonesLoading(false);
+    })();
+
+    return () => {
+      cancelled = true;
+      setMilestonesLoading(false);
+    };
+  }, [exploreResult, selectedSong]);
+
+  /** The milestone labelling a given card in Charlie's list, if any. */
+  const milestoneForIndex = (i: number) => milestones.find((m) => m.listIndex === i) || null;
+  /** Milestones that are nights of their own, not already in the list. */
+  const standaloneMilestones = milestones.filter((m) => m.listIndex === null);
 
   const handleApply = () => {
     if (!suggestion) return;
@@ -900,6 +963,18 @@ const CosmicCharlieDialog = ({
                 <p className="text-sm text-card-foreground font-body leading-relaxed whitespace-pre-line">{exploreResult.linerNotes}</p>
               </div>
               <div className="space-y-3">
+                {milestonesLoading && (
+                  <p className="font-body text-[11px] text-muted-foreground text-center py-1">
+                    Checking the crates for the first and last times it was played…
+                  </p>
+                )}
+
+                {standaloneMilestones
+                  .filter((m) => m.kind === "ftp")
+                  .map((m) => (
+                    <MilestoneCard key={m.kind} milestone={m} songTitle={exploreResult.songTitle} songId={selectedSong?.id || ""} onPlay={playSingle} />
+                  ))}
+
                 {exploreResult.versions.map((v, i) => (
                   <div key={i} className="p-3 rounded-lg border border-border bg-background space-y-2">
                     <div className="flex items-start justify-between gap-2">
@@ -915,7 +990,10 @@ const CosmicCharlieDialog = ({
                         </div>
                       )}
                     </div>
-                    {v.eraName && <span className="inline-block text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-dead-gold font-body">{v.eraName}</span>}
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      {v.eraName && <span className="inline-block text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-dead-gold font-body">{v.eraName}</span>}
+                      {milestoneForIndex(i) && <MilestoneChip kind={milestoneForIndex(i)!.kind} />}
+                    </div>
                     <p className="text-xs text-foreground/80 font-body leading-relaxed">{v.whyThisVersion}</p>
                     {v.archiveUrl && (
                       <div className="flex items-center gap-2">
@@ -947,6 +1025,12 @@ const CosmicCharlieDialog = ({
                     )}
                   </div>
                 ))}
+
+                {standaloneMilestones
+                  .filter((m) => m.kind === "ltp")
+                  .map((m) => (
+                    <MilestoneCard key={m.kind} milestone={m} songTitle={exploreResult.songTitle} songId={selectedSong?.id || ""} onPlay={playSingle} />
+                  ))}
               </div>
               <div className="flex flex-col gap-2 pt-2">
                 <Button
@@ -954,20 +1038,23 @@ const CosmicCharlieDialog = ({
                   onClick={() => {
                     if (!exploreResult || !selectedSong) return;
                     unlockAudio();
+                    const guideSongs = buildGuideSongs(
+                      selectedSong.id,
+                      exploreResult.songTitle,
+                      exploreResult.versions.map((v) => ({
+                        showDate: v.showDate,
+                        venue: v.venue,
+                        archiveUrl: v.archiveUrl,
+                        rating: v.rating,
+                        whyThisVersion: v.whyThisVersion,
+                      })),
+                      milestones,
+                    );
+
                     const fakeSuggestion: AISuggestion = {
                       setlist_name: `${exploreResult.songTitle} — Listening Guide`,
                       explanation: exploreResult.linerNotes,
-                      sets: [{
-                        setNumber: 1,
-                        songs: exploreResult.versions.map((v, i) => ({
-                          songId: selectedSong.id,
-                          title: exploreResult.songTitle,
-                          matched: true,
-                          segueToNext: false,
-                          notes: `${v.showDate} — ${v.venue || "Unknown Venue"}${v.whyThisVersion ? ` • ${v.whyThisVersion}` : ""}`,
-                          position: i + 1,
-                        })),
-                      }],
+                      sets: [{ setNumber: 1, songs: guideSongs }],
                     };
                     onCreateNewSetlist(fakeSuggestion, fakeSuggestion.setlist_name);
                     handleReset();
@@ -1126,5 +1213,86 @@ const CosmicCharlieDialog = ({
     </Dialog>
   );
 };
+
+/**
+ * A first/last-played night that Charlie did not already pick. Dashed border
+ * because it is a bookend rather than one of his picks — and it is rendered
+ * whether or not a tape turned up: the date is the point, the tape is a bonus.
+ */
+const MilestoneCard = ({
+  milestone: m,
+  songTitle,
+  songId,
+  onPlay,
+}: {
+  milestone: MilestoneEntry;
+  songTitle: string;
+  songId: string;
+  onPlay: (slot: PlayableSlot) => void;
+}) => (
+  <div className="p-3 rounded-lg border border-dashed border-primary/40 bg-primary/[0.04] space-y-2">
+    <div className="flex items-start justify-between gap-2">
+      <div>
+        <p className="font-display text-sm text-foreground">{m.date}</p>
+        {milestonePlace(m) && (
+          <p className="text-xs text-foreground/75 font-body">{milestonePlace(m)}</p>
+        )}
+      </div>
+      <MilestoneChip kind={m.kind} />
+    </div>
+
+    {m.tapeFound ? (
+      <div className="flex items-center gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-7 text-xs font-body gap-1 border-primary/30 text-dead-gold hover:bg-primary/10"
+          onClick={() =>
+            onPlay({
+              id: `explore-${m.kind}-${m.date}`,
+              song: { id: songId, title: songTitle },
+              version: {
+                ...SYNTHETIC_VERSION_DEFAULTS,
+                id: `archive-${m.kind}-${m.date}`,
+                song_id: songId,
+                show_date: m.date,
+                archive_org_url: m.archiveUrl,
+                venue: m.venue,
+                city: m.city,
+                description: MILESTONE_LABEL[m.kind],
+              },
+              setNumber: 1,
+              position: 0,
+              segueToNext: false,
+            })
+          }
+        >
+          <Play className="w-3 h-3 fill-current" /> Play this version
+        </Button>
+        <a
+          href={m.archiveUrl!}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-[10px] text-foreground/75 hover:text-dead-gold hover:underline font-body"
+        >
+          Archive.org ↗
+        </a>
+      </div>
+    ) : (
+      <p className="text-xs text-foreground/80 font-body leading-relaxed italic">{NO_TAPE_LINE}</p>
+    )}
+  </div>
+);
+
+/**
+ * The callout. FTP/LTP is what a taper writes on the J-card; the long form is
+ * there for anyone who hasn't met the shorthand yet.
+ */
+const MilestoneChip = ({ kind }: { kind: MilestoneEntry["kind"] }) => (
+  <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full border border-primary/50 bg-primary/10 text-primary font-body whitespace-nowrap">
+    <span className="font-medium">{MILESTONE_SHORT[kind]}</span>
+    <span className="text-foreground/70">{MILESTONE_LABEL[kind]}</span>
+  </span>
+);
 
 export default CosmicCharlieDialog;

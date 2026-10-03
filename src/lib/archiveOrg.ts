@@ -319,6 +319,138 @@ export async function findTrackInRecording(
   return null;
 }
 
+/** The fields we ask advancedsearch.php for, and the only ones we read. */
+interface ArchiveSearchDoc {
+  identifier: string;
+  date?: string;
+  venue?: string;
+  avg_rating?: string | number;
+  downloads?: number;
+}
+
+/**
+ * Given search hits, return the first recording we can pin the song to an
+ * actual track inside. Shared by the by-song and by-date lookups — the two
+ * disagreeing about what counts as a match is exactly the kind of silent
+ * divergence a second copy of this loop would create.
+ */
+async function pickRecordingWithTrack(
+  docs: ArchiveSearchDoc[],
+  songTitle: string,
+): Promise<ArchiveResult | null> {
+  for (const doc of docs) {
+    const identifier = doc.identifier;
+    try {
+      const metaRes = await fetchArchive(`https://archive.org/metadata/${identifier}`);
+      if (!metaRes.ok) continue;
+      const meta = await metaRes.json();
+      const audioFiles = (meta.files || []).filter(
+        (f: any) =>
+          f.format === "VBR MP3" ||
+          f.format === "Ogg Vorbis" ||
+          f.name?.endsWith(".mp3") ||
+          f.name?.endsWith(".ogg")
+      );
+
+      let bestScore = 0;
+      let bestFile: any = null;
+      for (const f of audioFiles) {
+        const title = f.title || f.name || "";
+        const score = matchScore(title, songTitle);
+        if (score > bestScore) {
+          bestScore = score;
+          bestFile = f;
+        }
+      }
+
+      if (bestFile && bestScore >= 60) {
+        return {
+          url: `https://archive.org/details/${identifier}`,
+          date: doc.date ? doc.date.split("T")[0] : null,
+          venue: doc.venue || meta.metadata?.venue || meta.metadata?.coverage || null,
+          directTrackUrl: `https://archive.org/download/${identifier}/${encodeURIComponent(bestFile.name)}`,
+        };
+      }
+    } catch {
+      continue;
+    }
+  }
+  return null;
+}
+
+const dateCache = new Map<string, ArchiveResult | null>();
+const dateInflight = new Map<string, Promise<ArchiveResult | null>>();
+
+/**
+ * Find a circulating recording of one specific night that contains one
+ * specific song — the lookup behind "first time played" / "last time played".
+ *
+ * Unlike findArchiveRecording, a miss here is a real answer, not a failure:
+ * plenty of nights the Dead played were never taped, or the tape never
+ * reached the Archive. Callers show the date anyway and say so.
+ */
+export async function findRecordingForDate(
+  songTitle: string,
+  date: string,
+): Promise<ArchiveResult | null> {
+  const day = date.slice(0, 10);
+  const key = `${songTitle.toLowerCase().trim()}@${day}`;
+  if (dateCache.has(key)) return dateCache.get(key)!;
+  if (dateInflight.has(key)) return dateInflight.get(key)!;
+
+  const promise = (async () => {
+    try {
+      const q = encodeURIComponent(`collection:GratefulDead AND date:[${day} TO ${day}]`);
+      const apiUrl = `https://archive.org/advancedsearch.php?q=${q}&fl[]=identifier&fl[]=date&fl[]=venue&fl[]=avg_rating&fl[]=downloads&sort[]=downloads+desc&sort[]=avg_rating+desc&rows=10&output=json`;
+      const res = await fetchArchive(apiUrl);
+      if (!res.ok) {
+        dateCache.set(key, null);
+        return null;
+      }
+      const data = await res.json();
+      const docs: ArchiveSearchDoc[] = (
+        (data?.response?.docs || []) as ArchiveSearchDoc[]
+      ).filter((d) => isSameArchiveDay(d.date, day));
+      if (docs.length === 0) {
+        dateCache.set(key, null);
+        return null;
+      }
+
+      const withTrack = await pickRecordingWithTrack(docs, songTitle);
+      if (withTrack) {
+        dateCache.set(key, withTrack);
+        return withTrack;
+      }
+
+      // The night circulates but this song is not on the tape we could read —
+      // a partial recording, or a title we could not match. Still the night.
+      const doc = docs[0];
+      const result: ArchiveResult = {
+        url: `https://archive.org/details/${doc.identifier}`,
+        date: day,
+        venue: doc.venue || null,
+        directTrackUrl: null,
+      };
+      dateCache.set(key, result);
+      return result;
+    } catch {
+      dateCache.set(key, null);
+      return null;
+    } finally {
+      dateInflight.delete(key);
+    }
+  })();
+
+  dateInflight.set(key, promise);
+  return promise;
+}
+
+/** archive.org returns 1971-10-19T00:00:00Z; compare only the day. */
+export function isSameArchiveDay(archiveDate: string | null | undefined, day: string): boolean {
+  if (!archiveDate) return false;
+  return archiveDate.slice(0, 10) === day.slice(0, 10);
+}
+
 export async function findArchiveRecording(
   songTitle: string,
   yearStart?: number | null,
@@ -360,46 +492,11 @@ export async function findArchiveRecording(
       }
 
       // Try each result to find one where we can match a specific track
-      for (const doc of docs) {
-        const identifier = doc.identifier;
-        try {
-          const metaRes = await fetchArchive(`https://archive.org/metadata/${identifier}`);
-          if (!metaRes.ok) continue;
-          const meta = await metaRes.json();
-          const audioFiles = (meta.files || []).filter(
-            (f: any) =>
-              f.format === "VBR MP3" ||
-              f.format === "Ogg Vorbis" ||
-              f.name?.endsWith(".mp3") ||
-              f.name?.endsWith(".ogg")
-          );
-
-          let bestScore = 0;
-          let bestFile: any = null;
-          for (const f of audioFiles) {
-            const title = f.title || f.name || "";
-            const score = matchScore(title, songTitle);
-            if (score > bestScore) {
-              bestScore = score;
-              bestFile = f;
-            }
-          }
-
-          if (bestFile && bestScore >= 60) {
-            const result: ArchiveResult = {
-              url: `https://archive.org/details/${identifier}`,
-              date: doc.date ? doc.date.split("T")[0] : null,
-              venue: doc.venue || null,
-              directTrackUrl: `https://archive.org/download/${identifier}/${encodeURIComponent(bestFile.name)}`,
-            };
-            cache.set(key, result);
-            return result;
-          }
-        } catch {
-          continue;
-        }
+      const withTrack = await pickRecordingWithTrack(docs, songTitle);
+      if (withTrack) {
+        cache.set(key, withTrack);
+        return withTrack;
       }
-
       // Fallback: return first (era-filtered) result without direct track
       const doc = docs[0];
       const result: ArchiveResult = {
