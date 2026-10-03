@@ -1,4 +1,5 @@
 import { Component, ErrorInfo, ReactNode } from "react";
+import { captureException } from "@/lib/posthog";
 
 interface Props {
   children: ReactNode;
@@ -18,6 +19,12 @@ class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, info: ErrorInfo) {
     console.error("[ErrorBoundary] Uncaught:", error, info.componentStack);
+    // Without this a crash lives only in the console of the device it happened
+    // on, which means the only way anyone learns about it is a screenshot.
+    captureException(error, {
+      component_stack: info.componentStack?.slice(0, 2000),
+      path: typeof window !== "undefined" ? window.location.pathname : null,
+    });
   }
 
   reset = () => {

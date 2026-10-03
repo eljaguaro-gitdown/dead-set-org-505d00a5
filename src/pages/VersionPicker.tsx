@@ -364,21 +364,31 @@ const VersionPicker = () => {
   };
 
   const share = async () => {
-    if (!user) {
-      toast.info("Sign in to share this");
-      navigate(`/auth?redirect=${encodeURIComponent(`/versions/${slug}`)}`);
-      return;
-    }
-    const url = `${window.location.origin}/versions/${slug}`;
+    // Everything here is wrapped: a share sheet the reader dismisses, a
+    // clipboard the browser refuses, an analytics call that throws — none of
+    // them should be able to take the page down behind an error screen.
     try {
-      if (navigator.share) await navigator.share({ title: `${song?.title} — the versions`, url });
-      else {
+      if (!user) {
+        toast.info("Sign in to share this");
+        navigate(`/auth?redirect=${encodeURIComponent(`/versions/${slug ?? ""}`)}`);
+        return;
+      }
+      const url = `${window.location.origin}/versions/${slug ?? ""}`;
+      if (navigator.share) {
+        await navigator.share({ title: `${song?.title ?? "Dead Set"} — the versions`, url });
+      } else if (navigator.clipboard?.writeText) {
         await navigator.clipboard.writeText(url);
         toast.success("Link copied");
+      } else {
+        toast.info(url);
       }
       captureEvent("version_picker_shared", { song_title: song?.title });
-    } catch {
-      /* dismissed */
+    } catch (e) {
+      // AbortError is the reader closing the sheet; anything else is worth a word.
+      if ((e as DOMException)?.name !== "AbortError") {
+        console.error("[VersionPicker] share failed", e);
+        toast.error("Couldn't open the share sheet");
+      }
     }
   };
 
