@@ -26,7 +26,6 @@ import {
   buildMilestones,
   milestonePlace,
   MILESTONE_LABEL,
-  MILESTONE_SHORT,
   NO_TAPE_LINE,
   type MilestoneEntry,
   type MilestoneTape,
@@ -365,10 +364,14 @@ const VersionPicker = () => {
       <main className="mx-auto w-full max-w-3xl px-5 py-8 pb-40">
         <Link
           to="/"
-          className="inline-flex items-center gap-1.5 font-ticket text-[11px] uppercase tracking-[0.12em] text-foreground/60 hover:text-primary transition-colors mb-6"
+          className="inline-flex items-center gap-1.5 font-ticket text-[11px] uppercase tracking-[0.12em] text-foreground/75 hover:text-foreground transition-colors mb-5"
         >
           <ArrowLeft className="w-3.5 h-3.5" /> Back
         </Link>
+
+        {/* The cream sheet every reading surface in the app uses. Without it the
+            card-surface tokens below render dark text on the maroon ground. */}
+        <article className="bg-card text-card-foreground rounded-sm border border-border p-5 md:p-7">
 
         {/* ── The song ─────────────────────────────────────────────── */}
         <header className="mb-7">
@@ -527,7 +530,7 @@ const VersionPicker = () => {
                     )}
                     {v.is_benchmark && <Chip tone="canon">★ Era benchmark</Chip>}
                     {sleeper && <Chip tone="sleep">◆ Sleeper</Chip>}
-                    {m && <Chip tone="milestone">{MILESTONE_SHORT[m.kind]} {MILESTONE_LABEL[m.kind]}</Chip>}
+                    {m && <Chip tone="milestone">{MILESTONE_LABEL[m.kind]}</Chip>}
                   </div>
 
                   {v.blurb && (
@@ -558,6 +561,7 @@ const VersionPicker = () => {
               .map((m) => <MilestoneRow key={m.kind} milestone={m} />)}
           </div>
         )}
+        </article>
       </main>
 
       {/* ── Keep it / send it ──────────────────────────────────────── */}
@@ -575,7 +579,7 @@ const VersionPicker = () => {
             <Button
               variant="outline"
               onClick={() => void share()}
-              className="min-h-[48px] border-border font-ticket text-[11px] uppercase tracking-[0.1em] gap-1.5"
+              className="min-h-[48px] border-foreground/30 text-foreground hover:bg-foreground/10 font-ticket text-[11px] uppercase tracking-[0.1em] gap-1.5"
             >
               <Share2 className="w-3.5 h-3.5" /> Share
             </Button>
@@ -588,14 +592,14 @@ const VersionPicker = () => {
 
 const MilestoneRow = ({ milestone: m }: { milestone: MilestoneEntry }) => (
   <article className="rounded-sm border border-dashed border-primary/40 bg-primary/[0.04] px-3.5 py-3">
-    <div className="flex items-start justify-between gap-3">
+    <div className="flex items-start justify-between gap-3 flex-wrap">
       <div>
         <p className="font-hand text-2xl leading-tight text-[hsl(var(--dead-blue))]">{fmtDate(m.date)}</p>
         {milestonePlace(m) && (
           <p className="font-ticket text-[11px] text-muted-foreground mt-0.5">{milestonePlace(m)}</p>
         )}
       </div>
-      <Chip tone="milestone">{MILESTONE_SHORT[m.kind]} {MILESTONE_LABEL[m.kind]}</Chip>
+      <Chip tone="milestone">{MILESTONE_LABEL[m.kind]}</Chip>
     </div>
     {!m.tapeFound && (
       <p className="font-body text-[13px] leading-relaxed text-muted-foreground mt-2 italic">{NO_TAPE_LINE}</p>
