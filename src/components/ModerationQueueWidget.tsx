@@ -80,7 +80,7 @@ const ModerationQueueWidget = ({ enabled }: { enabled: boolean }) => {
   };
 
   return (
-    <div className="bg-card border border-border rounded-lg overflow-hidden">
+    <div className="bg-card text-card-foreground border border-border rounded-lg overflow-hidden">
       <div className="px-4 py-3 border-b border-border flex items-center gap-2">
         <Flag className="w-3.5 h-3.5 text-dead-gold" />
         <h2 className="font-display text-sm text-card-foreground">Moderation Queue</h2>
