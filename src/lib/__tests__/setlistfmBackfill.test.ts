@@ -3,7 +3,6 @@ import { describe, it, expect } from "vitest";
 // never run — api.setlist.fm is unreachable from CI and from the sandbox it
 // was written in. Testing its pure core here means the first live run only
 // exercises the network, not the arithmetic.
-// @ts-expect-error — plain .mjs script, no types
 import { normalise, toIso, deriveStats } from "../../../scripts/backfill-song-stats.mjs";
 
 /** A setlist shaped the way setlist.fm returns them. */
