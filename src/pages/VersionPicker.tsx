@@ -494,7 +494,7 @@ const VersionPicker = () => {
 
           {/* The life of the song, in three numbers, before anything is asked
               of the reader. */}
-          <dl className="flex flex-wrap gap-x-5 gap-y-1 mb-5">
+          <dl className="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-2.5 mb-5">
             {song.times_played != null && (
               <div>
                 <dt className="font-ticket text-[9px] uppercase tracking-[0.14em] text-muted-foreground">Played</dt>
@@ -505,7 +505,7 @@ const VersionPicker = () => {
             )}
             {song.first_played && (
               <div>
-                <dt className="font-ticket text-[9px] uppercase tracking-[0.14em] text-muted-foreground">First</dt>
+                <dt className="font-ticket text-[9px] uppercase tracking-[0.14em] text-muted-foreground">First played</dt>
                 <dd className="font-mono text-base font-medium text-card-foreground tabular-nums leading-tight">
                   {song.first_played.slice(0, 4)}
                 </dd>
@@ -513,7 +513,7 @@ const VersionPicker = () => {
             )}
             {song.last_played && (
               <div>
-                <dt className="font-ticket text-[9px] uppercase tracking-[0.14em] text-muted-foreground">Last</dt>
+                <dt className="font-ticket text-[9px] uppercase tracking-[0.14em] text-muted-foreground">Last played</dt>
                 <dd className="font-mono text-base font-medium text-card-foreground tabular-nums leading-tight">
                   {song.last_played.slice(0, 4)}
                 </dd>
@@ -577,10 +577,24 @@ const VersionPicker = () => {
           {arc && (
             <figure className="mt-5">
               <figcaption className="font-ticket text-[9px] uppercase tracking-[0.16em] text-muted-foreground mb-2">
-                {arc.startYear}–{arc.endYear} · {voted ? "every ranked night" : "every night Charlie pulled"}
+                First played to last played · {voted ? "every ranked night between" : "every night Charlie pulled"}
               </figcaption>
+              {/* FTP and LTP anchor the rail. They are the two dates every head
+                  reaches for, so they get the ends of the line and their own
+                  marks rather than living only in a card further down. */}
+              <div className="flex items-end justify-between mb-1">
+                <span className="font-ticket text-[9px] uppercase tracking-[0.14em] px-1.5 py-0.5 rounded-[2px] border border-primary/50 bg-primary/10 text-primary">
+                  FTP
+                </span>
+                <span className="font-ticket text-[9px] uppercase tracking-[0.14em] px-1.5 py-0.5 rounded-[2px] border border-primary/50 bg-primary/10 text-primary">
+                  LTP
+                </span>
+              </div>
               <div className="relative h-9">
                 <span className="absolute left-0 right-0 top-[17px] h-px bg-muted-foreground/30" />
+                {/* The bookends themselves — taller ticks at each end. */}
+                <span className="absolute left-0 top-[9px] w-[2px] h-4 rounded-sm bg-primary" />
+                <span className="absolute right-0 top-[9px] w-[2px] h-4 rounded-sm bg-primary" />
                 {arc.points.map((pt) => (
                   <button
                     key={pt.v.id}
@@ -608,9 +622,9 @@ const VersionPicker = () => {
                   </button>
                 ))}
               </div>
-              <div className="flex justify-between font-mono text-[10px] text-muted-foreground tabular-nums -mt-1">
-                <span>{arc.startYear}</span>
-                <span>{arc.endYear}</span>
+              <div className="flex justify-between gap-3 font-ticket text-[10px] text-muted-foreground tabular-nums -mt-1">
+                <span>{song.first_played ? fmtDate(song.first_played) : arc.startYear}</span>
+                <span className="text-right">{song.last_played ? fmtDate(song.last_played) : arc.endYear}</span>
               </div>
             </figure>
           )}
