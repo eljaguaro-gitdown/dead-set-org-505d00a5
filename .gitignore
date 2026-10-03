@@ -33,3 +33,6 @@ dist-ssr
 # Force-add (git add -f) if you ever author a skill you want in the repo.
 .claude/skills/
 posthog-self-driving-report.md
+.setlistfm-cache/
+setlistfm-derived.json
+report.json
