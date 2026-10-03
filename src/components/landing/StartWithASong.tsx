@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Search, ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { songSlug } from "@/lib/songSlug";
@@ -23,7 +23,7 @@ interface SongRow {
   title: string;
 }
 
-/** Songs with a full ranked version list. Hand-held while the corpus is two. */
+/** Songs already written up end to end — flagged in results, not listed out. */
 const READY = ["Shakedown Street", "Crazy Fingers"];
 
 interface Props {
@@ -79,10 +79,11 @@ const StartWithASong = ({ variant = "section" }: Props) => {
         <span className="ds-hero__pick-burst" aria-hidden="true">New</span>
         <p className="ds-hero__pick-eyebrow">Start with a song</p>
         <h2 id="ds-pick-title" className="ds-hero__pick-title">
-          Which one do you argue about?
+          Pick a song you love.
         </h2>
         <p className="ds-hero__pick-sub">
-          Every version worth knowing — including the ones nobody names.
+          Then meet the versions you've never heard — the first time they played it,
+          the last time, and every night worth knowing in between.
         </p>
 
         <div ref={boxRef} style={{ position: "relative" }}>
@@ -111,7 +112,7 @@ const StartWithASong = ({ variant = "section" }: Props) => {
                 <li key={s2.id}>
                   <button type="button" onClick={() => go(s2.title, "search_pick")} className="ds-hero__pick-result">
                     <span>{s2.title}</span>
-                    {READY.includes(s2.title) && <span className="ds-hero__pick-result-ready">mapped</span>}
+                    {READY.includes(s2.title) && <span className="ds-hero__pick-result-ready">written up</span>}
                   </button>
                 </li>
               ))}
@@ -119,15 +120,10 @@ const StartWithASong = ({ variant = "section" }: Props) => {
           )}
         </div>
 
-        <p className="ds-hero__pick-ready-label">Mapped end to end</p>
-        <div className="ds-hero__pick-chips">
-          {READY.map((title) => (
-            <button key={title} type="button" onClick={() => go(title, "ready_chip")} className="ds-hero__pick-chip">
-              {title}
-              <span className="ds-hero__pick-chip-arrow" aria-hidden="true">→</span>
-            </button>
-          ))}
-        </div>
+        <Link to="/songbook" className="ds-hero__pick-songbook" onClick={() => captureEvent("landing_songbook_link")}>
+          Or wander the Songbook
+          <span className="ds-hero__pick-chip-arrow" aria-hidden="true">→</span>
+        </Link>
       </section>
     );
   }
@@ -138,12 +134,12 @@ const StartWithASong = ({ variant = "section" }: Props) => {
         <p className="font-ticket text-[10px] uppercase tracking-[0.18em] text-primary mb-2">
           Start with a song
         </p>
-        <h2 className="font-title text-3xl md:text-4xl text-card-foreground leading-tight mb-2">
-          Which one do you argue about?
+        <h2 className="font-header text-3xl md:text-4xl text-card-foreground leading-tight mb-2">
+          Pick a song you love.
         </h2>
         <p className="font-body text-sm text-muted-foreground max-w-[46ch] mx-auto">
-          Name it and we'll show you every version worth knowing — including the ones that never
-          made anybody's shortlist.
+          Then meet the versions you've never heard — the first time they played it, the last
+          time, and every night worth knowing in between.
         </p>
       </div>
 
@@ -179,7 +175,7 @@ const StartWithASong = ({ variant = "section" }: Props) => {
                   <span className="font-body text-sm text-card-foreground">{s2.title}</span>
                   {READY.includes(s2.title) && (
                     <span className="font-ticket text-[9px] uppercase tracking-[0.12em] text-primary whitespace-nowrap">
-                      fully mapped
+                      written up
                     </span>
                   )}
                 </button>
@@ -189,23 +185,14 @@ const StartWithASong = ({ variant = "section" }: Props) => {
         )}
       </div>
 
-      <div className="mt-4">
-        <p className="font-ticket text-[10px] uppercase tracking-[0.14em] text-muted-foreground mb-2 text-center">
-          Mapped end to end
-        </p>
-        <div className="flex gap-2 justify-center flex-wrap">
-          {READY.map((title) => (
-            <button
-              key={title}
-              type="button"
-              onClick={() => go(title, "ready_chip")}
-              className="inline-flex items-center gap-1.5 rounded-sm border border-primary/40 bg-primary/[0.07] px-3.5 py-3 min-h-[48px] font-body text-sm text-card-foreground hover:bg-primary/15 active:bg-primary/20 transition-colors"
-            >
-              {title}
-              <ArrowRight className="w-3.5 h-3.5 text-primary" />
-            </button>
-          ))}
-        </div>
+      <div className="mt-4 text-center">
+        <Link
+          to="/songbook"
+          onClick={() => captureEvent("landing_songbook_link")}
+          className="inline-flex items-center gap-1.5 font-ticket text-[11px] uppercase tracking-[0.12em] text-primary underline underline-offset-4"
+        >
+          Or wander the Songbook <ArrowRight className="w-3.5 h-3.5" />
+        </Link>
       </div>
     </section>
   );

@@ -639,13 +639,30 @@ const HeroSection = (_props: HeroSectionProps) => {
           color: #9a3b26;
           white-space: nowrap;
         }
-        .ds-hero__pick-ready-label {
+        .ds-hero__pick-ready-label-unused {
           font-family: 'IBM Plex Mono', ui-monospace, monospace;
           font-size: 10px;
           letter-spacing: 0.2em;
           text-transform: uppercase;
           color: var(--text-eyebrow);
           margin: 18px 0 9px;
+        }
+        .ds-hero__pick-songbook {
+          margin-top: 14px;
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          min-height: 48px;
+          padding: 0 18px;
+          border-radius: 8px;
+          border: 1.5px solid var(--rule-faint);
+          background: rgba(239, 231, 208, 0.06);
+          color: var(--text-primary);
+          font-family: 'IBM Plex Mono', ui-monospace, monospace;
+          font-size: 12px;
+          letter-spacing: 0.14em;
+          text-transform: uppercase;
+          text-decoration: none;
         }
         .ds-hero__pick-chips {
           display: flex;
