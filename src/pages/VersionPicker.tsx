@@ -106,6 +106,9 @@ const VersionPicker = () => {
   const [resolving, setResolving] = useState<string | null>(null);
   const [milestones, setMilestones] = useState<MilestoneEntry[]>([]);
   const [feature, setFeature] = useState<PickerFeature | null>(null);
+  // Charlie's picks, for the songs nobody has ranked yet.
+  const [charlie, setCharlie] = useState<{ linerNotes: string } | null>(null);
+  const [charlieLoading, setCharlieLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -135,8 +138,50 @@ const VersionPicker = () => {
         .eq("song_id", match.id)
         .order("votes", { ascending: false, nullsFirst: false });
       if (cancelled) return;
-      setVersions((v ?? []) as PickerVersion[]);
+      const catalog = (v ?? []) as PickerVersion[];
+      setVersions(catalog);
       setLoading(false);
+
+      // Only 2 of 234 songs have a ranked version list. For every other song
+      // the catalog is silent, and a silent page is a dead end on the one
+      // surface meant to send people into the music. Charlie knows the tapes
+      // even where the poll has nothing to say — labelled as his picks, never
+      // dressed up as the vote.
+      if (catalog.length === 0) {
+        setCharlieLoading(true);
+        try {
+          const { data: ex } = await supabase.functions.invoke("ai-deadhead", {
+            body: { mode: "explore", songTitle: match.title, songId: match.id, eraIds: null },
+          });
+          if (cancelled) return;
+          const picked = (ex?.versions ?? []) as {
+            showDate: string; venue: string | null; city: string | null;
+            eraName: string | null; archiveUrl: string | null; whyThisVersion: string;
+          }[];
+          if (picked.length > 0) {
+            setVersions(
+              picked.map((pv, i) => ({
+                id: `charlie-${i}-${pv.showDate}`,
+                show_date: pv.showDate,
+                venue: pv.venue,
+                city: pv.city,
+                era_id: null,
+                votes: null,
+                vote_source: null,
+                source_url: null,
+                blurb: pv.whyThisVersion,
+                is_benchmark: false,
+                archive_org_url: pv.archiveUrl,
+              })),
+            );
+            setCharlie({ linerNotes: ex?.linerNotes ?? "" });
+          }
+        } catch (e) {
+          console.error("[VersionPicker] Charlie fallback failed", e);
+        } finally {
+          if (!cancelled) setCharlieLoading(false);
+        }
+      }
 
       // The Songbook issue, where one exists — the best writing we have about
       // this song. Enrichment only: if it fails, the versions still render.
@@ -476,7 +521,9 @@ const VersionPicker = () => {
             )}
             {versions.length > 0 && (
               <div>
-                <dt className="font-ticket text-[9px] uppercase tracking-[0.14em] text-muted-foreground">Ranked</dt>
+                <dt className="font-ticket text-[9px] uppercase tracking-[0.14em] text-muted-foreground">
+                  {voted ? "Ranked" : "Picks"}
+                </dt>
                 <dd className="font-mono text-base font-medium text-card-foreground tabular-nums leading-tight">
                   {versions.length}
                 </dd>
@@ -502,7 +549,11 @@ const VersionPicker = () => {
               </button>
               <div className="min-w-0">
                 <p className="font-ticket text-[10px] uppercase tracking-[0.14em] text-primary mb-0.5">
-                  {resolving === topVersion.id ? "Finding the tape…" : "Start with the one they all name"}
+                  {resolving === topVersion.id
+                  ? "Finding the tape…"
+                  : voted
+                    ? "Start with the one they all name"
+                    : "Start here"}
                 </p>
                 <p className="font-hand text-2xl leading-none text-[hsl(var(--dead-blue))]">
                   {fmtDate(topVersion.show_date)}
@@ -526,7 +577,7 @@ const VersionPicker = () => {
           {arc && (
             <figure className="mt-5">
               <figcaption className="font-ticket text-[9px] uppercase tracking-[0.16em] text-muted-foreground mb-2">
-                {arc.startYear}–{arc.endYear} · every ranked night
+                {arc.startYear}–{arc.endYear} · {voted ? "every ranked night" : "every night Charlie pulled"}
               </figcaption>
               <div className="relative h-9">
                 <span className="absolute left-0 right-0 top-[17px] h-px bg-muted-foreground/30" />
@@ -583,6 +634,18 @@ const VersionPicker = () => {
             >
               Read the whole issue →
             </Link>
+          </section>
+        )}
+
+        {/* ── Charlie, where the poll has nothing ───────────────────── */}
+        {!feature && charlie?.linerNotes && (
+          <section className="mb-6 p-4 rounded-sm border-l-[3px] border-[hsl(var(--dead-gold))] bg-[hsl(var(--dead-gold)/0.08)]">
+            <p className="font-ticket text-[10px] uppercase tracking-[0.18em] text-[hsl(var(--dead-gold))] mb-1.5">
+              Cosmic Charlie went digging
+            </p>
+            <p className="font-body text-sm leading-relaxed text-card-foreground/85 max-w-[62ch] whitespace-pre-line">
+              {charlie.linerNotes}
+            </p>
           </section>
         )}
 
@@ -672,10 +735,17 @@ const VersionPicker = () => {
         )}
 
         {/* ── The versions ─────────────────────────────────────────── */}
-        {versions.length === 0 ? (
+        {charlieLoading ? (
+          <div className="border border-dashed border-border rounded-sm p-6 text-center">
+            <Loader2 className="w-5 h-5 animate-spin mx-auto mb-2 text-primary" />
+            <p className="font-ticket text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
+              Charlie's going through the crates
+            </p>
+          </div>
+        ) : versions.length === 0 ? (
           <div className="border border-dashed border-border rounded-sm p-5 text-center">
             <p className="font-ticket text-[11px] uppercase tracking-[0.16em] text-muted-foreground mb-1">
-              Nothing ranked yet
+              Nothing on this one yet
             </p>
             <p className="font-body text-sm text-muted-foreground">
               Nobody has mapped {song.title} across the eras. That gap is the work.
