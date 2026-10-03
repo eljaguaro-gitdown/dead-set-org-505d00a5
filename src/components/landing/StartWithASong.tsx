@@ -90,7 +90,7 @@ const StartWithASong = ({ variant = "section" }: Props) => {
       </div>
 
       <div ref={boxRef} className="relative">
-        <div className="flex items-center gap-2 rounded-sm border border-border bg-card px-3 py-3 min-h-[48px] focus-within:border-primary/50 transition-colors">
+        <label className="flex items-center gap-2 rounded-sm border border-border bg-card px-3 py-3 min-h-[48px] cursor-text focus-within:border-primary/50 transition-colors">
           <Search className="w-4 h-4 text-muted-foreground shrink-0" />
           <input
             value={q}
@@ -107,9 +107,9 @@ const StartWithASong = ({ variant = "section" }: Props) => {
             spellCheck={false}
             // 16px minimum: iOS zooms the viewport on focus for anything
             // smaller, which shoves the results list off screen.
-            className="flex-1 min-w-0 bg-transparent font-body text-base text-card-foreground placeholder:text-muted-foreground/70 outline-none"
+            className="flex-1 min-w-0 self-stretch min-h-[24px] bg-transparent font-body text-base text-card-foreground placeholder:text-muted-foreground/70 outline-none"
           />
-        </div>
+        </label>
 
         {open && matches.length > 0 && (
           <ul className="absolute z-20 left-0 right-0 mt-1 rounded-sm border border-border bg-card shadow-lg overflow-hidden">
