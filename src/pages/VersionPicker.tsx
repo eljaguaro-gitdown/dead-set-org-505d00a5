@@ -239,8 +239,69 @@ const VersionPicker = () => {
   const theSleepers = useMemo(() => sleeperList(versions), [versions]);
   const shown = sleepersOnly ? theSleepers : versions;
   const source = versions.find((v) => v.source_url);
-  /** Highest-voted night — what the big play button starts. */
+  /** Highest-voted night — the fallback when the debut has no tape. */
   const topVersion = versions[0] ?? null;
+  const ftp = milestones.find((m) => m.kind === "ftp") ?? null;
+  /**
+   * The big button leads with the first time they ever played it. The debut is
+   * the thing every head wants to hear and the catalog knows it for 200 of 234
+   * songs, so it beats "highest voted" as an opening offer. If no tape of that
+   * night circulates the tap still plays — it falls through to the top pick and
+   * says why.
+   */
+  const heroDate = song?.first_played ?? topVersion?.show_date ?? null;
+  const heroIsDebut = !!song?.first_played;
+  const heroVenue = heroIsDebut
+    ? (ftp?.venue ?? versions.find((v) => v.show_date?.slice(0, 10) === song?.first_played?.slice(0, 10))?.venue ?? null)
+    : (topVersion?.venue ?? null);
+  const heroCity = heroIsDebut ? (ftp?.city ?? null) : (topVersion?.city ?? null);
+  const [heroResolving, setHeroResolving] = useState(false);
+
+  /** Play the debut; fall through to the top pick when no tape of it exists. */
+  const playHero = async () => {
+    if (!song) return;
+    if (!heroIsDebut || !song.first_played) {
+      if (topVersion) await playVersion(topVersion);
+      return;
+    }
+    unlockAudio();
+    setHeroResolving(true);
+    try {
+      const url =
+        ftp?.archiveUrl ??
+        (await findRecordingForDate(song.title, song.first_played))?.url ??
+        null;
+      if (url) {
+        playSingle({
+          id: `picker-ftp-${song.id}`,
+          song: { id: song.id, title: song.title },
+          version: {
+            ...SYNTHETIC_VERSION_DEFAULTS,
+            id: `archive-ftp-${song.first_played}`,
+            song_id: song.id,
+            show_date: song.first_played,
+            venue: heroVenue,
+            city: heroCity,
+            archive_org_url: url,
+            description: MILESTONE_LABEL.ftp,
+          },
+          setNumber: 1,
+          position: 0,
+          segueToNext: false,
+        } as PlayableSlot);
+        captureEvent("version_picker_played_debut", { song_id: song.id, song_title: song.title });
+        return;
+      }
+      if (topVersion) {
+        toast.info("No tape of the debut circulates — starting with the next best thing");
+        await playVersion(topVersion);
+      } else {
+        toast.info("No tape of this night circulates yet");
+      }
+    } finally {
+      setHeroResolving(false);
+    }
+  };
 
   /**
    * Every ranked night placed on the song's own lifespan. Three decades of a
@@ -533,34 +594,38 @@ const VersionPicker = () => {
 
           {/* One tap, no scrolling, no reading. The whole pitch is that the
               music is one gesture away. */}
-          {topVersion && (
+          {heroDate && (
             <div className="flex items-center gap-3.5 p-3 rounded-sm bg-gradient-to-r from-primary/[0.14] to-transparent border border-primary/30">
               <button
                 type="button"
-                onClick={() => void playVersion(topVersion)}
-                disabled={resolving === topVersion.id}
-                aria-label={`Play ${song.title}, ${fmtDate(topVersion.show_date)}`}
+                onClick={() => void playHero()}
+                disabled={heroResolving}
+                aria-label={`Play ${song.title}, ${fmtDate(heroDate)}`}
                 className="shrink-0 w-[68px] h-[68px] rounded-full grid place-items-center text-[hsl(var(--dead-dark))] shadow-lg transition-transform active:scale-95 disabled:opacity-70"
                 style={{ background: "radial-gradient(circle at 34% 30%, hsl(var(--dead-gold)), hsl(38 62% 42%))" }}
               >
-                {resolving === topVersion.id
+                {heroResolving
                   ? <Loader2 className="w-7 h-7 animate-spin" />
                   : <Play className="w-8 h-8 fill-current translate-x-[2px]" />}
               </button>
               <div className="min-w-0">
                 <p className="font-ticket text-[10px] uppercase tracking-[0.14em] text-primary mb-0.5">
-                  {resolving === topVersion.id
+                  {heroResolving
                   ? "Finding the tape…"
-                  : voted
-                    ? "Start with the one they all name"
-                    : "Start here"}
+                  : heroIsDebut
+                    ? "The very first time they played it"
+                    : voted
+                      ? "Start with the one they all name"
+                      : "Start here"}
                 </p>
                 <p className="font-hand text-2xl leading-none text-[hsl(var(--dead-blue))]">
-                  {fmtDate(topVersion.show_date)}
+                  {fmtDate(heroDate)}
                 </p>
-                <p className="font-ticket text-[11px] text-muted-foreground mt-0.5 truncate">
-                  {topVersion.venue}{topVersion.city ? ` · ${topVersion.city}` : ""}
-                </p>
+                {(heroVenue || heroCity) && (
+                  <p className="font-ticket text-[11px] text-muted-foreground mt-0.5 truncate">
+                    {heroVenue}{heroVenue && heroCity ? " · " : ""}{heroCity}
+                  </p>
+                )}
               </div>
               <button
                 type="button"
