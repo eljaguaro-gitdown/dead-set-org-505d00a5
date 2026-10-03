@@ -50,11 +50,13 @@ export interface MilestoneEntry {
   /** False when the date is known but no tape of it turned up. */
   tapeFound: boolean;
   /**
-   * "list"    — the explorer already chose this night; label its card.
-   * "archive" — found on the Archive by date.
-   * "none"    — date only. Still shown; that absence is information.
+   * "list"      — the explorer already chose this night; label its card.
+   * "archive"   — found on the Archive by date.
+   * "none"      — date only. Still shown; that absence is information.
+   * "unchecked" — the Archive lookup failed. The date still shows, but nothing
+   *               is said about a tape: a 503 is not evidence that none exists.
    */
-  source: "list" | "archive" | "none";
+  source: "list" | "archive" | "none" | "unchecked";
   /** Index of the explorer version this milestone labels, when source is "list". */
   listIndex: number | null;
 }
@@ -91,13 +93,15 @@ export const findMilestoneInList = (
  * Build the milestone entries for a song.
  *
  * `tapes` maps a milestone date to whatever the Archive lookup found for it
- * (or null when the lookup came back empty). Keeping the lookup outside this
- * function is what lets it be tested without the network.
+ * (or null when the lookup came back empty). `unchecked` holds the dates whose
+ * lookup failed outright. Keeping the lookup outside this function is what
+ * lets it be tested without the network.
  */
 export const buildMilestones = (
   song: MilestoneSong,
   versions: MilestoneCandidate[],
   tapes: Map<string, MilestoneTape | null>,
+  unchecked: Set<string> = new Set(),
 ): MilestoneEntry[] => {
   const entries: MilestoneEntry[] = [];
 
@@ -140,7 +144,7 @@ export const buildMilestones = (
       city: null,
       archiveUrl: null,
       tapeFound: false,
-      source: "none",
+      source: unchecked.has(date) ? "unchecked" : "none",
       listIndex: null,
     };
   };
@@ -173,5 +177,12 @@ export const milestoneNote = (entry: MilestoneEntry): string => {
   const place = milestonePlace(entry);
   const where = place ? ` — ${place}` : "";
   const head = `${MILESTONE_LABEL[entry.kind]}: ${entry.date}${where}`;
-  return entry.tapeFound ? head : `${head} • ${NO_TAPE_LINE}`;
+  return saysNoTape(entry) ? `${head} • ${NO_TAPE_LINE}` : head;
 };
+
+/**
+ * Whether to say no tape circulates: every tapeless milestone except one whose
+ * lookup failed, where the honest answer is that nobody knows yet.
+ */
+export const saysNoTape = (entry: MilestoneEntry): boolean =>
+  !entry.tapeFound && entry.source !== "unchecked";

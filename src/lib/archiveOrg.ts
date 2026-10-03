@@ -388,6 +388,10 @@ const dateInflight = new Map<string, Promise<ArchiveResult | null>>();
  * Unlike findArchiveRecording, a miss here is a real answer, not a failure:
  * plenty of nights the Dead played were never taped, or the tape never
  * reached the Archive. Callers show the date anyway and say so.
+ *
+ * A failed request is not a miss. It throws and is not cached, so a 503 or a
+ * timeout never turns into "no tape of this night circulates", and the next
+ * lookup tries again.
  */
 export async function findRecordingForDate(
   songTitle: string,
@@ -403,10 +407,7 @@ export async function findRecordingForDate(
       const q = encodeURIComponent(`collection:GratefulDead AND date:[${day} TO ${day}]`);
       const apiUrl = `https://archive.org/advancedsearch.php?q=${q}&fl[]=identifier&fl[]=date&fl[]=venue&fl[]=avg_rating&fl[]=downloads&sort[]=downloads+desc&sort[]=avg_rating+desc&rows=10&output=json`;
       const res = await fetchArchive(apiUrl);
-      if (!res.ok) {
-        dateCache.set(key, null);
-        return null;
-      }
+      if (!res.ok) throw new Error(`archive.org search ${res.status}`);
       const data = await res.json();
       const docs: ArchiveSearchDoc[] = (
         (data?.response?.docs || []) as ArchiveSearchDoc[]
@@ -433,9 +434,6 @@ export async function findRecordingForDate(
       };
       dateCache.set(key, result);
       return result;
-    } catch {
-      dateCache.set(key, null);
-      return null;
     } finally {
       dateInflight.delete(key);
     }
