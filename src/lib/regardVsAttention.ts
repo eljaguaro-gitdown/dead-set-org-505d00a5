@@ -1,0 +1,149 @@
+/**
+ * The ranking for the songs nobody voted on — which is 232 of 234.
+ *
+ * `sleeperMath` reads fan votes off an all-time list. Two songs in the whole
+ * catalog have that list. For every other song the picker has to either say
+ * nothing or find a different signal, and there is one sitting in the open:
+ * archive.org publishes, for every recording, how highly it is rated and how
+ * often it is downloaded. Regard and attention. A tape the traders rate high
+ * and nobody pulls is the same thing a vote-poll sleeper is — enough regard to
+ * be respected, not enough to get heard.
+ *
+ * What this is NOT: archive.org rates the *recording*, not the performance of
+ * one song inside it. The cohort here is already "recordings that contain this
+ * song", so within that set the rating is a usable proxy — but it is a proxy,
+ * and the copy that surfaces it says "the tape", never "the version".
+ */
+
+export interface RegardInput {
+  /** archive.org identifier — the stable key for the recording. */
+  identifier: string;
+  /** avg_rating, 0–5. Null when nobody has rated it. */
+  avgRating?: number | null;
+  /** num_reviews backing that rating. Null/0 when unrated. */
+  reviews?: number | null;
+  /** downloads — the attention side. */
+  downloads?: number | null;
+}
+
+export interface RegardScore extends RegardInput {
+  /** Rating pulled toward the cohort mean by how few reviews back it. */
+  regard: number;
+  /** log10(downloads) — downloads are heavy-tailed, so compare their orders. */
+  attention: number;
+  /** Share of the cohort this recording out-regards, 0–1. */
+  regardRank: number;
+  /** Share of the cohort this recording out-draws, 0–1. */
+  attentionRank: number;
+  /** regardRank − attentionRank. Positive means held higher than it's pulled. */
+  overlooked: number;
+}
+
+/**
+ * How many reviews it takes before a rating speaks for itself. Below this the
+ * score is dragged toward the cohort mean, so one five-star review on one tape
+ * cannot outrank forty reviews averaging 4.7.
+ */
+export const PRIOR_WEIGHT = 3;
+
+/** How far a recording must out-rank its own draw before we call it quiet. */
+export const QUIET_GEM_THRESHOLD = 0.3;
+
+/**
+ * Percentiles over three recordings are noise, not a ranking. Under this many
+ * the signal reports nothing rather than guessing.
+ */
+export const MIN_COHORT = 4;
+
+/** Review-weighted mean rating of the cohort — the prior each tape is pulled toward. */
+const cohortMean = (inputs: RegardInput[]): number => {
+  let weighted = 0;
+  let weight = 0;
+  for (const i of inputs) {
+    const r = i.reviews ?? 0;
+    if (i.avgRating != null && r > 0) {
+      weighted += i.avgRating * r;
+      weight += r;
+    }
+  }
+  // Nothing in the cohort is rated: the Archive's own house average for this
+  // collection, so an unrated cohort lands flat instead of at zero.
+  return weight > 0 ? weighted / weight : 4.5;
+};
+
+/** Share of `values` strictly below `value`, 0–1. Ties share the lower rank. */
+const rankOf = (value: number, values: number[]): number => {
+  if (values.length < 2) return 0;
+  const below = values.filter((v) => v < value).length;
+  return below / (values.length - 1);
+};
+
+/**
+ * Score a cohort of recordings against each other. Always relative — a 4.6
+ * means nothing until you know what the other tapes of this song scored.
+ */
+export const scoreRecordings = (inputs: RegardInput[]): RegardScore[] => {
+  const mean = cohortMean(inputs);
+
+  const partial = inputs.map((i) => {
+    const reviews = Math.max(0, i.reviews ?? 0);
+    const rating = i.avgRating ?? mean;
+    const regard = (rating * reviews + mean * PRIOR_WEIGHT) / (reviews + PRIOR_WEIGHT);
+    const attention = Math.log10(Math.max(0, i.downloads ?? 0) + 1);
+    return { ...i, regard, attention };
+  });
+
+  const regards = partial.map((p) => p.regard);
+  const attentions = partial.map((p) => p.attention);
+
+  return partial.map((p) => {
+    const regardRank = rankOf(p.regard, regards);
+    const attentionRank = rankOf(p.attention, attentions);
+    return { ...p, regardRank, attentionRank, overlooked: regardRank - attentionRank };
+  });
+};
+
+/**
+ * True when a recording is held well above where its draw would put it.
+ * Also requires it to be in the better half of the cohort on regard — being
+ * ignored is not interesting on its own, only being ignored *and* good is.
+ */
+export const isQuietGem = (score: RegardScore): boolean =>
+  score.regardRank >= 0.5 && score.overlooked >= QUIET_GEM_THRESHOLD;
+
+export const quietGems = (scores: RegardScore[]): RegardScore[] =>
+  scores.filter(isQuietGem);
+
+/**
+ * True when the cohort is big enough and carries enough ratings for any of
+ * this to mean anything. A cohort nobody has rated has no regard to read.
+ */
+export const hasRegardData = (inputs: RegardInput[]): boolean =>
+  inputs.length >= MIN_COHORT &&
+  inputs.some((i) => i.avgRating != null && (i.reviews ?? 0) > 0) &&
+  inputs.some((i) => (i.downloads ?? 0) > 0);
+
+/**
+ * The method, said plainly, for the songs with no poll behind them.
+ * No machinery, no "we rank" — it reads the tape, the way a trader would.
+ */
+export const REGARD_METHOD_LINE =
+  "No all-time poll on this one, so we read the tape box instead: how highly each recording is rated against how often it gets pulled. The ones held high and pulled least are the quiet gems.";
+
+/** What we say when even the tape box is silent. */
+export const NO_REGARD_LINE =
+  "Not enough circulating on this one to compare tapes yet. What's here is what's on the shelf.";
+
+export const QUIET_GEM_CHIP = "Quiet gem";
+
+/**
+ * One line of evidence for a single card, so the chip is never a bare claim.
+ * Returns null when the recording carries nothing worth citing.
+ */
+export const quietGemReason = (score: RegardScore): string | null => {
+  const reviews = score.reviews ?? 0;
+  if (score.avgRating == null || reviews < 1) return null;
+  const rating = score.avgRating.toFixed(1);
+  const noun = reviews === 1 ? "review" : "reviews";
+  return `${rating} across ${reviews} ${noun}, and pulled less than most tapes of this song.`;
+};

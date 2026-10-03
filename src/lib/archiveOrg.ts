@@ -529,6 +529,10 @@ export interface ArchiveVersion {
   date: string | null;
   venue: string | null;
   avgRating: number | null;
+  /** How many reviews back that rating — a 5.0 off one review is not a 5.0. */
+  reviews: number | null;
+  /** How often the tape gets pulled. The attention half of the gem signal. */
+  downloads: number | null;
   directTrackUrl?: string | null;
 }
 
@@ -652,7 +656,7 @@ export async function findManyArchiveRecordings(
     const query = encodeURIComponent(
       `collection:GratefulDead "${cleanTitle}"${windowDateClause}`
     );
-    const apiUrl = `https://archive.org/advancedsearch.php?q=${query}&fl=identifier,date,avg_rating,venue&sort[]=avg_rating+desc&output=json&rows=${maxResults}`;
+    const apiUrl = `https://archive.org/advancedsearch.php?q=${query}&fl=identifier,date,avg_rating,num_reviews,downloads,venue&sort[]=avg_rating+desc&output=json&rows=${maxResults}`;
     const res = await fetchArchive(apiUrl);
     if (!res.ok) return [];
     const data = await res.json();
@@ -665,6 +669,8 @@ export async function findManyArchiveRecordings(
       date: doc.date ? doc.date.split("T")[0] : null,
       venue: doc.venue || null,
       avgRating: doc.avg_rating ? Number(doc.avg_rating) : null,
+      reviews: doc.num_reviews != null ? Number(doc.num_reviews) : null,
+      downloads: doc.downloads != null ? Number(doc.downloads) : null,
     }));
 
     // Belt-and-suspenders, same as findArchiveRecording: drop anything outside
