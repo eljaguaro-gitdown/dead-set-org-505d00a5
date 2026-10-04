@@ -14,6 +14,8 @@ import { render, screen, waitFor, cleanup, fireEvent } from "@testing-library/re
 
 const navigate = vi.fn();
 let mockUser: { id: string } | null = null;
+let searchParams = new URLSearchParams();
+const setSearchParams = vi.fn();
 const playSingle = vi.fn();
 const playSetlist = vi.fn();
 
@@ -23,6 +25,7 @@ vi.mock("react-router-dom", async () => {
     ...actual,
     useParams: () => ({ slug: "shakedown-street" }),
     useNavigate: () => navigate,
+    useSearchParams: () => [searchParams, setSearchParams],
     Link: ({ children }: { children: React.ReactNode }) => <a>{children}</a>,
   };
 });
@@ -97,6 +100,8 @@ beforeEach(() => {
   playSingle.mockReset();
   playSetlist.mockReset();
   mockUser = null;
+  searchParams = new URLSearchParams();
+  setSearchParams.mockReset();
   window.HTMLElement.prototype.scrollIntoView = vi.fn();
 });
 afterEach(cleanup);
@@ -124,34 +129,74 @@ describe("VersionPicker — signed out", () => {
     expect(navigate).not.toHaveBeenCalled();
   });
 
-  it("asks for sign-in when keeping a guide, and does not save", async () => {
+  /**
+   * The gate is an invitation now, not a trapdoor. The old path fired a toast
+   * and navigated to /auth on the next line, so the tape someone had just
+   * discovered vanished mid-excitement and a login form took its place. The
+   * page has to stay on screen while they decide.
+   */
+  it("invites rather than redirecting when keeping a guide", async () => {
     await openPage();
     fireEvent.click(await screen.findByRole("button", { name: /keep as a listening guide/i }));
-    await waitFor(() =>
-      expect(navigate).toHaveBeenCalledWith(expect.stringContaining("/auth?redirect=")),
-    );
+    expect(await screen.findByText(/Keep it on your shelf/i)).toBeInTheDocument();
+    // The page is still there behind it.
+    expect(screen.getByText("Shakedown Street")).toBeInTheDocument();
+    expect(navigate).not.toHaveBeenCalled();
   });
 
-  it("asks for sign-in when sharing", async () => {
+  it("invites rather than redirecting when sharing", async () => {
     await openPage();
-    // Two share affordances: the icon beside the play button and the one in
-    // the bottom bar. Both must ask.
-    const shares = await screen.findAllByRole("button", { name: /share/i });
-    expect(shares.length).toBeGreaterThanOrEqual(2);
-    for (const btn of shares) {
-      navigate.mockReset();
-      fireEvent.click(btn);
-      await waitFor(() =>
-        expect(navigate).toHaveBeenCalledWith(expect.stringContaining("/auth?redirect=")),
-      );
-    }
+    fireEvent.click(await screen.findByRole("button", { name: /share/i }));
+    expect(await screen.findByText(/Pass it on/i)).toBeInTheDocument();
+    expect(navigate).not.toHaveBeenCalled();
   });
 
-  it("sends them back to the song they were on after signing in", async () => {
+  it("offers one Share, and it is not in the bottom bar", async () => {
     await openPage();
-    fireEvent.click((await screen.findAllByRole("button", { name: /share/i }))[0]);
+    // Two identical share buttons is how the wrong one got hit: the labelled
+    // copy sat in the fixed bottom bar, under a scrolling thumb.
+    expect(await screen.findAllByRole("button", { name: /share/i })).toHaveLength(1);
+  });
+
+  it("carries the interrupted action through sign-in", async () => {
+    await openPage();
+    fireEvent.click(await screen.findByRole("button", { name: /share/i }));
+    fireEvent.click(await screen.findByRole("button", { name: /sign in and send it/i }));
     await waitFor(() => expect(navigate).toHaveBeenCalled());
-    expect(decodeURIComponent(navigate.mock.calls[0][0] as string)).toContain("/versions/shakedown-street");
+    const href = decodeURIComponent(navigate.mock.calls[0][0] as string);
+    expect(href).toContain("/versions/shakedown-street");
+    expect(href).toContain("then=share");
+  });
+
+  it("lets them take the plain link without an account", async () => {
+    // /versions/:slug is a public url — it reads fine signed out and is two
+    // taps out of the address bar. Walling it buys nothing and costs goodwill.
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.assign(navigator, { clipboard: { writeText }, share: undefined });
+    await openPage();
+    fireEvent.click(await screen.findByRole("button", { name: /share/i }));
+    fireEvent.click(await screen.findByRole("button", { name: /just copy the link/i }));
+    await waitFor(() => expect(writeText).toHaveBeenCalled());
+    expect(navigate).not.toHaveBeenCalled();
+  });
+
+  it("gives saving no second door — a guide needs an account to exist", async () => {
+    await openPage();
+    fireEvent.click(await screen.findByRole("button", { name: /keep as a listening guide/i }));
+    await screen.findByText(/Keep it on your shelf/i);
+    expect(screen.queryByRole("button", { name: /just copy the link/i })).not.toBeInTheDocument();
+  });
+});
+
+describe("VersionPicker — signed in", () => {
+  it("shares straight through, with no sheet in the way", async () => {
+    mockUser = { id: "user-1" };
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.assign(navigator, { clipboard: { writeText }, share: undefined });
+    await openPage();
+    fireEvent.click(await screen.findByRole("button", { name: /share/i }));
+    await waitFor(() => expect(writeText).toHaveBeenCalled());
+    expect(screen.queryByText(/Pass it on/i)).not.toBeInTheDocument();
   });
 });
 

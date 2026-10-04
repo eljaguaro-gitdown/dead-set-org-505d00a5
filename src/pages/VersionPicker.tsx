@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams, Link } from "react-router-dom";
 import { ArrowLeft, Play, Loader2, Share2, ListMusic, ChevronDown } from "lucide-react";
+import { SignInInvite } from "@/components/SignInInvite";
+import type { InviteIntent } from "@/lib/signInInviteCopy";
 import { supabase } from "@/integrations/supabase/client";
 import { songbookDb } from "@/lib/songbookDb";
 import { useAudioPlayer, type PlayableSlot } from "@/contexts/AudioPlayerContext";
@@ -92,6 +94,7 @@ const fmtDate = (iso: string | null) => {
 
 const VersionPicker = () => {
   const { slug } = useParams<{ slug: string }>();
+  const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const { user } = useAuth();
   const { playSingle, playSetlist, unlockAudio, playingSlot } = useAudioPlayer();
@@ -110,6 +113,35 @@ const VersionPicker = () => {
   const [charlie, setCharlie] = useState<{ linerNotes: string } | null>(null);
   const [charlieLoading, setCharlieLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  /** Which sign-in invite is open, if any. Null means nothing is in the way. */
+  const [invite, setInvite] = useState<InviteIntent | null>(null);
+
+  /**
+   * Finish what they came back for.
+   *
+   * /auth returns to `?then=share` or `?then=save`. Without this the reader
+   * signs in, lands back on the page, and nothing happens — they have to find
+   * the button again, which is a small letdown at the end of a flow built
+   * entirely on momentum. The param is consumed immediately so a refresh or a
+   * back-button does not re-fire it.
+   */
+  useEffect(() => {
+    const then = searchParams.get("then");
+    if (!then || !user || !song) return;
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        next.delete("then");
+        return next;
+      },
+      { replace: true },
+    );
+    if (then === "share") void sendIt();
+    if (then === "save") void saveAsGuide();
+    // sendIt/saveAsGuide are stable for this purpose; re-running on their
+    // identity would re-fire the action on every render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, user, song]);
 
   useEffect(() => {
     if (!slug) return;
@@ -404,8 +436,7 @@ const VersionPicker = () => {
   const saveAsGuide = async () => {
     if (!song) return;
     if (!user) {
-      toast.info("Sign in to keep this guide");
-      navigate(`/auth?redirect=${encodeURIComponent(`/versions/${slug}`)}`);
+      setInvite("save");
       return;
     }
     setSaving(true);
@@ -469,16 +500,13 @@ const VersionPicker = () => {
     }
   };
 
-  const share = async () => {
-    // Everything here is wrapped: a share sheet the reader dismisses, a
-    // clipboard the browser refuses, an analytics call that throws — none of
-    // them should be able to take the page down behind an error screen.
+  /** Where /auth sends the reader back to, carrying what they were trying to do. */
+  const authHref = (then: InviteIntent) =>
+    `/auth?redirect=${encodeURIComponent(`/versions/${slug ?? ""}?then=${then}`)}`;
+
+  /** The share itself, with no gate in front of it. */
+  const sendIt = async () => {
     try {
-      if (!user) {
-        toast.info("Sign in to share this");
-        navigate(`/auth?redirect=${encodeURIComponent(`/versions/${slug ?? ""}`)}`);
-        return;
-      }
       const url = `${window.location.origin}/versions/${slug ?? ""}`;
       if (navigator.share) {
         await navigator.share({ title: `${song?.title ?? "Dead Set"} — the versions`, url });
@@ -496,6 +524,18 @@ const VersionPicker = () => {
         toast.error("Couldn't open the share sheet");
       }
     }
+  };
+
+  /**
+   * Share, gated gently. Signed in, this is a straight pass-through — the
+   * people who already joined get no extra tap.
+   */
+  const share = () => {
+    if (!user) {
+      setInvite("share");
+      return;
+    }
+    void sendIt();
   };
 
   if (loading) {
@@ -549,9 +589,22 @@ const VersionPicker = () => {
           </p>
           {/* font-header, not font-title: the blackletter is the logo's face and
               is close to unreadable at a song title's size on a phone. */}
-          <h1 className="font-header text-[2.1rem] leading-[1.05] md:text-5xl text-card-foreground mb-3">
-            {song.title}
-          </h1>
+          <div className="flex items-start gap-3 mb-3">
+            <h1 className="font-header text-[2.1rem] leading-[1.05] md:text-5xl text-card-foreground flex-1 min-w-0">
+              {song.title}
+            </h1>
+            {/* Share lives here, with its name on it. It used to be a bare icon
+                circle by the hero date with a second, labelled copy in the
+                fixed bottom bar — so the one people actually hit was the one
+                sitting under a scrolling thumb. One button, one place, labelled. */}
+            <button
+              type="button"
+              onClick={share}
+              className="shrink-0 inline-flex items-center gap-1.5 min-h-[44px] px-3 rounded-full border border-primary/40 text-primary hover:bg-primary/10 active:bg-primary/15 transition-colors font-ticket text-[11px] uppercase tracking-[0.1em]"
+            >
+              <Share2 className="w-3.5 h-3.5" /> Share
+            </button>
+          </div>
 
           {/* The life of the song, in three numbers, before anything is asked
               of the reader. */}
@@ -627,14 +680,6 @@ const VersionPicker = () => {
                   </p>
                 )}
               </div>
-              <button
-                type="button"
-                onClick={() => void share()}
-                aria-label={`Share ${song.title}`}
-                className="ml-auto shrink-0 grid place-items-center w-11 h-11 rounded-full border border-primary/40 text-primary hover:bg-primary/10 active:bg-primary/15 transition-colors"
-              >
-                <Share2 className="w-4 h-4" />
-              </button>
             </div>
           )}
 
@@ -919,21 +964,30 @@ const VersionPicker = () => {
             <Button
               onClick={() => void saveAsGuide()}
               disabled={saving}
-              className="flex-1 min-h-[48px] bg-primary text-primary-foreground font-ticket text-[11px] uppercase tracking-[0.1em] gap-1.5"
+              className="w-full min-h-[48px] bg-primary text-primary-foreground font-ticket text-[11px] uppercase tracking-[0.1em] gap-1.5"
             >
               {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ListMusic className="w-3.5 h-3.5" />}
               Keep as a listening guide
             </Button>
-            <Button
-              variant="outline"
-              onClick={() => void share()}
-              className="min-h-[48px] border-foreground/30 text-foreground hover:bg-foreground/10 font-ticket text-[11px] uppercase tracking-[0.1em] gap-1.5"
-            >
-              <Share2 className="w-3.5 h-3.5" /> Share
-            </Button>
           </div>
         </div>
       )}
+
+      {/* The gate, as an invitation. The page stays on screen behind it. */}
+      <SignInInvite
+        intent={invite ?? "share"}
+        open={invite !== null}
+        onOpenChange={(open) => !open && setInvite(null)}
+        onSignIn={() => navigate(authHref(invite ?? "share"))}
+        onSecondary={
+          invite === "share"
+            ? () => {
+                setInvite(null);
+                void sendIt();
+              }
+            : undefined
+        }
+      />
     </PageLayout>
   );
 };
