@@ -7,6 +7,7 @@ import {
   quietGemReason,
   MIN_COHORT,
   MAX_GEMS,
+  MIN_GEM_REVIEWS,
   QUIET_GEM_THRESHOLD,
   type RegardInput,
 } from "@/lib/regardVsAttention";
@@ -154,7 +155,7 @@ describe("quietGemReason", () => {
   it("cites the rating and the review count", () => {
     const score = scoreRecordings(cohort).find(byId("quiet"))!;
     expect(quietGemReason(score)).toBe(
-      "4.9 across 22 reviews, and pulled less than most tapes of this song.",
+      "4.9 across 22 reviews, and pulled less than the other tapes here.",
     );
   });
 
@@ -177,7 +178,7 @@ describe("quietGemReason", () => {
 describe("user-facing copy", () => {
   it("never says the forbidden words", async () => {
     const copy = await import("@/lib/regardVsAttention");
-    const strings = [copy.REGARD_METHOD_LINE, copy.NO_REGARD_LINE, copy.QUIET_GEM_CHIP];
+    const strings = [copy.REGARD_METHOD_LINE, copy.QUIET_GEM_CHIP];
     for (const s of strings) {
       expect(s).not.toMatch(/\bAI\b|algorithm|model|engine|pipeline|score\b/i);
     }
@@ -227,5 +228,79 @@ describe("what the live Archive taught it", () => {
     ])[0];
     expect(quietGemReason(score)).toContain("4.9 across");
     expect(quietGemReason(score)).not.toContain("5.0");
+  });
+});
+
+/**
+ * The release gate blocked on these. Each is reproduced from the real cohort
+ * that exposed it, so the test fails against the code that shipped.
+ */
+describe("what the gate caught", () => {
+  /**
+   * Crazy Fingers, 1975 window, as archive.org actually returns it: unrated
+   * tapes with modest downloads, and enough rated tapes below the cohort mean
+   * that an unrated one clears the better half on nothing at all.
+   */
+  const CRAZY_FINGERS_1975 = [
+    { identifier: "1975-06-17", avgRating: 4.44, reviews: 102, downloads: 531_410 },
+    { identifier: "1975-08-13", avgRating: 4.92, reviews: 67, downloads: 311_361 },
+    { identifier: "1975-02-28", avgRating: 4.57, reviews: 15, downloads: 55_303 },
+    { identifier: "1975-06-07", avgRating: 4.57, reviews: 7, downloads: 42_173 },
+    { identifier: "1975-06-05", avgRating: 3.75, reviews: 4, downloads: 34_500 },
+    { identifier: "1975-07-07", avgRating: 4.0, reviews: 5, downloads: 32_121 },
+    { identifier: "1975-04-02", avgRating: 3.71, reviews: 7, downloads: 20_130 },
+    { identifier: "1975-01-01", avgRating: 4.5, reviews: 8, downloads: 18_215 },
+    // The two the gate named. Unrated, and flagged as gems by the shipped code.
+    { identifier: "UNRATED-1975-06-03", avgRating: null, reviews: null, downloads: 4_730 },
+    { identifier: "UNRATED-1975-07-07", avgRating: null, reviews: null, downloads: 3_655 },
+  ];
+
+  it("never calls a tape nobody rated a gem", () => {
+    const gems = quietGems(scoreRecordings(CRAZY_FINGERS_1975)).map((g) => g.identifier);
+    expect(gems).not.toContain("UNRATED-1975-06-03");
+    expect(gems).not.toContain("UNRATED-1975-07-07");
+  });
+
+  it("never marks a tape it cannot produce evidence for", () => {
+    // The chip and its evidence line are one claim. A gem with a null reason
+    // renders a gold mark with nothing under it.
+    for (const gem of quietGems(scoreRecordings(CRAZY_FINGERS_1975))) {
+      expect(quietGemReason(gem)).not.toBeNull();
+    }
+  });
+
+  it("still parks the unrated mid-pack for ranking — it just cannot win", () => {
+    // The fix must not turn unrated tapes into zero-regard, which would be a
+    // different wrong answer: unknown is not bad.
+    const scored = scoreRecordings(CRAZY_FINGERS_1975);
+    const unrated = scored.find((s) => s.identifier === "UNRATED-1975-06-03")!;
+    const worst = scored.find((s) => s.identifier === "1975-04-02")!;
+    expect(unrated.regard).toBeGreaterThan(worst.regard);
+    expect(isQuietGem(unrated)).toBe(false);
+  });
+
+  it("holds the review floor where it is documented", () => {
+    const thin = Array.from({ length: 6 }, (_, i) => ({
+      identifier: `t${i}`,
+      avgRating: 4.9,
+      reviews: MIN_GEM_REVIEWS - 1,
+      downloads: 1_000 * (i + 1),
+    }));
+    expect(quietGems(scoreRecordings(thin))).toHaveLength(0);
+  });
+
+  it("does not claim a gem is pulled less than most tapes of the song", () => {
+    // It is not: the cohort is already the most-circulated tapes, so a gem sits
+    // in the top 1% of the population by downloads. The line may only speak
+    // about the tapes actually on screen.
+    const gem = scoreRecordings([
+      { identifier: "a", avgRating: 4.9, reviews: 40, downloads: 10_000 },
+      { identifier: "b", avgRating: 4.5, reviews: 40, downloads: 200_000 },
+      { identifier: "c", avgRating: 4.4, reviews: 40, downloads: 300_000 },
+      { identifier: "d", avgRating: 4.3, reviews: 40, downloads: 400_000 },
+    ])[0];
+    const line = quietGemReason(gem)!;
+    expect(line).not.toMatch(/most tapes of this song/);
+    expect(line).toContain("the other tapes here");
   });
 });

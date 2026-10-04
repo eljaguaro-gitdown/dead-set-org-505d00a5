@@ -284,9 +284,9 @@ describe("SongVersionBrowser — quiet gems", () => {
 
     expect(await screen.findByText("Quiet gem")).toBeInTheDocument();
     expect(
-      screen.getByText(/4\.9 across 22 reviews, and pulled less than most tapes/),
+      screen.getByText(/4\.9 across 22 reviews, and pulled less than the other tapes here/),
     ).toBeInTheDocument();
-    expect(screen.getByText(/how highly each recording is rated/)).toBeInTheDocument();
+    expect(screen.getByText(/the ones held highest and pulled least/)).toBeInTheDocument();
   });
 
   it("marks only the quiet one — a chip on every card says nothing", async () => {
@@ -307,7 +307,7 @@ describe("SongVersionBrowser — quiet gems", () => {
 
     await waitFor(() => expect(findManyArchiveRecordings).toHaveBeenCalled());
     expect(screen.queryByText("Quiet gem")).not.toBeInTheDocument();
-    expect(screen.queryByText(/how highly each recording is rated/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/the ones held highest and pulled least/)).not.toBeInTheDocument();
   });
 
   it("stays silent when too few tapes circulate to rank anything", async () => {
