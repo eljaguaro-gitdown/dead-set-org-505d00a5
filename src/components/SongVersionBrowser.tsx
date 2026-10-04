@@ -13,6 +13,14 @@ import {
 } from "@/components/ui/select";
 import { findManyArchiveRecordings, type ArchiveVersion } from "@/lib/archiveOrg";
 import {
+  scoreRecordings,
+  quietGems,
+  hasRegardData,
+  quietGemReason,
+  QUIET_GEM_CHIP,
+  REGARD_METHOD_LINE,
+} from "@/lib/regardVsAttention";
+import {
   ALL_PLAYING_YEARS,
   ALL_YEARS,
   encodeYearWindow,
@@ -156,6 +164,39 @@ const SongVersionBrowser = ({ song, curatedVersions, eras, eraId, onSelectSong, 
       return (b.date || "").localeCompare(a.date || "");
     });
   }, [windowVersions, sortMode]);
+
+  /**
+   * The quiet gems in this window: tapes held high and pulled least. Scored
+   * over the whole fetched cohort, not the sorted slice, so flipping the sort
+   * never changes which tapes are gems.
+   *
+   * Note the cohort is already archive.org's top `rows` by rating, so this is
+   * "the least-pulled of the well-regarded", not "the best tape overall" —
+   * which is exactly the question a head is asking at this point in the page.
+   */
+  const gems = useMemo(() => {
+    // One row per NIGHT, not per upload. Cornell 1977-05-08 circulates as
+    // several transfers; scored as separate tapes, the quieter transfers each
+    // look overlooked next to the 1.46M-download one and the signal ends up
+    // calling the most famous tape in the catalog a hidden gem. Keep the
+    // most-pulled transfer of each date and compare shows to shows.
+    const bestPerNight = new Map<string, ArchiveVersion>();
+    for (const v of windowVersions) {
+      const night = v.date || v.identifier;
+      const held = bestPerNight.get(night);
+      if (!held || (v.downloads ?? 0) > (held.downloads ?? 0)) bestPerNight.set(night, v);
+    }
+    const cohort = [...bestPerNight.values()].map((v) => ({
+      identifier: v.identifier,
+      avgRating: v.avgRating,
+      reviews: v.reviews,
+      downloads: v.downloads,
+    }));
+    if (!hasRegardData(cohort)) return new Map<string, string | null>();
+    return new Map(
+      quietGems(scoreRecordings(cohort)).map((s) => [s.identifier, quietGemReason(s)] as const),
+    );
+  }, [windowVersions]);
 
   /**
    * The versions Charlie writes notes for: the best of what's *in the window*.
@@ -433,11 +474,18 @@ const SongVersionBrowser = ({ song, curatedVersions, eras, eraId, onSelectSong, 
             </p>
           )}
 
+          {gems.size > 0 && (
+            <p className="text-xs text-muted-foreground font-body mb-2 leading-snug">
+              {REGARD_METHOD_LINE}
+            </p>
+          )}
           {sortedVersions.map((av) => (
               <ArchiveVersionCard
                 key={av.identifier}
                 version={av}
                 songTitle={song.title}
+                quietGem={gems.has(av.identifier)}
+                gemReason={gems.get(av.identifier) ?? null}
                 description={descriptions[av.identifier]}
                 onSelect={() => handleSelectArchiveVersion(av)}
                 onPlayArchive={onPlayArchive}
@@ -567,6 +615,8 @@ function CuratedVersionCard({
 function ArchiveVersionCard({
   version: av,
   songTitle,
+  quietGem,
+  gemReason,
   description,
   onSelect,
   onPlayArchive,
@@ -575,6 +625,8 @@ function ArchiveVersionCard({
 }: {
   version: ArchiveVersion;
   songTitle: string;
+  quietGem?: boolean;
+  gemReason?: string | null;
   description?: string;
   onSelect: () => void;
   onPlayArchive?: (url: string, songTitle: string, showDate: string, venue?: string | null) => void;
@@ -589,6 +641,14 @@ function ArchiveVersionCard({
       <div className="flex items-center justify-between">
         <span className="text-sm font-body text-card-foreground">{av.date || "Unknown date"}</span>
         <div className="flex items-center gap-1">
+          {quietGem && (
+            <Badge
+              variant="outline"
+              className="text-[10px] px-1 py-0 border-dead-gold/50 text-dead-gold"
+            >
+              {QUIET_GEM_CHIP}
+            </Badge>
+          )}
           {av.avgRating != null && av.avgRating > 0 && (
             <Badge variant="outline" className="text-[10px] px-1 py-0 border-accent/30 text-accent-foreground">
               ★ {av.avgRating.toFixed(1)}
@@ -642,6 +702,9 @@ function ArchiveVersionCard({
       </div>
       {av.venue && (
         <p className="text-xs text-muted-foreground font-body mt-0.5">{av.venue}</p>
+      )}
+      {quietGem && gemReason && (
+        <p className="text-xs text-dead-gold/90 font-body mt-0.5">{gemReason}</p>
       )}
       {description && (
         <p className="text-xs text-accent-foreground font-body mt-1 italic">"{description}"</p>

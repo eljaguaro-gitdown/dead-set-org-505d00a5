@@ -17,6 +17,8 @@ const version = (identifier: string): ArchiveVersion => ({
   date: "1974-08-06",
   venue: "Roosevelt Stadium",
   avgRating: 5,
+  reviews: 1,
+  downloads: 100,
 });
 
 /** Minimal archive.org metadata payload with the given track titles. */
