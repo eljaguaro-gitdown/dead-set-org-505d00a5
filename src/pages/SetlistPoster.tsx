@@ -351,12 +351,23 @@ const SetlistPoster = () => {
       const entries = Array.from(dated.entries());
       for (let i = 0; i < entries.length; i += 4) {
         const batch = await Promise.all(
-          entries.slice(i, i + 4).map(async ([key, { title, date }]) =>
-            [key, await findRecordingForDate(title, date)] as const
-          )
+          entries.slice(i, i + 4).map(async ([key, { title, date }]) => {
+            try {
+              return [key, await findRecordingForDate(title, date)] as const;
+            } catch {
+              // findRecordingForDate throws when the Archive could not be
+              // asked. Leave the key UNSET rather than writing null: null here
+              // would be read as "no tape of this night", and the player would
+              // stop retrying a night that may well have one. Unset, the
+              // player resolves it again at play time.
+              return null;
+            }
+          })
         );
         if (cancelled) return;
-        batch.forEach(([key, result]) => { nextResolved[key] = result; });
+        batch.forEach((entry) => {
+          if (entry) nextResolved[entry[0]] = entry[1];
+        });
       }
 
       if (cancelled) return;

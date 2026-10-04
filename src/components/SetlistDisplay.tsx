@@ -138,12 +138,18 @@ const SortableSlotItem = ({
           eraYearRange?.start ?? null,
           eraYearRange?.end ?? null
         );
-    lookup.then((result) => {
-      if (!cancelled) {
-        setArchiveResult(result);
-        setArchiveLoading(false);
-      }
-    });
+    lookup
+      .then((result) => {
+        if (!cancelled) {
+          setArchiveResult(result);
+          setArchiveLoading(false);
+        }
+      })
+      .catch(() => {
+        // findRecordingForDate throws when the Archive could not be asked.
+        // Without this the row's spinner never clears.
+        if (!cancelled) setArchiveLoading(false);
+      });
     return () => { cancelled = true; };
   }, [slot.song.title, existingArchiveUrl, slot.version?.show_date, eraYearRange?.start, eraYearRange?.end]);
 

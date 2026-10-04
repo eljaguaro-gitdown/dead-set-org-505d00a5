@@ -553,22 +553,40 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     const namedNight = slot.version?.show_date;
     if (namedNight) {
       audioDebug.log("resolve", "findRecordingForDate", { song: slot.song.title, date: namedNight });
-      const dated = await findRecordingForDate(slot.song.title, namedNight);
-      if (dated) {
-        return {
-          ...slot,
-          version: {
-            ...(slot.version ?? SYNTHETIC_VERSION_DEFAULTS),
-            id: slot.version?.id ?? "",
-            song_id: slot.song.id,
-            show_date: namedNight,
-            archive_org_url: dated.url,
-            venue: slot.version?.venue ?? dated.venue,
-          },
-          directTrackUrl: dated.directTrackUrl || null,
-        };
+      // findRecordingForDate THROWS on a failed request, deliberately, to keep
+      // "could not ask the Archive" distinct from "no tape of this night
+      // circulates" — and it caches neither. Its sibling findArchiveRecording
+      // does the opposite, swallowing the error and caching null, so the two
+      // cannot be called the same way. An uncaught rejection here escapes
+      // through playSetlist/playSingle/advancePlaylist: nothing plays, no
+      // toast fires, and a single tap leaves playingSlot set, spinning.
+      try {
+        const dated = await findRecordingForDate(slot.song.title, namedNight);
+        if (dated) {
+          return {
+            ...slot,
+            version: {
+              ...(slot.version ?? SYNTHETIC_VERSION_DEFAULTS),
+              id: slot.version?.id ?? "",
+              song_id: slot.song.id,
+              show_date: namedNight,
+              archive_org_url: dated.url,
+              venue: slot.version?.venue ?? dated.venue,
+            },
+            directTrackUrl: dated.directTrackUrl || null,
+          };
+        }
+        audioDebug.log("resolve", "no tape found for named night", { song: slot.song.title, date: namedNight }, "warn");
+      } catch (e) {
+        audioDebug.log(
+          "resolve",
+          "named-night lookup failed — treating as unresolved, not as 'no tape'",
+          { song: slot.song.title, date: namedNight, error: String(e) },
+          "warn",
+        );
       }
-      audioDebug.log("resolve", "no tape found for named night", { song: slot.song.title, date: namedNight }, "warn");
+      // Unresolved either way: the caller skips this slot and moves on, and
+      // because nothing was cached the next attempt asks again.
       return null;
     }
 

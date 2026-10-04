@@ -167,6 +167,65 @@ describe("resolveSlot — a slot that names its night", () => {
     expect(findArchiveRecording).not.toHaveBeenCalled();
   });
 
+  /**
+   * findRecordingForDate THROWS on a failed request, by design, so that a 503
+   * or a timeout is never mistaken for "no tape of this night circulates".
+   * Its sibling findArchiveRecording swallows errors and returns null, so the
+   * two cannot be called the same way — and the first version of this feature
+   * called the throwing one as though it were the swallowing one.
+   *
+   * The 2026-10-04 gate caught it: an uncaught rejection escaped through
+   * playSetlist, playSingle and advancePlaylist. Nothing played, no toast
+   * fired, a single tap left playingSlot set and spinning, and Play All stayed
+   * stuck on the dead slot instead of advancing. The suite was green because
+   * every mock resolved — null or a result, never a rejection.
+   */
+  describe("when the Archive cannot be asked at all", () => {
+    it("toasts and clears instead of spinning forever on a single tap", async () => {
+      vi.mocked(findRecordingForDate).mockRejectedValueOnce(new Error("archive.org search 503"));
+      const { result } = renderHook(() => useAudioPlayer(), { wrapper });
+
+      await act(async () => {
+        await result.current.playSingle(guideSlot(0, "1980-05-16"));
+      });
+
+      await waitFor(() => expect(toastError).toHaveBeenCalled());
+      expect(result.current.playingSlot).toBeNull();
+      // A failed lookup is not a miss, so it must not fall back to a title search.
+      expect(findArchiveRecording).not.toHaveBeenCalled();
+    });
+
+    it("advances past the failed night instead of stalling the queue", async () => {
+      const nights = ["1980-05-16", "1981-03-28", "1990-03-15"];
+      const slots = nights.map((d, i) => guideSlot(i, d));
+      // The FIRST night cannot be asked for; the rest resolve normally.
+      vi.mocked(findRecordingForDate).mockRejectedValueOnce(new Error("archive.org search 503"));
+
+      const { result } = renderHook(() => useAudioPlayer(), { wrapper });
+      await act(async () => {
+        await result.current.playSetlist(slots, "setlist-althea");
+      });
+
+      // Play All skips the unaskable night and starts on the next one.
+      await waitFor(() => expect(result.current.playingSlot?.id).toBe("slot-1"));
+      expect(result.current.playingSlot?.version?.archive_org_url).toContain("gd1981-03-28");
+      expect(result.current.playlistIndex).toBe(1);
+    });
+
+    it("does not reject out of playSetlist", async () => {
+      vi.mocked(findRecordingForDate).mockRejectedValue(new Error("archive.org search 503"));
+      const { result } = renderHook(() => useAudioPlayer(), { wrapper });
+
+      // Every night unaskable: the call must settle, not throw at the caller.
+      await act(async () => {
+        await expect(
+          result.current.playSetlist([guideSlot(0, "1980-05-16"), guideSlot(1, "1981-03-28")], "s"),
+        ).resolves.not.toThrow();
+      });
+      expect(result.current.playingSlot).toBeNull();
+    });
+  });
+
   it("still searches by title when the slot names no night at all", async () => {
     const slot = guideSlot(0, "");
     const { result } = renderHook(() => useAudioPlayer(), { wrapper });
