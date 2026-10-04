@@ -319,3 +319,42 @@ describe("SongVersionBrowser — quiet gems", () => {
     expect(screen.queryByText("Quiet gem")).not.toBeInTheDocument();
   });
 });
+
+describe("SongVersionBrowser — one row per night", () => {
+  /**
+   * Cornell 1977-05-08 circulates as several transfers. Scored as separate
+   * tapes, the quieter transfers look overlooked beside the 1.46M-download one
+   * and the signal calls the most famous tape in the catalog a hidden gem.
+   * Found by running the real Archive data through it.
+   */
+  const CORNELL = [
+    rated("gd77-05-08.famous", "1977-05-08", 4.78, 300, 1_460_546),
+    rated("gd77-05-08.transfer2", "1977-05-08", 4.93, 29, 143_936),
+    rated("gd77-05-08.transfer3", "1977-05-08", 4.91, 35, 137_657),
+    rated("gd73-06-10", "1973-06-10", 4.62, 217, 1_280_004),
+    rated("gd72-05-03", "1972-05-03", 4.94, 36, 126_858),
+    rated("gd72-09-21", "1972-09-21", 4.87, 66, 112_605),
+  ];
+
+  it("does not call Cornell a quiet gem because a second transfer is quieter", async () => {
+    findManyArchiveRecordings.mockResolvedValue(CORNELL);
+
+    renderBrowser();
+
+    await waitFor(() => expect(findManyArchiveRecordings).toHaveBeenCalled());
+    // Whatever it marks, no 1977-05-08 card may carry the chip.
+    const chips = screen.queryAllByText("Quiet gem");
+    for (const chip of chips) {
+      expect(chip.closest("button")?.textContent).not.toContain("1977-05-08");
+    }
+  });
+
+  it("never marks more than a few, or the mark means nothing", async () => {
+    findManyArchiveRecordings.mockResolvedValue(CORNELL);
+
+    renderBrowser();
+
+    await waitFor(() => expect(findManyArchiveRecordings).toHaveBeenCalled());
+    expect(screen.queryAllByText("Quiet gem").length).toBeLessThanOrEqual(3);
+  });
+});

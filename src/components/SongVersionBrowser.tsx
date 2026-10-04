@@ -14,7 +14,7 @@ import {
 import { findManyArchiveRecordings, type ArchiveVersion } from "@/lib/archiveOrg";
 import {
   scoreRecordings,
-  isQuietGem,
+  quietGems,
   hasRegardData,
   quietGemReason,
   QUIET_GEM_CHIP,
@@ -175,7 +175,18 @@ const SongVersionBrowser = ({ song, curatedVersions, eras, eraId, onSelectSong, 
    * which is exactly the question a head is asking at this point in the page.
    */
   const gems = useMemo(() => {
-    const cohort = windowVersions.map((v) => ({
+    // One row per NIGHT, not per upload. Cornell 1977-05-08 circulates as
+    // several transfers; scored as separate tapes, the quieter transfers each
+    // look overlooked next to the 1.46M-download one and the signal ends up
+    // calling the most famous tape in the catalog a hidden gem. Keep the
+    // most-pulled transfer of each date and compare shows to shows.
+    const bestPerNight = new Map<string, ArchiveVersion>();
+    for (const v of windowVersions) {
+      const night = v.date || v.identifier;
+      const held = bestPerNight.get(night);
+      if (!held || (v.downloads ?? 0) > (held.downloads ?? 0)) bestPerNight.set(night, v);
+    }
+    const cohort = [...bestPerNight.values()].map((v) => ({
       identifier: v.identifier,
       avgRating: v.avgRating,
       reviews: v.reviews,
@@ -183,9 +194,7 @@ const SongVersionBrowser = ({ song, curatedVersions, eras, eraId, onSelectSong, 
     }));
     if (!hasRegardData(cohort)) return new Map<string, string | null>();
     return new Map(
-      scoreRecordings(cohort)
-        .filter(isQuietGem)
-        .map((s) => [s.identifier, quietGemReason(s)] as const),
+      quietGems(scoreRecordings(cohort)).map((s) => [s.identifier, quietGemReason(s)] as const),
     );
   }, [windowVersions]);
 
