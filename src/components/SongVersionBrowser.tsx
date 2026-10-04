@@ -475,7 +475,7 @@ const SongVersionBrowser = ({ song, curatedVersions, eras, eraId, onSelectSong, 
           )}
 
           {gems.size > 0 && (
-            <p className="text-xs text-muted-foreground font-body mb-2 leading-snug">
+            <p className="text-xs text-foreground/75 font-body mb-2 leading-snug">
               {REGARD_METHOD_LINE}
             </p>
           )}
@@ -644,7 +644,7 @@ function ArchiveVersionCard({
           {quietGem && (
             <Badge
               variant="outline"
-              className="text-[10px] px-1 py-0 border-dead-gold/50 text-dead-gold"
+              className="text-[10px] px-1 py-0 border-dead-gold bg-dead-gold text-dead-dark"
             >
               {QUIET_GEM_CHIP}
             </Badge>
@@ -704,7 +704,7 @@ function ArchiveVersionCard({
         <p className="text-xs text-muted-foreground font-body mt-0.5">{av.venue}</p>
       )}
       {quietGem && gemReason && (
-        <p className="text-xs text-dead-gold/90 font-body mt-0.5">{gemReason}</p>
+        <p className="text-xs text-card-foreground font-body mt-0.5">{gemReason}</p>
       )}
       {description && (
         <p className="text-xs text-accent-foreground font-body mt-1 italic">"{description}"</p>

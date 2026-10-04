@@ -66,6 +66,23 @@ export const MAX_GEMS = 3;
  */
 export const MIN_COHORT = 4;
 
+/**
+ * Reviews a tape needs before it can be called a gem.
+ *
+ * An unrated tape takes the cohort mean as its regard, which is the right way
+ * to rank it (unknown lands mid-pack) and the wrong way to decide it. Where
+ * enough rated tapes sit below that mean, an unrated one clears the better
+ * half on nothing at all: the Crazy Fingers 1975 window flagged
+ * `gd1975-06-03.145776` — no rating, no reviews, 4,730 downloads — as a gem,
+ * and `quietGemReason` returned null, so the chip appeared with no evidence
+ * under it. "Held high" has to mean somebody held it.
+ *
+ * Set to PRIOR_WEIGHT so a gem's own rating is at least half its own score
+ * rather than mostly the prior. Live gems carry 14-66 reviews, so this
+ * excludes the unrated, not the real ones.
+ */
+export const MIN_GEM_REVIEWS = PRIOR_WEIGHT;
+
 /** Review-weighted mean rating of the cohort — the prior each tape is pulled toward. */
 const cohortMean = (inputs: RegardInput[]): number => {
   let weighted = 0;
@@ -120,7 +137,10 @@ export const scoreRecordings = (inputs: RegardInput[]): RegardScore[] => {
  * ignored is not interesting on its own, only being ignored *and* good is.
  */
 export const isQuietGem = (score: RegardScore): boolean =>
-  score.regardRank >= 0.5 && score.overlooked >= QUIET_GEM_THRESHOLD;
+  (score.reviews ?? 0) >= MIN_GEM_REVIEWS &&
+  score.avgRating != null &&
+  score.regardRank >= 0.5 &&
+  score.overlooked >= QUIET_GEM_THRESHOLD;
 
 /**
  * The gems worth marking: the most overlooked few that clear the bar.
@@ -146,11 +166,7 @@ export const hasRegardData = (inputs: RegardInput[]): boolean =>
  * No machinery, no "we rank" — it reads the tape, the way a trader would.
  */
 export const REGARD_METHOD_LINE =
-  "No all-time poll on this one, so we read the tape box instead: how highly each recording is rated against how often it gets pulled. The ones held high and pulled least are the quiet gems.";
-
-/** What we say when even the tape box is silent. */
-export const NO_REGARD_LINE =
-  "Not enough circulating on this one to compare tapes yet. What's here is what's on the shelf.";
+  "No all-time poll on this one, so we read the tape box instead. Of the tapes that circulate most, these are the ones held highest and pulled least.";
 
 export const QUIET_GEM_CHIP = "Quiet gem";
 
@@ -165,5 +181,9 @@ export const quietGemReason = (score: RegardScore): string | null => {
   // does not have, and a number beside a gold chip has to survive being checked.
   const rating = (Math.floor(score.avgRating * 10) / 10).toFixed(1);
   const noun = reviews === 1 ? "review" : "reviews";
-  return `${rating} across ${reviews} ${noun}, and pulled less than most tapes of this song.`;
+  // NOT "less than most tapes of this song". The cohort is already the most-
+  // circulated tapes, so a gem sits in the top 1% of the whole population by
+  // downloads — on Ramble On Rose, out-drawn by 24 of 2,903. A number printed
+  // beside a gold chip has to survive being checked, and that one did not.
+  return `${rating} across ${reviews} ${noun}, and pulled less than the other tapes here.`;
 };
