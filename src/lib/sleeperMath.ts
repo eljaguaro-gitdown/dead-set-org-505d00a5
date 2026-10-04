@@ -59,9 +59,13 @@ export const METHOD_LINE =
   "Ranked on fan votes. The ones polling under 30% of the leader are the sleepers.";
 
 /**
- * What we say when a song has no votes behind it — which is most of them.
- * Claiming a method we did not apply is worse than admitting the gap, and the
- * gap is the invitation.
+ * What we say when a song has no votes behind it — which is 232 of 234.
+ *
+ * It used to open "Nobody's voted this one onto an all-time list yet", which
+ * is true and is also an apology in the one place the page should feel like a
+ * find: four words of absence at the top of a song with 382 performances
+ * behind it. Claiming a method we did not apply would still be worse, so the
+ * gap stays stated — it just stops going first. Lead with what IS here.
  */
 export const NO_VOTES_LINE =
-  "Nobody's voted this one onto an all-time list yet, so there's no poll to read. What's here is what's on tape.";
+  "These are the nights on tape — from the first time they played it to the last. No all-time poll exists for this one yet, so nothing here is ranked against one.";

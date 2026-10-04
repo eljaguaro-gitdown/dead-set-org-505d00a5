@@ -349,9 +349,18 @@ const VersionPicker = () => {
     const endYear = Math.max(...years, song?.last_played ? Number(song.last_played.slice(0, 4)) : -Infinity);
     const span = Math.max(1, endYear - startYear);
     const lead = leaderVotes(versions);
+    // Every decade boundary inside the span, so the empty stretches between
+    // a debut and a farewell are legible instead of blank.
+    const decades: { year: number; pct: number }[] = [];
+    for (let y = Math.ceil(startYear / 10) * 10; y <= endYear; y += 10) {
+      const pct = 3 + ((y - startYear) / span) * 94;
+      if (pct > 8 && pct < 92) decades.push({ year: y, pct });
+    }
+
     return {
       startYear,
       endYear,
+      decades,
       points: dated.map((v) => ({
         v,
         // Inset so the end dots are not half off the rail.
@@ -361,6 +370,32 @@ const VersionPicker = () => {
       })),
     };
   }, [versions, song]);
+
+  /**
+   * Play a milestone night — the debut or the last time — when the explorer
+   * did not already list it. buildMilestones has resolved the tape by then, so
+   * the url is in hand and there is nothing to look up.
+   */
+  const playMilestone = (m: MilestoneEntry) => {
+    if (!song || !m.archiveUrl) return;
+    unlockAudio();
+    playSingle({
+      id: `picker-${song.id}-${m.kind}`,
+      song: { id: song.id, title: song.title },
+      version: {
+        ...SYNTHETIC_VERSION_DEFAULTS,
+        id: `archive-picker-${m.kind}`,
+        song_id: song.id,
+        show_date: m.date,
+        venue: m.venue,
+        city: m.city,
+        archive_org_url: m.archiveUrl,
+      },
+      setNumber: 1,
+      position: 0,
+      segueToNext: false,
+    } as PlayableSlot);
+  };
 
   /**
    * Play one version. Most ranked versions carry no archive_org_url — the
@@ -608,37 +643,38 @@ const VersionPicker = () => {
 
           {/* The life of the song, in three numbers, before anything is asked
               of the reader. */}
-          <dl className="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-2.5 mb-5">
+          <dl className="grid grid-cols-2 sm:grid-cols-4 gap-x-5 gap-y-5 mb-7 pb-6 border-b border-border">
             {song.times_played != null && (
               <div>
-                <dt className="font-ticket text-[9px] uppercase tracking-[0.14em] text-muted-foreground">Played</dt>
-                <dd className="font-mono text-base font-medium text-card-foreground tabular-nums leading-tight">
-                  {song.times_played}<span className="text-[11px] text-muted-foreground"> times</span>
+                <dt className="font-ticket text-[10px] uppercase tracking-[0.14em] text-card-foreground/70 mb-0.5">Played</dt>
+                <dd className="font-mono text-[1.9rem] font-medium text-card-foreground tabular-nums leading-none">
+                  {song.times_played}
+                  <span className="font-ticket text-[11px] uppercase tracking-[0.1em] text-card-foreground/70 ml-1.5 align-baseline">times</span>
                 </dd>
               </div>
             )}
             {song.first_played && (
               <div>
-                <dt className="font-ticket text-[9px] uppercase tracking-[0.14em] text-muted-foreground">First played</dt>
-                <dd className="font-mono text-base font-medium text-card-foreground tabular-nums leading-tight">
+                <dt className="font-ticket text-[10px] uppercase tracking-[0.14em] text-card-foreground/70 mb-0.5">First played</dt>
+                <dd className="font-mono text-[1.9rem] font-medium text-card-foreground tabular-nums leading-none">
                   {song.first_played.slice(0, 4)}
                 </dd>
               </div>
             )}
             {song.last_played && (
               <div>
-                <dt className="font-ticket text-[9px] uppercase tracking-[0.14em] text-muted-foreground">Last played</dt>
-                <dd className="font-mono text-base font-medium text-card-foreground tabular-nums leading-tight">
+                <dt className="font-ticket text-[10px] uppercase tracking-[0.14em] text-card-foreground/70 mb-0.5">Last played</dt>
+                <dd className="font-mono text-[1.9rem] font-medium text-card-foreground tabular-nums leading-none">
                   {song.last_played.slice(0, 4)}
                 </dd>
               </div>
             )}
             {versions.length > 0 && (
               <div>
-                <dt className="font-ticket text-[9px] uppercase tracking-[0.14em] text-muted-foreground">
-                  {voted ? "Ranked" : "Picks"}
+                <dt className="font-ticket text-[10px] uppercase tracking-[0.14em] text-card-foreground/70 mb-0.5">
+                  {voted ? "Ranked" : "On this page"}
                 </dt>
-                <dd className="font-mono text-base font-medium text-card-foreground tabular-nums leading-tight">
+                <dd className="font-mono text-[1.9rem] font-medium text-card-foreground tabular-nums leading-none">
                   {versions.length}
                 </dd>
               </div>
@@ -685,26 +721,53 @@ const VersionPicker = () => {
 
           {/* Thirty years on one line — where every ranked night actually sits. */}
           {arc && (
-            <figure className="mt-5">
-              <figcaption className="font-ticket text-[9px] uppercase tracking-[0.16em] text-muted-foreground mb-2">
+            <figure className="mt-7">
+              <figcaption className="font-ticket text-[11px] uppercase tracking-[0.14em] text-card-foreground/70 mb-4">
                 First played to last played · {voted ? "every ranked night between" : "every night Charlie pulled"}
               </figcaption>
-              {/* FTP and LTP anchor the rail. They are the two dates every head
-                  reaches for, so they get the ends of the line and their own
-                  marks rather than living only in a card further down. */}
-              <div className="flex items-end justify-between mb-1">
-                <span className="font-ticket text-[9px] uppercase tracking-[0.14em] px-1.5 py-0.5 rounded-[2px] border border-primary/50 bg-primary/10 text-primary">
-                  FTP
-                </span>
-                <span className="font-ticket text-[9px] uppercase tracking-[0.14em] px-1.5 py-0.5 rounded-[2px] border border-primary/50 bg-primary/10 text-primary">
-                  LTP
-                </span>
+
+              {/* The two dates every head reaches for, given the ends of the
+                  line and their actual size. They used to be two 9px pills at
+                  the far corners with the dates in 10px underneath, which made
+                  the most-loved thing on the page the quietest. */}
+              <div className="flex items-start justify-between gap-4 mb-3">
+                <div className="min-w-0">
+                  <p className="font-ticket text-[11px] uppercase tracking-[0.14em] text-primary">
+                    First time played
+                  </p>
+                  <p className="font-hand text-[1.9rem] leading-none text-[hsl(var(--dead-blue))] mt-1">
+                    {song.first_played ? fmtDate(song.first_played) : arc.startYear}
+                  </p>
+                </div>
+                <div className="min-w-0 text-right">
+                  <p className="font-ticket text-[11px] uppercase tracking-[0.14em] text-primary">
+                    Last time played
+                  </p>
+                  <p className="font-hand text-[1.9rem] leading-none text-[hsl(var(--dead-blue))] mt-1">
+                    {song.last_played ? fmtDate(song.last_played) : arc.endYear}
+                  </p>
+                </div>
               </div>
-              <div className="relative h-9">
-                <span className="absolute left-0 right-0 top-[17px] h-px bg-muted-foreground/30" />
+
+              <div className="relative h-12">
+                <span className="absolute left-0 right-0 top-[22px] h-px bg-card-foreground/25" />
                 {/* The bookends themselves — taller ticks at each end. */}
-                <span className="absolute left-0 top-[9px] w-[2px] h-4 rounded-sm bg-primary" />
-                <span className="absolute right-0 top-[9px] w-[2px] h-4 rounded-sm bg-primary" />
+                <span className="absolute left-0 top-[13px] w-[3px] h-5 rounded-sm bg-primary" />
+                <span className="absolute right-0 top-[13px] w-[3px] h-5 rounded-sm bg-primary" />
+
+                {/* Decade marks. The rail was mostly empty between a 1973 debut
+                    and a 1995 farewell, and that emptiness said nothing. Now
+                    the gap is scaled: you can see which decade a night sits in
+                    without counting pixels. */}
+                {arc.decades.map((d) => (
+                  <span key={d.year} className="absolute" style={{ left: `${d.pct}%` }}>
+                    <span className="block w-px h-2.5 bg-card-foreground/25 absolute top-[18px] -translate-x-1/2" />
+                    <span className="absolute top-[32px] -translate-x-1/2 font-mono text-[11px] text-card-foreground/55 tabular-nums">
+                      {d.year}
+                    </span>
+                  </span>
+                ))}
+
                 {arc.points.map((pt) => (
                   <button
                     key={pt.v.id}
@@ -712,14 +775,14 @@ const VersionPicker = () => {
                     onClick={() => void playVersion(pt.v)}
                     title={`${fmtDate(pt.v.show_date)} — ${pt.v.venue ?? ""}`}
                     aria-label={`Play ${fmtDate(pt.v.show_date)}`}
-                    className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 grid place-items-center w-9 h-9 rounded-full"
+                    className="absolute top-[22px] -translate-y-1/2 -translate-x-1/2 grid place-items-center w-11 h-11 rounded-full"
                     style={{ left: `${pt.pct}%` }}
                   >
                     <span
                       className="block rounded-full transition-transform hover:scale-125"
                       style={{
-                        width: pt.lead ? 13 : pt.sleeper ? 9 : 11,
-                        height: pt.lead ? 13 : pt.sleeper ? 9 : 11,
+                        width: pt.lead ? 16 : pt.sleeper ? 12 : 14,
+                        height: pt.lead ? 16 : pt.sleeper ? 12 : 14,
                         background: pt.sleeper
                           ? "hsl(var(--dead-green))"
                           : pt.v.is_benchmark
@@ -731,10 +794,6 @@ const VersionPicker = () => {
                     />
                   </button>
                 ))}
-              </div>
-              <div className="flex justify-between gap-3 font-ticket text-[10px] text-muted-foreground tabular-nums -mt-1">
-                <span>{song.first_played ? fmtDate(song.first_played) : arc.startYear}</span>
-                <span className="text-right">{song.last_played ? fmtDate(song.last_played) : arc.endYear}</span>
               </div>
             </figure>
           )}
@@ -879,7 +938,7 @@ const VersionPicker = () => {
           <div className="flex flex-col gap-2">
             {standalone
               .filter((m) => m.kind === "ftp")
-              .map((m) => <MilestoneRow key={m.kind} milestone={m} />)}
+              .map((m) => <MilestoneRow key={m.kind} milestone={m} onPlay={playMilestone} />)}
 
             {shown.map((v) => {
               const sleeper = isSleeperVersion(v, versions);
@@ -889,35 +948,61 @@ const VersionPicker = () => {
               return (
                 <article
                   key={v.id}
-                  className={`rounded-sm border px-3.5 py-3 transition-colors ${
+                  className={`rounded-sm border px-4 py-4 sm:px-5 sm:py-5 transition-colors ${
                     playing ? "bg-primary/10 border-primary/45" : "border-border bg-card hover:border-primary/30"
                   }`}
                 >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className={`font-hand text-2xl leading-tight ${playing ? "text-primary" : "text-[hsl(var(--dead-blue))]"}`}>
+                  {/* Play moved to the right of the row and became a disc.
+                      It used to be a small outline button stacked underneath,
+                      which left the whole right half of every card empty while
+                      the date — the thing people are actually here to read —
+                      sat at 24px. The night gets the width; the tap gets the
+                      corner it can be reached in. */}
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="min-w-0 flex-1">
+                      <p className={`font-hand text-[2.4rem] sm:text-[2.9rem] leading-[0.95] ${playing ? "text-primary" : "text-[hsl(var(--dead-blue))]"}`}>
                         {fmtDate(v.show_date)}
                       </p>
-                      <p className="font-ticket text-[11px] text-muted-foreground mt-0.5">
-                        {v.venue}{v.city ? ` · ${v.city}` : ""}
-                      </p>
+                      {(v.venue || v.city) && (
+                        <p className="font-ticket text-[14px] leading-snug text-card-foreground/80 mt-1.5">
+                          {v.venue}{v.city ? ` · ${v.city}` : ""}
+                        </p>
+                      )}
                     </div>
-                    {v.votes != null && (
-                      <div className="flex flex-col items-end gap-1 shrink-0">
-                        <span className="font-mono text-[13px] font-medium text-card-foreground tabular-nums leading-none">
-                          {v.votes}
-                          <span className="font-ticket text-[9px] uppercase tracking-[0.1em] text-muted-foreground ml-1 font-normal">
-                            votes
-                          </span>
-                        </span>
-                        <span className="block w-[84px] h-[3px] rounded-sm bg-muted-foreground/30 overflow-hidden">
-                          <span className="block h-full rounded-sm bg-primary" style={{ width: `${pct}%` }} />
-                        </span>
-                      </div>
-                    )}
+                    <button
+                      type="button"
+                      disabled={resolving === v.id}
+                      onClick={() => void playVersion(v)}
+                      aria-label={`Play this version — ${fmtDate(v.show_date)}`}
+                      className={`shrink-0 grid place-items-center w-14 h-14 sm:w-16 sm:h-16 rounded-full transition-transform hover:scale-105 active:scale-95 disabled:opacity-60 ${
+                        playing
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-[hsl(var(--dead-gold))] text-dead-dark"
+                      }`}
+                    >
+                      {resolving === v.id ? (
+                        <Loader2 className="w-6 h-6 animate-spin" />
+                      ) : (
+                        <Play className="w-6 h-6 fill-current translate-x-[1px]" />
+                      )}
+                    </button>
                   </div>
 
-                  <div className="flex items-center gap-1.5 flex-wrap mt-2">
+                  {v.votes != null && (
+                    <div className="flex items-center gap-2 mt-3">
+                      <span className="block flex-1 max-w-[180px] h-[4px] rounded-sm bg-card-foreground/15 overflow-hidden">
+                        <span className="block h-full rounded-sm bg-primary" style={{ width: `${pct}%` }} />
+                      </span>
+                      <span className="font-mono text-[13px] font-medium text-card-foreground tabular-nums leading-none">
+                        {v.votes}
+                        <span className="font-ticket text-[10px] uppercase tracking-[0.1em] text-card-foreground/70 ml-1 font-normal">
+                          votes
+                        </span>
+                      </span>
+                    </div>
+                  )}
+
+                  <div className="flex items-center gap-1.5 flex-wrap mt-3">
                     {v.era_id && eraNames.get(v.era_id) && (
                       <Chip tone="era">{eraNames.get(v.era_id)}</Chip>
                     )}
@@ -927,31 +1012,21 @@ const VersionPicker = () => {
                   </div>
 
                   {v.blurb && (
-                    <p className="font-body text-[13px] leading-relaxed text-muted-foreground mt-2 max-w-[62ch]">
+                    <p className="font-body text-[15px] leading-relaxed text-card-foreground/85 mt-3 max-w-[62ch]">
                       {v.blurb}
                     </p>
                   )}
 
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={resolving === v.id}
-                    onClick={() => void playVersion(v)}
-                    className="h-9 min-h-[40px] mt-2.5 px-3 text-xs font-body gap-1.5 border-primary/30 text-dead-gold hover:bg-primary/10 active:bg-primary/15"
-                  >
-                    {resolving === v.id ? (
-                      <><Loader2 className="w-3 h-3 animate-spin" /> Looking for the tape…</>
-                    ) : (
-                      <><Play className="w-3 h-3 fill-current" /> Play this version</>
-                    )}
-                  </Button>
+                  {resolving === v.id && (
+                    <p className="font-ticket text-[12px] text-card-foreground/70 mt-2">Looking for the tape…</p>
+                  )}
                 </article>
               );
             })}
 
             {standalone
               .filter((m) => m.kind === "ltp")
-              .map((m) => <MilestoneRow key={m.kind} milestone={m} />)}
+              .map((m) => <MilestoneRow key={m.kind} milestone={m} onPlay={playMilestone} />)}
           </div>
         )}
         </article>
@@ -992,19 +1067,49 @@ const VersionPicker = () => {
   );
 };
 
-const MilestoneRow = ({ milestone: m }: { milestone: MilestoneEntry }) => (
-  <article className="rounded-sm border border-dashed border-primary/40 bg-primary/[0.04] px-3.5 py-3">
-    <div className="flex items-start justify-between gap-3 flex-wrap">
-      <div>
-        <p className="font-hand text-2xl leading-tight text-[hsl(var(--dead-blue))]">{fmtDate(m.date)}</p>
+/**
+ * A milestone night that is not already in the list — the debut or the last
+ * time, when the explorer did not choose it.
+ *
+ * It used to render the date and stop. If a tape HAD been found it offered no
+ * way to hear it, so "July 9, 1995 · Soldier Field" sat there as a dead end on
+ * a page whose whole promise is press play — the last time they ever played
+ * the song, and no button. Now the tape plays when there is one, and when
+ * there isn't the row says so instead of staying silent.
+ */
+const MilestoneRow = ({
+  milestone: m,
+  onPlay,
+}: {
+  milestone: MilestoneEntry;
+  onPlay?: (m: MilestoneEntry) => void;
+}) => (
+  <article className="rounded-sm border border-dashed border-primary/40 bg-primary/[0.04] px-4 py-4 sm:px-5 sm:py-5">
+    <div className="flex items-center justify-between gap-4">
+      <div className="min-w-0 flex-1">
+        <Chip tone="milestone">{MILESTONE_LABEL[m.kind]}</Chip>
+        <p className="font-hand text-[2.4rem] sm:text-[2.9rem] leading-[0.95] text-[hsl(var(--dead-blue))] mt-2">
+          {fmtDate(m.date)}
+        </p>
         {milestonePlace(m) && (
-          <p className="font-ticket text-[11px] text-muted-foreground mt-0.5">{milestonePlace(m)}</p>
+          <p className="font-ticket text-[14px] leading-snug text-card-foreground/80 mt-1.5">
+            {milestonePlace(m)}
+          </p>
         )}
       </div>
-      <Chip tone="milestone">{MILESTONE_LABEL[m.kind]}</Chip>
+      {m.tapeFound && onPlay && (
+        <button
+          type="button"
+          onClick={() => onPlay(m)}
+          aria-label={`Play this version — ${fmtDate(m.date)}`}
+          className="shrink-0 grid place-items-center w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-[hsl(var(--dead-gold))] text-dead-dark transition-transform hover:scale-105 active:scale-95"
+        >
+          <Play className="w-6 h-6 fill-current translate-x-[1px]" />
+        </button>
+      )}
     </div>
     {!m.tapeFound && (
-      <p className="font-body text-[13px] leading-relaxed text-muted-foreground mt-2 italic">{NO_TAPE_LINE}</p>
+      <p className="font-body text-[15px] leading-relaxed text-card-foreground/85 mt-3 italic">{NO_TAPE_LINE}</p>
     )}
   </article>
 );
@@ -1017,7 +1122,7 @@ const Chip = ({ tone, children }: { tone: "canon" | "sleep" | "era" | "milestone
     milestone: "text-primary border-primary/50 bg-primary/10",
   } as const;
   return (
-    <span className={`font-ticket text-[9px] uppercase tracking-[0.12em] px-1.5 py-0.5 rounded-[2px] border whitespace-nowrap ${tones[tone]}`}>
+    <span className={`font-ticket text-[11px] uppercase tracking-[0.1em] px-2 py-1 rounded-[2px] border whitespace-nowrap ${tones[tone]}`}>
       {children}
     </span>
   );
