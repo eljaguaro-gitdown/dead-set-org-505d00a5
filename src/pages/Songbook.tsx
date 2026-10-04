@@ -271,7 +271,9 @@ const Songbook = () => {
         )}
 
         <section className="mt-14 p-5 md:p-6 rounded-r-sm border-l-[3px] border-[hsl(var(--dead-blue))] bg-[hsl(var(--dead-blue)/0.08)]">
-          <h3 className="font-ticket text-[10px] uppercase tracking-[0.18em] text-[hsl(var(--dead-blue))] mb-2">
+          {/* Gold, like its sibling eyebrows: blue on this maroon panel is
+              2.71:1 at 10px. Gold on maroon measures 5.25:1. */}
+          <h3 className="font-ticket text-[10px] uppercase tracking-[0.18em] text-[hsl(var(--dead-gold))] mb-2">
             How long can this possibly run
           </h3>
           <p className="font-body text-sm text-foreground/85 max-w-[64ch] mb-2">

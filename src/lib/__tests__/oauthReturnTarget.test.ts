@@ -1,4 +1,10 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
+
+vi.mock("@/integrations/supabase/client", () => ({
+  supabase: { auth: { getSession: vi.fn(), onAuthStateChange: () => ({ data: { subscription: { unsubscribe: vi.fn() } } }) } },
+}));
+
+import { clearStaleOAuthMarkers } from "@/hooks/useAuth";
 
 /**
  * The web OAuth round trip loses the querystring.
@@ -69,22 +75,20 @@ describe("the OAuth return target", () => {
  * target behind, so an unrelated later sign-in in the same tab inherited it.
  */
 describe("a stale target cannot hijack a later sign-in", () => {
-  /** What clearStaleOAuthMarkers does on sign-out / init. */
-  const clearStale = () => {
-    sessionStorage.removeItem("post_oauth_redirect");
-    sessionStorage.removeItem("ds_pending_oauth_provider");
-    sessionStorage.removeItem(KEY);
-  };
+  // The real function, not a local copy of what it ought to do. The first
+  // version of this test mirrored the implementation, which meant it could
+  // never fail if useAuth.ts stopped clearing the key — the exact regression
+  // it exists to catch.
 
   it("is dropped with the other OAuth markers", () => {
     stashTarget("/versions/dark-star?then=share");
-    clearStale();
+    clearStaleOAuthMarkers();
     expect(takeTarget()).toBeNull();
   });
 
   it("leaves nothing behind after an abandoned attempt and a fresh sign-in", () => {
     stashTarget("/versions/china-cat?then=save");   // started, then abandoned
-    clearStale();                                    // session reset
+    clearStaleOAuthMarkers();                                    // session reset
     stashTarget(null);                               // later, ordinary sign-in
     expect(takeTarget()).toBeNull();
   });

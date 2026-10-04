@@ -40,7 +40,26 @@ const START_FAILED_MESSAGE = "Couldn't start sign-in. Give it another go.";
 export async function signInWithProvider(
   provider: OAuthProvider,
   next: string = "/",
+  /**
+   * Where to land after the round trip, when the caller has somewhere
+   * specific in mind — Save or Share on a song page. On web the tab leaves
+   * and returns to "/", losing the querystring, so Index reads this back.
+   *
+   * It is owned HERE rather than by the callers because there are two of them
+   * (Auth.tsx and AuthModal.tsx) and only one was setting it: a target left by
+   * an abandoned sign-in could hijack a later unrelated one started from the
+   * modal. Passing nothing clears it, so the gap cannot reopen by someone
+   * forgetting a second call site.
+   */
+  returnTo?: string | null,
 ): Promise<OAuthSignInResult> {
+  try {
+    if (returnTo) sessionStorage.setItem("post_oauth_target", returnTo);
+    else sessionStorage.removeItem("post_oauth_target");
+  } catch {
+    // Blocked storage just means the old behaviour: the smart destination.
+  }
+
   // Fires oauth_redirect_started and leaves the provider in sessionStorage,
   // which is what useAuth reads on SIGNED_IN to log oauth_returned. Native
   // completes in-process rather than via a redirect, but the funnel is the

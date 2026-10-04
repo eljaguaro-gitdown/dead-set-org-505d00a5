@@ -153,13 +153,7 @@ const Auth = () => {
       // /my-setlists instead, with the thing they asked for forgotten. Stash
       // the target across the round trip; Index picks it up. redirectTo stays
       // exactly as it was.
-      try {
-        if (explicitRedirect) sessionStorage.setItem("post_oauth_target", explicitRedirect);
-        else sessionStorage.removeItem("post_oauth_target");
-      } catch {
-        // A blocked sessionStorage just means the old behaviour.
-      }
-      const result = await signInWithProvider(provider);
+      const result = await signInWithProvider(provider, "/", explicitRedirect);
       if (result.status === "error") {
         toast.error(result.message);
         return;

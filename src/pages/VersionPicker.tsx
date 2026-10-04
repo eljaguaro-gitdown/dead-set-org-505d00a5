@@ -159,11 +159,36 @@ const VersionPicker = () => {
   useEffect(() => {
     const el = document.querySelector("[data-global-player]");
     if (!el) { setPlayerHeight(0); return; }
-    const measure = () => setPlayerHeight(el.getBoundingClientRect().height);
+
+    /**
+     * The player's own box is not the whole obstruction. Its error banner
+     * ("That song isn't on this tape") is `absolute -top-12`, so it hangs ~48px
+     * ABOVE the root and getBoundingClientRect().height does not see it — it
+     * covered the Keep button whenever a tape turned out not to contain the
+     * song. Measure from the highest edge anything in the player reaches.
+     */
+    const measure = () => {
+      let top = el.getBoundingClientRect().top;
+      for (const child of el.querySelectorAll("*")) {
+        const r = child.getBoundingClientRect();
+        if (r.height > 0 && r.top < top) top = r.top;
+      }
+      setPlayerHeight(Math.max(0, window.innerHeight - top));
+    };
     measure();
+
+    // Size alone is not enough: the banner is an absolutely-positioned child,
+    // so it appears without changing the root's height. Watch the subtree too.
     const ro = new ResizeObserver(measure);
     ro.observe(el);
-    return () => ro.disconnect();
+    const mo = new MutationObserver(measure);
+    mo.observe(el, { childList: true, subtree: true, attributes: true });
+    window.addEventListener("resize", measure);
+    return () => {
+      ro.disconnect();
+      mo.disconnect();
+      window.removeEventListener("resize", measure);
+    };
   }, [playingSlot]);
 
   useEffect(() => {
@@ -1037,14 +1062,14 @@ const VersionPicker = () => {
               </button>
               {methodOpen && (
                 <div className="mt-2.5 pt-2.5 border-t border-dashed border-[hsl(var(--dead-blue)/0.3)] space-y-2">
-                  <p className="font-body text-[13px] leading-relaxed text-muted-foreground max-w-[62ch]">
+                  <p className="font-body text-[13px] leading-relaxed text-card-foreground/85 max-w-[62ch]">
                     <strong className="text-card-foreground font-medium">★ Era benchmark</strong> — the
                     highest-voted version inside its era.{" "}
                     <strong className="text-card-foreground font-medium">◆ Sleeper</strong> — ranked on the
                     all-time list but polling under 30% of the leader
                     {leader > 0 && <> (fewer than {Math.ceil(cutoff)} votes against {leader})</>}.
                   </p>
-                  <p className="font-body text-[13px] leading-relaxed text-muted-foreground max-w-[62ch]">
+                  <p className="font-body text-[13px] leading-relaxed text-card-foreground/85 max-w-[62ch]">
                     Arithmetic on public vote counts, not an opinion we invented. Where no data exists, this
                     page shows the gap rather than filling it with adjectives.
                     {source && (
