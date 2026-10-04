@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useCallback, useRef, useEffect, useMemo, type ReactNode } from "react";
-import { findArchiveRecording, findTrackInRecording } from "@/lib/archiveOrg";
+import { findArchiveRecording, findRecordingForDate, findTrackInRecording } from "@/lib/archiveOrg";
 import { audioDebug } from "@/lib/audioDebug";
 import {
   startPlayEvent,
@@ -538,7 +538,41 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
       return slot;
     }
 
-    // No archive URL at all — do a generic search as last resort
+    // The slot names its night but carries no tape: resolve THAT night.
+    // Listening-guide slots arrive this way — the Version Explorer's picks come
+    // with a date and often no URL — and so do catalog versions whose row has
+    // no archive_org_url. Before this branch existed both fell straight through
+    // to the generic by-title search below, which answers with the song's
+    // best-drawing tape from some other year entirely.
+    //
+    // A named night that cannot be found deliberately does NOT fall through to
+    // that search. The card above it says why THIS night matters; playing a
+    // different one puts the prose and the music on different shows, which is
+    // the exact bug src/lib/listeningGuide.ts was written to end. Better to say
+    // we came up empty than to quietly swap the tape.
+    const namedNight = slot.version?.show_date;
+    if (namedNight) {
+      audioDebug.log("resolve", "findRecordingForDate", { song: slot.song.title, date: namedNight });
+      const dated = await findRecordingForDate(slot.song.title, namedNight);
+      if (dated) {
+        return {
+          ...slot,
+          version: {
+            ...(slot.version ?? SYNTHETIC_VERSION_DEFAULTS),
+            id: slot.version?.id ?? "",
+            song_id: slot.song.id,
+            show_date: namedNight,
+            archive_org_url: dated.url,
+            venue: slot.version?.venue ?? dated.venue,
+          },
+          directTrackUrl: dated.directTrackUrl || null,
+        };
+      }
+      audioDebug.log("resolve", "no tape found for named night", { song: slot.song.title, date: namedNight }, "warn");
+      return null;
+    }
+
+    // No archive URL and no night — a generic search is all that is left.
     audioDebug.log("resolve", "findArchiveRecording (generic search)", { song: slot.song.title });
     const result = await findArchiveRecording(slot.song.title);
     if (result) {

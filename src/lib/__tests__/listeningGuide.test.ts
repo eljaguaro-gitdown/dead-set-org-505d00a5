@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import { buildGuideSongs, guideNotes, type GuideVersion } from "@/lib/listeningGuide";
 import { decodeArchiveNotes } from "@/hooks/useSetlist";
 import { buildMilestones, NO_TAPE_LINE } from "@/lib/firstLastPlayed";
+import { archiveKeyDate } from "@/lib/archiveOrg";
 
 /**
  * The failure this file exists to prevent, observed in production on
@@ -47,9 +48,16 @@ describe("buildGuideSongs — every slot binds its own tape", () => {
     expect(songs.map((s) => s.position)).toEqual([1, 2]);
   });
 
-  it("leaves prose unbound rather than inventing a tape when there is none", () => {
+  it("still records the night when the pick arrives with no tape URL", () => {
+    // The Version Explorer's archiveUrl is optional, so for any song with no
+    // catalog versions every pick arrives this way. Storing only the prose —
+    // what this did until 2026-10-04 — left the player nothing to resolve but
+    // the song title, and a six-night guide played one tape six times.
     const songs = buildGuideSongs("song-1", song.title, [v("1972-05-04", { archiveUrl: null })], []);
-    expect(decodeSlot(songs[0].notes).version).toBeNull();
+    const decoded = decodeSlot(songs[0].notes);
+    expect(decoded.version?.show_date).toBe("1972-05-04");
+    expect(decoded.version?.archive_org_url).toBeNull();
+    expect(decoded.version?.venue).toBe("Winterland Arena");
     expect(songs[0].notes).toContain("1972-05-04");
   });
 });
@@ -87,8 +95,11 @@ describe("buildGuideSongs — first and last played", () => {
     const debut = songs[0];
     expect(debut.notes).toContain("1971-10-19");
     expect(debut.notes).toContain(NO_TAPE_LINE);
-    // No tape means no binding — but the night is still in the guide.
-    expect(decodeSlot(debut.notes).version).toBeNull();
+    // No tape found when the guide was built, but the night is recorded all the
+    // same: the Archive gains recordings, so the night stays resolvable later.
+    const decoded = decodeSlot(debut.notes);
+    expect(decoded.version?.show_date).toBe("1971-10-19");
+    expect(decoded.version?.archive_org_url).toBeNull();
   });
 
   it("labels a milestone Charlie already picked instead of adding a second slot", () => {
@@ -111,5 +122,41 @@ describe("guideNotes", () => {
     expect(notes.startsWith('{"__archive":true')).toBe(true);
     expect(decodeSlot(notes).notes).toBe("prose");
     expect(decodeSlot(notes).version?.venue).toBe("Auditorium Theatre");
+  });
+
+  it("writes the blob whenever a night is known, tape or no tape", () => {
+    const notes = guideNotes("1980-05-16", "Nassau Coliseum", null, null, "prose");
+    expect(notes.startsWith('{"__archive":true')).toBe(true);
+    expect(decodeSlot(notes).version?.show_date).toBe("1980-05-16");
+    expect(decodeSlot(notes).notes).toBe("prose");
+  });
+
+  it("keeps prose alone when there is no night to bind", () => {
+    expect(guideNotes("", "Nassau Coliseum", null, null, "prose")).toBe("prose");
+  });
+});
+
+/**
+ * The invariant that actually broke on the Althea guide of 2026-10-04: every
+ * slot of a guide is the SAME SONG on a DIFFERENT NIGHT, so a slot that cannot
+ * say which night it means is unplayable by construction — a by-title lookup
+ * has nothing to distinguish it from its five neighbours and returns one tape
+ * for all of them.
+ */
+describe("a guide's slots are distinguishable by night", () => {
+  it("gives every slot of one song its own resolvable night", () => {
+    const nights = ["1980-05-16", "1981-03-28", "1990-03-15", "1991-09-10"];
+    const songs = buildGuideSongs(
+      "song-1",
+      "Althea",
+      nights.map((d) => v(d, { archiveUrl: null })),
+      [],
+    );
+
+    const dates = songs.map((s) => decodeSlot(s.notes).version?.show_date);
+    expect(dates).toEqual(nights);
+    // Four slots, four distinct nights — no two rows can collapse onto one tape.
+    expect(new Set(dates).size).toBe(songs.length);
+    expect(dates.every((d) => archiveKeyDate(d) !== null)).toBe(true);
   });
 });

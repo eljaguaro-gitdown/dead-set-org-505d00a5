@@ -22,6 +22,7 @@ import type { ReactNode } from "react";
 // resolveSlot succeeds for every slot in the playlist.
 vi.mock("@/lib/archiveOrg", () => ({
   findArchiveRecording: vi.fn(async () => null),
+  findRecordingForDate: vi.fn(async () => null),
   findTrackInRecording: vi.fn(async (archiveUrl: string, songTitle: string) => {
     return `https://archive.org/download/${encodeURIComponent(archiveUrl)}/${encodeURIComponent(songTitle)}.mp3`;
   }),

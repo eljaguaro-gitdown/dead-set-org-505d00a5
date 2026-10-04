@@ -76,6 +76,7 @@ const { DEFAULT_TRACK } = vi.hoisted(() => ({
 
 vi.mock("@/lib/archiveOrg", () => ({
   findArchiveRecording: vi.fn(async () => null),
+  findRecordingForDate: vi.fn(async () => null),
   findTrackInRecording: vi.fn(DEFAULT_TRACK),
 }));
 

@@ -45,6 +45,16 @@ export interface GuideSong {
  * the prose beneath it. Builds the slot shape encodeArchiveNotes reads instead
  * of writing a second copy of that JSON — two encoders of this blob is the
  * divergence the single-source test exists to prevent.
+ *
+ * The blob is written whenever we know the NIGHT, with or without a tape URL.
+ * It used to be written only when an archive URL came with the pick, and the
+ * URL is optional in the Version Explorer's result — so for any song with no
+ * catalog versions (232 of 234 of them) every slot saved as bare prose. The
+ * date the card printed lived only inside that prose string, the player had
+ * nothing structured to resolve, and it fell back to a by-title search for the
+ * whole song. That is how the Althea guide saved on 2026-10-04 came back
+ * "couldn't find audio" on every row while all four nights sat on the Archive.
+ * Storing the night unbound lets the player resolve that night on demand.
  */
 export const guideNotes = (
   showDate: string,
@@ -53,7 +63,8 @@ export const guideNotes = (
   rating: number | null,
   prose: string,
 ): string => {
-  if (!archiveUrl) return prose;
+  // Nothing to bind without a night — prose is all there is to keep.
+  if (!showDate) return prose;
   return encodeArchiveNotes({
     id: `guide-${showDate}`,
     song: {} as Song,

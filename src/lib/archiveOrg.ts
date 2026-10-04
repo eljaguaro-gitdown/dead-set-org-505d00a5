@@ -12,6 +12,25 @@ export interface ArchiveResult {
   directTrackUrl?: string | null;
 }
 
+/**
+ * The day part of a show date, or null when there is no usable night.
+ * Tolerates the empty strings decodeArchiveNotes writes for an unknown date
+ * and the full timestamps the catalog sometimes carries.
+ */
+export const archiveKeyDate = (showDate: string | null | undefined): string | null => {
+  const day = (showDate || "").slice(0, 10);
+  return /^\d{4}-\d{2}-\d{2}$/.test(day) ? day : null;
+};
+
+/**
+ * Lookup key for a resolved recording: a song on a specific night, or the song
+ * alone when no night is known. Resolving by title alone is only correct when
+ * no two slots of the same song want different nights — which is exactly what a
+ * listening guide is, so anything holding a map of these must key on the night.
+ */
+export const archiveKey = (title: string, date: string | null): string =>
+  date ? `${title.toLowerCase().trim()}@${date}` : title.toLowerCase().trim();
+
 const cache = new Map<string, ArchiveResult | null>();
 const inflight = new Map<string, Promise<ArchiveResult | null>>();
 

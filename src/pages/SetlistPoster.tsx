@@ -17,7 +17,7 @@ import ShareDropdown from "@/components/ShareDropdown";
 import ShareFlow from "@/components/ShareFlow";
 import ShowPlate from "@/components/ShowPlate";
 import { toast } from "sonner";
-import { findArchiveRecordings, matchScore, type ArchiveResult } from "@/lib/archiveOrg";
+import { archiveKey, archiveKeyDate, findArchiveRecordings, findRecordingForDate, matchScore, type ArchiveResult } from "@/lib/archiveOrg";
 import { useFavoriteSongs } from "@/hooks/useFavoriteSongs";
 import type { Database } from "@/integrations/supabase/types";
 import { trackCtaClick } from "@/lib/trackCtaClick";
@@ -319,24 +319,47 @@ const SetlistPoster = () => {
     let cancelled = false;
 
     const resolveArchives = async () => {
-      const unresolvedSongs = Array.from(
-        new Set(
-          slots
-            .filter((slot) => !slot.version?.archive_org_url)
-            .map((slot) => slot.song.title)
-        )
-      );
+      const unresolved = slots.filter((slot) => !slot.version?.archive_org_url);
+      if (unresolved.length === 0) return;
 
-      if (unresolvedSongs.length === 0) return;
-
-      const results = await findArchiveRecordings(unresolvedSongs);
-      if (cancelled) return;
+      // Slots that name their own night resolve THAT night, keyed by
+      // title@date. Keying by title alone was the bug behind the Althea
+      // listening guide: every slot in a guide is the same song, so a
+      // six-night guide deduped to one lookup and all six rows were handed
+      // whichever tape of that song draws best — one night, repeated six
+      // times, under six cards describing six different shows.
+      const dated = new Map<string, { title: string; date: string }>();
+      const undatedTitles = new Set<string>();
+      for (const slot of unresolved) {
+        const date = archiveKeyDate(slot.version?.show_date);
+        if (date) dated.set(archiveKey(slot.song.title, date), { title: slot.song.title, date });
+        else undatedTitles.add(slot.song.title);
+      }
 
       const nextResolved: Record<string, ArchiveResult | null> = {};
-      unresolvedSongs.forEach((title) => {
-        nextResolved[title] = results.get(title) ?? null;
-      });
 
+      if (undatedTitles.size > 0) {
+        const results = await findArchiveRecordings(Array.from(undatedTitles));
+        if (cancelled) return;
+        undatedTitles.forEach((title) => {
+          nextResolved[archiveKey(title, null)] = results.get(title) ?? null;
+        });
+      }
+
+      // Four at a time, matching findArchiveRecordings' own concurrency, so a
+      // long guide does not open a socket per row.
+      const entries = Array.from(dated.entries());
+      for (let i = 0; i < entries.length; i += 4) {
+        const batch = await Promise.all(
+          entries.slice(i, i + 4).map(async ([key, { title, date }]) =>
+            [key, await findRecordingForDate(title, date)] as const
+          )
+        );
+        if (cancelled) return;
+        batch.forEach(([key, result]) => { nextResolved[key] = result; });
+      }
+
+      if (cancelled) return;
       setResolvedArchives((prev) => ({ ...prev, ...nextResolved }));
     };
 
@@ -423,19 +446,29 @@ const SetlistPoster = () => {
     : undefined;
 
   const buildPlayableSlot = useCallback((slot: EnrichedSlot) => {
-    const resolvedArchive = resolvedArchives[slot.song.title] ?? null;
-    const resolvedVersion = slot.version || (resolvedArchive ? {
-      ...SYNTHETIC_VERSION_DEFAULTS,
-      id: "",
-      song_id: slot.song.id,
-      show_date: resolvedArchive.date || "",
-      archive_org_url: resolvedArchive.url,
-      venue: resolvedArchive.venue,
-      city: null,
-      era_id: null,
-      rating: null,
-      description: null,
-    } : null);
+    const slotDate = archiveKeyDate(slot.version?.show_date);
+    const resolvedArchive = resolvedArchives[archiveKey(slot.song.title, slotDate)] ?? null;
+
+    // A version that names a night but carries no tape keeps its own date,
+    // venue and Charlie's note — the resolved recording only supplies the URL.
+    // Taking the whole resolved object here would overwrite the night the card
+    // above the row is describing.
+    const resolvedVersion = slot.version
+      ? (slot.version.archive_org_url || !resolvedArchive
+          ? slot.version
+          : { ...slot.version, archive_org_url: resolvedArchive.url, venue: slot.version.venue ?? resolvedArchive.venue })
+      : (resolvedArchive ? {
+          ...SYNTHETIC_VERSION_DEFAULTS,
+          id: "",
+          song_id: slot.song.id,
+          show_date: resolvedArchive.date || "",
+          archive_org_url: resolvedArchive.url,
+          venue: resolvedArchive.venue,
+          city: null,
+          era_id: null,
+          rating: null,
+          description: null,
+        } : null);
 
     return {
       id: slot.id,

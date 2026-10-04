@@ -23,7 +23,7 @@ import { X, GripVertical, ChevronRight, ChevronDown, ExternalLink, Headphones, P
 import { useFavoriteSongs } from "@/hooks/useFavoriteSongs";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { findArchiveRecording, type ArchiveResult } from "@/lib/archiveOrg";
+import { archiveKeyDate, findArchiveRecording, findRecordingForDate, type ArchiveResult } from "@/lib/archiveOrg";
 import type { Database } from "@/integrations/supabase/types";
 import { SYNTHETIC_VERSION_DEFAULTS } from "@/lib/syntheticVersion";
 
@@ -127,18 +127,25 @@ const SortableSlotItem = ({
     }
     let cancelled = false;
     setArchiveLoading(true);
-    findArchiveRecording(
-      slot.song.title,
-      eraYearRange?.start ?? null,
-      eraYearRange?.end ?? null
-    ).then((result) => {
+    // A slot that names its night but carries no tape resolves that night. The
+    // era-windowed search below answers with the song's best tape from anywhere
+    // in the window, which would link this row to a show it is not describing.
+    const namedNight = archiveKeyDate(slot.version?.show_date);
+    const lookup = namedNight
+      ? findRecordingForDate(slot.song.title, namedNight)
+      : findArchiveRecording(
+          slot.song.title,
+          eraYearRange?.start ?? null,
+          eraYearRange?.end ?? null
+        );
+    lookup.then((result) => {
       if (!cancelled) {
         setArchiveResult(result);
         setArchiveLoading(false);
       }
     });
     return () => { cancelled = true; };
-  }, [slot.song.title, existingArchiveUrl, eraYearRange?.start, eraYearRange?.end]);
+  }, [slot.song.title, existingArchiveUrl, slot.version?.show_date, eraYearRange?.start, eraYearRange?.end]);
 
   // ── Era audit: flag if displayed archive date falls outside the chosen era window ──
   const displayedDate = slot.version?.show_date || archiveResult?.date || null;
