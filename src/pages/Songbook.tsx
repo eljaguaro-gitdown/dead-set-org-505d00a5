@@ -118,13 +118,13 @@ const Songbook = () => {
 
         {/* ── MASTHEAD ── */}
         <header className="text-center pb-7 border-b border-dashed border-primary/30 mb-8">
-          <p className="font-ticket text-[10px] uppercase tracking-[0.24em] text-primary mb-3">
+          <p className="font-ticket text-[10px] uppercase tracking-[0.24em] text-[hsl(var(--dead-gold))] mb-3">
             One song a week · forever
           </p>
           <h1 className="font-title text-4xl md:text-6xl text-foreground leading-none mb-4">
             The Songbook
           </h1>
-          <p className="font-body text-sm md:text-base text-foreground/70 max-w-[54ch] mx-auto">
+          <p className="font-body text-sm md:text-base text-foreground/85 max-w-[54ch] mx-auto">
             Every week we take one song and follow it across thirty years — the first time they played it,
             the last time, and every version in between worth your evening. The catalogue is deep enough
             that we will not run out.
@@ -148,7 +148,7 @@ const Songbook = () => {
             {/* ── CURRENT ISSUE ── */}
             <section className="mb-12">
               <div className="flex items-baseline gap-2 mb-3">
-                <span className="font-ticket text-[10px] uppercase tracking-[0.2em] text-primary">This week</span>
+                <span className="font-ticket text-[10px] uppercase tracking-[0.2em] text-[hsl(var(--dead-gold))]">This week</span>
                 <span className="flex-1 h-px bg-primary/25" />
               </div>
 
@@ -160,7 +160,7 @@ const Songbook = () => {
                 })}
                 className="block bg-card text-card-foreground rounded-sm p-6 md:p-9 border border-border hover:border-primary/50 transition-colors group"
               >
-                <p className="font-ticket text-[10px] uppercase tracking-[0.18em] text-primary mb-3">
+                <p className="font-ticket text-[10px] uppercase tracking-[0.18em] text-dead-dark mb-3">
                   Issue {String(current.issue_number ?? 1).padStart(3, "0")}
                 </p>
                 <h2 className="font-header text-3xl md:text-5xl leading-none mb-3 group-hover:text-primary transition-colors">
@@ -181,7 +181,7 @@ const Songbook = () => {
                   <Meta k="First played" v={current.ftp_date ?? "—"} />
                   <Meta k="Last played" v={current.ltp_date ?? "—"} />
                   <Meta k="Times played" v={current.times_played != null ? String(current.times_played) : "—"} />
-                  <span className="ml-auto font-ticket text-[11px] uppercase tracking-[0.12em] text-primary self-end">
+                  <span className="ml-auto font-ticket text-[11px] uppercase tracking-[0.12em] text-dead-dark self-end">
                     Read the issue &rarr;
                   </span>
                 </div>
@@ -241,7 +241,7 @@ const Songbook = () => {
               </span>
               <span className="flex-1 h-px bg-[hsl(var(--dead-gold)/0.3)]" />
             </div>
-            <p className="font-body text-sm text-foreground/70 max-w-[62ch] mb-5">
+            <p className="font-body text-sm text-foreground/85 max-w-[62ch] mb-5">
               Songs the series hasn't reached yet, mapped by the people who got there first.
               Build a listening guide for a song nobody has covered and it lands here under your name.
             </p>
@@ -274,19 +274,19 @@ const Songbook = () => {
           <h3 className="font-ticket text-[10px] uppercase tracking-[0.18em] text-[hsl(var(--dead-blue))] mb-2">
             How long can this possibly run
           </h3>
-          <p className="font-body text-sm text-foreground/75 max-w-[64ch] mb-2">
+          <p className="font-body text-sm text-foreground/85 max-w-[64ch] mb-2">
             The Grateful Dead's live repertoire is roughly <strong className="text-foreground">523 songs</strong> —
             189 originals and 334 covers. Around <strong className="text-foreground">450</strong> were played
             in front of an audience more than once. At one issue a week, that is close to a decade before we
             repeat ourselves.
           </p>
-          <p className="font-body text-sm text-foreground/75 max-w-[64ch]">
+          <p className="font-body text-sm text-foreground/85 max-w-[64ch]">
             Not every song earns a full issue — a lot of those covers were played once, at a soundcheck, or
             with a guest. Songs the band actually lived with, the ones that changed shape across eras, are
             where the series spends its time. When a song has only one version worth naming, we will say so
             rather than pad it.
           </p>
-          <p className="font-mono text-[11px] text-foreground/45 mt-3">
+          <p className="font-mono text-[11px] text-foreground/80 mt-3">
             Counts:{" "}
             <a href="http://deadessays.blogspot.com/2011/07/grateful-dead-song-graph.html" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">
               GD Lyric &amp; Song Finder, via Grateful Dead Guide
@@ -294,7 +294,7 @@ const Songbook = () => {
           </p>
         </section>
 
-        <p className="font-ticket text-[11px] uppercase tracking-[0.1em] text-foreground/50 text-center mt-12">
+        <p className="font-ticket text-[11px] uppercase tracking-[0.1em] text-foreground/85 text-center mt-12">
           Built on the shoulders of the tapers, the traders &amp; the Internet Archive
         </p>
       </main>
@@ -304,7 +304,9 @@ const Songbook = () => {
 
 const Stat = ({ n, label }: { n: string; label: string }) => (
   <div className="bg-card text-card-foreground py-3 px-2">
-    <div className="font-header text-xl md:text-2xl text-primary leading-none">{n}</div>
+    {/* 20px is not "large text" under WCAG (that needs 18.66px BOLD or 24px),
+        so text-primary's 4.06:1 on the cream stat tile does not pass. */}
+    <div className="font-header text-xl md:text-2xl text-dead-dark leading-none">{n}</div>
     <div className="font-ticket text-[9px] uppercase tracking-[0.1em] text-muted-foreground mt-1.5 leading-snug">
       {label}
     </div>

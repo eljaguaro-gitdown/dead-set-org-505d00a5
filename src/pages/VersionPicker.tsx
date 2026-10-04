@@ -145,8 +145,14 @@ const VersionPicker = () => {
    * Both are `fixed bottom-0 z-40` and GlobalAudioPlayer renders after
    * <Routes>, so it painted on top: the moment someone pressed play — exactly
    * when they might want to keep the thing they are hearing — the save and
-   * sign-in call to action disappeared for the rest of the session. The player
-   * is draggable, so its height is not a number anyone can hardcode; measure it.
+   * sign-in call to action disappeared for the rest of the session.
+   *
+   * z-index cannot fix this. PageLayout wraps every page in
+   * `relative z-10`, which opens a stacking context, so any z-index set in
+   * here is scoped inside it and the whole context still loses to the
+   * player's root-level z-40. Moving the bar is the only thing that works,
+   * and the player is draggable, so its height is not a number anyone can
+   * hardcode — measure it.
    */
   const [playerHeight, setPlayerHeight] = useState(0);
 
@@ -816,7 +822,7 @@ const VersionPicker = () => {
             <button
               type="button"
               onClick={share}
-              className="shrink-0 inline-flex items-center gap-1.5 min-h-[44px] px-3 rounded-full border border-primary/40 text-primary hover:bg-primary/10 active:bg-primary/15 transition-colors font-ticket text-[11px] uppercase tracking-[0.1em]"
+              className="shrink-0 inline-flex items-center gap-1.5 min-h-[44px] px-3 rounded-full border border-primary/50 bg-primary/10 text-dead-dark hover:bg-primary/20 active:bg-primary/25 transition-colors font-ticket text-[11px] uppercase tracking-[0.1em]"
             >
               <Share2 className="w-3.5 h-3.5" /> Share
             </button>
@@ -1024,7 +1030,7 @@ const VersionPicker = () => {
                 type="button"
                 onClick={() => setMethodOpen((o) => !o)}
                 aria-expanded={methodOpen}
-                className="mt-1.5 inline-flex items-center gap-1 font-ticket text-[10px] uppercase tracking-[0.14em] text-[hsl(var(--dead-blue))] hover:opacity-80 transition-opacity"
+                className="mt-1.5 inline-flex items-center gap-1 font-ticket text-[10px] uppercase tracking-[0.14em] text-dead-dark hover:opacity-80 transition-opacity"
               >
                 the arithmetic
                 <ChevronDown className={`w-3 h-3 transition-transform ${methodOpen ? "rotate-180" : ""}`} />
@@ -1070,7 +1076,7 @@ const VersionPicker = () => {
             <h2 className="font-header text-xl md:text-2xl text-card-foreground leading-tight mb-2">
               {theSleepers.length} you probably haven't heard
             </h2>
-            <p className="font-body text-sm text-muted-foreground max-w-[52ch] mb-3">
+            <p className="font-body text-sm text-card-foreground/85 max-w-[52ch] mb-3">
               Real regard, almost no attention. Enough heads voted these onto the all-time list that they
               aren't random picks — they just never became the ones everybody names.
             </p>

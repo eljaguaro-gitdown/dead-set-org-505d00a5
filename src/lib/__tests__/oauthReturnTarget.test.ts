@@ -63,3 +63,29 @@ describe("the OAuth return target", () => {
     expect(takeTarget()).toBeNull();
   });
 });
+
+/**
+ * The gate found this one after the first fix: an abandoned sign-in left the
+ * target behind, so an unrelated later sign-in in the same tab inherited it.
+ */
+describe("a stale target cannot hijack a later sign-in", () => {
+  /** What clearStaleOAuthMarkers does on sign-out / init. */
+  const clearStale = () => {
+    sessionStorage.removeItem("post_oauth_redirect");
+    sessionStorage.removeItem("ds_pending_oauth_provider");
+    sessionStorage.removeItem(KEY);
+  };
+
+  it("is dropped with the other OAuth markers", () => {
+    stashTarget("/versions/dark-star?then=share");
+    clearStale();
+    expect(takeTarget()).toBeNull();
+  });
+
+  it("leaves nothing behind after an abandoned attempt and a fresh sign-in", () => {
+    stashTarget("/versions/china-cat?then=save");   // started, then abandoned
+    clearStale();                                    // session reset
+    stashTarget(null);                               // later, ordinary sign-in
+    expect(takeTarget()).toBeNull();
+  });
+});
