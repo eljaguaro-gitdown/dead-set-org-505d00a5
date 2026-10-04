@@ -46,7 +46,7 @@ vi.mock("@/components/PageLayout", () => ({
 }));
 vi.mock("@/components/SiteHeader", () => ({ default: () => <header /> }));
 vi.mock("@/lib/posthog", () => ({ captureEvent: vi.fn() }));
-const findManyArchiveRecordings = vi.fn(async () => []);
+const findManyArchiveRecordings = vi.fn((..._a: unknown[]) => Promise.resolve([]));
 vi.mock("@/lib/archiveOrg", () => ({
   findRecordingForDate: vi.fn(async () => null),
   findManyArchiveRecordings: (...a: unknown[]) => findManyArchiveRecordings(...a),

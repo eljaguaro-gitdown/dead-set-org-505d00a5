@@ -3,6 +3,7 @@ import { useParams, useNavigate, useSearchParams, Link } from "react-router-dom"
 import { ArrowLeft, Play, Loader2, Share2, ListMusic, ChevronDown } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { SignInInvite } from "@/components/SignInInvite";
+import { shareVersionsCopy } from "@/lib/shareCopy";
 import {
   contributeToSongbook,
   SONGBOOK_ADDED_TITLE,
@@ -133,6 +134,26 @@ const VersionPicker = () => {
   const [contributed, setContributed] = useState<string | null>(null);
   /** Quiet gems by night (YYYY-MM-DD), with the evidence line for each. */
   const [gems, setGems] = useState<Map<string, string | null>>(new Map());
+  /** The sharer's own name, so a share can say who it came from. */
+  const [profileName, setProfileName] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!user) { setProfileName(null); return; }
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data } = await supabase
+          .from("profiles")
+          .select("display_name")
+          .eq("user_id", user.id)
+          .maybeSingle();
+        if (!cancelled) setProfileName((data as { display_name?: string | null } | null)?.display_name?.trim() || null);
+      } catch {
+        // A share without a name still reads fine.
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [user]);
 
   /**
    * The quiet gems, for the songs no poll covers.
@@ -637,10 +658,23 @@ const VersionPicker = () => {
   const sendIt = async () => {
     try {
       const url = `${window.location.origin}/versions/${slug ?? ""}`;
+
+      // A share names what is being passed on. It used to go out as
+      // "<song> — the versions" with no body at all, so Franklin's Tower
+      // arrived looking exactly like every other song on the site.
+      const { title, text } = shareVersionsCopy({
+        songTitle: song?.title ?? "Dead Set",
+        url,
+        senderName: profileName,
+        timesPlayed: song?.times_played,
+        firstPlayed: song?.first_played,
+        lastPlayed: song?.last_played,
+      });
+
       if (navigator.share) {
-        await navigator.share({ title: `${song?.title ?? "Dead Set"} — the versions`, url });
+        await navigator.share({ title, text, url });
       } else if (navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(url);
+        await navigator.clipboard.writeText(text);
         toast.success("Link copied");
       } else {
         toast.info(url);
