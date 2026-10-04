@@ -444,7 +444,7 @@ CRITICAL VOICE GUIDELINES:
 - Reference real Deadhead community consensus where appropriate.
 - Don't just describe the music — tell the STORY of why this version matters.
 
-${versionsContext.length > 0 ? `KNOWN NOTABLE VERSIONS IN THE DATABASE:\n${versionsContext}\n\nUse these as your primary source.` : `No pre-cataloged versions found for this song.`}
+${versionsContext.length > 0 ? `ALREADY CATALOGED (${(versions || []).length} version${(versions || []).length === 1 ? "" : "s"}):\n${versionsContext}\n\nThese are a STARTING POINT, NOT A LIMIT. Include them, then add the other versions you know of until you have 5-8 in total. A song played hundreds of times has more than ${(versions || []).length} performances worth hearing, and returning only what is listed above makes the page look empty.` : `Nothing is cataloged for this song yet, so every pick is yours. Still return 5-8.`}
 
 SONG INFO:
 - Title: ${song.title}
@@ -468,6 +468,12 @@ You MUST respond using the explore_versions tool.`;
                 linerNotes: { type: "string" },
                 versions: {
                   type: "array",
+                  // The prose asks for 5-8 and the schema used to accept any
+                  // length, so a song with 2 cataloged versions came back with
+                  // 2 picks — Eyes of the World, 382 performances, two cards.
+                  // Bounds here are enforced; bounds in the prompt are a wish.
+                  minItems: 5,
+                  maxItems: 8,
                   items: {
                     type: "object",
                     properties: {

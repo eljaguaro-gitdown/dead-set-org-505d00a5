@@ -15,6 +15,20 @@ import { captureEvent } from "@/lib/posthog";
  * back issues below, and an honest count of how far in we are.
  */
 
+/**
+ * A song whose first listening guide came from a reader. The editorial series
+ * runs a song a week; the repertoire is ~523 songs, so the series alone is a
+ * decade of Sundays and 232 of the 234 songs in the catalog have nothing. This
+ * is the shelf filling from the other end.
+ */
+interface CommunityRow {
+  id: string;
+  created_at: string;
+  setlist_id: string;
+  songs: { title: string } | null;
+  profiles: { display_name: string | null } | null;
+}
+
 interface FeatureRow {
   id: string;
   slug: string;
@@ -35,6 +49,7 @@ const yearOf = (d: string | null) => (d ? d.slice(-4) : "");
 
 const Songbook = () => {
   const [features, setFeatures] = useState<FeatureRow[]>([]);
+  const [community, setCommunity] = useState<CommunityRow[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -48,6 +63,20 @@ const Songbook = () => {
       if (cancelled) return;
       setFeatures((data ?? []) as FeatureRow[]);
       setLoading(false);
+
+      // Separate query, and deliberately after the issues are on screen: the
+      // community shelf is additive, so a failure here must leave the
+      // editorial series rendering exactly as it does today.
+      try {
+        const { data: entries } = await songbookDb
+          .from("songbook_entries")
+          .select("id, created_at, setlist_id, songs(title), profiles(display_name)")
+          .order("created_at", { ascending: false })
+          .limit(60);
+        if (!cancelled) setCommunity((entries ?? []) as CommunityRow[]);
+      } catch (e) {
+        console.error("[songbook] community shelf failed", e);
+      }
     })();
     return () => { cancelled = true; };
   }, []);
@@ -177,6 +206,47 @@ const Songbook = () => {
         )}
 
         {/* ── THE RUNWAY ── */}
+        {/* ── FROM THE COMMUNITY ──
+            Not issues, and never labelled as them. An issue is written and
+            sourced; these are the nights a head mapped first. Same shelf,
+            different tier, and the difference is stated rather than blurred. */}
+        {community.length > 0 && (
+          <section className="mt-14">
+            <div className="flex items-baseline gap-2 mb-3">
+              <span className="font-ticket text-[10px] uppercase tracking-[0.2em] text-[hsl(var(--dead-gold))]">
+                From the community
+              </span>
+              <span className="flex-1 h-px bg-[hsl(var(--dead-gold)/0.3)]" />
+            </div>
+            <p className="font-body text-sm text-foreground/70 max-w-[62ch] mb-5">
+              Songs the series hasn't reached yet, mapped by the people who got there first.
+              Build a listening guide for a song nobody has covered and it lands here under your name.
+            </p>
+
+            <ul className="grid gap-px bg-border rounded-sm overflow-hidden sm:grid-cols-2">
+              {community.map((c) => (
+                <li key={c.id}>
+                  <Link
+                    to={`/setlist/${c.setlist_id}`}
+                    onClick={() => captureEvent("songbook_community_opened", { entry_id: c.id })}
+                    className="block bg-card text-card-foreground p-4 md:p-5 hover:bg-card/80 transition-colors group h-full"
+                  >
+                    <h3 className="font-header text-xl md:text-2xl leading-tight group-hover:text-primary transition-colors">
+                      {c.songs?.title ?? "A song"}
+                    </h3>
+                    <p className="font-ticket text-[12px] text-card-foreground/70 mt-1.5">
+                      first mapped by{" "}
+                      <span className="text-card-foreground">
+                        {c.profiles?.display_name ?? "a Deadhead"}
+                      </span>
+                    </p>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
         <section className="mt-14 p-5 md:p-6 rounded-r-sm border-l-[3px] border-[hsl(var(--dead-blue))] bg-[hsl(var(--dead-blue)/0.08)]">
           <h3 className="font-ticket text-[10px] uppercase tracking-[0.18em] text-[hsl(var(--dead-blue))] mb-2">
             How long can this possibly run

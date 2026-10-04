@@ -1,7 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useNavigate, useSearchParams, Link } from "react-router-dom";
 import { ArrowLeft, Play, Loader2, Share2, ListMusic, ChevronDown } from "lucide-react";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { SignInInvite } from "@/components/SignInInvite";
+import {
+  contributeToSongbook,
+  SONGBOOK_ADDED_TITLE,
+  SONGBOOK_ADDED_BODY,
+} from "@/lib/songbookContribution";
 import type { InviteIntent } from "@/lib/signInInviteCopy";
 import { supabase } from "@/integrations/supabase/client";
 import { songbookDb } from "@/lib/songbookDb";
@@ -115,6 +121,8 @@ const VersionPicker = () => {
   const [saving, setSaving] = useState(false);
   /** Which sign-in invite is open, if any. Null means nothing is in the way. */
   const [invite, setInvite] = useState<InviteIntent | null>(null);
+  /** Set when this guide was the first to map its song. Holds the setlist id. */
+  const [contributed, setContributed] = useState<string | null>(null);
 
   /**
    * Finish what they came back for.
@@ -525,6 +533,25 @@ const VersionPicker = () => {
         slot_count: guideSongs.length,
         sleepers_only: sleepersOnly,
       });
+      // If nobody had mapped this song yet, the guide becomes its Songbook
+      // entry. The database decides — song_id is UNIQUE, so the first guide in
+      // wins and a second one is a quiet no-op rather than an error.
+      const contribution = await contributeToSongbook({
+        songId: song.id,
+        setlistId: created.id,
+        creatorId: user.id,
+      });
+
+      if (contribution.outcome === "added") {
+        captureEvent("songbook_entry_contributed", {
+          song_id: song.id,
+          song_title: song.title,
+        });
+        // Worth stopping for. Everything else navigates straight on.
+        setContributed(created.id);
+        return;
+      }
+
       toast.success("Guide saved");
       navigate(`/setlist/${created.id}`);
     } catch (e) {
@@ -1047,6 +1074,53 @@ const VersionPicker = () => {
           </div>
         </div>
       )}
+
+      {/*
+        The Songbook moment. A toast would be wrong here: "Guide saved" is
+        bookkeeping, but "a song nobody had written about now has an entry, and
+        it is yours" is the whole reason the shelf fills at all. It gets the
+        screen for as long as they want it.
+      */}
+      <Sheet open={contributed !== null} onOpenChange={(open) => {
+        if (!open && contributed) navigate(`/setlist/${contributed}`);
+      }}>
+        <SheetContent
+          side="bottom"
+          className="bg-card text-card-foreground border-t border-border rounded-t-sm px-5 pt-6 pb-[max(1.25rem,env(safe-area-inset-bottom))]"
+        >
+          <div className="mx-auto w-full max-w-md">
+            <SheetHeader className="text-left space-y-2">
+              <p className="font-ticket text-[10px] uppercase tracking-[0.18em] text-dead-dark">
+                The Songbook · a new entry
+              </p>
+              <SheetTitle className="font-header text-[1.75rem] leading-tight text-card-foreground">
+                {SONGBOOK_ADDED_TITLE}
+              </SheetTitle>
+              <SheetDescription className="font-body text-[15px] leading-relaxed text-card-foreground/85">
+                {SONGBOOK_ADDED_BODY}
+              </SheetDescription>
+            </SheetHeader>
+            <p className="font-hand text-[1.9rem] leading-none text-[hsl(var(--dead-blue))] mt-5">
+              {song.title}
+            </p>
+            <div className="mt-6 space-y-2">
+              <Button
+                onClick={() => contributed && navigate(`/setlist/${contributed}`)}
+                className="w-full min-h-[48px] bg-primary text-primary-foreground font-ticket text-[11px] uppercase tracking-[0.1em]"
+              >
+                Open the guide
+              </Button>
+              <Button
+                variant="ghost"
+                onClick={() => navigate("/songbook")}
+                className="w-full min-h-[44px] text-card-foreground/80 hover:text-card-foreground hover:bg-card-foreground/5 font-body text-sm"
+              >
+                See it on the shelf
+              </Button>
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
 
       {/* The gate, as an invitation. The page stays on screen behind it. */}
       <SignInInvite
