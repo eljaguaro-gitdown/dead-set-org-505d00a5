@@ -50,6 +50,17 @@ export const PRIOR_WEIGHT = 3;
 export const QUIET_GEM_THRESHOLD = 0.3;
 
 /**
+ * At most this many gems per song, highest `overlooked` first.
+ *
+ * Measured against live archive.org data: on "Ramble On Rose" the threshold
+ * alone flagged 16 of 50 tapes. A chip on a third of the list is wallpaper —
+ * the whole value of the mark is that it is rare. Capping beats tuning the
+ * threshold per song, which is just overfitting to whichever song I happened
+ * to check.
+ */
+export const MAX_GEMS = 3;
+
+/**
  * Percentiles over three recordings are noise, not a ranking. Under this many
  * the signal reports nothing rather than guessing.
  */
@@ -111,8 +122,15 @@ export const scoreRecordings = (inputs: RegardInput[]): RegardScore[] => {
 export const isQuietGem = (score: RegardScore): boolean =>
   score.regardRank >= 0.5 && score.overlooked >= QUIET_GEM_THRESHOLD;
 
-export const quietGems = (scores: RegardScore[]): RegardScore[] =>
-  scores.filter(isQuietGem);
+/**
+ * The gems worth marking: the most overlooked few that clear the bar.
+ * Ties break toward the better-regarded tape.
+ */
+export const quietGems = (scores: RegardScore[], limit = MAX_GEMS): RegardScore[] =>
+  scores
+    .filter(isQuietGem)
+    .sort((a, b) => b.overlooked - a.overlooked || b.regard - a.regard)
+    .slice(0, limit);
 
 /**
  * True when the cohort is big enough and carries enough ratings for any of
@@ -143,7 +161,9 @@ export const QUIET_GEM_CHIP = "Quiet gem";
 export const quietGemReason = (score: RegardScore): string | null => {
   const reviews = score.reviews ?? 0;
   if (score.avgRating == null || reviews < 1) return null;
-  const rating = score.avgRating.toFixed(1);
+  // Floor, never round: 4.95 printed as "5.0" claims a perfect score the tape
+  // does not have, and a number beside a gold chip has to survive being checked.
+  const rating = (Math.floor(score.avgRating * 10) / 10).toFixed(1);
   const noun = reviews === 1 ? "review" : "reviews";
   return `${rating} across ${reviews} ${noun}, and pulled less than most tapes of this song.`;
 };

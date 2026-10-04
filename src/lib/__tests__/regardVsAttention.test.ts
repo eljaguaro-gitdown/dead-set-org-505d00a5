@@ -6,6 +6,7 @@ import {
   hasRegardData,
   quietGemReason,
   MIN_COHORT,
+  MAX_GEMS,
   QUIET_GEM_THRESHOLD,
   type RegardInput,
 } from "@/lib/regardVsAttention";
@@ -180,5 +181,51 @@ describe("user-facing copy", () => {
     for (const s of strings) {
       expect(s).not.toMatch(/\bAI\b|algorithm|model|engine|pipeline|score\b/i);
     }
+  });
+});
+
+/**
+ * These three came out of running the signal against the live Archive on
+ * 2026-10-04, not out of reasoning about it. Each one is a defect the fixture
+ * cohort above could never have shown.
+ */
+describe("what the live Archive taught it", () => {
+  /**
+   * 20 tapes where regard runs OPPOSITE to draw: the best-rated are the
+   * least-pulled. Both ranks are percentiles and percentiles are scale-
+   * invariant, so a cohort whose rating and downloads descend together scores
+   * `overlooked` of 0 for every row no matter how differently the two
+   * magnitudes move — which is exactly what my first attempt at this fixture
+   * did, and why it reported no gems at all.
+   */
+  const many = Array.from({ length: 20 }, (_, i) => ({
+    identifier: `tape-${i}`,
+    avgRating: 4.9 - i * 0.01,
+    reviews: 40,
+    downloads: 10_000 + i * 40_000,
+  }));
+
+  it("marks at most MAX_GEMS, however many clear the bar", () => {
+    const scored = scoreRecordings(many);
+    expect(scored.filter(isQuietGem).length).toBeGreaterThan(MAX_GEMS);
+    expect(quietGems(scored)).toHaveLength(MAX_GEMS);
+  });
+
+  it("marks the most overlooked ones, not the first ones it met", () => {
+    const scored = scoreRecordings(many);
+    const picked = quietGems(scored);
+    const best = [...scored].sort((a, b) => b.overlooked - a.overlooked).slice(0, MAX_GEMS);
+    expect(picked.map((g) => g.identifier)).toEqual(best.map((g) => g.identifier));
+  });
+
+  it("floors the rating — 4.95 is not a 5.0", () => {
+    const score = scoreRecordings([
+      { identifier: "near", avgRating: 4.95, reviews: 40, downloads: 100 },
+      { identifier: "b", avgRating: 4.5, reviews: 40, downloads: 100 },
+      { identifier: "c", avgRating: 4.4, reviews: 40, downloads: 100 },
+      { identifier: "d", avgRating: 4.3, reviews: 40, downloads: 100 },
+    ])[0];
+    expect(quietGemReason(score)).toContain("4.9 across");
+    expect(quietGemReason(score)).not.toContain("5.0");
   });
 });
