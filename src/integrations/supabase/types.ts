@@ -1626,6 +1626,52 @@ export type Database = {
           },
         ]
       }
+      songbook_entries: {
+        Row: {
+          created_at: string
+          creator_id: string
+          id: string
+          setlist_id: string
+          song_id: string
+        }
+        Insert: {
+          created_at?: string
+          creator_id: string
+          id?: string
+          setlist_id: string
+          song_id: string
+        }
+        Update: {
+          created_at?: string
+          creator_id?: string
+          id?: string
+          setlist_id?: string
+          song_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "songbook_entries_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "dispatch_recipients"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "songbook_entries_setlist_id_fkey"
+            columns: ["setlist_id"]
+            isOneToOne: false
+            referencedRelation: "setlists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "songbook_entries_song_id_fkey"
+            columns: ["song_id"]
+            isOneToOne: true
+            referencedRelation: "songs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       songs: {
         Row: {
           first_played: string | null
