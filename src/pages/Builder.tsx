@@ -310,14 +310,18 @@ const Builder = () => {
           .map((s: any) => {
             const song = songs.find((sg) => sg.id === s.songId);
             if (!song) return null;
+            const id = s.id || crypto.randomUUID();
+            // The cache holds the same blob a saved slot does; decode it so a
+            // recording the guest picked (or a guide bound) survives sign-in.
+            const { notes, version } = decodeArchiveNotes(id, song.id, s.notes || "");
             return {
-              id: s.id || crypto.randomUUID(),
+              id,
               song,
-              version: null,
+              version,
               setNumber: s.setNumber,
               position: s.position,
               segueToNext: s.segueToNext || false,
-              notes: s.notes || "",
+              notes,
             };
           })
           .filter(Boolean) as SetlistSlotData[];
@@ -341,7 +345,9 @@ const Builder = () => {
         setNumber: s.setNumber,
         position: s.position,
         segueToNext: s.segueToNext,
-        notes: s.notes,
+        // Encoded, not s.notes: plain prose would drop the slot's recording
+        // across the OAuth redirect. Both restore sites decode it.
+        notes: encodeArchiveNotes(s),
       })),
     };
     sessionStorage.setItem("deadset-guest-cache", JSON.stringify(payload));
@@ -565,14 +571,16 @@ const Builder = () => {
             .map((s: any) => {
               const song = songs.find((sg: any) => sg.id === s.songId);
               if (!song) return null;
+              const id = s.id || crypto.randomUUID();
+              const { notes, version } = decodeArchiveNotes(id, song.id, s.notes || "");
               return {
-                id: s.id || crypto.randomUUID(),
+                id,
                 song,
-                version: null,
+                version,
                 setNumber: s.setNumber,
                 position: s.position,
                 segueToNext: s.segueToNext || false,
-                notes: s.notes || "",
+                notes,
               };
             })
             .filter(Boolean) as SetlistSlotData[];

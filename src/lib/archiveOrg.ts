@@ -388,6 +388,10 @@ const dateInflight = new Map<string, Promise<ArchiveResult | null>>();
  * Unlike findArchiveRecording, a miss here is a real answer, not a failure:
  * plenty of nights the Dead played were never taped, or the tape never
  * reached the Archive. Callers show the date anyway and say so.
+ *
+ * A failed request is not a miss. It throws and is not cached, so a 503 or a
+ * timeout never turns into "no tape of this night circulates", and the next
+ * lookup tries again.
  */
 export async function findRecordingForDate(
   songTitle: string,
@@ -403,10 +407,7 @@ export async function findRecordingForDate(
       const q = encodeURIComponent(`collection:GratefulDead AND date:[${day} TO ${day}]`);
       const apiUrl = `https://archive.org/advancedsearch.php?q=${q}&fl[]=identifier&fl[]=date&fl[]=venue&fl[]=avg_rating&fl[]=downloads&sort[]=downloads+desc&sort[]=avg_rating+desc&rows=10&output=json`;
       const res = await fetchArchive(apiUrl);
-      if (!res.ok) {
-        dateCache.set(key, null);
-        return null;
-      }
+      if (!res.ok) throw new Error(`archive.org search ${res.status}`);
       const data = await res.json();
       const docs: ArchiveSearchDoc[] = (
         (data?.response?.docs || []) as ArchiveSearchDoc[]
@@ -433,9 +434,6 @@ export async function findRecordingForDate(
       };
       dateCache.set(key, result);
       return result;
-    } catch {
-      dateCache.set(key, null);
-      return null;
     } finally {
       dateInflight.delete(key);
     }
@@ -529,6 +527,10 @@ export interface ArchiveVersion {
   date: string | null;
   venue: string | null;
   avgRating: number | null;
+  /** How many reviews back that rating — a 5.0 off one review is not a 5.0. */
+  reviews: number | null;
+  /** How often the tape gets pulled. The attention half of the gem signal. */
+  downloads: number | null;
   directTrackUrl?: string | null;
 }
 
@@ -652,7 +654,15 @@ export async function findManyArchiveRecordings(
     const query = encodeURIComponent(
       `collection:GratefulDead "${cleanTitle}"${windowDateClause}`
     );
-    const apiUrl = `https://archive.org/advancedsearch.php?q=${query}&fl=identifier,date,avg_rating,venue&sort[]=avg_rating+desc&output=json&rows=${maxResults}`;
+    // Sorted by downloads, NOT by rating. Measured against the live API on
+    // 2026-10-04: the top 50 of `sort=avg_rating desc` for "Ramble On Rose" is
+    // fifty tapes rated exactly 5.0, every one of them on 1-6 reviews, one with
+    // 461 downloads total. That is the noise floor of a 5-star-biased rating
+    // system, not the best tapes — and it was burying 1973-06-10 (4.62 on 217
+    // reviews, 1.28M downloads). Ranking by circulation gives the real
+    // population, with ratings that actually vary (4.22–4.95), which is what
+    // both the browser and the quiet-gem signal need to say anything true.
+    const apiUrl = `https://archive.org/advancedsearch.php?q=${query}&fl=identifier,date,avg_rating,num_reviews,downloads,venue&sort[]=downloads+desc&output=json&rows=${maxResults}`;
     const res = await fetchArchive(apiUrl);
     if (!res.ok) return [];
     const data = await res.json();
@@ -665,6 +675,8 @@ export async function findManyArchiveRecordings(
       date: doc.date ? doc.date.split("T")[0] : null,
       venue: doc.venue || null,
       avgRating: doc.avg_rating ? Number(doc.avg_rating) : null,
+      reviews: doc.num_reviews != null ? Number(doc.num_reviews) : null,
+      downloads: doc.downloads != null ? Number(doc.downloads) : null,
     }));
 
     // Belt-and-suspenders, same as findArchiveRecording: drop anything outside

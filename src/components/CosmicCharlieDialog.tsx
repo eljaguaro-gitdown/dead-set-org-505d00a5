@@ -25,6 +25,7 @@ import {
   milestonePlace,
   MILESTONE_LABEL,
   NO_TAPE_LINE,
+  saysNoTape,
   type MilestoneEntry,
   type MilestoneTape,
 } from "@/lib/firstLastPlayed";
@@ -369,15 +370,23 @@ const CosmicCharlieDialog = ({
       const needed = dates.filter(
         (d) => !exploreResult.versions.some((v) => v.showDate?.slice(0, 10) === d.slice(0, 10)),
       );
+      // A lookup that failed is not a night without a tape: keep its date,
+      // claim nothing about it.
+      const unchecked = new Set<string>();
       const found = await Promise.all(
         Array.from(new Set(needed)).map(async (d) => {
-          const tape = await findRecordingForDate(exploreResult.songTitle, d);
-          return [d, tape as MilestoneTape | null] as const;
+          try {
+            const tape = await findRecordingForDate(exploreResult.songTitle, d);
+            return [d, tape as MilestoneTape | null] as const;
+          } catch {
+            unchecked.add(d);
+            return [d, null] as const;
+          }
         }),
       );
       if (cancelled) return;
       setMilestones(
-        buildMilestones(selectedSong, exploreResult.versions, new Map(found)),
+        buildMilestones(selectedSong, exploreResult.versions, new Map(found), unchecked),
       );
       setMilestonesLoading(false);
     })();
@@ -1229,7 +1238,9 @@ const MilestoneCard = ({
   songId: string;
   onPlay: (slot: PlayableSlot) => void;
 }) => (
-  <div className="p-3 rounded-lg border border-dashed border-primary/40 bg-primary/[0.04] space-y-2">
+  // bg-background, like Charlie's cards: the dialog itself is the cream card,
+  // and this card's text is the cream --foreground (1.1:1 on cream).
+  <div className="p-3 rounded-lg border border-dashed border-primary/50 bg-background space-y-2">
     <div className="flex items-start justify-between gap-2">
       <div>
         <p className="font-display text-sm text-foreground">{m.date}</p>
@@ -1277,9 +1288,9 @@ const MilestoneCard = ({
           Archive.org ↗
         </a>
       </div>
-    ) : (
+    ) : saysNoTape(m) ? (
       <p className="text-xs text-foreground/80 font-body leading-relaxed italic">{NO_TAPE_LINE}</p>
-    )}
+    ) : null}
   </div>
 );
 
@@ -1288,7 +1299,7 @@ const MilestoneCard = ({
  * there for anyone who hasn't met the shorthand yet.
  */
 const MilestoneChip = ({ kind }: { kind: MilestoneEntry["kind"] }) => (
-  <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full border border-primary/50 bg-primary/10 text-primary font-body whitespace-nowrap">
+  <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full border border-primary/50 bg-primary/15 text-dead-gold font-body whitespace-nowrap">
     <span className="font-medium">{MILESTONE_LABEL[kind]}</span>
   </span>
 );

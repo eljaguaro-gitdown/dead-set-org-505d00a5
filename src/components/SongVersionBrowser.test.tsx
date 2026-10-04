@@ -245,3 +245,116 @@ describe("SongVersionBrowser — dig deep by year", () => {
     expect(invoke).not.toHaveBeenCalled();
   });
 });
+
+/**
+ * The quiet-gem signal is the ranking for the 232 songs no poll covers, so it
+ * has to actually reach the screen. A banked correction from an earlier gate:
+ * "defined but never called" is its own finding — a pure module with passing
+ * unit tests proves the arithmetic, not the wiring. These tests render.
+ */
+const rated = (
+  identifier: string,
+  date: string,
+  rating: number,
+  reviews: number,
+  downloads: number,
+) => ({
+  identifier,
+  url: `https://archive.org/details/${identifier}`,
+  date,
+  venue: "Winterland",
+  avgRating: rating,
+  reviews,
+  downloads,
+});
+
+/** One famous tape, one equally-loved tape nobody pulls, two also-rans. */
+const COHORT = [
+  rated("gd-famous", "1977-05-08", 4.8, 40, 90_000),
+  rated("gd-quiet", "1973-11-10", 4.9, 22, 1_200),
+  rated("gd-middling", "1980-09-02", 4.2, 12, 20_000),
+  rated("gd-rough", "1985-06-14", 3.4, 8, 6_000),
+];
+
+describe("SongVersionBrowser — quiet gems", () => {
+  it("marks the loved tape nobody pulls, and says how it decided", async () => {
+    findManyArchiveRecordings.mockResolvedValue(COHORT);
+
+    renderBrowser();
+
+    expect(await screen.findByText("Quiet gem")).toBeInTheDocument();
+    expect(
+      screen.getByText(/4\.9 across 22 reviews, and pulled less than the other tapes here/),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/the ones held highest and pulled least/)).toBeInTheDocument();
+  });
+
+  it("marks only the quiet one — a chip on every card says nothing", async () => {
+    findManyArchiveRecordings.mockResolvedValue(COHORT);
+
+    renderBrowser();
+
+    await screen.findByText("Quiet gem");
+    expect(screen.getAllByText("Quiet gem")).toHaveLength(1);
+  });
+
+  it("stays silent when the tapes carry no ratings to compare", async () => {
+    findManyArchiveRecordings.mockResolvedValue(
+      COHORT.map((v) => ({ ...v, avgRating: null, reviews: 0 })),
+    );
+
+    renderBrowser();
+
+    await waitFor(() => expect(findManyArchiveRecordings).toHaveBeenCalled());
+    expect(screen.queryByText("Quiet gem")).not.toBeInTheDocument();
+    expect(screen.queryByText(/the ones held highest and pulled least/)).not.toBeInTheDocument();
+  });
+
+  it("stays silent when too few tapes circulate to rank anything", async () => {
+    findManyArchiveRecordings.mockResolvedValue(COHORT.slice(0, 2));
+
+    renderBrowser();
+
+    await waitFor(() => expect(findManyArchiveRecordings).toHaveBeenCalled());
+    expect(screen.queryByText("Quiet gem")).not.toBeInTheDocument();
+  });
+});
+
+describe("SongVersionBrowser — one row per night", () => {
+  /**
+   * Cornell 1977-05-08 circulates as several transfers. Scored as separate
+   * tapes, the quieter transfers look overlooked beside the 1.46M-download one
+   * and the signal calls the most famous tape in the catalog a hidden gem.
+   * Found by running the real Archive data through it.
+   */
+  const CORNELL = [
+    rated("gd77-05-08.famous", "1977-05-08", 4.78, 300, 1_460_546),
+    rated("gd77-05-08.transfer2", "1977-05-08", 4.93, 29, 143_936),
+    rated("gd77-05-08.transfer3", "1977-05-08", 4.91, 35, 137_657),
+    rated("gd73-06-10", "1973-06-10", 4.62, 217, 1_280_004),
+    rated("gd72-05-03", "1972-05-03", 4.94, 36, 126_858),
+    rated("gd72-09-21", "1972-09-21", 4.87, 66, 112_605),
+  ];
+
+  it("does not call Cornell a quiet gem because a second transfer is quieter", async () => {
+    findManyArchiveRecordings.mockResolvedValue(CORNELL);
+
+    renderBrowser();
+
+    await waitFor(() => expect(findManyArchiveRecordings).toHaveBeenCalled());
+    // Whatever it marks, no 1977-05-08 card may carry the chip.
+    const chips = screen.queryAllByText("Quiet gem");
+    for (const chip of chips) {
+      expect(chip.closest("button")?.textContent).not.toContain("1977-05-08");
+    }
+  });
+
+  it("never marks more than a few, or the mark means nothing", async () => {
+    findManyArchiveRecordings.mockResolvedValue(CORNELL);
+
+    renderBrowser();
+
+    await waitFor(() => expect(findManyArchiveRecordings).toHaveBeenCalled());
+    expect(screen.queryAllByText("Quiet gem").length).toBeLessThanOrEqual(3);
+  });
+});
