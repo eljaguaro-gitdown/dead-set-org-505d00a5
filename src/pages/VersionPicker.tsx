@@ -3,7 +3,9 @@ import { useParams, useNavigate, useSearchParams, Link } from "react-router-dom"
 import { ArrowLeft, Play, Loader2, Share2, ListMusic, ChevronDown } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { SignInInvite } from "@/components/SignInInvite";
-import { shareVersionsCopy } from "@/lib/shareCopy";
+import { shareVersionsCopy, lifespanLine } from "@/lib/shareCopy";
+import { renderVersionsCard, loadCardFonts } from "@/lib/versionsShareCard";
+import { shareToInstagram } from "@/lib/instagramShare";
 import {
   contributeToSongbook,
   SONGBOOK_ADDED_TITLE,
@@ -689,6 +691,36 @@ const VersionPicker = () => {
     }
   };
 
+  /** Post the song's card to Instagram, caption and all. */
+  const postToInstagram = async () => {
+    if (!song) return;
+    setInvite(null);
+    // Canvas will silently fall back to Times if the faces are not already
+    // loaded, so wait for them before drawing.
+    await loadCardFonts();
+    const imageDataUrl = renderVersionsCard({
+      songTitle: song.title,
+      timesPlayed: song.times_played,
+      firstPlayed: song.first_played,
+      lastPlayed: song.last_played,
+      nights: shown
+        .filter((v) => v.show_date)
+        .map((v) => ({ date: v.show_date!, venue: v.venue, city: v.city })),
+    }) ?? undefined;
+    await shareToInstagram({
+      context: "versions",
+      songTitle: song.title,
+      lifespan: lifespanLine({
+        timesPlayed: song.times_played,
+        firstPlayed: song.first_played,
+        lastPlayed: song.last_played,
+      }),
+      pageUrl: `${window.location.origin}/versions/${slug ?? ""}`,
+      imageDataUrl,
+    });
+    captureEvent("version_picker_instagram", { song_title: song.title });
+  };
+
   /**
    * Share, gated gently. Signed in, this is a straight pass-through — the
    * people who already joined get no extra tap.
@@ -1242,7 +1274,8 @@ const VersionPicker = () => {
         open={invite !== null}
         onOpenChange={(open) => !open && setInvite(null)}
         onSignIn={() => navigate(authHref(invite ?? "share"))}
-        onSecondary={
+        onInstagram={invite === "share" ? () => void postToInstagram() : undefined}
+        onPlainLink={
           invite === "share"
             ? () => {
                 setInvite(null);
