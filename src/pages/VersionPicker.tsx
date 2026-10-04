@@ -139,6 +139,27 @@ const VersionPicker = () => {
   /** The sharer's own name, so a share can say who it came from. */
   const [profileName, setProfileName] = useState<string | null>(null);
 
+  /**
+   * How far to lift the Keep bar so the global player does not bury it.
+   *
+   * Both are `fixed bottom-0 z-40` and GlobalAudioPlayer renders after
+   * <Routes>, so it painted on top: the moment someone pressed play — exactly
+   * when they might want to keep the thing they are hearing — the save and
+   * sign-in call to action disappeared for the rest of the session. The player
+   * is draggable, so its height is not a number anyone can hardcode; measure it.
+   */
+  const [playerHeight, setPlayerHeight] = useState(0);
+
+  useEffect(() => {
+    const el = document.querySelector("[data-global-player]");
+    if (!el) { setPlayerHeight(0); return; }
+    const measure = () => setPlayerHeight(el.getBoundingClientRect().height);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [playingSlot]);
+
   useEffect(() => {
     if (!user) { setProfileName(null); return; }
     let cancelled = false;
@@ -779,7 +800,7 @@ const VersionPicker = () => {
 
         {/* ── The song, and a way to hear it before reading a word ──── */}
         <header className="mb-7">
-          <p className="font-ticket text-[10px] uppercase tracking-[0.18em] text-primary mb-1.5">
+          <p className="font-ticket text-[10px] uppercase tracking-[0.18em] text-dead-dark mb-1.5">
             Every version worth knowing
           </p>
           {/* font-header, not font-title: the blackletter is the logo's face and
@@ -858,7 +879,7 @@ const VersionPicker = () => {
                   : <Play className="w-8 h-8 fill-current translate-x-[2px]" />}
               </button>
               <div className="min-w-0">
-                <p className="font-ticket text-[10px] uppercase tracking-[0.14em] text-primary mb-0.5">
+                <p className="font-ticket text-[10px] uppercase tracking-[0.14em] text-dead-dark mb-0.5">
                   {heroResolving
                   ? "Finding the tape…"
                   : heroIsDebut
@@ -892,7 +913,7 @@ const VersionPicker = () => {
                   the most-loved thing on the page the quietest. */}
               <div className="flex items-start justify-between gap-4 mb-3">
                 <div className="min-w-0">
-                  <p className="font-ticket text-[11px] uppercase tracking-[0.14em] text-primary">
+                  <p className="font-ticket text-[11px] uppercase tracking-[0.14em] text-dead-dark">
                     First time played
                   </p>
                   <p className="font-hand text-[1.9rem] leading-none text-[hsl(var(--dead-blue))] mt-1">
@@ -900,7 +921,7 @@ const VersionPicker = () => {
                   </p>
                 </div>
                 <div className="min-w-0 text-right">
-                  <p className="font-ticket text-[11px] uppercase tracking-[0.14em] text-primary">
+                  <p className="font-ticket text-[11px] uppercase tracking-[0.14em] text-dead-dark">
                     Last time played
                   </p>
                   <p className="font-hand text-[1.9rem] leading-none text-[hsl(var(--dead-blue))] mt-1">
@@ -922,7 +943,7 @@ const VersionPicker = () => {
                 {arc.decades.map((d) => (
                   <span key={d.year} className="absolute" style={{ left: `${d.pct}%` }}>
                     <span className="block w-px h-2.5 bg-card-foreground/25 absolute top-[18px] -translate-x-1/2" />
-                    <span className="absolute top-[32px] -translate-x-1/2 font-mono text-[11px] text-card-foreground/55 tabular-nums">
+                    <span className="absolute top-[32px] -translate-x-1/2 font-mono text-[11px] text-card-foreground/75 tabular-nums">
                       {d.year}
                     </span>
                   </span>
@@ -962,7 +983,7 @@ const VersionPicker = () => {
         {/* ── The Songbook, when this song has an issue ─────────────── */}
         {feature && (feature.headline || feature.dek) && (
           <section className="mb-6 p-4 rounded-sm border-l-[3px] border-[hsl(var(--dead-gold))] bg-[hsl(var(--dead-gold)/0.08)]">
-            <p className="font-ticket text-[10px] uppercase tracking-[0.18em] text-[hsl(var(--dead-gold))] mb-1.5">
+            <p className="font-ticket text-[10px] uppercase tracking-[0.18em] text-dead-dark mb-1.5">
               The Songbook{feature.issue_number != null && ` · Issue ${String(feature.issue_number).padStart(3, "0")}`}
             </p>
             {feature.headline && (
@@ -973,7 +994,7 @@ const VersionPicker = () => {
             )}
             <Link
               to={`/songbook/${feature.slug}`}
-              className="inline-block mt-2.5 font-ticket text-[11px] uppercase tracking-[0.12em] text-primary underline underline-offset-4"
+              className="inline-block mt-2.5 font-ticket text-[11px] uppercase tracking-[0.12em] text-dead-dark underline underline-offset-4"
             >
               Read the whole issue →
             </Link>
@@ -983,7 +1004,7 @@ const VersionPicker = () => {
         {/* ── Charlie, where the poll has nothing ───────────────────── */}
         {!feature && charlie?.linerNotes && (
           <section className="mb-6 p-4 rounded-sm border-l-[3px] border-[hsl(var(--dead-gold))] bg-[hsl(var(--dead-gold)/0.08)]">
-            <p className="font-ticket text-[10px] uppercase tracking-[0.18em] text-[hsl(var(--dead-gold))] mb-1.5">
+            <p className="font-ticket text-[10px] uppercase tracking-[0.18em] text-dead-dark mb-1.5">
               Cosmic Charlie went digging
             </p>
             <p className="font-body text-sm leading-relaxed text-card-foreground/85 max-w-[62ch] whitespace-pre-line">
@@ -1027,7 +1048,7 @@ const VersionPicker = () => {
                           href={source.source_url!}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-primary underline underline-offset-2"
+                          className="text-dead-dark underline underline-offset-2"
                         >
                           {source.vote_source ?? "source"}
                         </a>.
@@ -1043,7 +1064,7 @@ const VersionPicker = () => {
         {/* ── The pitch + filter ───────────────────────────────────── */}
         {theSleepers.length > 0 && (
           <section className="mb-6 p-4 rounded-sm border border-primary/40 bg-gradient-to-b from-primary/[0.13] to-primary/[0.05]">
-            <p className="font-ticket text-[10px] uppercase tracking-[0.18em] text-primary mb-1">
+            <p className="font-ticket text-[10px] uppercase tracking-[0.18em] text-dead-dark mb-1">
               Why you're really here
             </p>
             <h2 className="font-header text-xl md:text-2xl text-card-foreground leading-tight mb-2">
@@ -1207,7 +1228,10 @@ const VersionPicker = () => {
 
       {/* ── Keep it / send it ──────────────────────────────────────── */}
       {versions.length > 0 && (
-        <div className="fixed bottom-0 inset-x-0 z-40 border-t border-border bg-background/95 backdrop-blur px-5 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+        <div
+          className="fixed inset-x-0 z-50 border-t border-border bg-background/95 backdrop-blur px-5 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] transition-[bottom] duration-200"
+          style={{ bottom: playerHeight }}
+        >
           <div className="mx-auto max-w-3xl flex items-center gap-2">
             <Button
               onClick={() => void saveAsGuide()}
@@ -1337,10 +1361,14 @@ const MilestoneRow = ({
 
 const Chip = ({ tone, children }: { tone: "canon" | "sleep" | "era" | "milestone"; children: React.ReactNode }) => {
   const tones = {
-    canon: "text-[hsl(var(--dead-gold))] border-[hsl(var(--dead-gold)/0.6)] bg-[hsl(var(--dead-gold)/0.1)]",
-    sleep: "text-[hsl(var(--dead-green))] border-[hsl(var(--dead-green)/0.6)] bg-[hsl(var(--dead-green)/0.1)]",
-    era: "text-muted-foreground border-border bg-muted/40",
-    milestone: "text-primary border-primary/50 bg-primary/10",
+    // Every tone's TEXT is dead-dark (13.66:1 on the cream card). The colour
+    // lives in the border and the fill. Gold text here measured 2.58:1, green
+    // 3.69:1 and primary 4.09:1 — all under the 4.5:1 bar, all on 11px type
+    // with no large-text exemption to lean on.
+    canon: "text-dead-dark border-[hsl(var(--dead-gold)/0.7)] bg-[hsl(var(--dead-gold)/0.22)]",
+    sleep: "text-dead-dark border-[hsl(var(--dead-green)/0.7)] bg-[hsl(var(--dead-green)/0.22)]",
+    era: "text-dead-dark/80 border-border bg-muted/50",
+    milestone: "text-dead-dark border-primary/60 bg-primary/15",
   } as const;
   return (
     <span className={`font-ticket text-[11px] uppercase tracking-[0.1em] px-2 py-1 rounded-[2px] border whitespace-nowrap ${tones[tone]}`}>

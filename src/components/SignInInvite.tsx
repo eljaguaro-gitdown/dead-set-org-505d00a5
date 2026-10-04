@@ -64,7 +64,7 @@ export const SignInInvite = ({
           <ul className="mt-4 space-y-2">
             {copy.benefits.map((b) => (
               <li key={b} className="flex gap-2.5 items-start">
-                <span aria-hidden="true" className="text-[hsl(var(--dead-gold))] leading-[1.4] shrink-0">
+                <span aria-hidden="true" className="text-dead-dark leading-[1.4] shrink-0">
                   ◆
                 </span>
                 <span className="font-body text-[15px] leading-snug text-card-foreground/90">{b}</span>
@@ -83,7 +83,7 @@ export const SignInInvite = ({
             {(onInstagram || onPlainLink) && (
               <div className="flex items-center gap-3 pt-2 pb-1" aria-hidden="true">
                 <span className="flex-1 h-px bg-card-foreground/15" />
-                <span className="font-ticket text-[10px] uppercase tracking-[0.14em] text-card-foreground/60">
+                <span className="font-ticket text-[10px] uppercase tracking-[0.14em] text-card-foreground/75">
                   or send it as is
                 </span>
                 <span className="flex-1 h-px bg-card-foreground/15" />
@@ -108,7 +108,7 @@ export const SignInInvite = ({
               >
                 <span>{copy.plainLabel}</span>
                 {copy.plainNote && (
-                  <span className="font-ticket text-[11px] normal-case text-card-foreground/60">
+                  <span className="font-ticket text-[11px] normal-case text-card-foreground/75">
                     {copy.plainNote}
                   </span>
                 )}

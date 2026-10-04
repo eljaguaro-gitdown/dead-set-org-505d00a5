@@ -25,8 +25,10 @@ interface CommunityRow {
   id: string;
   created_at: string;
   setlist_id: string;
+  creator_id: string;
   songs: { title: string } | null;
-  profiles: { display_name: string | null } | null;
+  /** Filled by a second query — see the note on the fetch below. */
+  creatorName?: string | null;
 }
 
 interface FeatureRow {
@@ -68,12 +70,33 @@ const Songbook = () => {
       // community shelf is additive, so a failure here must leave the
       // editorial series rendering exactly as it does today.
       try {
+        // NOT `profiles(display_name)` as an embed. songbook_entries.creator_id
+        // references auth.users, not profiles, so PostgREST has no relationship
+        // to traverse and rejects the whole select — the shelf would have come
+        // back null and rendered empty forever, silently, because the catch
+        // below swallows it. Every other page (Browse, MySetlists) resolves
+        // names with a second query by user_id; this does the same.
         const { data: entries } = await songbookDb
           .from("songbook_entries")
-          .select("id, created_at, setlist_id, songs(title), profiles(display_name)")
+          .select("id, created_at, setlist_id, creator_id, songs(title)")
           .order("created_at", { ascending: false })
           .limit(60);
-        if (!cancelled) setCommunity((entries ?? []) as CommunityRow[]);
+
+        const rows = (entries ?? []) as CommunityRow[];
+        const creatorIds = [...new Set(rows.map((r) => r.creator_id).filter(Boolean))];
+        if (creatorIds.length) {
+          const { data: profiles } = await songbookDb
+            .from("profiles")
+            .select("user_id, display_name")
+            .in("user_id", creatorIds);
+          const names = new Map(
+            ((profiles ?? []) as { user_id: string; display_name: string | null }[]).map(
+              (p) => [p.user_id, p.display_name],
+            ),
+          );
+          for (const r of rows) r.creatorName = names.get(r.creator_id) ?? null;
+        }
+        if (!cancelled) setCommunity(rows);
       } catch (e) {
         console.error("[songbook] community shelf failed", e);
       }
@@ -237,7 +260,7 @@ const Songbook = () => {
                     <p className="font-ticket text-[12px] text-card-foreground/70 mt-1.5">
                       first mapped by{" "}
                       <span className="text-card-foreground">
-                        {c.profiles?.display_name ?? "a Deadhead"}
+                        {c.creatorName ?? "a Deadhead"}
                       </span>
                     </p>
                   </Link>
@@ -290,7 +313,10 @@ const Stat = ({ n, label }: { n: string; label: string }) => (
 
 const Meta = ({ k, v }: { k: string; v: string }) => (
   <span className="block">
-    <span className="block font-ticket text-[9px] uppercase tracking-[0.14em] text-[hsl(var(--dead-gold))]">{k}</span>
+    {/* dead-dark, not gold: these render inside the issue card, and gold on
+        the cream card is 2.58:1. Gold stays correct on the maroon page — the
+        community header above is 5.30:1 — but this is the other surface. */}
+    <span className="block font-ticket text-[9px] uppercase tracking-[0.14em] text-dead-dark/85">{k}</span>
     <span className="block font-hand text-lg text-card-foreground leading-tight">{v}</span>
   </span>
 );

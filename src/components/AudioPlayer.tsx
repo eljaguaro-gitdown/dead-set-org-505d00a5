@@ -664,6 +664,10 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
           setYOffset(next);
           try { window.localStorage.setItem("audioPlayerYOffset", String(next)); } catch {}
         }}
+        /* Tagged so a page-level bottom bar can measure this and sit above it
+           rather than underneath. The player is draggable, so its height is not
+           a constant anyone can hardcode. */
+        data-global-player=""
         className="fixed bottom-0 left-0 right-0 z-40 border-t-2 border-dashed border-border bg-card paper-grain"
       >
         {/* Drag handle — lift the player up to reveal content beneath */}
