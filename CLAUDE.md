@@ -172,6 +172,10 @@ functions deploy only when the Lovable agent is asked. Merging ships nothing.
 **[`docs/RELEASING.md`](docs/RELEASING.md) has the order, the verification for
 each surface, and the failure modes** — read it before shipping anything.
 
+## Live experiments
+
+**[`docs/releases/2026-10-04-song-first-front-door.md`](docs/releases/2026-10-04-song-first-front-door.md) — shipped 2026-10-04, review 2026-10-18.** The landing page's front door changed from "build a setlist" to "pick a song you love", with a new `/versions/:slug` route, community-filled Songbook entries, and the quiet-gem signal. The bet, the metrics, the 2026-10-03 baseline and the known gaps are all written down *before* the result, so the review cannot be graded against a story invented afterwards. Read it before changing the landing page, the picker, or the share and sign-in gates during the window, and before drawing any conclusion from a traffic number in that period.
+
 ## Conventions
 
 - **Import alias:** `@/` → `src/` (configured in `vite.config.ts`, `vitest.config.ts`, `tsconfig`, `components.json`). Always import via `@/components/...`, `@/lib/...`, etc.
