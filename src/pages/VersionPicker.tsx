@@ -18,7 +18,15 @@ import SiteHeader from "@/components/SiteHeader";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { SYNTHETIC_VERSION_DEFAULTS } from "@/lib/syntheticVersion";
-import { findRecordingForDate } from "@/lib/archiveOrg";
+import { findRecordingForDate, findManyArchiveRecordings } from "@/lib/archiveOrg";
+import {
+  scoreRecordings,
+  quietGems,
+  hasRegardData,
+  quietGemReason,
+  QUIET_GEM_CHIP,
+  REGARD_METHOD_LINE,
+} from "@/lib/regardVsAttention";
 import { songSlug } from "@/lib/songSlug";
 import {
   isSleeper as isSleeperVersion,
@@ -123,6 +131,65 @@ const VersionPicker = () => {
   const [invite, setInvite] = useState<InviteIntent | null>(null);
   /** Set when this guide was the first to map its song. Holds the setlist id. */
   const [contributed, setContributed] = useState<string | null>(null);
+  /** Quiet gems by night (YYYY-MM-DD), with the evidence line for each. */
+  const [gems, setGems] = useState<Map<string, string | null>>(new Map());
+
+  /**
+   * The quiet gems, for the songs no poll covers.
+   *
+   * sleeperMath needs fan votes and two songs in the catalog have them, so for
+   * everyone else this page could rank nothing. archive.org publishes both
+   * halves of a usable answer for every recording — how highly it is rated and
+   * how often it is pulled — so a tape held high and rarely taken is findable
+   * without a poll, a partner or a key.
+   *
+   * Only fetched when there is no poll to read, because for the two songs that
+   * have one the votes are the better signal and this would be a second lookup
+   * for nothing. Runs after the page has rendered: the versions are already on
+   * screen and the chips arrive when they arrive.
+   */
+  useEffect(() => {
+    // hasVoteData rather than `voted`, which is derived further down the
+    // component — same predicate, available here.
+    if (!song || hasVoteData(versions) || versions.length === 0) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const tapes = await findManyArchiveRecordings(song.title, 50);
+        if (cancelled || tapes.length === 0) return;
+
+        // One row per NIGHT, not per upload — several transfers of one show
+        // would otherwise compete with each other and the quieter copies of a
+        // famous tape would look overlooked.
+        const bestPerNight = new Map<string, (typeof tapes)[number]>();
+        for (const t of tapes) {
+          const night = t.date?.slice(0, 10);
+          if (!night) continue;
+          const held = bestPerNight.get(night);
+          if (!held || (t.downloads ?? 0) > (held.downloads ?? 0)) bestPerNight.set(night, t);
+        }
+
+        const cohort = [...bestPerNight.values()].map((t) => ({
+          identifier: t.date!.slice(0, 10),
+          avgRating: t.avgRating,
+          reviews: t.reviews,
+          downloads: t.downloads,
+        }));
+        if (!hasRegardData(cohort)) return;
+
+        setGems(
+          new Map(
+            quietGems(scoreRecordings(cohort)).map((g) => [g.identifier, quietGemReason(g)] as const),
+          ),
+        );
+      } catch (e) {
+        // Chips are a bonus on this page, never the content. A failed lookup
+        // must leave the versions exactly as they are.
+        console.error("[VersionPicker] gem lookup failed", e);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [song, versions]);
 
   /**
    * Finish what they came back for.
@@ -862,7 +929,7 @@ const VersionPicker = () => {
         {/* ── Why these — the quiet disclosure ──────────────────────── */}
         <section className="mb-7 border-l-[3px] border-[hsl(var(--dead-blue))] bg-[hsl(var(--dead-blue)/0.06)] rounded-r-sm p-3.5">
           <p className="font-body text-[13px] leading-relaxed text-card-foreground/85">
-            {voted ? METHOD_LINE : NO_VOTES_LINE}
+            {voted ? METHOD_LINE : gems.size > 0 ? REGARD_METHOD_LINE : NO_VOTES_LINE}
           </p>
           {voted && (
             <>
@@ -1036,7 +1103,20 @@ const VersionPicker = () => {
                     {v.is_benchmark && <Chip tone="canon">★ Era benchmark</Chip>}
                     {sleeper && <Chip tone="sleep">◆ Sleeper</Chip>}
                     {m && <Chip tone="milestone">{MILESTONE_LABEL[m.kind]}</Chip>}
+                    {gems.has(v.show_date?.slice(0, 10) ?? "") && (
+                      <Chip tone="canon">◆ {QUIET_GEM_CHIP}</Chip>
+                    )}
                   </div>
+
+                  {/* card-foreground, not dead-gold: gold on the cream card is
+                      2.58:1 — the exact measurement banked in CLAUDE.md after it
+                      shipped once. The chip carries the gold, the line carries
+                      the evidence. */}
+                  {gems.get(v.show_date?.slice(0, 10) ?? "") && (
+                    <p className="font-body text-[14px] leading-relaxed text-card-foreground/85 mt-2">
+                      {gems.get(v.show_date!.slice(0, 10))}
+                    </p>
+                  )}
 
                   {v.blurb && (
                     <p className="font-body text-[15px] leading-relaxed text-card-foreground/85 mt-3 max-w-[62ch]">

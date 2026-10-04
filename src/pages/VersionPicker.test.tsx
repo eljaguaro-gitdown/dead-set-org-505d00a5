@@ -46,8 +46,10 @@ vi.mock("@/components/PageLayout", () => ({
 }));
 vi.mock("@/components/SiteHeader", () => ({ default: () => <header /> }));
 vi.mock("@/lib/posthog", () => ({ captureEvent: vi.fn() }));
+const findManyArchiveRecordings = vi.fn(async () => []);
 vi.mock("@/lib/archiveOrg", () => ({
   findRecordingForDate: vi.fn(async () => null),
+  findManyArchiveRecordings: (...a: unknown[]) => findManyArchiveRecordings(...a),
 }));
 
 const SONGS = [
@@ -101,6 +103,7 @@ beforeEach(() => {
   playSetlist.mockReset();
   mockUser = null;
   searchParams = new URLSearchParams();
+  findManyArchiveRecordings.mockClear();
   setSearchParams.mockReset();
   window.HTMLElement.prototype.scrollIntoView = vi.fn();
 });
@@ -214,5 +217,20 @@ describe("VersionPicker — the method is explained, not asserted", () => {
     expect(screen.queryByText(/fewer than 55 votes against 181/)).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /the arithmetic/i }));
     expect(await screen.findByText(/fewer than 55 votes against 181/)).toBeInTheDocument();
+  });
+});
+
+/**
+ * The gem signal on this page. sleeperMath covers 2 songs; this covers the
+ * other 232, so it has to actually reach the screen — and it has to stay off
+ * the screen for the two that have a real poll, where a second lookup would
+ * buy nothing.
+ */
+describe("VersionPicker — quiet gems where no poll exists", () => {
+  it("does not go looking when the song already has votes", async () => {
+    await openPage();
+    // SONGS/VERSIONS fixtures carry votes, so the archive lookup is pointless.
+    await waitFor(() => expect(screen.getByText("Shakedown Street")).toBeInTheDocument());
+    expect(findManyArchiveRecordings).not.toHaveBeenCalled();
   });
 });
