@@ -15,6 +15,22 @@ import { captureEvent } from "@/lib/posthog";
  * back issues below, and an honest count of how far in we are.
  */
 
+/**
+ * A song whose first listening guide came from a reader. The editorial series
+ * runs a song a week; the repertoire is ~523 songs, so the series alone is a
+ * decade of Sundays and 232 of the 234 songs in the catalog have nothing. This
+ * is the shelf filling from the other end.
+ */
+interface CommunityRow {
+  id: string;
+  created_at: string;
+  setlist_id: string;
+  creator_id: string;
+  songs: { title: string } | null;
+  /** Filled by a second query — see the note on the fetch below. */
+  creatorName?: string | null;
+}
+
 interface FeatureRow {
   id: string;
   slug: string;
@@ -35,6 +51,7 @@ const yearOf = (d: string | null) => (d ? d.slice(-4) : "");
 
 const Songbook = () => {
   const [features, setFeatures] = useState<FeatureRow[]>([]);
+  const [community, setCommunity] = useState<CommunityRow[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -48,6 +65,41 @@ const Songbook = () => {
       if (cancelled) return;
       setFeatures((data ?? []) as FeatureRow[]);
       setLoading(false);
+
+      // Separate query, and deliberately after the issues are on screen: the
+      // community shelf is additive, so a failure here must leave the
+      // editorial series rendering exactly as it does today.
+      try {
+        // NOT `profiles(display_name)` as an embed. songbook_entries.creator_id
+        // references auth.users, not profiles, so PostgREST has no relationship
+        // to traverse and rejects the whole select — the shelf would have come
+        // back null and rendered empty forever, silently, because the catch
+        // below swallows it. Every other page (Browse, MySetlists) resolves
+        // names with a second query by user_id; this does the same.
+        const { data: entries } = await songbookDb
+          .from("songbook_entries")
+          .select("id, created_at, setlist_id, creator_id, songs(title)")
+          .order("created_at", { ascending: false })
+          .limit(60);
+
+        const rows = (entries ?? []) as CommunityRow[];
+        const creatorIds = [...new Set(rows.map((r) => r.creator_id).filter(Boolean))];
+        if (creatorIds.length) {
+          const { data: profiles } = await songbookDb
+            .from("profiles")
+            .select("user_id, display_name")
+            .in("user_id", creatorIds);
+          const names = new Map(
+            ((profiles ?? []) as { user_id: string; display_name: string | null }[]).map(
+              (p) => [p.user_id, p.display_name],
+            ),
+          );
+          for (const r of rows) r.creatorName = names.get(r.creator_id) ?? null;
+        }
+        if (!cancelled) setCommunity(rows);
+      } catch (e) {
+        console.error("[songbook] community shelf failed", e);
+      }
     })();
     return () => { cancelled = true; };
   }, []);
@@ -66,13 +118,13 @@ const Songbook = () => {
 
         {/* ── MASTHEAD ── */}
         <header className="text-center pb-7 border-b border-dashed border-primary/30 mb-8">
-          <p className="font-ticket text-[10px] uppercase tracking-[0.24em] text-primary mb-3">
+          <p className="font-ticket text-[10px] uppercase tracking-[0.24em] text-[hsl(var(--dead-gold))] mb-3">
             One song a week · forever
           </p>
           <h1 className="font-title text-4xl md:text-6xl text-foreground leading-none mb-4">
             The Songbook
           </h1>
-          <p className="font-body text-sm md:text-base text-foreground/70 max-w-[54ch] mx-auto">
+          <p className="font-body text-sm md:text-base text-foreground/85 max-w-[54ch] mx-auto">
             Every week we take one song and follow it across thirty years — the first time they played it,
             the last time, and every version in between worth your evening. The catalogue is deep enough
             that we will not run out.
@@ -96,7 +148,7 @@ const Songbook = () => {
             {/* ── CURRENT ISSUE ── */}
             <section className="mb-12">
               <div className="flex items-baseline gap-2 mb-3">
-                <span className="font-ticket text-[10px] uppercase tracking-[0.2em] text-primary">This week</span>
+                <span className="font-ticket text-[10px] uppercase tracking-[0.2em] text-[hsl(var(--dead-gold))]">This week</span>
                 <span className="flex-1 h-px bg-primary/25" />
               </div>
 
@@ -108,7 +160,7 @@ const Songbook = () => {
                 })}
                 className="block bg-card text-card-foreground rounded-sm p-6 md:p-9 border border-border hover:border-primary/50 transition-colors group"
               >
-                <p className="font-ticket text-[10px] uppercase tracking-[0.18em] text-primary mb-3">
+                <p className="font-ticket text-[10px] uppercase tracking-[0.18em] text-dead-dark mb-3">
                   Issue {String(current.issue_number ?? 1).padStart(3, "0")}
                 </p>
                 <h2 className="font-header text-3xl md:text-5xl leading-none mb-3 group-hover:text-primary transition-colors">
@@ -129,7 +181,7 @@ const Songbook = () => {
                   <Meta k="First played" v={current.ftp_date ?? "—"} />
                   <Meta k="Last played" v={current.ltp_date ?? "—"} />
                   <Meta k="Times played" v={current.times_played != null ? String(current.times_played) : "—"} />
-                  <span className="ml-auto font-ticket text-[11px] uppercase tracking-[0.12em] text-primary self-end">
+                  <span className="ml-auto font-ticket text-[11px] uppercase tracking-[0.12em] text-dead-dark self-end">
                     Read the issue &rarr;
                   </span>
                 </div>
@@ -177,23 +229,66 @@ const Songbook = () => {
         )}
 
         {/* ── THE RUNWAY ── */}
+        {/* ── FROM THE COMMUNITY ──
+            Not issues, and never labelled as them. An issue is written and
+            sourced; these are the nights a head mapped first. Same shelf,
+            different tier, and the difference is stated rather than blurred. */}
+        {community.length > 0 && (
+          <section className="mt-14">
+            <div className="flex items-baseline gap-2 mb-3">
+              <span className="font-ticket text-[10px] uppercase tracking-[0.2em] text-[hsl(var(--dead-gold))]">
+                From the community
+              </span>
+              <span className="flex-1 h-px bg-[hsl(var(--dead-gold)/0.3)]" />
+            </div>
+            <p className="font-body text-sm text-foreground/85 max-w-[62ch] mb-5">
+              Songs the series hasn't reached yet, mapped by the people who got there first.
+              Build a listening guide for a song nobody has covered and it lands here under your name.
+            </p>
+
+            <ul className="grid gap-px bg-border rounded-sm overflow-hidden sm:grid-cols-2">
+              {community.map((c) => (
+                <li key={c.id}>
+                  <Link
+                    to={`/setlist/${c.setlist_id}`}
+                    onClick={() => captureEvent("songbook_community_opened", { entry_id: c.id })}
+                    className="block bg-card text-card-foreground p-4 md:p-5 hover:bg-card/80 transition-colors group h-full"
+                  >
+                    <h3 className="font-header text-xl md:text-2xl leading-tight group-hover:text-primary transition-colors">
+                      {c.songs?.title ?? "A song"}
+                    </h3>
+                    <p className="font-ticket text-[12px] text-card-foreground/70 mt-1.5">
+                      first mapped by{" "}
+                      <span className="text-card-foreground">
+                        {c.creatorName ?? "a Deadhead"}
+                      </span>
+                    </p>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
         <section className="mt-14 p-5 md:p-6 rounded-r-sm border-l-[3px] border-[hsl(var(--dead-blue))] bg-[hsl(var(--dead-blue)/0.08)]">
-          <h3 className="font-ticket text-[10px] uppercase tracking-[0.18em] text-[hsl(var(--dead-blue))] mb-2">
+          {/* Gold, like its sibling eyebrows: blue on this maroon panel is
+              2.71:1 at 10px. Gold on maroon measures 5.25:1. */}
+          <h3 className="font-ticket text-[10px] uppercase tracking-[0.18em] text-[hsl(var(--dead-gold))] mb-2">
             How long can this possibly run
           </h3>
-          <p className="font-body text-sm text-foreground/75 max-w-[64ch] mb-2">
+          <p className="font-body text-sm text-foreground/85 max-w-[64ch] mb-2">
             The Grateful Dead's live repertoire is roughly <strong className="text-foreground">523 songs</strong> —
             189 originals and 334 covers. Around <strong className="text-foreground">450</strong> were played
             in front of an audience more than once. At one issue a week, that is close to a decade before we
             repeat ourselves.
           </p>
-          <p className="font-body text-sm text-foreground/75 max-w-[64ch]">
+          <p className="font-body text-sm text-foreground/85 max-w-[64ch]">
             Not every song earns a full issue — a lot of those covers were played once, at a soundcheck, or
             with a guest. Songs the band actually lived with, the ones that changed shape across eras, are
             where the series spends its time. When a song has only one version worth naming, we will say so
             rather than pad it.
           </p>
-          <p className="font-mono text-[11px] text-foreground/45 mt-3">
+          <p className="font-mono text-[11px] text-foreground/80 mt-3">
             Counts:{" "}
             <a href="http://deadessays.blogspot.com/2011/07/grateful-dead-song-graph.html" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">
               GD Lyric &amp; Song Finder, via Grateful Dead Guide
@@ -201,7 +296,7 @@ const Songbook = () => {
           </p>
         </section>
 
-        <p className="font-ticket text-[11px] uppercase tracking-[0.1em] text-foreground/50 text-center mt-12">
+        <p className="font-ticket text-[11px] uppercase tracking-[0.1em] text-foreground/85 text-center mt-12">
           Built on the shoulders of the tapers, the traders &amp; the Internet Archive
         </p>
       </main>
@@ -211,7 +306,9 @@ const Songbook = () => {
 
 const Stat = ({ n, label }: { n: string; label: string }) => (
   <div className="bg-card text-card-foreground py-3 px-2">
-    <div className="font-header text-xl md:text-2xl text-primary leading-none">{n}</div>
+    {/* 20px is not "large text" under WCAG (that needs 18.66px BOLD or 24px),
+        so text-primary's 4.06:1 on the cream stat tile does not pass. */}
+    <div className="font-header text-xl md:text-2xl text-dead-dark leading-none">{n}</div>
     <div className="font-ticket text-[9px] uppercase tracking-[0.1em] text-muted-foreground mt-1.5 leading-snug">
       {label}
     </div>
@@ -220,7 +317,10 @@ const Stat = ({ n, label }: { n: string; label: string }) => (
 
 const Meta = ({ k, v }: { k: string; v: string }) => (
   <span className="block">
-    <span className="block font-ticket text-[9px] uppercase tracking-[0.14em] text-[hsl(var(--dead-gold))]">{k}</span>
+    {/* dead-dark, not gold: these render inside the issue card, and gold on
+        the cream card is 2.58:1. Gold stays correct on the maroon page — the
+        community header above is 5.30:1 — but this is the other surface. */}
+    <span className="block font-ticket text-[9px] uppercase tracking-[0.14em] text-dead-dark/85">{k}</span>
     <span className="block font-hand text-lg text-card-foreground leading-tight">{v}</span>
   </span>
 );

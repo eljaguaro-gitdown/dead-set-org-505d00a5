@@ -6,6 +6,8 @@ import { songbookDb } from "@/lib/songbookDb";
 import { useAudioPlayer, type PlayableSlot } from "@/contexts/AudioPlayerContext";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
+// PROTOTYPE — song-first entry; see src/components/landing/StartWithASong.tsx
+import StartWithASong from "@/components/landing/StartWithASong";
 
 // Daily community spotlight — server picks one public setlist per UTC day,
 // rotating fairly so every public setlist gets a turn. See get_hero_spotlight().
@@ -516,6 +518,176 @@ const HeroSection = (_props: HeroSectionProps) => {
           width: 100%;
           display: flex; flex-direction: column; align-items: center; gap: 12px;
         }
+        /* ── Song picker — the first move of the product. Styled in the
+              hero's own palette: the app's card tokens are built for the
+              cream card surface and vanish on this maroon. ── */
+        .ds-hero__pick {
+          position: relative;
+          margin: 26px 0 30px;
+          padding: 22px 16px 20px;
+          border: 1px solid var(--rule-gold-40);
+          border-radius: 10px;
+          background:
+            radial-gradient(120% 140% at 50% 0%, rgba(214, 178, 113, 0.14), transparent 62%),
+            var(--bg-plaque);
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.32);
+        }
+        .ds-hero__pick-burst {
+          position: absolute;
+          top: -16px;
+          right: -6px;
+          width: 62px;
+          height: 62px;
+          display: grid;
+          place-items: center;
+          background: var(--text-eyebrow);
+          color: #3a0303;
+          font-family: 'IBM Plex Mono', ui-monospace, monospace;
+          font-size: 11px;
+          font-weight: 700;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          transform: rotate(-12deg);
+          clip-path: polygon(
+            50% 0%, 60% 14%, 76% 7%, 78% 25%, 94% 24%, 88% 40%, 100% 50%,
+            88% 60%, 94% 76%, 78% 75%, 76% 93%, 60% 86%, 50% 100%, 40% 86%,
+            24% 93%, 22% 75%, 6% 76%, 12% 60%, 0% 50%, 12% 40%, 6% 24%,
+            22% 25%, 24% 7%, 40% 14%
+          );
+        }
+        .ds-hero__pick-eyebrow {
+          font-family: 'IBM Plex Mono', ui-monospace, monospace;
+          font-size: 11px;
+          letter-spacing: 0.26em;
+          text-transform: uppercase;
+          color: var(--text-eyebrow);
+          margin: 0 0 8px;
+        }
+        .ds-hero__pick-title {
+          font-family: 'Sancreek', 'Playfair Display', Georgia, serif;
+          font-size: clamp(27px, 7.4vw, 34px);
+          line-height: 1.1;
+          color: var(--text-primary);
+          margin: 0 0 8px;
+        }
+        .ds-hero__pick-sub {
+          font-size: 15px;
+          line-height: 1.5;
+          color: var(--text-soft);
+          margin: 0 0 16px;
+          max-width: 34ch;
+          margin-inline: auto;
+        }
+        .ds-hero__pick-field {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          min-height: 54px;
+          padding: 0 14px;
+          border-radius: 8px;
+          background: var(--text-primary);
+          border: 2px solid transparent;
+          cursor: text;
+          transition: border-color 140ms ease;
+        }
+        .ds-hero__pick-field:focus-within { border-color: var(--accent-warm); }
+        .ds-hero__pick-input {
+          flex: 1;
+          min-width: 0;
+          align-self: stretch;
+          border: 0;
+          outline: 0;
+          background: transparent;
+          /* 16px minimum or iOS zooms the page on focus. */
+          font-size: 16px;
+          font-family: 'DM Sans', system-ui, sans-serif;
+          color: #3a0303;
+        }
+        .ds-hero__pick-input::placeholder { color: rgba(58, 3, 3, 0.55); }
+        .ds-hero__pick-results {
+          list-style: none;
+          margin: 6px 0 0;
+          padding: 0;
+          border-radius: 8px;
+          overflow: hidden;
+          background: var(--text-primary);
+          text-align: left;
+        }
+        .ds-hero__pick-result {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 10px;
+          width: 100%;
+          min-height: 52px;
+          padding: 10px 14px;
+          background: transparent;
+          border: 0;
+          border-bottom: 1px solid rgba(58, 3, 3, 0.12);
+          font-family: 'DM Sans', system-ui, sans-serif;
+          font-size: 16px;
+          color: #3a0303;
+          text-align: left;
+          cursor: pointer;
+        }
+        .ds-hero__pick-result:last-child { border-bottom: 0; }
+        .ds-hero__pick-result-ready {
+          font-family: 'IBM Plex Mono', ui-monospace, monospace;
+          font-size: 10px;
+          letter-spacing: 0.14em;
+          text-transform: uppercase;
+          color: #9a3b26;
+          white-space: nowrap;
+        }
+        .ds-hero__pick-ready-label-unused {
+          font-family: 'IBM Plex Mono', ui-monospace, monospace;
+          font-size: 10px;
+          letter-spacing: 0.2em;
+          text-transform: uppercase;
+          color: var(--text-eyebrow);
+          margin: 18px 0 9px;
+        }
+        .ds-hero__pick-songbook {
+          margin-top: 14px;
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          min-height: 48px;
+          padding: 0 18px;
+          border-radius: 8px;
+          border: 1.5px solid var(--rule-faint);
+          background: rgba(239, 231, 208, 0.06);
+          color: var(--text-primary);
+          font-family: 'IBM Plex Mono', ui-monospace, monospace;
+          font-size: 12px;
+          letter-spacing: 0.14em;
+          text-transform: uppercase;
+          text-decoration: none;
+        }
+        .ds-hero__pick-chips {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+          justify-content: center;
+        }
+        .ds-hero__pick-chip {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          min-height: 50px;
+          padding: 0 16px;
+          border-radius: 8px;
+          border: 1.5px solid var(--rule-faint);
+          background: rgba(239, 231, 208, 0.06);
+          color: var(--text-primary);
+          font-family: 'DM Sans', system-ui, sans-serif;
+          font-size: 16px;
+          cursor: pointer;
+          transition: background 140ms ease, border-color 140ms ease;
+        }
+        .ds-hero__pick-chip:active { background: rgba(239, 231, 208, 0.16); }
+        .ds-hero__pick-chip-arrow { color: var(--text-eyebrow); font-size: 15px; }
+
         .ds-hero__cta-eyebrow {
           font-family: 'IBM Plex Mono', ui-monospace, monospace;
           font-size: 11px;
@@ -778,23 +950,43 @@ const HeroSection = (_props: HeroSectionProps) => {
           box-shadow: 0 0 8px rgba(194, 74, 51, 0.7);
           animation: ds-hero-pulse 2s ease-in-out infinite;
         }
+        .ds-hero__cassette { cursor: pointer; }
+        .ds-hero__cassette:hover .ds-hero__play-btn { transform: scale(1.06); }
         .ds-hero__play-btn {
           flex-shrink: 0;
-          width: 64px; height: 64px;
+          width: 76px; height: 76px;
           border-radius: 999px;
           background: linear-gradient(135deg, #d4af37, #f3e5ab 45%, #b8860b);
-          color: #3a2406;
+          color: #2a1a04;
           border: none;
           display: inline-flex; align-items: center; justify-content: center;
           cursor: pointer;
-          transition: background-color 0.15s ease, transform 0.05s ease, box-shadow 0.2s ease;
-          box-shadow: 0 4px 14px rgba(194, 74, 51, 0.25);
+          transition: transform 0.18s ease, box-shadow 0.2s ease, filter 0.15s ease;
+          /* Lifted off the shell rather than sitting flat on it: a ring of its
+             own colour plus a real drop shadow. The old 4px/0.25 shadow left
+             it reading as decoration on a light card. */
+          box-shadow:
+            0 0 0 5px rgba(212, 175, 55, 0.22),
+            0 8px 22px rgba(58, 36, 6, 0.35);
           margin-top: 12px;
+          position: relative;
+          z-index: 1;
         }
         @media (min-width: 640px) {
-          .ds-hero__play-btn { width: 72px; height: 72px; }
+          .ds-hero__play-btn { width: 88px; height: 88px; }
         }
-        .ds-hero__play-btn:hover { filter: brightness(1.06); }
+        /* A slow breath while it is waiting to be pressed, and nothing once it
+           is playing — an animation that never stops is noise, not an offer. */
+        .ds-hero__play-btn--idle { animation: ds-hero-cta 2.6s ease-in-out infinite; }
+        @keyframes ds-hero-cta {
+          0%, 100% { box-shadow: 0 0 0 5px rgba(212,175,55,0.22), 0 8px 22px rgba(58,36,6,0.35); }
+          50%      { box-shadow: 0 0 0 11px rgba(212,175,55,0.10), 0 10px 26px rgba(58,36,6,0.40); }
+        }
+        .ds-hero__play-btn svg { width: 34px; height: 34px; }
+        @media (min-width: 640px) {
+          .ds-hero__play-btn svg { width: 40px; height: 40px; }
+        }
+        .ds-hero__play-btn:hover { filter: brightness(1.08); transform: scale(1.06); }
         .ds-hero__play-btn:active { transform: scale(0.96); }
         .ds-hero__play-btn:focus-visible {
           outline: 2px solid var(--accent-warm);
@@ -851,7 +1043,8 @@ const HeroSection = (_props: HeroSectionProps) => {
 
         @media (prefers-reduced-motion: reduce) {
           .ds-hero__logo-mark,
-          .ds-hero__portrait { animation: none !important; }
+          .ds-hero__portrait,
+          .ds-hero__play-btn--idle { animation: none !important; }
           .ds-hero__content > * {
             animation: none !important;
             opacity: 1 !important;
@@ -888,13 +1081,29 @@ const HeroSection = (_props: HeroSectionProps) => {
             the Internet Archive. Press play — no signup required.
           </p>
 
+          {/* PROTOTYPE — naming a song is the first move of the product, so it
+              sits above the Songbook card and lands in the first viewport on a
+              phone. Anyone can search, open and play what they find; signing in
+              is only asked for at save and share. */}
+          <StartWithASong variant="hero" />
+
           <p className="ds-hero__chase">
             That song. That night. That version you'll never forget —
             and the next one waiting to be found, inhaled, and passed on.
           </p>
 
           {/* Now Spinning — proof-by-music. One tap, one ear, you're in. */}
-          <div className="ds-hero__cassette" role="group" aria-label={takeover ? `The Songbook — ${takeover.songTitle}` : `Today's Spotlight — ${spotlight?.title ?? "community setlist"}`}>
+          {/* The whole shell plays, not just the disc. The song title, the
+              date and the venue sat in dead space next to a play button —
+              people aim at the thing they are reading. The real <button>
+              below stays, so keyboard and screen-reader users still have a
+              proper control; this just widens where a thumb can land. */}
+          <div
+            className="ds-hero__cassette"
+            role="group"
+            aria-label={takeover ? `The Songbook — ${takeover.songTitle}` : `Today's Spotlight — ${spotlight?.title ?? "community setlist"}`}
+            onClick={() => { if (!heroLoading && (takeover || spotlight)) void handleHeroPlay(); }}
+          >
             <div className="ds-hero__cassette-eyebrow-row" aria-hidden="true">
               <span className="ds-hero__cassette-live">
                 <span className="ds-hero__cassette-live-dot" />
@@ -909,9 +1118,9 @@ const HeroSection = (_props: HeroSectionProps) => {
 
             <button
               type="button"
-              onClick={handleHeroPlay}
+              onClick={(e) => { e.stopPropagation(); void handleHeroPlay(); }}
               disabled={heroLoading || (!takeover && !spotlight)}
-              className="ds-hero__play-btn"
+              className={`ds-hero__play-btn${isHeroPlaying ? "" : " ds-hero__play-btn--idle"}`}
               aria-label={isHeroPlaying ? `Pause ${takeover?.songTitle ?? spotlight?.title ?? "spotlight"}` : `Play ${takeover?.songTitle ?? spotlight?.title ?? "spotlight"}`}
             >
               {isHeroPlaying ? (

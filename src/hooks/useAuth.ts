@@ -70,10 +70,15 @@ const hasActiveSessionFlag = () => {
 // Clears sessionStorage markers set right before an OAuth redirect. Safe to
 // call whenever we know we do NOT have an active session, so poisoned tab
 // state from a failed OAuth round-trip cannot outlive the failure.
-const clearStaleOAuthMarkers = () => {
+export const clearStaleOAuthMarkers = () => {
   if (typeof window === "undefined") return;
   sessionStorage.removeItem("post_oauth_redirect");
   sessionStorage.removeItem("ds_pending_oauth_provider");
+  // Must be cleared with the rest. Abandon a Google sign-in started from
+  // /auth?redirect=/versions/X, then sign in later in the same tab from
+  // anywhere else, and the stale target would hijack that second sign-in and
+  // drop them on the old song page.
+  sessionStorage.removeItem("post_oauth_target");
 };
 
 const ensureAuthInitialized = () => {

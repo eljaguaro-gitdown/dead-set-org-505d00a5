@@ -24,7 +24,6 @@ import {
   buildMilestones,
   milestonePlace,
   MILESTONE_LABEL,
-  MILESTONE_SHORT,
   NO_TAPE_LINE,
   saysNoTape,
   type MilestoneEntry,
@@ -1301,8 +1300,7 @@ const MilestoneCard = ({
  */
 const MilestoneChip = ({ kind }: { kind: MilestoneEntry["kind"] }) => (
   <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full border border-primary/50 bg-primary/15 text-dead-gold font-body whitespace-nowrap">
-    <span className="font-medium">{MILESTONE_SHORT[kind]}</span>
-    <span className="text-foreground/80">{MILESTONE_LABEL[kind]}</span>
+    <span className="font-medium">{MILESTONE_LABEL[kind]}</span>
   </span>
 );
 

@@ -109,6 +109,22 @@ const Index = () => {
     } catch {
       // ignore
     }
+    // Where they were trying to go before signing in, if anywhere. Auth stashes
+    // this because the web OAuth round trip loses ?redirect= — see the note
+    // there. It wins over the generic destination: someone who pressed Share on
+    // a song wants that song back, not their setlist list.
+    let target: string | null = null;
+    try {
+      target = sessionStorage.getItem("post_oauth_target");
+      if (target) sessionStorage.removeItem("post_oauth_target");
+    } catch {
+      // ignore
+    }
+    if (target) {
+      navigate(target, { replace: true });
+      return;
+    }
+
     let cancelled = false;
     (async () => {
       const path = await getPostAuthRedirect(user.id);

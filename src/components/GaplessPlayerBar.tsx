@@ -117,6 +117,12 @@ const GaplessPlayerBar = () => {
           setYOffset(next);
           try { window.localStorage.setItem("audioPlayerYOffset", String(next)); } catch { /* noop */ }
         }}
+        /* Tagged so a page-level bottom bar can measure this and sit above it.
+           BOTH players must carry this: GlobalAudioPlayer mounts this one by
+           default and only falls back to AudioPlayer for
+           localStorage player_engine="legacy". Tagging only the legacy one left
+           the fix working for nobody — see playerBarTagged.test.ts. */
+        data-global-player=""
         className="fixed bottom-0 left-0 right-0 z-40 border-t-2 border-dashed border-border bg-card paper-grain"
       >
         {/* Drag handle — lift the player up to reveal content beneath */}

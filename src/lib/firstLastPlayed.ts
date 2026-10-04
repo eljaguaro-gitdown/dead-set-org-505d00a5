@@ -66,7 +66,14 @@ export const MILESTONE_LABEL: Record<MilestoneKind, string> = {
   ltp: "Last time played",
 };
 
-/** The short form taper culture actually uses. */
+/**
+ * The short form taper culture actually uses.
+ *
+ * Currently unused on purpose, not by accident: the chip printed "FTP First
+ * time played" and the pair squeezed the date off the card at 390px, so the
+ * chip shows the words alone. Kept because the abbreviation is the thing heads
+ * actually say, and it belongs anywhere there is room for it.
+ */
 export const MILESTONE_SHORT: Record<MilestoneKind, string> = {
   ftp: "FTP",
   ltp: "LTP",

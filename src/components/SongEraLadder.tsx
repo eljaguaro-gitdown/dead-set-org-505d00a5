@@ -2,6 +2,12 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { songbookDb } from "@/lib/songbookDb";
 import { useIsMobile } from "@/hooks/use-mobile";
+import {
+  isSleeper as isSleeperVersion,
+  leaderVotes,
+  sleeperCutoff as computeSleeperCutoff,
+  votePercent,
+} from "@/lib/sleeperMath";
 
 /**
  * The era ladder — every ranked version of one song, grouped by the era it
@@ -13,8 +19,6 @@ import { useIsMobile } from "@/hooks/use-mobile";
  *             down the page, with each era hanging off it. A 31-year axis
  *             squeezed into 360px is unreadable; a vertical rail is not.
  */
-
-const SLEEPER_RATIO = 0.3; // under 30% of the song's leader
 
 export interface LadderEra {
   id: string;
@@ -104,12 +108,11 @@ const SongEraLadder = ({ songId, songTitle, activeVersionId, onPlay, onPlaySleep
     return () => { cancelled = true; };
   }, [songId]);
 
-  const leader = useMemo(
-    () => versions.reduce((max, v) => Math.max(max, v.votes ?? 0), 0),
-    [versions],
-  );
-  const sleeperCutoff = leader * SLEEPER_RATIO;
-  const isSleeper = (v: LadderVersion) => v.votes != null && leader > 0 && v.votes < sleeperCutoff;
+  // The arithmetic lives in @/lib/sleeperMath so every surface that says
+  // "sleeper" is reading the same rule off the same numbers.
+  const leader = useMemo(() => leaderVotes(versions), [versions]);
+  const sleeperCutoff = computeSleeperCutoff(versions);
+  const isSleeper = (v: LadderVersion) => isSleeperVersion(v, versions);
   const sleepers = versions.filter(isSleeper);
   const sleeperCount = sleepers.length;
 
@@ -339,7 +342,7 @@ const SongEraLadder = ({ songId, songTitle, activeVersionId, onPlay, onPlaySleep
                   const sleeper = isSleeper(v);
                   const playing = !!playingVersionId && v.id === playingVersionId;
                   const here = v.id === activeVersionId && !playing;
-                  const pct = leader ? Math.round(((v.votes ?? 0) / leader) * 100) : 0;
+                  const pct = votePercent(v, versions);
                   return (
                     <button
                       key={v.id}

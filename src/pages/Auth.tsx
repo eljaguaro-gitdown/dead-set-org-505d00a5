@@ -145,7 +145,15 @@ const Auth = () => {
       // matches redirect URLs against an allow-list where the known-good
       // entry is the bare callback. Where to land afterwards is smartRedirect's
       // job anyway — it already honours ?redirect=.
-      const result = await signInWithProvider(provider);
+      //
+      // But on WEB the tab leaves entirely and comes back to "/", so
+      // smartRedirect never runs and ?redirect= was being dropped on the
+      // commonest sign-in path there is. Anything that sent someone here to
+      // finish an action — Save or Share on a song page — landed them on
+      // /my-setlists instead, with the thing they asked for forgotten. Stash
+      // the target across the round trip; Index picks it up. redirectTo stays
+      // exactly as it was.
+      const result = await signInWithProvider(provider, "/", explicitRedirect);
       if (result.status === "error") {
         toast.error(result.message);
         return;
