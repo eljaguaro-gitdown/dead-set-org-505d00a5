@@ -950,23 +950,43 @@ const HeroSection = (_props: HeroSectionProps) => {
           box-shadow: 0 0 8px rgba(194, 74, 51, 0.7);
           animation: ds-hero-pulse 2s ease-in-out infinite;
         }
+        .ds-hero__cassette { cursor: pointer; }
+        .ds-hero__cassette:hover .ds-hero__play-btn { transform: scale(1.06); }
         .ds-hero__play-btn {
           flex-shrink: 0;
-          width: 64px; height: 64px;
+          width: 76px; height: 76px;
           border-radius: 999px;
           background: linear-gradient(135deg, #d4af37, #f3e5ab 45%, #b8860b);
-          color: #3a2406;
+          color: #2a1a04;
           border: none;
           display: inline-flex; align-items: center; justify-content: center;
           cursor: pointer;
-          transition: background-color 0.15s ease, transform 0.05s ease, box-shadow 0.2s ease;
-          box-shadow: 0 4px 14px rgba(194, 74, 51, 0.25);
+          transition: transform 0.18s ease, box-shadow 0.2s ease, filter 0.15s ease;
+          /* Lifted off the shell rather than sitting flat on it: a ring of its
+             own colour plus a real drop shadow. The old 4px/0.25 shadow left
+             it reading as decoration on a light card. */
+          box-shadow:
+            0 0 0 5px rgba(212, 175, 55, 0.22),
+            0 8px 22px rgba(58, 36, 6, 0.35);
           margin-top: 12px;
+          position: relative;
+          z-index: 1;
         }
         @media (min-width: 640px) {
-          .ds-hero__play-btn { width: 72px; height: 72px; }
+          .ds-hero__play-btn { width: 88px; height: 88px; }
         }
-        .ds-hero__play-btn:hover { filter: brightness(1.06); }
+        /* A slow breath while it is waiting to be pressed, and nothing once it
+           is playing — an animation that never stops is noise, not an offer. */
+        .ds-hero__play-btn--idle { animation: ds-hero-cta 2.6s ease-in-out infinite; }
+        @keyframes ds-hero-cta {
+          0%, 100% { box-shadow: 0 0 0 5px rgba(212,175,55,0.22), 0 8px 22px rgba(58,36,6,0.35); }
+          50%      { box-shadow: 0 0 0 11px rgba(212,175,55,0.10), 0 10px 26px rgba(58,36,6,0.40); }
+        }
+        .ds-hero__play-btn svg { width: 34px; height: 34px; }
+        @media (min-width: 640px) {
+          .ds-hero__play-btn svg { width: 40px; height: 40px; }
+        }
+        .ds-hero__play-btn:hover { filter: brightness(1.08); transform: scale(1.06); }
         .ds-hero__play-btn:active { transform: scale(0.96); }
         .ds-hero__play-btn:focus-visible {
           outline: 2px solid var(--accent-warm);
@@ -1023,7 +1043,8 @@ const HeroSection = (_props: HeroSectionProps) => {
 
         @media (prefers-reduced-motion: reduce) {
           .ds-hero__logo-mark,
-          .ds-hero__portrait { animation: none !important; }
+          .ds-hero__portrait,
+          .ds-hero__play-btn--idle { animation: none !important; }
           .ds-hero__content > * {
             animation: none !important;
             opacity: 1 !important;
@@ -1072,7 +1093,17 @@ const HeroSection = (_props: HeroSectionProps) => {
           </p>
 
           {/* Now Spinning — proof-by-music. One tap, one ear, you're in. */}
-          <div className="ds-hero__cassette" role="group" aria-label={takeover ? `The Songbook — ${takeover.songTitle}` : `Today's Spotlight — ${spotlight?.title ?? "community setlist"}`}>
+          {/* The whole shell plays, not just the disc. The song title, the
+              date and the venue sat in dead space next to a play button —
+              people aim at the thing they are reading. The real <button>
+              below stays, so keyboard and screen-reader users still have a
+              proper control; this just widens where a thumb can land. */}
+          <div
+            className="ds-hero__cassette"
+            role="group"
+            aria-label={takeover ? `The Songbook — ${takeover.songTitle}` : `Today's Spotlight — ${spotlight?.title ?? "community setlist"}`}
+            onClick={() => { if (!heroLoading && (takeover || spotlight)) void handleHeroPlay(); }}
+          >
             <div className="ds-hero__cassette-eyebrow-row" aria-hidden="true">
               <span className="ds-hero__cassette-live">
                 <span className="ds-hero__cassette-live-dot" />
@@ -1087,9 +1118,9 @@ const HeroSection = (_props: HeroSectionProps) => {
 
             <button
               type="button"
-              onClick={handleHeroPlay}
+              onClick={(e) => { e.stopPropagation(); void handleHeroPlay(); }}
               disabled={heroLoading || (!takeover && !spotlight)}
-              className="ds-hero__play-btn"
+              className={`ds-hero__play-btn${isHeroPlaying ? "" : " ds-hero__play-btn--idle"}`}
               aria-label={isHeroPlaying ? `Pause ${takeover?.songTitle ?? spotlight?.title ?? "spotlight"}` : `Play ${takeover?.songTitle ?? spotlight?.title ?? "spotlight"}`}
             >
               {isHeroPlaying ? (
