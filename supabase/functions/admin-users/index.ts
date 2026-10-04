@@ -309,8 +309,10 @@ Deno.serve(async (req) => {
       adminClient.from("setlists").select("creator_id").limit(20000),
       adminClient
         .rpc("refresh_admin_traffic_stats")
-        .then(() => adminClient.from("admin_traffic_stats_cache").select("*").eq("id", 1).maybeSingle())
-        .catch(() => adminClient.from("admin_traffic_stats_cache").select("*").eq("id", 1).maybeSingle()),
+        .then(
+          () => adminClient.from("admin_traffic_stats_cache").select("*").eq("id", 1).maybeSingle(),
+          () => adminClient.from("admin_traffic_stats_cache").select("*").eq("id", 1).maybeSingle(),
+        ),
     ]);
 
     if (usersRes.error) throw usersRes.error;
