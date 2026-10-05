@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useCallback, useRef, useEffect, useMemo, type ReactNode } from "react";
-import { findArchiveRecording, findRecordingForDate, findTrackInRecording } from "@/lib/archiveOrg";
+import { archiveKeyDate, findArchiveRecording, findRecordingForDate, findTrackInRecording } from "@/lib/archiveOrg";
 import { audioDebug } from "@/lib/audioDebug";
 import {
   startPlayEvent,
@@ -458,7 +458,13 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
       // nothing rescues it, so isLoading (defined as !directTrackUrl) stayed
       // true and the bar span forever. Treat it as the determinate failure
       // it is, straight away rather than after the watchdog below.
-      if (resolved && !resolved.directTrackUrl && engineMode === "gapless") {
+      // resolveSlot now returns NULL rather than a trackless slot, because a
+      // slot with no track is not survivable on either engine: gapless gets
+      // `url: undefined` and spins, and the legacy player streams the whole
+      // recording from the top, playing a different song under this one's
+      // name. Both forms are handled here so the behaviour people see — the
+      // error banner, or a skip inside a queue — is unchanged.
+      if (!resolved || (!resolved.directTrackUrl && engineMode === "gapless")) {
         audioDebug.log("context", "unplayable slot — no direct track", { song: slot.song.title }, "error");
         if (playlistMode) {
           toast.info(`Skipping ${slot.song.title} — not on this tape`);
@@ -532,10 +538,43 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
       if (directUrl) {
         return { ...slot, directTrackUrl: directUrl };
       }
-      // Couldn't find specific track in that recording — still usable via AudioPlayer fallback
-      audioDebug.log("resolve", "no direct track in recording — falling back", { song: slot.song.title }, "warn");
+
+      // The stored recording does not contain this song. That happens because
+      // a stored archive URL is not evidence of anything: ai-deadhead took
+      // Charlie's own `archiveUrl` string ahead of the catalog's verified one,
+      // so guides saved before that was fixed point at recordings chosen by a
+      // model rather than found on the Archive. A Ripple guide saved on
+      // 2026-10-04 named the right nights and pointed at tapes without Ripple
+      // on them.
+      //
+      // We know which NIGHT this slot is describing, so go find a recording of
+      // that night that actually carries the song, rather than giving up on a
+      // URL we never had reason to trust. This heals already-saved guides
+      // without a migration.
+      const night = archiveKeyDate(slot.version.show_date);
+      if (night) {
+        audioDebug.log("resolve", "stored tape lacks the song — re-resolving the night", { song: slot.song.title, date: night }, "warn");
+        try {
+          const dated = await findRecordingForDate(slot.song.title, night);
+          if (dated?.directTrackUrl) {
+            return {
+              ...slot,
+              version: { ...slot.version, archive_org_url: dated.url },
+              directTrackUrl: dated.directTrackUrl,
+            };
+          }
+        } catch (e) {
+          audioDebug.log("resolve", "night re-resolve failed", { song: slot.song.title, error: String(e) }, "warn");
+        }
+      }
+
+      // No tape we can read has this song on it. Say so; never hand back a
+      // slot with no track, because the legacy player streams the whole
+      // recording from the top and plays a DIFFERENT SONG under this one's
+      // name. That is the failure this whole surface exists to prevent.
+      audioDebug.log("resolve", "song is not on any readable tape of this night", { song: slot.song.title }, "error");
       console.warn(`[QA] Could not resolve direct track for "${slot.song.title}" in ${slot.version.archive_org_url}`);
-      return slot;
+      return null;
     }
 
     // The slot names its night but carries no tape: resolve THAT night.
@@ -562,7 +601,8 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
       // toast fires, and a single tap leaves playingSlot set, spinning.
       try {
         const dated = await findRecordingForDate(slot.song.title, namedNight);
-        if (dated) {
+        // A night with no readable track is not a playable slot — see above.
+        if (dated?.directTrackUrl) {
           return {
             ...slot,
             version: {
@@ -593,7 +633,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     // No archive URL and no night — a generic search is all that is left.
     audioDebug.log("resolve", "findArchiveRecording (generic search)", { song: slot.song.title });
     const result = await findArchiveRecording(slot.song.title);
-    if (result) {
+    if (result?.directTrackUrl) {
       return {
         ...slot,
         version: {

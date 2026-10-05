@@ -21,6 +21,10 @@ import type { ReactNode } from "react";
 // slot has an archive_org_url but no directTrackUrl. Return a stable URL so
 // resolveSlot succeeds for every slot in the playlist.
 vi.mock("@/lib/archiveOrg", () => ({
+  archiveKeyDate: (d?: string | null) => {
+    const day = (d || "").slice(0, 10);
+    return /^\d{4}-\d{2}-\d{2}$/.test(day) ? day : null;
+  },
   findArchiveRecording: vi.fn(async () => null),
   findRecordingForDate: vi.fn(async () => null),
   findTrackInRecording: vi.fn(async (archiveUrl: string, songTitle: string) => {

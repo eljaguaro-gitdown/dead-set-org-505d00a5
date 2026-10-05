@@ -482,7 +482,6 @@ You MUST respond using the explore_versions tool.`;
                       city: { type: "string" },
                       eraName: { type: "string" },
                       rating: { type: "number" },
-                      archiveUrl: { type: "string" },
                       whyThisVersion: { type: "string" },
                     },
                     required: ["showDate", "venue", "city", "eraName", "rating", "whyThisVersion"],
@@ -535,7 +534,19 @@ You MUST respond using the explore_versions tool.`;
         const dbVersion = (versions || []).find((dbv: any) => dbv.show_date === v.showDate);
         return {
           ...v,
-          archiveUrl: v.archiveUrl || dbVersion?.archive_org_url || null,
+          // The CATALOG's url, never Charlie's. `v.archiveUrl` is a free-text
+          // string out of the model's tool call: it is not looked up, not
+          // checked, and nothing downstream could tell a real identifier from
+          // an invented one. Preferring it over the verified column is how a
+          // Ripple guide came to point at tapes with no Ripple on them —
+          // right night in the prose, a recording nobody had opened, and the
+          // player either skipping the row or streaming someone else's song
+          // under Ripple's name.
+          //
+          // Dropping it costs nothing: a slot with no url resolves by DATE at
+          // play time, and that path only answers with a recording it has read
+          // and found the song inside.
+          archiveUrl: dbVersion?.archive_org_url || null,
           description: dbVersion?.description || null,
         };
       });
