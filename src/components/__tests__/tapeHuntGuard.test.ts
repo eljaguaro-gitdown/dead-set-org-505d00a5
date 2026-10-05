@@ -46,6 +46,45 @@ describe("Play All says it is working, and ignores a second tap", () => {
     });
   }
 
+  /**
+   * Measured, not guessed, by the 2026-10-05 gate: "Cueing…" is 7px wider than
+   * "Play All", and the Poster's header row has about 1px of slack for a
+   * signed-in owner at 320px. The wider word pushed Share 22px off the screen
+   * and wrapped the guest CTA at 390px, the commonest phone width.
+   *
+   * And Chromium moves focus OFF an element that becomes `disabled`, so the
+   * real attribute dropped a keyboard user to <body> mid-cue and left them
+   * there. `aria-disabled` plus the handler's own guard says the same thing
+   * without touching focus.
+   */
+  it("the Play All button's label does not change width while cueing", () => {
+    const src = read("../../pages/SetlistPoster.tsx");
+    const i = src.indexOf('aria-label={cueing ? "Cueing the tapes" : "Play All"}');
+    expect(i).toBeGreaterThan(-1);
+    // Only the button's CHILDREN matter for width. aria-label is allowed to
+    // change — it is announced, not rendered, so it costs no pixels.
+    const start = src.indexOf("{cueing ? (", i);
+    const end = src.indexOf("</button>", i);
+    expect(start).toBeGreaterThan(-1);
+    expect(end).toBeGreaterThan(start);
+    const children = src.slice(start, end);
+
+    // A ternary producing label TEXT is the regression:
+    // {cueing ? "Cueing…" : "Play All"} is 7px wider in one state.
+    expect(children).not.toMatch(/\?\s*"[^"]*"\s*:\s*"[^"]*"/);
+    // The label sits as bare text, unconditionally.
+    expect(children).toMatch(/\n\s*Play All\s*\n?\s*$/);
+  });
+
+  it("the Play All button keeps focus — aria-disabled, never disabled", () => {
+    const src = read("../../pages/SetlistPoster.tsx");
+    const i = src.indexOf('aria-label={cueing ? "Cueing the tapes" : "Play All"}');
+    const button = src.slice(Math.max(0, i - 200), i + 1400);
+    expect(button).toMatch(/aria-disabled=\{cueing\}/);
+    // The real attribute is what drops focus; it must not come back.
+    expect(button).not.toMatch(/(?<!aria-)\bdisabled=\{cueing\}/);
+  });
+
   it("TapeHunt never spins Charlie — a rotating portrait reads as a mistake", () => {
     const hunt = read("../TapeHunt.tsx");
     // The reel rotates; the breathe keyframe must not.

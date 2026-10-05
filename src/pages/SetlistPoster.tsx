@@ -634,11 +634,31 @@ const SetlistPoster = () => {
             Only the icon changes here. The sentence lives in normal flow
             below, where it can be as wide as it likes.
           */}
+          {/*
+            Two things in this one button, both measured rather than guessed.
+
+            The LABEL NEVER CHANGES. "Cueing…" is 7px wider than "Play All",
+            and this row has about 1px of slack for a signed-in owner at
+            320px — enough that the wider word pushed Share 22px off the
+            screen, and wrapped the guest "Build your own →" CTA at 390. Only
+            the icon swaps, and a 12px reel is exactly as wide as the 12px
+            triangle it replaces. aria-label carries the state for screen
+            readers; the sentence below carries it for everyone else.
+
+            And it is aria-disabled, NOT disabled. Chromium moves focus off an
+            element that becomes disabled, so the real `disabled` attribute
+            dropped a keyboard or switch user to <body> mid-cue and left them
+            there after the cue finished. aria-disabled announces the state
+            without touching focus, and `if (cueing) return` in the handler is
+            what actually makes the tap a no-op.
+          */}
           <button
             onClick={handlePlayAll}
-            disabled={cueing}
+            aria-disabled={cueing}
             aria-label={cueing ? "Cueing the tapes" : "Play All"}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-body bg-card/80 border border-border text-card-foreground hover:border-primary/40 transition-colors disabled:cursor-default"
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-body bg-card/80 border border-border text-card-foreground transition-colors ${
+              cueing ? "opacity-60 cursor-default" : "hover:border-primary/40"
+            }`}
           >
             {cueing ? (
               <span
@@ -648,7 +668,7 @@ const SetlistPoster = () => {
             ) : (
               <Play className="w-3 h-3 fill-current" />
             )}
-            {cueing ? "Cueing…" : "Play All"}
+            Play All
           </button>
           {playabilityStats && playabilityStats.unplayable > 0 && (
             <span
