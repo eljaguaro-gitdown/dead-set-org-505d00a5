@@ -603,3 +603,60 @@ URL. Rollback values are recorded in this file above.
 **Worth sweeping the other 62 `notable_versions` rows for the same rot** — a
 dead identifier, a night without the song, or a described performance that
 never took place. Nothing has checked them.
+
+---
+
+## The `notable_versions` sweep (2026-10-05)
+
+Prompted by the deleted Bird Song row: nothing had ever checked whether a
+catalog version points at a recording that carries its song. All 62 rows were
+checked on two independent questions, kept apart because they have different
+fixes.
+
+| | rows |
+|---|---|
+| clean | **41** |
+| link rot — real night, dead stored identifier | 12 |
+| fabricated — no show tape of that night carries the song | 9 |
+
+**41 clean includes all 14 Shakedown Street rows that carry no
+`archive_org_url` at all.** A missing url is not a defect: the player resolves
+those by night, and every one of their nights carries the song. They were the
+most alarming thing in the listing and turned out to be the healthiest.
+
+### Link rot — 12 rows, url nulled
+
+Every one of these names a real, well-taped night (7/7, 8/8, 9/9, 10/10
+carriers) behind a stored identifier that returns `{}`. Nulling the url puts
+them on the same by-night path the Shakedown rows already use, so they gain a
+working tape instead of losing one. Bertha 1971-08-06, Dark Star 1973-11-11 and
+1974-02-24, Eyes of the World 1973-02-09, Here Comes Sunshine 1973-02-09,
+Playing in the Band 1973-11-17, Scarlet Begonias 1974-03-23, Shakedown Street
+1979-12-26, St. Stephen 1971-08-06, Sugaree 1972-05-26, Touch of Grey
+1987-07-10, Uncle John's Band 1970-05-02.
+
+### Fabricated — 9 rows, deleted
+
+No show tape of the named night carries the song, on up to ten tapes each.
+Three of them are the same famous night: **Veneta, 1972-08-27** claims Morning
+Dew, The Other One and Truckin', none of which that show's tapes carry — while
+Bertha, China Cat, Dark Star, Deal, He's Gone, Jack Straw and Sugar Magnolia on
+the *same tape* all verify, so the recording is fine and the claims are not.
+**Terrapin Station at Barton Hall, 1977-05-08** is the same shape: the most
+written-about show the band played, and Terrapin is not on it.
+
+Also deleted: Bertha 1973-02-19, Eyes of the World 1974-02-24, Playing in the
+Band 1974-06-28, Truckin' 1973-11-11, Weather Report Suite 1973-10-19.
+
+Two were referenced, both by the same public setlist — *"Ana Reflections Feels
+and Smiles Smiles Smiles"*, which also held the deleted Bird Song row. Its
+slots were released (`notable_version_id` nulled, song and position kept) and
+the stale playability rows dropped, as before.
+
+### What this leaves
+
+53 versions, 25 of which resolve by night. The rule worth keeping: **a
+`notable_versions` row asserts that a specific song was played on a specific
+night, and nothing in the pipeline has ever checked that assertion.** Any
+future row — hand-written, imported, or model-authored — should be verified
+against the night's tapes before it reaches a reader.
