@@ -712,7 +712,7 @@ const Admin = () => {
                           )}
                         </button>
                       </AlertDialogTrigger>
-                      <AlertDialogContent className="bg-card border-border">
+                      <AlertDialogContent className="bg-card text-card-foreground border-border">
                         <AlertDialogHeader>
                           <AlertDialogTitle className="font-display text-card-foreground">
                             Delete {u.displayName || u.email}?

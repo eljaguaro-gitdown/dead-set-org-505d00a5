@@ -230,7 +230,7 @@ const BuildFromShowDialog = ({ open, onOpenChange, onSeed, initialDate }: BuildF
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) resetAll(); onOpenChange(o); }}>
-      <DialogContent className="bg-card border-border max-w-md">
+      <DialogContent className="bg-card text-card-foreground border-border max-w-md">
         <DialogHeader>
           <DialogTitle className="font-display text-3xl text-card-foreground flex items-center gap-2">
             <Sparkles className="w-6 h-6 text-primary" />

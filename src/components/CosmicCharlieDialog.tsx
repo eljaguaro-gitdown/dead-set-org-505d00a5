@@ -468,7 +468,7 @@ const CosmicCharlieDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="bg-card border-border max-w-lg max-h-[80vh] overflow-y-auto">
+      <DialogContent className="bg-card text-card-foreground border-border max-w-lg max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-center gap-3">
             <CosmicCharlieAvatar size={48} animate />

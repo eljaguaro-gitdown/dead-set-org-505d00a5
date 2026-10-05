@@ -145,7 +145,7 @@ const AuthModal = ({ open, onOpenChange, onAuthenticated, onBeforeRedirect }: Au
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="bg-card border-border rounded-t-2xl max-h-[85vh] overflow-y-auto">
+      <SheetContent side="bottom" className="bg-card text-card-foreground border-border rounded-t-2xl max-h-[85vh] overflow-y-auto">
         <SheetHeader className="text-center pb-2">
           <SheetTitle className="font-display text-2xl text-card-foreground">
             {isSignUp ? "Create your account" : "Welcome back"}
