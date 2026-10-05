@@ -105,7 +105,22 @@ const wrapper = ({ children }: { children: ReactNode }) => (
 
 describe("resolveSlot — a slot that names its night", () => {
   beforeEach(() => {
+    // clearAllMocks resets CALLS but not IMPLEMENTATIONS, so a persistent
+    // mockRejectedValue in one test would leak into the next and make this
+    // file order-dependent. Restore both defaults explicitly.
     vi.clearAllMocks();
+    vi.mocked(findRecordingForDate).mockImplementation(async (_title: string, date: string) => ({
+      url: `https://archive.org/details/gd${date}.sbd`,
+      date,
+      venue: "Nassau Coliseum",
+      directTrackUrl: `https://archive.org/download/gd${date}.sbd/althea.mp3`,
+    }));
+    vi.mocked(findArchiveRecording).mockImplementation(async () => ({
+      url: "https://archive.org/details/gd1989-03-29.WRONG-NIGHT",
+      date: "1989-03-29",
+      venue: "Charlotte Coliseum",
+      directTrackUrl: "https://archive.org/download/WRONG-NIGHT/althea.mp3",
+    }));
     mockPlayabilityRow.mockResolvedValue({ data: null, error: null });
   });
 
@@ -210,6 +225,39 @@ describe("resolveSlot — a slot that names its night", () => {
       await waitFor(() => expect(result.current.playingSlot?.id).toBe("slot-1"));
       expect(result.current.playingSlot?.version?.archive_org_url).toContain("gd1981-03-28");
       expect(result.current.playlistIndex).toBe(1);
+    });
+
+    /**
+     * Why there is no "slot 1's lookup rejects mid-queue" test here: by the
+     * time the queue advances, slot 1 is already bound. Starting the setlist
+     * resolves the next night ahead, so resolveSlot returns at its first
+     * early-exit and never asks the Archive again — an injected rejection is
+     * not consumed and the night plays. The first attempt at this test
+     * asserted slot-2 and got slot-1 for exactly that reason.
+     *
+     * A night can therefore only fail mid-queue if its prefetch ALSO failed,
+     * which is the all-reject case asserted below, and it runs through the
+     * same resolveSlot catch the head-of-queue test already covers. The
+     * invariant worth pinning instead is that advancing does not re-ask for a
+     * night already in hand — that is what keeps the failure unreachable.
+     */
+    it("does not re-ask the Archive for a night the queue already resolved", async () => {
+      const slots = ["1980-05-16", "1981-03-28"].map((d, i) => guideSlot(i, d));
+      const { result } = renderHook(() => useAudioPlayer(), { wrapper });
+
+      await act(async () => {
+        await result.current.playSetlist(slots, "setlist-althea");
+      });
+      await waitFor(() => expect(result.current.playingSlot?.id).toBe("slot-0"));
+
+      const callsBeforeAdvance = vi.mocked(findRecordingForDate).mock.calls.length;
+      await act(async () => {
+        await result.current.advancePlaylist(1);
+      });
+
+      await waitFor(() => expect(result.current.playingSlot?.id).toBe("slot-1"));
+      expect(result.current.playingSlot?.version?.archive_org_url).toContain("gd1981-03-28");
+      expect(vi.mocked(findRecordingForDate).mock.calls.length).toBe(callsBeforeAdvance);
     });
 
     it("does not reject out of playSetlist", async () => {
