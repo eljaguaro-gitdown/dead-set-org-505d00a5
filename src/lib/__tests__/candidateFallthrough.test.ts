@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { findRecordingForDate } from "@/lib/archiveOrg";
+import { findArchiveRecording, findRecordingForDate } from "@/lib/archiveOrg";
 
 /**
  * A night usually has many tapes. The by-date lookup asks for ten, ordered
@@ -114,5 +114,56 @@ describe("walking candidate recordings", () => {
 
     const r = await findRecordingForDate("Scarlet Begonias", "1974-03-23");
     expect(r?.directTrackUrl).toContain("d1t04.flac");
+  });
+
+  /**
+   * The gate killed three mutations this file had missed. A 5xx is a RESOLVED
+   * Response, so "mocks that reject, not just resolve empty" did not actually
+   * cover the commonest production failure: every throwing test above used
+   * mockRejectedValueOnce, and dropping `unreachable++` from the `!metaRes.ok`
+   * branch left all 36 tests green.
+   */
+  it("a 5xx with no match throws — a failure status is not a rejected promise", async () => {
+    vi.stubGlobal("fetch", vi.fn()
+      .mockResolvedValueOnce(search("1977-05-08", "tape-a", "tape-b"))
+      .mockResolvedValueOnce(tape(["Dark Star"]))                     // read, no match
+      .mockResolvedValueOnce(new Response("busy", { status: 503 }))); // never learned
+    await expect(findRecordingForDate("Five Hundred Three Song", "1977-05-08")).rejects.toThrow(/unreadable/i);
+  });
+
+  /**
+   * A band-restricted soundboard streams rather than serving files. Only
+   * derivatives are eligible there; reaching for the lossless original earns a
+   * 403. Nothing sent a restricted item through the BY-NIGHT search before, so
+   * forcing `restricted: false` stayed green.
+   */
+  it("will not reach for the lossless original on a stream-restricted item", async () => {
+    vi.stubGlobal("fetch", vi.fn()
+      .mockResolvedValueOnce(search("1977-05-08", "restricted-sbd"))
+      .mockResolvedValueOnce(json({
+        metadata: { "access-restricted-item": "true" },
+        files: [{ name: "d1t02.flac", title: "Scarlet Begonias", format: "Flac" }],
+      })));
+
+    const r = await findRecordingForDate("Scarlet Begonias", "1977-05-08");
+    expect(r?.directTrackUrl).toBeNull();   // the night, without the forbidden original
+  });
+});
+
+/**
+ * findArchiveRecording's contract is the opposite of its sibling's: every
+ * failure becomes "no tape", cached for the session. That is wrong in
+ * principle and deliberate in practice, and now that its callee can throw,
+ * nothing proved the catch still covered it — the gate made that catch
+ * rethrow and all 408 tests stayed green. Its callers in AudioPlayerContext
+ * and SetlistPoster rely entirely on the swallow.
+ */
+describe("findArchiveRecording keeps swallowing", () => {
+  it("absorbs ArchiveUnreachable rather than letting it reach its callers", async () => {
+    vi.stubGlobal("fetch", vi.fn()
+      .mockResolvedValueOnce(json({ response: { docs: [{ identifier: "tape-a", date: "1973-02-09T00:00:00Z" }] } }))
+      .mockRejectedValueOnce(new TypeError("network down")));
+
+    await expect(findArchiveRecording("Swallowed Song")).resolves.toBeNull();
   });
 });

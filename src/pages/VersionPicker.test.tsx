@@ -47,10 +47,16 @@ vi.mock("@/components/PageLayout", () => ({
 vi.mock("@/components/SiteHeader", () => ({ default: () => <header /> }));
 vi.mock("@/lib/posthog", () => ({ captureEvent: vi.fn() }));
 const findManyArchiveRecordings = vi.fn((..._a: unknown[]) => Promise.resolve([]));
+/** Reconfigurable per test: a night can resolve, miss, or be unaskable. */
+const findRecordingForDate = vi.fn(async (..._a: unknown[]) => null as unknown);
 vi.mock("@/lib/archiveOrg", () => ({
-  findRecordingForDate: vi.fn(async () => null),
+  findRecordingForDate: (...a: unknown[]) => findRecordingForDate(...a),
   findManyArchiveRecordings: (...a: unknown[]) => findManyArchiveRecordings(...a),
 }));
+
+const toastError = vi.fn();
+const toastInfo = vi.fn();
+vi.mock("sonner", () => ({ toast: { error: (m: string) => toastError(m), info: (m: string) => toastInfo(m), success: vi.fn() } }));
 
 const SONGS = [
   { id: "song-1", title: "Shakedown Street", times_played: 165, first_played: "1978-08-31", last_played: "1995-07-06" },
@@ -104,6 +110,10 @@ beforeEach(() => {
   mockUser = null;
   searchParams = new URLSearchParams();
   findManyArchiveRecordings.mockClear();
+  findRecordingForDate.mockReset();
+  findRecordingForDate.mockResolvedValue(null);
+  toastError.mockReset();
+  toastInfo.mockReset();
   setSearchParams.mockReset();
   window.HTMLElement.prototype.scrollIntoView = vi.fn();
 });
@@ -232,5 +242,85 @@ describe("VersionPicker — quiet gems where no poll exists", () => {
     // SONGS/VERSIONS fixtures carry votes, so the archive lookup is pointless.
     await waitFor(() => expect(screen.getByText("Shakedown Street")).toBeInTheDocument());
     expect(findManyArchiveRecordings).not.toHaveBeenCalled();
+  });
+});
+
+/**
+ * findRecordingForDate throws when the Archive could not be ASKED, which is a
+ * different thing from a night with no tape. That throw used to be reachable
+ * only from the search leg; once the metadata leg began counting unreadable
+ * candidates, any one of ten requests could raise it — and this page awaited
+ * it in three places with no guard.
+ *
+ * The worst was playVersion: `setResolving(null)` sat AFTER the await, so a
+ * rejection skipped it and left the button disabled under "Looking for the
+ * tape…" forever, with no toast and an unhandled rejection. A reader tapped
+ * play and the page simply stopped.
+ */
+describe("VersionPicker — when the Archive cannot be asked", () => {
+  const unaskable = () => findRecordingForDate.mockRejectedValue(new Error("archive.org unreadable"));
+
+  /** v2 carries no archive_org_url, so playing it must resolve by night. */
+  const playUnstoredVersion = async () => {
+    await openPage();
+    const buttons = await screen.findAllByRole("button", { name: /play this version/i });
+    const target = buttons[buttons.length - 1];
+    fireEvent.click(target);
+    return target;
+  };
+
+  it("clears the busy state instead of freezing the button", async () => {
+    unaskable();
+    const button = await playUnstoredVersion();
+    await waitFor(() => expect(toastError).toHaveBeenCalled());
+    expect(button).not.toBeDisabled();
+    expect(screen.queryByText(/Looking for the tape/i)).not.toBeInTheDocument();
+  });
+
+  it("says it could not reach the Archive, NOT that no tape circulates", async () => {
+    unaskable();
+    await playUnstoredVersion();
+    await waitFor(() => expect(toastError).toHaveBeenCalledWith(expect.stringMatching(/couldn't reach the archive/i)));
+    // The two are different claims and must never be collapsed.
+    expect(toastInfo).not.toHaveBeenCalledWith(expect.stringMatching(/no tape/i));
+  });
+
+  it("does not try to play anything", async () => {
+    unaskable();
+    await playUnstoredVersion();
+    await waitFor(() => expect(toastError).toHaveBeenCalled());
+    expect(playSingle).not.toHaveBeenCalled();
+  });
+
+  it("still says 'no tape circulates' when the night genuinely has none", async () => {
+    findRecordingForDate.mockResolvedValue(null);
+    await playUnstoredVersion();
+    await waitFor(() => expect(toastInfo).toHaveBeenCalledWith(expect.stringMatching(/no tape/i)));
+    expect(toastError).not.toHaveBeenCalled();
+  });
+
+  /**
+   * The hero is the one-tap path the whole front door points at, and it awaits
+   * the same resolver. Its `finally` always cleared the spinner, so the button
+   * recovered — but the rejection left with nothing said, so the reader tapped
+   * the biggest control on the page and got silence.
+   */
+  it("the hero tap says something when the Archive cannot be asked", async () => {
+    unaskable();
+    await openPage();
+    const hero = await screen.findByRole("button", { name: /^Play Shakedown Street, /i });
+    fireEvent.click(hero);
+    await waitFor(() => expect(toastError).toHaveBeenCalledWith(expect.stringMatching(/couldn't reach the archive/i)));
+    expect(hero).not.toBeDisabled();
+    expect(screen.queryByText(/Finding the tape/i)).not.toBeInTheDocument();
+  });
+
+  it("renders the page even when a milestone night cannot be asked", async () => {
+    unaskable();
+    await openPage();
+    // One rejected night used to reject the whole Promise.all, so setMilestones
+    // never ran and the page silently lost its first/last-played row.
+    expect(await screen.findByText("Shakedown Street")).toBeInTheDocument();
+    expect((await screen.findAllByText(/June 30, 1985/)).length).toBeGreaterThan(0);
   });
 });

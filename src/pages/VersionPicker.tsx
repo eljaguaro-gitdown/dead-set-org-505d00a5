@@ -403,10 +403,20 @@ const VersionPicker = () => {
       const needed = dates.filter(
         (d) => !versions.some((v) => v.show_date?.slice(0, 10) === d.slice(0, 10)),
       );
+      // A lookup that failed is not a night without a tape: keep its date and
+      // claim nothing about it. Catching per date also keeps one bad night
+      // from rejecting the whole Promise.all and losing the milestones that
+      // did resolve — the same shape as SetlistPoster discarding a batch.
+      const unchecked = new Set<string>();
       const found = await Promise.all(
         Array.from(new Set(needed)).map(async (d) => {
-          const tape = await findRecordingForDate(song.title, d);
-          return [d, tape as MilestoneTape | null] as const;
+          try {
+            const tape = await findRecordingForDate(song.title, d);
+            return [d, tape as MilestoneTape | null] as const;
+          } catch {
+            unchecked.add(d);
+            return [d, null] as const;
+          }
         }),
       );
       if (cancelled) return;
@@ -420,6 +430,7 @@ const VersionPicker = () => {
             archiveUrl: v.archive_org_url,
           })),
           new Map(found),
+          unchecked,
         ),
       );
     })();
@@ -526,6 +537,10 @@ const VersionPicker = () => {
       } else {
         toast.info("No tape of this night circulates yet");
       }
+    } catch {
+      // Could not ask the Archive. Say that, not "no tape circulates" — the
+      // whole point of the resolver throwing is that the two are different.
+      toast.error("Couldn't reach the Archive — try again");
     } finally {
       setHeroResolving(false);
     }
@@ -606,9 +621,20 @@ const VersionPicker = () => {
     let url = v.archive_org_url;
     let directTrackUrl: string | null = null;
     if (!url) {
+      // setResolving(null) used to sit after the await, so a rejection skipped
+      // it: the button stayed disabled under "Looking for the tape…" forever,
+      // with no toast and an unhandled rejection. Clearing in `finally` is the
+      // fix; the catch is what tells the reader which kind of failure it was.
       setResolving(v.id);
-      const tape = await findRecordingForDate(song.title, v.show_date);
-      setResolving(null);
+      let tape: Awaited<ReturnType<typeof findRecordingForDate>> = null;
+      try {
+        tape = await findRecordingForDate(song.title, v.show_date);
+      } catch {
+        toast.error("Couldn't reach the Archive — try again");
+        return;
+      } finally {
+        setResolving(null);
+      }
       if (!tape?.url) {
         toast.info("No tape of this night circulates yet");
         return;
