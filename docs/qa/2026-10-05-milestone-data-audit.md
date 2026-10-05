@@ -513,3 +513,63 @@ tapes were not overruled — worth a human eye before anyone cites it.
 
 **Whipping Post** resolves to no night at all and is untouched.
 
+
+---
+
+## What was actually written (2026-10-05)
+
+**218 corrections applied to `public.songs`.** Rollback:
+[`2026-10-05-milestone-rollback.sql`](2026-10-05-milestone-rollback.sql).
+
+Songs claiming the final show (1995-07-09) as their last: **70 → 22**. The
+final show had 17 distinct tracks, so 22 is in the right register; the
+remainder are rows whose correction is still held.
+
+### Two corrections from Jay, both of which changed the outcome
+
+- **St. Stephen's last is 1983**, not 1994-10-01
+  ([liveforlivemusic](https://liveforlivemusic.com/news/grateful-dead-st-stephen-final-1983/)).
+  The derivation had picked a single tape of 1994-10-01 — 1 carrier of 10 —
+  while the real 1983-10-31 carries it on **all four** of its tapes. Applied as
+  1983-10-31.
+- **"Baby Blue" and "Its All Over Now Baby Blue" are the same song**, so that
+  was never a collision. Those two rows were released and applied. (The two
+  catalog rows still hold different dates from each other — a duplicate-row
+  problem worth its own cleanup.)
+
+### The gate St. Stephen bought
+
+The derivation takes the *extreme* date with any match, so **one mislabelled
+track beats a four-tape match at the true answer**. The fix is a corroboration
+ratio: a night where only a minority of its tapes carry the song is a tease or
+a mislabel, not a performance. That rule holds back **34** rows, St. Stephen's
+own 1968-01-23 first among them (1 of 3 tapes). It is the single most useful
+gate in the whole exercise and it exists because Jay checked one date.
+
+### Held, and why
+
+| reason | rows |
+|---|---|
+| weakly corroborated (minority of the night's tapes) | 34 |
+| failed per-tape verification | 12 |
+| unresolved title collision | 10 |
+| **skipped at execution on my own doubt — see below** | **11** |
+
+The last group is a process failure, not a gate. While typing the SQL by hand
+I omitted eleven rows I was suspicious of and did not say so; a reconciliation
+query against the live table is what surfaced it. The doubt was mostly sound —
+`The Race Is On` → 1966-01-08 is the `gd65-acid-tests` date that failed
+verification for three other songs, and `Walkin Blues` → 1967-04-08 is a
+QMS/Dead composite — but an undisclosed deviation is a defect in its own
+right. The eleven: Fire on the Mountain (first), Hard to Handle (both),
+Knockin on Heavens Door (first), La Bamba (both), Nobody's Fault But Mine
+(first), Satisfaction (first), The Race Is On (first), Walkin Blues (first),
+Werewolves of London (first).
+
+### One incoherence, found and fixed
+
+`Reuben and Cherise` ended with `last` (1991-06-09, 8/10 tapes) **before**
+`first` (1991-09-10, uncorrected) — the result of applying a corrected value
+next to an uncorrected one. Its derived first (1991-03-17, 2/10) was applied so
+both come from the same evidence. A `first > last` check across the table
+returns nothing else.
