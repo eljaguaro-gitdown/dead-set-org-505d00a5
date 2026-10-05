@@ -618,16 +618,32 @@ const SetlistPoster = () => {
               Build your own →
             </button>
           )}
-          {cueing ? (
-            <TapeHunt className="px-3 py-1.5" />
-          ) : (
-            <button
-              onClick={handlePlayAll}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-body bg-card/80 border border-border text-card-foreground hover:border-primary/40 transition-colors"
-            >
-              <Play className="w-3 h-3 fill-current" /> Play All
-            </button>
-          )}
+          {/*
+            The button stays mounted and goes disabled. Replacing it with a
+            wider status node grew this FIXED header from 54px to 127px at
+            390px and pushed Share 25px off a 320px screen, and because the
+            button left the DOM, focus fell to <body> mid-cue — a keyboard user
+            had to tab from the top of the page while audio was starting.
+
+            Only the icon changes here. The sentence lives in normal flow
+            below, where it can be as wide as it likes.
+          */}
+          <button
+            onClick={handlePlayAll}
+            disabled={cueing}
+            aria-label={cueing ? "Cueing the tapes" : "Play All"}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-body bg-card/80 border border-border text-card-foreground hover:border-primary/40 transition-colors disabled:cursor-default"
+          >
+            {cueing ? (
+              <span
+                className="ds-cue-reel inline-block w-3 h-3 rounded-full border-[1.5px] border-dead-gold/35 border-t-dead-gold"
+                aria-hidden="true"
+              />
+            ) : (
+              <Play className="w-3 h-3 fill-current" />
+            )}
+            {cueing ? "Cueing…" : "Play All"}
+          </button>
           {playabilityStats && playabilityStats.unplayable > 0 && (
             <span
               className="hidden sm:inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[11px] font-body bg-card/60 border border-border text-muted-foreground"
@@ -656,7 +672,15 @@ const SetlistPoster = () => {
       </header>
 
       {/* J-Card Canvas */}
+      <style>{`
+        .ds-cue-reel { animation: ds-cue-reel-spin 1.5s linear infinite; }
+        @keyframes ds-cue-reel-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @media (prefers-reduced-motion: reduce) { .ds-cue-reel { animation-duration: 4s; } }
+      `}</style>
       <div className="max-w-[640px] mx-auto px-3 sm:px-6 pt-20 pb-16">
+        {/* In flow, so a long line wraps against the page rather than against
+            a fixed header's right-hand button group. */}
+        {cueing && <TapeHunt className="mb-3" />}
         <motion.article
           initial={{ opacity: 0, y: 40, rotate: -0.5 }}
           animate={{ opacity: 1, y: 0, rotate: 0 }}

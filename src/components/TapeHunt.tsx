@@ -41,21 +41,36 @@ const LINE_MS = 2200;
 
 const TapeHunt = ({ className = "" }: { className?: string }) => {
   const [i, setI] = useState(0);
+  const [announced, setAnnounced] = useState("");
 
   useEffect(() => {
     const t = setInterval(() => setI((n) => (n + 1) % LINES.length), LINE_MS);
     return () => clearInterval(t);
   }, []);
 
+  /**
+   * Announce ONCE, and only after mount.
+   *
+   * A live region that is inserted already populated often goes unspoken, and
+   * one that re-announces every 2.2s reads five lines in a ten-second wait —
+   * the rotation is a visual reassurance, not something anyone needs read to
+   * them repeatedly. So the region mounts empty, fills a tick later (which is
+   * what makes it speak), and then holds still while the visible line cycles
+   * behind aria-hidden.
+   */
+  useEffect(() => {
+    const t = setTimeout(() => setAnnounced("Finding the tape."), 60);
+    return () => clearTimeout(t);
+  }, []);
+
   return (
-    <div
-      className={`flex items-center gap-2.5 ${className}`}
-      // One live region, so a screen reader hears the line change rather than
-      // the whole row being re-announced.
-      role="status"
-      aria-live="polite"
-    >
-      <span className="relative inline-flex items-center justify-center shrink-0" style={{ width: 28, height: 28 }}>
+    <div className={`flex items-center gap-2.5 ${className}`}>
+      {/* Decorative: the spoken version is the live region below. */}
+      <span
+        className="relative inline-flex items-center justify-center shrink-0"
+        style={{ width: 28, height: 28 }}
+        aria-hidden="true"
+      >
         {/* The reel: it turns, because a tape really is being found. */}
         <span className="ds-tapehunt__reel absolute inset-0 rounded-full border-2 border-dead-gold/35 border-t-dead-gold" />
         <span className="ds-tapehunt__charlie">
@@ -63,8 +78,15 @@ const TapeHunt = ({ className = "" }: { className?: string }) => {
         </span>
       </span>
 
-      <span className="font-ticket text-[11px] uppercase tracking-[0.1em] text-foreground/85">
+      <span
+        className="font-ticket text-[11px] uppercase tracking-[0.1em] text-foreground/85"
+        aria-hidden="true"
+      >
         {LINES[i]}
+      </span>
+
+      <span className="sr-only" role="status" aria-live="polite">
+        {announced}
       </span>
 
       <style>{`

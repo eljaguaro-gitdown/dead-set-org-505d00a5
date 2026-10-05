@@ -40,8 +40,9 @@ describe("Play All says it is working, and ignores a second tap", () => {
 
     it(`${name} — shows TapeHunt while it waits`, () => {
       expect(src).toContain("TapeHunt");
-      // Rendered off the same flag that guards the tap, so the two cannot drift.
-      expect(src).toMatch(new RegExp(`${state}\\s*\\?[\\s\\S]{0,80}TapeHunt`));
+      // Rendered off the same flag that guards the tap, so the two cannot
+      // drift — either `flag && <TapeHunt` or `flag ? <TapeHunt`.
+      expect(src).toMatch(new RegExp(`${state}\\s*(\\?|&&)[\\s\\S]{0,80}TapeHunt`));
     });
   }
 

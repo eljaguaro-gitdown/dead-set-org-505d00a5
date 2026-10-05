@@ -649,7 +649,16 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const playSetlist = useCallback(async (slots: PlayableSlot[], setlistId?: string) => {
-    if (slots.length === 0) return;
+    if (slots.length === 0) {
+      // Log before returning. This used to be a bare `return`, so pressing Play
+      // All on a setlist whose slots had not loaded produced a debug snapshot
+      // with playbackState "idle" and events: [] — indistinguishable from never
+      // having pressed anything. A reporter cannot tell those apart, and on
+      // 2026-10-05 one copied exactly that snapshot and it cost a round trip to
+      // interpret. Every entry point into playback now leaves a trace.
+      audioDebug.log("context", "playSetlist — nothing to play", { setlistId, count: 0 }, "warn");
+      return;
+    }
     const seq = ++playSetlistSeqRef.current;
     engineSlotIdRef.current = null; // force the engine to (re)anchor on the new setlist
     // Inside the user's tap — unlock audio before async track resolution starts.
