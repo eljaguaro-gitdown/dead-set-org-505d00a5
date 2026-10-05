@@ -413,8 +413,8 @@ const Messages = () => {
         )}
 
         {/* Chat view */}
+        {/* min-h-0 is load-bearing: without it this flex column floors at its content height, grows past the overflow-hidden pane, and the composer disappears. */}
         {showChat && (
-          {/* min-h-0 is load-bearing: without it this flex column floors at its content height, grows past the overflow-hidden pane, and the composer disappears. */}
           <div className="flex-1 min-h-0 flex flex-col bg-background">
             {/* Chat header */}
             <div className="flex items-center gap-3 p-4 border-b border-border bg-card">
