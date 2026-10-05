@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Share2, Copy, Check, Twitter, Facebook, MessageCircle, Smartphone, Instagram } from "lucide-react";
 import { toast } from "sonner";
-import { trackShare } from "@/lib/trackShare";
+import { trackShare, setlistIdFromShareUrl } from "@/lib/trackShare";
 import { shareToInstagram } from "@/lib/instagramShare";
 import { useAuth } from "@/hooks/useAuth";
 import SendToFriendDialog from "./SendToFriendDialog";
@@ -42,6 +42,10 @@ const ShareDropdown = ({ url, ogUrl, title, description }: ShareDropdownProps) =
   // unused — it belongs in <meta property="og:image">, not as the shared link.
   void ogUrl;
   const linkToShare = url;
+  // Derived, not a prop: see setlistIdFromShareUrl. Undefined for non-setlist
+  // share urls such as /songbook/<slug>, which is correct — those are not
+  // setlists and must not be attributed to one.
+  const setlistId = setlistIdFromShareUrl(linkToShare);
   const setlistTitle = title.replace(/\s+—\s+Dead-Set\.Org$/i, "").trim() || title;
   const setlistShareText = description
     ? `${description}\n\n${setlistTitle} on Dead-Set.Org`
@@ -60,7 +64,7 @@ const ShareDropdown = ({ url, ogUrl, title, description }: ShareDropdownProps) =
     }
     setCopied(true);
     toast.success("Link copied!");
-    trackShare({ shareType: "setlist", channel: "copy_link" });
+    trackShare({ shareType: "setlist", channel: "copy_link", setlistId });
     setTimeout(() => { setCopied(false); setOpen(false); }, 1500);
   };
 
@@ -69,14 +73,14 @@ const ShareDropdown = ({ url, ogUrl, title, description }: ShareDropdownProps) =
   const shareTwitter = () => {
     const tweetUrl = `https://x.com/intent/tweet?text=${encodeURIComponent(`${setlistTitle} on Dead-Set.Org`)}&url=${encodeURIComponent(socialUrl)}`;
     window.open(tweetUrl, "_blank", "noopener,noreferrer,width=550,height=420");
-    trackShare({ shareType: "setlist", channel: "twitter" });
+    trackShare({ shareType: "setlist", channel: "twitter", setlistId });
     setOpen(false);
   };
 
   const shareFacebook = () => {
     const fbUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(socialUrl)}`;
     window.open(fbUrl, "_blank", "noopener,noreferrer,width=550,height=420");
-    trackShare({ shareType: "setlist", channel: "facebook" });
+    trackShare({ shareType: "setlist", channel: "facebook", setlistId });
     setOpen(false);
   };
 
@@ -84,7 +88,7 @@ const ShareDropdown = ({ url, ogUrl, title, description }: ShareDropdownProps) =
     if (!navigator.share) return;
     try {
       await navigator.share({ title: setlistTitle, text: setlistShareText, url: linkToShare });
-      trackShare({ shareType: "setlist", channel: "native_share" });
+      trackShare({ shareType: "setlist", channel: "native_share", setlistId });
     } catch {
       // user cancelled — keep menu open so they can pick another option
       return;

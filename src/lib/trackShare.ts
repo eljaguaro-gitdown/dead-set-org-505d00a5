@@ -21,6 +21,30 @@ interface TrackShareOptions {
   metadata?: Record<string, unknown>;
 }
 
+/**
+ * Pull a setlist id out of a canonical share URL.
+ *
+ * `share_events.setlist_id` is what ties a share to the thing shared, and
+ * therefore to the inbound visitors who later land on `/setlist/<id>`. Without
+ * it a share is an unattributable tally mark.
+ *
+ * This DERIVES the id from the url the sharing component already holds rather
+ * than taking it as a prop, because a prop is a thing a caller can forget —
+ * and that is exactly what happened: `ShareFlow` passed `setlistId` on every
+ * channel while `ShareDropdown` passed it on none, so every share through the
+ * dropdown (the one on the save-celebration, the poster and the songbook)
+ * logged `setlist_id: null`. Two share surfaces, one instrumented.
+ *
+ * A url that is not a setlist url (e.g. `/songbook/<slug>`) correctly yields
+ * undefined — it is not a setlist and must not be attributed to one.
+ */
+export const setlistIdFromShareUrl = (url: string): string | undefined => {
+  const match = url.match(
+    /\/setlist\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(?:[/?#]|$)/i,
+  );
+  return match ? match[1].toLowerCase() : undefined;
+};
+
 /** Fire-and-forget share event logger */
 export const trackShare = async ({
   shareType,

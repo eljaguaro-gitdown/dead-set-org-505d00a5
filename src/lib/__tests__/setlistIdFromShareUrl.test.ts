@@ -1,0 +1,80 @@
+import { describe, it, expect } from "vitest";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import { setlistIdFromShareUrl } from "@/lib/trackShare";
+
+const ID = "4b062f5d-eb1c-49a6-b25e-6fd1a495d23e";
+
+describe("setlistIdFromShareUrl", () => {
+  it("pulls the id out of the canonical share url", () => {
+    expect(setlistIdFromShareUrl(`https://dead-set.org/setlist/${ID}`)).toBe(ID);
+  });
+
+  it("tolerates a trailing slash, query string and hash", () => {
+    expect(setlistIdFromShareUrl(`https://dead-set.org/setlist/${ID}/`)).toBe(ID);
+    expect(setlistIdFromShareUrl(`https://dead-set.org/setlist/${ID}?utm_source=x`)).toBe(ID);
+    expect(setlistIdFromShareUrl(`https://dead-set.org/setlist/${ID}#set2`)).toBe(ID);
+  });
+
+  it("lowercases so the same setlist never attributes two ways", () => {
+    expect(setlistIdFromShareUrl(`https://dead-set.org/setlist/${ID.toUpperCase()}`)).toBe(ID);
+  });
+
+  it("returns undefined for a songbook url — it is not a setlist", () => {
+    // SongFeature shares /songbook/<slug>. Attributing that to a setlist id
+    // would be worse than leaving it null.
+    expect(setlistIdFromShareUrl("https://dead-set.org/songbook/ripple")).toBeUndefined();
+  });
+
+  it("returns undefined for the app link and other routes", () => {
+    expect(setlistIdFromShareUrl("https://dead-set.org/")).toBeUndefined();
+    expect(setlistIdFromShareUrl("https://dead-set.org/browse")).toBeUndefined();
+    expect(setlistIdFromShareUrl(`https://dead-set.org/versions/${ID}`)).toBeUndefined();
+  });
+
+  it("refuses a slug or partial id in the setlist position", () => {
+    // A non-uuid there means something changed upstream; guessing is worse
+    // than returning nothing.
+    expect(setlistIdFromShareUrl("https://dead-set.org/setlist/my-cool-show")).toBeUndefined();
+    expect(setlistIdFromShareUrl("https://dead-set.org/setlist/4b062f5d")).toBeUndefined();
+    expect(setlistIdFromShareUrl(`https://dead-set.org/setlist/${ID.slice(0, -1)}`)).toBeUndefined();
+  });
+
+  it("requires the id to end the segment, not merely start it", () => {
+    // Without a trailing boundary the pattern happily reads an id out of a
+    // longer, malformed segment. Verified: dropping the boundary group left
+    // every other assertion green.
+    expect(setlistIdFromShareUrl(`https://dead-set.org/setlist/${ID}extra`)).toBeUndefined();
+    expect(setlistIdFromShareUrl(`https://dead-set.org/setlist/${ID}-copy`)).toBeUndefined();
+  });
+
+  it("does not match a lookalike path segment", () => {
+    expect(setlistIdFromShareUrl(`https://dead-set.org/not-a-setlist/${ID}`)).toBeUndefined();
+  });
+});
+
+describe("every ShareDropdown channel attributes its share", () => {
+  // The defect this guards: ShareFlow passed setlistId on all six channels
+  // while ShareDropdown passed it on none, so a share through the dropdown
+  // logged setlist_id null and could never be tied to the inbound visitors it
+  // produced. One instrumented surface and one silent one is the same shape as
+  // the duplicate archive-notes encoder — so assert the surfaces AGREE.
+  const src = readFileSync(
+    join(__dirname, "..", "..", "components", "ShareDropdown.tsx"),
+    "utf8",
+  );
+  const calls = [...src.matchAll(/trackShare\(\{([^}]*)\}\)/g)].map((m) => m[1]);
+
+  it("found every trackShare call (guards a silently empty match)", () => {
+    expect(calls.length).toBeGreaterThanOrEqual(4);
+  });
+
+  it("passes setlistId on every channel", () => {
+    const missing = calls.filter((c) => !/\bsetlistId\b/.test(c));
+    expect(missing, `channels not attributing: ${missing.join(" | ")}`).toEqual([]);
+  });
+
+  it("derives the id rather than trusting a prop a caller can forget", () => {
+    expect(src).toMatch(/setlistIdFromShareUrl\(/);
+  });
+});
