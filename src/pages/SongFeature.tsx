@@ -173,7 +173,7 @@ const SongFeature = () => {
           {/* ── issue masthead ── */}
           <header className="pb-6 border-b-2 border-dashed border-primary/35 mb-7">
             <p className="font-ticket text-[10px] uppercase tracking-[0.2em] text-primary mb-3">
-              The Songbook · Issue {String(feature.issue_number ?? 1).padStart(3, "0")}
+              The Songbook · Vol. {feature.issue_number ?? 1}
             </p>
             <h1 className="font-header text-4xl md:text-6xl leading-none mb-4">{feature.title}</h1>
             {feature.headline && (

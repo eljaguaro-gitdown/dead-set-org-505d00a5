@@ -1088,7 +1088,7 @@ const VersionPicker = () => {
         {feature && (feature.headline || feature.dek) && (
           <section className="mb-6 p-4 rounded-sm border-l-[3px] border-[hsl(var(--dead-gold))] bg-[hsl(var(--dead-gold)/0.08)]">
             <p className="font-ticket text-[10px] uppercase tracking-[0.18em] text-dead-dark mb-1.5">
-              The Songbook{feature.issue_number != null && ` · Issue ${String(feature.issue_number).padStart(3, "0")}`}
+              The Songbook{feature.issue_number != null && ` · Vol. ${feature.issue_number}`}
             </p>
             {feature.headline && (
               <h2 className="font-header text-xl leading-tight text-card-foreground mb-1.5">{feature.headline}</h2>

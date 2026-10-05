@@ -1111,7 +1111,7 @@ const HeroSection = (_props: HeroSectionProps) => {
               </span>
               <span>
                 {takeover
-                  ? `ISSUE ${String(takeover.issueNumber ?? 1).padStart(3, "0")}`
+                  ? `VOL. ${takeover.issueNumber ?? 1}`
                   : spotlight ? `${spotlight.songCount} SONG${spotlight.songCount === 1 ? "" : "S"}` : "COMMUNITY"}
               </span>
             </div>
@@ -1162,7 +1162,7 @@ const HeroSection = (_props: HeroSectionProps) => {
                 onClick={() => { trackCtaClick("hero_songbook_read", `/songbook/${takeover.slug}`); navigate(`/songbook/${takeover.slug}`); }}
                 className="underline underline-offset-2 hover:text-foreground transition-colors"
               >
-                {isHeroPlaying ? "now read the whole story →" : "the version everybody names — read Issue 001 →"}
+                {isHeroPlaying ? "now read the whole story →" : `the version everybody names — read Vol. ${takeover.issueNumber ?? 1} →`}
               </button>
             ) : (
               isHeroPlaying ? "the music never stops" : "today's featured setlist — built by a fellow head"
