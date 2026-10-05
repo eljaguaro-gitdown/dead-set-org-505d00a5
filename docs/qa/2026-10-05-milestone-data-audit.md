@@ -392,3 +392,40 @@ count is higher, since 27 songs were not in the sample.
 | When Push Comes to Shove | last | 1992-09-17 | **1989-07-17** | 1158d | `gd89-07-17.sbd.unknown.17702.sbeok.shnf` | When Push Comes to Shove |
 | Women Are Smarter | first | 1986-03-19 | **1981-07-07** | 1716d | `gd81-07-07.sbd.miller.30649.sbeok.flacf` | Women Are Smarter |
 | Women Are Smarter | last | 1995-06-25 | **1992-12-12** | 925d | `gd92-12-12.fob-boardman.evans.23220.sbeok.flac` | Women Are Smarter |
+
+---
+
+## Deferred, found while fixing the above (2026-10-05)
+
+### `findManyArchiveRecordings` destroys the distinction at source
+
+Not part of this release and live since before it. The resolver work above
+taught `findRecordingForDate` to tell "could not ask the Archive" from "no
+tape circulates", and fixed the consumers that ignored it. The *other* search
+path never had the distinction to begin with: `findManyArchiveRecordings`
+swallows every failure — both `!res.ok` and a bare `catch` — and returns `[]`.
+
+[`SongVersionBrowser.tsx`](../../src/components/SongVersionBrowser.tsx) then
+prints, on an Archive outage:
+
+- "Nothing from &lt;years&gt; circulating for &lt;song&gt;" (line ~512)
+- "No recordings found on the Archive" (line ~523)
+
+Same false claim as the milestone card, from the opposite direction — there a
+consumer ignored the distinction, here it is erased before any consumer can
+see it. Smallest fix is to rethrow, or return a tri-state, in the `findMany`
+path. Whether `SongVersionBrowser` sits on a live route was not traced.
+
+### The module-level cache is a trap for integration tests
+
+`findRecordingForDate` caches positive results at module scope for the
+session. Any test that drives the *real* resolver more than once per file
+needs `vi.resetModules()` or distinct dates per case — otherwise an earlier
+success is served to a later case that expected a failure. This produced a
+false failure in the gate's own repro, where a 500 case "passed" by playing a
+night an earlier case had cached.
+
+Worth committing a trimmed version of that repro: no test currently joins the
+real resolver to the real picker, which is the exact seam both blocks lived
+in. `VersionPicker.test.tsx` mocks `archiveOrg` wholesale and so cannot see
+that a 503 produces a throw at all.
