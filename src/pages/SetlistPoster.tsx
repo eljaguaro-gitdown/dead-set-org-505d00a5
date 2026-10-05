@@ -413,7 +413,13 @@ const SetlistPoster = () => {
     let unplayable = 0;
     for (const s of slots) {
       const st = playability[s.id];
-      if (st === "unresolved" || st === "error") unplayable++;
+      // Same rule as the per-row badge, and it has to be the same rule: a
+      // count that disagrees with the rows beneath it is worse than either.
+      // A slot that names its night can still resolve at play time, so the
+      // job's verdict on one stored recording does not condemn it.
+      if ((st === "unresolved" || st === "error") && !archiveKeyDate(s.version?.show_date)) {
+        unplayable++;
+      }
     }
     return { total: slots.length, withAudio: slots.length - unplayable, unplayable };
   }, [playability, slots]);
@@ -823,8 +829,26 @@ const SetlistPoster = () => {
                           const slotStatus = playability[slot.id];
                           // Only flag slots the precompute job KNOWS have no audio —
                           // absent rows stay optimistic (may resolve live on play).
+                          //
+                          // A slot that NAMES ITS NIGHT is never declared dead here,
+                          // whatever the job wrote. The job resolves the stored url
+                          // only; the player, since 2026-10-05, falls back to finding
+                          // a recording OF THAT NIGHT that carries the song. So for a
+                          // dated slot the job's verdict is a statement about one
+                          // recording, not about the night, and the player can still
+                          // succeed where the job gave up.
+                          //
+                          // This was not theoretical: a Ripple guide showed "no tape"
+                          // on every row while gd70-08-18 and gd71-04-29 both carry a
+                          // track titled "Ripple". The rows were greyed out and
+                          // labelled dead on the share surface, telling readers not to
+                          // bother with music that plays. A false "no tape" costs more
+                          // than a missing one.
+                          const namesItsNight = !!archiveKeyDate(slot.version?.show_date);
                           const isUnplayable =
-                            (slotStatus === "unresolved" || slotStatus === "error") && !isNowPlaying;
+                            (slotStatus === "unresolved" || slotStatus === "error") &&
+                            !namesItsNight &&
+                            !isNowPlaying;
                           const charSum = slot.id.split("").reduce((a, c) => a + c.charCodeAt(0), 0);
                           const rotation = isNowPlaying ? 0 : ((charSum % 7) - 3) * 0.3;
                           const xShift = isNowPlaying ? 0 : ((charSum % 5) - 2) * 0.5;
