@@ -484,10 +484,17 @@ const VersionPicker = () => {
     unlockAudio();
     setHeroResolving(true);
     try {
-      const url =
-        ftp?.archiveUrl ??
-        (await findRecordingForDate(song.title, song.first_played))?.url ??
-        null;
+      // Keep the whole recording, not just its address. findRecordingForDate
+      // has already located the track inside it; taking only `.url` threw that
+      // away and left the player to re-fetch the same metadata before it could
+      // make a sound — seconds of silence after the tap on a phone, and a
+      // second chance to fail.
+      const tape =
+        (ftp?.archiveUrl
+          ? { url: ftp.archiveUrl, directTrackUrl: ftp.directTrackUrl ?? null }
+          : null) ??
+        (await findRecordingForDate(song.title, song.first_played));
+      const url = tape?.url ?? null;
       if (url) {
         playSingle({
           id: `picker-ftp-${song.id}`,
@@ -505,6 +512,7 @@ const VersionPicker = () => {
           setNumber: 1,
           position: 0,
           segueToNext: false,
+          directTrackUrl: tape?.directTrackUrl ?? null,
         } as PlayableSlot);
         captureEvent("version_picker_played_debut", { song_id: song.id, song_title: song.title });
         capturePlayed("hero_debut", true);
@@ -580,6 +588,7 @@ const VersionPicker = () => {
       setNumber: 1,
       position: 0,
       segueToNext: false,
+      directTrackUrl: m.directTrackUrl ?? null,
     } as PlayableSlot);
     capturePlayed(m.kind === "ftp" ? "milestone_first" : "milestone_last", m.kind === "ftp");
   };
@@ -593,6 +602,7 @@ const VersionPicker = () => {
     if (!song || !v.show_date) return;
     unlockAudio();
     let url = v.archive_org_url;
+    let directTrackUrl: string | null = null;
     if (!url) {
       setResolving(v.id);
       const tape = await findRecordingForDate(song.title, v.show_date);
@@ -602,6 +612,7 @@ const VersionPicker = () => {
         return;
       }
       url = tape.url;
+      directTrackUrl = tape.directTrackUrl ?? null;
     }
     playSingle({
       id: `picker-${song.id}-${v.id}`,
@@ -622,6 +633,7 @@ const VersionPicker = () => {
       setNumber: 1,
       position: 0,
       segueToNext: false,
+      directTrackUrl,
     } as PlayableSlot);
     capturePlayed(origin, false);
   };

@@ -159,3 +159,52 @@ describe("a lookup that failed", () => {
     expect(ltp.source).toBe("archive");
   });
 });
+
+/**
+ * The track url has to survive the trip.
+ *
+ * findRecordingForDate locates the exact playable file inside a recording, but
+ * buildMilestones copied only the recording's address and dropped the track,
+ * and the picker's play paths then took only `.url` as well. So the player was
+ * handed a details page, had to re-fetch the very metadata that had already
+ * been read, and could only make a sound after a second round trip — which on
+ * a phone is seconds of nothing after the tap, and another chance to fail.
+ *
+ * Reported from a phone on 2026-10-05: Bertha's debut, the player bar showing
+ * the right song and the right night, sitting at 0:00 / 0:00.
+ */
+describe("a resolved tape keeps its track url", () => {
+  const song = { title: "Bertha", first_played: "1971-02-18", last_played: "1995-07-09" };
+
+  it("carries directTrackUrl from the lookup onto the milestone", () => {
+    const milestones = buildMilestones(
+      song,
+      [],
+      new Map([
+        ["1971-02-18", {
+          url: "https://archive.org/details/gd71-02-18.sbd.orf.107.sbeok.shnf",
+          venue: "Capitol Theatre",
+          directTrackUrl: "https://archive.org/download/gd71-02-18.sbd.orf.107.sbeok.shnf/gd-1971-02-18-d1-t01.wav.mp3",
+        }],
+      ]),
+    );
+    const debut = milestones.find((m) => m.kind === "ftp");
+    expect(debut?.archiveUrl).toContain("gd71-02-18");
+    // The whole point: not null.
+    expect(debut?.directTrackUrl).toContain("d1-t01.wav.mp3");
+  });
+
+  it("is null, not undefined, when the lookup found only the night", () => {
+    const milestones = buildMilestones(
+      song,
+      [],
+      new Map([["1971-02-18", { url: "https://archive.org/details/x", venue: "Capitol Theatre" }]]),
+    );
+    expect(milestones.find((m) => m.kind === "ftp")?.directTrackUrl).toBeNull();
+  });
+
+  it("is null for a night with no tape at all", () => {
+    const milestones = buildMilestones(song, [], new Map([["1971-02-18", null]]));
+    expect(milestones.find((m) => m.kind === "ftp")?.directTrackUrl).toBeNull();
+  });
+});

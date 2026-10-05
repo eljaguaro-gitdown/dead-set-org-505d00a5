@@ -47,6 +47,12 @@ export interface MilestoneEntry {
   city: string | null;
   /** The circulating recording, when one was found. */
   archiveUrl: string | null;
+  /**
+   * The playable track inside that recording, when the lookup already found
+   * it. Without this the player only gets a details page and has to re-fetch
+   * the same metadata to locate a track we had in hand.
+   */
+  directTrackUrl: string | null;
   /** False when the date is known but no tape of it turned up. */
   tapeFound: boolean;
   /**
@@ -124,6 +130,7 @@ export const buildMilestones = (
         venue: v.venue ?? null,
         city: v.city ?? null,
         archiveUrl: v.archiveUrl ?? null,
+        directTrackUrl: null,
         tapeFound: !!v.archiveUrl,
         source: "list",
         listIndex,
@@ -137,7 +144,11 @@ export const buildMilestones = (
         date,
         venue: tape.venue ?? null,
         city: null,
+        // Carry the resolved track, not just the night. Dropping it here sent
+        // the player a details page and made it re-fetch the same metadata to
+        // find a track we had already located.
         archiveUrl: tape.url,
+        directTrackUrl: tape.directTrackUrl ?? null,
         tapeFound: true,
         source: "archive",
         listIndex: null,
@@ -150,6 +161,7 @@ export const buildMilestones = (
       venue: null,
       city: null,
       archiveUrl: null,
+      directTrackUrl: null,
       tapeFound: false,
       source: unchecked.has(date) ? "unchecked" : "none",
       listIndex: null,
