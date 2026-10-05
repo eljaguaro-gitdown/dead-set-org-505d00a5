@@ -718,7 +718,6 @@ Deno.serve(async (req) => {
     const { data: songRows } = await supabase.from("songs").select("id,title");
     const songs: Array<{ id: string; title: string }> = songRows || [];
 
-    const yr = parseInt(date.slice(0, 4), 10);
     const tracksWithIds: Array<ParsedTrack & { songId: string | null; matched: boolean }> = [];
     for (const t of tracks) {
       if (SKIP_TITLES.test(t.rawTitle.trim())) {
@@ -739,8 +738,12 @@ Deno.serve(async (req) => {
           .from("songs")
           .insert({
             title: cleanTitle,
-            first_played: String(yr),
-            last_played: String(yr),
+            // `date` is the night itself, validated ^\d{4}-\d{2}-\d{2}$ above.
+            // This used to store String(yr) — a bare year — which songs.first_played
+            // accepted while it was text. It is `date` now, so the insert both
+            // satisfies the column and records the night rather than the year.
+            first_played: date,
+            last_played: date,
             times_played: 1,
           })
           .select("id,title")
