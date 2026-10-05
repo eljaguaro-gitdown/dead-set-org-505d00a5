@@ -16,6 +16,7 @@ import DancingBear from "@/components/DancingBear";
 import ShareDropdown from "@/components/ShareDropdown";
 import ShareFlow from "@/components/ShareFlow";
 import ShowPlate from "@/components/ShowPlate";
+import TapeHunt from "@/components/TapeHunt";
 import { toast } from "sonner";
 import { archiveKey, archiveKeyDate, findArchiveRecordings, findRecordingForDate, matchScore, type ArchiveResult } from "@/lib/archiveOrg";
 import { useFavoriteSongs } from "@/hooks/useFavoriteSongs";
@@ -499,9 +500,26 @@ const SetlistPoster = () => {
     playSingle(buildPlayableSlot(slot), { slots: allPlayable, setlistId: id ?? null });
   };
 
+  /**
+   * Cueing a guide means resolving each night against the Archive, which on a
+   * phone is seconds. Until 2026-10-05 nothing on screen said so, and the
+   * second tap people reasonably gave it made things WORSE: playSetlist bumps
+   * a sequence number and abandons any run whose number is stale, so tapping
+   * again discarded the work in flight and restarted the wait.
+   *
+   * The guard is the fix; TapeHunt is how the guard explains itself.
+   */
+  const [cueing, setCueing] = useState(false);
+
   const handlePlayAll = async () => {
-    const playable = slots.map(buildPlayableSlot);
-    await globalPlaySetlist(playable, id);
+    if (cueing) return;
+    setCueing(true);
+    try {
+      const playable = slots.map(buildPlayableSlot);
+      await globalPlaySetlist(playable, id);
+    } finally {
+      setCueing(false);
+    }
   };
 
   const setGroups = [
@@ -600,12 +618,16 @@ const SetlistPoster = () => {
               Build your own →
             </button>
           )}
-          <button
-            onClick={handlePlayAll}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-body bg-card/80 border border-border text-card-foreground hover:border-primary/40 transition-colors"
-          >
-            <Play className="w-3 h-3 fill-current" /> Play All
-          </button>
+          {cueing ? (
+            <TapeHunt className="px-3 py-1.5" />
+          ) : (
+            <button
+              onClick={handlePlayAll}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-body bg-card/80 border border-border text-card-foreground hover:border-primary/40 transition-colors"
+            >
+              <Play className="w-3 h-3 fill-current" /> Play All
+            </button>
+          )}
           {playabilityStats && playabilityStats.unplayable > 0 && (
             <span
               className="hidden sm:inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[11px] font-body bg-card/60 border border-border text-muted-foreground"

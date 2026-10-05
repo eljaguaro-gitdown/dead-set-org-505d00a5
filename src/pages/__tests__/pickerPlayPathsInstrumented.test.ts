@@ -48,9 +48,12 @@ describe("every play path on the picker reports a play", () => {
   const audioHandlers = all.filter((h) => count(h.body, STARTS_AUDIO) > 0);
 
   it("finds the handlers at all (so the test cannot pass vacuously)", () => {
-    // playHero, playMilestone, playVersion, playAll.
+    // playHero, playMilestone, playVersion, and playAllInner — `playAll` is
+    // now the guarded wrapper that bails while a queue is already cueing, and
+    // the audio call lives in playAllInner. Naming them explicitly is what
+    // stops this file passing when a rename hides a handler from the scan.
     expect(audioHandlers.map((h) => h.name).sort()).toEqual(
-      ["playAll", "playHero", "playMilestone", "playVersion"],
+      ["playAllInner", "playHero", "playMilestone", "playVersion"],
     );
   });
 

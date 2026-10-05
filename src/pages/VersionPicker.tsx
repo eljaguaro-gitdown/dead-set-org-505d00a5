@@ -50,6 +50,7 @@ import {
   type MilestoneTape,
 } from "@/lib/firstLastPlayed";
 import { buildGuideSongs } from "@/lib/listeningGuide";
+import TapeHunt from "@/components/TapeHunt";
 import { captureEvent } from "@/lib/posthog";
 
 /** Which control started the audio — one per play path on this page. */
@@ -448,6 +449,7 @@ const VersionPicker = () => {
     : (topVersion?.venue ?? null);
   const heroCity = heroIsDebut ? (ftp?.city ?? null) : (topVersion?.city ?? null);
   const [heroResolving, setHeroResolving] = useState(false);
+  const [cueingAll, setCueingAll] = useState(false);
 
   /**
    * Every way a visitor can start audio on this page reports the same event.
@@ -640,6 +642,22 @@ const VersionPicker = () => {
 
   /** Everything on screen, in order, as one queue. */
   const playAll = async () => {
+    if (!song || cueingAll) return;
+    setCueingAll(true);
+    try {
+      await playAllInner();
+    } finally {
+      setCueingAll(false);
+    }
+  };
+
+  /**
+   * Cueing a queue costs one Archive round trip per night, so it is seconds on
+   * a phone. playSetlist abandons any run whose sequence number has been
+   * bumped, which makes an impatient second tap restart the wait rather than
+   * shorten it — so the tap is guarded and TapeHunt says why.
+   */
+  const playAllInner = async () => {
     if (!song) return;
     unlockAudio();
     const withTape = shown.filter((v) => v.archive_org_url && v.show_date);
@@ -1161,13 +1179,17 @@ const VersionPicker = () => {
               aren't random picks — they just never became the ones everybody names.
             </p>
             <div className="flex items-center gap-3 flex-wrap">
-              <button
-                type="button"
-                onClick={() => { setSleepersOnly(true); void playAll(); }}
-                className="font-ticket text-[11px] uppercase tracking-[0.1em] px-4 py-2.5 rounded-sm bg-primary text-primary-foreground hover:opacity-90 active:opacity-80 transition-opacity"
-              >
-                ▶ Play the {theSleepers.length} sleepers
-              </button>
+              {cueingAll ? (
+                <TapeHunt className="px-4 py-2.5" />
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => { setSleepersOnly(true); void playAll(); }}
+                  className="font-ticket text-[11px] uppercase tracking-[0.1em] px-4 py-2.5 rounded-sm bg-primary text-primary-foreground hover:opacity-90 active:opacity-80 transition-opacity"
+                >
+                  ▶ Play the {theSleepers.length} sleepers
+                </button>
+              )}
               <button
                 type="button"
                 onClick={() => setSleepersOnly(false)}
