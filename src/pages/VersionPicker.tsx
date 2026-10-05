@@ -663,6 +663,10 @@ const VersionPicker = () => {
         setNumber: 1,
         position: i,
         segueToNext: false,
+        // These come from the catalog with a night and no track; the player
+        // resolves each one. Stated rather than omitted so the invariant test
+        // can tell "no track known" from "track forgotten".
+        directTrackUrl: null,
       })) as PlayableSlot[],
     );
     capturePlayed("play_all", false, withTape.length);

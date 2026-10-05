@@ -1022,6 +1022,8 @@ const CosmicCharlieDialog = ({
                               setNumber: 1,
                               position: i,
                               segueToNext: false,
+                              // Charlie's picks name a night, never a track.
+                              directTrackUrl: null,
                             };
                             playSingle(slot);
                           }}
@@ -1274,6 +1276,9 @@ const MilestoneCard = ({
               setNumber: 1,
               position: 0,
               segueToNext: false,
+              // The milestone already resolved this track; passing it spares
+              // the player a second fetch of metadata we have already read.
+              directTrackUrl: m.directTrackUrl ?? null,
             })
           }
         >
