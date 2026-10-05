@@ -103,4 +103,19 @@ describe("every ShareDropdown channel attributes its share", () => {
   it("derives the id rather than trusting a prop a caller can forget", () => {
     expect(src).toMatch(/setlistIdFromShareUrl\(/);
   });
+
+  it("forwards setlistId to the DM dialog it renders", () => {
+    // Found on live traffic, not by this suite: a share through the in-app DM
+    // logged setlist_id NULL while ShareFlow's identical dialog logged it fine.
+    // SendToFriendDialog passes `setlistId` to trackShare correctly — the id was
+    // undefined because ShareDropdown never handed it the PROP. Scanning
+    // trackShare calls in this file cannot see that, because the call lives in
+    // the child. Same ShareFlow-vs-ShareDropdown asymmetry as the four direct
+    // channels; I fixed four paths of five.
+    const render = src.match(/<SendToFriendDialog[\s\S]*?\/>/);
+    expect(render, "SendToFriendDialog is not rendered here any more").not.toBeNull();
+    // Not merely `setlistId={` — `setlistId={undefined}` satisfies that and
+    // reinstates the exact defect. Verified: the loose form survived it.
+    expect(render![0]).toMatch(/setlistId=\{(?!\s*(?:undefined|null)\s*\})/);
+  });
 });

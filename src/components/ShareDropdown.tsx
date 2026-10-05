@@ -171,6 +171,7 @@ const ShareDropdown = ({ url, ogUrl, title, description }: ShareDropdownProps) =
           onOpenChange={setDmOpen}
           shareUrl={url}
           shareText={setlistShareText}
+          setlistId={setlistId}
         />
       )}
     </div>
