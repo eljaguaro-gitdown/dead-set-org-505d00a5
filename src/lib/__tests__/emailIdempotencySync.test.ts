@@ -135,6 +135,41 @@ describe("the sender actually enforces the key it is handed", () => {
   });
 
   it("skips the send when the claim comes back already-held", () => {
+    // Greping for the string only proves the string is present. The gate
+    // changed `claimed === false` to `claimed === 'never'` — which can never be
+    // true, so nothing is ever suppressed — and this test stayed green. Pin the
+    // comparison, not the label.
     expect(sender).toMatch(/duplicate_suppressed/);
+    expect(sender).toMatch(/claimed\s*===\s*false/);
+  });
+
+  it("hands the key back when the send does not happen", () => {
+    // Claiming must precede the render and the enqueue or two paths could both
+    // get through — but that means a render throw or an enqueue error leaves a
+    // key claimed for a message nobody sent, and the redundant signup paths
+    // then retry into duplicate_suppressed and lose the welcome email for good.
+    expect(sender).toMatch(/releaseIdempotency/);
+    const release = sender.indexOf("const releaseIdempotency");
+    expect(release, "releaseIdempotency not defined").toBeGreaterThan(-1);
+    // Both failure exits must hand the key back. Scoped to the enqueue-error
+    // BLOCK, not merely "somewhere before it": searching the whole prefix found
+    // the render path's release and stayed green when the enqueue one was
+    // deleted. Verified by deleting exactly that line.
+    const blockStart = sender.indexOf("if (enqueueError) {");
+    expect(blockStart, "enqueue-error block not found").toBeGreaterThan(-1);
+    // Anchor on the 500 RETURN, not the first mention of the phrase — it also
+    // appears in the console.error and the log row two lines in, which made the
+    // slice two lines long and the assertion vacuous.
+    const enqueueReturn = sender.indexOf(
+      "return new Response(JSON.stringify({ error: 'Failed to enqueue email' })",
+      blockStart,
+    );
+    expect(enqueueReturn, "enqueue-error 500 return not found").toBeGreaterThan(-1);
+    const enqueueBlock = sender.slice(blockStart, enqueueReturn);
+    expect(
+      enqueueBlock,
+      "the enqueue-failure path does not release the idempotency key",
+    ).toMatch(/await releaseIdempotency\(\)/);
+    expect(sender).toMatch(/catch \(renderError\)[\s\S]{0,200}releaseIdempotency/);
   });
 });

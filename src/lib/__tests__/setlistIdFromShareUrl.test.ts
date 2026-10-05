@@ -63,7 +63,33 @@ describe("every ShareDropdown channel attributes its share", () => {
     join(__dirname, "..", "..", "components", "ShareDropdown.tsx"),
     "utf8",
   );
-  const calls = [...src.matchAll(/trackShare\(\{([^}]*)\}\)/g)].map((m) => m[1]);
+  /**
+   * Brace-counted, not regex-matched. `/trackShare\(\{([^}]*)\}\)/` stops at the
+   * FIRST closing brace, so a call carrying a nested object —
+   * `trackShare({ channel: "x", metadata: { a: 1 } })` — does not match at all
+   * and silently drops out of the sweep. The 2026-10-05 gate added exactly such
+   * a call with no setlistId and every test stayed green. `shareSong.ts` and
+   * `instagramShare.ts` already pass `metadata`, so this is the shape the next
+   * edit is most likely to use.
+   */
+  const callArgs = (source: string): string[] => {
+    const out: string[] = [];
+    const needle = "trackShare(";
+    for (let i = source.indexOf(needle); i !== -1; i = source.indexOf(needle, i + 1)) {
+      let depth = 0;
+      for (let j = i + needle.length; j < source.length; j++) {
+        const c = source[j];
+        if (c === "(" || c === "{") depth++;
+        else if (c === "}") depth--;
+        else if (c === ")") {
+          if (depth === 0) { out.push(source.slice(i + needle.length, j)); break; }
+          depth--;
+        }
+      }
+    }
+    return out;
+  };
+  const calls = callArgs(src);
 
   it("found every trackShare call (guards a silently empty match)", () => {
     expect(calls.length).toBeGreaterThanOrEqual(4);

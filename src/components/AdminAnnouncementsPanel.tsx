@@ -88,6 +88,9 @@ const AdminAnnouncementsPanel = () => {
     setCtaUrl(a.cta_url || "");
   };
 
+  /** The row currently loaded for editing, if any. */
+  const editingRow = editingId ? list.find((a) => a.id === editingId) ?? null : null;
+
   const clearComposer = () => {
     setEditingId(null);
     setTitle("");
@@ -175,15 +178,30 @@ const AdminAnnouncementsPanel = () => {
             </button>
           )}
           {/* Saving without sending is the whole point of a draft: the words
-              the trigger generated can be rewritten and left unpublished. */}
+              the trigger generated can be rewritten and left unpublished.
+
+              But the same button on an already-published row RETRACTS it —
+              published goes false and it stops showing to everyone. That is a
+              real thing to want and a terrible thing to do by accident, so the
+              label states the consequence instead of hiding it behind the word
+              "draft". Found by the 2026-10-05 pre-release gate. */}
           <Button
             variant="outline"
             onClick={() => handleSubmit(false)}
             disabled={submitting || !title.trim() || !body.trim()}
             className="font-mono text-xs tracking-wider uppercase gap-2"
+            title={
+              editingRow?.published
+                ? "Stops showing this to users and saves your edits"
+                : "Saves without sending anything"
+            }
           >
             <FileText className="w-3.5 h-3.5" />
-            {submitting ? "Saving…" : "Save draft"}
+            {submitting
+              ? "Saving…"
+              : editingRow?.published
+                ? "Unpublish & save"
+                : "Save draft"}
           </Button>
           <Button
             onClick={() => handleSubmit(true)}
@@ -219,7 +237,7 @@ const AdminAnnouncementsPanel = () => {
                       <h4 className="font-display text-sm text-card-foreground">{a.title}</h4>
                       {!a.published && (
                         <span className="font-mono text-[9px] text-muted-foreground tracking-wider uppercase border border-border rounded px-1.5 py-0.5">
-                          Draft — not sent
+                          Not published
                         </span>
                       )}
                     </div>

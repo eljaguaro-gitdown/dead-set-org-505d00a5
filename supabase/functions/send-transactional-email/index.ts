@@ -295,6 +295,34 @@ Deno.serve(async (req) => {
     )
   }
 
+  /**
+   * Hand the key back when the send did NOT happen.
+   *
+   * Claiming has to come BEFORE the render and the enqueue, or two paths
+   * racing could both get through. But that ordering means a render throw or
+   * an enqueue error leaves the key claimed for a message nobody sent — and
+   * because the signup flow's three redundant paths all retry with the SAME
+   * key, every retry then gets duplicate_suppressed and the new Deadhead's
+   * welcome email is lost silently and permanently. That is the exact failure
+   * the redundancy exists to prevent, and the inverse of this gate's stated
+   * fail-open intent. Found by the 2026-10-05 pre-release gate.
+   *
+   * Releasing is best-effort: if the delete fails the worst case is the old
+   * behaviour, so it must never mask the original error.
+   */
+  const releaseIdempotency = async () => {
+    if (!explicitIdempotencyKey) return
+    const { error } = await supabase
+      .from('email_idempotency')
+      .delete()
+      .eq('idempotency_key', explicitIdempotencyKey)
+    if (error) {
+      console.error('Failed to release idempotency key after a failed send', {
+        error, idempotencyKey: explicitIdempotencyKey, templateName,
+      })
+    }
+  }
+
   // 3b. Idempotency gate.
   // Several paths deliberately fire the same message with the same key so that
   // one failing path cannot drop a transactional email: the signup flow runs
@@ -343,13 +371,23 @@ Deno.serve(async (req) => {
   }
 
   // 4. Render React Email template to HTML and plain text
-  const html = await renderAsync(
-    React.createElement(template.component, templateData)
-  )
-  const plainText = await renderAsync(
-    React.createElement(template.component, templateData),
-    { plainText: true }
-  )
+  let html: string
+  let plainText: string
+  try {
+    html = await renderAsync(React.createElement(template.component, templateData))
+    plainText = await renderAsync(
+      React.createElement(template.component, templateData),
+      { plainText: true }
+    )
+  } catch (renderError) {
+    // Nothing was sent, so the key must not stay claimed.
+    await releaseIdempotency()
+    console.error('Failed to render template', { error: renderError, templateName })
+    return new Response(JSON.stringify({ error: 'Failed to render email template' }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })
+  }
 
   // Resolve subject — supports static string or dynamic function
   const resolvedSubject =
@@ -402,6 +440,9 @@ Deno.serve(async (req) => {
       error_message: 'Failed to enqueue email',
     })
 
+    // The mail is not queued, so this key is free again — otherwise the
+    // retry that the redundant signup paths provide is silently swallowed.
+    await releaseIdempotency()
     return new Response(JSON.stringify({ error: 'Failed to enqueue email' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
