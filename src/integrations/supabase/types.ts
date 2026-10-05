@@ -608,6 +608,27 @@ export type Database = {
         }
         Relationships: []
       }
+      email_idempotency: {
+        Row: {
+          claimed_at: string
+          idempotency_key: string
+          recipient_email: string | null
+          template_name: string | null
+        }
+        Insert: {
+          claimed_at?: string
+          idempotency_key: string
+          recipient_email?: string | null
+          template_name?: string | null
+        }
+        Update: {
+          claimed_at?: string
+          idempotency_key?: string
+          recipient_email?: string | null
+          template_name?: string | null
+        }
+        Relationships: []
+      }
       email_send_log: {
         Row: {
           created_at: string
@@ -1881,6 +1902,14 @@ export type Database = {
       }
     }
     Functions: {
+      claim_email_idempotency: {
+        Args: {
+          _key: string
+          _recipient_email?: string
+          _template_name?: string
+        }
+        Returns: boolean
+      }
       cleanup_expired_drafts: { Args: never; Returns: number }
       delete_email: {
         Args: { message_id: number; queue_name: string }
