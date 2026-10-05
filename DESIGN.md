@@ -24,10 +24,18 @@ clarity (data). The tension between the ornate header and the typewriter data
 
 | Role | Font | Why |
 |---|---|---|
-| **Titles / Logos** | `UnifrakturMaguntia` | Intricate, dense, "magical" — the quasi-gothic flair of 60s concert hand-lettering. Hero titles + playlist names. |
+| **Titles / Logos** | `UnifrakturMaguntia` | Intricate, dense, "magical" — the quasi-gothic flair of 60s concert hand-lettering. The wordmark and playlist names. **Not page mastheads** — see below. |
 | **Section Headers** | `Sancreek` | Wild-west / Victorian, tactile, perfectly imperfect — early Dead promo art. Era-specific section dividers. |
 | **Setlist / Ticket Data** | `Special Elite` | The "ticket stub" workhorse — a vintage typewriter / manual press. Grounds the psychedelia in archival reality. |
 | **UI / Navigation** | `IBM Plex Mono` | Clean, technical, slightly human — long track lists and search results without looking like a sterile modern app. |
+
+**Masthead rule (added 2026-10-05):** a page masthead takes `Sancreek`, not
+the blackletter. `/songbook` read "Titles / Logos" literally and set **The
+Songbook** in `UnifrakturMaguntia`, which made it the only blackletter on a
+page whose every issue title is Sancreek, and at 60px the dense gothic is
+genuinely hard to read. The intent of the row above is ornate-over-
+utilitarian, and Sancreek satisfies it. Reserve the blackletter for the
+wordmark and for playlist names, where it is short and expected.
 
 **Priority rule:** Always use `Special Elite` for any element representing a
 physical record, ticket, or archive document. Use `IBM Plex Mono` for
