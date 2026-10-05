@@ -1678,6 +1678,7 @@ export type Database = {
           id: string
           is_jam_vehicle: boolean | null
           last_played: string | null
+          stats_source: string | null
           tags: string[] | null
           times_played: number | null
           title: string
@@ -1690,6 +1691,7 @@ export type Database = {
           id?: string
           is_jam_vehicle?: boolean | null
           last_played?: string | null
+          stats_source?: string | null
           tags?: string[] | null
           times_played?: number | null
           title: string
@@ -1702,6 +1704,7 @@ export type Database = {
           id?: string
           is_jam_vehicle?: boolean | null
           last_played?: string | null
+          stats_source?: string | null
           tags?: string[] | null
           times_played?: number | null
           title?: string
