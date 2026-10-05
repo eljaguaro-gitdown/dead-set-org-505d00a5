@@ -7,7 +7,7 @@
 **Success metrics:** saves, bio-link taps, DM conversations. Never follower count.
 
 **Bio link for the next few days:**
-`https://dead-set.org/versions/shakedown-street?ref=instagram-bio&utm_source=instagram`
+`https://dead-set.org/?ref=instagram-bio&utm_source=instagram`
 (slug confirmed from `songSlug("Shakedown Street")` in `src/lib/__tests__/songSlug.test.ts`). Please confirm the tag is in the profile settings before posting.
 
 ---
@@ -70,7 +70,7 @@ Wake. Now. Discover.
 ```
 
 If you want a clickable path in the comments, the link goes in the same comment, tagged for the post:
-`https://dead-set.org/versions/shakedown-street?ref=instagram-post&utm_source=instagram`
+`https://dead-set.org/?ref=instagram-post&utm_source=instagram`
 
 ---
 
@@ -167,7 +167,7 @@ Left out on purpose: #deadandcompany (a different era and a different crowd than
 5. **The /versions/ page carries no Archive credit.** The caption body and slide 5 supply it. Nothing in the post says the page credits the Archive, so the post does not overstate the page. Worth a ticket for a credit line on the page itself; I do not touch `src/`.
 6. **headyversion is named in the caption.** For Shakedown the ranking is sourced from headyversion votes per the migration. On the page that source is visible only inside the collapsed "the arithmetic" disclosure. Confirm you are happy naming them, and consider letting them know. This is a courtesy, not a legal question. Nothing in this post touches the Archive relationship beyond credit, so I have not escalated anything.
 7. **Alt text is unverified against images.** Slides 1 to 4 are described from the page's code and labels, not from your captures. Instagram's own alt-text length limit is something I could not confirm; each block is kept short (about 60 words) in case.
-8. **Experiment window.** The front door has a review date of 2026-10-18 (`docs/releases/2026-10-04-song-first-front-door.md`). This post sends traffic straight onto /versions/ and will lift "reached the picker" without the landing page having done the work. The `ref=instagram-bio` and `ref=instagram-post` tags are what let the growth review separate it. Please keep them on.
+8. **Experiment window — DESTINATION CHANGED, and this note is why.** The front door has a review date of 2026-10-18 (`docs/releases/2026-10-04-song-first-front-door.md`). An earlier version of this brief sent traffic straight to `/versions/shakedown-street`, which would have lifted "reached the picker" without the landing page having done any of the work — measuring past the very thing under test. **Jay's call, adopted: the link goes to the front page**, `https://dead-set.org/?ref=instagram-bio&utm_source=instagram`. The landing search field already reads "Dark Star, Shakedown Street…", so a reader arriving from a Shakedown post is met with Shakedown suggested in the box and message match survives. Expect a lower absolute count at the picker than a deep link would have produced — that gap IS the front-door measurement, not a loss. The `ref=instagram-bio` and `ref=instagram-post` tags are what let the growth review separate this cohort. Please keep them on.
 9. **Hashtags** are not checked against live counts (see above).
 10. **File location.** You asked for `docs/community/`; my usual home for briefs is `community/briefs/`. Move it if you want it alongside the others.
 
