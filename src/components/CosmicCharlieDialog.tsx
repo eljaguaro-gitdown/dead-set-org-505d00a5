@@ -1003,7 +1003,21 @@ const CosmicCharlieDialog = ({
                       {milestoneForIndex(i) && <MilestoneChip kind={milestoneForIndex(i)!.kind} />}
                     </div>
                     <p className="text-xs text-foreground/80 font-body leading-relaxed">{v.whyThisVersion}</p>
-                    {v.archiveUrl && (
+                    {/*
+                      Play follows the NIGHT, not a stored url. ai-deadhead no
+                      longer takes Charlie's own archiveUrl — it was a free-text
+                      string the model filled in, and it pointed at recordings
+                      nobody had opened — so for any song with no catalog rows
+                      (232 of 234) this is null. Gating Play on it would have
+                      taken the button off almost every card the moment that
+                      function deployed. resolveSlot resolves a named night by
+                      date and only answers with a recording it has read and
+                      found the song inside, so a date is all Play needs.
+
+                      The Archive link still needs a real url, so it keeps its
+                      own guard below.
+                    */}
+                    {(v.archiveUrl || v.showDate) && (
                       <div className="flex items-center gap-2">
                         <Button
                           variant="outline"
@@ -1016,7 +1030,7 @@ const CosmicCharlieDialog = ({
                               version: {
                                 ...SYNTHETIC_VERSION_DEFAULTS,
                                 id: "", song_id: "", show_date: v.showDate,
-                                archive_org_url: v.archiveUrl!, venue: v.venue,
+                                archive_org_url: v.archiveUrl ?? null, venue: v.venue,
                                 city: v.city, era_id: null, rating: v.rating, description: v.description,
                               },
                               setNumber: 1,
@@ -1030,7 +1044,9 @@ const CosmicCharlieDialog = ({
                         >
                           <Play className="w-3 h-3 fill-current" /> Play this version
                         </Button>
-                        <a href={v.archiveUrl} target="_blank" rel="noopener noreferrer" className="text-[10px] text-foreground/75 hover:text-dead-gold hover:underline font-body">Archive.org ↗</a>
+                        {v.archiveUrl && (
+                          <a href={v.archiveUrl} target="_blank" rel="noopener noreferrer" className="text-[10px] text-foreground/75 hover:text-dead-gold hover:underline font-body">Archive.org ↗</a>
+                        )}
                       </div>
                     )}
                   </div>
