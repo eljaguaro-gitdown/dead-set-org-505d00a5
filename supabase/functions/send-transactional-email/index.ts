@@ -57,6 +57,7 @@ Deno.serve(async (req) => {
   let templateName: string
   let recipientEmail: string
   let idempotencyKey: string
+  let explicitIdempotencyKey: string | null
   let messageId: string
   let templateData: Record<string, any> = {}
   try {
@@ -64,7 +65,8 @@ Deno.serve(async (req) => {
     templateName = body.templateName || body.template_name
     recipientEmail = body.recipientEmail || body.recipient_email
     messageId = crypto.randomUUID()
-    idempotencyKey = body.idempotencyKey || body.idempotency_key || messageId
+    explicitIdempotencyKey = body.idempotencyKey || body.idempotency_key || null
+    idempotencyKey = explicitIdempotencyKey || messageId
     if (body.templateData && typeof body.templateData === 'object') {
       templateData = body.templateData
     }
@@ -291,6 +293,53 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
     )
+  }
+
+  // 3b. Idempotency gate.
+  // Several paths deliberately fire the same message with the same key so that
+  // one failing path cannot drop a transactional email: the signup flow runs
+  // from the handle_new_user_emails trigger, the useAuth client backfill AND
+  // AuthModal. That redundancy is intentional, but exactly one of them may
+  // actually send. The claim is atomic in postgres (INSERT ... ON CONFLICT DO
+  // NOTHING behind claim_email_idempotency), so two paths racing cannot both
+  // win -- which a check-then-send in this function could not guarantee.
+  //
+  // Only an explicit caller-supplied key is claimed. No key means no dedupe.
+  //
+  // This FAILS OPEN on purpose: if the claim errors we send anyway and log
+  // loudly. A duplicate welcome is a smaller harm than silently dropping a new
+  // Deadhead's only welcome, which is the very failure the redundant paths
+  // exist to prevent.
+  if (explicitIdempotencyKey) {
+    const { data: claimed, error: claimError } = await supabase.rpc(
+      'claim_email_idempotency',
+      {
+        _key: explicitIdempotencyKey,
+        _template_name: templateName,
+        _recipient_email: effectiveRecipient,
+      }
+    )
+
+    if (claimError) {
+      console.error('Idempotency claim failed -- sending anyway (fail open)', {
+        error: claimError,
+        idempotencyKey: explicitIdempotencyKey,
+        templateName,
+      })
+    } else if (claimed === false) {
+      console.log('Duplicate suppressed by idempotency key', {
+        idempotencyKey: explicitIdempotencyKey,
+        templateName,
+        recipientEmail: effectiveRecipient,
+      })
+      return new Response(
+        JSON.stringify({ success: true, reason: 'duplicate_suppressed' }),
+        {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      )
+    }
   }
 
   // 4. Render React Email template to HTML and plain text
