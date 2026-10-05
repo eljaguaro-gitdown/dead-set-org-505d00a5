@@ -573,3 +573,33 @@ Werewolves of London (first).
 next to an uncorrected one. Its derived first (1991-03-17, 2/10) was applied so
 both come from the same evidence. A `first > last` check across the table
 returns nothing else.
+
+### The Bird Song catalog version, deleted 2026-10-05
+
+`notable_versions` row `8ee2821a-d813-4ef5-a663-66a549c60492` claimed
+*"Transcendent Bird Song from the Europe 72 tour"*, dated 1972-04-08 at Wembley
+Empire Pool, rating 5, pointing at
+`https://archive.org/details/gd1972-04-08.sbd.miller.24659.sbeok.flac16`.
+
+Three things were wrong with it, each worse than the last:
+
+1. The identifier returns `{}` — it does not exist, in either its given form or
+   with the `.flac16` suffix stripped.
+2. None of the **four** tapes of 1972-04-08 carries a Bird Song.
+3. **No night of the entire Europe '72 tour carries one.** Checked every 1972
+   date in the sweep: 37 nights have a Bird Song and the earliest is
+   **1972-07-18**, two months after the tour ended. The description is not a
+   mis-dated memory; it describes a performance that did not happen.
+
+It was the only `notable_versions` row Bird Song had.
+
+**It was referenced by three of Jay's own setlists**, one of them public and
+named — found by checking before deleting, not after. So the delete released
+the three slots (`notable_version_id` set to null, song and position kept, so
+each now resolves by night like any other catalog-less slot) and dropped the
+three `setlist_slot_playability` rows that had been computed against the dead
+URL. Rollback values are recorded in this file above.
+
+**Worth sweeping the other 62 `notable_versions` rows for the same rot** — a
+dead identifier, a night without the song, or a described performance that
+never took place. Nothing has checked them.
