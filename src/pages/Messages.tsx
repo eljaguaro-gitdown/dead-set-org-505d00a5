@@ -414,12 +414,7 @@ const Messages = () => {
 
         {/* Chat view */}
         {showChat && (
-          {/* min-h-0 is load-bearing. This column is a flex item, so its default
-             min-height:auto floors it at its CONTENT height — the message list
-             below is `flex-1 overflow-y-auto`, and without this it refuses to
-             shrink, the column grows past the pane, and the composer (its last
-             child) is pushed out. The pane is overflow-hidden, so the composer
-             does not become scrollable, it just disappears. */}
+          {/* min-h-0 is load-bearing: without it this flex column floors at its content height, grows past the overflow-hidden pane, and the composer disappears. */}
           <div className="flex-1 min-h-0 flex flex-col bg-background">
             {/* Chat header */}
             <div className="flex items-center gap-3 p-4 border-b border-border bg-card">
