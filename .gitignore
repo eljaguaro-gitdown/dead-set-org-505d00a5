@@ -38,3 +38,6 @@ posthog-self-driving-report.md
 # `supabase/migrations/` are the repo's real content; .temp/ is a version
 # marker the CLI rewrites on every run and offers up as a change each time.
 supabase/.temp/
+.setlistfm-cache/
+setlistfm-derived.json
+report.json
