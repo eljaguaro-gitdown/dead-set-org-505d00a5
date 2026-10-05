@@ -201,21 +201,32 @@ const Messages = () => {
       </SiteHeader>
 
       {/*
-        This used to be `height: calc(100vh - 73px)` — 73px being a guess at the
-        height of the chrome above it. SiteHeader is taller than that (and its
-        height moves with the signed-in state, the admin link and the viewport
-        width), so the column ran past the bottom of the screen by the
-        difference and the composer, as its last child, sat below the fold.
-        That is why the message box could only be reached by scrolling.
+        The composer kept ending up out of reach. Measured in Chromium on both
+        shas at 320/375/390/414/430/1920, the cause is `paddingBottom` here:
+        the global audio player is `fixed bottom-0 z-40` and paints over this
+        page, so on the live build `elementFromPoint` at the centre of the
+        message input returned the PLAYER, not the input. The box was inside
+        the viewport the whole time — `visible` was true — and simply had
+        something on top of it. z-index cannot help: PageLayout wraps children
+        in `relative z-10`, which opens a stacking context the whole page then
+        loses inside. The player is drag-resizable and has two implementations
+        of different heights, so the offset is measured, not a constant — see
+        useGlobalPlayerHeight.
 
-        There is no constant to correct, because there is no constant: the
-        header's height is whatever it renders as. `flex-1 min-h-0` asks for
-        "whatever is left" instead, which is right at every width and in every
-        auth state. PageLayout's `fullHeight` pins the column to one dvh so
-        there IS a definite amount left over.
+        This element also used to carry `height: calc(100vh - 73px)`, 73px
+        being a guess at the chrome above it (the real SiteHeader measures
+        89px at 320-390, 77px at 414/430, 81px at 1920). That constant was
+        WRONG BUT INERT: the element is `flex-1`, i.e. `flex: 1 1 0%`, so
+        flex-grow decides its main-axis size and the height was never used.
+        Removing it changed no measurement. It is gone because it was a lie
+        about how this box is sized, not because it was the defect.
 
-        paddingBottom clears the global audio player, which is fixed above this
-        page and cannot be escaped with z-index — see useGlobalPlayerHeight.
+        `min-h-0` is the part that matters structurally: a flex item's default
+        `min-height: auto` floors it at its content height, so without it this
+        column cannot shrink, grows past the pane, and pushes the composer out
+        on a long conversation. `fullHeight` pins the page to one dvh, which
+        is what makes "whatever is left" a definite amount — and dvh rather
+        than vh because 100vh on mobile is the toolbars-retracted viewport.
       */}
       <div
         data-messages-pane=""
