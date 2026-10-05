@@ -52,6 +52,16 @@ import {
 import { buildGuideSongs } from "@/lib/listeningGuide";
 import { captureEvent } from "@/lib/posthog";
 
+/** Which control started the audio — one per play path on this page. */
+type PlayOrigin =
+  | "hero_debut"
+  | "hero_top"
+  | "hero_fallback"
+  | "milestone_first"
+  | "milestone_last"
+  | "version"
+  | "play_all";
+
 /**
  * PROTOTYPE — the version picker as a page rather than a step inside a modal.
  *
@@ -439,11 +449,36 @@ const VersionPicker = () => {
   const heroCity = heroIsDebut ? (ftp?.city ?? null) : (topVersion?.city ?? null);
   const [heroResolving, setHeroResolving] = useState(false);
 
+  /**
+   * Every way a visitor can start audio on this page reports the same event.
+   *
+   * Until 2026-10-05 only ONE of the four play paths captured anything — the
+   * hero's debut-tape branch — so a visitor who tapped any other night, or
+   * landed on a song whose debut has no tape, recorded as "did not play".
+   * `version_picker_played_debut` is the numerator of the ratio the front-door
+   * experiment turns on, and it was counting a fraction of the plays.
+   *
+   * That event is left exactly as it was, so its history stays comparable.
+   * This one is the honest "pressed play" count. `origin` says which control
+   * was used, which `audio_play_started` cannot answer — it carries no song
+   * and no origin, so it cannot be attributed to the picker on its own.
+   */
+  const capturePlayed = (origin: PlayOrigin, isDebut: boolean, queued?: number) => {
+    if (!song) return;
+    captureEvent("version_picker_played", {
+      song_id: song.id,
+      song_title: song.title,
+      origin,
+      is_debut: isDebut,
+      ...(queued === undefined ? {} : { queued_count: queued }),
+    });
+  };
+
   /** Play the debut; fall through to the top pick when no tape of it exists. */
   const playHero = async () => {
     if (!song) return;
     if (!heroIsDebut || !song.first_played) {
-      if (topVersion) await playVersion(topVersion);
+      if (topVersion) await playVersion(topVersion, "hero_top");
       return;
     }
     unlockAudio();
@@ -472,11 +507,12 @@ const VersionPicker = () => {
           segueToNext: false,
         } as PlayableSlot);
         captureEvent("version_picker_played_debut", { song_id: song.id, song_title: song.title });
+        capturePlayed("hero_debut", true);
         return;
       }
       if (topVersion) {
         toast.info("No tape of the debut circulates — starting with the next best thing");
-        await playVersion(topVersion);
+        await playVersion(topVersion, "hero_fallback");
       } else {
         toast.info("No tape of this night circulates yet");
       }
@@ -545,6 +581,7 @@ const VersionPicker = () => {
       position: 0,
       segueToNext: false,
     } as PlayableSlot);
+    capturePlayed(m.kind === "ftp" ? "milestone_first" : "milestone_last", m.kind === "ftp");
   };
 
   /**
@@ -552,7 +589,7 @@ const VersionPicker = () => {
    * research recorded the night, not the tape — so the recording is resolved
    * by date on demand rather than making the page wait for 15 lookups.
    */
-  const playVersion = async (v: PickerVersion) => {
+  const playVersion = async (v: PickerVersion, origin: PlayOrigin = "version") => {
     if (!song || !v.show_date) return;
     unlockAudio();
     let url = v.archive_org_url;
@@ -586,6 +623,7 @@ const VersionPicker = () => {
       position: 0,
       segueToNext: false,
     } as PlayableSlot);
+    capturePlayed(origin, false);
   };
 
   /** Everything on screen, in order, as one queue. */
@@ -615,6 +653,7 @@ const VersionPicker = () => {
         segueToNext: false,
       })) as PlayableSlot[],
     );
+    capturePlayed("play_all", false, withTape.length);
   };
 
   /** Keep what's on screen as a listening guide, bound tape by tape. */
