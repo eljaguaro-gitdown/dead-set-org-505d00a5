@@ -47,7 +47,15 @@ interface FeatureRow {
 /** Repertoire size — sourced, not estimated. See the note rendered on-page. */
 const REPERTOIRE_TOTAL = 523;
 
-const yearOf = (d: string | null) => (d ? d.slice(-4) : "");
+/** The week an issue went out, in the archive's own plain register. */
+const fmtWeek = (d: string | null) => {
+  if (!d) return "";
+  const parsed = new Date(`${d.slice(0, 10)}T00:00:00Z`);
+  if (Number.isNaN(parsed.getTime())) return d;
+  return parsed.toLocaleDateString("en-US", {
+    month: "long", day: "numeric", year: "numeric", timeZone: "UTC",
+  });
+};
 
 const Songbook = () => {
   const [features, setFeatures] = useState<FeatureRow[]>([]);
@@ -121,7 +129,16 @@ const Songbook = () => {
           <p className="font-ticket text-[10px] uppercase tracking-[0.24em] text-[hsl(var(--dead-gold))] mb-3">
             One song a week · forever
           </p>
-          <h1 className="font-title text-4xl md:text-6xl text-foreground leading-none mb-4">
+          {/*
+            Sancreek, not UnifrakturMaguntia. DESIGN.md §2 assigns the
+            blackletter to "titles and logos", and read literally that put it
+            here — but it made the masthead the only blackletter on a page
+            whose every issue title is Sancreek, and at 60px the dense gothic
+            is genuinely hard to read. The table's intent is ornate-over-
+            utilitarian, which Sancreek satisfies; the outlier was the
+            inconsistency, not the rule. DESIGN.md's row should say so.
+          */}
+          <h1 className="font-header text-4xl md:text-6xl text-foreground leading-none mb-4">
             The Songbook
           </h1>
           <p className="font-body text-sm md:text-base text-foreground/85 max-w-[54ch] mx-auto">
@@ -160,8 +177,11 @@ const Songbook = () => {
                 })}
                 className="block bg-card text-card-foreground rounded-sm p-6 md:p-9 border border-border hover:border-primary/50 transition-colors group"
               >
-                <p className="font-ticket text-[10px] uppercase tracking-[0.18em] text-dead-dark mb-3">
-                  Issue {String(current.issue_number ?? 1).padStart(3, "0")}
+                <p className="font-ticket text-[10px] uppercase tracking-[0.18em] text-dead-dark mb-3 flex flex-wrap items-center gap-x-2.5 gap-y-1">
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-sm bg-dead-gold text-dead-dark">
+                    Vol. {current.issue_number ?? 1}
+                  </span>
+                  {current.week_of && <span className="text-dead-dark/75">{fmtWeek(current.week_of)}</span>}
                 </p>
                 <h2 className="font-header text-3xl md:text-5xl leading-none mb-3 group-hover:text-primary transition-colors">
                   {current.title}
@@ -199,7 +219,15 @@ const Songbook = () => {
                   <span className="font-mono text-[11px] text-foreground/50 tabular-nums">{back.length}</span>
                 </div>
 
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {/*
+                  A back issue is the same object as the current one — it is
+                  just older. It used to render as a title and a year range in
+                  a three-up grid beside a full-dress current issue, which read
+                  as an afterthought rather than an archive. Two up, with the
+                  headline, the dek and the same stamped meta row, so the shelf
+                  looks like a run of issues worth reading back through.
+                */}
+                <div className="grid gap-4 sm:grid-cols-2">
                   {back.map((f) => (
                     <Link
                       key={f.id}
@@ -208,18 +236,40 @@ const Songbook = () => {
                         issue_number: f.issue_number,
                         placement: "archive",
                       })}
-                      className="block bg-card text-card-foreground rounded-sm p-4 border border-border hover:border-primary/50 transition-colors group"
+                      className="flex flex-col bg-card text-card-foreground rounded-sm p-5 border border-border hover:border-primary/50 transition-colors group"
                     >
-                      <p className="font-ticket text-[9px] uppercase tracking-[0.16em] text-muted-foreground mb-1.5">
-                        Issue {String(f.issue_number ?? 0).padStart(3, "0")}
+                      <p className="font-ticket text-[9px] uppercase tracking-[0.16em] text-dead-dark mb-2.5 flex flex-wrap items-center gap-x-2 gap-y-1">
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded-sm bg-dead-gold text-dead-dark">
+                          Vol. {f.issue_number ?? 0}
+                        </span>
+                        {f.week_of && <span className="text-dead-dark/75">{fmtWeek(f.week_of)}</span>}
                       </p>
-                      <h3 className="font-header text-xl leading-tight mb-1.5 group-hover:text-primary transition-colors">
+
+                      <h3 className="font-header text-2xl leading-tight mb-2 group-hover:text-primary transition-colors">
                         {f.title}
                       </h3>
-                      <p className="font-ticket text-[11px] text-muted-foreground">
-                        {yearOf(f.ftp_date)}–{yearOf(f.ltp_date)}
-                        {f.times_played != null && <> · {f.times_played}×</>}
-                      </p>
+
+                      {f.headline && (
+                        <p className="font-hand text-xl text-[hsl(var(--dead-blue))] leading-tight mb-2.5">
+                          {f.headline}
+                        </p>
+                      )}
+                      {f.dek && (
+                        <p className="font-body text-[13px] text-muted-foreground leading-relaxed mb-4 line-clamp-3">
+                          {f.dek}
+                        </p>
+                      )}
+
+                      {/* mt-auto so every card's rule sits on the same line
+                          however long the dek above it runs. */}
+                      <div className="mt-auto flex flex-wrap gap-x-5 gap-y-2 pt-3 border-t-2 border-dashed border-border">
+                        <Meta k="First played" v={f.ftp_date ?? "—"} />
+                        <Meta k="Last played" v={f.ltp_date ?? "—"} />
+                        <Meta k="Times played" v={f.times_played != null ? String(f.times_played) : "—"} />
+                        <span className="ml-auto font-ticket text-[10px] uppercase tracking-[0.12em] text-dead-dark self-end">
+                          Read &rarr;
+                        </span>
+                      </div>
                     </Link>
                   ))}
                 </div>
