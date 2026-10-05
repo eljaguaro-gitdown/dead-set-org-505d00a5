@@ -429,3 +429,87 @@ Worth committing a trimmed version of that repro: no test currently joins the
 real resolver to the real picker, which is the exact seam both blocks lived
 in. `VersionPicker.test.tsx` mocks `archiveOrg` wholesale and so cannot see
 that a 503 produces a throw at all.
+
+---
+
+## The verified change set (2026-10-05, final)
+
+The audit above proposed 277 changes from a sweep that read **one** tape per
+night. That was stricter than the player, which walks ten — so it under-
+reported what is on tape. Everything below was redone at the player's own
+criteria and then verified a second time, per tape.
+
+### Three gates, and what each one caught
+
+1. **Derivation** across up to 10 tapes per night, scoring with the app's own
+   `matchScore` at its real threshold of 60. Reading ten instead of one moved
+   **53 milestones**, 43 of them firsts moving earlier.
+2. **Per-tape verification.** The derivation unions the titles of every tape of
+   a night, which is wrong when one of them is a studio session sharing the
+   date. So each proposed date was re-fetched tape by tape, requiring the song
+   on a recording whose identifier is named like a real show of that day.
+   This rejected, without being told to: `gd65-acid-tests` pinned to
+   1966-01-08; `sbd-rehearsals` on 1987-06-01; the Terrapin Station studio
+   outtakes on 1977-02-17 (which had **no** show tape at all); and unknown-day
+   items `gd69-xx-xx` and `gd73-08-xx`.
+3. **Collision check.** `matchScore` cannot tell two catalog songs apart when
+   one title satisfies the other. Per-tape proof that *a* track exists is not
+   proof it is the *right song*.
+
+### Result
+
+| | |
+|---|---|
+| **Ready to apply** | **259** |
+| Held — milestone failed per-tape verification | 12 |
+| Held — title collides with another catalog song | 12 |
+
+
+SQL for the ready rows is in
+[`2026-10-05-milestone-corrections.sql`](2026-10-05-milestone-corrections.sql),
+one statement per row, each carrying the tape count and an example identifier
+as a comment. Nothing has been run.
+
+### Held: failed per-tape verification — catalog value kept
+
+| song | milestone | keeps | rejected proposal |
+|---|---|---|---|
+| All Along the Watchtower | first | 1987-09-18 | 1987-06-01 |
+| Friend of the Devil | first | 1970-06-07 | 1969-12-31 |
+| In the Midnight Hour | first | 1966-07-03 | 1966-01-08 |
+| Let It Grow | first | 1973-11-11 | 1973-08-01 |
+| Peggy-O | first | 1973-02-09 | 1966-01-08 |
+| Queen Jane Approximately | first | 1987-04-03 | 1987-06-01 |
+| Rosemary | last | 1970-02-14 | 1969-12-31 |
+| Terrapin Station | first | 1977-02-26 | 1977-02-17 |
+| U.S. Blues | first | 1974-02-22 | 1966-01-08 |
+| Unbroken Chain | first | 1995-02-20 | 1977-02-17 |
+| Viola Lee Blues | first | 1966-07-03 | 1966-01-08 |
+| When I Paint My Masterpiece | first | 1987-04-03 | 1987-06-01 |
+
+### Held: title collision — needs a human or a better matcher
+
+| song | milestone | current | proposed | also matches |
+|---|---|---|---|---|
+| Baby Blue | first | 1989-02-06 | 1966-05-19 | Its All Over Now Baby Blue |
+| Baby Blue | last | 1995-07-09 | 1995-02-19 | Its All Over Now Baby Blue |
+| Lovelight | first | 1966-10-10 | 1967-08-05 | Turn on Your Love Light |
+| Lovelight | last | 1995-06-30 | 1995-06-19 | Turn on Your Love Light |
+| Minglewood Blues | first | 1966-07-03 | 1966-05-19 | New Minglewood Blues |
+| Minglewood Blues | last | 1995-07-08 | 1995-06-27 | New Minglewood Blues |
+| New Minglewood Blues | first | 1977-02-26 | 1966-05-19 | Minglewood Blues |
+| New Minglewood Blues | last | 1995-07-08 | 1995-06-27 | Minglewood Blues |
+| Playing in the Band | first | 1971-02-18 | 1970-10-30 | Playing in the Band Reprise |
+| Playing in the Band | last | 1995-07-09 | 1995-07-05 | Playing in the Band Reprise |
+| Turn on Your Love Light | first | 1967-09-29 | 1967-08-05 | Lovelight |
+| Turn on Your Love Light | last | 1995-06-30 | 1995-06-19 | Lovelight |
+
+### Two things this does not settle
+
+**`St. Stephen` resolves to 1994-10-01**, on three independent soundboards with
+clean identifiers and no outtake markers. Conventional setlist history retires
+the song in 1983. Tape evidence and received history disagree here and the
+tapes were not overruled — worth a human eye before anyone cites it.
+
+**Whipping Post** resolves to no night at all and is untouched.
+
