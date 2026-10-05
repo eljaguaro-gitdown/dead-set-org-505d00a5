@@ -33,3 +33,8 @@ dist-ssr
 # Force-add (git add -f) if you ever author a skill you want in the repo.
 .claude/skills/
 posthog-self-driving-report.md
+
+# Supabase CLI scratch. `supabase/config.toml` and `supabase/functions/` and
+# `supabase/migrations/` are the repo's real content; .temp/ is a version
+# marker the CLI rewrites on every run and offers up as a change each time.
+supabase/.temp/
