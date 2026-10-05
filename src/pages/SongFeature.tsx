@@ -6,6 +6,8 @@ import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 import PageLayout from "@/components/PageLayout";
 import SiteHeader from "@/components/SiteHeader";
 import ShareDropdown from "@/components/ShareDropdown";
+import CommunityIssueArticle from "@/components/CommunityIssueArticle";
+import { loadCommunityIssue, type CommunityIssue } from "@/lib/communityIssue";
 import SongEraLadder, { type LadderVersion } from "@/components/SongEraLadder";
 import { ladderSlot, ladderPlaylist } from "@/lib/ladderPlayback";
 import { captureEvent } from "@/lib/posthog";
@@ -61,6 +63,12 @@ const SongFeature = () => {
   const { slug } = useParams<{ slug: string }>();
   const { playSingle, playSetlist, playingSlot } = useAudioPlayer();
   const [feature, setFeature] = useState<FeatureRow | null>(null);
+  /**
+   * The community fallback. A song can carry BOTH an editorial issue and a
+   * community entry, and the editorial one is the issue — so this is only
+   * consulted when `song_features` has nothing for the slug.
+   */
+  const [communityIssue, setCommunityIssue] = useState<CommunityIssue | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -75,7 +83,15 @@ const SongFeature = () => {
         .eq("published", true)
         .maybeSingle();
       if (cancelled) return;
-      setFeature((data ?? null) as FeatureRow | null);
+      const curated = (data ?? null) as FeatureRow | null;
+      setFeature(curated);
+      if (!curated) {
+        const community = await loadCommunityIssue(slug);
+        if (cancelled) return;
+        setCommunityIssue(community);
+      } else {
+        setCommunityIssue(null);
+      }
       setLoading(false);
     })();
     return () => { cancelled = true; };
@@ -83,6 +99,11 @@ const SongFeature = () => {
 
   // Dynamic meta so a shared issue unfurls as itself, not as the app.
   useEffect(() => {
+    if (!feature && communityIssue) {
+      const t = `${communityIssue.title} — The Songbook · Dead Set`;
+      document.title = t;
+      return;
+    }
     if (!feature) return;
     const title = `${feature.title} — The Songbook · Dead Set`;
     document.title = title;
@@ -102,7 +123,7 @@ const SongFeature = () => {
     set("og:url", `https://dead-set.org/songbook/${feature.slug}`);
     set("twitter:title", title);
     set("twitter:description", feature.dek ?? "");
-  }, [feature]);
+  }, [feature, communityIssue]);
 
   const handlePlay = (v: LadderVersion) => {
     if (!feature?.song_id) return;
@@ -134,6 +155,15 @@ const SongFeature = () => {
         <main className="mx-auto w-full max-w-3xl px-5 py-16">
           <p className="font-ticket text-xs text-foreground/60 text-center">Pulling the issue…</p>
         </main>
+      </PageLayout>
+    );
+  }
+
+  if (!feature && communityIssue) {
+    return (
+      <PageLayout>
+        <SiteHeader />
+        <CommunityIssueArticle issue={communityIssue} />
       </PageLayout>
     );
   }

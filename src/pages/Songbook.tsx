@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { songbookDb } from "@/lib/songbookDb";
 import PageLayout from "@/components/PageLayout";
+import { songSlug } from "@/lib/songSlug";
 import SiteHeader from "@/components/SiteHeader";
 import { captureEvent } from "@/lib/posthog";
 
@@ -299,20 +300,32 @@ const Songbook = () => {
             <ul className="grid gap-px bg-border rounded-sm overflow-hidden sm:grid-cols-2">
               {community.map((c) => (
                 <li key={c.id}>
+                  {/* Points at the issue, not the raw guide: a community entry
+                      now gets the same page the editorial issues get, at the
+                      same /songbook/<slug> url, which is what makes it
+                      shareable as an issue. The guide is one click on from
+                      there. */}
                   <Link
-                    to={`/setlist/${c.setlist_id}`}
+                    to={`/songbook/${songSlug(c.songs?.title ?? "")}`}
                     onClick={() => captureEvent("songbook_community_opened", { entry_id: c.id })}
                     className="block bg-card text-card-foreground p-4 md:p-5 hover:bg-card/80 transition-colors group h-full"
                   >
                     <h3 className="font-header text-xl md:text-2xl leading-tight group-hover:text-primary transition-colors">
                       {c.songs?.title ?? "A song"}
                     </h3>
-                    <p className="font-ticket text-[12px] text-card-foreground/70 mt-1.5">
-                      first mapped by{" "}
-                      <span className="text-card-foreground">
-                        {c.creatorName ?? "a Deadhead"}
+                    <div className="flex items-end justify-between gap-3 mt-1.5">
+                      <p className="font-ticket text-[12px] text-card-foreground/70">
+                        first mapped by{" "}
+                        <span className="text-card-foreground">
+                          {c.creatorName ?? "a Deadhead"}
+                        </span>
+                      </p>
+                      {/* The same promise the curated card makes, because it now
+                          leads to the same kind of page. */}
+                      <span className="font-ticket text-[11px] uppercase tracking-[0.12em] text-primary shrink-0">
+                        Read →
                       </span>
-                    </p>
+                    </div>
                   </Link>
                 </li>
               ))}
