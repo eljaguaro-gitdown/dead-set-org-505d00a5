@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Megaphone, Send, Trash2, Eye, EyeOff } from "lucide-react";
+import { Megaphone, Send, Trash2, Eye, EyeOff, Pencil, X, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -18,6 +18,15 @@ const AdminAnnouncementsPanel = () => {
   const [ctaLabel, setCtaLabel] = useState("");
   const [ctaUrl, setCtaUrl] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  /**
+   * Which announcement the composer is editing, if any.
+   *
+   * Drafts arrive here from the draft_songbook_announcement trigger, which
+   * writes words generated from a Songbook entry rather than written by
+   * anyone. Without this the only two options were publish-verbatim or retype,
+   * which is not a review step.
+   */
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   const refresh = async () => {
     setLoading(true);
@@ -34,7 +43,7 @@ const AdminAnnouncementsPanel = () => {
     refresh();
   }, []);
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (publish: boolean) => {
     if (!user) return;
     if (!title.trim() || !body.trim()) {
       toast.error("Title and body are required");
@@ -45,25 +54,46 @@ const AdminAnnouncementsPanel = () => {
       return;
     }
     setSubmitting(true);
-    const { error } = await supabase.from("announcements").insert({
-      author_id: user.id,
+    const fields = {
       title: title.trim(),
       body: body.trim(),
       cta_label: ctaLabel.trim() || null,
       cta_url: ctaUrl.trim() || null,
-      published: true,
-    });
+      published: publish,
+    };
+    // Editing updates the row in place so a reviewed draft keeps its identity
+    // instead of leaving the original behind to be deleted by hand.
+    const { error } = editingId
+      ? await supabase.from("announcements").update(fields).eq("id", editingId)
+      : await supabase.from("announcements").insert({ ...fields, author_id: user.id });
     setSubmitting(false);
     if (error) {
       toast.error(error.message);
       return;
     }
-    toast.success("Announcement sent to all users");
+    toast.success(
+      publish
+        ? "Announcement sent to all users"
+        : "Saved as a draft — nothing sent",
+    );
+    clearComposer();
+    refresh();
+  };
+
+  const startEditing = (a: Announcement) => {
+    setEditingId(a.id);
+    setTitle(a.title);
+    setBody(a.body);
+    setCtaLabel(a.cta_label || "");
+    setCtaUrl(a.cta_url || "");
+  };
+
+  const clearComposer = () => {
+    setEditingId(null);
     setTitle("");
     setBody("");
     setCtaLabel("");
     setCtaUrl("");
-    refresh();
   };
 
   const togglePublished = async (a: Announcement) => {
@@ -133,9 +163,30 @@ const AdminAnnouncementsPanel = () => {
             maxLength={500}
           />
         </div>
-        <div className="flex justify-end">
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          {editingId && (
+            <button
+              type="button"
+              onClick={clearComposer}
+              className="mr-auto flex items-center gap-1.5 font-mono text-[10px] text-muted-foreground hover:text-card-foreground tracking-wider uppercase transition-colors"
+            >
+              <X className="w-3 h-3" />
+              Cancel edit
+            </button>
+          )}
+          {/* Saving without sending is the whole point of a draft: the words
+              the trigger generated can be rewritten and left unpublished. */}
           <Button
-            onClick={handleSubmit}
+            variant="outline"
+            onClick={() => handleSubmit(false)}
+            disabled={submitting || !title.trim() || !body.trim()}
+            className="font-mono text-xs tracking-wider uppercase gap-2"
+          >
+            <FileText className="w-3.5 h-3.5" />
+            {submitting ? "Saving…" : "Save draft"}
+          </Button>
+          <Button
+            onClick={() => handleSubmit(true)}
             disabled={submitting || !title.trim() || !body.trim()}
             className="font-mono text-xs tracking-wider uppercase gap-2"
           >
@@ -168,7 +219,7 @@ const AdminAnnouncementsPanel = () => {
                       <h4 className="font-display text-sm text-card-foreground">{a.title}</h4>
                       {!a.published && (
                         <span className="font-mono text-[9px] text-muted-foreground tracking-wider uppercase border border-border rounded px-1.5 py-0.5">
-                          Hidden
+                          Draft — not sent
                         </span>
                       )}
                     </div>
@@ -186,9 +237,20 @@ const AdminAnnouncementsPanel = () => {
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
                     <button
+                      onClick={() => startEditing(a)}
+                      className={`p-1.5 transition-colors ${
+                        editingId === a.id
+                          ? "text-accent-foreground"
+                          : "text-muted-foreground hover:text-card-foreground"
+                      }`}
+                      title="Edit in the composer above"
+                    >
+                      <Pencil className="w-3.5 h-3.5" />
+                    </button>
+                    <button
                       onClick={() => togglePublished(a)}
                       className="p-1.5 text-muted-foreground hover:text-card-foreground transition-colors"
-                      title={a.published ? "Hide" : "Re-publish"}
+                      title={a.published ? "Hide from users" : "Send to all users as-is"}
                     >
                       {a.published ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                     </button>
