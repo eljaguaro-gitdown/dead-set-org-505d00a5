@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import PageLayout from "@/components/PageLayout";
+import { useGlobalPlayerHeight } from "@/hooks/useGlobalPlayerHeight";
 import SiteHeader from "@/components/SiteHeader";
 import { useAuth } from "@/hooks/useAuth";
 import { useDirectMessages } from "@/hooks/useDirectMessages";
@@ -82,6 +83,8 @@ const Messages = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const isMobile = useIsMobile();
+  /** How much of the bottom of the screen the global audio player is covering. */
+  const playerHeight = useGlobalPlayerHeight();
   const {
     conversations,
     messages,
@@ -187,7 +190,7 @@ const Messages = () => {
   if (authLoading) return null;
 
   return (
-    <PageLayout>
+    <PageLayout fullHeight>
       <SiteHeader>
         <button
           onClick={() => navigate("/my-setlists")}
@@ -197,7 +200,28 @@ const Messages = () => {
         </button>
       </SiteHeader>
 
-      <div className="flex-1 flex overflow-hidden" style={{ height: "calc(100vh - 73px)" }}>
+      {/*
+        This used to be `height: calc(100vh - 73px)` — 73px being a guess at the
+        height of the chrome above it. SiteHeader is taller than that (and its
+        height moves with the signed-in state, the admin link and the viewport
+        width), so the column ran past the bottom of the screen by the
+        difference and the composer, as its last child, sat below the fold.
+        That is why the message box could only be reached by scrolling.
+
+        There is no constant to correct, because there is no constant: the
+        header's height is whatever it renders as. `flex-1 min-h-0` asks for
+        "whatever is left" instead, which is right at every width and in every
+        auth state. PageLayout's `fullHeight` pins the column to one dvh so
+        there IS a definite amount left over.
+
+        paddingBottom clears the global audio player, which is fixed above this
+        page and cannot be escaped with z-index — see useGlobalPlayerHeight.
+      */}
+      <div
+        data-messages-pane=""
+        className="flex-1 min-h-0 flex overflow-hidden"
+        style={{ paddingBottom: playerHeight }}
+      >
         {/* Conversation List */}
         {showConversationList && (
           <div className={`${isMobile && activeConversationId ? "hidden" : ""} ${isMobile ? "w-full" : "w-80"} border-r border-border flex flex-col bg-card`}>
@@ -390,7 +414,13 @@ const Messages = () => {
 
         {/* Chat view */}
         {showChat && (
-          <div className="flex-1 flex flex-col bg-background">
+          {/* min-h-0 is load-bearing. This column is a flex item, so its default
+             min-height:auto floors it at its CONTENT height — the message list
+             below is `flex-1 overflow-y-auto`, and without this it refuses to
+             shrink, the column grows past the pane, and the composer (its last
+             child) is pushed out. The pane is overflow-hidden, so the composer
+             does not become scrollable, it just disappears. */}
+          <div className="flex-1 min-h-0 flex flex-col bg-background">
             {/* Chat header */}
             <div className="flex items-center gap-3 p-4 border-b border-border bg-card">
               {isMobile && (

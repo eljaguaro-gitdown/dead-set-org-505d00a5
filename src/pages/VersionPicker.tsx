@@ -15,6 +15,7 @@ import type { InviteIntent } from "@/lib/signInInviteCopy";
 import { supabase } from "@/integrations/supabase/client";
 import { songbookDb } from "@/lib/songbookDb";
 import { useAudioPlayer, type PlayableSlot } from "@/contexts/AudioPlayerContext";
+import { useGlobalPlayerHeight } from "@/hooks/useGlobalPlayerHeight";
 import { useAuth } from "@/hooks/useAuth";
 import PageLayout from "@/components/PageLayout";
 import SiteHeader from "@/components/SiteHeader";
@@ -153,55 +154,10 @@ const VersionPicker = () => {
 
   /**
    * How far to lift the Keep bar so the global player does not bury it.
-   *
-   * Both are `fixed bottom-0 z-40` and GlobalAudioPlayer renders after
-   * <Routes>, so it painted on top: the moment someone pressed play — exactly
-   * when they might want to keep the thing they are hearing — the save and
-   * sign-in call to action disappeared for the rest of the session.
-   *
-   * z-index cannot fix this. PageLayout wraps every page in
-   * `relative z-10`, which opens a stacking context, so any z-index set in
-   * here is scoped inside it and the whole context still loses to the
-   * player's root-level z-40. Moving the bar is the only thing that works,
-   * and the player is draggable, so its height is not a number anyone can
-   * hardcode — measure it.
+   * The measurement lives in one place now — see useGlobalPlayerHeight for
+   * why it has to be measured rather than hardcoded.
    */
-  const [playerHeight, setPlayerHeight] = useState(0);
-
-  useEffect(() => {
-    const el = document.querySelector("[data-global-player]");
-    if (!el) { setPlayerHeight(0); return; }
-
-    /**
-     * The player's own box is not the whole obstruction. Its error banner
-     * ("That song isn't on this tape") is `absolute -top-12`, so it hangs ~48px
-     * ABOVE the root and getBoundingClientRect().height does not see it — it
-     * covered the Keep button whenever a tape turned out not to contain the
-     * song. Measure from the highest edge anything in the player reaches.
-     */
-    const measure = () => {
-      let top = el.getBoundingClientRect().top;
-      for (const child of el.querySelectorAll("*")) {
-        const r = child.getBoundingClientRect();
-        if (r.height > 0 && r.top < top) top = r.top;
-      }
-      setPlayerHeight(Math.max(0, window.innerHeight - top));
-    };
-    measure();
-
-    // Size alone is not enough: the banner is an absolutely-positioned child,
-    // so it appears without changing the root's height. Watch the subtree too.
-    const ro = new ResizeObserver(measure);
-    ro.observe(el);
-    const mo = new MutationObserver(measure);
-    mo.observe(el, { childList: true, subtree: true, attributes: true });
-    window.addEventListener("resize", measure);
-    return () => {
-      ro.disconnect();
-      mo.disconnect();
-      window.removeEventListener("resize", measure);
-    };
-  }, [playingSlot]);
+  const playerHeight = useGlobalPlayerHeight();
 
   useEffect(() => {
     if (!user) { setProfileName(null); return; }
