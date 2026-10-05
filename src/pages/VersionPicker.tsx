@@ -46,6 +46,7 @@ import {
   milestonePlace,
   MILESTONE_LABEL,
   NO_TAPE_LINE,
+  saysNoTape,
   type MilestoneEntry,
   type MilestoneTape,
 } from "@/lib/firstLastPlayed";
@@ -1487,7 +1488,13 @@ const MilestoneRow = ({
         </button>
       )}
     </div>
-    {!m.tapeFound && (
+    {/* saysNoTape, not !tapeFound. A night whose lookup FAILED has no tape
+        found either, and printing this line about it states as fact the one
+        thing the resolver throws precisely so we never claim: that nobody
+        taped it. The honest answer there is to say nothing. CosmicCharlieDialog
+        already branched on this predicate; this card did not, which left the
+        `unchecked` set inert all the way from the effect to the screen. */}
+    {saysNoTape(m) && (
       <p className="font-body text-[15px] leading-relaxed text-card-foreground/85 mt-3 italic">{NO_TAPE_LINE}</p>
     )}
   </article>

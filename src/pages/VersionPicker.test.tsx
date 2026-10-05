@@ -313,6 +313,9 @@ describe("VersionPicker — when the Archive cannot be asked", () => {
     await waitFor(() => expect(toastError).toHaveBeenCalledWith(expect.stringMatching(/couldn't reach the archive/i)));
     expect(hero).not.toBeDisabled();
     expect(screen.queryByText(/Finding the tape/i)).not.toBeInTheDocument();
+    // The playVersion test asserted this and the hero test did not, so a hero
+    // catch that ALSO claimed "no tape" survived mutation.
+    expect(toastInfo).not.toHaveBeenCalledWith(expect.stringMatching(/no tape/i));
   });
 
   it("renders the page even when a milestone night cannot be asked", async () => {
@@ -322,5 +325,31 @@ describe("VersionPicker — when the Archive cannot be asked", () => {
     // never ran and the page silently lost its first/last-played row.
     expect(await screen.findByText("Shakedown Street")).toBeInTheDocument();
     expect((await screen.findAllByText(/June 30, 1985/)).length).toBeGreaterThan(0);
+  });
+
+  /**
+   * The one that matters, and the one the first two rounds missed. Collecting
+   * `unchecked` and passing it to buildMilestones is worth nothing while the
+   * card branches on `!m.tapeFound`: the data knew the lookup had failed and
+   * the screen still printed "No tape of this night circulates — the date is
+   * on record, the music isn't."
+   *
+   * That is a claim about the tapers, asserted in their own voice, on the
+   * evidence of a 503. Assert the SENTENCE, not the field.
+   */
+  it("never claims no tape circulates when the lookup merely failed", async () => {
+    unaskable();
+    await openPage();
+    await waitFor(() => expect(findRecordingForDate).toHaveBeenCalled());
+    expect(screen.queryByText(/No tape of this night circulates/i)).not.toBeInTheDocument();
+  });
+
+  it("still says it when the night genuinely has no tape", async () => {
+    findRecordingForDate.mockResolvedValue(null);
+    await openPage();
+    await waitFor(() => expect(findRecordingForDate).toHaveBeenCalled());
+    // Both milestones render the line, so this is findAll — a findByText here
+    // throws on the second match and reads like the code failed.
+    expect((await screen.findAllByText(/No tape of this night circulates/i)).length).toBe(2);
   });
 });
