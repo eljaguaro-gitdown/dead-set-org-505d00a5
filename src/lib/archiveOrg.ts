@@ -348,52 +348,80 @@ interface ArchiveSearchDoc {
 }
 
 /**
+ * Thrown when every candidate recording was passed over because we could not
+ * read it — a 5xx, a 429, a timeout. It means "could not ask the Archive",
+ * which is categorically different from "the song is not on these tapes", and
+ * the two must not collapse into one null (see the error-contract rule in
+ * CLAUDE.md). Callers decide: the by-date lookup lets it out so nothing is
+ * cached, the by-song lookup swallows it like every other failure.
+ */
+export class ArchiveUnreachable extends Error {
+  constructor(readonly tried: number) {
+    super(`archive.org unreadable for all ${tried} candidate recordings`);
+    this.name = "ArchiveUnreachable";
+  }
+}
+
+/**
  * Given search hits, return the first recording we can pin the song to an
  * actual track inside. Shared by the by-song and by-date lookups — the two
  * disagreeing about what counts as a match is exactly the kind of silent
  * divergence a second copy of this loop would create.
+ *
+ * Candidates arrive most-downloaded first (ties by rating) and are walked in
+ * that order, so a tape we cannot read costs only its own turn.
+ *
+ * TWO WAYS TO PASS OVER A CANDIDATE, and they are not the same answer:
+ *
+ *   unreachable — the metadata request failed. We learned nothing about this
+ *                 tape. Counted, and if NOTHING matched and at least one
+ *                 candidate was unreachable, this throws rather than
+ *                 reporting a negative we did not establish.
+ *   no match    — the metadata read fine and carries no track for this song.
+ *                 That is a real finding about this tape. An item that no
+ *                 longer exists answers `{}`, which lands here correctly: we
+ *                 successfully learned it has no files.
+ *
+ * Returning null therefore means "every candidate was read, none had it".
+ * Only that is safe to cache.
+ *
+ * Scoring goes through findBestTrack rather than a private copy of the loop.
+ * The copy that used to live here filtered with the equivalent of
+ * `isDerivative`, i.e. as though every item were stream-restricted, so a
+ * FLAC-only tape was invisible to the search while the stored-URL path
+ * accepted it — the same two-copies divergence this function's own docstring
+ * warns about, one level down.
  */
 async function pickRecordingWithTrack(
   docs: ArchiveSearchDoc[],
   songTitle: string,
 ): Promise<ArchiveResult | null> {
+  let unreachable = 0;
   for (const doc of docs) {
     const identifier = doc.identifier;
     try {
       const metaRes = await fetchArchive(`https://archive.org/metadata/${identifier}`);
-      if (!metaRes.ok) continue;
-      const meta = await metaRes.json();
-      const audioFiles = (meta.files || []).filter(
-        (f: any) =>
-          f.format === "VBR MP3" ||
-          f.format === "Ogg Vorbis" ||
-          f.name?.endsWith(".mp3") ||
-          f.name?.endsWith(".ogg")
-      );
-
-      let bestScore = 0;
-      let bestFile: any = null;
-      for (const f of audioFiles) {
-        const title = f.title || f.name || "";
-        const score = matchScore(title, songTitle);
-        if (score > bestScore) {
-          bestScore = score;
-          bestFile = f;
-        }
+      if (!metaRes.ok) {
+        unreachable++;
+        continue;
       }
-
-      if (bestFile && bestScore >= 60) {
+      const meta = await metaRes.json();
+      const best = findBestTrack(meta.files || [], songTitle, {
+        restricted: isRestrictedItem(meta),
+      });
+      if (best) {
         return {
           url: `https://archive.org/details/${identifier}`,
           date: doc.date ? doc.date.split("T")[0] : null,
           venue: doc.venue || meta.metadata?.venue || meta.metadata?.coverage || null,
-          directTrackUrl: `https://archive.org/download/${identifier}/${encodeURIComponent(bestFile.name)}`,
+          directTrackUrl: `https://archive.org/download/${identifier}/${encodeURIComponent(best.file.name)}`,
         };
       }
     } catch {
-      continue;
+      unreachable++;
     }
   }
+  if (unreachable > 0) throw new ArchiveUnreachable(unreachable);
   return null;
 }
 
@@ -442,8 +470,11 @@ export async function findRecordingForDate(
         return withTrack;
       }
 
-      // The night circulates but this song is not on the tape we could read —
-      // a partial recording, or a title we could not match. Still the night.
+      // Every candidate was read and none carried the song — a partial
+      // recording, or a title we could not match. Still the night, so keep it
+      // and cache it. (Had any candidate been unreadable, pickRecordingWithTrack
+      // would have thrown instead, and this `try` has no `catch`, so the
+      // rejection leaves without touching dateCache and the night is retried.)
       const doc = docs[0];
       const result: ArchiveResult = {
         url: `https://archive.org/details/${doc.identifier}`,
@@ -514,7 +545,11 @@ export async function findArchiveRecording(
         cache.set(key, withTrack);
         return withTrack;
       }
-      // Fallback: return first (era-filtered) result without direct track
+      // Fallback: every candidate read, none matched — return the first with
+      // no direct track. An ArchiveUnreachable instead lands in this
+      // function's catch below, which caches null: wrong in principle, but it
+      // is this lookup's long-standing contract that any failure reads as "no
+      // tape", and findRecordingForDate is the one that must stay honest.
       const doc = docs[0];
       const result: ArchiveResult = {
         url: `https://archive.org/details/${doc.identifier}`,
