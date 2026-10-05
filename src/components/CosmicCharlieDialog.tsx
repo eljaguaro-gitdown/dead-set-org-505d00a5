@@ -75,7 +75,18 @@ interface CosmicCharlieDialogProps {
   eraId: string | null;
   currentSlots: { songTitle: string; setNumber: number; segue: boolean }[];
   onApplySuggestion: (suggestion: AISuggestion) => void;
-  onCreateNewSetlist: (suggestion: AISuggestion, customTitle?: string) => void;
+  /**
+   * `songbookSongId` is set only when the suggestion is a listening guide — a
+   * shelf of nights for ONE song, out of the Version Explorer. Builder uses it
+   * to file the Songbook entry, which it cannot infer: an ordinary Charlie
+   * setlist is many different songs and must not claim a Songbook slot for any
+   * of them.
+   */
+  onCreateNewSetlist: (
+    suggestion: AISuggestion,
+    customTitle?: string,
+    songbookSongId?: string,
+  ) => void;
 }
 
 const VIBES = [
@@ -1082,7 +1093,15 @@ const CosmicCharlieDialog = ({
                       explanation: exploreResult.linerNotes,
                       sets: [{ setNumber: 1, songs: guideSongs }],
                     };
-                    onCreateNewSetlist(fakeSuggestion, fakeSuggestion.setlist_name);
+                    // The third argument is what files this in the Songbook.
+                    // Without it the guide saved fine and the shelf never heard
+                    // about it — which is exactly what happened to the Eyes of
+                    // the World guide on 2026-10-05.
+                    onCreateNewSetlist(
+                      fakeSuggestion,
+                      fakeSuggestion.setlist_name,
+                      selectedSong.id,
+                    );
                     handleReset();
                     toast.success("Listening guide saved as a new setlist! 🎧");
                   }}

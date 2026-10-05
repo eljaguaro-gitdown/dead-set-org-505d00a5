@@ -36,6 +36,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 import { emitCommunityFeedOptimisticInsert } from "@/lib/communityFeedEvents";
 import { captureEvent } from "@/lib/posthog";
+import { contributeToSongbook, SONGBOOK_ADDED_TOAST } from "@/lib/songbookContribution";
 import type { Database } from "@/integrations/supabase/types";
 import { decideAutoplay, type PendingAutoplay } from "@/lib/autoplayArm";
 import { SYNTHETIC_VERSION_DEFAULTS } from "@/lib/syntheticVersion";
@@ -700,7 +701,7 @@ const Builder = () => {
   );
 
   const handleCreateNewFromCharlie = useCallback(
-    async (suggestion: { setlist_name?: string; explanation: string; sets: { setNumber: number; songs: { songId: string; title: string; segueToNext: boolean; notes: string; position: number }[] }[] }, customTitle?: string) => {
+    async (suggestion: { setlist_name?: string; explanation: string; sets: { setNumber: number; songs: { songId: string; title: string; segueToNext: boolean; notes: string; position: number }[] }[] }, customTitle?: string, songbookSongId?: string) => {
       // Build the slot list ONCE so guest + auth flows share the same data and we
       // can hydrate local state immediately (avoids the post-navigate empty-render bug).
       const builtSlots: SetlistSlotData[] = [];
@@ -768,6 +769,31 @@ const Builder = () => {
         if (suggestion.explanation) {
           await supabase.from("setlists").update({ description: suggestion.explanation }).eq("id", created.id);
         }
+        // If this was a listening guide and nobody had mapped that song yet,
+        // the guide becomes its Songbook entry, credited to whoever made it.
+        //
+        // This lives here and not in CosmicCharlieDialog because the dialog
+        // never learns the created setlist's id — it hands a suggestion to this
+        // callback and walks away. That gap is why Charlie-made guides were
+        // silently missing from the Songbook while VersionPicker-made ones were
+        // filed correctly: two paths producing the same artifact, one of them
+        // instrumented. The database decides who was first (song_id is UNIQUE),
+        // so a second guide for the same song is a quiet no-op, not an error.
+        if (songbookSongId && user) {
+          const contribution = await contributeToSongbook({
+            songId: songbookSongId,
+            setlistId: created.id,
+            creatorId: user.id,
+          });
+          if (contribution.outcome === "added") {
+            captureEvent("songbook_entry_contributed", {
+              song_id: songbookSongId,
+              source: "cosmic_charlie",
+            });
+            toast.success(SONGBOOK_ADDED_TOAST);
+          }
+        }
+
         // Hydrate local slots immediately so the UI shows the songs even if the
         // post-navigate loadSetlist() races or briefly returns an empty result.
         armAutoplay(created.id, builtSlots.length);
@@ -779,7 +805,7 @@ const Builder = () => {
         setTimeout(() => setCharlieCreating(false), 400);
       }
     },
-    [isGuestMode, songs, createSetlist, selectedEra, navigate, setSlots, armAutoplay]
+    [isGuestMode, songs, createSetlist, selectedEra, navigate, setSlots, armAutoplay, user]
   );
 
   const addSongsToCurrentSetlist = useCallback(

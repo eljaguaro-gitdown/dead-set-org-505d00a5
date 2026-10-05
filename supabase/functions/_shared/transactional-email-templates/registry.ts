@@ -19,6 +19,7 @@ import { template as dailyUserReport } from './daily-user-report.tsx'
 import { template as weeklyInsights } from './weekly-insights.tsx'
 import { template as featuredSetlist } from './featured-setlist.tsx'
 import { template as moderationReport } from './moderation-report.tsx'
+import { template as songbookDraftNotification } from './songbook-draft-notification.tsx'
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'welcome-email': welcomeEmail,
@@ -31,6 +32,7 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'weekly-insights': weeklyInsights,
   'featured-setlist': featuredSetlist,
   'moderation-report': moderationReport,
+  'songbook-draft-notification': songbookDraftNotification,
 }
 
 // Internal operator alerts. These are never subscriber mail, so they SKIP the
@@ -42,5 +44,6 @@ export const INTERNAL_TEMPLATES: string[] = [
   'daily-user-report',
   'weekly-insights',
   'moderation-report',
+  'songbook-draft-notification',
 ]
 
