@@ -257,6 +257,15 @@ describe("every payload sells the thing and invites the tap", () => {
       expect(p.text).toBe(`${p.body}\n\n${p.url}`);
     });
 
+    it(`${kind}: the body offers no second link to tap`, () => {
+      // WhatsApp linkifies a bare "Dead-Set.Org", so a brand stamp in the
+      // listen line rendered as a tappable link ABOVE the real url — pointing
+      // at the home page rather than the song. The whole message should carry
+      // exactly one thing to tap, and it should be the one that plays.
+      expect(p.body.toLowerCase()).not.toContain("dead-set.org");
+      expect(p.text.toLowerCase().split("dead-set.org").length - 1).toBe(1);
+    });
+
     it(`${kind}: body still names its subject and invites the tap`, () => {
       // Everything the share has to SELL must survive in the half that goes to
       // the native sheet — that is the half most people see.

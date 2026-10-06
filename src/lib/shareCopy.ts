@@ -122,7 +122,7 @@ export const shareVersionsCopy = (args: {
     detail: life
       ? `${life}. First time played to last, and every night worth the evening.`
       : null,
-    listen: "Tap any night to hear it — Dead-Set.Org",
+    listen: "Tap any night to hear it",
     url: args.url,
   });
 };
@@ -143,7 +143,7 @@ export const shareGuideCopy = (args: {
     detail: count
       ? `${count} version${count === 1 ? "" : "s"}, in order, start to finish.`
       : null,
-    listen: "Press play and listen straight through — Dead-Set.Org",
+    listen: "Press play and listen straight through",
     url: args.url,
   });
 };
@@ -164,7 +164,7 @@ export const shareAppCopy = (args: {
     lead: `${fromLine(args.senderName)}Dead Set`,
     detail:
       "Thousands of live recordings, every night the tapers kept. Find the version, not just the song.",
-    listen: "Press play, no signup — Dead-Set.Org",
+    listen: "Press play, no signup",
     url: args.url,
   });
 
@@ -190,7 +190,7 @@ export const shareSetlistCopy = (args: {
         : count
           ? `${count} song${count === 1 ? "" : "s"}, in order, start to finish.`
           : null,
-    listen: "Press play to hear the whole night — Dead-Set.Org",
+    listen: "Press play to hear the whole night",
     url: args.url,
   });
 };
@@ -214,7 +214,7 @@ export const shareSongCopy = (args: {
       : `${args.songTitle} on Dead-Set.Org`,
     lead: `${fromLine(args.senderName)}${args.songTitle}`,
     detail: night,
-    listen: "Tap to hear this one — Dead-Set.Org",
+    listen: "Tap to hear this one",
     url: args.url,
   });
 };
@@ -252,7 +252,7 @@ export const shareSongbookCopy = (args: {
       : `${args.songTitle} — The Songbook`,
     lead: `${fromLine(args.senderName)}${args.songTitle} in The Songbook`,
     detail: second ? `${second}.` : null,
-    listen: "Tap any night to hear it — Dead-Set.Org",
+    listen: "Tap any night to hear it",
     url: args.url,
   });
 };
@@ -282,7 +282,7 @@ export const shareCollabCopy = (args: {
       own && own !== args.setlistName
         ? own
         : "Still being put together. Pull up a chair.",
-    listen: "Press play, or pick up where I left off — Dead-Set.Org",
+    listen: "Press play, or pick up where I left off",
     url: args.url,
   });
 };
