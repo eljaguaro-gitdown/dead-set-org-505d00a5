@@ -1,8 +1,15 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, ListMusic } from "lucide-react";
+import { ArrowLeft, ListMusic, Play, Loader2 } from "lucide-react";
+import { toast } from "sonner";
+import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 import ShareDropdown from "@/components/ShareDropdown";
-import type { CommunityIssue } from "@/lib/communityIssue";
+import {
+  communityPlaylist,
+  communitySlot,
+  communityShareText,
+  type CommunityIssue,
+} from "@/lib/communityIssue";
 
 /**
  * A Songbook issue the community wrote, presented as the editorial issues are.
@@ -37,8 +44,48 @@ export const formatIssueDate = (iso: string | null): string => {
 };
 
 const CommunityIssueArticle = ({ issue }: { issue: CommunityIssue }) => {
+  const { playSingle, playSetlist, playingSlot } = useAudioPlayer();
+  /**
+   * Resolving a guide takes seconds, and with nothing on screen people tap
+   * again — which abandons the run in flight and restarts the wait. The label
+   * stays a constant width and only the 12px icon swaps, because a busy state
+   * that grows a control has pushed things off a 320px screen here before.
+   */
+  const [cueing, setCueing] = useState(false);
   const shareUrl = `https://dead-set.org/songbook/${issue.slug}`;
   const dated = issue.nights.filter((n) => n.showDate);
+  const playable = issue.nights.filter((n) => n.archiveUrl);
+
+  const playAll = async () => {
+    if (cueing) return;
+    setCueing(true);
+    try {
+      const slots = communityPlaylist(issue);
+      if (slots.length === 0) {
+        toast.info("No tape of these nights circulates yet");
+        return;
+      }
+      await playSetlist(slots);
+    } catch {
+      // "Could not ask the Archive" is an admission about the network, not an
+      // answer about the music. The two must not collapse into one message.
+      toast.error("Couldn't reach the Archive — try again");
+    } finally {
+      setCueing(false);
+    }
+  };
+
+  const playNight = async (night: (typeof issue.nights)[number]) => {
+    if (!night.archiveUrl) {
+      toast.info("No tape of this night circulates yet");
+      return;
+    }
+    try {
+      await playSingle(communitySlot(issue, night));
+    } catch {
+      toast.error("Couldn't reach the Archive — try again");
+    }
+  };
 
   /**
    * Parity with the curated issue, which sets these too. Honest caveat: a
@@ -49,7 +96,7 @@ const CommunityIssueArticle = ({ issue }: { issue: CommunityIssue }) => {
    */
   useEffect(() => {
     const title = `${issue.title} — The Songbook · Dead Set`;
-    const desc = `${issue.title}, first mapped by ${issue.mappedBy}.`;
+    const desc = communityShareText(issue);
     document.title = title;
     const set = (key: string, content: string) => {
       const attr = key.startsWith("og:") ? "property" : "name";
@@ -81,7 +128,7 @@ const CommunityIssueArticle = ({ issue }: { issue: CommunityIssue }) => {
         <ShareDropdown
           url={shareUrl}
           title={`${issue.title} — The Songbook`}
-          description={`${issue.title}, first mapped by ${issue.mappedBy}.`}
+          description={communityShareText(issue)}
         />
       </div>
 
@@ -94,6 +141,27 @@ const CommunityIssueArticle = ({ issue }: { issue: CommunityIssue }) => {
           <p className="font-hand text-2xl md:text-4xl text-[hsl(var(--dead-blue))] leading-tight">
             First mapped by {issue.mappedBy}{sentenceEnd(issue.mappedBy)}
           </p>
+
+          {/* Above the lifespan block on purpose. The whole point of an issue
+              is to get somebody listening, and this used to sit at the foot of
+              the page behind a scroll. aria-disabled rather than disabled:
+              Chromium moves focus off an element that becomes disabled, which
+              drops a keyboard or switch user to <body> mid-cue. */}
+          {playable.length > 0 && (
+            <button
+              type="button"
+              onClick={playAll}
+              aria-disabled={cueing}
+              className="mt-5 inline-flex items-center gap-2.5 rounded-sm bg-dead-dark px-5 py-3 font-ticket text-xs uppercase tracking-[0.14em] text-dead-cream transition-opacity hover:opacity-90"
+            >
+              {cueing ? (
+                <Loader2 className="w-3 h-3 animate-spin shrink-0" />
+              ) : (
+                <Play className="w-3 h-3 shrink-0" />
+              )}
+              Play all {playable.length} nights
+            </button>
+          )}
         </header>
 
         {/* The same lifespan block as a curated issue. Venue and city are absent
@@ -153,16 +221,34 @@ const CommunityIssueArticle = ({ issue }: { issue: CommunityIssue }) => {
                 key={`${night.position}-${night.showDate ?? "undated"}`}
                 className="pl-4 border-l-2 border-dashed border-primary/35"
               >
-                <span className="block font-hand text-xl md:text-2xl leading-tight text-card-foreground">
-                  {formatIssueDate(night.showDate)}
-                </span>
-                {night.venue && (
-                  <span className="block font-ticket text-[11px] text-muted-foreground leading-relaxed">
-                    {night.venue}
+                <button
+                  type="button"
+                  onClick={() => playNight(night)}
+                  className="group flex w-full items-start gap-2.5 text-left"
+                  aria-label={`Play ${issue.title}, ${formatIssueDate(night.showDate)}`}
+                >
+                  <span
+                    className={`mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border transition-colors ${
+                      playingSlot?.version?.show_date === night.showDate
+                        ? "border-dead-dark bg-dead-dark text-dead-cream"
+                        : "border-dead-dark/40 text-dead-dark group-hover:bg-dead-dark group-hover:text-dead-cream"
+                    }`}
+                  >
+                    <Play className="h-3 w-3" />
                   </span>
-                )}
+                  <span className="min-w-0">
+                    <span className="block font-hand text-xl md:text-2xl leading-tight text-card-foreground">
+                      {formatIssueDate(night.showDate)}
+                    </span>
+                    {night.venue && (
+                      <span className="block font-ticket text-[11px] text-muted-foreground leading-relaxed">
+                        {night.venue}
+                      </span>
+                    )}
+                  </span>
+                </button>
                 {night.note && (
-                  <p className="font-body text-[15px] leading-[1.7] text-card-foreground/85 mt-1 max-w-[66ch]">
+                  <p className="font-body text-[15px] leading-[1.7] text-card-foreground/85 mt-1 ml-[38px] max-w-[66ch]">
                     {night.note}
                   </p>
                 )}

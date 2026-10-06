@@ -51,19 +51,35 @@ const ShareDropdown = ({ url, ogUrl, title, description }: ShareDropdownProps) =
     ? `${description}\n\n${setlistTitle} on Dead-Set.Org`
     : `${setlistTitle} on Dead-Set.Org`;
 
+  /**
+   * Copy the TEXT and the link, not the bare link.
+   *
+   * A pasted bare url leaves the receiving app to say what it is, and the
+   * unfurl it generates is the SITEWIDE meta — "Dead Set — a discovery tool"
+   * — because every route here is client-rendered and a crawler does not run
+   * JS. So a shared Songbook issue read as the app rather than as the song.
+   * Prepending the text is what actually puts "Played 382 times between 1973
+   * and 1995" in front of the person receiving it, and it works in every app
+   * including the ones that unfurl nothing at all.
+   *
+   * The real fix for the unfurl itself is per-route meta served before the SPA
+   * fallback, which this app does not have for any route.
+   */
+  const copyPayload = `${setlistShareText}\n${linkToShare}`;
+
   const copyLink = async () => {
     try {
-      await navigator.clipboard.writeText(linkToShare);
+      await navigator.clipboard.writeText(copyPayload);
     } catch {
       const ta = document.createElement("textarea");
-      ta.value = linkToShare;
+      ta.value = copyPayload;
       document.body.appendChild(ta);
       ta.select();
       document.execCommand("copy");
       document.body.removeChild(ta);
     }
     setCopied(true);
-    toast.success("Link copied!");
+    toast.success("Copied — ready to paste");
     trackShare({ shareType: "setlist", channel: "copy_link", setlistId });
     setTimeout(() => { setCopied(false); setOpen(false); }, 1500);
   };

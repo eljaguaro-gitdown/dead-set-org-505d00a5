@@ -2,6 +2,8 @@ import { songbookDb } from "@/lib/songbookDb";
 import { supabase } from "@/integrations/supabase/client";
 import { songSlug } from "@/lib/songSlug";
 import { decodeArchiveNotes } from "@/hooks/useSetlist";
+import { SYNTHETIC_VERSION_DEFAULTS } from "@/lib/syntheticVersion";
+import type { PlayableSlot } from "@/contexts/AudioPlayerContext";
 
 /**
  * A Songbook issue that the community wrote, rather than the editorial series.
@@ -137,4 +139,67 @@ export const loadCommunityIssue = async (
     console.error("[songbook] community issue failed", e);
     return null;
   }
+};
+
+/**
+ * A community issue's nights as playable slots.
+ *
+ * Same job `ladderPlayback` does for the era ladder, and same rule: a night
+ * with no recording behind it is DROPPED, because the player can only start on
+ * a slot carrying an archive_org_url and a dead slot mid-queue is a gap the
+ * listener has to skip past. Every community guide today stores an archive
+ * blob per night, so nothing is currently lost to this.
+ */
+export const communitySlot = (
+  issue: Pick<CommunityIssue, "songId" | "title">,
+  night: CommunityNight,
+  position = 0,
+): PlayableSlot => ({
+  id: `songbook-${issue.songId}-${night.position}`,
+  song: { id: issue.songId, title: issue.title },
+  version: {
+    ...SYNTHETIC_VERSION_DEFAULTS,
+    id: `songbook-${issue.songId}-${night.position}`,
+    song_id: issue.songId,
+    show_date: night.showDate ?? "",
+    venue: night.venue,
+    archive_org_url: night.archiveUrl,
+    description: night.note || null,
+  },
+  setNumber: 1,
+  position,
+  segueToNext: false,
+});
+
+/** The whole guide, oldest night first — the song walking forward in time. */
+export const communityPlaylist = (issue: CommunityIssue): PlayableSlot[] =>
+  issue.nights
+    .filter((n) => !!n.archiveUrl)
+    .sort((a, b) => (a.showDate ?? "").localeCompare(b.showDate ?? ""))
+    .map((n, i) => communitySlot(issue, n, i));
+
+/**
+ * What a shared link should say about this issue.
+ *
+ * The bare title told a reader nothing — a WhatsApp paste read "Dead Set — a
+ * discovery tool", which is the app, not the song. This leads with what makes
+ * the song worth opening: how long it ran, how often, and how many nights
+ * somebody picked out of it.
+ */
+export const communityShareText = (issue: CommunityIssue): string => {
+  const playable = issue.nights.filter((n) => n.showDate).length;
+  const from = issue.firstPlayed?.slice(0, 4);
+  const to = issue.lastPlayed?.slice(0, 4);
+  const span =
+    from && to && from !== to
+      ? ` between ${from} and ${to}`
+      : from
+        ? ` in ${from}`
+        : "";
+  const count =
+    issue.timesPlayed != null ? `Played ${issue.timesPlayed} times${span}.` : "";
+  const picked = playable
+    ? ` ${playable} ${playable === 1 ? "night" : "nights"} worth knowing, mapped by ${issue.mappedBy}.`
+    : ` Mapped by ${issue.mappedBy}.`;
+  return `${count}${picked}`.trim();
 };
