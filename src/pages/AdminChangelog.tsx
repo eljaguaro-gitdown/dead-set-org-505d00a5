@@ -43,12 +43,10 @@ const AdminChangelog = () => {
   const [saving, setSaving] = useState(false);
 
   // Week header fields
-  const [weekNumber, setWeekNumber] = useState(1);
-  const [weekLabel, setWeekLabel] = useState("");
+  // The one date everything else is derived from. Defaults to today, which is
+  // right for the weekly routine and editable for a backfill.
+  const [shippedOn, setShippedOn] = useState(() => new Date().toISOString().slice(0, 10));
   const [editionTitle, setEditionTitle] = useState("");
-  const [statsUpdates, setStatsUpdates] = useState(0);
-  const [statsFeedback, setStatsFeedback] = useState(0);
-  const [statsBugs, setStatsBugs] = useState(0);
   const [encoreNote, setEncoreNote] = useState("");
   const [nextWeekTeaser, setNextWeekTeaser] = useState("");
 
@@ -132,8 +130,8 @@ const AdminChangelog = () => {
   };
 
   const handleSave = async (publish: boolean) => {
-    if (!weekLabel || !editionTitle) {
-      toast.error("Week label and edition title are required");
+    if (!shippedOn || !editionTitle) {
+      toast.error("A ship date and an edition title are required");
       return;
     }
     if (items.some(i => !i.title)) {
@@ -143,8 +141,7 @@ const AdminChangelog = () => {
     setSaving(true);
     try {
       const rows = items.map(item => ({
-        week_number: weekNumber,
-        week_label: weekLabel,
+        shipped_on: shippedOn,
         edition_title: editionTitle,
         tag: item.tag,
         title: item.title,
@@ -154,11 +151,14 @@ const AdminChangelog = () => {
         encore_note: encoreNote || null,
         next_week_teaser: nextWeekTeaser || null,
         published: publish,
-        week_stats_updates: statsUpdates,
-        week_stats_feedback: statsFeedback,
-        week_stats_bugs: statsBugs,
       }));
-      const { error } = await supabase.from("changelog_entries").insert(rows);
+      // Cast for the same reason as the read in Updates.tsx: `shipped_on` is
+      // not in the generated Database types yet, and the legacy week_* columns
+      // still read as required there. The migration adds the column and makes
+      // the legacy ones optional; drop this hop once types.ts is regenerated.
+      const { error } = await supabase
+        .from("changelog_entries")
+        .insert(rows as unknown as never);
       if (error) throw error;
       toast.success(publish ? "Published!" : "Draft saved!");
       if (publish) navigate("/updates");
@@ -228,34 +228,24 @@ const AdminChangelog = () => {
             {/* Week header */}
             <div className="bg-[#0d0d0d] border border-[#2a2410] rounded-lg p-5 space-y-4">
               <h2 className="font-mono text-sm text-[#c9a84c] uppercase tracking-wider">Week Header</h2>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="font-mono text-xs text-[#a09880] mb-1 block">Week #</label>
-                  <Input type="number" value={weekNumber} onChange={e => setWeekNumber(Number(e.target.value))} className="bg-[#0a0a0a] border-[#2a2410] text-[#b0ac9a]" />
-                </div>
-                <div>
-                  <label className="font-mono text-xs text-[#a09880] mb-1 block">Date Range</label>
-                  <Input value={weekLabel} onChange={e => setWeekLabel(e.target.value)} placeholder="Apr 7–11, 2026" className="bg-[#0a0a0a] border-[#2a2410] text-[#b0ac9a]" />
-                </div>
+              <div>
+                <label className="font-mono text-xs text-[#a09880] mb-1 block">Shipped on</label>
+                <Input type="date" value={shippedOn} onChange={e => setShippedOn(e.target.value)} className="bg-[#0a0a0a] border-[#2a2410] text-[#b0ac9a]" />
+                <p className="font-mono text-[11px] text-[#6f6a58] mt-1">
+                  The week and its date range come from this. There is no week number to
+                  keep in step and no range to type — that is how one edition came to be
+                  headed &ldquo;Week 3 &middot; Apr 21 &ndash; Sep 23&rdquo;.
+                </p>
               </div>
               <div>
                 <label className="font-mono text-xs text-[#a09880] mb-1 block">Edition Title</label>
                 <Input value={editionTitle} onChange={e => setEditionTitle(e.target.value)} placeholder="What Got Better This Week" className="bg-[#0a0a0a] border-[#2a2410] text-[#b0ac9a] font-display italic" />
               </div>
-              <div className="grid grid-cols-3 gap-3">
-                <div>
-                  <label className="font-mono text-xs text-[#a09880] mb-1 block">Updates</label>
-                  <Input type="number" value={statsUpdates} onChange={e => setStatsUpdates(Number(e.target.value))} className="bg-[#0a0a0a] border-[#2a2410] text-[#b0ac9a]" />
-                </div>
-                <div>
-                  <label className="font-mono text-xs text-[#a09880] mb-1 block">Feedback</label>
-                  <Input type="number" value={statsFeedback} onChange={e => setStatsFeedback(Number(e.target.value))} className="bg-[#0a0a0a] border-[#2a2410] text-[#b0ac9a]" />
-                </div>
-                <div>
-                  <label className="font-mono text-xs text-[#a09880] mb-1 block">Bugs</label>
-                  <Input type="number" value={statsBugs} onChange={e => setStatsBugs(Number(e.target.value))} className="bg-[#0a0a0a] border-[#2a2410] text-[#b0ac9a]" />
-                </div>
-              </div>
+              <p className="font-mono text-[11px] text-[#6f6a58]">
+                The three counts on the published card are the entries themselves —
+                updates shipped, how many carry a credit, how many are fixes — so they
+                cannot disagree with the list underneath them.
+              </p>
               <div>
                 <label className="font-mono text-xs text-[#a09880] mb-1 block">From the lab — your personal note</label>
                 <Textarea value={encoreNote} onChange={e => setEncoreNote(e.target.value)} placeholder="A personal note to the community..." className="bg-[#0a0a0a] border-[#2a2410] text-[#b0ac9a] font-hand" rows={3} />
@@ -329,14 +319,14 @@ const AdminChangelog = () => {
               <div className="bg-[#0d0d0d] border border-[#2a2410] rounded-lg p-5 space-y-5">
                 {/* Week header preview */}
                 <div>
-                  <p className="font-mono text-xs text-[#a09880]">Week {weekNumber} · {weekLabel || "..."}</p>
+                  <p className="font-mono text-xs text-[#a09880]">{shippedOn || "..."}</p>
                   <p className="font-display text-xl text-[#c9a84c] italic mt-1">{editionTitle || "Edition title..."}</p>
                 </div>
                 {/* Stats pills */}
                 <div className="flex gap-2 flex-wrap">
-                  <span className="font-mono text-xs border border-[#c9a84c]/30 text-[#c9a84c] rounded-full px-2.5 py-0.5">{statsUpdates} updates</span>
-                  <span className="font-mono text-xs border border-[#c9a84c]/30 text-[#c9a84c] rounded-full px-2.5 py-0.5">{statsFeedback} from feedback</span>
-                  <span className="font-mono text-xs border border-[#c9a84c]/30 text-[#c9a84c] rounded-full px-2.5 py-0.5">{statsBugs} bugs squashed</span>
+                  <span className="font-mono text-xs border border-[#c9a84c]/30 text-[#c9a84c] rounded-full px-2.5 py-0.5">{items.length} {items.length === 1 ? "update" : "updates"} shipped</span>
+                  <span className="font-mono text-xs border border-[#c9a84c]/30 text-[#c9a84c] rounded-full px-2.5 py-0.5">{items.filter(i => i.credit).length} from your feedback</span>
+                  <span className="font-mono text-xs border border-[#c9a84c]/30 text-[#c9a84c] rounded-full px-2.5 py-0.5">{items.filter(i => i.tag === "fix").length} {items.filter(i => i.tag === "fix").length === 1 ? "bug" : "bugs"} squashed</span>
                 </div>
 
                 {/* Set I */}

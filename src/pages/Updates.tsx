@@ -2,35 +2,20 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { ChevronRight, ArrowLeft, Loader2 } from "lucide-react";
+import { groupEditions, type BuildNoteEntry, type Edition } from "@/lib/buildNotes";
 
 type ChangelogTag = "fix" | "new" | "improved" | "beta";
 
-interface ChangelogEntry {
-  id: string;
-  week_number: number;
-  week_label: string;
-  edition_title: string;
+/**
+ * An edition is a WEEK OF SHIP DATES, derived in @/lib/buildNotes. The
+ * `week_number` / `week_label` / `week_stats_*` columns are legacy: they were
+ * typed by hand, which is how this page came to show "Week 3 · Apr 21 – Sep 23,
+ * 2026" — five months under one week heading. Only `week_label` is still read,
+ * and only as an override on the editions published before `shipped_on`
+ * existed, so their original labels survive.
+ */
+interface ChangelogEntry extends BuildNoteEntry {
   tag: ChangelogTag;
-  title: string;
-  detail: string;
-  credit: string | null;
-  set_number: number;
-  encore_note: string | null;
-  next_week_teaser: string | null;
-  week_stats_updates: number;
-  week_stats_feedback: number;
-  week_stats_bugs: number;
-}
-
-interface WeekGroup {
-  week_number: number;
-  week_label: string;
-  edition_title: string;
-  stats: { updates: number; feedback: number; bugs: number };
-  set1: ChangelogEntry[];
-  set2: ChangelogEntry[];
-  encore_note: string | null;
-  next_week_teaser: string | null;
 }
 
 const TAG_STYLES: Record<ChangelogTag, { label: string; bg: string; text: string }> = {
@@ -41,9 +26,9 @@ const TAG_STYLES: Record<ChangelogTag, { label: string; bg: string; text: string
 };
 
 const Updates = () => {
-  const [weeks, setWeeks] = useState<WeekGroup[]>([]);
+  const [weeks, setWeeks] = useState<Edition<ChangelogEntry>[]>([]);
   const [loading, setLoading] = useState(true);
-  const [expanded, setExpanded] = useState<Set<number>>(new Set());
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     const fetchEntries = async () => {
@@ -51,41 +36,28 @@ const Updates = () => {
         .from("changelog_entries")
         .select("*")
         .eq("published", true)
-        .order("week_number", { ascending: false });
+        .order("shipped_on", { ascending: false });
 
       if (error || !data) { setLoading(false); return; }
 
-      const grouped = new Map<number, WeekGroup>();
-      for (const entry of data as ChangelogEntry[]) {
-        if (!grouped.has(entry.week_number)) {
-          grouped.set(entry.week_number, {
-            week_number: entry.week_number,
-            week_label: entry.week_label,
-            edition_title: entry.edition_title,
-            stats: { updates: entry.week_stats_updates, feedback: entry.week_stats_feedback, bugs: entry.week_stats_bugs },
-            set1: [],
-            set2: [],
-            encore_note: entry.encore_note,
-            next_week_teaser: entry.next_week_teaser,
-          });
-        }
-        const group = grouped.get(entry.week_number)!;
-        if (entry.set_number === 1) group.set1.push(entry);
-        else group.set2.push(entry);
-        if (entry.encore_note) group.encore_note = entry.encore_note;
-        if (entry.next_week_teaser) group.next_week_teaser = entry.next_week_teaser;
-      }
-
-      const sorted = Array.from(grouped.values()).sort((a, b) => b.week_number - a.week_number);
-      setWeeks(sorted);
-      // Expand most recent week
-      if (sorted.length > 0) setExpanded(new Set([sorted[0].week_number]));
+      // `today` is passed in rather than read inside, so the in-progress week
+      // is a parameter of the grouping and can be tested.
+      const today = new Date().toISOString().slice(0, 10);
+      // Cast through unknown because `shipped_on` is not in the generated
+      // Database types yet: types.ts regenerates from the schema (CLAUDE.md —
+      // never hand-edit it), and this sandbox has no Supabase access token to
+      // run the generator. The column exists; the migration adds it. Drop the
+      // `unknown` hop the moment types.ts carries shipped_on.
+      const editions = groupEditions(data as unknown as ChangelogEntry[], today);
+      setWeeks(editions);
+      // Open the newest edition — the one people came to read.
+      if (editions.length > 0) setExpanded(new Set([editions[0].key]));
       setLoading(false);
     };
     fetchEntries();
   }, []);
 
-  const toggleWeek = (wn: number) => {
+  const toggleWeek = (wn: string) => {
     setExpanded(prev => {
       const next = new Set(prev);
       if (next.has(wn)) next.delete(wn); else next.add(wn);
@@ -116,13 +88,16 @@ const Updates = () => {
         ) : (
           <div className="space-y-4">
             {weeks.map(week => {
-              const isOpen = expanded.has(week.week_number);
+              const isOpen = expanded.has(week.key);
               return (
-                <div key={week.week_number} className="bg-[#0d0d0d] border border-[#2a2410] rounded-lg overflow-hidden">
+                <div key={week.key} className="bg-[#0d0d0d] border border-[#2a2410] rounded-lg overflow-hidden">
                   {/* Week header — always visible */}
-                  <button onClick={() => toggleWeek(week.week_number)} className="w-full px-5 py-4 flex items-center justify-between text-left group">
+                  <button onClick={() => toggleWeek(week.key)} className="w-full px-5 py-4 flex items-center justify-between text-left group">
                     <div>
-                      <p className="font-mono text-xs text-[#a09880]">Week {week.week_number} · {week.week_label}</p>
+                      <p className="font-mono text-xs text-[#a09880]">
+                        {week.label}
+                        {week.inProgress && <span className="text-[#c9a84c]"> · this week, still running</span>}
+                      </p>
                       <p className="font-display text-lg md:text-xl text-[#c9a84c] italic mt-0.5">{week.edition_title}</p>
                     </div>
                     <ChevronRight className={`w-4 h-4 text-[#c9a84c] transition-transform duration-200 ${isOpen ? "rotate-90" : ""}`} />
