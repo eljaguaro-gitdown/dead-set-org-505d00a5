@@ -233,3 +233,105 @@ describe("it shows a creator's better-presented work", () => {
     expect(seen.size).toBe(47);
   });
 });
+
+describe("the path production actually takes — a fresh lead present", () => {
+  /**
+   * Every coverage test above runs with nothing fresh, so they only exercise
+   * slots=3. Production creates ~16 setlists a week, so a fresh lead is there
+   * almost every week and slots=2 is the REAL path — which had no coverage at
+   * all. Three mutations survived the whole suite because of it: using `count`
+   * rather than `slots` for the stride (starves a third of the pool), ignoring
+   * the lead when sizing the window (renders FOUR cards), and widening the
+   * window to `count` while the lead still takes a slot.
+   *
+   * What keeps everyone reachable is that the stride EQUALS the window width,
+   * so the windows tile the ring. These pin that where it counts.
+   */
+  const withLead = (n: number) =>
+    Array.from({ length: n }, (_, i) =>
+      s(`s${i}`, `c${i}`, i === 0 ? daysAgo(1) : daysAgo(60 + i)),
+    );
+
+  it.each([4, 6, 7, 9, 12, 48])(
+    "never shows more cards than asked, with %i creators and a fresh lead",
+    (n) => {
+      for (let w = 0; w < 12; w++) {
+        const picks = featuredForWeek(withLead(n), 3, NOW, w);
+        expect(picks.length, `n=${n} week=${w}`).toBeLessThanOrEqual(3);
+        // And never the same person twice on one shelf.
+        expect(new Set(picks.map((p) => p.creator_id)).size).toBe(picks.length);
+      }
+    },
+  );
+
+  it.each([6, 9, 12, 48])(
+    "still reaches every creator with %i in the pool and a lead taking a slot",
+    (n) => {
+      const rows = withLead(n);
+      const seen = new Set<string>();
+      for (let w = 0; w < 400 && seen.size < n; w++) {
+        featuredForWeek(rows, 3, NOW, w).forEach((p) => seen.add(p.creator_id));
+      }
+      expect(seen.size, `n=${n}`).toBe(n);
+    },
+  );
+
+  it("leads with the fresh one and fills the rest from the rotation", () => {
+    const picks = featuredForWeek(withLead(12), 3, NOW, 5);
+    expect(picks).toHaveLength(3);
+    expect(picks[0].id).toBe("s0");
+    expect(picks.slice(1).some((p) => p.id === "s0")).toBe(false);
+  });
+});
+
+describe("an empty setlist never reaches the shelf", () => {
+  // Selection happens before enrichment, so without a song count a named but
+  // empty setlist renders as a "0 songs" card. The main grid already hides
+  // empties. Measured: 3 of 189 named public setlists are empty.
+  const full = (id: string, c: string, d: string) => ({ ...s(id, c, d), songCount: 12 });
+  const empty = (id: string, c: string, d: string) => ({ ...s(id, c, d), songCount: 0 });
+
+  it("prefers a creator's non-empty setlist even when the empty one is newer", () => {
+    expect(oneSetlistPerCreator([empty("e", "ann", daysAgo(1)), full("f", "ann", daysAgo(30))])
+      .map((p) => p.id)).toEqual(["f"]);
+  });
+
+  it("keeps an empty-only creator off the shelf", () => {
+    const picks = featuredForWeek(
+      [...manyCreators.map((m) => ({ ...m, songCount: 9 })), empty("x", "ghost", daysAgo(1))],
+      3, NOW,
+    );
+    expect(picks.some((p) => p.creator_id === "ghost")).toBe(false);
+  });
+
+  it("treats an unknown count as eligible, not as empty", () => {
+    // `undefined` means the caller did not say — it must not silently exclude
+    // every setlist on a surface that does not fetch counts.
+    const picks = featuredForWeek(manyCreators, 3, NOW, 3);
+    expect(picks).toHaveLength(3);
+  });
+});
+
+describe("isoWeekIndex does not depend on the machine's timezone", () => {
+  // It survived a mutation to local getters because CI and the sandbox both
+  // run in UTC. A timezone regression would have shipped green.
+  const inTZ = (tz: string, fn: () => void) => {
+    const prev = process.env.TZ;
+    process.env.TZ = tz;
+    try { fn(); } finally { process.env.TZ = prev; }
+  };
+
+  it.each(["UTC", "Pacific/Kiritimati", "Pacific/Pago_Pago", "America/New_York", "Asia/Kolkata"])(
+    "gives the same index in %s",
+    (tz) => {
+      const at = (iso: string) => {
+        let v = 0;
+        inTZ(tz, () => { v = isoWeekIndex(new Date(iso)); });
+        return v;
+      };
+      // Instants either side of UTC midnight on an ISO week boundary.
+      expect(at("2026-10-11T23:59:59Z")).toBe(at("2026-10-05T00:00:00Z"));
+      expect(at("2026-10-12T00:00:00Z")).toBe(at("2026-10-05T00:00:00Z") + 1);
+    },
+  );
+});

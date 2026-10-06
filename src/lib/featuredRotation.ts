@@ -40,6 +40,15 @@ export interface RotatableSetlist {
   created_at: string;
   /** Optional: used only to prefer a creator's better-presented work. */
   title?: string | null;
+  /**
+   * Songs in the setlist, when the caller knows. Selection happens before
+   * enrichment, so without this an empty-but-named setlist can reach the shelf
+   * as a "0 songs" card — the main grid hides empties, the shelf did not.
+   * Measured on production: 3 of the 189 named public setlists are empty, and
+   * every one of the 35 named creators also has a non-empty one, so preferring
+   * non-empty costs nobody their turn.
+   */
+  songCount?: number | null;
 }
 
 /**
@@ -60,6 +69,9 @@ export interface RotatableSetlist {
  * The 12 it excludes have made nothing but untitled setlists. That is a bar,
  * not a snub: name one and you are in the rotation the same week.
  */
+/** Known to have no songs. `undefined` means "caller did not say", not empty. */
+const isEmpty = (s: RotatableSetlist) => s.songCount != null && s.songCount <= 0;
+
 const isUntitled = (s: RotatableSetlist) => {
   const t = (s.title ?? "").trim();
   return t === "" || /^untitled setlist$/i.test(t);
@@ -86,8 +98,10 @@ export const FRESH_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
 const newestFirst = (a: RotatableSetlist, b: RotatableSetlist) =>
   b.created_at.localeCompare(a.created_at) || a.id.localeCompare(b.id);
 
-/** Titled beats untitled; otherwise newest wins. */
+/** Has songs beats empty; titled beats untitled; otherwise newest wins. */
 const betterRepresentative = (a: RotatableSetlist, b: RotatableSetlist) => {
+  const ae = isEmpty(a), be = isEmpty(b);
+  if (ae !== be) return ae ? 1 : -1;
   const au = isUntitled(a), bu = isUntitled(b);
   if (au !== bu) return au ? 1 : -1;
   return newestFirst(a, b);
@@ -124,8 +138,8 @@ export const featuredForWeek = <T extends RotatableSetlist>(
   if (count <= 0) return [];
   // The bar: a setlist somebody named. Falls back to everything only if NOBODY
   // has named one, so a fresh install still shows a shelf instead of nothing.
-  const named = setlists.filter((x) => !isUntitled(x));
-  const pool = oneSetlistPerCreator(named.length > 0 ? named : setlists);
+  const eligible = setlists.filter((x) => !isUntitled(x) && !isEmpty(x));
+  const pool = oneSetlistPerCreator(eligible.length > 0 ? eligible : setlists);
   if (pool.length === 0) return [];
 
   // Rule 1 — new work first. `pool` is newest-first, so the head is the most

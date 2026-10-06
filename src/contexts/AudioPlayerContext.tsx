@@ -422,6 +422,10 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
   const stopPlayback = useCallback(() => {
     audioDebug.log("context", "stopPlayback");
     playSetlistSeqRef.current++; // invalidate any in-flight playSetlist
+    // A busy flag set by one entry point has to be cleared by EVERY path that
+    // supersedes it, not just the one that re-sets it. "The newer run owns it"
+    // was only true when the newer run was another playSetlist.
+    setCueingTitle(null);
     resolveGenRef.current++; // cancel background resolve-and-append
     engineSlotIdRef.current = null;
     audioDebug.setSlot(null, null, null, null);
@@ -436,6 +440,10 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
   ) => {
     audioDebug.log("context", "playSingle", { id: slot.id, song: slot.song.title, hasUrl: !!slot.version?.archive_org_url, hasDirect: !!slot.directTrackUrl, withContext: !!playlistContext });
     playSetlistSeqRef.current++; // invalidate any in-flight playSetlist
+    // See stopPlayback: without this the digging card stayed up over a tape
+    // that was already playing — measured at 31s in a real browser, until an
+    // unrelated stall error happened to hide it.
+    setCueingTitle(null);
     engineSlotIdRef.current = null; // force the engine to (re)anchor on this slot
     // We're inside the user's tap — unlock the AudioContext while the gesture
     // window is open, before any async resolution starts.
@@ -766,11 +774,14 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
     const seq = ++playSetlistSeqRef.current;
+    // Supersession runs BOTH ways. Without this, a slow single tap that failed
+    // after Play All had started cleared its playingSlot and toasted over the
+    // tape that was playing.
+    playSingleSeqRef.current++;
     clearPlaybackError(); // same reason as playSingle: a new run is a new attempt
     // Play All clears playingSlot and leaves it null until the first track
     // resolves, so nothing else marks this wait as busy. Named so the card can
     // say which song it is hunting for.
-    setCueingTitle(slots[0]?.song.title ?? null);
     setCueingTitle(slots[0]?.song.title ?? null);
     engineSlotIdRef.current = null; // force the engine to (re)anchor on the new setlist
     // Inside the user's tap — unlock audio before async track resolution starts.

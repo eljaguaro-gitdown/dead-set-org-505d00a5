@@ -21,13 +21,30 @@ import type { Database } from "@/integrations/supabase/types";
 type Setlist = Database["public"]["Tables"]["setlists"]["Row"];
 type Era = Database["public"]["Tables"]["eras"]["Row"];
 
-/** How many creators deep the rotation can reach in one query. */
-const FEATURED_POOL = 400;
+/**
+ * How many setlists deep the rotation can see.
+ *
+ * The pool query asks for FOUR columns, not the full row, so this can be deep
+ * without being expensive — the three winners are fetched in full afterwards.
+ * The first version selected every column for 400 rows on every Browse load,
+ * which both cost more than the old 3-row query and quietly capped the
+ * rotation: a creator whose only named setlist fell outside the newest 400
+ * would have become permanently invisible with no error and no log. At 16 new
+ * setlists a week that was about nine weeks away.
+ */
+const FEATURED_POOL = 2000;
 /** Cards on the shelf. */
 const FEATURED_SLOTS = 3;
 
 /** The columns featuredForWeek actually reads. */
-type SetlistRow = { id: string; creator_id: string; created_at: string; title: string };
+type SetlistRow = {
+  id: string; creator_id: string; created_at: string; title: string; songCount: number | null;
+};
+/** The pool query's shape — `setlist_slots(count)` is a PostgREST aggregate. */
+type PoolRow = {
+  id: string; creator_id: string; created_at: string; title: string;
+  setlist_slots?: { count: number }[] | null;
+};
 
 interface SetlistWithMeta extends Setlist {
   slot_count: number;
@@ -97,17 +114,34 @@ const Browse = () => {
       // all-time leaderboard: 200 of 255 public setlists have no upvotes at
       // all, so it could only ever show the same three, and 44 of 47 creators
       // could never appear. See featuredRotation for the whole argument.
-      const { data } = await supabase
+      // Two steps on purpose. The pool is only what the rotation READS —
+      // `setlist_slots(count)` is an aggregate, so the song count arrives
+      // without fetching a single slot row, and an empty setlist cannot reach
+      // the shelf as a "0 songs" card the way the main grid already prevents.
+      const { data: pool } = await supabase
         .from("setlists")
-        .select("id, title, creator_id, description, era_id, is_public, is_collaborative, play_count, upvote_count, created_at, updated_at")
+        .select("id, creator_id, created_at, title, setlist_slots(count)")
         .eq("is_public", true)
         .order("created_at", { ascending: false })
         .limit(FEATURED_POOL);
-      if (!data || data.length === 0) return;
-      const picks = featuredForWeek(data as unknown as SetlistRow[], FEATURED_SLOTS);
+      if (!pool || pool.length === 0) return;
+      const candidates: SetlistRow[] = (pool as unknown as PoolRow[]).map((r) => ({
+        id: r.id,
+        creator_id: r.creator_id,
+        created_at: r.created_at,
+        title: r.title,
+        songCount: r.setlist_slots?.[0]?.count ?? null,
+      }));
+      const picks = featuredForWeek(candidates, FEATURED_SLOTS);
       if (picks.length === 0) return;
-      // Enrich only what we are about to show, not the whole pool.
-      const enriched = await enrichSetlists(picks as unknown as Setlist[]);
+
+      // Now fetch the full rows for the three winners only.
+      const { data } = await supabase
+        .from("setlists")
+        .select("id, title, creator_id, description, era_id, is_public, is_collaborative, play_count, upvote_count, created_at, updated_at")
+        .in("id", picks.map((p) => p.id));
+      if (!data || data.length === 0) return;
+      const enriched = await enrichSetlists(data as unknown as Setlist[]);
       // enrichSetlists does not promise to preserve order, and the rotation IS
       // the order — slot 1 is this week's new work.
       const byId = new Map(enriched.map((e) => [e.id, e]));
