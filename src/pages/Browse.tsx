@@ -15,10 +15,19 @@ import FavoriteButton from "@/components/FavoriteButton";
 import PlaySetlistButton from "@/components/PlaySetlistButton";
 import { useFavorites } from "@/hooks/useFavorites";
 import { toast } from "sonner";
+import { featuredForWeek } from "@/lib/featuredRotation";
 import type { Database } from "@/integrations/supabase/types";
 
 type Setlist = Database["public"]["Tables"]["setlists"]["Row"];
 type Era = Database["public"]["Tables"]["eras"]["Row"];
+
+/** How many creators deep the rotation can reach in one query. */
+const FEATURED_POOL = 400;
+/** Cards on the shelf. */
+const FEATURED_SLOTS = 3;
+
+/** The columns featuredForWeek actually reads. */
+type SetlistRow = { id: string; creator_id: string; created_at: string; title: string };
 
 interface SetlistWithMeta extends Setlist {
   slot_count: number;
@@ -79,18 +88,30 @@ const Browse = () => {
     });
   }, []);
 
-  // Fetch featured (top 3 by upvotes) and trending (most played in last 7 days) — once
+  // Featured rotates weekly across the community; trending is most-played in
+  // the last 7 days.
   useEffect(() => {
     const fetchFeatured = async () => {
+      // Newest-first and deep enough to hold one setlist from every creator.
+      // The old query asked for the top 3 by upvote_count, which is an
+      // all-time leaderboard: 200 of 255 public setlists have no upvotes at
+      // all, so it could only ever show the same three, and 44 of 47 creators
+      // could never appear. See featuredRotation for the whole argument.
       const { data } = await supabase
         .from("setlists")
         .select("id, title, creator_id, description, era_id, is_public, is_collaborative, play_count, upvote_count, created_at, updated_at")
         .eq("is_public", true)
-        .order("upvote_count", { ascending: false })
-        .limit(3);
+        .order("created_at", { ascending: false })
+        .limit(FEATURED_POOL);
       if (!data || data.length === 0) return;
-      const enriched = await enrichSetlists(data as unknown as Setlist[]);
-      setFeatured(enriched);
+      const picks = featuredForWeek(data as unknown as SetlistRow[], FEATURED_SLOTS);
+      if (picks.length === 0) return;
+      // Enrich only what we are about to show, not the whole pool.
+      const enriched = await enrichSetlists(picks as unknown as Setlist[]);
+      // enrichSetlists does not promise to preserve order, and the rotation IS
+      // the order — slot 1 is this week's new work.
+      const byId = new Map(enriched.map((e) => [e.id, e]));
+      setFeatured(picks.map((p) => byId.get(p.id)).filter(Boolean) as SetlistWithMeta[]);
     };
 
     const fetchTrending = async () => {
