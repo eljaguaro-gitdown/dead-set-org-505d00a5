@@ -91,7 +91,25 @@ const Songbook = () => {
           .order("created_at", { ascending: false })
           .limit(60);
 
-        const rows = (entries ?? []) as CommunityRow[];
+        let rows = (entries ?? []) as CommunityRow[];
+
+        // Drop any guide its author has since made private or deleted. The
+        // issue page already refuses those, so without this the shelf keeps a
+        // live card pointing at "No issue here yet." Resolved by a second
+        // query rather than an embed, for the same reason the names below are.
+        const setlistIds = [...new Set(rows.map((r) => r.setlist_id).filter(Boolean))];
+        if (setlistIds.length) {
+          const { data: visible } = await songbookDb
+            .from("setlists")
+            .select("id")
+            .eq("is_public", true)
+            .in("id", setlistIds);
+          const open = new Set(
+            ((visible ?? []) as { id: string }[]).map((v) => v.id),
+          );
+          rows = rows.filter((r) => open.has(r.setlist_id));
+        }
+
         const creatorIds = [...new Set(rows.map((r) => r.creator_id).filter(Boolean))];
         if (creatorIds.length) {
           const { data: profiles } = await songbookDb
@@ -322,7 +340,11 @@ const Songbook = () => {
                       </p>
                       {/* The same promise the curated card makes, because it now
                           leads to the same kind of page. */}
-                      <span className="font-ticket text-[11px] uppercase tracking-[0.12em] text-primary shrink-0">
+                      {/* dead-dark, not primary: this renders on the cream
+                          card, where primary is 4.09:1. Its sibling — the
+                          curated card's "Read the issue" — already uses
+                          dead-dark for the same reason. */}
+                      <span className="font-ticket text-[11px] uppercase tracking-[0.12em] text-dead-dark shrink-0">
                         Read →
                       </span>
                     </div>

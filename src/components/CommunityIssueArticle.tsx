@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft, ListMusic } from "lucide-react";
 import ShareDropdown from "@/components/ShareDropdown";
@@ -14,6 +15,14 @@ import type { CommunityIssue } from "@/lib/communityIssue";
  */
 
 /** `1978-08-31` -> `Aug 31, 1978`, matching how the curated issues read. */
+/**
+ * A display name is whatever someone typed, and some of them end in a period
+ * ("Rosalie M."). Appending another gives "Rosalie M..", on a page that is
+ * mostly a credit to that person.
+ */
+export const sentenceEnd = (name: string): string =>
+  /[.!?]$/.test(name.trim()) ? "" : ".";
+
 export const formatIssueDate = (iso: string | null): string => {
   if (!iso) return "—";
   // Noon UTC, so a date-only value cannot slip a day in a western timezone.
@@ -30,6 +39,35 @@ export const formatIssueDate = (iso: string | null): string => {
 const CommunityIssueArticle = ({ issue }: { issue: CommunityIssue }) => {
   const shareUrl = `https://dead-set.org/songbook/${issue.slug}`;
   const dated = issue.nights.filter((n) => n.showDate);
+
+  /**
+   * Parity with the curated issue, which sets these too. Honest caveat: a
+   * crawler does not run JS, so this does NOT give a rich unfurl — that needs
+   * the og-image function to serve meta for /songbook/:slug server-side, which
+   * neither page has. What it does do is give the in-app and OS share sheets,
+   * which read the live DOM, the issue's own title rather than the app's.
+   */
+  useEffect(() => {
+    const title = `${issue.title} — The Songbook · Dead Set`;
+    const desc = `${issue.title}, first mapped by ${issue.mappedBy}.`;
+    document.title = title;
+    const set = (key: string, content: string) => {
+      const attr = key.startsWith("og:") ? "property" : "name";
+      let el = document.querySelector(`meta[${attr}="${key}"]`);
+      if (!el) {
+        el = document.createElement("meta");
+        el.setAttribute(attr, key);
+        document.head.appendChild(el);
+      }
+      el.setAttribute("content", content);
+    };
+    set("description", desc);
+    set("og:title", title);
+    set("og:description", desc);
+    set("og:url", shareUrl);
+    set("twitter:title", title);
+    set("twitter:description", desc);
+  }, [issue, shareUrl]);
 
   return (
     <main className="mx-auto w-full max-w-3xl px-5 md:px-6 py-8 md:py-12">
@@ -54,7 +92,7 @@ const CommunityIssueArticle = ({ issue }: { issue: CommunityIssue }) => {
           </p>
           <h1 className="font-header text-4xl md:text-6xl leading-none mb-4">{issue.title}</h1>
           <p className="font-hand text-2xl md:text-4xl text-[hsl(var(--dead-blue))] leading-tight">
-            First mapped by {issue.mappedBy}.
+            First mapped by {issue.mappedBy}{sentenceEnd(issue.mappedBy)}
           </p>
         </header>
 
@@ -112,7 +150,7 @@ const CommunityIssueArticle = ({ issue }: { issue: CommunityIssue }) => {
           <ol className="space-y-4 mb-8">
             {dated.map((night) => (
               <li
-                key={night.position}
+                key={`${night.position}-${night.showDate ?? "undated"}`}
                 className="pl-4 border-l-2 border-dashed border-primary/35"
               >
                 <span className="block font-hand text-xl md:text-2xl leading-tight text-card-foreground">
@@ -136,7 +174,8 @@ const CommunityIssueArticle = ({ issue }: { issue: CommunityIssue }) => {
         <div className="mt-10 pt-8 border-t-2 border-dashed border-primary/35">
           <Link
             to={`/setlist/${issue.setlistId}`}
-            className="inline-flex items-center gap-2 font-ticket text-xs uppercase tracking-[0.12em] text-primary underline underline-offset-4"
+            /* dead-dark on the cream card: primary measures 4.09:1 here. */
+            className="inline-flex items-center gap-2 font-ticket text-xs uppercase tracking-[0.12em] text-dead-dark underline underline-offset-4"
           >
             <ListMusic className="w-3.5 h-3.5" />
             Hear the guide
