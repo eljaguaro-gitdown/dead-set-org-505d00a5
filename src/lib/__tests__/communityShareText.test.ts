@@ -94,13 +94,23 @@ describe("the share control copies text, not a bare url", () => {
     "utf8",
   );
 
-  it("writes the share text AND the link to the clipboard", () => {
+  it("writes the share text, which carries the link, not the bare url", () => {
     // Copying only the url leaves the receiving app to describe the page, and
     // what it finds is the sitewide meta, because every route is
     // client-rendered and a crawler does not run JS.
-    expect(src).toMatch(/const copyPayload = `\$\{setlistShareText\}\\n\$\{linkToShare\}`/);
+    //
+    // The payload now comes from @/lib/shareCopy, whose text ends in the url —
+    // so this pins "copyPayload is the share text" rather than the old
+    // hand-assembled `${text}\n${url}`. That the text really does end in the
+    // url is asserted in shareSurfacesUseShareCopy.test.ts, against the
+    // builders themselves rather than against this file's source.
+    expect(src).toMatch(/const copyPayload = shareText;/);
+    expect(src).toMatch(/const shareText = share\.text;/);
     expect(src).toMatch(/clipboard\.writeText\(copyPayload\)/);
     // The no-clipboard fallback must copy the same thing.
     expect(src).toMatch(/ta\.value = copyPayload/);
+    // And must never fall back to the bare link.
+    expect(src).not.toMatch(/writeText\(linkToShare\)/);
+    expect(src).not.toMatch(/ta\.value = linkToShare/);
   });
 });

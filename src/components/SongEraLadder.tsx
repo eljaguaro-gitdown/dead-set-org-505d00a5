@@ -56,6 +56,12 @@ interface Props {
   onPlaySleepers?: (versions: LadderVersion[]) => void;
   /** The version sounding right now, so a running queue shows its place. */
   playingVersionId?: string | null;
+  /**
+   * The ladder's rows, reported up once loaded, so a page can offer play
+   * ABOVE the ladder without running the same query twice. The Songbook
+   * masthead's "Play all" needs them before the reader has scrolled this far.
+   */
+  onVersionsLoaded?: (versions: LadderVersion[]) => void;
 }
 
 /** Era accent colours. Every one of the seven DB eras gets one — the old
@@ -79,10 +85,14 @@ const fmtDate = (iso: string | null) => {
   return `${months[m - 1]} ${d}, ${y}`;
 };
 
-const SongEraLadder = ({ songId, songTitle, activeVersionId, onPlay, onPlaySleepers, playingVersionId }: Props) => {
+const SongEraLadder = ({ songId, songTitle, activeVersionId, onPlay, onPlaySleepers, playingVersionId, onVersionsLoaded }: Props) => {
   const isMobile = useIsMobile();
   const [eras, setEras] = useState<LadderEra[]>([]);
   const [versions, setVersions] = useState<LadderVersion[]>([]);
+  // Through a ref: the effect keys on songId only, and a parent passing an
+  // inline callback must not retrigger the fetch on every render.
+  const onVersionsLoadedRef = useRef(onVersionsLoaded);
+  onVersionsLoadedRef.current = onVersionsLoaded;
   const [loading, setLoading] = useState(true);
   const [openEra, setOpenEra] = useState<string | null>(null);
   const [sleepersOnly, setSleepersOnly] = useState(false);
@@ -102,7 +112,9 @@ const SongEraLadder = ({ songId, songTitle, activeVersionId, onPlay, onPlaySleep
       ]);
       if (cancelled) return;
       setEras((e ?? []) as LadderEra[]);
-      setVersions((v ?? []) as LadderVersion[]);
+      const loaded = (v ?? []) as LadderVersion[];
+      setVersions(loaded);
+      onVersionsLoadedRef.current?.(loaded);
       setLoading(false);
     })();
     return () => { cancelled = true; };

@@ -10,11 +10,20 @@ interface ShareDropdownProps {
   url: string;
   /** URL with OG meta tags for social crawlers (edge function). Falls back to url. */
   ogUrl?: string;
+  /** Document/heading title. The SHARE's title comes from `share`. */
   title: string;
-  description?: string;
+  /**
+   * The share's own copy, from `@/lib/shareCopy` — REQUIRED, and the only
+   * source of what a share says. The clipboard, the native sheet, the DM and
+   * the socials all read it, so every surface sells what it is passing on
+   * instead of each one inventing a line. There is deliberately no fallback:
+   * a new caller must add a function to shareCopy rather than assemble a
+   * string here. See the rule at the top of that module.
+   */
+  share: { title: string; text: string };
 }
 
-const ShareDropdown = ({ url, ogUrl, title, description }: ShareDropdownProps) => {
+const ShareDropdown = ({ url, ogUrl, title, share }: ShareDropdownProps) => {
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [dmOpen, setDmOpen] = useState(false);
@@ -46,10 +55,7 @@ const ShareDropdown = ({ url, ogUrl, title, description }: ShareDropdownProps) =
   // share urls such as /songbook/<slug>, which is correct — those are not
   // setlists and must not be attributed to one.
   const setlistId = setlistIdFromShareUrl(linkToShare);
-  const setlistTitle = title.replace(/\s+—\s+Dead-Set\.Org$/i, "").trim() || title;
-  const setlistShareText = description
-    ? `${description}\n\n${setlistTitle} on Dead-Set.Org`
-    : `${setlistTitle} on Dead-Set.Org`;
+  const shareText = share.text;
 
   /**
    * Copy the TEXT and the link, not the bare link.
@@ -65,7 +71,7 @@ const ShareDropdown = ({ url, ogUrl, title, description }: ShareDropdownProps) =
    * The real fix for the unfurl itself is per-route meta served before the SPA
    * fallback, which this app does not have for any route.
    */
-  const copyPayload = `${setlistShareText}\n${linkToShare}`;
+  const copyPayload = shareText;
 
   const copyLink = async () => {
     try {
@@ -87,7 +93,7 @@ const ShareDropdown = ({ url, ogUrl, title, description }: ShareDropdownProps) =
   const socialUrl = linkToShare;
 
   const shareTwitter = () => {
-    const tweetUrl = `https://x.com/intent/tweet?text=${encodeURIComponent(`${setlistTitle} on Dead-Set.Org`)}&url=${encodeURIComponent(socialUrl)}`;
+    const tweetUrl = `https://x.com/intent/tweet?text=${encodeURIComponent(share.title)}&url=${encodeURIComponent(socialUrl)}`;
     window.open(tweetUrl, "_blank", "noopener,noreferrer,width=550,height=420");
     trackShare({ shareType: "setlist", channel: "twitter", setlistId });
     setOpen(false);
@@ -103,7 +109,7 @@ const ShareDropdown = ({ url, ogUrl, title, description }: ShareDropdownProps) =
   const shareNative = async () => {
     if (!navigator.share) return;
     try {
-      await navigator.share({ title: setlistTitle, text: setlistShareText, url: linkToShare });
+      await navigator.share({ title: share.title, text: shareText, url: linkToShare });
       trackShare({ shareType: "setlist", channel: "native_share", setlistId });
     } catch {
       // user cancelled — keep menu open so they can pick another option
@@ -186,7 +192,7 @@ const ShareDropdown = ({ url, ogUrl, title, description }: ShareDropdownProps) =
           open={dmOpen}
           onOpenChange={setDmOpen}
           shareUrl={url}
-          shareText={setlistShareText}
+          shareText={shareText}
           setlistId={setlistId}
         />
       )}

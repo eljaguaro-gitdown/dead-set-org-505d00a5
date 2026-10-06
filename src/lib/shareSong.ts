@@ -1,6 +1,7 @@
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { trackShare } from "./trackShare";
+import { shareSongCopy } from "./shareCopy";
 
 interface ShareSongInput {
   favoriteSongId?: string | null;
@@ -51,12 +52,15 @@ export async function shareSong(input: ShareSongInput): Promise<void> {
 
   const link = `${SITE_ORIGIN}/song/${songId}${params.toString() ? `?${params.toString()}` : ""}`;
 
-  const versionLine = showDate ? `${showDate}${venue ? ` · ${venue}` : ""}` : null;
-  const fromLine = senderName ? `${senderName} sent you ` : "";
-  const title = versionLine ? `${songTitle} — ${versionLine}` : `${songTitle} on Dead-Set.Org`;
-  const text = versionLine
-    ? `🌹 ${fromLine}${songTitle} — ${versionLine}\n\nListen on Dead-Set.Org ⚡\n\n${link}`
-    : `🌹 ${fromLine}${songTitle}\n\nListen on Dead-Set.Org ⚡\n\n${link}`;
+  // The copy lives in @/lib/shareCopy, not here — see the rule at the top of
+  // that module. Every share surface sells what it is through the same builder.
+  const { title, text } = shareSongCopy({
+    songTitle,
+    url: link,
+    senderName,
+    showDate,
+    venue,
+  });
 
   // Native share (mobile)
   if (typeof navigator !== "undefined" && navigator.share) {

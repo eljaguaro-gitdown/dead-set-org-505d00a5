@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import ShowPlate from "./ShowPlate";
 import { trackShare } from "@/lib/trackShare";
+import { shareSetlistCopy } from "@/lib/shareCopy";
 import { shareToInstagram } from "@/lib/instagramShare";
 import SendToFriendDialog from "./SendToFriendDialog";
 import { useAuth } from "@/hooks/useAuth";
@@ -47,11 +48,14 @@ const ShareFlow = ({
   };
 
   const shareUrl = `https://dead-set.org/setlist/${setlistId}`;
-  const shareTitle = setlistName;
   const oneLiner = getShowOneLiner();
-  const shareText = oneLiner && oneLiner !== setlistName
-    ? `${oneLiner} ⚡ ${setlistName} on Dead-Set.Org`
-    : `${setlistName} on Dead-Set.Org`;
+  // One builder for every share surface — see the rule at the top of shareCopy.
+  const { title: shareTitle, text: shareText } = shareSetlistCopy({
+    setlistName,
+    url: shareUrl,
+    songCount,
+    oneLiner,
+  });
 
   const handleImageReady = useCallback((dataUrl: string) => {
     setPlateDataUrl(dataUrl);
@@ -70,9 +74,12 @@ const ShareFlow = ({
 
   const handleCopyLink = async () => {
     try {
-      await navigator.clipboard.writeText(shareUrl);
+      // The TEXT, not the bare url: a pasted bare link unfurls as the sitewide
+      // app card, so the setlist's own name never reaches the recipient.
+      // shareText already ends with shareUrl.
+      await navigator.clipboard.writeText(shareText);
       trackShare({ shareType: "setlist", channel: "copy_link", setlistId });
-      toast.success("Link copied!");
+      toast.success("Copied — ready to paste");
     } catch {
       toast.error("Couldn't copy link");
     }

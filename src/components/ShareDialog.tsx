@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Copy, Check, Link } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { shareCollabCopy } from "@/lib/shareCopy";
 import {
   Dialog,
   DialogContent,
@@ -53,18 +54,22 @@ const ShareDialog = ({ open, onOpenChange, shareLink, creatorName, setlistTitle,
     return "";
   };
 
-  const oneLiner = getOneLiner();
-  const shareText = oneLiner
-    ? `${oneLiner} ⚡ ${setlistTitle || "Dream Setlist"} on Dead-Set.Org — check it out and collaborate!`
-    : creatorName && setlistTitle
-      ? `${creatorName} built "${setlistTitle}" on Dead-Set.Org — check it out and collaborate!`
-      : "Check out this setlist on Dead-Set.Org — jump in and collaborate!";
+  // Copy comes from @/lib/shareCopy, not from here — see the rule at the top of
+  // that module. The link FIELD above deliberately still shows and copies the
+  // bare url: it is labelled as the invite link, and a copy button beside a
+  // readonly input has to copy what the input shows.
+  const { title: shareTitle, text: shareText } = shareCollabCopy({
+    setlistName: setlistTitle || "Dream Setlist",
+    url: shareLink,
+    senderName: creatorName,
+    oneLiner: getOneLiner(),
+  });
 
   const handleShare = async () => {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: setlistTitle || "Dream Setlist",
+          title: shareTitle,
           text: shareText,
           url: shareLink,
         });

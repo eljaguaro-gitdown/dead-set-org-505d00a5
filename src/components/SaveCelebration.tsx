@@ -3,6 +3,7 @@ import { Share2, ExternalLink, PartyPopper, Compass } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import ShareDropdown from "@/components/ShareDropdown";
+import { shareSetlistCopy } from "@/lib/shareCopy";
 
 interface SaveCelebrationProps {
   setlistId: string;
@@ -47,7 +48,7 @@ const SaveCelebration = ({ setlistId, setlistTitle, onDismiss }: SaveCelebration
             url={posterUrl}
             ogUrl={ogUrl}
             title={`${setlistTitle} — Dead-Set.Org`}
-            description={`Check out my dream Dead show: ${setlistTitle}`}
+            share={shareSetlistCopy({ setlistName: setlistTitle, url: posterUrl })}
           />
         </div>
 

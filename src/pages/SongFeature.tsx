@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Loader2, Play } from "lucide-react";
 import { songbookDb } from "@/lib/songbookDb";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 import PageLayout from "@/components/PageLayout";
 import SiteHeader from "@/components/SiteHeader";
 import ShareDropdown from "@/components/ShareDropdown";
+import { shareSongbookCopy } from "@/lib/shareCopy";
 import CommunityIssueArticle from "@/components/CommunityIssueArticle";
 import { loadCommunityIssue, type CommunityIssue } from "@/lib/communityIssue";
 import SongEraLadder, { type LadderVersion } from "@/components/SongEraLadder";
@@ -125,6 +126,40 @@ const SongFeature = () => {
     set("twitter:description", feature.dek ?? "");
   }, [feature, communityIssue]);
 
+  /**
+   * The ladder's rows, lifted so the masthead can offer play before the reader
+   * has scrolled past the lifespan block and the discussion. A shared link
+   * sells the song and the music is one tap away, not a scroll away — the
+   * community issue already works this way and the curated issue is the same
+   * promise. `cueing` keeps a constant-width label and uses aria-disabled
+   * rather than disabled, which drops focus to <body> mid-cue in Chromium.
+   */
+  const [ladderVersions, setLadderVersions] = useState<LadderVersion[]>([]);
+  const [cueing, setCueing] = useState(false);
+  const playableCount = ladderVersions.filter((v) => !!v.archive_org_url).length;
+
+  const handlePlayAll = async () => {
+    if (cueing || !feature?.song_id) return;
+    setCueing(true);
+    try {
+      const slots = ladderPlaylist(
+        { id: feature.song_id, title: feature.title },
+        ladderVersions,
+      );
+      if (slots.length === 0) {
+        toast.info("No tape of these nights circulates yet");
+        return;
+      }
+      await playSetlist(slots);
+    } catch {
+      // "Could not ask the Archive" is an admission about the network, not an
+      // answer about the music — the two must not collapse into one message.
+      toast.error("Couldn't reach the Archive — try again");
+    } finally {
+      setCueing(false);
+    }
+  };
+
   const handlePlay = (v: LadderVersion) => {
     if (!feature?.song_id) return;
     playSingle(ladderSlot({ id: feature.song_id, title: feature.title }, v));
@@ -195,7 +230,12 @@ const SongFeature = () => {
           <ShareDropdown
             url={shareUrl}
             title={`${feature.title} — The Songbook`}
-            description={feature.dek ?? undefined}
+            share={shareSongbookCopy({
+              songTitle: feature.title,
+              url: shareUrl,
+              issueNumber: feature.issue_number,
+              timesPlayed: feature.times_played,
+            })}
           />
         </div>
 
@@ -210,6 +250,22 @@ const SongFeature = () => {
               <p className="font-hand text-2xl md:text-4xl text-[hsl(var(--dead-blue))] leading-tight">
                 {feature.headline}
               </p>
+            )}
+
+            {playableCount > 0 && (
+              <button
+                type="button"
+                onClick={handlePlayAll}
+                aria-disabled={cueing}
+                className="mt-5 inline-flex items-center gap-2.5 rounded-sm bg-dead-dark px-5 py-3 font-ticket text-xs uppercase tracking-[0.14em] text-dead-cream transition-opacity hover:opacity-90"
+              >
+                {cueing ? (
+                  <Loader2 className="w-3 h-3 animate-spin shrink-0" />
+                ) : (
+                  <Play className="w-3 h-3 shrink-0" />
+                )}
+                Play all {playableCount} nights
+              </button>
             )}
           </header>
 
@@ -253,6 +309,7 @@ const SongFeature = () => {
           {feature.song_id && (
             <div className="mt-10 pt-8 border-t-2 border-dashed border-primary/35">
               <SongEraLadder
+                onVersionsLoaded={setLadderVersions}
                 songId={feature.song_id}
                 songTitle={feature.title}
                 onPlay={handlePlay}

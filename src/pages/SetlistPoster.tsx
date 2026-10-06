@@ -9,6 +9,7 @@ import { useFavorites } from "@/hooks/useFavorites";
 import EraTooltip from "@/components/EraTooltip";
 import { EraBorder } from "@/components/EraArt";
 import { supabase } from "@/integrations/supabase/client";
+import { shareSetlistCopy } from "@/lib/shareCopy";
 import { useAuth } from "@/hooks/useAuth";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 import CharlieMark from "@/components/CharlieMark";
@@ -693,7 +694,17 @@ const SetlistPoster = () => {
               <span className="sm:hidden">{rebuilding ? "…" : "Rebuild"}</span>
             </button>
           )}
-          <ShareDropdown url={shareUrl} ogUrl={ogShareUrl} title={shareTitle} description={shareDescription} />
+          <ShareDropdown
+            url={shareUrl}
+            ogUrl={ogShareUrl}
+            title={shareTitle}
+            share={shareSetlistCopy({
+              setlistName: setlist?.title || "Dream Setlist",
+              url: shareUrl,
+              songCount: slots.length,
+              oneLiner: setlist?.description,
+            })}
+          />
         </div>
       </header>
 

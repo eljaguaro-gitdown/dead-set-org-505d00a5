@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { ArrowLeft, ListMusic, Play, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
+import { shareSongbookCopy } from "@/lib/shareCopy";
 import ShareDropdown from "@/components/ShareDropdown";
 import {
   communityPlaylist,
@@ -128,7 +129,15 @@ const CommunityIssueArticle = ({ issue }: { issue: CommunityIssue }) => {
         <ShareDropdown
           url={shareUrl}
           title={`${issue.title} — The Songbook`}
-          description={communityShareText(issue)}
+          share={shareSongbookCopy({
+            songTitle: issue.title,
+            url: shareUrl,
+            mappedBy: issue.mappedBy,
+            nightCount: dated.length,
+            timesPlayed: issue.timesPlayed,
+            firstPlayed: issue.firstPlayed,
+            lastPlayed: issue.lastPlayed,
+          })}
         />
       </div>
 

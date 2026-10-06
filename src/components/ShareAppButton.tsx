@@ -10,11 +10,13 @@ import {
 import { toast } from "sonner";
 import { trackShare } from "@/lib/trackShare";
 import { shareToInstagram } from "@/lib/instagramShare";
+import { shareAppCopy } from "@/lib/shareCopy";
 
 const SHARE_URL = "https://dead-set.org";
-const SHARE_TITLE = "Dead Set — Every Deadhead knows the feeling";
-const SHARE_TEXT =
-  "Every Deadhead knows the feeling. Build dream setlists, discover rare gems, and explore 50 years of live recordings on Dead-Set.Org. ⚡🌹";
+const SHARE_PAYLOAD = shareAppCopy({ url: SHARE_URL });
+const SHARE_TITLE = SHARE_PAYLOAD.title;
+/** The app's share copy lives in shareCopy with every other surface's. */
+const SHARE_TEXT = SHARE_PAYLOAD.text;
 
 interface ShareAppButtonProps {
   variant?: "icon" | "full";
@@ -28,10 +30,10 @@ const ShareAppButton = ({ variant = "icon", className = "" }: ShareAppButtonProp
 
   const handleCopyLink = async () => {
     try {
-      await navigator.clipboard.writeText(SHARE_URL);
+      await navigator.clipboard.writeText(SHARE_TEXT);
     } catch {
       const ta = document.createElement("textarea");
-      ta.value = SHARE_URL;
+      ta.value = SHARE_TEXT;
       document.body.appendChild(ta);
       ta.select();
       document.execCommand("copy");
@@ -54,14 +56,14 @@ const ShareAppButton = ({ variant = "icon", className = "" }: ShareAppButtonProp
   };
 
   const handleSMS = () => {
-    const body = encodeURIComponent(`${SHARE_TEXT}\n${SHARE_URL}`);
+    const body = encodeURIComponent(SHARE_TEXT);
     window.open(`sms:?body=${body}`, "_blank");
     trackShare({ shareType: "app_link", channel: "sms" });
     setOpen(false);
   };
 
   const handleWhatsApp = () => {
-    const text = encodeURIComponent(`${SHARE_TEXT}\n${SHARE_URL}`);
+    const text = encodeURIComponent(SHARE_TEXT);
     window.open(`https://wa.me/?text=${text}`, "_blank");
     trackShare({ shareType: "app_link", channel: "whatsapp" });
     setOpen(false);
@@ -69,14 +71,14 @@ const ShareAppButton = ({ variant = "icon", className = "" }: ShareAppButtonProp
 
   const handleEmail = () => {
     const subject = encodeURIComponent(SHARE_TITLE);
-    const body = encodeURIComponent(`${SHARE_TEXT}\n\n${SHARE_URL}`);
+    const body = encodeURIComponent(SHARE_TEXT);
     window.open(`mailto:?subject=${subject}&body=${body}`, "_blank");
     trackShare({ shareType: "app_link", channel: "email" });
     setOpen(false);
   };
 
   const handleTwitter = () => {
-    const text = encodeURIComponent(`${SHARE_TEXT}\n${SHARE_URL}`);
+    const text = encodeURIComponent(SHARE_TEXT);
     window.open(`https://twitter.com/intent/tweet?text=${text}`, "_blank");
     trackShare({ shareType: "app_link", channel: "twitter" });
     setOpen(false);
