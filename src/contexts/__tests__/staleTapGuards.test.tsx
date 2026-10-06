@@ -7,9 +7,11 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
  *
  * Scope, stated honestly because the gate measured it: resolveSlot has a
  * stored-url branch and a no-url branch, each with its own staleness bail and
- * its own success guard. The first six tests below drive the NO-URL branch;
- * the stored-url pair is covered by the last two, added after mutants showed
- * the branch was unpinned. These mock `findRecordingForDate` wholesale, so
+ * its own success guard, and all four conjuncts need their own test. The first
+ * block drives the NO-URL branch, then one heal test, then three stored-url
+ * tests, then two for Next — the last ones added after mutants showed each
+ * branch unpinned in turn. Each of the four guards dies to exactly one test
+ * here; if you delete one, read the mutation note in the commit first. These mock `findRecordingForDate` wholesale, so
  * they prove the context's SEQUENCING and nothing about the resolver beneath
  * it — resolveReachability.test.tsx runs the real resolver over a stubbed
  * fetch for that.
@@ -86,6 +88,7 @@ const Harness = () => {
       <button onClick={() => void playSingle(B)}>tapB</button>
       <button onClick={() => void playSetlist([B], "s1")}>playAll</button>
       <div data-testid="now">{playingSlot?.id ?? ""}</div>
+      <div data-testid="tape">{playingSlot?.directTrackUrl ?? ""}</div>
       <div data-testid="err">{transport.error ?? ""}</div>
     </>
   );
@@ -164,6 +167,9 @@ describe("an abandoned tap must not kill the tap that replaced it", () => {
     land();
     await new Promise((r) => setTimeout(r, 50));
     expect(now()).toBe("b");
+    // The title says "steal the TAPE", so assert the tape. Asserting only the
+    // slot id left the sentence wider than the check beneath it.
+    expect(screen.getByTestId("tape").textContent).toContain("gd-b");
   });
 
   it("two controls on ONE row: the slower night must not take over the faster one", async () => {
@@ -456,6 +462,10 @@ describe("Next, pressed while a tap is still resolving", () => {
     // exact end state is what stops this test quietly becoming about
     // something else again.
     await waitFor(() => expect(screen.getByTestId("q").textContent).toBe(""));
+    // Name the mechanism, not just its side effect: without this, deleting the
+    // End-of-setlist toast left all 11 tests green. "The player is empty" is
+    // true of several different ways to arrive here.
+    expect(mocks.info).toHaveBeenCalledWith("End of setlist");
     landSlow();
     await new Promise((r) => setTimeout(r, 50));
     expect(screen.getByTestId("q").textContent).toBe("");
@@ -498,6 +508,7 @@ describe("Next, pressed while a tap is still resolving", () => {
     await waitFor(() => expect(screen.getByTestId("r")).toHaveTextContent("dated"));
     fireEvent.click(screen.getByText("next2"));
     await waitFor(() => expect(screen.getByTestId("r").textContent).toBe(""));
+    expect(mocks.info).toHaveBeenCalledWith("End of setlist");
     landDated();
     await new Promise((r) => setTimeout(r, 50));
     expect(screen.getByTestId("r").textContent).toBe("");
