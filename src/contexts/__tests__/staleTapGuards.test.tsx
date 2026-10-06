@@ -401,12 +401,19 @@ describe("the stored-url branch has the same two guards, and they were unpinned"
 
 describe("Next, pressed while a tap is still resolving", () => {
   /**
-   * The gate's survivor 3, and the one case where the id half of the success
-   * guard is the ONLY thing holding the line: `advancePlaylist` changes
-   * playingSlot without bumping playSingleSeqRef, so a tap that resolves after
-   * the reader has already skipped past it is still "current" by sequence
-   * number. Dropping `prev.playingSlot?.id === slot.id` survived every other
-   * test here, because nothing else moves the player without bumping the seq.
+   * The case where the id half of the success guard is the ONLY thing holding
+   * the line: transport.next() goes through `advancePlaylist`, which changes
+   * playingSlot WITHOUT bumping playSingleSeqRef, so a tap that lands after
+   * the reader has moved on is still "current" by sequence number. Dropping
+   * `prev.playingSlot?.id === slot.id` survives every other test in this file.
+   *
+   * What actually happens here, probed rather than assumed: a bare playSingle
+   * carries no playlist context, so it empties playlistSlots and Next finds
+   * nothing to advance to and STOPS the player. That is a real guarded
+   * behaviour — a late tap must not resurrect a player the reader stopped —
+   * but it is not "skips to the next track", which is what the first version
+   * of this test was titled. The gate caught the mismatch; the assertions now
+   * pin the stop explicitly so the next reader cannot mistake the mechanism.
    */
   const tape = (id: string, t: string): PlayableSlot => ({
     ...base, id, position: id === "p2" ? 1 : 0,
@@ -416,7 +423,7 @@ describe("Next, pressed while a tap is still resolving", () => {
   const P2 = tape("p2", "gd-p2");
   const SLOW = tape("slow", "gd-slow");
 
-  it("the skipped-past tap does not drag the player back when it lands", async () => {
+  it("a late tap does not restart a player that Next has already stopped", async () => {
     let landSlow: () => void = () => {};
     mocks.findTrackInRecordingDetailed.mockImplementation((url: string) => {
       if (url.includes("gd-slow")) {
@@ -444,12 +451,55 @@ describe("Next, pressed while a tap is still resolving", () => {
     fireEvent.click(screen.getByText("slow"));
     await waitFor(() => expect(screen.getByTestId("q")).toHaveTextContent("slow"));
     fireEvent.click(screen.getByText("next"));
-    // Sanity: the skip actually moved the player, or the assertion below is
-    // vacuous — this is the trap that made my first race test worthless.
-    await waitFor(() => expect(screen.getByTestId("q").textContent).not.toBe("slow"));
-    const after = screen.getByTestId("q").textContent;
+    // Pin the mechanism, not just "something changed": a bare playSingle left
+    // no queue, so Next stops the player rather than advancing. Asserting the
+    // exact end state is what stops this test quietly becoming about
+    // something else again.
+    await waitFor(() => expect(screen.getByTestId("q").textContent).toBe(""));
     landSlow();
     await new Promise((r) => setTimeout(r, 50));
-    expect(screen.getByTestId("q").textContent).toBe(after);
+    expect(screen.getByTestId("q").textContent).toBe("");
+  });
+
+  it("the same holds for a tap with no stored tape, resolved by night", async () => {
+    /**
+     * The gate's remaining note: dropping the id check from the NO-URL branch
+     * alone survived all 29 tests, because the test above runs a slot that
+     * carries a stored url and so only exercises the other branch. Both
+     * branches have the same guard and both need their own coverage — the
+     * lesson from the conjunction mutants, one level up.
+     */
+    const dated: PlayableSlot = {
+      ...base, id: "dated",
+      version: { ...base.version, archive_org_url: null, show_date: "1980-05-16" } as PlayableSlot["version"],
+    };
+    let landDated: () => void = () => {};
+    mocks.findRecordingForDate.mockImplementation(
+      () => new Promise((res) => {
+        landDated = () => res({
+          url: "https://archive.org/details/gd-dated",
+          directTrackUrl: "https://archive.org/download/gd-dated/althea.mp3",
+          venue: "Nassau", date: "1980-05-16",
+        });
+      }),
+    );
+    const R = () => {
+      const { playSingle, playingSlot, transport } = useAudioPlayer();
+      return (
+        <>
+          <button onClick={() => void playSingle(dated)}>dated</button>
+          <button onClick={() => transport.next()}>next2</button>
+          <div data-testid="r">{playingSlot?.id ?? ""}</div>
+        </>
+      );
+    };
+    render(<AudioPlayerProvider><R /></AudioPlayerProvider>);
+    fireEvent.click(screen.getByText("dated"));
+    await waitFor(() => expect(screen.getByTestId("r")).toHaveTextContent("dated"));
+    fireEvent.click(screen.getByText("next2"));
+    await waitFor(() => expect(screen.getByTestId("r").textContent).toBe(""));
+    landDated();
+    await new Promise((r) => setTimeout(r, 50));
+    expect(screen.getByTestId("r").textContent).toBe("");
   });
 });
