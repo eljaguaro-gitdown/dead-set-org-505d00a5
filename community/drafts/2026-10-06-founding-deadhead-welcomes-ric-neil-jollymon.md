@@ -2,7 +2,7 @@
 
 **Sender:** jay (from his own address)
 **Channel:** personal email, one-to-one (not Resend). Chip: send to his new Yahoo address, the one on his Oct 5 account.
-**Status:** draft for Jay's review. Nothing has been sent.
+**Status:** Chip's email went out 2026-10-06 04:29 UTC as the branded HTML version (`2026-10-06-chip-welcome-back.html`). It was sent through the app's email queue from "Jay · Dead Set <grateful_jaguaro@dead-set.org>", and the send log shows it as sent (message 0311db4d). ric's email is still an unsent draft.
 
 **Flag for Jay (both emails):** I found no existing welcome template or past welcome drafts in the repo, so these follow the field guide and playbook. Before sending, confirm each person's email address. The music observations in ric's email describe how his sets are built, never that those nights happened, so no show-date claims need checking.
 
