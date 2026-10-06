@@ -1,12 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 // fireEvent, not user-event: that package is not installed, and bun.lock cannot
 // be regenerated outside Lovable's registry, so adding one is a real cost.
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import {
   stripNightPreamble,
   communityPlaylist,
   nightFromSlot,
+  venueForDate,
 } from "@/lib/communityIssue";
 import type { CommunityIssue } from "@/lib/communityIssue";
 import { decodeArchiveNotes } from "@/hooks/useSetlist";
@@ -64,6 +65,10 @@ const EYES: CommunityIssue = {
   slug: "eyes-of-the-world",
   firstPlayed: "1973-02-09",
   lastPlayed: "1995-07-06",
+  // Eyes' guide happens to include both its first and last night, so a real
+  // issue carries venues here — see venueForDate.
+  firstPlayedVenue: "Roscoe Maples Pavilion, Stanford U.",
+  lastPlayedVenue: "Riverport Amphitheatre",
   timesPlayed: 382,
   mappedBy: "ric neil",
   setlistId: "set-1",
@@ -212,5 +217,120 @@ describe("stripNightPreamble", () => {
 
   it("handles an absent note", () => {
     expect(stripNightPreamble(null, "1993-06-15")).toBe("");
+  });
+});
+
+describe("the lifespan block earns its venues the way a curated issue has them", () => {
+  /**
+   * A curated issue carries ftp_venue/ftp_city as columns; `songs` stores
+   * first_played/last_played as bare dates, so a community issue had a date
+   * with nothing under it where Crazy Fingers shows a venue. The guide's own
+   * nights are the only source: same date, same show, same venue. Across the
+   * six issues it fills 7 of the 12 slots.
+   */
+  it("prints the venue under the date when the guide includes that night", async () => {
+    renderIssue(EYES);
+    expect(await screen.findByText("Roscoe Maples Pavilion, Stanford U.")).toBeInTheDocument();
+    expect(await screen.findByText("Riverport Amphitheatre")).toBeInTheDocument();
+  });
+
+  it("prints the date alone when it does not — never a guessed venue", () => {
+    renderIssue({ ...EYES, firstPlayedVenue: null, lastPlayedVenue: null });
+    expect(screen.queryByText("Roscoe Maples Pavilion, Stanford U.")).toBeNull();
+    // The date itself is still there; only the venue line is absent. getAllBy,
+    // because Feb 9, 1973 is BOTH the first-played date and one of the nights
+    // in the list below it — getBy throws on the second match.
+    expect(screen.getAllByText("Feb 9, 1973").length).toBeGreaterThan(0);
+  });
+});
+
+describe("venueForDate", () => {
+  const nights = [
+    { position: 1, showDate: "1973-02-09", venue: "Roscoe Maples Pavilion", archiveUrl: null, note: "" },
+    { position: 2, showDate: "1995-07-06", venue: "Riverport Amphitheatre", archiveUrl: null, note: "" },
+    { position: 3, showDate: "1990-03-29", venue: null, archiveUrl: null, note: "" },
+  ];
+
+  it("finds the venue of the night on that date", () => {
+    expect(venueForDate(nights, "1995-07-06")).toBe("Riverport Amphitheatre");
+  });
+
+  it("returns null when no night falls on that date", () => {
+    // Althea and Bird Song are both in this position — their guides do not
+    // include their first or last night, so they render the date alone.
+    expect(venueForDate(nights, "1979-08-04")).toBeNull();
+  });
+
+  it("returns null when the matching night has no venue", () => {
+    expect(venueForDate(nights, "1990-03-29")).toBeNull();
+  });
+
+  it("is a no-op without a date", () => {
+    expect(venueForDate(nights, null)).toBeNull();
+  });
+});
+
+describe("the busy state survives a rejection, and a second tap cannot restart it", () => {
+  /**
+   * Three mutations survived the pre-release gate on these handlers: dropping
+   * the `finally` that clears `cueing`, dropping the error toast, and dropping
+   * the double-tap guard. The banked rule is that every player-path change
+   * needs a rejection test beside its null-result test — a null means "nothing
+   * there" and a throw means "could not ask", and a suite whose mocks only ever
+   * resolve cannot tell you which one you broke.
+   */
+  it("clears the busy state when playSetlist rejects, instead of spinning forever", async () => {
+    mocks.playSetlist.mockRejectedValueOnce(new Error("archive unreachable"));
+    renderIssue(EYES);
+    const button = await screen.findByRole("button", { name: /play all/i });
+    fireEvent.click(button);
+    // A rejection that skipped the reset left the control disabled under its
+    // busy label with no toast — the reader's tap simply stopped the page.
+    await waitFor(() => expect(button).toHaveAttribute("aria-disabled", "false"));
+  });
+
+  it("says it could not REACH the Archive — not that no tape exists", async () => {
+    mocks.playSetlist.mockRejectedValueOnce(new Error("archive unreachable"));
+    renderIssue(EYES);
+    fireEvent.click(await screen.findByRole("button", { name: /play all/i }));
+    await waitFor(() => expect(mocks.error).toHaveBeenCalled());
+    // The two must not collapse: one is an admission about the network, the
+    // other an answer about the music.
+    expect(String(mocks.error.mock.calls[0][0])).toMatch(/reach the Archive/i);
+    expect(mocks.info).not.toHaveBeenCalled();
+  });
+
+  it("a second tap while cueing does not start a second run", async () => {
+    let release: () => void = () => {};
+    mocks.playSetlist.mockImplementationOnce(
+      () => new Promise<void>((res) => { release = () => res(); }),
+    );
+    renderIssue(EYES);
+    const button = await screen.findByRole("button", { name: /play all/i });
+    fireEvent.click(button);
+    await waitFor(() => expect(button).toHaveAttribute("aria-disabled", "true"));
+    // playSetlist abandons any run whose sequence number is stale, so a second
+    // tap discards the work in flight and restarts the wait.
+    fireEvent.click(button);
+    fireEvent.click(button);
+    expect(mocks.playSetlist).toHaveBeenCalledTimes(1);
+    release();
+  });
+});
+
+describe("stripNightPreamble handles a bullet with no space after it", () => {
+  it("keeps the first letter of the prose", () => {
+    // `\s` inside a TEMPLATE literal is the letter "s", not whitespace, so the
+    // pattern ended (?:•s*|$) and ate a leading "s". Real notes put a space
+    // after the bullet, which .trim() hid — found by ESLint no-useless-escape.
+    expect(
+      stripNightPreamble("1977-05-08 Barton Hall •soaring jam", "1977-05-08"),
+    ).toBe("soaring jam");
+  });
+
+  it("still collapses the usual space after the bullet", () => {
+    expect(
+      stripNightPreamble("1977-05-08 Barton Hall •   soaring jam", "1977-05-08"),
+    ).toBe("soaring jam");
   });
 });

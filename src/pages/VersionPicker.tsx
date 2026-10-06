@@ -772,7 +772,7 @@ const VersionPicker = () => {
       // A share names what is being passed on. It used to go out as
       // "<song> — the versions" with no body at all, so Franklin's Tower
       // arrived looking exactly like every other song on the site.
-      const { title, text } = shareVersionsCopy({
+      const { title, body, text } = shareVersionsCopy({
         songTitle: song?.title ?? "Dead Set",
         url,
         senderName: profileName,
@@ -782,7 +782,9 @@ const VersionPicker = () => {
       });
 
       if (navigator.share) {
-        await navigator.share({ title, text, url });
+        // body, not text: the sheet takes the link in its own field, and
+        // text already ends with it.
+        await navigator.share({ title, text: body, url });
       } else if (navigator.clipboard?.writeText) {
         await navigator.clipboard.writeText(text);
         toast.success("Link copied");

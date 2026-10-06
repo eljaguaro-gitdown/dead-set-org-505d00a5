@@ -17,6 +17,8 @@ const SHARE_PAYLOAD = shareAppCopy({ url: SHARE_URL });
 const SHARE_TITLE = SHARE_PAYLOAD.title;
 /** The app's share copy lives in shareCopy with every other surface's. */
 const SHARE_TEXT = SHARE_PAYLOAD.text;
+// No url — the native sheet takes the link in its own field.
+const SHARE_BODY = SHARE_PAYLOAD.body;
 
 interface ShareAppButtonProps {
   variant?: "icon" | "full";
@@ -40,14 +42,14 @@ const ShareAppButton = ({ variant = "icon", className = "" }: ShareAppButtonProp
       document.body.removeChild(ta);
     }
     setCopied(true);
-    toast.success("Link copied!");
+    toast.success("Copied — ready to paste");
     trackShare({ shareType: "app_link", channel: "copy_link" });
     setTimeout(() => setCopied(false), 2000);
   };
 
   const handleNativeShare = async () => {
     try {
-      await navigator.share({ title: SHARE_TITLE, text: SHARE_TEXT, url: SHARE_URL });
+      await navigator.share({ title: SHARE_TITLE, text: SHARE_BODY, url: SHARE_URL });
       trackShare({ shareType: "app_link", channel: "native_share" });
       setOpen(false);
     } catch {

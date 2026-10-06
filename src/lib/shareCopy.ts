@@ -32,10 +32,24 @@ const BOLT = "⚡";
 export interface SharePayload {
   title: string;
   /**
-   * The message body, ENDING IN THE URL. Callers paste this whole string —
-   * clipboard, SMS body, mailto body, DM — and must not append the url again.
-   * `navigator.share` still takes `url` separately, which is what gives the
-   * native sheet its link affordance.
+   * The selling copy WITHOUT the url — what goes in a field that carries the
+   * link separately: `navigator.share({ title, text: body, url })`, an X intent
+   * with a `url` param, a DM that appends the link on its own line.
+   *
+   * This split exists because the single `text` that ended in the url was a
+   * trap. The pre-release gate found two surfaces still appending the link to
+   * it (SendToFriendDialog's DM body and ShareFlow's tweet), which sent it
+   * twice, and every `navigator.share({ text, url })` showed it twice as well.
+   * A caller cannot tell by the name whether a string already carries its link
+   * — so now one of them obviously does not, and the other obviously does.
+   */
+  body: string;
+  /** The link itself. */
+  url: string;
+  /**
+   * `body` + the url: the whole pasteable message. For a field that carries no
+   * link of its own — clipboard, SMS body, mailto body. Never append the url
+   * to this.
    */
   text: string;
 }
@@ -58,19 +72,22 @@ const payload = (args: {
   detail?: string | null;
   listen: string;
   url: string;
-}): SharePayload => ({
-  title: args.title,
-  text: [
+}): SharePayload => {
+  const body = [
     `${ROSE} ${args.lead}`,
     args.detail?.trim() ? args.detail.trim() : null,
     "",
     `${BOLT} ${args.listen}`,
-    "",
-    args.url,
   ]
     .filter((l) => l !== null)
-    .join("\n"),
-});
+    .join("\n");
+  return {
+    title: args.title,
+    body,
+    url: args.url,
+    text: `${body}\n\n${args.url}`,
+  };
+};
 
 /** "336 times · 1975 to 1995" — the life of the song, when the catalog knows it. */
 export const lifespanLine = (args: {
@@ -256,19 +273,16 @@ export const shareCollabCopy = (args: {
 }): SharePayload => {
   const own = args.oneLiner?.trim();
   const who = args.senderName?.trim();
-  return {
+  return payload({
     title: `${args.setlistName} — build it with me on Dead-Set.Org`,
-    text: payload({
-      title: "",
-      lead: who
-        ? `${who} is building ${args.setlistName}`
-        : `${args.setlistName} — in progress`,
-      detail:
-        own && own !== args.setlistName
-          ? own
-          : "Still being put together. Pull up a chair.",
-      listen: "Press play, or pick up where I left off — Dead-Set.Org",
-      url: args.url,
-    }).text,
-  };
+    lead: who
+      ? `${who} is building ${args.setlistName}`
+      : `${args.setlistName} — in progress`,
+    detail:
+      own && own !== args.setlistName
+        ? own
+        : "Still being put together. Pull up a chair.",
+    listen: "Press play, or pick up where I left off — Dead-Set.Org",
+    url: args.url,
+  });
 };

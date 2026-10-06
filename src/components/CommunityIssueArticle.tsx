@@ -174,6 +174,11 @@ const CommunityIssueArticle = ({ issue }: { issue: CommunityIssue }) => {
             <span className="block font-hand text-2xl md:text-3xl leading-tight mt-0.5">
               {formatIssueDate(issue.firstPlayed)}
             </span>
+            {issue.firstPlayedVenue && (
+              <span className="block font-ticket text-[11px] text-muted-foreground leading-relaxed">
+                {issue.firstPlayedVenue}
+              </span>
+            )}
           </div>
 
           <div className="flex md:flex-col items-center justify-center gap-3 md:gap-1 md:px-6 md:border-x border-dashed border-border py-3 md:py-0">
@@ -192,6 +197,11 @@ const CommunityIssueArticle = ({ issue }: { issue: CommunityIssue }) => {
             <span className="block font-hand text-2xl md:text-3xl leading-tight mt-0.5">
               {formatIssueDate(issue.lastPlayed)}
             </span>
+            {issue.lastPlayedVenue && (
+              <span className="block font-ticket text-[11px] text-muted-foreground leading-relaxed">
+                {issue.lastPlayedVenue}
+              </span>
+            )}
           </div>
         </div>
 

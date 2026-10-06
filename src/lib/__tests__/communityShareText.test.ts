@@ -18,6 +18,8 @@ const issue = (over: Partial<CommunityIssue> = {}): CommunityIssue => ({
   slug: "eyes-of-the-world",
   firstPlayed: "1973-02-09",
   lastPlayed: "1995-07-06",
+  firstPlayedVenue: null,
+  lastPlayedVenue: null,
   timesPlayed: 382,
   mappedBy: "ric neil",
   setlistId: "set-1",

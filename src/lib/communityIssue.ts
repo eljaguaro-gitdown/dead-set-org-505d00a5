@@ -41,6 +41,15 @@ export interface CommunityIssue {
   slug: string;
   firstPlayed: string | null;
   lastPlayed: string | null;
+  /**
+   * The venue of the first/last night, when the guide happens to include that
+   * night. `songs` stores dates only, so this is the ONLY place a community
+   * issue can learn a venue for them — see venueForDate. A curated issue
+   * carries ftp_venue/ftp_city as columns, which is why its lifespan block had
+   * a venue under each date and this one did not.
+   */
+  firstPlayedVenue: string | null;
+  lastPlayedVenue: string | null;
   timesPlayed: number | null;
   /** Display name of whoever mapped it first. Never an email. */
   mappedBy: string;
@@ -95,7 +104,7 @@ export const stripNightPreamble = (
   const escaped = date.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   // A leading segment carrying this night's date, ending at the bullet that
   // starts the prose or at the end of the note.
-  const preamble = new RegExp(`^[^\u2022\n]{0,40}?${escaped}[^\u2022\n]*(?:\u2022\s*|$)`);
+  const preamble = new RegExp(`^[^\u2022\n]{0,40}?${escaped}[^\u2022\n]*(?:\u2022\\s*|$)`);
   return text.replace(preamble, "").trim();
 };
 
@@ -106,6 +115,24 @@ export const stripNightPreamble = (
  * without a database behind it: the two fields it gets wrong are both silent
  * (a blank note, or a date printed twice), and neither shows up in a type.
  */
+/**
+ * The venue of whichever night in the guide falls on `date`.
+ *
+ * Same date means same show means same venue, so this is a lookup rather than
+ * a guess — and it is the only venue a community issue has for its first and
+ * last played, because `songs` carries `first_played`/`last_played` as bare
+ * dates with no venue column. Across the six issues it fills 7 of the 12
+ * slots; the rest render the date alone, which is what we actually know.
+ */
+export const venueForDate = (
+  nights: CommunityNight[],
+  date: string | null | undefined,
+): string | null => {
+  if (!date) return null;
+  const match = nights.find((n) => n.showDate === date && n.venue?.trim());
+  return match?.venue?.trim() ?? null;
+};
+
 export const nightFromSlot = (
   position: number,
   decoded: ReturnType<typeof decodeArchiveNotes>,
@@ -175,6 +202,8 @@ export const loadCommunityIssue = async (
       slug,
       firstPlayed: song.first_played,
       lastPlayed: song.last_played,
+      firstPlayedVenue: venueForDate(nights, song.first_played),
+      lastPlayedVenue: venueForDate(nights, song.last_played),
       timesPlayed: song.times_played,
       mappedBy: profile?.display_name?.trim() || "a Deadhead",
       setlistId: entry.setlist_id,

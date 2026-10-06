@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Share2, Copy, Check, Twitter, Facebook, MessageCircle, Smartphone, Instagram } from "lucide-react";
 import { toast } from "sonner";
 import { trackShare, setlistIdFromShareUrl } from "@/lib/trackShare";
+import type { SharePayload } from "@/lib/shareCopy";
 import { shareToInstagram } from "@/lib/instagramShare";
 import { useAuth } from "@/hooks/useAuth";
 import SendToFriendDialog from "./SendToFriendDialog";
@@ -20,7 +21,7 @@ interface ShareDropdownProps {
    * a new caller must add a function to shareCopy rather than assemble a
    * string here. See the rule at the top of that module.
    */
-  share: { title: string; text: string };
+  share: SharePayload;
 }
 
 const ShareDropdown = ({ url, ogUrl, title, share }: ShareDropdownProps) => {
@@ -55,6 +56,9 @@ const ShareDropdown = ({ url, ogUrl, title, share }: ShareDropdownProps) => {
   // share urls such as /songbook/<slug>, which is correct — those are not
   // setlists and must not be attributed to one.
   const setlistId = setlistIdFromShareUrl(linkToShare);
+  // `body` carries no url; `text` does. A field that also takes the link
+  // separately gets `body`, a field that takes one string gets `text`.
+  const shareBody = share.body;
   const shareText = share.text;
 
   /**
@@ -109,7 +113,7 @@ const ShareDropdown = ({ url, ogUrl, title, share }: ShareDropdownProps) => {
   const shareNative = async () => {
     if (!navigator.share) return;
     try {
-      await navigator.share({ title: share.title, text: shareText, url: linkToShare });
+      await navigator.share({ title: share.title, text: shareBody, url: linkToShare });
       trackShare({ shareType: "setlist", channel: "native_share", setlistId });
     } catch {
       // user cancelled — keep menu open so they can pick another option
@@ -192,7 +196,7 @@ const ShareDropdown = ({ url, ogUrl, title, share }: ShareDropdownProps) => {
           open={dmOpen}
           onOpenChange={setDmOpen}
           shareUrl={url}
-          shareText={shareText}
+          shareBody={shareBody}
           setlistId={setlistId}
         />
       )}

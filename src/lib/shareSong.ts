@@ -54,7 +54,7 @@ export async function shareSong(input: ShareSongInput): Promise<void> {
 
   // The copy lives in @/lib/shareCopy, not here — see the rule at the top of
   // that module. Every share surface sells what it is through the same builder.
-  const { title, text } = shareSongCopy({
+  const { title, body, text } = shareSongCopy({
     songTitle,
     url: link,
     senderName,
@@ -65,7 +65,7 @@ export async function shareSong(input: ShareSongInput): Promise<void> {
   // Native share (mobile)
   if (typeof navigator !== "undefined" && navigator.share) {
     try {
-      await navigator.share({ title, text, url: link });
+      await navigator.share({ title, text: body, url: link });
       trackShare({
         shareType: "setlist",
         channel: "native_share",

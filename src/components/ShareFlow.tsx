@@ -50,7 +50,7 @@ const ShareFlow = ({
   const shareUrl = `https://dead-set.org/setlist/${setlistId}`;
   const oneLiner = getShowOneLiner();
   // One builder for every share surface — see the rule at the top of shareCopy.
-  const { title: shareTitle, text: shareText } = shareSetlistCopy({
+  const { title: shareTitle, body: shareBody, text: shareText } = shareSetlistCopy({
     setlistName,
     url: shareUrl,
     songCount,
@@ -88,7 +88,7 @@ const ShareFlow = ({
   const handleNativeShare = async () => {
     if (navigator.share) {
       try {
-        await navigator.share({ title: shareTitle, text: shareText, url: shareUrl });
+        await navigator.share({ title: shareTitle, text: shareBody, url: shareUrl });
         trackShare({ shareType: "setlist", channel: "native_share", setlistId });
       } catch { /* cancelled */ }
     } else {
@@ -97,7 +97,9 @@ const ShareFlow = ({
   };
 
   const handleTwitter = () => {
-    const text = encodeURIComponent(`${shareText} ${shareUrl}`);
+    // shareBody, not shareText: the latter already ends in the url, and this
+    // appends one. Sending the link twice is what the pre-release gate blocked.
+    const text = encodeURIComponent(`${shareBody} ${shareUrl}`);
     window.open(`https://twitter.com/intent/tweet?text=${text}`, "_blank");
     trackShare({ shareType: "setlist", channel: "twitter", setlistId });
   };
@@ -231,7 +233,7 @@ const ShareFlow = ({
               open={dmOpen}
               onOpenChange={setDmOpen}
               shareUrl={shareUrl}
-              shareText={shareText}
+              shareBody={shareBody}
               setlistId={setlistId}
             />
           )}

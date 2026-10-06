@@ -110,9 +110,31 @@ describe("every share surface gets its copy from shareCopy", () => {
     expect(offenders).toEqual([]);
   });
 
+  /**
+   * The shape of the defect the gate blocked on: a template literal that
+   * interpolates a payload's TEXT (which ends in the url) and then a url. Both
+   * real cases looked exactly like this — SendToFriendDialog's DM body and
+   * ShareFlow's tweet — and a test on the builders' output cannot see either.
+   */
+  it("no surface appends a url to a payload's text", () => {
+    const offenders: string[] = [];
+    for (const file of files) {
+      for (const lit of literals(readFileSync(file, "utf8"))) {
+        if (!lit.startsWith("`")) continue;
+        const names = [...lit.matchAll(/\$\{\s*([A-Za-z_$][\w$]*)/g)].map((m) => m[1]);
+        const hasText = names.some((n) => /(^|[a-z])(Text|TEXT)$/.test(n));
+        const hasUrl = names.some((n) => /([Uu]rl|URL)$/.test(n));
+        if (hasText && hasUrl) offenders.push(`${file.replace(SRC, "src/")}  ${lit}`);
+      }
+    }
+    expect(offenders).toEqual([]);
+  });
+
   it("ShareDropdown requires `share` and keeps no fallback", () => {
     const src = readFileSync(join(SRC, "components/ShareDropdown.tsx"), "utf8");
-    expect(src).toMatch(/^\s*share: \{ title: string; text: string \};\s*$/m);
+    // Typed as SharePayload rather than a structural copy, which could drift
+    // from it — and did, once `body` was added.
+    expect(src).toMatch(/^\s*share: SharePayload;\s*$/m);
     expect(src).not.toMatch(/share\?\s*:/);
     // No conditional on `share` — a ternary here is a second shape.
     expect(stripComments(src)).not.toMatch(/share\s*\?\s*[^.]/);
@@ -151,9 +173,26 @@ describe("every payload sells the thing and invites the tap", () => {
       expect(p.text).toContain(subject);
     });
 
-    it(`${kind}: ends with the url and carries it exactly once`, () => {
+    it(`${kind}: text ends with the url and carries it exactly once`, () => {
       expect(p.text.endsWith(url)).toBe(true);
       expect(p.text.split(url).length - 1).toBe(1);
+    });
+
+    it(`${kind}: body carries NO url, so a caller may append one`, () => {
+      // The pre-release gate blocked on two surfaces appending the link to a
+      // string that already ended in it. `body` is the half that is safe to
+      // append to, and this is what makes that true rather than customary.
+      expect(p.body).not.toContain(url);
+      expect(p.body).not.toMatch(/https?:\/\//);
+      expect(p.url).toBe(url);
+      expect(p.text).toBe(`${p.body}\n\n${p.url}`);
+    });
+
+    it(`${kind}: body still names its subject and invites the tap`, () => {
+      // Everything the share has to SELL must survive in the half that goes to
+      // the native sheet — that is the half most people see.
+      expect(p.body).toContain(subject);
+      expect(p.body).toMatch(/⚡ .*(play|hear|listen)/i);
     });
 
     it(`${kind}: invites a press of play, not just a brand stamp`, () => {

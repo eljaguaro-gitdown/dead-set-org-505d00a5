@@ -696,7 +696,10 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
 
     if (!startSlot || startIndex < 0) {
       audioDebug.log("context", "no audio found in setlist", { setlistId }, "error");
-      toast.error("Couldn't find audio for any songs in the setlist");
+      // Reaches a setlist, a Songbook issue, a listening guide and the era
+      // ladder alike, so it cannot say "songs in the setlist". Taper voice: a
+      // tape either circulates or it does not.
+      toast.error("No tape circulating for any of these yet");
       return;
     }
 

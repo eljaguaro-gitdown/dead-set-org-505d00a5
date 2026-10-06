@@ -25,7 +25,7 @@ interface SendToFriendDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   shareUrl: string;
-  shareText: string;
+  shareBody: string;
   setlistId?: string;
 }
 
@@ -33,7 +33,7 @@ const SendToFriendDialog = ({
   open,
   onOpenChange,
   shareUrl,
-  shareText,
+  shareBody,
   setlistId,
 }: SendToFriendDialogProps) => {
   const [recents, setRecents] = useState<Recipient[]>([]);
@@ -173,7 +173,10 @@ const SendToFriendDialog = ({
     const trimmedNote = note.trim();
     const message = trimmedNote
       ? `${trimmedNote}\n${shareUrl}`
-      : `${shareText}\n${shareUrl}`;
+      // shareBody carries NO url by contract (see SharePayload), so appending
+      // the link here is correct and necessary. Passing a string that already
+      // ended in the url is what sent it twice before.
+      : `${shareBody}\n${shareUrl}`;
 
     const { error } = await supabase.from("direct_messages").insert({
       conversation_id: conversationId,

@@ -58,7 +58,7 @@ const ShareDialog = ({ open, onOpenChange, shareLink, creatorName, setlistTitle,
   // that module. The link FIELD above deliberately still shows and copies the
   // bare url: it is labelled as the invite link, and a copy button beside a
   // readonly input has to copy what the input shows.
-  const { title: shareTitle, text: shareText } = shareCollabCopy({
+  const { title: shareTitle, body: shareBody, text: shareText } = shareCollabCopy({
     setlistName: setlistTitle || "Dream Setlist",
     url: shareLink,
     senderName: creatorName,
@@ -70,7 +70,7 @@ const ShareDialog = ({ open, onOpenChange, shareLink, creatorName, setlistTitle,
       try {
         await navigator.share({
           title: shareTitle,
-          text: shareText,
+          text: shareBody,
           url: shareLink,
         });
       } catch {
