@@ -90,6 +90,12 @@ export default {
         sm: "calc(var(--radius) - 4px)",
       },
       keyframes: {
+        // The dancing bears in CrateDigging. Bounce and tilt, staggered per
+        // bear, so a row of four reads as a march rather than a pulse.
+        "bear-step": {
+          "0%, 100%": { transform: "translateY(0) rotate(-9deg)" },
+          "50%": { transform: "translateY(-6px) rotate(9deg)" },
+        },
         "accordion-down": {
           from: { height: "0" },
           to: { height: "var(--radix-accordion-content-height)" },
@@ -116,6 +122,7 @@ export default {
         "accordion-up": "accordion-up 0.2s ease-out",
         eq: "eq 0.8s ease-in-out infinite",
         "spin-slow": "spin-slow 60s linear infinite",
+        "bear-step": "bear-step 0.9s ease-in-out infinite",
       },
     },
   },

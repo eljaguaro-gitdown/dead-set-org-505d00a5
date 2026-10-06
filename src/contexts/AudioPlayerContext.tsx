@@ -451,7 +451,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
 
     // Resolve direct track URL in background if missing
     if (!slot.directTrackUrl && slot.version?.archive_org_url) {
-      const resolved = await resolveSlot(slot);
+      const { slot: resolved, unreachable: cantReach } = await resolveSlot(slot);
       // resolveSlot returns the slot UNCHANGED when it cannot find the song
       // inside that recording. Under the legacy player that was survivable —
       // AudioPlayer fell back to the whole recording. On the gapless path
@@ -466,11 +466,24 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
       // error banner, or a skip inside a queue — is unchanged.
       if (!resolved || (!resolved.directTrackUrl && engineMode === "gapless")) {
         audioDebug.log("context", "unplayable slot — no direct track", { song: slot.song.title }, "error");
+        // Two different things, said differently. "Not on this tape" is an
+        // answer about the music; "couldn't reach" is an admission about the
+        // network, and the tape is probably fine — which is exactly the case
+        // people reported, where the song started playing moments later.
         if (playlistMode) {
-          toast.info(`Skipping ${slot.song.title} — not on this tape`);
+          toast.info(
+            cantReach
+              ? `Still looking for ${slot.song.title} — the Archive is slow`
+              : `Skipping ${slot.song.title} — not on this tape`,
+          );
           void advancePlaylistRef.current(1);
         } else {
-          setPlaybackError("That song isn't on this tape.", slot.id);
+          setPlaybackError(
+            cantReach
+              ? "Couldn't reach the Archive just now. Tap play to try again."
+              : "That song isn't on this tape.",
+            slot.id,
+          );
         }
         return;
       }
@@ -489,7 +502,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
         );
       }
     } else if (!slot.version?.archive_org_url) {
-      const resolved = await resolveSlot(slot);
+      const { slot: resolved, unreachable: cantReach } = await resolveSlot(slot);
       if (resolved?.version?.archive_org_url) {
         audioDebug.setSlot(resolved.id, resolved.song.title, resolved.version.archive_org_url, resolved.directTrackUrl ?? null);
         setState(prev => prev.playingSlot?.id === slot.id
@@ -503,16 +516,40 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
           : prev
         );
       } else {
-        audioDebug.log("context", "no audio found for song", { song: slot.song.title }, "error");
-        toast.error("Couldn't find audio for this song");
+        audioDebug.log("context", "no audio found for song", { song: slot.song.title, unreachable: cantReach }, "error");
+        toast.error(
+          cantReach
+            ? "Couldn't reach the Archive just now — tap play to try again."
+            : "No tape of this one circulates yet",
+        );
         setState({ playingSlot: null, playlistMode: false, playlistIndex: 0, playlistSlots: [], activeSetlistId: null });
       }
     }
   }, [engineMode, getEngine, setPlaybackError]);
 
   /** Resolve a slot: ensure it has an archive URL and directTrackUrl */
-  const resolveSlot = async (slot: PlayableSlot): Promise<PlayableSlot | null> => {
-    if (slot.version?.archive_org_url && slot.directTrackUrl) return slot;
+  /**
+   * Why a resolve failed, not just that it did.
+   *
+   * resolveSlot used to return `null` for three different things: "the song is
+   * not on this tape" (an answer about the music), "the Archive did not
+   * respond" (an admission about the network), and "the search came back
+   * empty". The caller reported all three as "That song isn't on this tape."
+   * — which is how a reader got told a tape was missing seconds before it
+   * started playing. The named-night branch even logs "treating as unresolved,
+   * not as 'no tape'" and then threw that distinction away in its return type.
+   */
+  interface ResolveOutcome {
+    slot: PlayableSlot | null;
+    /** A lookup FAILED rather than answering. Transient: worth asking again. */
+    unreachable: boolean;
+  }
+  const ok = (s: PlayableSlot): ResolveOutcome => ({ slot: s, unreachable: false });
+  const absent = (): ResolveOutcome => ({ slot: null, unreachable: false });
+  const unreachable = (): ResolveOutcome => ({ slot: null, unreachable: true });
+
+  const resolveSlot = async (slot: PlayableSlot): Promise<ResolveOutcome> => {
+    if (slot.version?.archive_org_url && slot.directTrackUrl) return ok(slot);
 
     // Prefer a server-precomputed direct track URL over a live archive.org
     // round-trip. Misses (private/uncrawled slots, synthetic ids) fall through
@@ -528,15 +565,25 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
             archive_org_url: precomputed.detailsUrl, venue: null,
             city: null, era_id: null, rating: null, description: null,
           };
-      return { ...slot, version, directTrackUrl: precomputed.directTrackUrl };
+      return ok({ ...slot, version, directTrackUrl: precomputed.directTrackUrl });
     }
 
     if (slot.version?.archive_org_url && !slot.directTrackUrl) {
       // Has a specific show URL — find the track WITHIN that recording
       audioDebug.log("resolve", "findTrackInRecording", { url: slot.version.archive_org_url, song: slot.song.title });
-      const directUrl = await findTrackInRecording(slot.version.archive_org_url, slot.song.title);
+      let directUrl: string | null = null;
+      try {
+        directUrl = await findTrackInRecording(slot.version.archive_org_url, slot.song.title);
+      } catch (e) {
+        // Unguarded before: a throw here escaped resolveSlot into playSingle,
+        // where nothing caught it — nothing played, no toast fired, and the
+        // bar spun forever on a slot that was only unreachable.
+        audioDebug.log("resolve", "track lookup failed — unreachable, not absent",
+          { url: slot.version.archive_org_url, song: slot.song.title, error: String(e) }, "warn");
+        return unreachable();
+      }
       if (directUrl) {
-        return { ...slot, directTrackUrl: directUrl };
+        return ok({ ...slot, directTrackUrl: directUrl });
       }
 
       // The stored recording does not contain this song. That happens because
@@ -552,18 +599,22 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
       // URL we never had reason to trust. This heals already-saved guides
       // without a migration.
       const night = archiveKeyDate(slot.version.show_date);
+      let healUnreachable = false;
       if (night) {
         audioDebug.log("resolve", "stored tape lacks the song — re-resolving the night", { song: slot.song.title, date: night }, "warn");
         try {
           const dated = await findRecordingForDate(slot.song.title, night);
           if (dated?.directTrackUrl) {
-            return {
+            return ok({
               ...slot,
               version: { ...slot.version, archive_org_url: dated.url },
               directTrackUrl: dated.directTrackUrl,
-            };
+            });
           }
         } catch (e) {
+          // findRecordingForDate THROWS on a failed request, deliberately, so
+          // this is "could not ask", never "the song is not here".
+          healUnreachable = true;
           audioDebug.log("resolve", "night re-resolve failed", { song: slot.song.title, error: String(e) }, "warn");
         }
       }
@@ -572,9 +623,10 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
       // slot with no track, because the legacy player streams the whole
       // recording from the top and plays a DIFFERENT SONG under this one's
       // name. That is the failure this whole surface exists to prevent.
-      audioDebug.log("resolve", "song is not on any readable tape of this night", { song: slot.song.title }, "error");
+      audioDebug.log("resolve", "song is not on any readable tape of this night",
+        { song: slot.song.title, unreachable: healUnreachable }, healUnreachable ? "warn" : "error");
       console.warn(`[QA] Could not resolve direct track for "${slot.song.title}" in ${slot.version.archive_org_url}`);
-      return null;
+      return healUnreachable ? unreachable() : absent();
     }
 
     // The slot names its night but carries no tape: resolve THAT night.
@@ -590,6 +642,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     // the exact bug src/lib/listeningGuide.ts was written to end. Better to say
     // we came up empty than to quietly swap the tape.
     const namedNight = slot.version?.show_date;
+    let nightUnreachable = false;
     if (namedNight) {
       audioDebug.log("resolve", "findRecordingForDate", { song: slot.song.title, date: namedNight });
       // findRecordingForDate THROWS on a failed request, deliberately, to keep
@@ -603,7 +656,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
         const dated = await findRecordingForDate(slot.song.title, namedNight);
         // A night with no readable track is not a playable slot — see above.
         if (dated?.directTrackUrl) {
-          return {
+          return ok({
             ...slot,
             version: {
               ...(slot.version ?? SYNTHETIC_VERSION_DEFAULTS),
@@ -614,10 +667,11 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
               venue: slot.version?.venue ?? dated.venue,
             },
             directTrackUrl: dated.directTrackUrl || null,
-          };
+          });
         }
         audioDebug.log("resolve", "no tape found for named night", { song: slot.song.title, date: namedNight }, "warn");
       } catch (e) {
+        nightUnreachable = true;
         audioDebug.log(
           "resolve",
           "named-night lookup failed — treating as unresolved, not as 'no tape'",
@@ -625,16 +679,16 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
           "warn",
         );
       }
-      // Unresolved either way: the caller skips this slot and moves on, and
-      // because nothing was cached the next attempt asks again.
-      return null;
+      // Nothing cached either way, so the next attempt asks again. The two
+      // reasons are NOT the same and the caller is told which it was.
+      return nightUnreachable ? unreachable() : absent();
     }
 
     // No archive URL and no night — a generic search is all that is left.
     audioDebug.log("resolve", "findArchiveRecording (generic search)", { song: slot.song.title });
     const result = await findArchiveRecording(slot.song.title);
     if (result?.directTrackUrl) {
-      return {
+      return ok({
         ...slot,
         version: {
           ...SYNTHETIC_VERSION_DEFAULTS,
@@ -643,9 +697,12 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
           city: null, era_id: null, rating: null, description: null,
         },
         directTrackUrl: result.directTrackUrl || null,
-      };
+      });
     }
-    return null;
+    // findArchiveRecording swallows its own errors and caches null, so this
+    // branch genuinely cannot tell the two apart — reported as absent, which
+    // is the conservative read.
+    return absent();
   };
 
   const playSetlist = useCallback(async (slots: PlayableSlot[], setlistId?: string) => {
@@ -680,7 +737,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     let startSlot: PlayableSlot | null = null;
 
     for (let i = 0; i < sorted.length; i++) {
-      const resolved = await resolveSlot(sorted[i]);
+      const { slot: resolved } = await resolveSlot(sorted[i]);
       // Bail out if a newer playSetlist call has superseded this one.
       if (seq !== playSetlistSeqRef.current) {
         audioDebug.log("context", "playSetlist superseded, aborting", { seq, current: playSetlistSeqRef.current, setlistId }, "warn");
@@ -729,7 +786,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     audioDebug.log("context", "advancePlaylist", { dir, fromIndex: playlistIndex });
 
     for (let i = playlistIndex + dir; i >= 0 && i < playlistSlots.length; i += dir) {
-      const resolved = await resolveSlot(playlistSlots[i]);
+      const { slot: resolved } = await resolveSlot(playlistSlots[i]);
       if (resolved?.version?.archive_org_url) {
         audioDebug.setSlot(resolved.id, resolved.song.title, resolved.version.archive_org_url, resolved.directTrackUrl ?? null);
         // Advancing through this path is gapped by definition: legacy remounts
@@ -849,7 +906,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
       const slot = stateRef.current.playlistSlots[i];
       let resolved = slot;
       if (!slot.directTrackUrl || !slot.version?.archive_org_url) {
-        const r = await resolveSlot(slot);
+        const { slot: r } = await resolveSlot(slot);
         if (r) resolved = r;
       }
       if (gen !== resolveGenRef.current) return;
@@ -1036,7 +1093,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
 
         let resolved = slot;
         if (!slot.directTrackUrl || !slot.version?.archive_org_url) {
-          const r = await resolveSlot(slot);
+          const { slot: r } = await resolveSlot(slot);
           if (r) resolved = r;
         }
         if (cancelled) return;
