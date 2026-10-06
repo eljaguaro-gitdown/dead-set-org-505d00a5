@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { communityShareText, communityPlaylist } from "@/lib/communityIssue";
+import { communityShareText, communityPlaylist, communityFindings } from "@/lib/communityIssue";
 import type { CommunityIssue } from "@/lib/communityIssue";
 
 const night = (position: number, showDate: string | null, archiveUrl: string | null) => ({
@@ -126,5 +126,43 @@ describe("the share control copies text, not a bare url", () => {
     // And must never fall back to the bare link.
     expect(src).not.toMatch(/writeText\(linkToShare\)/);
     expect(src).not.toMatch(/ta\.value = linkToShare/);
+  });
+});
+
+describe("communityFindings — derived from the picks, never written for them", () => {
+  it("names the span and the rooms at either end", () => {
+    const i = issue({
+      nights: [
+        { position: 1, showDate: "1971-03-24", venue: "Winterland Arena", archiveUrl: null, note: "" },
+        { position: 2, showDate: "1995-07-09", venue: "Soldier Field", archiveUrl: null, note: "" },
+      ],
+    });
+    expect(communityFindings(i)).toBe("2 nights, 24 years apart, Winterland Arena to Soldier Field.");
+  });
+
+  it("says nothing when there is only one night to describe", () => {
+    expect(communityFindings(issue({
+      nights: [{ position: 1, showDate: "1971-03-24", venue: "Winterland", archiveUrl: null, note: "" }],
+    }))).toBeNull();
+  });
+
+  it("does not say 'Winterland to Winterland'", () => {
+    const i = issue({
+      nights: [
+        { position: 1, showDate: "1971-03-24", venue: "Winterland", archiveUrl: null, note: "" },
+        { position: 2, showDate: "1973-03-24", venue: "Winterland", archiveUrl: null, note: "" },
+      ],
+    });
+    expect(communityFindings(i)).toBe("2 nights, 2 years apart.");
+  });
+
+  it("handles nights inside one year", () => {
+    const i = issue({
+      nights: [
+        { position: 1, showDate: "1977-05-08", venue: "Barton Hall", archiveUrl: null, note: "" },
+        { position: 2, showDate: "1977-09-03", venue: "Englishtown", archiveUrl: null, note: "" },
+      ],
+    });
+    expect(communityFindings(i)).toContain("inside one year");
   });
 });

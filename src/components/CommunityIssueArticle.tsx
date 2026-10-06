@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, ListMusic, Play, Loader2 } from "lucide-react";
+import { ArrowLeft, Play, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 import { shareSongbookCopy } from "@/lib/shareCopy";
@@ -9,6 +9,7 @@ import SongbookFooterCta from "@/components/SongbookFooterCta";
 import ShareDropdown from "@/components/ShareDropdown";
 import {
   communityPlaylist,
+  communityFindings,
   communitySlot,
   communityShareText,
   type CommunityIssue,
@@ -73,6 +74,8 @@ const CommunityIssueArticle = ({ issue }: { issue: CommunityIssue }) => {
    * the tap handler and the label can never describe different sets.
    */
   const playQueue = useMemo(() => communityPlaylist(issue), [issue]);
+  /** Derived from the picks, never written for them — see communityFindings. */
+  const findings = useMemo(() => communityFindings(issue), [issue]);
 
   const playAll = async () => {
     if (cueing) return;
@@ -90,6 +93,29 @@ const CommunityIssueArticle = ({ issue }: { issue: CommunityIssue }) => {
       toast.error("Couldn't reach the Archive — try again");
     } finally {
       setCueing(false);
+    }
+  };
+
+  /**
+   * The first and last nights a song was ever played are DATES, and a date is
+   * all the resolver needs — it looks the night up on the Archive. We printed
+   * both and offered neither, which is the one thing a Songbook page should
+   * never do: name a night and then make you go find it yourself.
+   */
+  const playByDate = async (date: string | null, label: string) => {
+    if (!date) return;
+    try {
+      await playSingle(
+        communitySlot(issue, {
+          position: -1,
+          showDate: date,
+          venue: label || null,
+          archiveUrl: null,
+          note: "",
+        }),
+      );
+    } catch {
+      toast.error("Couldn't reach the Archive — try again");
     }
   };
 
@@ -183,9 +209,24 @@ const CommunityIssueArticle = ({ issue }: { issue: CommunityIssue }) => {
             <span className="block font-ticket text-[9px] uppercase tracking-[0.16em] text-[hsl(var(--dead-gold))]">
               First played <em className="not-italic text-muted-foreground">(FTP)</em>
             </span>
-            <span className="block font-hand text-2xl md:text-3xl leading-tight mt-0.5">
-              {formatIssueDate(issue.firstPlayed)}
-            </span>
+            <button
+              type="button"
+              onClick={() => playByDate(issue.firstPlayed, issue.firstPlayedVenue ?? "")}
+              disabled={!issue.firstPlayed}
+              className="group mt-0.5 flex items-center gap-2 text-left disabled:cursor-default"
+              /* Not "Play <title>, …": that prefix belongs to the night rows, and a
+                 shared prefix makes both unselectable in a test and ambiguous aloud. */
+              aria-label={`First played ${formatIssueDate(issue.firstPlayed)} — play this night`}
+            >
+              {issue.firstPlayed && (
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-dead-dark/40 text-dead-dark transition-colors group-hover:bg-dead-dark group-hover:text-dead-cream">
+                  <Play className="h-2.5 w-2.5" />
+                </span>
+              )}
+              <span className="font-hand text-2xl md:text-3xl leading-tight">
+                {formatIssueDate(issue.firstPlayed)}
+              </span>
+            </button>
             {issue.firstPlayedVenue && (
               <span className="block font-ticket text-[11px] text-muted-foreground leading-relaxed">
                 {issue.firstPlayedVenue}
@@ -206,9 +247,22 @@ const CommunityIssueArticle = ({ issue }: { issue: CommunityIssue }) => {
             <span className="block font-ticket text-[9px] uppercase tracking-[0.16em] text-[hsl(var(--dead-gold))]">
               Last played <em className="not-italic text-muted-foreground">(LTP)</em>
             </span>
-            <span className="block font-hand text-2xl md:text-3xl leading-tight mt-0.5">
-              {formatIssueDate(issue.lastPlayed)}
-            </span>
+            <button
+              type="button"
+              onClick={() => playByDate(issue.lastPlayed, issue.lastPlayedVenue ?? "")}
+              disabled={!issue.lastPlayed}
+              className="group mt-0.5 flex items-center gap-2 text-left md:ml-auto md:flex-row-reverse disabled:cursor-default"
+              aria-label={`Last played ${formatIssueDate(issue.lastPlayed)} — play this night`}
+            >
+              {issue.lastPlayed && (
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-dead-dark/40 text-dead-dark transition-colors group-hover:bg-dead-dark group-hover:text-dead-cream">
+                  <Play className="h-2.5 w-2.5" />
+                </span>
+              )}
+              <span className="font-hand text-2xl md:text-3xl leading-tight">
+                {formatIssueDate(issue.lastPlayed)}
+              </span>
+            </button>
             {issue.lastPlayedVenue && (
               <span className="block font-ticket text-[11px] text-muted-foreground leading-relaxed">
                 {issue.lastPlayedVenue}
@@ -226,6 +280,7 @@ const CommunityIssueArticle = ({ issue }: { issue: CommunityIssue }) => {
                 {dated.length} {dated.length === 1 ? "night" : "nights"}
               </strong>
               . These are the ones they picked.
+              {findings && <> {findings}</>}
             </>
           ) : (
             <>
@@ -279,14 +334,6 @@ const CommunityIssueArticle = ({ issue }: { issue: CommunityIssue }) => {
         )}
 
         <div className="mt-10 pt-8 border-t-2 border-dashed border-primary/35">
-          <Link
-            to={`/setlist/${issue.setlistId}`}
-            /* dead-dark on the cream card: primary measures 4.09:1 here. */
-            className="inline-flex items-center gap-2 font-ticket text-xs uppercase tracking-[0.12em] text-dead-dark underline underline-offset-4"
-          >
-            <ListMusic className="w-3.5 h-3.5" />
-            Hear the guide
-          </Link>
           <p className="font-ticket text-[11px] text-muted-foreground mt-4 leading-relaxed">
             The tapes are on the Internet Archive, put there by tapers and
             traders. The map through them is {issue.mappedBy}'s.

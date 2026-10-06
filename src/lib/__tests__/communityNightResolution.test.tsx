@@ -26,7 +26,7 @@ import { decodeArchiveNotes } from "@/hooks/useSetlist";
 
 const mocks = vi.hoisted(() => ({
   playSetlist: vi.fn(async (_slots: unknown[]) => {}),
-  playSingle: vi.fn(async () => {}),
+  playSingle: vi.fn(async (_slot: unknown) => {}),
   info: vi.fn(),
   error: vi.fn(),
 }));
@@ -428,5 +428,53 @@ describe("the remaining gate notes, pinned", () => {
     expect(
       await screen.findByRole("link", { name: /Every issue of The Songbook/i }),
     ).toHaveAttribute("href", "/songbook");
+  });
+});
+
+describe("the first and last nights are offered, not just printed", () => {
+  /**
+   * Reported: "we list ftp and ltp but yet we don't provide those tapes?"
+   * Both are dates, and a date is all the resolver needs. Printing a night and
+   * then making the reader go find it is the one thing a Songbook page should
+   * never do.
+   */
+  it("offers the first-played night as a tape", async () => {
+    renderIssue(EYES);
+    const btn = await screen.findByRole("button", { name: /first played/i });
+    fireEvent.click(btn);
+    await waitFor(() => expect(mocks.playSingle).toHaveBeenCalled());
+    const slot = mocks.playSingle.mock.calls[0][0] as { version?: { show_date?: string } };
+    expect(slot.version?.show_date).toBe(EYES.firstPlayed);
+  });
+
+  it("offers the last-played night as a tape", async () => {
+    renderIssue(EYES);
+    fireEvent.click(await screen.findByRole("button", { name: /last played/i }));
+    await waitFor(() => expect(mocks.playSingle).toHaveBeenCalled());
+    const slot = mocks.playSingle.mock.calls[0][0] as { version?: { show_date?: string } };
+    expect(slot.version?.show_date).toBe(EYES.lastPlayed);
+  });
+
+  it("does not offer a tape when the catalog has no date", async () => {
+    renderIssue({ ...EYES, firstPlayed: null });
+    const btn = await screen.findByRole("button", { name: /first played/i });
+    expect(btn).toBeDisabled();
+  });
+});
+
+describe("the brand layout: play at the top, no duplicate at the foot", () => {
+  it("has no 'Hear the guide' link at the bottom any more", async () => {
+    // Play all moved to the masthead; the foot-of-page link was the old
+    // entry point and left the page saying "listen" twice, once below a
+    // scroll.
+    renderIssue(EYES);
+    await screen.findByRole("button", { name: /play all/i });
+    expect(screen.queryByText(/hear the guide/i)).toBeNull();
+  });
+
+  it("still credits the Archive and still closes on the invitation", async () => {
+    renderIssue(EYES);
+    expect(await screen.findByText(/Internet Archive/i)).toBeInTheDocument();
+    expect(await screen.findByText(/A new song every week/i)).toBeInTheDocument();
   });
 });

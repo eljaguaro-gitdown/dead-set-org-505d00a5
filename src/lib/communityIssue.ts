@@ -248,6 +248,45 @@ export const communitySlot = (
   segueToNext: false,
 });
 
+/**
+ * What the map itself shows — findings, not invention.
+ *
+ * A curated issue carries an editor's essay. A community issue has the
+ * author's per-night notes and nothing above them, so when those notes are
+ * thin the page reads as a bare list. Bird Song is the case that exposed it:
+ * all three of its notes were only a restatement of their own date, so once
+ * the duplicate preamble was stripped there was nothing left at all.
+ *
+ * This is derived from the picks, never written for them: how far apart the
+ * chosen nights sit, and which rooms they start and end in. Everything here
+ * is checkable against the list underneath it.
+ */
+export const communityFindings = (issue: CommunityIssue): string | null => {
+  const dated = issue.nights
+    .filter((n) => n.showDate)
+    .sort((a, b) => (a.showDate ?? "").localeCompare(b.showDate ?? ""));
+  if (dated.length < 2) return null;
+  const first = dated[0];
+  const last = dated[dated.length - 1];
+  const y1 = Number(first.showDate!.slice(0, 4));
+  const y2 = Number(last.showDate!.slice(0, 4));
+  const span = y2 - y1;
+  const rooms = [first.venue?.trim(), last.venue?.trim()].filter(Boolean);
+  const reach =
+    span >= 2
+      ? `${span} years apart`
+      : span === 1
+        ? "a year apart"
+        : "inside one year";
+  // Only name the rooms when we have both and they differ — "from Winterland
+  // to Winterland" is noise.
+  const between =
+    rooms.length === 2 && rooms[0] !== rooms[1]
+      ? `, ${rooms[0]} to ${rooms[1]}`
+      : "";
+  return `${dated.length} nights, ${reach}${between}.`;
+};
+
 /** The whole guide, oldest night first — the song walking forward in time. */
 export const communityPlaylist = (issue: CommunityIssue): PlayableSlot[] =>
   issue.nights
