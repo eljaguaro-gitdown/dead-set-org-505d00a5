@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 import { shareSongbookCopy } from "@/lib/shareCopy";
 import PlayAllNights from "@/components/PlayAllNights";
+import SongbookFooterCta from "@/components/SongbookFooterCta";
 import ShareDropdown from "@/components/ShareDropdown";
 import {
   communityPlaylist,
@@ -55,7 +56,18 @@ const CommunityIssueArticle = ({ issue }: { issue: CommunityIssue }) => {
    */
   const [cueing, setCueing] = useState(false);
   const shareUrl = `https://dead-set.org/songbook/${issue.slug}`;
-  const dated = issue.nights.filter((n) => n.showDate);
+  /**
+   * Oldest first, matching communityPlaylist — the song walking forward
+   * through the years, which is how the curated ladder reads too.
+   *
+   * These were rendered in the author's slot order while the queue sorted by
+   * date, so Play all played the nights in a different order from the one on
+   * screen: Eyes lists Jun 15 1993 above Jun 17 1991 and would have played
+   * them the other way round. Found by rendering the page, not by reading it.
+   */
+  const dated = issue.nights
+    .filter((n) => n.showDate)
+    .sort((a, b) => (a.showDate ?? "").localeCompare(b.showDate ?? ""));
   /**
    * The queue IS the count — see PlayAllNights. Built once here so the button,
    * the tap handler and the label can never describe different sets.
@@ -281,6 +293,8 @@ const CommunityIssueArticle = ({ issue }: { issue: CommunityIssue }) => {
           </p>
         </div>
       </article>
+
+      <SongbookFooterCta />
     </main>
   );
 };

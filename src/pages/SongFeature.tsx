@@ -8,6 +8,7 @@ import SiteHeader from "@/components/SiteHeader";
 import ShareDropdown from "@/components/ShareDropdown";
 import { shareSongbookCopy } from "@/lib/shareCopy";
 import PlayAllNights from "@/components/PlayAllNights";
+import SongbookFooterCta from "@/components/SongbookFooterCta";
 import CommunityIssueArticle from "@/components/CommunityIssueArticle";
 import { loadCommunityIssue, type CommunityIssue } from "@/lib/communityIssue";
 import SongEraLadder, { type LadderVersion } from "@/components/SongEraLadder";
@@ -331,17 +332,7 @@ const SongFeature = () => {
           )}
         </article>
 
-        <div className="text-center mt-9">
-          <p className="font-ticket text-[11px] uppercase tracking-[0.12em] text-foreground/55 mb-3">
-            A new song every week
-          </p>
-          <Link
-            to="/songbook"
-            className="inline-block font-ticket text-[11px] uppercase tracking-[0.12em] px-5 py-3 rounded-sm bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
-          >
-            Every issue of The Songbook
-          </Link>
-        </div>
+        <SongbookFooterCta />
       </main>
     </PageLayout>
   );

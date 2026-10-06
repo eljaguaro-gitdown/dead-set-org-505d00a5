@@ -334,3 +334,53 @@ describe("stripNightPreamble handles a bullet with no space after it", () => {
     ).toBe("soaring jam");
   });
 });
+
+describe("what the page shows and what Play all plays are the same, in the same order", () => {
+  /**
+   * Found by rendering, not by reading: the nights were listed in the author's
+   * slot order while communityPlaylist sorted by date, so Eyes showed
+   * Jun 15 1993 above Jun 17 1991 and would have played them the other way
+   * round. A list and a queue that disagree is the same family of defect as a
+   * count that disagrees with its rows.
+   */
+  const OUT_OF_ORDER: CommunityIssue = {
+    ...EYES,
+    nights: [
+      night(1, "1993-06-15", null),
+      night(2, "1973-02-09", "https://archive.org/details/a"),
+      night(3, "1991-06-17", null),
+    ],
+  };
+
+  it("lists the nights oldest first, whatever order the slots are in", async () => {
+    renderIssue(OUT_OF_ORDER);
+    const headings = await screen.findAllByRole("button", { name: /^Play Eyes of the World/i });
+    expect(headings.map((h) => h.getAttribute("aria-label"))).toEqual([
+      "Play Eyes of the World, Feb 9, 1973",
+      "Play Eyes of the World, Jun 17, 1991",
+      "Play Eyes of the World, Jun 15, 1993",
+    ]);
+  });
+
+  it("plays them in exactly the order it listed them", async () => {
+    renderIssue(OUT_OF_ORDER);
+    const listed = (await screen.findAllByRole("button", { name: /^Play Eyes of the World/i }))
+      // Non-greedy on the title only: /^.*, / is greedy and eats through the
+      // LAST comma, which left bare years.
+      .map((h) => h.getAttribute("aria-label")!.replace(/^Play [^,]+, /, ""));
+    fireEvent.click(await screen.findByRole("button", { name: /play all/i }));
+    await waitFor(() => expect(mocks.playSetlist).toHaveBeenCalled());
+    const queued = (mocks.playSetlist.mock.calls[0][0] as { version?: { show_date?: string } }[])
+      .map((s) => formatIssueDateLike(s.version?.show_date));
+    expect(queued).toEqual(listed);
+  });
+});
+
+/** Mirrors the card's date formatting so the two lists are comparable. */
+function formatIssueDateLike(iso?: string): string {
+  if (!iso) return "";
+  const [y, m, d] = iso.split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString("en-US", {
+    month: "short", day: "numeric", year: "numeric", timeZone: "UTC",
+  });
+}
