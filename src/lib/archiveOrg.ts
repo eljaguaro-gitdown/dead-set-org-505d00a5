@@ -271,34 +271,59 @@ function findBestTrack(
  * Try fetching metadata for an identifier, with fallback variants
  * (e.g. stripping .flac16 suffix which often has empty metadata).
  */
+/**
+ * Why this reports `unreachable` rather than just `null`.
+ *
+ * It used to return `null` for two different things: the item was READ and has
+ * no files (an answer), and the request never completed — a 5xx after its
+ * retry, a timeout, a rejected fetch (not an answer). `findTrackInRecording`
+ * collapsed both into `null`, so with the network down the player said "That
+ * song isn't on this tape" about a tape nobody had managed to open.
+ *
+ * A failing STATUS is a resolved promise, which is why a `catch` on the caller
+ * could never see it — the exact trap banked in CLAUDE.md, walked into again.
+ */
+type MetadataResult =
+  | { kind: "read"; files: any[]; resolvedId: string; restricted: boolean }
+  | { kind: "failed"; unreachable: boolean };
+
 async function fetchMetadataWithFallback(
   identifier: string,
-): Promise<{ files: any[]; resolvedId: string; restricted: boolean } | null> {
+): Promise<MetadataResult> {
   const variants = [identifier];
   // Many AI-generated URLs use .flac16 suffix identifiers that have empty metadata;
   // the base identifier (without .flac16) usually works
   if (/\.flac\d*$/i.test(identifier)) {
     variants.push(identifier.replace(/\.flac\d*$/i, ""));
   }
+  // Sticky across variants: if ANY attempt failed to complete, we never got a
+  // clean answer about this item, whatever a later variant returned.
+  let unreachable = false;
   for (const id of variants) {
     // One retry for transient archive.org failures (504/503 are common).
     for (let attempt = 0; attempt < 2; attempt++) {
       try {
         const res = await fetchArchive(`https://archive.org/metadata/${id}`);
         if (!res.ok) {
-          if (attempt === 0 && (res.status >= 500 || res.status === 429)) {
-            await new Promise((r) => setTimeout(r, 600));
-            continue;
+          if (res.status >= 500 || res.status === 429) {
+            // A server failure is not an answer about the music, even after
+            // the retry is spent.
+            unreachable = true;
+            if (attempt === 0) {
+              await new Promise((r) => setTimeout(r, 600));
+              continue;
+            }
           }
           break;
         }
         const meta = await res.json();
         const files = meta.files || [];
         if (files.length > 0) {
-          return { files, resolvedId: id, restricted: isRestrictedItem(meta) };
+          return { kind: "read", files, resolvedId: id, restricted: isRestrictedItem(meta) };
         }
         break;
       } catch {
+        unreachable = true;
         if (attempt === 0) {
           await new Promise((r) => setTimeout(r, 600));
           continue;
@@ -306,36 +331,62 @@ async function fetchMetadataWithFallback(
       }
     }
   }
-  return null;
+  return { kind: "failed", unreachable };
+}
+
+/**
+ * The track URL, AND whether we actually got to ask.
+ *
+ * `findTrackInRecording` below keeps the old `string | null` contract for the
+ * legacy player; anything that needs to tell "not on this tape" from "could
+ * not reach the Archive" must call this one.
+ */
+export async function findTrackInRecordingDetailed(
+  archiveUrl: string,
+  songTitle: string,
+): Promise<{ url: string | null; unreachable: boolean }> {
+  const res = await findTrackInner(archiveUrl, songTitle);
+  return res;
 }
 
 export async function findTrackInRecording(
   archiveUrl: string,
   songTitle: string
 ): Promise<string | null> {
+  return (await findTrackInner(archiveUrl, songTitle)).url;
+}
+
+async function findTrackInner(
+  archiveUrl: string,
+  songTitle: string
+): Promise<{ url: string | null; unreachable: boolean }> {
   const match = archiveUrl.match(/archive\.org\/details\/([^/?#]+)/);
   const identifier = match?.[1];
-  if (!identifier) return null;
+  if (!identifier) return { url: null, unreachable: false };
 
   const meta = await fetchMetadataWithFallback(identifier);
-  if (!meta) return null;
+  if (meta.kind === "failed") return { url: null, unreachable: meta.unreachable };
 
   const best = findBestTrack(meta.files, songTitle, { restricted: meta.restricted });
   if (best) {
-    return `https://archive.org/download/${meta.resolvedId}/${encodeURIComponent(best.file.name)}`;
+    return {
+      url: `https://archive.org/download/${meta.resolvedId}/${encodeURIComponent(best.file.name)}`,
+      unreachable: false,
+    };
   }
 
   if (meta.restricted) {
     console.warn(
       `[QA] "${songTitle}" in ${meta.resolvedId}: stream-only item with no MP3 derivative — skipping rather than reaching for the restricted original`,
     );
-    return null;
+    return { url: null, unreachable: false };
   }
 
   console.warn(
     `[QA] No track match for "${songTitle}" in ${meta.resolvedId} (best score: 0)`
   );
-  return null;
+  // Read the tape, the song is not on it. A real answer.
+  return { url: null, unreachable: false };
 }
 
 /** The fields we ask advancedsearch.php for, and the only ones we read. */
@@ -616,7 +667,7 @@ async function checkRecordingForTrack(
   try {
     const meta = await fetchMetadataWithFallback(identifier);
     // No metadata means the check did not happen, not that the tape is empty.
-    if (!meta) return "unknown";
+    if (meta.kind === "failed") return "unknown";
     // Same threshold the player uses to decide what to play, so the browser
     // cannot offer a version that playback would then refuse.
     return findBestTrack(meta.files, songTitle, { restricted: meta.restricted }) !== null

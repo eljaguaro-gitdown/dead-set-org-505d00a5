@@ -97,7 +97,10 @@ const ShareDropdown = ({ url, ogUrl, title, share }: ShareDropdownProps) => {
   const socialUrl = linkToShare;
 
   const shareTwitter = () => {
-    const tweetUrl = `https://x.com/intent/tweet?text=${encodeURIComponent(share.title)}&url=${encodeURIComponent(socialUrl)}`;
+    // body, not title: X takes the link in its own `url` param, and a title like
+    // "Bertha on Dead-Set.Org" gets linkified into a SECOND link to the home
+    // page — the same defect as the WhatsApp one, one surface over.
+    const tweetUrl = `https://x.com/intent/tweet?text=${encodeURIComponent(shareBody)}&url=${encodeURIComponent(socialUrl)}`;
     window.open(tweetUrl, "_blank", "noopener,noreferrer,width=550,height=420");
     trackShare({ shareType: "setlist", channel: "twitter", setlistId });
     setOpen(false);

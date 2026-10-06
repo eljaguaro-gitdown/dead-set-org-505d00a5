@@ -30,6 +30,10 @@ const waitFor = async (fn: () => void | Promise<void>, timeoutMs = 1500) => {
   throw lastErr;
 };
 
+const { trackFn } = vi.hoisted(() => ({
+  trackFn: vi.fn(async (_u: string, _t: string) => null as string | null),
+}));
+
 vi.mock("@/lib/archiveOrg", () => ({
   archiveKeyDate: (d?: string | null) => {
     const day = (d || "").slice(0, 10);
@@ -47,7 +51,15 @@ vi.mock("@/lib/archiveOrg", () => ({
     venue: "Nassau Coliseum",
     directTrackUrl: `https://archive.org/download/gd${date}.sbd/althea.mp3`,
   })),
-  findTrackInRecording: vi.fn(async () => null as string | null),
+  findTrackInRecording: trackFn,
+  // The context calls the DETAILED variant, which also reports whether we got
+  // to ask at all. It delegates to the same vi.fn, so every existing
+  // mockResolvedValue/mockImplementation on findTrackInRecording still steers
+  // this path. `unreachable: false` = "we asked and got an answer".
+  findTrackInRecordingDetailed: vi.fn(async (u: string, t: string) => ({
+    url: await trackFn(u, t),
+    unreachable: false,
+  })),
 }));
 
 vi.mock("@/lib/playEventTracker", () => ({

@@ -72,8 +72,13 @@ const CrateDigging = () => {
    * track behind it yet. `transport.error` ends it — once there is something
    * to say, the bar says it and this gets out of the way.
    */
-  const digging = !!playingSlot && !playingSlot.directTrackUrl && !transport.error;
-  const title = playingSlot?.song.title ?? "";
+  // Two shapes of the same wait. A single tap sets `playingSlot` immediately
+  // and leaves directTrackUrl null; Play All clears playingSlot entirely and
+  // reports `cueingTitle` instead, which is why the multi-second Play All wait
+  // used to get no card at all.
+  const resolvingOne = !!playingSlot && !playingSlot.directTrackUrl;
+  const digging = (resolvingOne || !!transport.cueingTitle) && !transport.error;
+  const title = playingSlot?.song.title ?? transport.cueingTitle ?? "";
 
   useEffect(() => {
     if (!digging) {
@@ -82,7 +87,7 @@ const CrateDigging = () => {
     }
     const t = window.setTimeout(() => setVisible(true), SHOW_AFTER_MS);
     return () => window.clearTimeout(t);
-  }, [digging, playingSlot?.id]);
+  }, [digging, playingSlot?.id, transport.cueingTitle]);
 
   if (!visible || !digging) return null;
 

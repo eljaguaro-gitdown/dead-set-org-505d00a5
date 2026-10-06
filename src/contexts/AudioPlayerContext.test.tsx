@@ -20,6 +20,11 @@ import type { ReactNode } from "react";
 // Mock archive.org resolution — the context calls findTrackInRecording when a
 // slot has an archive_org_url but no directTrackUrl. Return a stable URL so
 // resolveSlot succeeds for every slot in the playlist.
+const { trackFn } = vi.hoisted(() => ({
+  trackFn: vi.fn(async (archiveUrl: string, songTitle: string) =>
+    `https://archive.org/download/${encodeURIComponent(archiveUrl)}/${encodeURIComponent(songTitle)}.mp3`),
+}));
+
 vi.mock("@/lib/archiveOrg", () => ({
   archiveKeyDate: (d?: string | null) => {
     const day = (d || "").slice(0, 10);
@@ -27,9 +32,15 @@ vi.mock("@/lib/archiveOrg", () => ({
   },
   findArchiveRecording: vi.fn(async () => null),
   findRecordingForDate: vi.fn(async () => null),
-  findTrackInRecording: vi.fn(async (archiveUrl: string, songTitle: string) => {
-    return `https://archive.org/download/${encodeURIComponent(archiveUrl)}/${encodeURIComponent(songTitle)}.mp3`;
-  }),
+  findTrackInRecording: trackFn,
+  // The context calls the DETAILED variant, which also reports whether we got
+  // to ask at all. It delegates to the same vi.fn, so every existing
+  // mockResolvedValue/mockImplementation on findTrackInRecording still steers
+  // this path. `unreachable: false` = "we asked and got an answer".
+  findTrackInRecordingDetailed: vi.fn(async (u: string, t: string) => ({
+    url: await trackFn(u, t),
+    unreachable: false,
+  })),
 }));
 
 // Play-event analytics writes to Supabase — stub it out so tests don't hit the network.
