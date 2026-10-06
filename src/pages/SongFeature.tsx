@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { ArrowLeft, Loader2, Play } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { songbookDb } from "@/lib/songbookDb";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 import PageLayout from "@/components/PageLayout";
 import SiteHeader from "@/components/SiteHeader";
 import ShareDropdown from "@/components/ShareDropdown";
 import { shareSongbookCopy } from "@/lib/shareCopy";
+import PlayAllNights from "@/components/PlayAllNights";
 import CommunityIssueArticle from "@/components/CommunityIssueArticle";
 import { loadCommunityIssue, type CommunityIssue } from "@/lib/communityIssue";
 import SongEraLadder, { type LadderVersion } from "@/components/SongEraLadder";
@@ -154,7 +155,6 @@ const SongFeature = () => {
         : [],
     [feature?.song_id, feature?.title, ladderVersions],
   );
-  const playableCount = playQueue.length;
 
   const handlePlayAll = async () => {
     if (cueing || !feature?.song_id) return;
@@ -267,21 +267,7 @@ const SongFeature = () => {
               </p>
             )}
 
-            {playableCount > 0 && (
-              <button
-                type="button"
-                onClick={handlePlayAll}
-                aria-disabled={cueing}
-                className="mt-5 inline-flex items-center gap-2.5 rounded-sm bg-dead-dark px-5 py-3 font-ticket text-xs uppercase tracking-[0.14em] text-dead-cream transition-opacity hover:opacity-90"
-              >
-                {cueing ? (
-                  <Loader2 className="w-3 h-3 animate-spin shrink-0" />
-                ) : (
-                  <Play className="w-3 h-3 shrink-0" />
-                )}
-                Play all {playableCount} {playableCount === 1 ? "night" : "nights"}
-              </button>
-            )}
+            <PlayAllNights slots={playQueue} cueing={cueing} onPlay={handlePlayAll} />
           </header>
 
           {/* ── the lifespan: FTP / LTP taught in place ── */}

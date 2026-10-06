@@ -101,7 +101,9 @@ describe("a night is playable when it can be resolved, not when it stores a url"
     // A count beside a control names a population: it must be the rows the
     // reader can see, or it contradicts the page under it.
     const button = await screen.findByRole("button", { name: /play all/i });
-    expect(button).toHaveTextContent("Play all 7 nights");
+    // Exact, not toHaveTextContent: that is a SUBSTRING match, so
+    // "Play all 7 nightsX" would pass and a plural regression at 1 slips by.
+    expect(button.textContent?.replace(/\s+/g, " ").trim()).toBe("Play all 7 nights");
     fireEvent.click(button);
     expect(mocks.playSetlist).toHaveBeenCalledTimes(1);
     expect(mocks.playSetlist.mock.calls[0][0]).toHaveLength(7);
@@ -109,9 +111,8 @@ describe("a night is playable when it can be resolved, not when it stores a url"
 
   it("says 'night' for a one-night guide", async () => {
     renderIssue({ ...EYES, nights: [EYES.nights[0]] });
-    expect(
-      await screen.findByRole("button", { name: /play all/i }),
-    ).toHaveTextContent("Play all 1 night");
+    const button = await screen.findByRole("button", { name: /play all/i });
+    expect(button.textContent?.replace(/\s+/g, " ").trim()).toBe("Play all 1 night");
   });
 
   it("a dated night with no url still plays on tap", async () => {

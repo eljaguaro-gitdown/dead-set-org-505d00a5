@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft, ListMusic, Play, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 import { shareSongbookCopy } from "@/lib/shareCopy";
+import PlayAllNights from "@/components/PlayAllNights";
 import ShareDropdown from "@/components/ShareDropdown";
 import {
   communityPlaylist,
@@ -56,19 +57,16 @@ const CommunityIssueArticle = ({ issue }: { issue: CommunityIssue }) => {
   const shareUrl = `https://dead-set.org/songbook/${issue.slug}`;
   const dated = issue.nights.filter((n) => n.showDate);
   /**
-   * Playable means RESOLVABLE, not "has a stored url". 21 of the 33 nights
-   * across the six community issues name their night and carry no url, and the
-   * player resolves those by night. Gating on the url meant Viola Lee Blues
-   * showed no play control at all, Stella Blue offered 1 of 6, and Eyes of the
-   * World 2 of 7 — a count disagreeing with the rows beneath it.
+   * The queue IS the count — see PlayAllNights. Built once here so the button,
+   * the tap handler and the label can never describe different sets.
    */
-  const playable = issue.nights.filter((n) => n.archiveUrl || n.showDate);
+  const playQueue = useMemo(() => communityPlaylist(issue), [issue]);
 
   const playAll = async () => {
     if (cueing) return;
     setCueing(true);
     try {
-      const slots = communityPlaylist(issue);
+      const slots = playQueue;
       if (slots.length === 0) {
         toast.info("No tape of these nights circulates yet");
         return;
@@ -162,26 +160,7 @@ const CommunityIssueArticle = ({ issue }: { issue: CommunityIssue }) => {
             First mapped by {issue.mappedBy}{sentenceEnd(issue.mappedBy)}
           </p>
 
-          {/* Above the lifespan block on purpose. The whole point of an issue
-              is to get somebody listening, and this used to sit at the foot of
-              the page behind a scroll. aria-disabled rather than disabled:
-              Chromium moves focus off an element that becomes disabled, which
-              drops a keyboard or switch user to <body> mid-cue. */}
-          {playable.length > 0 && (
-            <button
-              type="button"
-              onClick={playAll}
-              aria-disabled={cueing}
-              className="mt-5 inline-flex items-center gap-2.5 rounded-sm bg-dead-dark px-5 py-3 font-ticket text-xs uppercase tracking-[0.14em] text-dead-cream transition-opacity hover:opacity-90"
-            >
-              {cueing ? (
-                <Loader2 className="w-3 h-3 animate-spin shrink-0" />
-              ) : (
-                <Play className="w-3 h-3 shrink-0" />
-              )}
-              Play all {playable.length} {playable.length === 1 ? "night" : "nights"}
-            </button>
-          )}
+          <PlayAllNights slots={playQueue} cueing={cueing} onPlay={playAll} />
         </header>
 
         {/* The same lifespan block as a curated issue. Venue and city are absent
