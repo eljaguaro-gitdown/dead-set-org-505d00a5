@@ -1,7 +1,7 @@
 # Founding Deadhead welcomes: ric neil and Chip (welcome back)
 
 **Sender:** jay (from his own address)
-**Channel:** personal email, one-to-one (not Resend)
+**Channel:** personal email, one-to-one (not Resend). Chip: send to his new Yahoo address, the one on his Oct 5 account.
 **Status:** draft for Jay's review. Nothing has been sent.
 
 **Flag for Jay (both emails):** I found no existing welcome template or past welcome drafts in the repo, so these follow the field guide and playbook. Before sending, confirm each person's email address. The music observations in ric's email describe how his sets are built, never that those nights happened, so no show-date claims need checking.
@@ -55,7 +55,7 @@ A lot has happened since you were last around. The highlights:
 - **Cosmic Charlie has sharper opinions.** He now judges a version against its own era, so a good '77 isn't measured by '72 standards. There's also a new "Firsts & Lasts" chip, and he'll go hunting for first-time-played and last-time-played songs.
 - **New names for the "what kind of night?" chips:** Late Night, Daytime Show and Day Into Night.
 - **Your set starts playing the moment it's built.** No pre-roll, straight into the music.
-- **Dead Set is in testing on iPhone**, with our beta circle through TestFlight. Sign in with Google or Apple, and listen from your lock screen with the venue and date on the artist line. It's not on the App Store yet.
+- **Dead Set is coming to the App Store.** We've submitted the iPhone app and are working through Apple's review now. Our beta circle already runs it through TestFlight: sign in with Google or Apple, and listen from your lock screen with the venue and date on the artist line.
 - **Friends in Messages.** Tap a friend's name and you land on their public setlists.
 
 **Encore**
