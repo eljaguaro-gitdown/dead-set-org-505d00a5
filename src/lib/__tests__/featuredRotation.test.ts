@@ -94,6 +94,32 @@ describe("rule 2 — everyone gets a turn", () => {
     expect(seen.size).toBe(47);
   });
 
+  it.each([2, 3, 4, 5, 6, 9, 12, 15, 24, 48, 96])(
+    "starves nobody with %i creators, the sizes that share a factor with the stride",
+    (n) => {
+      // 47 is COPRIME with the 3-slot stride, which is the friendly case — so
+      // the test above proves less than it looks like it does. A window that
+      // advances by 3 over a pool of 6 could plausibly show only 2 of them
+      // forever. (It does not: the window is consecutive, so the windows tile
+      // the ring whatever the common factor. This pins that.)
+      for (const fresh of [false, true]) {
+        const rows: RotatableSetlist[] = Array.from({ length: n }, (_, i) => ({
+          id: `s${i}`,
+          creator_id: `c${i}`,
+          // `fresh` also shortens the window to 2 and shrinks the pool by one,
+          // so the stride and the ring size BOTH change — the harder case.
+          created_at: fresh && i === 0 ? daysAgo(1) : daysAgo(60 + i),
+          title: `Night ${i}`,
+        }));
+        const seen = new Set<string>();
+        for (let w = 0; w < 400 && seen.size < n; w++) {
+          featuredForWeek(rows, 3, NOW, w).forEach((p) => seen.add(p.creator_id));
+        }
+        expect(seen.size, `n=${n} fresh=${fresh}`).toBe(n);
+      }
+    },
+  );
+
   it("is stable within a week — same week in, same shelf out", () => {
     const a = featuredForWeek(manyCreators, 3, NOW, 7).map((p) => p.id);
     const b = featuredForWeek(manyCreators, 3, NOW, 7).map((p) => p.id);
