@@ -74,6 +74,27 @@ describe("groupEditions", () => {
     expect(outside.map((x) => x.key)).toEqual(["2026-08-24", "2026-04-20"]);
   });
 
+  it("the archive prints its stored label, not the span of the rows that survived into it", () => {
+    /**
+     * The gate's surviving mutant: dropping `key === ARCHIVE_KEY ||` from
+     * canOverride left all 19 tests green, because every test checked that the
+     * override is REFUSED and none checked that it is honoured where it must
+     * be. The archive is the one edition that cannot describe itself — most of
+     * what it covers predates this repo's history, and only four entries
+     * survived into it, all dated August. Derive its label and /updates would
+     * read "Aug 13–21, 2026" over an edition that genuinely spans Apr 21 to
+     * Aug 24 — a heading narrower than its own contents, which is the same
+     * class of lie as the five-month "week" this module replaced.
+     */
+    const out = groupEditions([
+      e({ shipped_on: "2026-08-21", week_label: "Apr 21 – Aug 24, 2026", title: "songbook" }),
+      e({ shipped_on: "2026-08-13", week_label: "Apr 21 – Aug 24, 2026", title: "firsts" }),
+    ], "2026-10-06");
+    expect(out[0].key).toBe("archive");
+    expect(out[0].label).toBe("Apr 21 – Aug 24, 2026");
+    expect(out[0].label).not.toBe("Aug 13–21, 2026");
+  });
+
   it("a stored label cannot relabel a derived week — only the archive keeps one", () => {
     /**
      * The hole the gate found: the override used to apply to any edition, so
