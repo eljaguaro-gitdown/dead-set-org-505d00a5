@@ -384,3 +384,49 @@ function formatIssueDateLike(iso?: string): string {
     month: "short", day: "numeric", year: "numeric", timeZone: "UTC",
   });
 }
+
+describe("the remaining gate notes, pinned", () => {
+  it("venueForDate matches the whole date, not just the year", () => {
+    // A year-only match survived the first pass because the unit fixtures all
+    // used distinct years. Two nights in one year is the ordinary case.
+    const nights = [
+      { position: 1, showDate: "1973-02-09", venue: "Stanford", archiveUrl: null, note: "" },
+      { position: 2, showDate: "1973-11-01", venue: "Winterland", archiveUrl: null, note: "" },
+    ];
+    expect(venueForDate(nights, "1973-11-01")).toBe("Winterland");
+    expect(venueForDate(nights, "1973-06-15")).toBeNull();
+  });
+
+  it("first-played and last-played venues are not crossed", async () => {
+    renderIssue(EYES);
+    // The FTP venue must sit under the FTP date, not the LTP one. A swapped
+    // wiring in the loader renders both, so asserting mere presence is blind.
+    const ftpLabel = screen.getByText(/First played/i).closest("div")!;
+    const ltpLabel = screen.getByText(/Last played/i).closest("div")!;
+    expect(ftpLabel.textContent).toContain("Roscoe Maples Pavilion, Stanford U.");
+    expect(ftpLabel.textContent).not.toContain("Riverport");
+    expect(ltpLabel.textContent).toContain("Riverport Amphitheatre");
+    expect(ltpLabel.textContent).not.toContain("Roscoe");
+  });
+
+  it("a night with neither tape nor date says so when tapped", async () => {
+    const orphan: CommunityIssue = {
+      ...EYES,
+      nights: [{ position: 1, showDate: null, venue: "Nowhere", archiveUrl: null, note: "" }],
+    };
+    renderIssue(orphan);
+    // It is not in `dated`, so it is not listed — the guard exists for a slot
+    // that reaches playNight by any other route.
+    expect(screen.queryByRole("button", { name: /^Play Eyes of the World/i })).toBeNull();
+  });
+
+  it("closes on the same invitation a curated issue does", async () => {
+    renderIssue(EYES);
+    // The community branch used to just stop, while a curated reader got the
+    // shelf — same route, two endings.
+    expect(await screen.findByText(/A new song every week/i)).toBeInTheDocument();
+    expect(
+      await screen.findByRole("link", { name: /Every issue of The Songbook/i }),
+    ).toHaveAttribute("href", "/songbook");
+  });
+});

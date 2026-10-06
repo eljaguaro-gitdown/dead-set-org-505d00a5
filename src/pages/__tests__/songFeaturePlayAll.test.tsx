@@ -20,6 +20,8 @@ const mocks = vi.hoisted(() => ({
   playSetlist: vi.fn(async (_s: unknown[]) => {}),
   playSingle: vi.fn(async () => {}),
   maybeSingle: vi.fn(),
+  info: vi.fn(),
+  error: vi.fn(),
   onVersionsLoaded: null as ((v: LadderVersion[]) => void) | null,
 }));
 
@@ -58,7 +60,7 @@ vi.mock("@/components/PageLayout", () => ({
 vi.mock("@/components/SiteHeader", () => ({ default: () => null }));
 vi.mock("@/components/ShareDropdown", () => ({ default: () => null }));
 vi.mock("@/lib/posthog", () => ({ captureEvent: vi.fn() }));
-vi.mock("sonner", () => ({ toast: { info: vi.fn(), error: vi.fn() } }));
+vi.mock("sonner", () => ({ toast: { info: mocks.info, error: mocks.error } }));
 
 import SongFeature from "@/pages/SongFeature";
 
@@ -140,5 +142,48 @@ describe("the curated issue's masthead offers the whole ladder", () => {
     );
     await screen.findByTestId("ladder");
     expect(screen.queryByRole("button", { name: /play all/i })).toBeNull();
+  });
+});
+
+describe("the curated Play all survives a failure instead of stranding the reader", () => {
+  /**
+   * The community page had these; this one did not, and the gate proved it by
+   * deleting the `finally`, the toast and the double-tap guard one at a time
+   * with the whole suite staying green. The banked rule: every player-path
+   * change needs a rejection test beside its null-result test.
+   */
+  it("clears the busy state when playSetlist rejects", async () => {
+    mocks.playSetlist.mockRejectedValueOnce(new Error("archive unreachable"));
+    await renderPage();
+    const button = await screen.findByRole("button", { name: /play all/i });
+    fireEvent.click(button);
+    // Without the finally, the control stays disabled under its busy label
+    // forever and the reader's tap simply stops the page.
+    await waitFor(() => expect(button).toHaveAttribute("aria-disabled", "false"));
+  });
+
+  it("says it could not REACH the Archive, which is not the same as no tape", async () => {
+    mocks.playSetlist.mockRejectedValueOnce(new Error("archive unreachable"));
+    await renderPage();
+    fireEvent.click(await screen.findByRole("button", { name: /play all/i }));
+    await waitFor(() => expect(mocks.error).toHaveBeenCalled());
+    expect(String(mocks.error.mock.calls[0][0])).toMatch(/reach the Archive/i);
+  });
+
+  it("a second tap while cueing does not restart the run", async () => {
+    let release: () => void = () => {};
+    mocks.playSetlist.mockImplementationOnce(
+      () => new Promise<void>((res) => { release = () => res(); }),
+    );
+    await renderPage();
+    const button = await screen.findByRole("button", { name: /play all/i });
+    fireEvent.click(button);
+    await waitFor(() => expect(button).toHaveAttribute("aria-disabled", "true"));
+    // playSetlist abandons a run whose sequence number is stale, so a second
+    // tap discards the work in flight and restarts the wait.
+    fireEvent.click(button);
+    fireEvent.click(button);
+    expect(mocks.playSetlist).toHaveBeenCalledTimes(1);
+    release();
   });
 });

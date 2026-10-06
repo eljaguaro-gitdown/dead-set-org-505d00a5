@@ -113,18 +113,87 @@ describe("every share surface gets its copy from shareCopy", () => {
   /**
    * The shape of the defect the gate blocked on: a template literal that
    * interpolates a payload's TEXT (which ends in the url) and then a url. Both
-   * real cases looked exactly like this — SendToFriendDialog's DM body and
-   * ShareFlow's tweet — and a test on the builders' output cannot see either.
+   * real cases looked like this — SendToFriendDialog's DM body and ShareFlow's
+   * tweet — and a test on the builders' output cannot see either.
+   *
+   * The first draft of THIS test was itself blind to the defect: its regex
+   * captured only the first segment of `${share.text}` and did not match
+   * `SHARE_TEXT` at all, so the re-gate reinstated the original defect in the
+   * very file that had been de-duplicated and the suite stayed green. The
+   * identifier match below covers all three spellings a person actually
+   * writes, and the concatenated form as well.
    */
+  /**
+   * Split an identifier into words, so one rule covers every spelling:
+   * shareText, SHARE_TEXT, share.text and p.body all normalise the same way.
+   * "someContext" becomes ["some","context"], which is NOT a text identifier —
+   * the word has to be "text", not merely end in those letters.
+   */
+  const words = (e: string) =>
+    e.replace(/([a-z0-9])([A-Z])/g, "$1_$2").toLowerCase().split(/[._]+/).filter(Boolean);
+
+  const isTextIdent = (e: string) => words(e).at(-1) === "text";
+  /** `linkToShare` and `socialUrl` are both the link — match the word anywhere. */
+  const isUrlIdent = (e: string) =>
+    words(e).some((w) => w === "url" || w === "link" || w === "href");
+
   it("no surface appends a url to a payload's text", () => {
     const offenders: string[] = [];
     for (const file of files) {
       for (const lit of literals(readFileSync(file, "utf8"))) {
         if (!lit.startsWith("`")) continue;
-        const names = [...lit.matchAll(/\$\{\s*([A-Za-z_$][\w$]*)/g)].map((m) => m[1]);
-        const hasText = names.some((n) => /(^|[a-z])(Text|TEXT)$/.test(n));
-        const hasUrl = names.some((n) => /([Uu]rl|URL)$/.test(n));
-        if (hasText && hasUrl) offenders.push(`${file.replace(SRC, "src/")}  ${lit}`);
+        // The whole expression inside ${...}, not just its first identifier.
+        const exprs = [...lit.matchAll(/\$\{([^}]*)\}/g)].map((m) => m[1].trim());
+        if (exprs.some(isTextIdent) && exprs.some(isUrlIdent)) {
+          offenders.push(`${file.replace(SRC, "src/")}  ${lit}`);
+        }
+      }
+    }
+    expect(offenders).toEqual([]);
+  });
+
+  it("no surface concatenates a payload's text with a url", () => {
+    const offenders: string[] = [];
+    for (const file of files) {
+      const src = stripComments(readFileSync(file, "utf8"));
+      // Per statement, not by pairing adjacent identifiers: a lazy regex
+      // matched the `n` inside a "\n" separator as the second identifier and
+      // never reached `linkToShare`, so the concatenated form walked through.
+      for (const stmt of src.split(/[;\n]/)) {
+        if (!stmt.includes("+")) continue;
+        const idents = stmt.match(/[A-Za-z_$][\w$.]*/g) ?? [];
+        if (idents.some(isTextIdent) && idents.some(isUrlIdent)) {
+          offenders.push(`${file.replace(SRC, "src/")}  ${stmt.trim()}`);
+        }
+      }
+    }
+    expect(offenders).toEqual([]);
+  });
+
+  /**
+   * The other half of the same rule: a native share sheet takes the link in its
+   * own field, so the `text` it is given must be the url-less half. Reverting
+   * any of the six calls to the url-carrying half stayed green before this.
+   */
+  it("every navigator.share that passes a url passes the url-less body as text", () => {
+    const offenders: string[] = [];
+    for (const file of files) {
+      const src = stripComments(readFileSync(file, "utf8"));
+      for (const m of src.matchAll(/navigator\.share\(\{([^}]*)\}/g)) {
+        const args = m[1];
+        // SHORTHAND counts: `navigator.share({ title, text, url })` passes the
+        // variable `text`, and two real calls are written exactly that way —
+        // they survived a `text\s*:` regex that only saw explicit properties.
+        const prop = (name: string): string | null => {
+          const explicit = args.match(new RegExp(`\\b${name}\\s*:\\s*([A-Za-z_$][\\w$.]*)`));
+          if (explicit) return explicit[1];
+          return new RegExp(`(?:^|,)\\s*${name}\\s*(?:,|$)`).test(args) ? name : null;
+        };
+        if (!prop("url")) continue; // files-only shares are exempt
+        const text = prop("text");
+        if (text && isTextIdent(text)) {
+          offenders.push(`${file.replace(SRC, "src/")}  text: ${text}`);
+        }
       }
     }
     expect(offenders).toEqual([]);
