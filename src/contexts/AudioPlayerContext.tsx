@@ -642,11 +642,15 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
           { url: slot.version.archive_org_url, song: slot.song.title, error: String(e) }, "warn");
         return unreachable();
       }
-      if (!directUrl && trackUnreachable) {
-        audioDebug.log("resolve", "could not read this tape — unreachable, not absent",
-          { url: slot.version.archive_org_url, song: slot.song.title }, "warn");
-        return unreachable();
-      }
+      // NO early return here, deliberately. Failing fast on an unreadable
+      // stored tape forecloses the heal below — and the gate proved that is a
+      // REGRESSION, not a trade: a stored identifier that persistently 503s
+      // beside a healthy night search used to heal onto another tape of that
+      // night, and with the early return it looped "tap play to try again"
+      // forever instead. `trackUnreachable` is still carried, and the verdict
+      // at the end of this branch returns unreachable() when the heal also
+      // fails, so nothing is lost but the shortcut. The cost on a dead network
+      // is one extra search, bounded by its own 12s cap and the 25s watchdog.
       if (directUrl) {
         return ok({ ...slot, directTrackUrl: directUrl });
       }
