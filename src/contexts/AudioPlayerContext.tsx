@@ -529,7 +529,11 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
       if (resolved) {
         audioDebug.setDirectTrackUrl(resolved.directTrackUrl ?? null);
         audioDebug.log("context", "resolved direct track", { url: resolved.directTrackUrl });
-        setState(prev => prev.playingSlot?.id === slot.id
+        // `seq` as well as the id: the id alone is not identity enough when
+        // two controls can legitimately build the same slot, and a late
+        // resolve from an abandoned tap then lands on the current one. The
+        // failure paths already checked seq; the success paths did not.
+        setState(prev => seq === playSingleSeqRef.current && prev.playingSlot?.id === slot.id
           ? {
               ...prev,
               playingSlot: resolved,
@@ -544,7 +548,11 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
       const { slot: resolved, unreachable: cantReach } = await resolveSlot(slot);
       if (resolved?.version?.archive_org_url) {
         audioDebug.setSlot(resolved.id, resolved.song.title, resolved.version.archive_org_url, resolved.directTrackUrl ?? null);
-        setState(prev => prev.playingSlot?.id === slot.id
+        // `seq` as well as the id: the id alone is not identity enough when
+        // two controls can legitimately build the same slot, and a late
+        // resolve from an abandoned tap then lands on the current one. The
+        // failure paths already checked seq; the success paths did not.
+        setState(prev => seq === playSingleSeqRef.current && prev.playingSlot?.id === slot.id
           ? {
               ...prev,
               playingSlot: resolved,

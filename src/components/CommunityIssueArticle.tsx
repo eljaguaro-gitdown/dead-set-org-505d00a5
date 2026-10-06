@@ -102,17 +102,28 @@ const CommunityIssueArticle = ({ issue }: { issue: CommunityIssue }) => {
    * both and offered neither, which is the one thing a Songbook page should
    * never do: name a night and then make you go find it yourself.
    */
-  const playByDate = async (date: string | null, label: string) => {
+  const playByDate = async (date: string | null, label: string, which: "ftp" | "ltp") => {
     if (!date) return;
     try {
       await playSingle(
-        communitySlot(issue, {
-          position: -1,
-          showDate: date,
-          venue: label || null,
-          archiveUrl: null,
-          note: "",
-        }),
+        communitySlot(
+          issue,
+          {
+            // DISTINCT per control. communitySlot derives the id from the
+            // position, so giving both buttons the same one made them the same
+            // slot to the player — and playSingle's SUCCESS path is guarded by
+            // slot id, not by sequence. Tap first-played, tap last-played
+            // before it resolves, and the late first-played result was applied
+            // to the last-played tap: the wrong night, from the right-looking
+            // button. The window is one Archive resolve, and the two controls
+            // sit side by side on a phone.
+            position: which === "ftp" ? -1 : -2,
+            showDate: date,
+            venue: label || null,
+            archiveUrl: null,
+            note: "",
+          },
+        ),
       );
     } catch {
       toast.error("Couldn't reach the Archive — try again");
@@ -211,12 +222,16 @@ const CommunityIssueArticle = ({ issue }: { issue: CommunityIssue }) => {
             </span>
             <button
               type="button"
-              onClick={() => playByDate(issue.firstPlayed, issue.firstPlayedVenue ?? "")}
+              onClick={() => playByDate(issue.firstPlayed, issue.firstPlayedVenue ?? "", "ftp")}
               disabled={!issue.firstPlayed}
               className="group mt-0.5 flex items-center gap-2 text-left disabled:cursor-default"
               /* Not "Play <title>, …": that prefix belongs to the night rows, and a
                  shared prefix makes both unselectable in a test and ambiguous aloud. */
-              aria-label={`First played ${formatIssueDate(issue.firstPlayed)} — play this night`}
+              aria-label={
+                issue.firstPlayed
+                  ? `First played ${formatIssueDate(issue.firstPlayed)} — play this night`
+                  : "First played — not known"
+              }
             >
               {issue.firstPlayed && (
                 <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-dead-dark/40 text-dead-dark transition-colors group-hover:bg-dead-dark group-hover:text-dead-cream">
@@ -249,10 +264,14 @@ const CommunityIssueArticle = ({ issue }: { issue: CommunityIssue }) => {
             </span>
             <button
               type="button"
-              onClick={() => playByDate(issue.lastPlayed, issue.lastPlayedVenue ?? "")}
+              onClick={() => playByDate(issue.lastPlayed, issue.lastPlayedVenue ?? "", "ltp")}
               disabled={!issue.lastPlayed}
               className="group mt-0.5 flex items-center gap-2 text-left md:ml-auto md:flex-row-reverse disabled:cursor-default"
-              aria-label={`Last played ${formatIssueDate(issue.lastPlayed)} — play this night`}
+              aria-label={
+                issue.lastPlayed
+                  ? `Last played ${formatIssueDate(issue.lastPlayed)} — play this night`
+                  : "Last played — not known"
+              }
             >
               {issue.lastPlayed && (
                 <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-dead-dark/40 text-dead-dark transition-colors group-hover:bg-dead-dark group-hover:text-dead-cream">

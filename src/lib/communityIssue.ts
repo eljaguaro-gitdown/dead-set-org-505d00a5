@@ -268,23 +268,32 @@ export const communityFindings = (issue: CommunityIssue): string | null => {
   if (dated.length < 2) return null;
   const first = dated[0];
   const last = dated[dated.length - 1];
-  const y1 = Number(first.showDate!.slice(0, 4));
-  const y2 = Number(last.showDate!.slice(0, 4));
-  const span = y2 - y1;
-  const rooms = [first.venue?.trim(), last.venue?.trim()].filter(Boolean);
-  const reach =
-    span >= 2
-      ? `${span} years apart`
-      : span === 1
-        ? "a year apart"
-        : "inside one year";
-  // Only name the rooms when we have both and they differ — "from Winterland
-  // to Winterland" is noise.
+
+  // From the actual dates, not from subtracting calendar years: 1971-12-31 to
+  // 1972-01-01 is one DAY, and calendar subtraction called it "a year apart".
+  const days =
+    (Date.parse(`${last.showDate}T00:00:00Z`) - Date.parse(`${first.showDate}T00:00:00Z`)) /
+    86_400_000;
+  if (!Number.isFinite(days)) return null;
+  const years = Math.floor(days / 365.25);
+
+  /**
+   * Rooms are compared on their first comma segment, trimmed and case-folded,
+   * so "Winterland Arena" and "Winterland Arena, San Francisco, CA" are one
+   * room rather than two. And only the segment is printed: a full venue string
+   * with its own commas makes "A to B" unreadable.
+   */
+  const room = (v?: string | null) => (v ?? "").split(",")[0].trim();
+  const a = room(first.venue);
+  const b = room(last.venue);
   const between =
-    rooms.length === 2 && rooms[0] !== rooms[1]
-      ? `, ${rooms[0]} to ${rooms[1]}`
-      : "";
-  return `${dated.length} nights, ${reach}${between}.`;
+    a && b && a.toLowerCase() !== b.toLowerCase() ? `, ${a} to ${b}` : "";
+
+  // No leading count: the sentence before this one already says how many
+  // nights there are, and saying it twice reads like a stutter.
+  if (years >= 2) return `${years} years between the first and the last${between}.`;
+  if (years === 1) return `A year between the first and the last${between}.`;
+  return `All inside one year${between}.`;
 };
 
 /** The whole guide, oldest night first — the song walking forward in time. */

@@ -31,8 +31,15 @@ type Era = Database["public"]["Tables"]["eras"]["Row"];
  * rotation: a creator whose only named setlist fell outside the newest 400
  * would have become permanently invisible with no error and no log. At 16 new
  * setlists a week that was about nine weeks away.
+ *
+ * 1000, not more: PostgREST caps a response at the project's `max-rows`, which
+ * this repo's own comment elsewhere calls 1000 by default. Asking for 2000
+ * would silently return 1000 and reinstate the cap while looking fixed. At ~16
+ * new public setlists a week this holds until roughly late 2027; past that the
+ * query has to select distinct creators server-side (an RPC or a view) rather
+ * than paging a window of setlists.
  */
-const FEATURED_POOL = 2000;
+const FEATURED_POOL = 1000;
 /** Cards on the shelf. */
 const FEATURED_SLOTS = 3;
 

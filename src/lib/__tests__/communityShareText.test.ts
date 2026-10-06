@@ -130,39 +130,65 @@ describe("the share control copies text, not a bare url", () => {
 });
 
 describe("communityFindings — derived from the picks, never written for them", () => {
+  const night = (d: string, venue: string | null) =>
+    ({ position: 1, showDate: d, venue, archiveUrl: null, note: "" });
+
   it("names the span and the rooms at either end", () => {
-    const i = issue({
-      nights: [
-        { position: 1, showDate: "1971-03-24", venue: "Winterland Arena", archiveUrl: null, note: "" },
-        { position: 2, showDate: "1995-07-09", venue: "Soldier Field", archiveUrl: null, note: "" },
-      ],
-    });
-    expect(communityFindings(i)).toBe("2 nights, 24 years apart, Winterland Arena to Soldier Field.");
+    expect(communityFindings(issue({
+      nights: [night("1971-03-24", "Winterland Arena"), night("1995-07-09", "Soldier Field")],
+    }))).toBe("24 years between the first and the last, Winterland Arena to Soldier Field.");
+  });
+
+  it("measures the span from the DATES, not by subtracting calendar years", () => {
+    // 1971-12-31 to 1972-01-01 is one day. Calendar subtraction called it
+    // "a year apart" — a claim the two rows underneath plainly contradict.
+    expect(communityFindings(issue({
+      nights: [night("1971-12-31", null), night("1972-01-01", null)],
+    }))).toBe("All inside one year.");
+    expect(communityFindings(issue({
+      nights: [night("1970-12-01", null), night("1972-01-01", null)],
+    }))).toBe("A year between the first and the last.");
   });
 
   it("says nothing when there is only one night to describe", () => {
+    expect(communityFindings(issue({ nights: [night("1971-03-24", "Winterland")] }))).toBeNull();
+  });
+
+  it("treats one room written two ways as one room", () => {
+    // "Winterland Arena" and "Winterland Arena, San Francisco, CA" are the
+    // same building; printing both as "A to B" invents a journey.
     expect(communityFindings(issue({
-      nights: [{ position: 1, showDate: "1971-03-24", venue: "Winterland", archiveUrl: null, note: "" }],
-    }))).toBeNull();
+      nights: [night("1971-03-24", "Winterland Arena"),
+               night("1973-03-24", "winterland arena, San Francisco, CA")],
+    }))).toBe("2 years between the first and the last.");
   });
 
-  it("does not say 'Winterland to Winterland'", () => {
-    const i = issue({
-      nights: [
-        { position: 1, showDate: "1971-03-24", venue: "Winterland", archiveUrl: null, note: "" },
-        { position: 2, showDate: "1973-03-24", venue: "Winterland", archiveUrl: null, note: "" },
-      ],
-    });
-    expect(communityFindings(i)).toBe("2 nights, 2 years apart.");
+  it("prints only the room, never the whole address", () => {
+    // A full venue string carries its own commas, which makes "A to B"
+    // unreadable — production has "Roscoe Maples Pavilion, Stanford U."
+    const out = communityFindings(issue({
+      nights: [night("1973-02-09", "Roscoe Maples Pavilion, Stanford U."),
+               night("1995-07-06", "Riverport Amphitheatre, Maryland Heights, MO")],
+    }))!;
+    expect(out).toBe("22 years between the first and the last, Roscoe Maples Pavilion to Riverport Amphitheatre.");
   });
 
-  it("handles nights inside one year", () => {
-    const i = issue({
-      nights: [
-        { position: 1, showDate: "1977-05-08", venue: "Barton Hall", archiveUrl: null, note: "" },
-        { position: 2, showDate: "1977-09-03", venue: "Englishtown", archiveUrl: null, note: "" },
-      ],
-    });
-    expect(communityFindings(i)).toContain("inside one year");
+  it("does not repeat the night count the sentence before it already gave", () => {
+    const out = communityFindings(issue({
+      nights: [night("1971-03-24", null), night("1995-07-09", null)],
+    }))!;
+    expect(out).not.toMatch(/\d+ nights/);
+  });
+
+  it("omits the rooms when a venue is missing", () => {
+    expect(communityFindings(issue({
+      nights: [night("1971-03-24", "Winterland"), night("1995-07-09", null)],
+    }))).toBe("24 years between the first and the last.");
+  });
+
+  it("handles two picks on the same date without claiming a span", () => {
+    expect(communityFindings(issue({
+      nights: [night("1977-05-08", "Barton Hall"), night("1977-05-08", "Barton Hall")],
+    }))).toBe("All inside one year.");
   });
 });

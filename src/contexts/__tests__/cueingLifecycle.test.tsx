@@ -266,3 +266,95 @@ describe("the other paths the gate found unpinned", () => {
     expect(err()).not.toMatch(/reach the Archive/i);
   });
 });
+
+describe("two taps that race must not swap each other's tape", () => {
+  /**
+   * The cardinal failure for this project: a tap that plays a different night
+   * than the one chosen.
+   *
+   * The Songbook's first-played and last-played controls both built their slot
+   * through `communitySlot(issue, { position: -1 })`, so both got the id
+   * `songbook-<song>--1`. `playSingle`'s SUCCESS path was guarded by slot id
+   * and not by sequence — only its failure paths checked `seq` — so tapping
+   * first-played, then last-played before the first resolved, applied the
+   * first's tape to the second's tap. The window is one Archive resolve, and
+   * the two controls sit side by side on a phone.
+   *
+   * Mock-level tests cannot see this: they assert which slot was handed to
+   * playSingle, and both taps hand over a correct slot. Only the provider can
+   * show the second one being overwritten.
+   */
+  const dated = (id: string, date: string): PlayableSlot => ({
+    ...A,
+    id,
+    version: { ...A.version, archive_org_url: null, show_date: date } as PlayableSlot["version"],
+  });
+
+  const Racer = ({ first, second }: { first: PlayableSlot; second: PlayableSlot }) => {
+    const { playSingle, playingSlot } = useAudioPlayer();
+    return (
+      <>
+        <button onClick={() => void playSingle(first)}>tapA</button>
+        <button onClick={() => void playSingle(second)}>tapB</button>
+        <div data-testid="night">{playingSlot?.version?.show_date ?? ""}</div>
+      </>
+    );
+  };
+
+  /** An advancedsearch response that really does name a recording. */
+  const searchDocs = (date: string) =>
+    json({ response: { docs: [{ identifier: `gd-${date}`, date: `${date}T00:00:00Z`, venue: "X" }] } });
+
+  /**
+   * Tap `first`, tap `second` while the first is still searching, then let the
+   * FIRST one resolve successfully and late. The second tap must keep the
+   * player.
+   */
+  const raceTaps = async (first: PlayableSlot, second: PlayableSlot) => {
+    const gates: { date: string; release: (r: Response) => void }[] = [];
+    vi.mocked(fetch).mockImplementation((input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.includes("advancedsearch")) {
+        const date = decodeURIComponent(url).match(/\d{4}-\d{2}-\d{2}/)?.[0] ?? "";
+        return new Promise<Response>((res) => gates.push({ date, release: res }));
+      }
+      return Promise.resolve(json(GOOD));
+    });
+    render(<AudioPlayerProvider><Racer first={first} second={second} /></AudioPlayerProvider>);
+    fireEvent.click(screen.getByText("tapA"));
+    await waitFor(() => expect(gates.length).toBe(1));
+    fireEvent.click(screen.getByText("tapB"));
+    await waitFor(() => expect(gates.length).toBe(2));
+
+    // Sanity: without this the assertion below passes on an empty player and
+    // proves nothing — which is exactly how the first version of this test
+    // survived every mutation.
+    expect(screen.getByTestId("night")).toHaveTextContent(
+      second.version!.show_date as string,
+    );
+
+    // The ABANDONED tap now resolves, successfully, last.
+    gates[0].release(searchDocs(gates[0].date));
+    await new Promise((r) => setTimeout(r, 1500));
+  };
+
+  it("the second tap's night survives a late first resolve, even with distinct ids", async () => {
+    const ftp = dated("songbook-song-1--1", "1971-02-18");
+    const ltp = dated("songbook-song-1--2", "1995-06-25");
+    // NB: dates are unique per test on purpose — findRecordingForDate caches by
+    // (title, date), so reusing them makes the second test resolve from cache
+    // and never issue the request the race depends on.
+    await raceTaps(ftp, ltp);
+    expect(screen.getByTestId("night")).not.toHaveTextContent("1971-02-18");
+  });
+
+  it("and survives it even when the two slots SHARE an id", async () => {
+    // Belt and braces: the id fix alone would leave the player one shared id
+    // away from the same bug. The sequence guard on the success path is what
+    // makes it structurally impossible.
+    const ftp = dated("songbook-song-1--1", "1973-11-11");
+    const ltp = dated("songbook-song-1--1", "1989-10-09");
+    await raceTaps(ftp, ltp);
+    expect(screen.getByTestId("night")).not.toHaveTextContent("1973-11-11");
+  });
+});
