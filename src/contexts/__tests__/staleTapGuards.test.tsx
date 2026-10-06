@@ -2,8 +2,17 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 
 /**
- * The two guards that keep an abandoned tap from killing the one that
- * replaced it, and the heal path that must survive an unreadable stored tape.
+ * The guards that keep an abandoned tap from killing the one that replaced it,
+ * and the heal path that must survive an unreadable stored tape.
+ *
+ * Scope, stated honestly because the gate measured it: resolveSlot has a
+ * stored-url branch and a no-url branch, each with its own staleness bail and
+ * its own success guard. The first six tests below drive the NO-URL branch;
+ * the stored-url pair is covered by the last two, added after mutants showed
+ * the branch was unpinned. These mock `findRecordingForDate` wholesale, so
+ * they prove the context's SEQUENCING and nothing about the resolver beneath
+ * it — resolveReachability.test.tsx runs the real resolver over a stubbed
+ * fetch for that.
  *
  * I could not pin the first two earlier: stubbing `fetch` beneath the real
  * resolver meant waiting out a 12s abort, and my tests passed with the guards
@@ -20,7 +29,12 @@ const mocks = vi.hoisted(() => ({
    * `unreachable: true` and `url: null` is exactly what the heal test is
    * about — a fixed `false` here is what let the regression walk past it.
    */
-  findTrackInRecordingDetailed: vi.fn(async () => ({ url: null as string | null, unreachable: false })),
+  findTrackInRecordingDetailed: vi.fn(
+    // Declared WITH its parameters: several tests below branch on the url, and
+    // a zero-arg vi.fn makes every one of those mockImplementations a type
+    // error that `vitest run` cannot see and only the typecheck reports.
+    async (_url: string, _title?: string) => ({ url: null as string | null, unreachable: false }),
+  ),
   findArchiveRecording: vi.fn(async () => null),
   error: vi.fn(),
   info: vi.fn(),
@@ -255,5 +269,187 @@ describe("an unreadable stored tape still heals onto another tape of that night"
       expect(screen.getByTestId("url")).toHaveTextContent("gd-healed"),
     );
     expect(screen.getByTestId("err2").textContent).toBe("");
+  });
+});
+
+
+describe("the stored-url branch has the same two guards, and they were unpinned", () => {
+  /**
+   * Found by the pre-release gate's mutants, not by me. Everything above drives
+   * the branch for a slot with a date and no tape, so the stored-url branch's
+   * staleness bail could be replaced with `if (false)` and its success guard
+   * stripped of the seq check with all tests green. That branch is the Songbook
+   * night-row shape — those rows carry stored urls — which is precisely where
+   * the swap defect was reported in the first place.
+   */
+  const stored = (id: string, tape: string): PlayableSlot => ({
+    ...base, id,
+    version: { ...base.version, archive_org_url: `https://archive.org/details/${tape}` } as PlayableSlot["version"],
+  });
+
+  it("a stored tape that fails late does not raise a banner over the tape now playing", async () => {
+    /**
+     * Both controls carry the SAME slot id, because that is what a Songbook
+     * row is. With different ids this mutant is invisible: setPlaybackError
+     * scopes the error to the failing slot, and a scoped error for a slot that
+     * is not playing is never exposed. Share the id — as the real rows do —
+     * and the stale failure's "Couldn't reach the Archive" lands squarely on
+     * the tape the reader is listening to. My first draft used two ids and the
+     * mutant walked straight through it.
+     */
+    const slow = stored("row", "gd-slow");
+    const fast = stored("row", "gd-fast");
+    let failSlow: () => void = () => {};
+    mocks.findTrackInRecordingDetailed.mockImplementation((url: string) => {
+      if (url.includes("gd-fast")) {
+        return Promise.resolve({ url: "https://archive.org/download/gd-fast/althea.mp3", unreachable: false });
+      }
+      // Hangs, then reports the tape as unreadable — so the heal runs too.
+      return new Promise((res) => { failSlow = () => res({ url: null, unreachable: true }); });
+    });
+    mocks.findRecordingForDate.mockRejectedValue(new Error("archive down"));
+    const Two = () => {
+      const { playSingle, playingSlot, transport } = useAudioPlayer();
+      return (
+        <>
+          <button onClick={() => void playSingle(slow)}>slow</button>
+          <button onClick={() => void playSingle(fast)}>fast</button>
+          <div data-testid="t">{playingSlot?.directTrackUrl ?? ""}</div>
+          <div data-testid="b">{transport.error ?? ""}</div>
+        </>
+      );
+    };
+    render(<AudioPlayerProvider><Two /></AudioPlayerProvider>);
+    fireEvent.click(screen.getByText("slow"));
+    fireEvent.click(screen.getByText("fast"));
+    await waitFor(() => expect(screen.getByTestId("t")).toHaveTextContent("gd-fast"));
+    failSlow();
+    await new Promise((r) => setTimeout(r, 50));
+    expect(screen.getByTestId("t").textContent).toContain("gd-fast");
+    expect(screen.getByTestId("b").textContent).toBe("");
+    expect(mocks.error).not.toHaveBeenCalled();
+  });
+
+  it("a stored tape that SUCCEEDS late does not take over from the newer tap", async () => {
+    // Same row, two nights: the id check cannot help here, so the seq check
+    // on the stored-url success path is the only thing holding the line.
+    const row = (tape: string): PlayableSlot => ({
+      ...base, id: "row",
+      version: { ...base.version, archive_org_url: `https://archive.org/details/${tape}` } as PlayableSlot["version"],
+    });
+    const first = row("gd-first");
+    const second = row("gd-second");
+    let landFirst: () => void = () => {};
+    mocks.findTrackInRecordingDetailed.mockImplementation((url: string) => {
+      if (url.includes("gd-second")) {
+        return Promise.resolve({ url: "https://archive.org/download/gd-second/althea.mp3", unreachable: false });
+      }
+      return new Promise((res) => {
+        landFirst = () => res({ url: "https://archive.org/download/gd-first/althea.mp3", unreachable: false });
+      });
+    });
+    const Row = () => {
+      const { playSingle, playingSlot } = useAudioPlayer();
+      return (
+        <>
+          <button onClick={() => void playSingle(first)}>one</button>
+          <button onClick={() => void playSingle(second)}>two</button>
+          <div data-testid="t2">{playingSlot?.directTrackUrl ?? ""}</div>
+        </>
+      );
+    };
+    render(<AudioPlayerProvider><Row /></AudioPlayerProvider>);
+    fireEvent.click(screen.getByText("one"));
+    fireEvent.click(screen.getByText("two"));
+    await waitFor(() => expect(screen.getByTestId("t2")).toHaveTextContent("gd-second"));
+    landFirst();
+    await new Promise((r) => setTimeout(r, 50));
+    expect(screen.getByTestId("t2").textContent).toContain("gd-second");
+  });
+
+  it("a track lookup that THROWS says the Archive was unreachable, not that the song isn't there", async () => {
+    /**
+     * The gate's survivor 5: nothing rejected that call, so the catch could
+     * have returned absent() — "That song isn't on this tape" — for what is
+     * actually "we couldn't read the tape". That is the exact conflation the
+     * unreachable/absent split exists to prevent.
+     */
+    mocks.findTrackInRecordingDetailed.mockRejectedValue(new Error("boom"));
+    mocks.findRecordingForDate.mockRejectedValue(new Error("boom"));
+    const only = stored("only", "gd-throw");
+    const One = () => {
+      const { playSingle, transport } = useAudioPlayer();
+      return (
+        <>
+          <button onClick={() => void playSingle(only)}>go</button>
+          <div data-testid="banner">{transport.error ?? ""}</div>
+        </>
+      );
+    };
+    render(<AudioPlayerProvider><One /></AudioPlayerProvider>);
+    fireEvent.click(screen.getByText("go"));
+    // A lone tap reports through the error BANNER, not a toast — the toast is
+    // the queue's "Skipping …" path. Asserting the toast here passed vacuously
+    // in my first draft, which is the sweep-vs-render mistake again.
+    await waitFor(() => expect(screen.getByTestId("banner").textContent).not.toBe(""));
+    const said = screen.getByTestId("banner").textContent ?? "";
+    expect(said).toMatch(/reach the Archive/i);
+    expect(said).not.toMatch(/isn't on this tape/i);
+  });
+});
+
+
+describe("Next, pressed while a tap is still resolving", () => {
+  /**
+   * The gate's survivor 3, and the one case where the id half of the success
+   * guard is the ONLY thing holding the line: `advancePlaylist` changes
+   * playingSlot without bumping playSingleSeqRef, so a tap that resolves after
+   * the reader has already skipped past it is still "current" by sequence
+   * number. Dropping `prev.playingSlot?.id === slot.id` survived every other
+   * test here, because nothing else moves the player without bumping the seq.
+   */
+  const tape = (id: string, t: string): PlayableSlot => ({
+    ...base, id, position: id === "p2" ? 1 : 0,
+    version: { ...base.version, archive_org_url: `https://archive.org/details/${t}` } as PlayableSlot["version"],
+  });
+  const P1 = tape("p1", "gd-p1");
+  const P2 = tape("p2", "gd-p2");
+  const SLOW = tape("slow", "gd-slow");
+
+  it("the skipped-past tap does not drag the player back when it lands", async () => {
+    let landSlow: () => void = () => {};
+    mocks.findTrackInRecordingDetailed.mockImplementation((url: string) => {
+      if (url.includes("gd-slow")) {
+        return new Promise((res) => {
+          landSlow = () => res({ url: "https://archive.org/download/gd-slow/althea.mp3", unreachable: false });
+        });
+      }
+      const which = url.includes("gd-p2") ? "p2" : "p1";
+      return Promise.resolve({ url: `https://archive.org/download/gd-${which}/althea.mp3`, unreachable: false });
+    });
+    const Q = () => {
+      const { playSetlist, playSingle, playingSlot, transport } = useAudioPlayer();
+      return (
+        <>
+          <button onClick={() => void playSetlist([P1, P2], "s")}>all</button>
+          <button onClick={() => void playSingle(SLOW)}>slow</button>
+          <button onClick={() => transport.next()}>next</button>
+          <div data-testid="q">{playingSlot?.id ?? ""}</div>
+        </>
+      );
+    };
+    render(<AudioPlayerProvider><Q /></AudioPlayerProvider>);
+    fireEvent.click(screen.getByText("all"));
+    await waitFor(() => expect(screen.getByTestId("q")).toHaveTextContent("p1"));
+    fireEvent.click(screen.getByText("slow"));
+    await waitFor(() => expect(screen.getByTestId("q")).toHaveTextContent("slow"));
+    fireEvent.click(screen.getByText("next"));
+    // Sanity: the skip actually moved the player, or the assertion below is
+    // vacuous — this is the trap that made my first race test worthless.
+    await waitFor(() => expect(screen.getByTestId("q").textContent).not.toBe("slow"));
+    const after = screen.getByTestId("q").textContent;
+    landSlow();
+    await new Promise((r) => setTimeout(r, 50));
+    expect(screen.getByTestId("q").textContent).toBe(after);
   });
 });

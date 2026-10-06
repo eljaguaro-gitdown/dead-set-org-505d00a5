@@ -150,6 +150,25 @@ describe("communityFindings — derived from the picks, never written for them",
     }))).toBe("A year between the first and the last.");
   });
 
+  it("counts two calendar years as two even when no leap day falls between", () => {
+    /**
+     * The pre-release gate found this. Dividing days by 365.25 made exactly
+     * two years read as one whenever the span missed a leap day: 1973-03-24 to
+     * 1975-03-24 is 730 days, and 730 / 365.25 is 1.998. The existing span
+     * test above happens to run 1971 to 1973, which DOES contain Feb 29 1972,
+     * so it was 731 days and floored to 2 — the fixture hid the bug.
+     *
+     * The anniversary pair is the whole point: one day short must still be one
+     * year, or the fix has merely moved the error to the other side.
+     */
+    expect(communityFindings(issue({
+      nights: [night("1973-03-24", null), night("1975-03-24", null)],
+    }))).toBe("2 years between the first and the last.");
+    expect(communityFindings(issue({
+      nights: [night("1973-03-24", null), night("1975-03-23", null)],
+    }))).toBe("A year between the first and the last.");
+  });
+
   it("says nothing when there is only one night to describe", () => {
     expect(communityFindings(issue({ nights: [night("1971-03-24", "Winterland")] }))).toBeNull();
   });

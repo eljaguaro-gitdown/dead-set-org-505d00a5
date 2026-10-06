@@ -649,8 +649,17 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
       // night, and with the early return it looped "tap play to try again"
       // forever instead. `trackUnreachable` is still carried, and the verdict
       // at the end of this branch returns unreachable() when the heal also
-      // fails, so nothing is lost but the shortcut. The cost on a dead network
-      // is one extra search, bounded by its own 12s cap and the 25s watchdog.
+      // fails, so nothing is lost but the shortcut.
+      //
+      // The cost on a dead network is one extra search bounded by its own 12s
+      // cap — but NOT, as this comment claimed until the gate measured it,
+      // "under the 25s watchdog". The stored-tape leg is 12s + a 0.6s retry
+      // wait + 12s = ~24.7s before the heal is even reached, so the verdict
+      // lands at ~37s with "Still looking for that tape" showing from 25.6s.
+      // (A `.flacNN` identifier adds a second variant and can push it further.)
+      // That is 12s longer than failing fast, and it buys the accurate message
+      // instead of the watchdog's — worth it, but it is a real wait, so do not
+      // add another leg here without measuring with every request hung.
       if (directUrl) {
         return ok({ ...slot, directTrackUrl: directUrl });
       }

@@ -269,13 +269,22 @@ export const communityFindings = (issue: CommunityIssue): string | null => {
   const first = dated[0];
   const last = dated[dated.length - 1];
 
-  // From the actual dates, not from subtracting calendar years: 1971-12-31 to
-  // 1972-01-01 is one DAY, and calendar subtraction called it "a year apart".
-  const days =
-    (Date.parse(`${last.showDate}T00:00:00Z`) - Date.parse(`${first.showDate}T00:00:00Z`)) /
-    86_400_000;
-  if (!Number.isFinite(days)) return null;
-  const years = Math.floor(days / 365.25);
+  /**
+   * Completed anniversaries, not days divided by an average year. Both of the
+   * obvious ways are wrong in opposite directions and this is the only thing
+   * that is right in both: subtracting calendar years alone called 1971-12-31
+   * to 1972-01-01 "a year apart" when it is one DAY, and dividing days by
+   * 365.25 called two calendar years with no leap day between them (730 days,
+   * e.g. 1973-03-24 to 1975-03-24) "a year", because 730 / 365.25 is 1.998.
+   * The window for that second error is only a few days wide per span, which
+   * is exactly why it would have survived in the copy indefinitely.
+   */
+  const ymd = (d: string) => d.split("-").map(Number);
+  const [fy, fm, fd] = ymd(first.showDate as string);
+  const [ly, lm, ld] = ymd(last.showDate as string);
+  if ([fy, fm, fd, ly, lm, ld].some((n) => !Number.isFinite(n))) return null;
+  // One off the difference when the last night falls before the anniversary.
+  const years = ly - fy - (lm < fm || (lm === fm && ld < fd) ? 1 : 0);
 
   /**
    * Rooms are compared on their first comma segment, trimmed and case-folded,
