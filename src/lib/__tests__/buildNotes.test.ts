@@ -39,6 +39,54 @@ describe("rangeLabel", () => {
 });
 
 describe("groupEditions", () => {
+  it("derives the label from the span when rows arrive NEWEST first", () => {
+    /**
+     * The order the real query returns. Every other fixture here lists the
+     * earliest date first, which let the min-tracking line be deleted with all
+     * thirteen tests green — and in production the page queries
+     * `order("shipped_on", { ascending: false })`, so the first row of a group
+     * is its MAX. With min tracking broken every label would read "max–max":
+     * the label-vs-entries defect this module exists to prevent, reintroduced
+     * by a fixture typed in the convenient direction.
+     */
+    const out = groupEditions([
+      e({ shipped_on: "2026-09-20", title: "d" }),
+      e({ shipped_on: "2026-09-18", title: "c" }),
+      e({ shipped_on: "2026-09-16", title: "a" }),
+    ], "2026-10-06");
+    expect(out[0].label).toBe("Sep 16–20, 2026");
+  });
+
+  it("the archive window includes both of its end days", () => {
+    // Aug 24 is the closing date and was untested; Aug 25 must fall out into
+    // its own week, and Apr 20 must stay out of the archive entirely.
+    const inside = groupEditions([
+      e({ shipped_on: "2026-04-21", title: "start" }),
+      e({ shipped_on: "2026-08-24", title: "end" }),
+    ], "2026-10-06");
+    expect(inside).toHaveLength(1);
+    expect(inside[0].key).toBe("archive");
+
+    const outside = groupEditions([
+      e({ shipped_on: "2026-04-20", title: "before" }),
+      e({ shipped_on: "2026-08-25", title: "after" }),
+    ], "2026-10-06");
+    expect(outside.map((x) => x.key)).toEqual(["2026-08-24", "2026-04-20"]);
+  });
+
+  it("a stored label cannot relabel a derived week — only the archive keeps one", () => {
+    /**
+     * The hole the gate found: the override used to apply to any edition, so
+     * one row carrying the old five-month label would print it over a week of
+     * September entries. That is the original defect, intact.
+     */
+    const out = groupEditions([
+      e({ shipped_on: "2026-09-16", week_label: "Apr 21 – Sep 23, 2026" }),
+      e({ shipped_on: "2026-09-18", week_label: null }),
+    ], "2026-10-06");
+    expect(out[0].label).toBe("Sep 16–18, 2026");
+  });
+
   it("splits work into the weeks it actually shipped in", () => {
     const out = groupEditions([
       e({ shipped_on: "2026-09-16", title: "a" }),

@@ -25,6 +25,19 @@ comment on column public.changelog_entries.shipped_on is
   'The day this change reached people. Build Notes groups by the ISO week of '
   'this date; week_number/week_label are legacy and must not be used to group.';
 
+
+-- REPLAY SAFETY. Everything below is a one-time backfill of rows that already
+-- existed, so every statement is bounded to rows created before this migration
+-- (the newest at the time was 2026-10-05 17:42Z). Without that bound a second
+-- apply would not be idempotent — it would be destructive:
+--   * `set published = true where published = false` publishes every draft
+--     sitting in the queue at that moment, which is the opposite of a draft;
+--   * `set edition_title = … where shipped_on >= '2026-10-05'` is open-ended
+--     forward, so it would rename every edition shipped from then on;
+--   * the title-keyed updates would re-date any future entry reusing a title.
+-- Caught by the pre-release gate, which asked what happens if Lovable applies
+-- repo migrations on sync. A backfill must say which rows it is for.
+
 -- Backfill, dated from the commit that shipped each item. The repo''s history
 -- begins 2026-08-09 (earlier work lives in the orphaned dead-set-org repo), so
 -- anything before that keeps the archive date it already implied.
@@ -64,42 +77,54 @@ update public.changelog_entries set shipped_on = v.d from (values
   ('A built setlist starts playing the moment it''s done',            date '2026-08-15'),
   ('The Songbook',                                                    date '2026-08-21')
 ) as v(t, d)
-where changelog_entries.title = v.t;
+where changelog_entries.title = v.t
+    and changelog_entries.created_at < timestamptz '2026-10-06 00:00:00+00';
 
 -- The two April editions predate this repo's history. They were already honest
 -- weekly editions, so they keep their stated weeks; a date inside each range
 -- reproduces the same grouping.
-update public.changelog_entries set shipped_on = date '2026-04-09' where week_number = 1;
-update public.changelog_entries set shipped_on = date '2026-04-17' where week_number = 2;
+update public.changelog_entries set shipped_on = date '2026-04-09'
+  where week_number = 1 and created_at < timestamptz '2026-10-06 00:00:00+00';
+update public.changelog_entries set shipped_on = date '2026-04-17'
+  where week_number = 2 and created_at < timestamptz '2026-10-06 00:00:00+00';
 
 -- Edition titles are per-week, and re-dating split one bucket into four. Name
 -- each week for what it actually carried.
 update public.changelog_entries set edition_title = 'Set the Tape Straight'
-  where shipped_on between date '2026-09-14' and date '2026-09-20';
+  where shipped_on between date '2026-09-14' and date '2026-09-20'
+    and created_at < timestamptz '2026-10-06 00:00:00+00';
 update public.changelog_entries set edition_title = 'The Silent Switch'
-  where shipped_on between date '2026-09-21' and date '2026-09-27';
+  where shipped_on between date '2026-09-21' and date '2026-09-27'
+    and created_at < timestamptz '2026-10-06 00:00:00+00';
 update public.changelog_entries set edition_title = 'Pick a Song, Hear the Night'
-  where shipped_on between date '2026-09-28' and date '2026-10-04';
+  where shipped_on between date '2026-09-28' and date '2026-10-04'
+    and created_at < timestamptz '2026-10-06 00:00:00+00';
 update public.changelog_entries set edition_title = 'Between the Tap and the Sound'
-  where shipped_on >= date '2026-10-05';
+  where shipped_on between date '2026-10-05' and date '2026-10-11'
+    and created_at < timestamptz '2026-10-06 00:00:00+00';
 -- The name was always right for the backlog; it was wrong only as a "week".
 update public.changelog_entries set edition_title = 'The Long Strange Gap'
-  where shipped_on between date '2026-04-21' and date '2026-08-24';
+  where shipped_on between date '2026-04-21' and date '2026-08-24'
+    and created_at < timestamptz '2026-10-06 00:00:00+00';
 
 -- Keep the typed label ONLY where it cannot be derived: the two April editions
 -- and the catch-up archive, all published before shipped_on existed. Anywhere
 -- else a stored label is what lets an edition disagree with its own dates.
-update public.changelog_entries set week_label = null where shipped_on >= date '2026-04-21';
+update public.changelog_entries set week_label = null
+  where shipped_on >= date '2026-04-21' and created_at < timestamptz '2026-10-06 00:00:00+00';
 update public.changelog_entries set week_label = 'Apr 21 – Aug 24, 2026'
-  where shipped_on between date '2026-04-21' and date '2026-08-24';
+  where shipped_on between date '2026-04-21' and date '2026-08-24'
+    and created_at < timestamptz '2026-10-06 00:00:00+00';
 
 -- The Sep 24 – Oct 5 edition sat written-but-unpublished, which is the other
 -- half of why the page looked frozen on a five-month "week".
-update public.changelog_entries set published = true where published = false;
+update public.changelog_entries set published = true
+  where published = false and created_at < timestamptz '2026-10-06 00:00:00+00';
 
 -- Brand rule, live on /updates since April: the word "AI" never appears on a
 -- user-facing surface, and Cosmic Charlie is a fan with deep crates — never a
 -- "generator". Found by sweeping the published rows while re-dating them.
 update public.changelog_entries
   set title = 'Cosmic Charlie builds you a night'
-  where title = 'Cosmic Charlie — AI setlist generator';
+  where title = 'Cosmic Charlie — AI setlist generator'
+    and created_at < timestamptz '2026-10-06 00:00:00+00';

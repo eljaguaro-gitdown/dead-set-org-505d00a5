@@ -111,7 +111,18 @@ export const groupEditions = <T extends BuildNoteEntry>(entries: T[], today: str
     const sorted = [...g.entries].sort(
       (a, b) => b.shipped_on.localeCompare(a.shipped_on) || a.title.localeCompare(b.title),
     );
-    const override = sorted.find((e) => e.week_label)?.week_label ?? null;
+    /**
+     * The override is honoured ONLY for editions that predate `shipped_on`:
+     * the catch-up archive and anything before it. Everywhere else a stored
+     * label would reproduce the exact defect this module exists to prevent —
+     * one row carrying `week_label: "Apr 21 – Sep 23, 2026"` would print that
+     * heading over a week of September entries, and nothing would notice.
+     * The admin no longer writes the column, but the weekly routine lives
+     * outside this repo and an admin tab left open on the old bundle still
+     * does, so the restriction is load-bearing rather than belt-and-braces.
+     */
+    const canOverride = key === ARCHIVE_KEY || g.max < ARCHIVE_START;
+    const override = canOverride ? sorted.find((e) => e.week_label)?.week_label ?? null : null;
     editions.push({
       key,
       label: override ?? rangeLabel(g.min, g.max),

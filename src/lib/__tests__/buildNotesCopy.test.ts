@@ -13,7 +13,10 @@ import { join } from "path";
  * way in, and nothing here can reach that.
  */
 const MIGRATIONS = join(process.cwd(), "supabase/migrations");
-const BANNED = /\b(ai|algorithm|algorithms|gemini|posthog|lovable|recommendation engine)\b/i;
+// `generat\w*` covers generate/generated/generator/generating: the brand rule
+// bans the word, and the entry this test exists because of was titled
+// "AI setlist generator" — the sweep that found it could not see that half.
+const BANNED = /\b(ai|a\.i\.|algorithm|algorithms|generat\w*|gemini|posthog|lovable|recommendation engine)\b/i;
 
 /**
  * Quoted string contents only — a path like ai-deadhead/index.ts is not copy.
