@@ -28,12 +28,29 @@ const TAG_STYLES: Record<ChangelogTag, { label: string; bg: string; text: string
 
 const TAGS: ChangelogTag[] = ["fix", "new", "improved", "beta"];
 
+/**
+ * A draft edition, keyed by the day it shipped rather than by a week number.
+ *
+ * It used to key on `week_number`, which new entries no longer carry — and
+ * `.eq("week_number", null)` matches NOTHING in PostgREST, so Publish would
+ * have reported success and published nothing at all. Dates are what group
+ * entries now, in the queue as well as on the page.
+ */
 interface DraftWeek {
-  week_number: number;
-  week_label: string;
+  shipped_on: string;
   edition_title: string;
   items: { title: string; detail: string }[];
 }
+
+/**
+ * `changelog_entries` with its types erased, for the queries that filter or sort
+ * on `shipped_on`. The column exists; the generated Database types do not know
+ * it yet (types.ts regenerates from the schema — CLAUDE.md, never hand-edit it —
+ * and this environment has no Supabase access token to run the generator).
+ * Delete this and the two casts in handleSave once types.ts carries shipped_on.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const draftQuery = () => supabase.from("changelog_entries") as any;
 
 const AdminChangelog = () => {
   const { user, loading: authLoading } = useAuth();
@@ -59,46 +76,47 @@ const AdminChangelog = () => {
   // "Save draft" below; before this list existed a saved draft could not be
   // seen or published again from the UI.
   const [drafts, setDrafts] = useState<DraftWeek[]>([]);
-  const [busyWeek, setBusyWeek] = useState<number | null>(null);
+  const [busyWeek, setBusyWeek] = useState<string | null>(null);
 
   const loadDrafts = async () => {
-    const { data, error } = await supabase
-      .from("changelog_entries")
-      .select("week_number, week_label, edition_title, title, detail, set_number")
+    // The builder is cast once rather than each column being cast in place:
+    // `order("shipped_on" as any)` makes PostgREST's generics recurse until tsc
+    // gives up ("Type instantiation is excessively deep"). One cast at the
+    // source is also one place to delete when types.ts regenerates.
+    const { data, error } = await draftQuery()
+      .select("shipped_on, edition_title, title, detail, set_number")
       .eq("published", false)
-      .order("week_number", { ascending: false })
+      .order("shipped_on", { ascending: false })
       .order("set_number", { ascending: true });
     if (error || !data) return;
-    const weeks = new Map<number, DraftWeek>();
-    for (const row of data) {
-      if (!weeks.has(row.week_number)) {
-        weeks.set(row.week_number, { week_number: row.week_number, week_label: row.week_label, edition_title: row.edition_title, items: [] });
+    const weeks = new Map<string, DraftWeek>();
+    for (const row of data as unknown as { shipped_on: string; edition_title: string; title: string; detail: string }[]) {
+      if (!weeks.has(row.shipped_on)) {
+        weeks.set(row.shipped_on, { shipped_on: row.shipped_on, edition_title: row.edition_title, items: [] });
       }
-      weeks.get(row.week_number)!.items.push({ title: row.title, detail: row.detail });
+      weeks.get(row.shipped_on)!.items.push({ title: row.title, detail: row.detail });
     }
     setDrafts(Array.from(weeks.values()));
   };
 
   const publishDraft = async (week: DraftWeek) => {
-    setBusyWeek(week.week_number);
-    const { error } = await supabase
-      .from("changelog_entries")
+    setBusyWeek(week.shipped_on);
+    const { error } = await draftQuery()
       .update({ published: true })
-      .eq("week_number", week.week_number)
+      .eq("shipped_on", week.shipped_on)
       .eq("published", false);
     setBusyWeek(null);
     if (error) { toast.error(error.message || "Failed to publish"); return; }
-    toast.success(`Week ${week.week_number} is live`);
+    toast.success(`${week.edition_title} is live`);
     loadDrafts();
   };
 
   const discardDraft = async (week: DraftWeek) => {
-    if (!window.confirm(`Discard the Week ${week.week_number} draft (${week.items.length} items)? This can't be undone.`)) return;
-    setBusyWeek(week.week_number);
-    const { error } = await supabase
-      .from("changelog_entries")
+    if (!window.confirm(`Discard the ${week.edition_title} draft (${week.items.length} items)? This can't be undone.`)) return;
+    setBusyWeek(week.shipped_on);
+    const { error } = await draftQuery()
       .delete()
-      .eq("week_number", week.week_number)
+      .eq("shipped_on", week.shipped_on)
       .eq("published", false);
     setBusyWeek(null);
     if (error) { toast.error(error.message || "Failed to discard"); return; }
@@ -196,9 +214,9 @@ const AdminChangelog = () => {
           <div className="mb-8 space-y-3">
             <h2 className="font-mono text-sm text-[#c9a84c] uppercase tracking-wider">Drafts waiting to publish</h2>
             {drafts.map(week => (
-              <div key={week.week_number} className="bg-[#0d0d0d] border border-[#c9a84c]/30 rounded-lg p-4 space-y-3">
+              <div key={week.shipped_on} className="bg-[#0d0d0d] border border-[#c9a84c]/30 rounded-lg p-4 space-y-3">
                 <div>
-                  <p className="font-mono text-xs text-[#a09880]">Week {week.week_number} · {week.week_label} · {week.items.length} {week.items.length === 1 ? "item" : "items"}</p>
+                  <p className="font-mono text-xs text-[#a09880]">{week.shipped_on} · {week.edition_title} · {week.items.length} {week.items.length === 1 ? "item" : "items"}</p>
                   <p className="font-display text-lg text-[#c9a84c] italic">{week.edition_title}</p>
                 </div>
                 <ul className="list-disc pl-5 text-sm text-[#b0ac9a] space-y-1">
@@ -211,7 +229,7 @@ const AdminChangelog = () => {
                 </ul>
                 <div className="flex gap-3">
                   <Button onClick={() => publishDraft(week)} disabled={busyWeek !== null} className="flex-1 bg-[#c9a84c] text-[#0a0a0a] hover:bg-[#d4b050]">
-                    <Send className="w-4 h-4 mr-1" /> {busyWeek === week.week_number ? "Working..." : "Publish"}
+                    <Send className="w-4 h-4 mr-1" /> {busyWeek === week.shipped_on ? "Working..." : "Publish"}
                   </Button>
                   <Button onClick={() => discardDraft(week)} disabled={busyWeek !== null} variant="outline" className="border-[#2a2410] text-[#a09880] hover:text-red-400">
                     <Trash2 className="w-4 h-4 mr-1" /> Discard
