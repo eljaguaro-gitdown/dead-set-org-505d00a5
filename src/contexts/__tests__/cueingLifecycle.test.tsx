@@ -28,6 +28,12 @@ vi.mock("@/integrations/supabase/client", () => ({
       select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: null, error: null }) }) }),
     }),
     auth: { getUser: async () => ({ data: { user: null } }) },
+    // `playSetlist` counts the play through this whenever it is given a
+    // setlistId. Omitting it does not fail a test — every assertion still
+    // passes — it throws an UNHANDLED REJECTION, and vitest exits 1 on those
+    // even with 749 of 749 green. That is what turned CI red for ten commits
+    // while every local run reported "all tests pass".
+    rpc: async () => ({ data: null, error: null }),
   },
 }));
 vi.mock("@/lib/player/engineFlag", () => ({ resolvePlayerEngine: () => "legacy" }));
