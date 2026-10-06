@@ -65,6 +65,65 @@ export const matchSongBySlug = <T extends { title: string }>(
  * issue and a community entry, and the editorial one is the issue — this is
  * only the fallback.
  */
+/**
+ * Charlie's note for a night usually opens by restating the night:
+ *
+ *   "1993-06-15 — Freedom Hall • A late-career standout that proves…"
+ *
+ * The card prints the date and the venue directly above it, so the reader gets
+ * them twice — once as a heading, then again as the first eight words of the
+ * prose. 23 of the 33 nights across the six community issues are written this
+ * way, so this is the common case, not an outlier.
+ *
+ * Stripped ONLY when the preamble restates THIS night's own date, and only
+ * when what precedes that date is a short label rather than prose — so a note
+ * that genuinely opens on a different show is left alone, and "The best since
+ * 1993-06-15 • …" cannot lose its first clause.
+ *
+ * Six of those nights are nothing BUT a restatement ("Last time played:
+ * 1995-07-06 — Riverport Amphitheatre", and all three of Bird Song's). Those
+ * come back empty, and the card renders no note rather than a line repeating
+ * the heading above it.
+ */
+export const stripNightPreamble = (
+  note: string | null | undefined,
+  showDate: string | null | undefined,
+): string => {
+  const text = (note ?? "").trim();
+  const date = (showDate ?? "").trim();
+  if (!text || !date) return text;
+  const escaped = date.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  // A leading segment carrying this night's date, ending at the bullet that
+  // starts the prose or at the end of the note.
+  const preamble = new RegExp(`^[^\u2022\n]{0,40}?${escaped}[^\u2022\n]*(?:\u2022\s*|$)`);
+  return text.replace(preamble, "").trim();
+};
+
+/**
+ * One decoded slot as one night.
+ *
+ * Extracted from loadCommunityIssue so the decode-to-night step is testable
+ * without a database behind it: the two fields it gets wrong are both silent
+ * (a blank note, or a date printed twice), and neither shows up in a type.
+ */
+export const nightFromSlot = (
+  position: number,
+  decoded: ReturnType<typeof decodeArchiveNotes>,
+): CommunityNight => ({
+  position,
+  showDate: decoded.version?.show_date ?? null,
+  venue: decoded.version?.venue ?? null,
+  archiveUrl: decoded.version?.archive_org_url ?? null,
+  // The note lives in `description` when the blob carries a `note` key, and
+  // otherwise in the free text trailing the newline (`decoded.notes`) — which
+  // is how all six community issues are actually written. Reading only the
+  // first renders every night blank.
+  note: stripNightPreamble(
+    (decoded.version?.description ?? "").trim() || (decoded.notes ?? "").trim(),
+    decoded.version?.show_date,
+  ),
+});
+
 export const loadCommunityIssue = async (
   slug: string,
 ): Promise<CommunityIssue | null> => {
@@ -106,20 +165,9 @@ export const loadCommunityIssue = async (
       .eq("user_id", entry.creator_id)
       .maybeSingle();
 
-    const nights: CommunityNight[] = (slots ?? []).map((slot) => {
-      const decoded = decodeArchiveNotes(slot.id, song.id, slot.notes);
-      return {
-        position: slot.position,
-        showDate: decoded.version?.show_date ?? null,
-        venue: decoded.version?.venue ?? null,
-        archiveUrl: decoded.version?.archive_org_url ?? null,
-        // The author's note about THIS tape lives in `description` — the
-        // decoder lifts it out of the archive blob. `decoded.notes` is only
-        // whatever free text trails the blob after the newline, which is
-        // usually empty. Reading the wrong one renders every night blank.
-        note: (decoded.version?.description ?? "").trim() || (decoded.notes ?? "").trim(),
-      };
-    });
+    const nights: CommunityNight[] = (slots ?? []).map((slot) =>
+      nightFromSlot(slot.position, decodeArchiveNotes(slot.id, song.id, slot.notes)),
+    );
 
     return {
       songId: song.id,
@@ -174,7 +222,13 @@ export const communitySlot = (
 /** The whole guide, oldest night first — the song walking forward in time. */
 export const communityPlaylist = (issue: CommunityIssue): PlayableSlot[] =>
   issue.nights
-    .filter((n) => !!n.archiveUrl)
+    // A night is playable when it can be RESOLVED, which a stored url is only
+    // one way of being. 21 of the 33 nights across the community issues name
+    // their night and carry no url — the Version Explorer's picks arrive that
+    // way — and AudioPlayerContext.resolveSlot looks those up by night through
+    // findRecordingForDate. Filtering on the url alone dropped every one:
+    // Viola Lee Blues offered nothing at all, Eyes of the World 2 of its 7.
+    .filter((n) => !!n.archiveUrl || !!n.showDate)
     .sort((a, b) => (a.showDate ?? "").localeCompare(b.showDate ?? ""))
     .map((n, i) => communitySlot(issue, n, i));
 

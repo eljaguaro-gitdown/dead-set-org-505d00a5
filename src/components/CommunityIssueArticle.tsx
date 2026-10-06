@@ -55,7 +55,14 @@ const CommunityIssueArticle = ({ issue }: { issue: CommunityIssue }) => {
   const [cueing, setCueing] = useState(false);
   const shareUrl = `https://dead-set.org/songbook/${issue.slug}`;
   const dated = issue.nights.filter((n) => n.showDate);
-  const playable = issue.nights.filter((n) => n.archiveUrl);
+  /**
+   * Playable means RESOLVABLE, not "has a stored url". 21 of the 33 nights
+   * across the six community issues name their night and carry no url, and the
+   * player resolves those by night. Gating on the url meant Viola Lee Blues
+   * showed no play control at all, Stella Blue offered 1 of 6, and Eyes of the
+   * World 2 of 7 — a count disagreeing with the rows beneath it.
+   */
+  const playable = issue.nights.filter((n) => n.archiveUrl || n.showDate);
 
   const playAll = async () => {
     if (cueing) return;
@@ -77,7 +84,11 @@ const CommunityIssueArticle = ({ issue }: { issue: CommunityIssue }) => {
   };
 
   const playNight = async (night: (typeof issue.nights)[number]) => {
-    if (!night.archiveUrl) {
+    // Only a night we can neither find nor name is refused here. Saying "no
+    // tape circulates" about a night nobody has looked up yet is an answer we
+    // have not earned — the resolver asks the Archive, and its two failure
+    // modes are kept apart in the catch below.
+    if (!night.archiveUrl && !night.showDate) {
       toast.info("No tape of this night circulates yet");
       return;
     }
@@ -168,7 +179,7 @@ const CommunityIssueArticle = ({ issue }: { issue: CommunityIssue }) => {
               ) : (
                 <Play className="w-3 h-3 shrink-0" />
               )}
-              Play all {playable.length} nights
+              Play all {playable.length} {playable.length === 1 ? "night" : "nights"}
             </button>
           )}
         </header>

@@ -73,11 +73,23 @@ describe("communityPlaylist", () => {
     expect(slots.map((s) => s.position)).toEqual([0, 1]);
   });
 
-  it("drops a night with no recording behind it", () => {
-    // The player can only start on a slot carrying an archive url, and a dead
-    // slot mid-queue is a gap the listener has to skip past.
+  it("KEEPS a night with no stored url, because it names its night", () => {
+    // This test used to assert the opposite, on the reasoning that "the player
+    // can only start on a slot carrying an archive url". That stopped being
+    // true when resolveSlot gained its named-night branch, and the assertion
+    // then pinned the defect as intended behaviour: 21 of the 33 nights across
+    // the six community issues have no stored url, so the rule it protected
+    // was hiding most of the catalog. Absent was current, not correct.
     const slots = communityPlaylist(
       issue({ nights: [night(1, "1974-06-18", null), night(2, "1977-05-08", "u")] }),
+    );
+    expect(slots).toHaveLength(2);
+    expect(slots.map((s) => s.version!.show_date)).toEqual(["1974-06-18", "1977-05-08"]);
+  });
+
+  it("still drops a night that can be neither found nor named", () => {
+    const slots = communityPlaylist(
+      issue({ nights: [night(1, null, null), night(2, "1977-05-08", "u")] }),
     );
     expect(slots).toHaveLength(1);
     expect(slots[0].version!.show_date).toBe("1977-05-08");

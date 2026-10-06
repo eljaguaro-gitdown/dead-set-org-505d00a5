@@ -136,11 +136,25 @@ describe("ladderPlaylist", () => {
     expect(slots.map((s) => s.position)).toEqual([0, 1, 2]);
   });
 
-  it("drops versions with no recording behind them rather than queueing a dead slot", () => {
+  it("KEEPS a version with no stored recording, because it names its night", () => {
+    // Previously asserted the opposite — "rather than queueing a dead slot" —
+    // which was true before resolveSlot could look a night up by date. 25 of
+    // the 53 notable_versions rows are dated with no url (Shakedown Street: 15
+    // versions, 1 url), so the old rule hid half the catalog from the queue.
     const noTape = { ...version("gd1980-x", "1980-05-01", 12, "era-75"), archive_org_url: null };
     const slots = ladderPlaylist(song, [noTape, version("gd1976-06-22", "1976-06-22", 24, "era-75")]);
-    expect(slots).toHaveLength(1);
-    expect(slots[0].version?.archive_org_url).toContain("gd1976-06-22");
+    expect(slots).toHaveLength(2);
+    // Oldest first, and the tapeless row keeps the night the player resolves by.
+    expect(slots.map((s) => s.version?.show_date)).toEqual(["1976-06-22", "1980-05-01"]);
+  });
+
+  it("still drops a version that can be neither found nor named", () => {
+    const orphan = {
+      ...version("gd1980-x", "1980-05-01", 12, "era-75"),
+      archive_org_url: null,
+      show_date: null,
+    };
+    expect(ladderPlaylist(song, [orphan])).toHaveLength(0);
   });
 
   it("carries the columns the player and the now-playing bar read", () => {

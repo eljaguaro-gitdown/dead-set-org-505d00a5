@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ArrowLeft, Loader2, Play } from "lucide-react";
 import { songbookDb } from "@/lib/songbookDb";
@@ -136,16 +136,31 @@ const SongFeature = () => {
    */
   const [ladderVersions, setLadderVersions] = useState<LadderVersion[]>([]);
   const [cueing, setCueing] = useState(false);
-  const playableCount = ladderVersions.filter((v) => !!v.archive_org_url).length;
+  /**
+   * The count and the queue come from ONE call, deliberately.
+   *
+   * A parallel filter beside the builder is how a button comes to promise a
+   * number it does not deliver, and this page had exactly that: it counted
+   * rows with a stored archive_org_url while ladderPlaylist decided what
+   * actually plays. Shakedown Street has 15 versions and one url, so it read
+   * "Play all 1 nights" above a ladder of fifteen. Deriving the label from the
+   * queue makes the two unable to disagree, which no test can guarantee about
+   * two separate filters.
+   */
+  const playQueue = useMemo(
+    () =>
+      feature?.song_id
+        ? ladderPlaylist({ id: feature.song_id, title: feature.title }, ladderVersions)
+        : [],
+    [feature?.song_id, feature?.title, ladderVersions],
+  );
+  const playableCount = playQueue.length;
 
   const handlePlayAll = async () => {
     if (cueing || !feature?.song_id) return;
     setCueing(true);
     try {
-      const slots = ladderPlaylist(
-        { id: feature.song_id, title: feature.title },
-        ladderVersions,
-      );
+      const slots = playQueue;
       if (slots.length === 0) {
         toast.info("No tape of these nights circulates yet");
         return;
@@ -264,7 +279,7 @@ const SongFeature = () => {
                 ) : (
                   <Play className="w-3 h-3 shrink-0" />
                 )}
-                Play all {playableCount} nights
+                Play all {playableCount} {playableCount === 1 ? "night" : "nights"}
               </button>
             )}
           </header>

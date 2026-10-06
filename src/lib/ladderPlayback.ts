@@ -49,15 +49,30 @@ export const ladderSlot = (
 /**
  * A run of ladder rows as one playlist, played oldest first — the same song
  * walking forward through the years, which is the point of the ladder.
- * Versions with no recording behind them are dropped: the player can only
- * start on a slot that carries an archive_org_url, and a dead slot mid-queue
- * is a gap the listener has to skip past.
+ *
+ * A row is kept when it can be RESOLVED, which a stored archive_org_url is
+ * only one way of being: AudioPlayerContext.resolveSlot looks a dated row up
+ * by night through findRecordingForDate. This used to filter on the url alone
+ * and drop it.
+ *
+ * Measured on production 2026-10-06: 25 of the 53 notable_versions rows are
+ * dated with no url, and badly concentrated — Shakedown Street has 15 versions
+ * and ONE url, so its Songbook issue offered a single night under a ladder of
+ * fifteen, and eight songs have their only version in that state and offered
+ * nothing at all.
+ *
+ * BLAST RADIUS: all 53 rows carry a show_date, so this makes effectively the
+ * whole catalog playable-by-night and gives up the true negative — a dated
+ * night that genuinely has no tape now fails at play time (honestly: "no tape
+ * of this night circulates yet") rather than being hidden in advance. That is
+ * the right trade while the job is wrong in the louder direction; the real fix
+ * is for those rows to carry resolved urls.
  */
 export const ladderPlaylist = (
   song: LadderSong,
   versions: LadderVersion[],
 ): PlayableSlot[] =>
   versions
-    .filter((v) => !!v.archive_org_url)
+    .filter((v) => !!v.archive_org_url || !!v.show_date)
     .sort((a, b) => (a.show_date ?? "").localeCompare(b.show_date ?? ""))
     .map((v, i) => ladderSlot(song, v, i));
