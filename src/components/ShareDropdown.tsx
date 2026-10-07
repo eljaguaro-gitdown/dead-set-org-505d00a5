@@ -65,9 +65,10 @@ const ShareDropdown = ({ url, ogUrl, title, share }: ShareDropdownProps) => {
    * Copy the TEXT and the link, not the bare link.
    *
    * A pasted bare url leaves the receiving app to say what it is, and the
-   * unfurl it generates is the SITEWIDE meta — "Dead Set — a discovery tool"
-   * — because every route here is client-rendered and a crawler does not run
-   * JS. So a shared Songbook issue read as the app rather than as the song.
+   * unfurl it generates is the SITEWIDE meta in index.html (the homepage's
+   * title and description), because every route here is client-rendered and
+   * a crawler does not run JS. So a shared Songbook issue read as the app
+   * rather than as the song.
    * Prepending the text is what actually puts "Played 382 times between 1973
    * and 1995" in front of the person receiving it, and it works in every app
    * including the ones that unfurl nothing at all.
