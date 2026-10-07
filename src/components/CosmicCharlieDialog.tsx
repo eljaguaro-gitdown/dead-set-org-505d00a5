@@ -1105,6 +1105,10 @@ const CosmicCharlieDialog = ({
                     handleReset();
                     toast.success("Listening guide saved as a new setlist! 🎧");
                   }}
+                  // Until the first/last-played lookups land, `milestones` is
+                  // empty, and a save would file the guide without either
+                  // bookend the cards above are about to show.
+                  disabled={milestonesLoading}
                   className="bg-primary text-primary-foreground font-body gap-1.5 w-full"
                 >
                   <Star className="w-3.5 h-3.5" /> Save as Listening Guide
