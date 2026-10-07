@@ -192,7 +192,7 @@ background-color: #0d0d0d;
       <div class="change-tag-cell"><span class="change-tag tag-fix">Fix</span></div>
       <div class="change-text-cell">
         <div class="change-title">100% song match rate — finally</div>
-        <div class="change-detail">Songs were silently vanishing from generated setlists. Fuzzy matching now handles apostrophes, abbreviations, and alternate spellings. Not one song gets left behind.</div>
+        <div class="change-detail">Songs were silently vanishing from Charlie's setlists. Fuzzy matching now handles apostrophes, abbreviations, and alternate spellings. Not one song gets left behind.</div>
       </div>
     </div>
 
@@ -235,7 +235,7 @@ background-color: #0d0d0d;
       <div class="change-tag-cell"><span class="change-tag tag-new">New</span></div>
       <div class="change-text-cell">
         <div class="change-title">The Aha Moment — built into every setlist</div>
-        <div class="change-detail">Every show Charlie generates now contains one placement designed to make a veteran Deadhead stop and say <em>wait — did they actually do that?</em> Morning Dew mid-Set II. Attics after '72. He'll tell you exactly why.</div>
+        <div class="change-detail">Every show Charlie builds now contains one placement designed to make a veteran Deadhead stop and say <em>wait — did they actually do that?</em> Morning Dew mid-Set II. Attics after '72. He'll tell you exactly why.</div>
       </div>
     </div>
 
