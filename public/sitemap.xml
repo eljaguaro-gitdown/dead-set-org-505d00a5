@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  The public pages a stranger can open without signing in. Static on purpose:
+  no lastmod, because a hand-written date goes stale and a crawler trusts it.
+  Songbook issues (/songbook/:slug) and shared setlists (/setlist/:id) are not
+  listed. They come from the database, and a static file would fall behind them.
+  sitemapRoutes.test.ts fails if an entry here stops matching a route in App.tsx.
+-->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://dead-set.org/</loc></url>
+  <url><loc>https://dead-set.org/songbook</loc></url>
+  <url><loc>https://dead-set.org/browse</loc></url>
+  <url><loc>https://dead-set.org/updates</loc></url>
+  <url><loc>https://dead-set.org/backstage</loc></url>
+  <url><loc>https://dead-set.org/about</loc></url>
+  <url><loc>https://dead-set.org/privacy</loc></url>
+  <url><loc>https://dead-set.org/terms</loc></url>
+</urlset>
