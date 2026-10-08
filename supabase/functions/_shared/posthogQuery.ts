@@ -8,8 +8,11 @@
 //   POSTHOG_PROJECT_ID        numeric project id (Dead-Set.Org = 617063)
 //   POSTHOG_API_HOST          app host, not the ingest host; defaults to US cloud
 //
-// Returns null — never throws — when the secrets are missing or the query
-// fails, so a report can say "traffic unavailable" instead of dying.
+// Returns null — never throws — when the secrets are missing, the query
+// fails, or PostHog does not answer within 10 seconds, so a report can say
+// "traffic unavailable" instead of dying.
+
+import { runPostHogQuery } from './runPostHogQuery.ts'
 
 // Filters every traffic number in a report should share. page_visits could not
 // apply them, which is why it is no longer the traffic source: it counted
@@ -24,38 +27,14 @@ export const POSTHOG_EXTERNAL_TRAFFIC_WHERE = `
   AND person_id NOT IN COHORT 579554
   AND NOT coalesce(properties.$virt_is_bot, false)`
 
-export const queryPostHog = async <Row extends Record<string, unknown>>(
+// The call itself, with its timeout, lives in ./runPostHogQuery.ts so the
+// Vitest suite can run it; this only supplies the secrets.
+export const queryPostHog = <Row extends Record<string, unknown>>(
   name: string,
   sql: string,
-): Promise<Row[] | null> => {
-  const apiKey = Deno.env.get('POSTHOG_PERSONAL_API_KEY')
-  const projectId = Deno.env.get('POSTHOG_PROJECT_ID')
-  const host = (Deno.env.get('POSTHOG_API_HOST') || 'https://us.posthog.com').replace(/\/$/, '')
-
-  if (!apiKey || !projectId) {
-    console.error('PostHog read environment is missing (POSTHOG_PERSONAL_API_KEY / POSTHOG_PROJECT_ID); query skipped:', name)
-    return null
-  }
-
-  try {
-    const res = await fetch(`${host}/api/projects/${projectId}/query/`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({ query: { kind: 'HogQLQuery', query: sql }, name }),
-    })
-    if (!res.ok) {
-      console.error(`PostHog query "${name}" failed: ${res.status} ${await res.text()}`)
-      return null
-    }
-    const body = await res.json()
-    const columns: string[] = body.columns || []
-    const results: unknown[][] = body.results || []
-    return results.map((r) => Object.fromEntries(columns.map((c, i) => [c, r[i]])) as Row)
-  } catch (e) {
-    console.error(`PostHog query "${name}" threw:`, e instanceof Error ? e.message : e)
-    return null
-  }
-}
+): Promise<Row[] | null> =>
+  runPostHogQuery<Row>(name, sql, {
+    apiKey: Deno.env.get('POSTHOG_PERSONAL_API_KEY'),
+    projectId: Deno.env.get('POSTHOG_PROJECT_ID'),
+    host: Deno.env.get('POSTHOG_API_HOST'),
+  })

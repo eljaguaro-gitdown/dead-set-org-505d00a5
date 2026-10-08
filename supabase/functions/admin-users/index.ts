@@ -1,6 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import { POSTHOG_EXTERNAL_TRAFFIC_WHERE, queryPostHog } from "../_shared/posthogQuery.ts";
 import { buildAdminTrafficSql, toAdminTraffic } from "./traffic.ts";
+import { checkAdmin } from "../_shared/requireAdmin.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -60,58 +61,42 @@ Deno.serve(async (req) => {
     const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-    // Verify caller is admin
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    // Allow service role key as bearer token (for internal calls)
-    const token = authHeader.replace("Bearer ", "");
-    const isServiceRole = token === serviceRoleKey;
-    let callerId: string | null = null;
-
-    if (!isServiceRole) {
-      // Create client with user's token to check role
-      const userClient = createClient(supabaseUrl, supabaseAnonKey, {
-        global: { headers: { Authorization: authHeader } },
-      });
-
-      const {
-        data: { user },
-        error: userError,
-      } = await userClient.auth.getUser();
-      if (userError || !user) {
-        return new Response(JSON.stringify({ error: "Unauthorized" }), {
-          status: 401,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-
-      // Check admin role
-      const { data: roleData } = await userClient
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", user.id)
-        .eq("role", "admin")
-        .maybeSingle();
-
-      if (!roleData) {
-        return new Response(JSON.stringify({ error: "Forbidden: admin only" }), {
-          status: 403,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      callerId = user.id;
-    }
-
     // Use service role to manage auth users
     const adminClient = createClient(supabaseUrl, serviceRoleKey, {
       auth: { autoRefreshToken: false, persistSession: false },
     });
+
+    // Admin or service role only, before anything is read: this function has
+    // verify_jwt = false and returns every account's email. See
+    // _shared/requireAdmin.ts, which send-beta-nudge runs too.
+    const auth = await checkAdmin(req.headers.get("Authorization"), {
+      serviceRoleKey,
+      getUserId: async (authHeader) => {
+        const userClient = createClient(supabaseUrl, supabaseAnonKey, {
+          global: { headers: { Authorization: authHeader } },
+        });
+        const { data, error } = await userClient.auth.getUser();
+        return error || !data.user ? null : data.user.id;
+      },
+      // The identity is proven above, so the role is read with the service
+      // client rather than through user_roles' RLS.
+      isAdmin: async (userId) => {
+        const { data } = await adminClient
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", userId)
+          .eq("role", "admin")
+          .maybeSingle();
+        return !!data;
+      },
+    });
+    if (!auth.ok) {
+      return new Response(JSON.stringify({ error: auth.error }), {
+        status: auth.status,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const callerId = auth.callerId;
 
     const url = new URL(req.url);
     const action = url.searchParams.get("action");

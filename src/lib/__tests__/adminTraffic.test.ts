@@ -67,7 +67,9 @@ describe("admin-users uses PostHog for traffic", () => {
 
   it("queries PostHog with the shared external-traffic filter and returns the mapped row", () => {
     expect(src).toMatch(/queryPostHog\("admin-users traffic", buildAdminTrafficSql\(POSTHOG_EXTERNAL_TRAFFIC_WHERE\)\)/);
-    expect(src).toMatch(/const traffic = toAdminTraffic\(trafficRows\)/);
+    // Anchored on the semicolon: without it, `toAdminTraffic(trafficRows) ?? { ...zeros }`
+    // passes, and an unanswered query reads as a site with no visitors again.
+    expect(src).toMatch(/const traffic = toAdminTraffic\(trafficRows\);/);
     expect(src).toMatch(/\btraffic,\s*\n\s*\}\)/);
   });
 
@@ -90,6 +92,12 @@ describe("readAdminTraffic (the page's side)", () => {
     const sent = toAdminTraffic([row]);
     expect(sent).not.toBeNull();
     expect(readAdminTraffic(JSON.parse(JSON.stringify(sent)))).toEqual(sent);
+  });
+
+  it("refuses a payload tagged as anything but exactly posthog", () => {
+    for (const source of ["page_visits", "not-posthog", "PostHog", "", 1]) {
+      expect(readAdminTraffic({ source, ...row }), String(source)).toBeNull();
+    }
   });
 
   it("refuses the old page_visits payload, which used the same field names", () => {
