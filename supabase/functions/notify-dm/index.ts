@@ -72,17 +72,12 @@ Deno.serve(async (req) => {
     })
   }
 
-  // Forward the caller's user JWT — Supabase's gateway requires a properly
-  // signed JWT (the new sb_publishable_/anon keys are not JWTs and get
-  // rejected as INVALID_JWT_FORMAT). The caller is already authenticated
-  // (verified above), so their JWT is valid for the downstream call.
-  const sendRes = await fetch(`${supabaseUrl}/functions/v1/send-transactional-email`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: authHeader,
-    },
-    body: JSON.stringify({
+  // Send as the service role, through the same client call the daily and
+  // weekly reports use. send-transactional-email lets only the service role
+  // and admins send this template (#101), and this function has already
+  // checked the caller and looked up the recipient itself.
+  const { error: sendError } = await supabase.functions.invoke('send-transactional-email', {
+    body: {
       templateName: 'dm-notification',
       recipientEmail: recipient.email,
       idempotencyKey: `dm-notify-${recipientUserId}-${Date.now()}`,
@@ -90,12 +85,11 @@ Deno.serve(async (req) => {
         senderName,
         messagePreview: messagePreview?.slice(0, 200) || '',
       },
-    }),
+    },
   })
 
-  if (!sendRes.ok) {
-    const errText = await sendRes.text()
-    console.error('Failed to send DM notification', sendRes.status, errText)
+  if (sendError) {
+    console.error('Failed to send DM notification', sendError)
     return new Response(JSON.stringify({ error: 'Failed to send notification' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
