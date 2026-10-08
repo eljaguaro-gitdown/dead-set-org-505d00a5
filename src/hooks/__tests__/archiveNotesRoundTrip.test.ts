@@ -73,4 +73,30 @@ describe("archive slot notes round-trip", () => {
     expect(notes).toBe("just a plain note");
     expect(version).toBeNull();
   });
+
+  /**
+   * The database refuses a slot whose fan-written note fails the house rules
+   * (filter_objectionable_text on setlist_slots), and the guest-transfer and
+   * Charlie paths insert every slot in one statement, so one failing note
+   * would drop the whole guide. The encoder is the one place every write goes
+   * through, so the note is dropped there and the slot still saves.
+   */
+  it("drops a fan note that fails the house rules, and keeps the tape", () => {
+    const encoded = encodeArchiveNotes(slotWith(CHARLIE_NOTE, "what a fucking jam"));
+    const { notes, version } = decodeArchiveNotes("slot-1", "song-1", encoded);
+
+    expect(notes).toBe("");
+    expect(version?.archive_org_url).toBe("https://archive.org/details/gd1975-06-17");
+    expect(version?.description).toBe(CHARLIE_NOTE);
+  });
+
+  it("drops a failing note on a plain slot too", () => {
+    const plain = { id: "slot-2", notes: "f4ggot", song: { id: "song-1", title: "Crazy Fingers" }, version: null } as never;
+    expect(encodeArchiveNotes(plain)).toBe("");
+  });
+
+  it("keeps a clean note, catalogue words included", () => {
+    const encoded = encodeArchiveNotes(slotWith(null, "Dick's Picks, into Hell in a Bucket"));
+    expect(decodeArchiveNotes("slot-1", "song-1", encoded).notes).toBe("Dick's Picks, into Hell in a Bucket");
+  });
 });

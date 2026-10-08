@@ -321,8 +321,10 @@ const Songbook = () => {
                   {/* Points at the issue, not the raw guide: a community entry
                       now gets the same page the editorial issues get, at the
                       same /songbook/<slug> url, which is what makes it
-                      shareable as an issue. The guide is one click on from
-                      there. */}
+                      shareable as an issue. This link used to open
+                      /setlist/:id, and moving it left that page's report and
+                      block behind (App Store 1.2). CommunityIssueArticle
+                      carries them now. Keep them there, or point this back. */}
                   <Link
                     to={`/songbook/${songSlug(c.songs?.title ?? "")}`}
                     onClick={() => captureEvent("songbook_community_opened", { entry_id: c.id })}

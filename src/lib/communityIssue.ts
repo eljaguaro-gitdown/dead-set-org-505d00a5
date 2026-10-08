@@ -53,6 +53,8 @@ export interface CommunityIssue {
   timesPlayed: number | null;
   /** Display name of whoever mapped it first. Never an email. */
   mappedBy: string;
+  /** Who wrote it: the person a block applies to, and how the page knows its owner. */
+  creatorId: string;
   setlistId: string;
   nights: CommunityNight[];
 }
@@ -206,6 +208,7 @@ export const loadCommunityIssue = async (
       lastPlayedVenue: venueForDate(nights, song.last_played),
       timesPlayed: song.times_played,
       mappedBy: profile?.display_name?.trim() || "a Deadhead",
+      creatorId: entry.creator_id,
       setlistId: entry.setlist_id,
       nights,
     };

@@ -6,6 +6,7 @@ import type { Database } from "@/integrations/supabase/types";
 import type { SetlistSlotData } from "@/components/SetlistDisplay";
 import type { User } from "@supabase/supabase-js";
 import { SYNTHETIC_VERSION_DEFAULTS } from "@/lib/syntheticVersion";
+import { isObjectionable } from "@/lib/contentFilter";
 import { captureEvent } from "@/lib/posthog";
 
 type SetlistRow = Database["public"]["Tables"]["setlists"]["Row"];
@@ -46,7 +47,12 @@ export const decodeArchiveNotes = (slotId: string, songId: string, rawNotes: str
 };
 
 export const encodeArchiveNotes = (slot: SetlistSlotData) => {
-  const userNotes = slot.notes || "";
+  // A fan's note is checked against the house rules here, at the one encoder
+  // every slot write goes through. The database rejects the whole row when it
+  // fails (filter_objectionable_text on setlist_slots), and several callers
+  // insert many rows at once, so one bad note would otherwise drop the whole
+  // guide. The setlist title has the same treatment ("Untitled Setlist").
+  const userNotes = isObjectionable(slot.notes) ? "" : slot.notes || "";
   if (!slot.version?.id?.startsWith("archive-")) return userNotes;
   const archiveMeta = JSON.stringify({
     __archive: true,
@@ -220,7 +226,7 @@ export const useSetlist = (user: User | null, setlistId?: string | null) => {
     const isSyntheticVersion = slot.version?.id?.startsWith("archive-");
     const notableVersionId = isSyntheticVersion ? null : (slot.version?.id || null);
 
-    const notes = isSyntheticVersion ? encodeArchiveNotes(slot) : slot.notes || "";
+    const notes = encodeArchiveNotes(slot);
 
     const { error } = await supabase.from("setlist_slots").upsert({
       id: slot.id,
@@ -271,10 +277,13 @@ export const useSetlist = (user: User | null, setlistId?: string | null) => {
         if (!slot) return;
         const merged = { ...slot, ...updates };
 
-        const notesToSave = encodeArchiveNotes(merged);
+        // A note that fails the house rules is not written, so the last clean
+        // one stays in place rather than being blanked, and the fan is told
+        // why. The move or segue that came with it still saves.
+        const notesOk = passesContentFilter(merged.notes);
 
         await supabase.from("setlist_slots").update({
-          notes: notesToSave,
+          ...(notesOk ? { notes: encodeArchiveNotes(merged) } : {}),
           segue_to_next: merged.segueToNext,
           position: merged.position,
           set_number: merged.setNumber,

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, Play, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
@@ -7,6 +7,8 @@ import { shareSongbookCopy } from "@/lib/shareCopy";
 import PlayAllNights from "@/components/PlayAllNights";
 import SongbookFooterCta from "@/components/SongbookFooterCta";
 import ShareDropdown from "@/components/ShareDropdown";
+import SafetyMenu from "@/components/SafetyMenu";
+import { useAuth } from "@/hooks/useAuth";
 import {
   communityPlaylist,
   communityFindings,
@@ -49,6 +51,9 @@ export const formatIssueDate = (iso: string | null): string => {
 
 const CommunityIssueArticle = ({ issue }: { issue: CommunityIssue }) => {
   const { playSingle, playSetlist, playingSlot } = useAudioPlayer();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const isOwner = !!user && user.id === issue.creatorId;
   /**
    * Resolving a guide takes seconds, and with nothing on screen people tap
    * again — which abandons the run in flight and restarts the wait. The label
@@ -184,19 +189,41 @@ const CommunityIssueArticle = ({ issue }: { issue: CommunityIssue }) => {
         >
           <ArrowLeft className="w-4 h-4" /> The Songbook
         </Link>
-        <ShareDropdown
-          url={shareUrl}
-          title={`${issue.title} — The Songbook`}
-          share={shareSongbookCopy({
-            songTitle: issue.title,
-            url: shareUrl,
-            mappedBy: issue.mappedBy,
-            nightCount: dated.length,
-            timesPlayed: issue.timesPlayed,
-            firstPlayed: issue.firstPlayed,
-            lastPlayed: issue.lastPlayed,
-          })}
-        />
+        <div className="flex items-center gap-1">
+          {/* App Store guideline 1.2: this page publishes what a fan wrote (their
+              name, their note on each night), so it carries the same report and
+              block as the setlist it came from. The shelf used to open
+              /setlist/:id, which has them; when it started opening this page
+              instead, the controls stayed behind. Signed-out visitors see it
+              too, because a reviewer starts signed out; submitting a report or
+              a block then tells them to sign in, as on /setlist/:id. */}
+          {!isOwner && (
+            <SafetyMenu
+              contentType="setlist"
+              contentId={issue.setlistId}
+              reportLabel="this guide"
+              ownerId={issue.creatorId}
+              ownerName={issue.mappedBy}
+              // Blocking hides the guide from the blocker, so this page would
+              // stop resolving under them. Back to the shelf instead.
+              onBlocked={() => navigate("/songbook")}
+              className="min-h-[44px] min-w-[44px]"
+            />
+          )}
+          <ShareDropdown
+            url={shareUrl}
+            title={`${issue.title} — The Songbook`}
+            share={shareSongbookCopy({
+              songTitle: issue.title,
+              url: shareUrl,
+              mappedBy: issue.mappedBy,
+              nightCount: dated.length,
+              timesPlayed: issue.timesPlayed,
+              firstPlayed: issue.firstPlayed,
+              lastPlayed: issue.lastPlayed,
+            })}
+          />
+        </div>
       </div>
 
       <article className="bg-card text-card-foreground rounded-sm border border-border p-5 md:p-10">
