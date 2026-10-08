@@ -1,5 +1,6 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { BETA_NUDGE_HTML } from './template.ts'
+import { checkAdmin } from './requireAdmin.ts'
 
 // SENDER_DOMAIN must match the verified subdomain delegated to Lovable's nameservers.
 // Sending from the root dead-set.org would be rejected ("No email domain record found").
@@ -133,8 +134,39 @@ Deno.serve(async (req) => {
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL')
   const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
-  if (!supabaseUrl || !serviceKey) {
+  const anonKey = Deno.env.get('SUPABASE_ANON_KEY')
+  if (!supabaseUrl || !serviceKey || !anonKey) {
     return jsonResponse({ error: 'Server configuration error' }, 500)
+  }
+
+  const supabase = createClient(supabaseUrl, serviceKey)
+
+  // Admin or service role only, and before anything reads a recipient: the
+  // anon key passes verify_jwt, and a dry run returns the recipient's email.
+  // See requireAdmin.ts.
+  const auth = await checkAdmin(req.headers.get('Authorization'), {
+    serviceRoleKey: serviceKey,
+    getUserId: async (authHeader) => {
+      const userClient = createClient(supabaseUrl, anonKey, {
+        global: { headers: { Authorization: authHeader } },
+      })
+      const { data, error } = await userClient.auth.getUser()
+      return error || !data.user ? null : data.user.id
+    },
+    // The identity is already proven above, so the role is read with the
+    // service client rather than through user_roles' RLS.
+    isAdmin: async (userId) => {
+      const { data } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', userId)
+        .eq('role', 'admin')
+        .maybeSingle()
+      return !!data
+    },
+  })
+  if (!auth.ok) {
+    return jsonResponse({ error: auth.error }, auth.status)
   }
 
   let body: RequestBody = {}
@@ -144,8 +176,6 @@ Deno.serve(async (req) => {
     // Allow empty body — defaults apply
   }
   const dryRun = body.dry_run === true
-
-  const supabase = createClient(supabaseUrl, serviceKey)
 
   // Resolve recipients: if recipient_ids omitted, fetch all profiles.
   // Beta cohort definition is curated via the admin UI's checkbox selection,
