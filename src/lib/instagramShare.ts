@@ -1,5 +1,5 @@
 import { toast } from "sonner";
-import { trackShare } from "./trackShare";
+import { trackShare, type ShareType } from "./trackShare";
 
 export type ShareContext = "setlist" | "app" | "versions";
 
@@ -15,6 +15,12 @@ interface InstagramShareOptions {
   lifespan?: string | null;
   /** `versions` only — the link back to the page. */
   pageUrl?: string;
+  /**
+   * What to record the share as, when the caption context and the thing being
+   * shared differ: the Songbook posts with the setlist caption but is not a
+   * setlist. Defaults to the context's own type.
+   */
+  trackAs?: ShareType;
 }
 
 const CAPTIONS = {
@@ -147,7 +153,7 @@ export async function shareToInstagram(opts: InstagramShareOptions): Promise<voi
           title: opts.songTitle || opts.setlistName || "Dead-Set.Org",
         });
         trackShare({
-          shareType: opts.context === "setlist" ? "setlist" : "app_link",
+          shareType: opts.trackAs ?? (opts.context === "setlist" ? "setlist" : "app_link"),
           channel: "instagram",
           setlistId: opts.setlistId,
         });
@@ -169,7 +175,7 @@ export async function shareToInstagram(opts: InstagramShareOptions): Promise<voi
 
   // 4. Track and notify
   trackShare({
-    shareType: opts.context === "setlist" ? "setlist" : "app_link",
+    shareType: opts.trackAs ?? (opts.context === "setlist" ? "setlist" : "app_link"),
     channel: "instagram",
     setlistId: opts.setlistId,
   });

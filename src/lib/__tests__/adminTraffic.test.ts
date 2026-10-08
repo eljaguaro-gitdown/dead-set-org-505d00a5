@@ -70,7 +70,7 @@ describe("admin-users uses PostHog for traffic", () => {
     // Anchored on the semicolon: without it, `toAdminTraffic(trafficRows) ?? { ...zeros }`
     // passes, and an unanswered query reads as a site with no visitors again.
     expect(src).toMatch(/const traffic = toAdminTraffic\(trafficRows\);/);
-    expect(src).toMatch(/\btraffic,\s*\n\s*\}\)/);
+    expect(src).toMatch(/JSON\.stringify\(\{\s*users: result,\s*traffic,/);
   });
 
   it("no longer reads the page_visits traffic cache", () => {
