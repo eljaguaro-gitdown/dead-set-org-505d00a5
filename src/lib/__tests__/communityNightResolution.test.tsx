@@ -40,6 +40,10 @@ vi.mock("@/contexts/AudioPlayerContext", () => ({
 }));
 vi.mock("sonner", () => ({ toast: { info: mocks.info, error: mocks.error } }));
 vi.mock("@/components/ShareDropdown", () => ({ default: () => null }));
+// The report/block control has its own test (communityIssueSafety.test.tsx);
+// here it would only need a QueryClient this suite has no reason to build.
+vi.mock("@/components/SafetyMenu", () => ({ default: () => null }));
+vi.mock("@/hooks/useAuth", () => ({ useAuth: () => ({ user: null }) }));
 
 import CommunityIssueArticle from "@/components/CommunityIssueArticle";
 
@@ -71,6 +75,7 @@ const EYES: CommunityIssue = {
   lastPlayedVenue: "Riverport Amphitheatre",
   timesPlayed: 382,
   mappedBy: "ric neil",
+  creatorId: "user-ric",
   setlistId: "set-1",
   nights: [
     night(1, "1973-02-09", "https://archive.org/details/a"),

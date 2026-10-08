@@ -22,6 +22,7 @@ const issue = (over: Partial<CommunityIssue> = {}): CommunityIssue => ({
   lastPlayedVenue: null,
   timesPlayed: 382,
   mappedBy: "ric neil",
+  creatorId: "user-ric",
   setlistId: "set-1",
   nights: [
     night(1, "1974-06-18", "https://archive.org/details/a"),
