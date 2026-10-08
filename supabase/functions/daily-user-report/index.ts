@@ -1,4 +1,5 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
+import { INTERNAL_SEND_HEADER, internalSendToken } from '../_shared/internalSend.ts'
 import { POSTHOG_EXTERNAL_TRAFFIC_WHERE, queryPostHog } from '../_shared/posthogQuery.ts'
 
 const corsHeaders = {
@@ -88,6 +89,7 @@ Deno.serve(async (req) => {
           reportDate,
         },
       },
+      headers: { [INTERNAL_SEND_HEADER]: await internalSendToken(serviceKey) },
     })
 
     if (error) {

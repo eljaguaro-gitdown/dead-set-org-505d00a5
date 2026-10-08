@@ -45,15 +45,10 @@ export interface AdminCheckDeps {
   isServiceRoleToken: (token: string) => Promise<boolean>;
 }
 
-/**
- * Whether a token says it is the service role. Unverified, and only ever used
- * to decide whether `isServiceRoleToken` is worth asking: a secret-style key,
- * or a JWT whose `role` claim is `service_role`. Anything unreadable is no.
- */
-const claimsServiceRole = (token: string): boolean => {
-  if (token.startsWith("sb_secret_")) return true;
+/** A JWT's `role` claim, unverified, or null for anything that is not a readable JWT. */
+const jwtRole = (token: string): string | null => {
   const parts = token.split(".");
-  if (parts.length !== 3) return false;
+  if (parts.length !== 3) return null;
   try {
     const b64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
     // JWTs drop base64's "=" padding. Node, jsdom and Deno decode it anyway,
@@ -61,10 +56,33 @@ const claimsServiceRole = (token: string): boolean => {
     // runtime whose atob is strict, where a missing pad would refuse every
     // database caller.
     const payload = JSON.parse(atob(b64 + "=".repeat((4 - (b64.length % 4)) % 4)));
-    return payload?.role === "service_role";
+    return typeof payload?.role === "string" ? payload.role : null;
   } catch {
-    return false;
+    return null;
   }
+};
+
+/**
+ * Whether a token says it is the service role. Unverified, and only ever used
+ * to decide whether `isServiceRoleToken` is worth asking: a secret-style key,
+ * or a JWT whose `role` claim is `service_role`. Anything unreadable is no.
+ */
+const claimsServiceRole = (token: string): boolean =>
+  token.startsWith("sb_secret_") || jwtRole(token) === "service_role";
+
+/**
+ * What kind of bearer a refused request carried, for the log: never the token
+ * itself. Refusals used to log nothing, which is how every internal email send
+ * could be refused without a trace (see _shared/internalSend.ts).
+ */
+export const describeBearer = (authHeader: string | null): string => {
+  if (!authHeader) return "none";
+  const token = authHeader.match(/^Bearer\s+(\S+)$/)?.[1];
+  if (!token) return "not a bearer";
+  if (token.startsWith("sb_secret_")) return "secret key";
+  if (token.startsWith("sb_publishable_")) return "publishable key";
+  const role = jwtRole(token);
+  return role ? `jwt, role ${role}` : "unrecognised";
 };
 
 export const checkAdmin = async (

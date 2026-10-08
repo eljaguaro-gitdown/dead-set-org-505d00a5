@@ -7,10 +7,12 @@
  * from noreply@notify.dead-set.org, and the internal templates skip the
  * suppression list. Probed against production on 2026-10-08.
  *
- * - The service role (this function's own key, or another service-role key
- *   Supabase confirms; see _shared/requireAdmin.ts) and admins may send
- *   anything to anyone. That covers the database triggers, the daily and
- *   weekly reports, notify-dm, notify-comment and the admin dashboard.
+ * - The service role and admins may send anything to anyone. Our own
+ *   functions (notify-dm, notify-comment, the daily and weekly reports) prove
+ *   the key with the header in _shared/internalSend.ts, because the bearer
+ *   token they send does not arrive as sent. The database triggers send a
+ *   service-role key Supabase confirms (see _shared/requireAdmin.ts), and the
+ *   admin dashboard sends an admin's own token.
  * - A signed-in fan may ask for exactly what the app asks for on their
  *   behalf: their own welcome email, to their own address, and the sign-up
  *   alert, to the owner's inboxes only and once per account per inbox.
@@ -22,6 +24,7 @@
  * run it.
  */
 import { checkAdmin } from "../_shared/requireAdmin.ts";
+import { internalSendToken } from "../_shared/internalSend.ts";
 
 export type SendAuthorization =
   | { ok: true; as: "service" | "admin" | "self" }
@@ -42,6 +45,8 @@ export interface SendRequest {
   templateName: string | undefined;
   recipientEmail: string | undefined;
   idempotencyKey: string | null;
+  /** The INTERNAL_SEND_HEADER value, from one of our own functions. */
+  internalToken?: string | null;
 }
 
 /** Where the sign-up alert may go: the same two inboxes `useAuth.ts` names. */
@@ -55,6 +60,10 @@ export const authorizeSend = async (
   request: SendRequest,
   deps: SendAuthorizationDeps,
 ): Promise<SendAuthorization> => {
+  if (request.internalToken && deps.serviceRoleKey && request.internalToken === (await internalSendToken(deps.serviceRoleKey))) {
+    return { ok: true, as: "service" };
+  }
+
   // One user lookup per request, shared by the admin check and the fan rules.
   let user: ReturnType<SendAuthorizationDeps["getUser"]> | undefined;
   const lookUp = (header: string) => (user ??= deps.getUser(header));

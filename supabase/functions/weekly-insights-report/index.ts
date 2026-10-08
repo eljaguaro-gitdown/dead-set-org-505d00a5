@@ -1,4 +1,5 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
+import { INTERNAL_SEND_HEADER, internalSendToken } from '../_shared/internalSend.ts'
 import { POSTHOG_EXTERNAL_TRAFFIC_WHERE, queryPostHog } from '../_shared/posthogQuery.ts'
 
 const corsHeaders = {
@@ -214,6 +215,7 @@ Be specific, data-driven, and actionable. Reference actual numbers. If growth is
           aiRecommendations,
         },
       },
+      headers: { [INTERNAL_SEND_HEADER]: await internalSendToken(serviceKey) },
     })
 
     if (error) {

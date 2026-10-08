@@ -169,10 +169,10 @@ describe("send-transactional-email runs the policy before anything else", () => 
   it("imports it, awaits it with the explicit idempotency key, and returns its status on a refusal", () => {
     expect(src).toMatch(/import \{ authorizeSend \} from '\.\/authorize\.ts'/);
     expect(serve).toMatch(
-      /const auth = await authorizeSend\(\s*req\.headers\.get\('Authorization'\),\s*\{ templateName, recipientEmail, idempotencyKey: explicitIdempotencyKey \},/,
+      /const auth = await authorizeSend\(\s*req\.headers\.get\('Authorization'\),\s*\{\s*templateName,\s*recipientEmail,\s*idempotencyKey: explicitIdempotencyKey,\s*internalToken: req\.headers\.get\(INTERNAL_SEND_HEADER\),\s*\},/,
     );
     expect(serve).toMatch(
-      /if \(!auth\.ok\) \{\s*return new Response\(JSON\.stringify\(\{ error: auth\.error \}\), \{\s*status: auth\.status,/,
+      /if \(!auth\.ok\) \{\s*console\.warn\('Send refused', \{[^}]*\}\)\s*return new Response\(JSON\.stringify\(\{ error: auth\.error \}\), \{\s*status: auth\.status,/,
     );
   });
 

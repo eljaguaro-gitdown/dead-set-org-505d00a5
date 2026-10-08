@@ -3,6 +3,8 @@ import { renderAsync } from 'npm:@react-email/components@0.0.22'
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { TEMPLATES, INTERNAL_TEMPLATES } from '../_shared/transactional-email-templates/registry.ts'
 import { authorizeSend } from './authorize.ts'
+import { describeBearer } from '../_shared/requireAdmin.ts'
+import { INTERNAL_SEND_HEADER } from '../_shared/internalSend.ts'
 
 // Configuration baked in at scaffold time — do NOT change these manually.
 // To update, re-run the email domain setup flow.
@@ -87,7 +89,12 @@ Deno.serve(async (req) => {
   // ./authorize.ts for who may send what.
   const auth = await authorizeSend(
     req.headers.get('Authorization'),
-    { templateName, recipientEmail, idempotencyKey: explicitIdempotencyKey },
+    {
+      templateName,
+      recipientEmail,
+      idempotencyKey: explicitIdempotencyKey,
+      internalToken: req.headers.get(INTERNAL_SEND_HEADER),
+    },
     {
       serviceRoleKey: supabaseServiceKey,
       getUser: async (authHeader) => {
@@ -117,6 +124,13 @@ Deno.serve(async (req) => {
     },
   )
   if (!auth.ok) {
+    // The kind of credential only, never the credential.
+    console.warn('Send refused', {
+      templateName,
+      status: auth.status,
+      bearer: describeBearer(req.headers.get('Authorization')),
+      internalHeader: req.headers.has(INTERNAL_SEND_HEADER),
+    })
     return new Response(JSON.stringify({ error: auth.error }), {
       status: auth.status,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
