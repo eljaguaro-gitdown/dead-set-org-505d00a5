@@ -88,15 +88,12 @@ Deno.serve(async (req) => {
     })
   }
 
-  // Forward the caller's user JWT — the gateway requires a properly signed
-  // JWT (sb_publishable_/anon keys are not JWTs and fail INVALID_JWT_FORMAT).
-  const sendRes = await fetch(`${supabaseUrl}/functions/v1/send-transactional-email`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: authHeader,
-    },
-    body: JSON.stringify({
+  // Send as the service role, through the same client call the daily and
+  // weekly reports use. send-transactional-email lets only the service role
+  // and admins send this template (#101), and this function has already
+  // checked the caller and looked up the recipient itself.
+  const { error: sendError } = await supabase.functions.invoke('send-transactional-email', {
+    body: {
       templateName: 'comment-notification',
       recipientEmail: recipient.email,
       idempotencyKey: `comment-notify-${commentId}`,
@@ -106,12 +103,11 @@ Deno.serve(async (req) => {
         preview: (preview || '').slice(0, 200),
         setlistId,
       },
-    }),
+    },
   })
 
-  if (!sendRes.ok) {
-    const errText = await sendRes.text()
-    console.error('Failed to send comment notification', sendRes.status, errText)
+  if (sendError) {
+    console.error('Failed to send comment notification', sendError)
     return new Response(JSON.stringify({ error: 'Failed to send notification' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

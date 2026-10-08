@@ -2,6 +2,7 @@ import * as React from 'npm:react@18.3.1'
 import { renderAsync } from 'npm:@react-email/components@0.0.22'
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { TEMPLATES, INTERNAL_TEMPLATES } from '../_shared/transactional-email-templates/registry.ts'
+import { authorizeSend } from './authorize.ts'
 
 // Configuration baked in at scaffold time — do NOT change these manually.
 // To update, re-run the email domain setup flow.
@@ -30,8 +31,9 @@ function generateToken(): string {
     .join('')
 }
 
-// Auth: this function uses verify_jwt = true in config.toml — Supabase's gateway
-// validates the caller's JWT (anon or service_role) before reaching this code.
+// Auth: verify_jwt = true in config.toml only proves the caller holds a valid
+// project JWT, and the public anon key is one. Who may send what is decided by
+// authorizeSend (./authorize.ts), right after the body is read (#101).
 
 Deno.serve(async (req) => {
   // Handle CORS preflight
@@ -78,6 +80,47 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
     )
+  }
+
+  // Before the template lookup, so a refused caller is not handed the list of
+  // templates, and before anything reads or writes the database. See
+  // ./authorize.ts for who may send what.
+  const auth = await authorizeSend(
+    req.headers.get('Authorization'),
+    { templateName, recipientEmail, idempotencyKey: explicitIdempotencyKey },
+    {
+      serviceRoleKey: supabaseServiceKey,
+      getUser: async (authHeader) => {
+        const userClient = createClient(supabaseUrl, Deno.env.get('SUPABASE_ANON_KEY') ?? '', {
+          global: { headers: { Authorization: authHeader } },
+        })
+        const { data, error } = await userClient.auth.getUser()
+        return error || !data.user ? null : { id: data.user.id, email: data.user.email ?? null }
+      },
+      isAdmin: async (userId) => {
+        const { data } = await createClient(supabaseUrl, supabaseServiceKey)
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', userId)
+          .eq('role', 'admin')
+          .maybeSingle()
+        return !!data
+      },
+      // Only the service role may list users, so a token that can is one.
+      isServiceRoleToken: async (token) => {
+        const probe = createClient(supabaseUrl, token, {
+          auth: { autoRefreshToken: false, persistSession: false },
+        })
+        const { error } = await probe.auth.admin.listUsers({ page: 1, perPage: 1 })
+        return !error
+      },
+    },
+  )
+  if (!auth.ok) {
+    return new Response(JSON.stringify({ error: auth.error }), {
+      status: auth.status,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })
   }
 
   if (!templateName) {
