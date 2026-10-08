@@ -20,7 +20,7 @@ const serve = src.slice(src.indexOf("Deno.serve("));
 describe("admin-users runs the shared admin check first", () => {
   it("imports the shared check rather than keeping its own", () => {
     expect(src).toMatch(/import \{ checkAdmin \} from "\.\.\/_shared\/requireAdmin\.ts";/);
-    expect(src).not.toMatch(/isServiceRole|authHeader\.replace\(|roleData/);
+    expect(src).not.toMatch(/\bisServiceRole\b|authHeader\.replace\(|roleData/);
   });
 
   it("awaits it and returns its status on a refusal", () => {
@@ -39,12 +39,19 @@ describe("admin-users runs the shared admin check first", () => {
     expect(serve).toMatch(/serviceRoleKey,/);
   });
 
+  it("proves another service-role key with the caller's token, never the function's own key", () => {
+    expect(serve).toMatch(
+      /isServiceRoleToken: async \(token\) => \{\s*const probe = createClient\(supabaseUrl, token, \{[\s\S]*?\}\);\s*const \{ error \} = await probe\.auth\.admin\.listUsers\(\{ page: 1, perPage: 1 \}\);\s*return !error;\s*\}/,
+    );
+  });
+
   it("checks before any action, user list, profile read or traffic query", () => {
     const gate = serve.indexOf("await checkAdmin(");
     expect(gate).toBeGreaterThan(-1);
     for (const later of [
       'searchParams.get("action")',
-      "auth.admin.listUsers(",
+      // The real user list, not the one-user check inside checkAdmin's deps.
+      "adminClient.auth.admin.listUsers(",
       '.from("profiles")',
       "queryPostHog(",
       "auth.admin.deleteUser(",
