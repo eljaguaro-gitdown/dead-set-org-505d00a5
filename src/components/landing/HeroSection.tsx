@@ -2,8 +2,10 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { trackCtaClick } from "@/lib/trackCtaClick";
 import { supabase } from "@/integrations/supabase/client";
-import { songbookDb } from "@/lib/songbookDb";
 import { useAudioPlayer, type PlayableSlot } from "@/contexts/AudioPlayerContext";
+import { loadWeeklySpotlight, type SongbookSpotlight } from "@/lib/songbookSpotlight";
+import { unlockAudioInGesture } from "@/lib/player/gestureUnlock";
+import SongbookSpotlightCard, { SongbookSpotlightSkeleton } from "@/components/landing/SongbookSpotlightCard";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 // PROTOTYPE — song-first entry; see src/components/landing/StartWithASong.tsx
@@ -18,28 +20,6 @@ interface HeroSpotlight {
   songCount: number;
   yearsLabel: string | null;
 }
-
-// Songbook takeover — while a song_features row has spotlight=true, the
-// cassette features that issue's benchmark version instead of the daily
-// community rotation. Stopped by clearing the flag in the DB; no deploy.
-interface SongbookTakeover {
-  slug: string;
-  issueNumber: number | null;
-  songId: string;
-  songTitle: string;
-  versionId: string;
-  showDate: string | null;
-  venue: string | null;
-  city: string | null;
-  eraId: string | null;
-  archiveOrgUrl: string | null;
-}
-
-// Tiny silent WAV (44 bytes) used to "unlock" iOS Safari audio inside the
-// user gesture. Without this, async work in playSingle (awaiting Archive.org
-// resolution) breaks the gesture chain and iOS refuses to autoplay later.
-const SILENT_WAV =
-  "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAVFYAAFRWAAABAAgAZGF0YQAAAAA=";
 
 // Props kept for backward-compat with Index.tsx — unused in the new editorial hero.
 interface FeaturedSetlist {
@@ -66,12 +46,15 @@ const HeroSection = (_props: HeroSectionProps) => {
   const { user } = useAuth();
   const [communityCount, setCommunityCount] = useState<number | null>(null);
   const [spotlight, setSpotlight] = useState<HeroSpotlight | null>(null);
-  const [takeover, setTakeover] = useState<SongbookTakeover | null>(null);
+  /**
+   * This week's Songbook song. "loading" holds the card's height; "none" (an
+   * empty or unreachable shelf) falls back to the daily community spotlight.
+   */
+  const [songbook, setSongbook] = useState<SongbookSpotlight | null>(null);
+  const [songbookState, setSongbookState] = useState<"loading" | "ready" | "none">("loading");
   const [heroLoading, setHeroLoading] = useState(false);
-  const { playSetlist, playSingle, playingSlot, stopPlayback, activeSetlistId } = useAudioPlayer();
-  const isHeroPlaying = takeover
-    ? playingSlot?.id === `hero-songbook-${takeover.versionId}`
-    : !!spotlight && activeSetlistId === spotlight.id && !!playingSlot;
+  const { playSetlist, playingSlot, stopPlayback, activeSetlistId } = useAudioPlayer();
+  const isHeroPlaying = !!spotlight && activeSetlistId === spotlight.id && !!playingSlot;
 
   // Pull a live count of public community setlists to give the secondary CTA real pull.
   useEffect(() => {
@@ -86,46 +69,23 @@ const HeroSection = (_props: HeroSectionProps) => {
     return () => { cancelled = true; };
   }, []);
 
-  // Songbook takeover — one query; silently absent unless a spotlight is set.
+  // The Songbook card rotates through the whole shelf, one song a week. See
+  // src/lib/songbookSpotlight.ts. It replaced the `song_features.spotlight`
+  // takeover, which pinned one issue until someone cleared the flag by hand.
   useEffect(() => {
     let cancelled = false;
-    (async () => {
-      const { data: feat } = await songbookDb
-        .from("song_features")
-        .select("slug, issue_number, song_id, title")
-        .eq("published", true)
-        .eq("spotlight", true)
-        .order("week_of", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      if (cancelled || !feat?.song_id) return;
-      const { data: v } = await songbookDb
-        .from("notable_versions")
-        .select("id, show_date, venue, city, era_id, archive_org_url, votes")
-        .eq("song_id", feat.song_id)
-        .eq("is_benchmark", true)
-        .order("votes", { ascending: false, nullsFirst: false })
-        .limit(1)
-        .maybeSingle();
-      if (cancelled || !v) return;
-      setTakeover({
-        slug: feat.slug,
-        issueNumber: feat.issue_number,
-        songId: feat.song_id,
-        songTitle: feat.title,
-        versionId: v.id,
-        showDate: v.show_date,
-        venue: v.venue,
-        city: v.city,
-        eraId: v.era_id,
-        archiveOrgUrl: v.archive_org_url,
-      });
-    })();
+    void loadWeeklySpotlight().then((s) => {
+      if (cancelled) return;
+      setSongbook(s);
+      setSongbookState(s ? "ready" : "none");
+    });
     return () => { cancelled = true; };
   }, []);
 
-  // Daily rotating community spotlight.
+  // Daily rotating community spotlight: the fallback when the Songbook card
+  // has nothing to show. Not fetched otherwise, since nothing would render it.
   useEffect(() => {
+    if (songbookState !== "none") return;
     let cancelled = false;
     (async () => {
       const { data: spot } = await supabase.rpc("get_hero_spotlight");
@@ -164,7 +124,7 @@ const HeroSection = (_props: HeroSectionProps) => {
       });
     })();
     return () => { cancelled = true; };
-  }, []);
+  }, [songbookState]);
 
   const handleCta = (e: React.MouseEvent<HTMLAnchorElement>) => {
     e.preventDefault();
@@ -172,63 +132,13 @@ const HeroSection = (_props: HeroSectionProps) => {
     navigate(BUILDER_ROUTE);
   };
 
-  const fmtShowDate = (iso: string | null) => {
-    if (!iso) return "";
-    const [y, m, d] = iso.split("-").map(Number);
-    if (!y || !m || !d) return iso;
-    const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
-    return `${months[m - 1]} ${d}, ${y}`;
-  };
-
-  const handleTakeoverPlay = () => {
-    if (!takeover) return;
-    if (isHeroPlaying) {
-      stopPlayback();
-      return;
-    }
-    try {
-      const unlock = new Audio(SILENT_WAV);
-      unlock.volume = 0;
-      void unlock.play().catch(() => {});
-    } catch { /* best effort */ }
-    trackCtaClick("hero_songbook_play", "audio");
-    playSingle({
-      id: `hero-songbook-${takeover.versionId}`,
-      song: { id: takeover.songId, title: takeover.songTitle },
-      version: {
-        id: takeover.versionId,
-        song_id: takeover.songId,
-        show_date: takeover.showDate ?? "",
-        venue: takeover.venue,
-        city: takeover.city,
-        archive_org_url: takeover.archiveOrgUrl,
-        era_id: takeover.eraId,
-        rating: null,
-        description: null,
-      } as never,
-      setNumber: 1,
-      position: 0,
-      segueToNext: false,
-    });
-  };
-
   const handleHeroPlay = async () => {
-    if (takeover) {
-      handleTakeoverPlay();
-      return;
-    }
     if (!spotlight) return;
     if (isHeroPlaying) {
       stopPlayback();
       return;
     }
-    try {
-      const unlock = new Audio(SILENT_WAV);
-      unlock.volume = 0;
-      void unlock.play().catch(() => {});
-    } catch {
-      // best effort
-    }
+    unlockAudioInGesture();
     trackCtaClick("hero_now_spinning_play", "audio");
     setHeroLoading(true);
     try {
@@ -910,6 +820,8 @@ const HeroSection = (_props: HeroSectionProps) => {
           font-weight: 500;
         }
 
+        .ds-hero__songbook { width: 100%; }
+
         /* Now Spinning cassette — the proof-by-music block. */
         .ds-hero__cassette {
           width: 100%;
@@ -1092,82 +1004,74 @@ const HeroSection = (_props: HeroSectionProps) => {
             and the next one waiting to be found, inhaled, and passed on.
           </p>
 
-          {/* Now Spinning — proof-by-music. One tap, one ear, you're in. */}
-          {/* The whole shell plays, not just the disc. The song title, the
-              date and the venue sat in dead space next to a play button —
-              people aim at the thing they are reading. The real <button>
-              below stays, so keyboard and screen-reader users still have a
-              proper control; this just widens where a thumb can land. */}
-          <div
-            className="ds-hero__cassette"
-            role="group"
-            aria-label={takeover ? `The Songbook — ${takeover.songTitle}` : `Today's Spotlight — ${spotlight?.title ?? "community setlist"}`}
-            onClick={() => { if (!heroLoading && (takeover || spotlight)) void handleHeroPlay(); }}
-          >
-            <div className="ds-hero__cassette-eyebrow-row" aria-hidden="true">
-              <span className="ds-hero__cassette-live">
-                <span className="ds-hero__cassette-live-dot" />
-                {isHeroPlaying ? "Now Spinning" : heroLoading ? "Cueing up…" : takeover ? "The Songbook" : "Today's Spotlight"}
-              </span>
-              <span>
-                {takeover
-                  ? `VOL. ${takeover.issueNumber ?? 1}`
-                  : spotlight ? `${spotlight.songCount} SONG${spotlight.songCount === 1 ? "" : "S"}` : "COMMUNITY"}
-              </span>
-            </div>
-
-            <button
-              type="button"
-              onClick={(e) => { e.stopPropagation(); void handleHeroPlay(); }}
-              disabled={heroLoading || (!takeover && !spotlight)}
-              className={`ds-hero__play-btn${isHeroPlaying ? "" : " ds-hero__play-btn--idle"}`}
-              aria-label={isHeroPlaying ? `Pause ${takeover?.songTitle ?? spotlight?.title ?? "spotlight"}` : `Play ${takeover?.songTitle ?? spotlight?.title ?? "spotlight"}`}
-            >
-              {isHeroPlaying ? (
-                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                  <rect x="6" y="5" width="4" height="14" rx="1" />
-                  <rect x="14" y="5" width="4" height="14" rx="1" />
-                </svg>
-              ) : (
-                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                  <path d="M8 5.14v13.72c0 .79.87 1.27 1.54.85l10.79-6.86a1 1 0 0 0 0-1.7L9.54 4.29A1 1 0 0 0 8 5.14z" />
-                </svg>
-              )}
-            </button>
-
-            <div className="ds-hero__cassette-meta">
-              {takeover ? (
-                <>
-                  <p className="ds-hero__cassette-song">{takeover.songTitle}</p>
-                  <p className="ds-hero__cassette-show">{fmtShowDate(takeover.showDate)}</p>
-                  <p className="ds-hero__cassette-venue">
-                    {takeover.venue}{takeover.city ? ` · ${takeover.city}` : ""}
-                  </p>
-                </>
-              ) : (
-                <>
-                  <p className="ds-hero__cassette-song">{spotlight?.title ?? "Loading spotlight…"}</p>
-                  <p className="ds-hero__cassette-show">by {spotlight?.creatorName ?? "—"}</p>
-                  {spotlight?.yearsLabel && (
-                    <p className="ds-hero__cassette-venue">{spotlight.yearsLabel}</p>
-                  )}
-                </>
-              )}
-            </div>
-          </div>
-          <p className="ds-hero__cassette-hint">
-            {takeover ? (
-              <button
-                type="button"
-                onClick={() => { trackCtaClick("hero_songbook_read", `/songbook/${takeover.slug}`); navigate(`/songbook/${takeover.slug}`); }}
-                className="underline underline-offset-2 hover:text-foreground transition-colors"
-              >
-                {isHeroPlaying ? "now read the whole story →" : `the version everybody names — read Vol. ${takeover.issueNumber ?? 1} →`}
-              </button>
+          {/* This week's Songbook song, or while the shelf loads, a card-sized
+              placeholder so the CTAs below do not jump. One wrapper for all three
+              states: the hero staggers its direct children in with an entrance
+              animation, and swapping the child itself would restart it, blanking
+              the card for a second after it had loaded. */}
+          <div className="ds-hero__songbook">
+            {songbookState === "loading" ? (
+              <SongbookSpotlightSkeleton />
+            ) : songbook ? (
+              <SongbookSpotlightCard key={songbook.slug} spotlight={songbook} />
             ) : (
-              isHeroPlaying ? "the music never stops" : "today's featured setlist — built by a fellow head"
+              <>
+                {/* Fallback: the daily community spotlight, the card that sat
+                    here before the Songbook did. */}
+                {/* The whole shell plays, not just the disc. The song title, the
+                    date and the venue sat in dead space next to a play button —
+                    people aim at the thing they are reading. The real <button>
+                    below stays, so keyboard and screen-reader users still have a
+                    proper control; this just widens where a thumb can land. */}
+                <div
+                  className="ds-hero__cassette"
+                  role="group"
+                  aria-label={`Today's Spotlight — ${spotlight?.title ?? "community setlist"}`}
+                  onClick={() => { if (!heroLoading && spotlight) void handleHeroPlay(); }}
+                >
+                  <div className="ds-hero__cassette-eyebrow-row" aria-hidden="true">
+                    <span className="ds-hero__cassette-live">
+                      <span className="ds-hero__cassette-live-dot" />
+                      {isHeroPlaying ? "Now Spinning" : heroLoading ? "Cueing up…" : "Today's Spotlight"}
+                    </span>
+                    <span>
+                      {spotlight ? `${spotlight.songCount} SONG${spotlight.songCount === 1 ? "" : "S"}` : "COMMUNITY"}
+                    </span>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); void handleHeroPlay(); }}
+                    disabled={heroLoading || !spotlight}
+                    className={`ds-hero__play-btn${isHeroPlaying ? "" : " ds-hero__play-btn--idle"}`}
+                    aria-label={isHeroPlaying ? `Pause ${spotlight?.title ?? "spotlight"}` : `Play ${spotlight?.title ?? "spotlight"}`}
+                  >
+                    {isHeroPlaying ? (
+                      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                        <rect x="6" y="5" width="4" height="14" rx="1" />
+                        <rect x="14" y="5" width="4" height="14" rx="1" />
+                      </svg>
+                    ) : (
+                      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                        <path d="M8 5.14v13.72c0 .79.87 1.27 1.54.85l10.79-6.86a1 1 0 0 0 0-1.7L9.54 4.29A1 1 0 0 0 8 5.14z" />
+                      </svg>
+                    )}
+                  </button>
+
+                  <div className="ds-hero__cassette-meta">
+                    <p className="ds-hero__cassette-song">{spotlight?.title ?? "Loading spotlight…"}</p>
+                    <p className="ds-hero__cassette-show">by {spotlight?.creatorName ?? "—"}</p>
+                    {spotlight?.yearsLabel && (
+                      <p className="ds-hero__cassette-venue">{spotlight.yearsLabel}</p>
+                    )}
+                  </div>
+                </div>
+                <p className="ds-hero__cassette-hint">
+                  {isHeroPlaying ? "the music never stops" : "today's featured setlist — built by a fellow head"}
+                </p>
+              </>
             )}
-          </p>
+          </div>
 
           {/* Primary CTA sits directly under the Now Spinning cassette so
               "Build your Setlist" lands in the first viewport on a phone,

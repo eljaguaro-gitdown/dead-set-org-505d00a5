@@ -58,7 +58,8 @@ describe("the Songbook numbers its entries Vol. N", () => {
     const printers = files.filter((rel) =>
       /issue_number|issueNumber/.test(readFileSync(resolve(root, rel), "utf8")),
     );
-    // Songbook, SongFeature, VersionPicker, HeroSection today. If a refactor
+    // Songbook, SongFeature, VersionPicker, and the home page's
+    // SongbookSpotlightCard (which took over from HeroSection) today. If a refactor
     // drops below this, the sweep below is passing over nothing.
     expect(printers.length).toBeGreaterThanOrEqual(4);
   });
