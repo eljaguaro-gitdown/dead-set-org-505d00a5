@@ -1,4 +1,5 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
+import { INTERNAL_SEND_HEADER, internalSendToken } from '../_shared/internalSend.ts'
 import { resolveCommentNotification } from './resolve.ts'
 
 const corsHeaders = {
@@ -111,9 +112,11 @@ Deno.serve(async (req) => {
   }
 
   // Send as the service role, through the same client call the daily and
-  // weekly reports use. send-transactional-email lets only the service role
-  // and admins send this template (#101), and this function has already
-  // checked the caller and looked up the recipient itself.
+  // weekly reports use, with the header that proves the key: the bearer token
+  // does not arrive as sent (see _shared/internalSend.ts).
+  // send-transactional-email lets only the service role and admins send this
+  // template (#101), and this function has already checked the caller and
+  // looked up the recipient itself.
   const { error: sendError } = await supabase.functions.invoke('send-transactional-email', {
     body: {
       templateName: 'comment-notification',
@@ -126,6 +129,7 @@ Deno.serve(async (req) => {
         setlistId,
       },
     },
+    headers: { [INTERNAL_SEND_HEADER]: await internalSendToken(serviceKey) },
   })
 
   if (sendError) {
