@@ -65,11 +65,11 @@ const AdminBetaNudge = () => {
     supabase
       .rpc("has_role", { _user_id: user.id, _role: "admin" })
       .then(({ data }) => {
+        // The admin role is the gate, here and in send-beta-nudge itself,
+        // which refuses anyone else. A hard-coded login email used to be a
+        // second gate, and it named an address the admin account does not
+        // sign in with, so the page bounced its only admin home.
         if (!data) {
-          navigate("/");
-          return;
-        }
-        if (user.email !== "grateful_jaguaro@dead-set.org") {
           navigate("/");
           return;
         }

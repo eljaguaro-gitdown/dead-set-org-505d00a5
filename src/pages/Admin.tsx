@@ -19,6 +19,7 @@ import PrivateRelayMonitor from "@/components/PrivateRelayMonitor";
 import DispatchSenderPanel from "@/components/DispatchSenderPanel";
 import GitHubSyncBadge from "@/components/GitHubSyncBadge";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
+import { readAdminTraffic, type TrafficStats } from "@/lib/adminTraffic";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -41,14 +42,6 @@ interface AdminUser {
   lastSignInAt: string | null;
   emailConfirmedAt: string | null;
   setlistCount: number;
-}
-
-interface TrafficStats {
-  totalPageViews: number;
-  totalUnique: number;
-  unique24h: number;
-  unique7d: number;
-  unique30d: number;
 }
 
 interface BackstageData {
@@ -103,7 +96,7 @@ const Admin = () => {
       console.error(usersRes.error);
     } else {
       setUsers(usersRes.data.users || []);
-      setTraffic(usersRes.data.traffic || null);
+      setTraffic(readAdminTraffic(usersRes.data.traffic));
     }
     const bsData = {
       wishlist: (wishlistRes.data as any[]) || [],
@@ -372,7 +365,7 @@ const Admin = () => {
           <div className="bg-card border border-border rounded-lg p-4">
             <p className="text-xs text-muted-foreground font-body uppercase tracking-wider">Visitors (24h)</p>
             <p className="font-display text-2xl text-card-foreground mt-1">
-              {loading ? "—" : traffic?.unique24h ?? 0}
+              {loading || !traffic ? "—" : traffic.unique24h}
             </p>
             <p
               className="text-[11px] text-muted-foreground font-body mt-0.5"
@@ -384,7 +377,7 @@ const Admin = () => {
           <div className="bg-card border border-border rounded-lg p-4">
             <p className="text-xs text-muted-foreground font-body uppercase tracking-wider">Visitors (7d)</p>
             <p className="font-display text-2xl text-card-foreground mt-1">
-              {loading ? "—" : traffic?.unique7d ?? 0}
+              {loading || !traffic ? "—" : traffic.unique7d}
             </p>
             <p
               className="text-[11px] text-muted-foreground font-body mt-0.5"
@@ -440,37 +433,26 @@ const Admin = () => {
             <h2 className="font-display text-sm text-card-foreground">Site Traffic</h2>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 p-4">
-            <div className="text-center">
-              <p className="text-xs text-muted-foreground font-body uppercase tracking-wider">Unique (24h)</p>
-              <p className="font-display text-2xl text-card-foreground mt-1">
-                {loading ? "—" : traffic?.unique24h ?? 0}
-              </p>
-            </div>
-            <div className="text-center">
-              <p className="text-xs text-muted-foreground font-body uppercase tracking-wider">Unique (7d)</p>
-              <p className="font-display text-2xl text-card-foreground mt-1">
-                {loading ? "—" : traffic?.unique7d ?? 0}
-              </p>
-            </div>
-            <div className="text-center">
-              <p className="text-xs text-muted-foreground font-body uppercase tracking-wider">Unique (30d)</p>
-              <p className="font-display text-2xl text-card-foreground mt-1">
-                {loading ? "—" : traffic?.unique30d ?? 0}
-              </p>
-            </div>
-            <div className="text-center">
-              <p className="text-xs text-muted-foreground font-body uppercase tracking-wider">All-Time Unique</p>
-              <p className="font-display text-2xl text-card-foreground mt-1">
-                {loading ? "—" : traffic?.totalUnique ?? 0}
-              </p>
-            </div>
-            <div className="text-center">
-              <p className="text-xs text-muted-foreground font-body uppercase tracking-wider">Total Page Views</p>
-              <p className="font-display text-2xl text-card-foreground mt-1">
-                {loading ? "—" : traffic?.totalPageViews ?? 0}
-              </p>
-            </div>
+            {([
+              ["Unique (24h)", traffic?.unique24h],
+              ["Unique (7d)", traffic?.unique7d],
+              ["Unique (30d)", traffic?.unique30d],
+              ["Page Views (24h)", traffic?.pageViews24h],
+              ["Page Views (30d)", traffic?.pageViews30d],
+            ] as const).map(([label, value]) => (
+              <div key={label} className="text-center">
+                <p className="text-xs text-muted-foreground font-body uppercase tracking-wider">{label}</p>
+                <p className="font-display text-2xl text-card-foreground mt-1">
+                  {loading || value == null ? "—" : value}
+                </p>
+              </div>
+            ))}
           </div>
+          <p className="px-4 pb-3 text-[11px] text-muted-foreground font-body">
+            {!loading && !traffic
+              ? "Traffic unavailable: PostHog didn't answer."
+              : "From PostHog: dead-set.org only, internal accounts and bots excluded."}
+          </p>
         </div>
 
         {/* Conversion Funnel */}
