@@ -198,13 +198,14 @@ export type Database = {
           next_week_teaser: string | null
           published: boolean
           set_number: number
+          shipped_on: string
           tag: Database["public"]["Enums"]["changelog_tag"]
           title: string
-          week_label: string
-          week_number: number
-          week_stats_bugs: number
-          week_stats_feedback: number
-          week_stats_updates: number
+          week_label: string | null
+          week_number: number | null
+          week_stats_bugs: number | null
+          week_stats_feedback: number | null
+          week_stats_updates: number | null
         }
         Insert: {
           created_at?: string
@@ -216,13 +217,14 @@ export type Database = {
           next_week_teaser?: string | null
           published?: boolean
           set_number?: number
+          shipped_on?: string
           tag: Database["public"]["Enums"]["changelog_tag"]
           title: string
-          week_label: string
-          week_number: number
-          week_stats_bugs?: number
-          week_stats_feedback?: number
-          week_stats_updates?: number
+          week_label?: string | null
+          week_number?: number | null
+          week_stats_bugs?: number | null
+          week_stats_feedback?: number | null
+          week_stats_updates?: number | null
         }
         Update: {
           created_at?: string
@@ -234,13 +236,14 @@ export type Database = {
           next_week_teaser?: string | null
           published?: boolean
           set_number?: number
+          shipped_on?: string
           tag?: Database["public"]["Enums"]["changelog_tag"]
           title?: string
-          week_label?: string
-          week_number?: number
-          week_stats_bugs?: number
-          week_stats_feedback?: number
-          week_stats_updates?: number
+          week_label?: string | null
+          week_number?: number | null
+          week_stats_bugs?: number | null
+          week_stats_feedback?: number | null
+          week_stats_updates?: number | null
         }
         Relationships: []
       }
@@ -2018,6 +2021,7 @@ export type Database = {
         Args: { _setlist_id: string }
         Returns: boolean
       }
+      slot_notes_text: { Args: { p_notes: string }; Returns: string }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
