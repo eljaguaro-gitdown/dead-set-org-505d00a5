@@ -91,6 +91,15 @@ Deno.serve(async (req) => {
           .maybeSingle();
         return !!data;
       },
+      // Only the service role may list users, so a token that can is one. See
+      // _shared/requireAdmin.ts: asked only of a token that claims the role.
+      isServiceRoleToken: async (token) => {
+        const probe = createClient(supabaseUrl, token, {
+          auth: { autoRefreshToken: false, persistSession: false },
+        });
+        const { error } = await probe.auth.admin.listUsers({ page: 1, perPage: 1 });
+        return !error;
+      },
     });
     if (!auth.ok) {
       return new Response(JSON.stringify({ error: auth.error }), {
