@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { readFileSync } from "fs";
 import { join } from "path";
-import { checkAdmin, type AdminCheckDeps } from "../../../supabase/functions/send-beta-nudge/requireAdmin";
+import { checkAdmin, type AdminCheckDeps } from "../../../supabase/functions/_shared/requireAdmin";
 
 /**
  * send-beta-nudge was callable with the public anon key: verify_jwt only
