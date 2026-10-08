@@ -41,3 +41,8 @@ supabase/.temp/
 .setlistfm-cache/
 setlistfm-derived.json
 report.json
+
+# Files Claude saves beside the project (Instagram slides, preview sheets).
+# They belong in Drive, not in the app's history: the folder turned up in
+# GitHub Desktop on 2026-10-08 as 16 uncommitted PNGs one click from main.
+Claude outputs/
