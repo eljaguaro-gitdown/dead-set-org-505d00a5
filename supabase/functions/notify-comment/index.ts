@@ -1,4 +1,5 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
+import { resolveCommentNotification } from './resolve.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -35,12 +36,10 @@ Deno.serve(async (req) => {
     })
   }
 
-  let body: {
-    setlistId: string
-    commentId: string
-    commenterName: string
-    preview: string
-  }
+  // The request names the setlist and the comment. The name and preview it
+  // also carries are ignored: they come from the stored comment and the
+  // caller's profile (#114).
+  let body: { setlistId?: unknown; commentId?: unknown }
   try {
     body = await req.json()
   } catch {
@@ -50,10 +49,33 @@ Deno.serve(async (req) => {
     })
   }
 
-  const { setlistId, commentId, commenterName, preview } = body
+  const { setlistId, commentId } = body
   if (!setlistId || !commentId) {
     return new Response(JSON.stringify({ error: 'Missing required fields' }), {
       status: 400,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })
+  }
+
+  // The comment must exist, be on this setlist, and be the caller's own.
+  // See ./resolve.ts.
+  const notice = await resolveCommentNotification(caller, setlistId, commentId, {
+    getComment: async (id) => {
+      const { data } = await supabase
+        .from('setlist_comments')
+        .select('setlist_id, user_id, content')
+        .eq('id', id)
+        .maybeSingle()
+      return data ?? null
+    },
+    displayName: async (userId) => {
+      const { data } = await supabase.from('profiles').select('display_name').eq('user_id', userId).maybeSingle()
+      return data?.display_name ?? null
+    },
+  })
+  if (!notice.ok) {
+    return new Response(JSON.stringify({ error: notice.error }), {
+      status: notice.status,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   }
@@ -62,7 +84,7 @@ Deno.serve(async (req) => {
   const { data: setlist, error: setlistError } = await supabase
     .from('setlists')
     .select('creator_id, title')
-    .eq('id', setlistId)
+    .eq('id', setlistId as string)
     .maybeSingle()
 
   if (setlistError || !setlist) {
@@ -98,9 +120,9 @@ Deno.serve(async (req) => {
       recipientEmail: recipient.email,
       idempotencyKey: `comment-notify-${commentId}`,
       templateData: {
-        commenterName: commenterName || 'A Deadhead',
+        commenterName: notice.commenterName,
         setlistTitle: setlist.title || 'your setlist',
-        preview: (preview || '').slice(0, 200),
+        preview: notice.preview,
         setlistId,
       },
     },
