@@ -1,6 +1,6 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { BETA_NUDGE_HTML } from './template.ts'
-import { checkAdmin } from './requireAdmin.ts'
+import { checkAdmin } from '../_shared/requireAdmin.ts'
 
 // SENDER_DOMAIN must match the verified subdomain delegated to Lovable's nameservers.
 // Sending from the root dead-set.org would be rejected ("No email domain record found").
@@ -143,7 +143,7 @@ Deno.serve(async (req) => {
 
   // Admin or service role only, and before anything reads a recipient: the
   // anon key passes verify_jwt, and a dry run returns the recipient's email.
-  // See requireAdmin.ts.
+  // See _shared/requireAdmin.ts.
   const auth = await checkAdmin(req.headers.get('Authorization'), {
     serviceRoleKey: serviceKey,
     getUserId: async (authHeader) => {
