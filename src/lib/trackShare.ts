@@ -1,7 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { captureEvent, captureException } from "@/lib/posthog";
 
-type ShareType = "app_link" | "setlist" | "poster";
+export type ShareType = "app_link" | "setlist" | "poster" | "songbook";
 type ShareChannel =
   | "copy_link"
   | "twitter"
@@ -44,6 +44,18 @@ export const setlistIdFromShareUrl = (url: string): string | undefined => {
   );
   return match ? match[1].toLowerCase() : undefined;
 };
+
+/**
+ * What kind of thing a share url points at, for `share_events.share_type`.
+ *
+ * Derived for the same reason as setlistIdFromShareUrl: the dropdown and the
+ * DM dialog hard-coded "setlist", so every Songbook issue shared through them
+ * was recorded as a setlist share with no setlist. That hid Songbook sharing
+ * and read as a tracking bug in the setlist numbers (e.g. /songbook/althea on
+ * 2026-10-06).
+ */
+export const shareTypeFromShareUrl = (url: string): "setlist" | "songbook" =>
+  /\/songbook\//i.test(url) ? "songbook" : "setlist";
 
 /** Fire-and-forget share event logger */
 export const trackShare = async ({
