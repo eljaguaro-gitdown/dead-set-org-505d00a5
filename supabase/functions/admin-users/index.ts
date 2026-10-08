@@ -1,4 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import { POSTHOG_EXTERNAL_TRAFFIC_WHERE, queryPostHog } from "../_shared/posthogQuery.ts";
+import { buildAdminTrafficSql, toAdminTraffic } from "./traffic.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -295,24 +297,17 @@ Deno.serve(async (req) => {
     }
 
     // Default: list users — fetch users, profiles, setlist counts, and
-    // traffic stats in parallel. Traffic stats are computed in a single
-    // SQL function instead of pulling the full page_visits table client-side
-    // (which was causing 60-130s response times and mobile timeouts).
-    // Traffic: refresh the cache (best-effort), then read it directly.
-    // get_admin_traffic_stats RPC can't be used here — it checks
-    // has_role(auth.uid()) and the service-role client has no uid, so the
-    // call raises and the panel rendered zeros. This function already
-    // verified the caller is an admin above.
-    const [usersRes, profilesRes, setlistCountsRes, trafficRes] = await Promise.all([
+    // traffic stats in parallel. Traffic comes from PostHog with the shared
+    // external-traffic filter (production host, internal cohort and bots
+    // excluded), the same numbers the daily and weekly reports use. It used
+    // to come from page_visits, which counted every Lovable preview reload
+    // and admin session as a visitor. See traffic.ts. queryPostHog never
+    // throws; a failure gives null, which the dashboard shows as "—".
+    const [usersRes, profilesRes, setlistCountsRes, trafficRows] = await Promise.all([
       adminClient.auth.admin.listUsers({ perPage: 200 }),
       adminClient.from("profiles").select("user_id, display_name, avatar_url"),
       adminClient.from("setlists").select("creator_id").limit(20000),
-      adminClient
-        .rpc("refresh_admin_traffic_stats")
-        .then(
-          () => adminClient.from("admin_traffic_stats_cache").select("*").eq("id", 1).maybeSingle(),
-          () => adminClient.from("admin_traffic_stats_cache").select("*").eq("id", 1).maybeSingle(),
-        ),
+      queryPostHog("admin-users traffic", buildAdminTrafficSql(POSTHOG_EXTERNAL_TRAFFIC_WHERE)),
     ]);
 
     if (usersRes.error) throw usersRes.error;
@@ -327,12 +322,7 @@ Deno.serve(async (req) => {
       countMap.set(s.creator_id, (countMap.get(s.creator_id) || 0) + 1);
     });
 
-    const trafficRow = trafficRes.data ?? null;
-    const totalPageViews = Number(trafficRow?.total_page_views ?? 0);
-    const totalUnique = Number(trafficRow?.total_unique ?? 0);
-    const unique24h = Number(trafficRow?.unique_24h ?? 0);
-    const unique7d = Number(trafficRow?.unique_7d ?? 0);
-    const unique30d = Number(trafficRow?.unique_30d ?? 0);
+    const traffic = toAdminTraffic(trafficRows);
 
     const result = (users || []).map((u: any) => {
       const profile = profileMap.get(u.id);
@@ -350,13 +340,7 @@ Deno.serve(async (req) => {
 
     return new Response(JSON.stringify({
       users: result,
-      traffic: {
-        totalPageViews: totalPageViews || 0,
-        totalUnique,
-        unique24h,
-        unique7d,
-        unique30d,
-      },
+      traffic,
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
