@@ -20,6 +20,7 @@ import DispatchSenderPanel from "@/components/DispatchSenderPanel";
 import GitHubSyncBadge from "@/components/GitHubSyncBadge";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { readAdminTraffic, type TrafficStats } from "@/lib/adminTraffic";
+import { readAdminFunnel, type AdminFunnel } from "@/lib/adminFunnel";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -42,6 +43,13 @@ interface AdminUser {
   lastSignInAt: string | null;
   emailConfirmedAt: string | null;
   setlistCount: number;
+  /** The owner or a test account (admin-users, _shared/internalAccounts.ts). */
+  isInternal?: boolean;
+}
+
+interface InternalIds {
+  userIds: string[];
+  visitorIds: string[];
 }
 
 interface BackstageData {
@@ -59,6 +67,8 @@ const Admin = () => {
   const { user, loading: authLoading } = useAuth();
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [traffic, setTraffic] = useState<TrafficStats | null>(null);
+  const [funnel, setFunnel] = useState<AdminFunnel | null>(null);
+  const [internal, setInternal] = useState<InternalIds | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [backstage, setBackstage] = useState<BackstageData>({ wishlist: [], bugs: [], shares: [] });
@@ -97,6 +107,13 @@ const Admin = () => {
     } else {
       setUsers(usersRes.data.users || []);
       setTraffic(readAdminTraffic(usersRes.data.traffic));
+      setFunnel(readAdminFunnel(usersRes.data.funnel));
+      const ids = usersRes.data.internal;
+      setInternal(
+        ids && Array.isArray(ids.userIds) && Array.isArray(ids.visitorIds)
+          ? { userIds: ids.userIds, visitorIds: ids.visitorIds }
+          : null,
+      );
     }
     const bsData = {
       wishlist: (wishlistRes.data as any[]) || [],
@@ -289,8 +306,18 @@ const Admin = () => {
    * saved session never re-signs-in and never counts here. It is a floor on
    * signed-in activity, never a measure of it — hence the label.
    */
+  // Fans only. Every count below used to include the owner and the test
+  // accounts: on 2026-10-08 the admin alone held 158 of 261 setlists, and was
+  // the only "signed in" user in the last 24 hours. An older admin-users sends
+  // no isInternal flag, in which case nobody is excluded and the tiles say so.
+  const internalKnown = users.some((u) => typeof u.isInternal === "boolean");
+  const fans = users.filter((u) => !u.isInternal);
+  const internalCount = users.length - fans.length;
+  const fanSetlists = fans.reduce((sum, u) => sum + u.setlistCount, 0);
+  const internalSetlists = users.reduce((sum, u) => sum + u.setlistCount, 0) - fanSetlists;
+
   const signedInWithin = (windowMs: number) =>
-    users.filter(
+    fans.filter(
       (u) =>
         u.lastSignInAt &&
         Date.now() - new Date(u.lastSignInAt).getTime() < windowMs
@@ -354,9 +381,12 @@ const Admin = () => {
         {/* User Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <div className="bg-card border border-border rounded-lg p-4">
-            <p className="text-xs text-muted-foreground font-body uppercase tracking-wider">Total Users</p>
+            <p className="text-xs text-muted-foreground font-body uppercase tracking-wider">Fans signed up</p>
             <p className="font-display text-2xl text-card-foreground mt-1">
-              {loading ? "—" : users.length}
+              {loading ? "—" : fans.length}
+            </p>
+            <p className="text-[11px] text-muted-foreground font-body mt-0.5">
+              {loading ? "—" : internalKnown ? `+${internalCount} yours / test, not counted` : "includes yours (update admin-users)"}
             </p>
           </div>
           {/* Visitors lead, signed-in rides underneath: nearly everyone here
@@ -387,9 +417,12 @@ const Admin = () => {
             </p>
           </div>
           <div className="bg-card border border-border rounded-lg p-4">
-            <p className="text-xs text-muted-foreground font-body uppercase tracking-wider">Total Setlists</p>
+            <p className="text-xs text-muted-foreground font-body uppercase tracking-wider">Fans' setlists</p>
             <p className="font-display text-2xl text-card-foreground mt-1">
-              {loading ? "—" : users.reduce((sum, u) => sum + u.setlistCount, 0)}
+              {loading ? "—" : fanSetlists}
+            </p>
+            <p className="text-[11px] text-muted-foreground font-body mt-0.5">
+              {loading ? "—" : internalKnown ? `+${internalSetlists} yours / test, not counted` : "includes yours (update admin-users)"}
             </p>
           </div>
         </div>
@@ -457,15 +490,17 @@ const Admin = () => {
 
         {/* Conversion Funnel */}
         <FunnelWidget
-          enabled={isAdmin}
-          signupDates={users.map((u) => u.createdAt).filter(Boolean)}
-          signupRecords={users
-            .filter((u) => u.id && u.createdAt)
-            .map((u) => ({ id: u.id, createdAt: u.createdAt }))}
+          funnel={funnel}
+          loading={loading}
+          signupDates={fans.map((u) => u.createdAt).filter(Boolean)}
         />
 
         {/* Sign-up Funnel (auth_events) */}
-        <AuthFunnelWidget enabled={isAdmin} />
+        <AuthFunnelWidget
+          enabled={isAdmin}
+          internalUserIds={internal?.userIds}
+          internalVisitorIds={internal?.visitorIds}
+        />
 
         {/* Listening Analytics */}
         <ListeningAnalyticsWidget enabled={isAdmin} />

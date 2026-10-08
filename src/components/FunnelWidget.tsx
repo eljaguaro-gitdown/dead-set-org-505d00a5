@@ -1,190 +1,61 @@
-import { useEffect, useMemo, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { Activity, Loader2 } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Activity } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { lastPacificDays, pacificDay, type AdminFunnel } from "@/lib/adminFunnel";
 
-interface SignupRecord {
-  id: string;
-  createdAt: string;
-}
+/**
+ * Landing → sign-up, in people.
+ *
+ * Every stage is a count of distinct outside people from PostHog (dead-set.org
+ * only, the owner's accounts and bots excluded), served by admin-users; sign-
+ * ups are new accounts that are not internal. This widget used to read
+ * page_visits and sum each day's unique visitors, so its 7-day "Visitors" read
+ * 283 against 18 real people on 2026-10-08, and every percentage divided by
+ * that. A window's total is now its own count of people, never a sum of days.
+ */
 
 interface FunnelWidgetProps {
-  /** Pre-loaded signup timestamps from the admin-users edge function (auth.users source of truth) */
+  /** From admin-users; null while loading or when PostHog did not answer. */
+  funnel: AdminFunnel | null;
+  loading: boolean;
+  /** Account creation times of NON-internal users. */
   signupDates: string[];
-  /** Optional: full signup records (id + createdAt) so we can cross-reference attribution */
-  signupRecords?: SignupRecord[];
-  enabled: boolean;
 }
 
 type Range = 7 | 30;
 
-interface DayRow {
-  day: string; // YYYY-MM-DD
-  visitors: number;
-  ctaClicks: number;
-  ctaClicksV2: number; // above-the-fold variant
-  authVisits: number;
-  signups: number;
-}
+/** First day landing-button taps were recorded on dead-set.org (landing_cta_clicked). */
+const CTA_TRACKED_SINCE = "Oct 3";
 
-const fmtDay = (d: Date) => d.toISOString().slice(0, 10);
-
-const buildDayBuckets = (days: number): Record<string, DayRow> => {
-  const buckets: Record<string, DayRow> = {};
-  const now = new Date();
-  for (let i = days - 1; i >= 0; i--) {
-    const d = new Date(now);
-    d.setUTCDate(d.getUTCDate() - i);
-    const key = fmtDay(d);
-    buckets[key] = { day: key, visitors: 0, ctaClicks: 0, ctaClicksV2: 0, authVisits: 0, signups: 0 };
-  }
-  return buckets;
-};
-
-interface LovableStats {
-  visitors24h: number;
-  signups24h: number;
-  visitorsTotal: number;
-  signupsTotal: number;
-}
-
-const FunnelWidget = ({ signupDates, signupRecords, enabled }: FunnelWidgetProps) => {
+const FunnelWidget = ({ funnel, loading, signupDates }: FunnelWidgetProps) => {
   const [range, setRange] = useState<Range>(7);
-  const [loading, setLoading] = useState(true);
-  const [rows, setRows] = useState<DayRow[]>([]);
-  const [lovable, setLovable] = useState<LovableStats | null>(null);
 
-  useEffect(() => {
-    if (!enabled) return;
-    let cancelled = false;
+  const days = useMemo(() => lastPacificDays(range), [range]);
 
-    const load = async () => {
-      setLoading(true);
-      const sinceDate = new Date();
-      sinceDate.setUTCDate(sinceDate.getUTCDate() - (range - 1));
-      sinceDate.setUTCHours(0, 0, 0, 0);
-      const sinceIso = sinceDate.toISOString();
+  const rows = useMemo(() => {
+    const byDay = new Map((funnel?.days ?? []).map((d) => [d.day, d]));
+    const signupsByDay = new Map<string, number>();
+    for (const ts of signupDates) {
+      const day = pacificDay(ts);
+      signupsByDay.set(day, (signupsByDay.get(day) ?? 0) + 1);
+    }
+    return days.map((day) => ({
+      day,
+      visitors: byDay.get(day)?.visitors ?? 0,
+      ctaPeople: byDay.get(day)?.ctaPeople ?? 0,
+      authPeople: byDay.get(day)?.authPeople ?? 0,
+      signups: signupsByDay.get(day) ?? 0,
+    }));
+  }, [funnel, days, signupDates]);
 
-      const buckets = buildDayBuckets(range);
+  // Window totals: people from PostHog's own window count; sign-ups summed
+  // (each account is created once, so summing days does not double-count).
+  const totals = funnel?.totals[range] ?? null;
+  const signups = rows.reduce((n, r) => n + r.signups, 0);
 
-      // Fetch in parallel — admins have SELECT on both tables via RLS
-      const dayMs = 86_400_000;
-      const since24h = new Date(Date.now() - dayMs).toISOString();
-      const [visitsRes, ctaRes, lovableAttrRes, lovableVisits24hRes] = await Promise.all([
-        supabase
-          .from("page_visits")
-          .select("visitor_id, page_path, created_at")
-          .gte("created_at", sinceIso)
-          .limit(50_000),
-        supabase
-          .from("share_events")
-          .select("created_at, channel")
-          .eq("share_type", "cta_click")
-          .gte("created_at", sinceIso)
-          .limit(50_000),
-        supabase
-          .from("visitor_attribution")
-          .select("visitor_id, user_id, signed_up_at")
-          .eq("first_source", "lovable")
-          .limit(50_000),
-        supabase
-          .from("page_visits")
-          .select("visitor_id")
-          .eq("landing_source", "lovable")
-          .gte("created_at", since24h)
-          .limit(50_000),
-      ]);
-
-      if (cancelled) return;
-
-      // Track unique visitors per day
-      const dailyVisitors: Record<string, Set<string>> = {};
-      for (const v of visitsRes.data ?? []) {
-        const day = fmtDay(new Date(v.created_at));
-        if (!buckets[day]) continue;
-        if (!dailyVisitors[day]) dailyVisitors[day] = new Set();
-        dailyVisitors[day].add(v.visitor_id);
-        if (v.page_path === "/auth" || v.page_path?.startsWith("/auth?")) {
-          buckets[day].authVisits++;
-        }
-      }
-      for (const [day, set] of Object.entries(dailyVisitors)) {
-        if (buckets[day]) buckets[day].visitors = set.size;
-      }
-
-      for (const c of ctaRes.data ?? []) {
-        const day = fmtDay(new Date(c.created_at));
-        if (!buckets[day]) continue;
-        buckets[day].ctaClicks++;
-        if (c.channel === "hero_primary_builder_v2_above_fold") {
-          buckets[day].ctaClicksV2++;
-        }
-      }
-
-      for (const ts of signupDates) {
-        const day = fmtDay(new Date(ts));
-        if (buckets[day]) buckets[day].signups++;
-      }
-
-      // Lovable attribution stats — count signups by joining against TRUE signup records
-      // (auth.users.created_at), not visitor_attribution.signed_up_at, which fires on
-      // re-link from new devices for existing users.
-      const lovableAttr = lovableAttrRes.data ?? [];
-      const lovable24hVisitorIds = new Set(
-        (lovableVisits24hRes.data ?? []).map((v) => v.visitor_id),
-      );
-      const signups24hCutoff = Date.now() - dayMs;
-      const recordById = new Map<string, number>(
-        (signupRecords ?? []).map((s) => [s.id, new Date(s.createdAt).getTime()]),
-      );
-      const lovableUserIds = lovableAttr
-        .map((a) => a.user_id)
-        .filter((uid): uid is string => !!uid);
-      const lovableSignupsTotal = signupRecords
-        ? lovableUserIds.filter((uid) => recordById.has(uid)).length
-        : lovableUserIds.length; // fallback: legacy behavior if records aren't passed yet
-      const lovableSignups24h = signupRecords
-        ? lovableUserIds.filter((uid) => {
-            const ts = recordById.get(uid);
-            return ts !== undefined && ts > signups24hCutoff;
-          }).length
-        : lovableAttr.filter(
-            (a) => a.signed_up_at && new Date(a.signed_up_at).getTime() > signups24hCutoff,
-          ).length;
-      setLovable({
-        visitors24h: lovable24hVisitorIds.size,
-        signups24h: lovableSignups24h,
-        visitorsTotal: lovableAttr.length,
-        signupsTotal: lovableSignupsTotal,
-      });
-
-      setRows(Object.values(buckets).reverse()); // newest first
-      setLoading(false);
-    };
-
-    load();
-    return () => {
-      cancelled = true;
-    };
-  }, [enabled, range, signupDates, signupRecords]);
-
-  const totals = useMemo(
-    () =>
-      rows.reduce(
-        (acc, r) => ({
-          visitors: acc.visitors + r.visitors,
-          ctaClicks: acc.ctaClicks + r.ctaClicks,
-          ctaClicksV2: acc.ctaClicksV2 + r.ctaClicksV2,
-          authVisits: acc.authVisits + r.authVisits,
-          signups: acc.signups + r.signups,
-        }),
-        { visitors: 0, ctaClicks: 0, ctaClicksV2: 0, authVisits: 0, signups: 0 },
-      ),
-    [rows],
-  );
-
-  const pct = (n: number, d: number) => (d > 0 ? `${((n / d) * 100).toFixed(1)}%` : "—");
+  const pct = (n: number, d: number | undefined) => (d && d > 0 ? `${((n / d) * 100).toFixed(1)}%` : "—");
   const maxVisitors = Math.max(1, ...rows.map((r) => r.visitors));
+  const show = (v: number | undefined) => (loading || v == null ? "—" : v);
 
   return (
     <div className="bg-card border border-border rounded-lg overflow-hidden">
@@ -206,90 +77,70 @@ const FunnelWidget = ({ signupDates, signupRecords, enabled }: FunnelWidgetProps
         </div>
       </div>
 
-      {loading ? (
-        <div className="p-8 flex items-center justify-center">
-          <Loader2 className="w-5 h-5 text-primary animate-spin" />
-        </div>
-      ) : (
-        <>
-          {/* Totals strip */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-y sm:divide-y-0 divide-border border-b border-border">
-            <FunnelStat label="Visitors" value={totals.visitors} />
-            <FunnelStat label="CTA clicks" value={totals.ctaClicks} sub={pct(totals.ctaClicks, totals.visitors)} />
-            <FunnelStat label="/auth visits" value={totals.authVisits} sub={pct(totals.authVisits, totals.visitors)} />
-            <FunnelStat label="Signups" value={totals.signups} sub={pct(totals.signups, totals.visitors)} highlight />
-          </div>
+      {/* Totals strip — people, not visits */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-y sm:divide-y-0 divide-border border-b border-border">
+        <FunnelStat label="Visitors" value={show(totals?.visitors)} />
+        <FunnelStat
+          label="Tapped a landing button"
+          value={show(totals?.ctaPeople)}
+          sub={totals ? pct(totals.ctaPeople, totals.visitors) : undefined}
+        />
+        <FunnelStat
+          label="Reached /auth"
+          value={show(totals?.authPeople)}
+          sub={totals ? pct(totals.authPeople, totals.visitors) : undefined}
+        />
+        <FunnelStat
+          label="Sign-ups"
+          value={loading ? "—" : signups}
+          sub={totals ? pct(signups, totals.visitors) : undefined}
+          highlight
+        />
+      </div>
 
-          {/* Lovable referral attribution */}
-          {lovable && (
-            <div className="px-4 py-3 border-b border-border bg-primary/5">
-              <div className="flex items-center justify-between gap-3 flex-wrap">
-                <div className="flex items-center gap-2">
-                  <span className="text-base">🌀</span>
-                  <h3 className="font-display text-sm text-accent-foreground">Lovable Referrals</h3>
-                  <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-                    launched apr 24
+      {/* Daily breakdown */}
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm font-mono">
+          <thead>
+            <tr className="text-xs uppercase tracking-wider text-muted-foreground border-b border-border">
+              <th className="text-left px-4 py-2">Day (PT)</th>
+              <th className="text-right px-3 py-2">Visitors</th>
+              <th className="text-right px-3 py-2">Tapped</th>
+              <th className="text-right px-3 py-2">/auth</th>
+              <th className="text-right px-4 py-2">Sign-ups</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r) => (
+              <tr key={r.day} className="border-b border-border/40 last:border-0">
+                <td className="px-4 py-2 text-card-foreground tabular-nums">{r.day.slice(5)}</td>
+                <td className="px-3 py-2 text-right tabular-nums">
+                  <div className="inline-flex items-center gap-2 justify-end w-full">
+                    <div
+                      className="h-1.5 bg-primary/40 rounded-sm"
+                      style={{ width: `${(r.visitors / maxVisitors) * 60}px` }}
+                    />
+                    <span className="text-card-foreground">{funnel ? r.visitors : "—"}</span>
+                  </div>
+                </td>
+                <td className="px-3 py-2 text-right tabular-nums text-muted-foreground">{funnel ? r.ctaPeople : "—"}</td>
+                <td className="px-3 py-2 text-right tabular-nums text-muted-foreground">{funnel ? r.authPeople : "—"}</td>
+                <td className="px-4 py-2 text-right tabular-nums">
+                  <span className={r.signups > 0 ? "text-accent-foreground font-bold" : "text-muted-foreground"}>
+                    {r.signups > 0 ? `+${r.signups}` : "0"}
                   </span>
-                </div>
-                <div className="flex items-center gap-4 text-xs font-mono">
-                  <span className="text-muted-foreground">
-                    24h: <span className="text-card-foreground font-bold">{lovable.visitors24h}</span> visits ·{" "}
-                    <span className="text-accent-foreground font-bold">{lovable.signups24h}</span> signups
-                  </span>
-                  <span className="text-muted-foreground">
-                    total: <span className="text-card-foreground font-bold">{lovable.visitorsTotal}</span> →{" "}
-                    <span className="text-accent-foreground font-bold">{lovable.signupsTotal}</span> ({pct(lovable.signupsTotal, lovable.visitorsTotal)})
-                  </span>
-                </div>
-              </div>
-            </div>
-          )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
-          {/* Daily breakdown */}
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm font-mono">
-              <thead>
-                <tr className="text-xs uppercase tracking-wider text-muted-foreground border-b border-border">
-                  <th className="text-left px-4 py-2">Day</th>
-                  <th className="text-right px-3 py-2">Visitors</th>
-                  <th className="text-right px-3 py-2">CTA</th>
-                  <th className="text-right px-3 py-2">/auth</th>
-                  <th className="text-right px-4 py-2">Signups</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((r) => (
-                  <tr key={r.day} className="border-b border-border/40 last:border-0">
-                    <td className="px-4 py-2 text-card-foreground tabular-nums">{r.day.slice(5)}</td>
-                    <td className="px-3 py-2 text-right tabular-nums">
-                      <div className="inline-flex items-center gap-2 justify-end w-full">
-                        <div
-                          className="h-1.5 bg-primary/40 rounded-sm"
-                          style={{ width: `${(r.visitors / maxVisitors) * 60}px` }}
-                        />
-                        <span className="text-card-foreground">{r.visitors}</span>
-                      </div>
-                    </td>
-                    <td className="px-3 py-2 text-right tabular-nums text-muted-foreground">{r.ctaClicks}</td>
-                    <td className="px-3 py-2 text-right tabular-nums text-muted-foreground">{r.authVisits}</td>
-                    <td className="px-4 py-2 text-right tabular-nums">
-                      <span className={r.signups > 0 ? "text-accent-foreground font-bold" : "text-muted-foreground"}>
-                        {r.signups > 0 ? `+${r.signups}` : "0"}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          <p className="px-4 py-2 text-xs font-body text-muted-foreground border-t border-border">
-            CTA clicks tracked from landing-page hero buttons. Of {totals.ctaClicks} total,{" "}
-            <span className="text-accent-foreground font-bold">{totals.ctaClicksV2}</span> came from the new
-            above-the-fold mobile variant. Older clicks may be missing if tracking was added recently.
-          </p>
-        </>
-      )}
+      <p className="px-4 py-2 text-xs font-body text-muted-foreground border-t border-border">
+        {!loading && !funnel
+          ? "Funnel unavailable: PostHog didn't answer, or the admin-users function predates this view."
+          : `People, not visits: dead-set.org only, your accounts and bots excluded. A window's total counts each person once, so it can be less than the sum of its days. Landing-button taps are recorded from ${CTA_TRACKED_SINCE}.`}
+      </p>
     </div>
   );
 };
@@ -301,7 +152,7 @@ const FunnelStat = ({
   highlight,
 }: {
   label: string;
-  value: number;
+  value: number | string;
   sub?: string;
   highlight?: boolean;
 }) => (

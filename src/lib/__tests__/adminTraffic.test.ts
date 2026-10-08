@@ -68,7 +68,7 @@ describe("admin-users uses PostHog for traffic", () => {
   it("queries PostHog with the shared external-traffic filter and returns the mapped row", () => {
     expect(src).toMatch(/queryPostHog\("admin-users traffic", buildAdminTrafficSql\(POSTHOG_EXTERNAL_TRAFFIC_WHERE\)\)/);
     expect(src).toMatch(/const traffic = toAdminTraffic\(trafficRows\)/);
-    expect(src).toMatch(/\btraffic,\s*\n\s*\}\)/);
+    expect(src).toMatch(/JSON\.stringify\(\{\s*users: result,\s*traffic,/);
   });
 
   it("no longer reads the page_visits traffic cache", () => {
