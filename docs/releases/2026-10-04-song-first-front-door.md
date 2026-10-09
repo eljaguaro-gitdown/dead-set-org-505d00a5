@@ -112,6 +112,25 @@ sign-ins down.** That is the softened share gate doing exactly what it was
 designed to do. Whether it is a win depends on whether the shares bring anyone
 back — look at new visitors arriving on a `/versions/` URL.
 
+## Changed during the window
+
+Written down so the review does not read a design change as a result.
+
+- **2026-10-08 — the Songbook card under the picker was redesigned and now
+  rotates weekly** (`src/lib/songbookSpotlight.ts`,
+  `SongbookSpotlightCard.tsx`). It was a play button for Vol. 2's benchmark
+  version. It is now the issue in miniature: headline, first-to-last lifespan,
+  a stub that plays the first or the last time they played the song, and the
+  sleeper count. It changes song every Monday (UTC), walking the editorial
+  issues and then the community entries. The first week is still Crazy
+  Fingers; **Oct 12 is Shakedown Street and Oct 19 is Althea**, both inside the
+  window. The card plays on the home page without passing through the
+  picker, so a rise in home-page plays here can come *out of*
+  `version_picker_viewed`. Segment by `songbook_spotlight_played` (carries
+  `slug` and `night`) before reading the primary ratio. **Live only from the
+  publish that carries it**: check the `/admin` sync badge for the sha rather
+  than assuming the merge date.
+
 ## Known gaps on launch day
 
 Stated plainly so the review does not mistake them for results:
