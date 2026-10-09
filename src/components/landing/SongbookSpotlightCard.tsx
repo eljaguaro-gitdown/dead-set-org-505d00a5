@@ -449,13 +449,9 @@ const SongbookSpotlightCard = ({ spotlight: s }: { spotlight: SongbookSpotlight 
         </div>
 
         <h2 id="sb-spot-title" className="sb-spot__title">{s.title}</h2>
-        {s.headline ? (
-          <p className="sb-spot__hook">{s.headline}</p>
-        ) : s.mappedBy ? (
-          // No headline is invented for a community entry. The credit goes
-          // here instead: the shelf exists to say who got there first.
-          <p className="sb-spot__hook">First mapped by {s.mappedBy}</p>
-        ) : null}
+        {/* A community entry has no headline, and none is invented. Nor is a
+            name put here: the guide's own page carries the credit. */}
+        {s.headline && <p className="sb-spot__hook">{s.headline}</p>}
 
         {(s.first.year || s.last.year) && (
           <div

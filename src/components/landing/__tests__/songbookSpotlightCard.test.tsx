@@ -54,7 +54,6 @@ const crazyFingers = (over: Partial<SongbookSpotlight> = {}): SongbookSpotlight 
   songId: "song-cf",
   issueNumber: 2,
   headline: "They put it down for 417 shows. It came back a different song.",
-  mappedBy: null,
   timesPlayed: 145,
   first: end({
     which: "first", date: "1975-06-17", label: "June 17, 1975", year: "1975",
@@ -76,7 +75,6 @@ const shakedown = (): SongbookSpotlight => ({
   songId: "song-ss",
   issueNumber: 1,
   headline: "One night is a moment. Seventeen years is a life.",
-  mappedBy: null,
   timesPlayed: 163,
   first: end({ which: "first", date: "1978-08-31", label: "Aug 31, 1978", year: "1978", venue: "Red Rocks Amphitheatre" }),
   last: end({
@@ -93,7 +91,6 @@ const althea = (nights = 6): SongbookSpotlight => ({
   songId: "song-al",
   issueNumber: null,
   headline: null,
-  mappedBy: "ric neil",
   timesPlayed: 269,
   first: end({ which: "first", date: "1979-08-04", label: "August 4, 1979", year: "1979" }),
   last: end({ which: "last", date: "1995-07-08", label: "July 8, 1995", year: "1995" }),
@@ -148,10 +145,11 @@ describe("SongbookSpotlightCard — what it says", () => {
     expect(stub()).toHaveTextContent("three shows before the band's last night");
   });
 
-  it("credits a community entry, counts its nights, and never calls it an issue or claims sleepers", () => {
+  it("names nobody on a community entry, counts its nights, and never calls it an issue or claims sleepers", () => {
     mocks.findRecordingForDate.mockResolvedValue(null);
-    renderCard(althea());
-    expect(screen.getByText("First mapped by ric neil")).toBeInTheDocument();
+    const { container } = renderCard(althea());
+    expect(container.querySelector(".sb-spot__hook")).toBeNull();
+    expect(screen.queryByText(/mapped by/i)).toBeNull();
     const read = screen.getByRole("link");
     expect(read).toHaveAttribute("href", "/songbook/althea");
     expect(norm(read.textContent)).toBe("6nights worth knowingRead the guide →");

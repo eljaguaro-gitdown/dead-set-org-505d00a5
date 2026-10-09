@@ -53,7 +53,6 @@ const community = (slug: string, title: string, createdAt: string, extra: Partia
   songId: `song-${slug}`,
   since: createdAt,
   setlistId: `set-${slug}`,
-  creatorId: "user-1",
   firstPlayed: null,
   lastPlayed: null,
   timesPlayed: null,
@@ -293,13 +292,14 @@ describe("communitySpotlight", () => {
       night(3, null, null, null),
       night(6, "1995-07-06", "Riverport Amphitheatre", "https://archive.org/details/gd95-07-06"),
     ],
-    "grateful_jaguaro",
   );
 
-  it("credits who mapped it and invents no headline", () => {
+  it("invents no headline and carries no name: the guide's page credits its mapper, the front door does not", () => {
     expect(stella.headline).toBeNull();
-    expect(stella.mappedBy).toBe("grateful_jaguaro");
     expect(stella.issueNumber).toBeNull();
+    expect(Object.keys(stella).sort()).toEqual(
+      ["finding", "first", "headline", "issueNumber", "kind", "last", "slug", "songId", "timesPlayed", "title"],
+    );
   });
 
   it("counts the nights that name a date, as the issue page's Play all does", () => {
@@ -321,7 +321,7 @@ describe("communitySpotlight", () => {
   });
 
   it("claims nothing when the guide has no dated nights", () => {
-    const empty = communitySpotlight(community("x", "X", "2026-10-06"), [night(1, null, null, null)], "a Deadhead");
+    const empty = communitySpotlight(community("x", "X", "2026-10-06"), [night(1, null, null, null)]);
     expect(empty.finding).toBeNull();
     expect(preferredEnd(empty)).toBeNull();
   });

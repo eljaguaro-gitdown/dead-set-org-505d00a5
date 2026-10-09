@@ -28,8 +28,14 @@ import type { PlayableSlot } from "@/contexts/AudioPlayerContext";
  * Community entries ride in the same rotation. 2 of the 8 songs on the shelf
  * are editorial issues; with only those, the card would repeat every other
  * week. A community entry is never labelled an issue (the shelf's own rule),
- * and its card is built from what is actually known: lifespan from `songs`,
- * the nights from the guide, the credit from the profile.
+ * and its card is built from what is actually known: lifespan from `songs`
+ * and the nights from the guide.
+ *
+ * The card names nobody. The guide's own page credits whoever mapped it; the
+ * front door is the community's. When the rotation went in, 5 of the 6
+ * community entries had one mapper, the founder, which would have put one
+ * handle on the home page 5 weeks in 8. So the name is not loaded at all,
+ * and the card cannot print what it was never given.
  *
  * Adding a song to the shelf shifts the positions after it, so the card can
  * change mid-week when something is published. Same trade featuredRotation
@@ -68,7 +74,6 @@ export interface IssueEntry extends ShelfBase {
 export interface CommunityEntry extends ShelfBase {
   kind: "community";
   setlistId: string;
-  creatorId: string;
   /** From `songs`, which is what the community issue page prints too. */
   firstPlayed: string | null;
   lastPlayed: string | null;
@@ -169,8 +174,6 @@ export interface SongbookSpotlight {
   issueNumber: number | null;
   /** The issue's headline. Community entries have none, and none is invented. */
   headline: string | null;
-  /** Who mapped a community entry first. Null on an editorial issue. */
-  mappedBy: string | null;
   timesPlayed: number | null;
   first: LifespanEnd;
   last: LifespanEnd;
@@ -267,7 +270,6 @@ export const issueSpotlight = (entry: IssueEntry, versions: RankedVersion[]): So
     songId: entry.songId,
     issueNumber: entry.issueNumber,
     headline: clean(i.headline),
-    mappedBy: null,
     timesPlayed: i.times_played,
     first: end("first", i.ftp_date, i.ftp_venue, i.ftp_city, null),
     last: end("last", i.ltp_date, i.ltp_venue, i.ltp_city, i.ltp_note),
@@ -278,7 +280,6 @@ export const issueSpotlight = (entry: IssueEntry, versions: RankedVersion[]): So
 export const communitySpotlight = (
   entry: CommunityEntry,
   nights: CommunityNight[],
-  mappedBy: string,
 ): SongbookSpotlight => {
   const end = (which: End, raw: string | null): LifespanEnd => {
     const date = raw ? raw.slice(0, 10) : null;
@@ -306,7 +307,6 @@ export const communitySpotlight = (
     songId: entry.songId,
     issueNumber: null,
     headline: null,
-    mappedBy,
     timesPlayed: entry.timesPlayed,
     first: end("first", entry.firstPlayed),
     last: end("last", entry.lastPlayed),
@@ -381,7 +381,6 @@ interface EntryRow {
   created_at: string;
   song_id: string;
   setlist_id: string;
-  creator_id: string;
   songs: {
     title: string;
     first_played: string | null;
@@ -417,7 +416,7 @@ export const loadShelf = async (): Promise<ShelfEntry[]> => {
   try {
     const { data: entries } = await songbookDb
       .from("songbook_entries")
-      .select("created_at, song_id, setlist_id, creator_id, songs(title, first_played, last_played, times_played)");
+      .select("created_at, song_id, setlist_id, songs(title, first_played, last_played, times_played)");
     const rows = ((entries ?? []) as EntryRow[]).filter((r) => r.songs?.title);
 
     // A guide its author has since made private leaves the shelf, as it does
@@ -443,7 +442,6 @@ export const loadShelf = async (): Promise<ShelfEntry[]> => {
         songId: r.song_id,
         since: r.created_at,
         setlistId: r.setlist_id,
-        creatorId: r.creator_id,
         firstPlayed: r.songs!.first_played,
         lastPlayed: r.songs!.last_played,
         timesPlayed: r.songs!.times_played,
@@ -465,20 +463,15 @@ export const loadSpotlight = async (entry: ShelfEntry): Promise<SongbookSpotligh
     return issueSpotlight(entry, (data ?? []) as RankedVersion[]);
   }
 
-  // creator_id references auth.users, not profiles, so the name is a second
-  // lookup by user_id. Same reason the shelf and the issue page do it this way.
-  const [{ data: slots }, { data: profile }] = await Promise.all([
-    supabase
-      .from("setlist_slots")
-      .select("id, position, notes")
-      .eq("setlist_id", entry.setlistId)
-      .order("position", { ascending: true }),
-    supabase.from("profiles").select("display_name").eq("user_id", entry.creatorId).maybeSingle(),
-  ]);
+  const { data: slots } = await supabase
+    .from("setlist_slots")
+    .select("id, position, notes")
+    .eq("setlist_id", entry.setlistId)
+    .order("position", { ascending: true });
   const nights = (slots ?? []).map((slot) =>
     nightFromSlot(slot.position, decodeArchiveNotes(slot.id, entry.songId, slot.notes)),
   );
-  return communitySpotlight(entry, nights, profile?.display_name?.trim() || "a Deadhead");
+  return communitySpotlight(entry, nights);
 };
 
 /** This week's card, or null when the shelf is empty or unreachable. */
