@@ -142,13 +142,15 @@ const GaplessPlayerBar = () => {
 
         {/* Something went wrong and playback will not resume by itself.
             Takes precedence over the autoplay prompt — if both are somehow
-            set, the error is the one the listener needs to act on. */}
+            set, the error is the one the listener needs to act on.
+            The box is the dark page fill, not the cream card, so the text is
+            text-foreground: text-card-foreground here measured 1.06:1. */}
         {transport.error ? (
           <div
             role="alert"
             className="absolute inset-x-0 -top-12 mx-auto w-fit max-w-[92vw] px-4 py-2 rounded-[10px] bg-background/95 border border-destructive/50 shadow-lg flex items-center gap-3"
           >
-            <span className="text-sm text-card-foreground font-body truncate">
+            <span className="text-sm text-foreground font-body truncate">
               {transport.error}
             </span>
             <button
