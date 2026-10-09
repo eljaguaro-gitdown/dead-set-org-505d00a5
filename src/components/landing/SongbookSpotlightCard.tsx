@@ -348,7 +348,7 @@ export const SongbookSpotlightSkeleton = () => (
 );
 
 const SongbookSpotlightCard = ({ spotlight: s }: { spotlight: SongbookSpotlight }) => {
-  const { playSingle, playingSlot, stopPlayback } = useAudioPlayer();
+  const { playSingle, playingSlot, stopPlayback, transport } = useAudioPlayer();
   const [cue, setCue] = useState<End | null>(() => preferredEnd(s));
   /** A lookup already made for the cued night: url AND track, so the tap needs no network. */
   const [found, setFound] = useState<ArchiveResult | null>(null);
@@ -397,7 +397,15 @@ const SongbookSpotlightCard = ({ spotlight: s }: { spotlight: SongbookSpotlight 
 
   const end = cue ? s[cue] : null;
   const slotId = cue ? spotlightSlotId(s, cue) : null;
-  const isPlaying = !!slotId && playingSlot?.id === slotId;
+  /**
+   * Ours, and not failed. When the Archive cannot be reached, playSingle sets
+   * the error and leaves `playingSlot` in place, so on the slot id alone the
+   * stub read "Now spinning" with a pause icon under a player bar saying
+   * "Couldn't reach the Archive", and its next tap stopped instead of retrying.
+   * `transport.error` is scoped to the current slot, so while it is set this
+   * night is not playing, and a tap asks again (playSingle clears the error).
+   */
+  const isPlaying = !!slotId && playingSlot?.id === slotId && !transport.error;
   const issueHref = `/songbook/${s.slug}`;
   const readLabel = s.kind === "issue" ? `Read Vol. ${s.issueNumber ?? 1}` : "Read the guide";
 
@@ -431,7 +439,7 @@ const SongbookSpotlightCard = ({ spotlight: s }: { spotlight: SongbookSpotlight 
   const finding = s.finding;
   const findingLine =
     finding?.kind === "sleepers"
-      ? "sleepers you probably haven't heard"
+      ? finding.count === 1 ? "sleeper you probably haven't heard" : "sleepers you probably haven't heard"
       : finding?.kind === "nights"
         ? finding.count === 1 ? "night worth knowing" : "nights worth knowing"
         : null;

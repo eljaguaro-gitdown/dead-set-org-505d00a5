@@ -15,6 +15,8 @@ const mocks = vi.hoisted(() => ({
   playSingle: vi.fn(async (_slot: unknown) => {}),
   stopPlayback: vi.fn(),
   playingSlot: null as { id: string } | null,
+  /** The context scopes this to the current slot; the card reads it as-is. */
+  transportError: null as string | null,
   findRecordingForDate: vi.fn(),
 }));
 
@@ -23,6 +25,7 @@ vi.mock("@/contexts/AudioPlayerContext", () => ({
     playSingle: mocks.playSingle,
     stopPlayback: mocks.stopPlayback,
     playingSlot: mocks.playingSlot,
+    transport: { error: mocks.transportError },
   }),
 }));
 vi.mock("@/lib/archiveOrg", () => ({
@@ -119,6 +122,7 @@ beforeEach(() => {
   mocks.stopPlayback.mockClear();
   mocks.findRecordingForDate.mockReset();
   mocks.playingSlot = null;
+  mocks.transportError = null;
 });
 
 describe("SongbookSpotlightCard — what it says", () => {
@@ -155,6 +159,13 @@ describe("SongbookSpotlightCard — what it says", () => {
     expect(norm(read.textContent)).toBe("6nights worth knowingRead the guide →");
     expect(screen.queryByText(/sleeper/i)).toBeNull();
     expect(screen.queryByText(/Vol\./)).toBeNull();
+  });
+
+  it("says one sleeper in the singular", () => {
+    renderCard(crazyFingers({ finding: { kind: "sleepers", count: 1 } }));
+    expect(norm(screen.getByRole("link").textContent)).toBe(
+      "1sleeper you probably haven't heardReal regard, almost no attention.Read Vol. 2 →",
+    );
   });
 
   it("says one night in the singular", () => {
@@ -266,6 +277,23 @@ describe("SongbookSpotlightCard — the night it plays", () => {
     fireEvent.click(stub());
     expect(mocks.stopPlayback).toHaveBeenCalledTimes(1);
     expect(mocks.playSingle).not.toHaveBeenCalled();
+  });
+
+  it("does not claim to be spinning when its night failed to start, and a tap tries again", () => {
+    // playSingle leaves playingSlot set when the Archive cannot be reached and
+    // puts the error on the transport. The bar says so; the stub must not
+    // contradict it, and its tap must retry rather than stop.
+    mocks.playingSlot = { id: "hero-songbook-crazy-fingers-first" };
+    mocks.transportError = "Couldn't reach the Archive just now. Tap play to try again.";
+    renderCard(crazyFingers());
+    expect(norm(kicker())).toBe("Hear the first one");
+    expect(stub()).toHaveAccessibleName(
+      "Play Crazy Fingers, the first time they played it: June 17, 1975 · Winterland Arena",
+    );
+    fireEvent.click(stub());
+    expect(mocks.stopPlayback).not.toHaveBeenCalled();
+    expect(mocks.playSingle).toHaveBeenCalledTimes(1);
+    expect(lastSlot()).toMatchObject({ id: "hero-songbook-crazy-fingers-first" });
   });
 
   it("does not read another song's playback as its own", () => {
