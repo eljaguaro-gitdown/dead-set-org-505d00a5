@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { setlistIdFromShareUrl } from "@/lib/trackShare";
+import { setlistIdFromShareUrl, shareTypeFromShareUrl } from "@/lib/trackShare";
 
 const ID = "4b062f5d-eb1c-49a6-b25e-6fd1a495d23e";
 
@@ -117,5 +117,32 @@ describe("every ShareDropdown channel attributes its share", () => {
     // Not merely `setlistId={` — `setlistId={undefined}` satisfies that and
     // reinstates the exact defect. Verified: the loose form survived it.
     expect(render![0]).toMatch(/setlistId=\{(?!\s*(?:undefined|null)\s*\})/);
+  });
+});
+
+describe("shareTypeFromShareUrl", () => {
+  it("records a setlist url as a setlist share", () => {
+    expect(shareTypeFromShareUrl(`https://dead-set.org/setlist/${ID}`)).toBe("setlist");
+  });
+
+  it("records a songbook url as a songbook share, not a setlist with no setlist", () => {
+    expect(shareTypeFromShareUrl("https://dead-set.org/songbook/althea")).toBe("songbook");
+  });
+});
+
+describe("share surfaces derive the type instead of hard-coding it", () => {
+  // The bug this guards: ShareDropdown and SendToFriendDialog wrote
+  // shareType: "setlist" literally, so Songbook shares were mislabelled.
+  for (const file of ["src/components/ShareDropdown.tsx", "src/components/SendToFriendDialog.tsx"]) {
+    it(`${file} never hard-codes shareType: "setlist"`, () => {
+      const src = readFileSync(join(process.cwd(), file), "utf8");
+      expect(src).not.toMatch(/shareType:\s*"setlist"/);
+    });
+  }
+
+  it("ShareDropdown passes the setlist to the Instagram share", () => {
+    const src = readFileSync(join(process.cwd(), "src/components/ShareDropdown.tsx"), "utf8");
+    const call = src.slice(src.indexOf("shareToInstagram({"), src.indexOf("});", src.indexOf("shareToInstagram({")));
+    expect(call).toMatch(/setlistId/);
   });
 });

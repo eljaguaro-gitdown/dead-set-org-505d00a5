@@ -10,7 +10,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { passesContentFilter } from "@/hooks/useModeration";
-import { trackShare } from "@/lib/trackShare";
+import { trackShare, shareTypeFromShareUrl } from "@/lib/trackShare";
 
 interface Recipient {
   // For existing convos we know the conversation id; for fresh recipients
@@ -234,7 +234,7 @@ const SendToFriendDialog = ({
     } catch {}
 
     setSentTo((prev) => new Set(prev).add(recipient.userId));
-    trackShare({ shareType: "setlist", channel: "sms", setlistId, metadata: { via: "in_app_dm" } });
+    trackShare({ shareType: shareTypeFromShareUrl(shareUrl), channel: "sms", setlistId, metadata: { via: "in_app_dm" } });
     toast.success(`Sent to ${recipient.displayName}!`);
     setTimeout(() => onOpenChange(false), 900);
   };

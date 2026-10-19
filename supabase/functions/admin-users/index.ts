@@ -1,6 +1,8 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import { POSTHOG_EXTERNAL_TRAFFIC_WHERE, queryPostHog } from "../_shared/posthogQuery.ts";
 import { buildAdminTrafficSql, toAdminTraffic } from "./traffic.ts";
+import { buildAdminFunnelDailySql, buildAdminFunnelTotalsSql, toAdminFunnel } from "./funnel.ts";
+import { internalUserIds } from "../_shared/internalAccounts.ts";
 import { checkAdmin } from "../_shared/requireAdmin.ts";
 
 const corsHeaders = {
@@ -297,12 +299,16 @@ Deno.serve(async (req) => {
     // to come from page_visits, which counted every Lovable preview reload
     // and admin session as a visitor. See traffic.ts. queryPostHog never
     // throws; a failure gives null, which the dashboard shows as "—".
-    const [usersRes, profilesRes, setlistCountsRes, trafficRows] = await Promise.all([
-      adminClient.auth.admin.listUsers({ perPage: 200 }),
-      adminClient.from("profiles").select("user_id, display_name, avatar_url"),
-      adminClient.from("setlists").select("creator_id").limit(20000),
-      queryPostHog("admin-users traffic", buildAdminTrafficSql(POSTHOG_EXTERNAL_TRAFFIC_WHERE)),
-    ]);
+    const [usersRes, profilesRes, setlistCountsRes, trafficRows, adminRolesRes, funnelDailyRows, funnelTotalRows] =
+      await Promise.all([
+        adminClient.auth.admin.listUsers({ perPage: 1000 }),
+        adminClient.from("profiles").select("user_id, display_name, avatar_url"),
+        adminClient.from("setlists").select("creator_id").limit(20000),
+        queryPostHog("admin-users traffic", buildAdminTrafficSql(POSTHOG_EXTERNAL_TRAFFIC_WHERE)),
+        adminClient.from("user_roles").select("user_id").eq("role", "admin"),
+        queryPostHog("admin-users funnel daily", buildAdminFunnelDailySql(POSTHOG_EXTERNAL_TRAFFIC_WHERE)),
+        queryPostHog("admin-users funnel totals", buildAdminFunnelTotalsSql(POSTHOG_EXTERNAL_TRAFFIC_WHERE)),
+      ]);
 
     if (usersRes.error) throw usersRes.error;
     const users = usersRes.data.users;
@@ -317,6 +323,31 @@ Deno.serve(async (req) => {
     });
 
     const traffic = toAdminTraffic(trafficRows);
+    const funnel = toAdminFunnel(funnelDailyRows, funnelTotalRows);
+
+    // The owner and the test accounts, so the dashboard can leave them out of
+    // every count (see _shared/internalAccounts.ts). Their devices too: a
+    // browser that has ever signed in to an internal account is the owner's,
+    // and pre-sign-in events (opening the sign-in sheet, clicking Google)
+    // carry only that browser's visitor_id, never a user_id.
+    const internalIds = internalUserIds(
+      (users || []).map((u: any) => ({ id: u.id, email: u.email })),
+      (adminRolesRes.data || []).map((r: any) => r.user_id),
+    );
+    const internalIdList = [...internalIds];
+    const internalVisitorIds = new Set<string>();
+    if (internalIdList.length > 0) {
+      const visitorSources = await Promise.all([
+        adminClient.from("auth_events").select("visitor_id").in("user_id", internalIdList).not("visitor_id", "is", null),
+        adminClient.from("visitor_attribution").select("visitor_id").in("user_id", internalIdList),
+        adminClient.from("share_events").select("visitor_id").in("user_id", internalIdList).not("visitor_id", "is", null),
+      ]);
+      for (const res of visitorSources) {
+        for (const row of (res.data || []) as Array<{ visitor_id: string | null }>) {
+          if (row.visitor_id) internalVisitorIds.add(row.visitor_id);
+        }
+      }
+    }
 
     const result = (users || []).map((u: any) => {
       const profile = profileMap.get(u.id);
@@ -329,12 +360,15 @@ Deno.serve(async (req) => {
         lastSignInAt: u.last_sign_in_at,
         emailConfirmedAt: u.email_confirmed_at,
         setlistCount: countMap.get(u.id) || 0,
+        isInternal: internalIds.has(u.id),
       };
     });
 
     return new Response(JSON.stringify({
       users: result,
       traffic,
+      funnel,
+      internal: { userIds: internalIdList, visitorIds: [...internalVisitorIds] },
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

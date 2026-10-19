@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Share2, Copy, Check, Twitter, Facebook, MessageCircle, Smartphone, Instagram } from "lucide-react";
 import { toast } from "sonner";
-import { trackShare, setlistIdFromShareUrl } from "@/lib/trackShare";
+import { trackShare, setlistIdFromShareUrl, shareTypeFromShareUrl } from "@/lib/trackShare";
 import type { SharePayload } from "@/lib/shareCopy";
 import { shareToInstagram } from "@/lib/instagramShare";
 import { useAuth } from "@/hooks/useAuth";
@@ -56,6 +56,7 @@ const ShareDropdown = ({ url, ogUrl, title, share }: ShareDropdownProps) => {
   // share urls such as /songbook/<slug>, which is correct — those are not
   // setlists and must not be attributed to one.
   const setlistId = setlistIdFromShareUrl(linkToShare);
+  const shareType = shareTypeFromShareUrl(linkToShare);
   // `body` carries no url; `text` does. A field that also takes the link
   // separately gets `body`, a field that takes one string gets `text`.
   const shareBody = share.body;
@@ -91,7 +92,7 @@ const ShareDropdown = ({ url, ogUrl, title, share }: ShareDropdownProps) => {
     }
     setCopied(true);
     toast.success("Copied — ready to paste");
-    trackShare({ shareType: "setlist", channel: "copy_link", setlistId });
+    trackShare({ shareType, channel: "copy_link", setlistId });
     setTimeout(() => { setCopied(false); setOpen(false); }, 1500);
   };
 
@@ -103,14 +104,14 @@ const ShareDropdown = ({ url, ogUrl, title, share }: ShareDropdownProps) => {
     // page — the same defect as the WhatsApp one, one surface over.
     const tweetUrl = `https://x.com/intent/tweet?text=${encodeURIComponent(shareBody)}&url=${encodeURIComponent(socialUrl)}`;
     window.open(tweetUrl, "_blank", "noopener,noreferrer,width=550,height=420");
-    trackShare({ shareType: "setlist", channel: "twitter", setlistId });
+    trackShare({ shareType, channel: "twitter", setlistId });
     setOpen(false);
   };
 
   const shareFacebook = () => {
     const fbUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(socialUrl)}`;
     window.open(fbUrl, "_blank", "noopener,noreferrer,width=550,height=420");
-    trackShare({ shareType: "setlist", channel: "facebook", setlistId });
+    trackShare({ shareType, channel: "facebook", setlistId });
     setOpen(false);
   };
 
@@ -118,7 +119,7 @@ const ShareDropdown = ({ url, ogUrl, title, share }: ShareDropdownProps) => {
     if (!navigator.share) return;
     try {
       await navigator.share({ title: share.title, text: shareBody, url: linkToShare });
-      trackShare({ shareType: "setlist", channel: "native_share", setlistId });
+      trackShare({ shareType, channel: "native_share", setlistId });
     } catch {
       // user cancelled — keep menu open so they can pick another option
       return;
@@ -130,6 +131,8 @@ const ShareDropdown = ({ url, ogUrl, title, share }: ShareDropdownProps) => {
     await shareToInstagram({
       context: "setlist",
       setlistName: title,
+      setlistId,
+      trackAs: shareType,
       posterUrl: url,
     });
     setOpen(false);
