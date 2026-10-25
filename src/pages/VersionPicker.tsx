@@ -127,7 +127,7 @@ const VersionPicker = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { playSingle, playSetlist, unlockAudio, playingSlot } = useAudioPlayer();
+  const { playSingle, playSetlist, unlockAudio, playingSlot, reportPlaybackFailure } = useAudioPlayer();
 
   const [song, setSong] = useState<PickerSong | null>(null);
   const [versions, setVersions] = useState<PickerVersion[]>([]);
@@ -492,7 +492,8 @@ const VersionPicker = () => {
         toast.info("No tape of the debut circulates — starting with the next best thing");
         await playVersion(topVersion, "hero_fallback");
       } else {
-        toast.info("No tape of this night circulates yet");
+        // An answer about the music: apologise, file it, offer one we know plays.
+        reportPlaybackFailure({ kind: "no_tape", songId: song.id, songTitle: song.title, showDate: song.first_played ?? null });
       }
     } catch {
       // Could not ask the Archive. Say that, not "no tape circulates" — the
@@ -593,7 +594,7 @@ const VersionPicker = () => {
         setResolving(null);
       }
       if (!tape?.url) {
-        toast.info("No tape of this night circulates yet");
+        reportPlaybackFailure({ kind: "no_tape", songId: song.id, songTitle: song.title, showDate: v.show_date });
         return;
       }
       url = tape.url;

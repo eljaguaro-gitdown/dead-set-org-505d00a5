@@ -24,7 +24,13 @@ const GaplessPlayerBar = () => {
     activeSetlistId,
     stopPlayback,
     transport,
+    playbackOops,
   } = useAudioPlayer();
+
+  // The oops card above the bar is already saying what went wrong with this
+  // slot, in more words and with a tape to try instead. Two messages for one
+  // tap is worse than either, and its "Try again" would fail the same way.
+  const oopsCoversError = !!playbackOops && !!playingSlot && playbackOops.slotId === playingSlot.id;
 
   const [muted, setMuted] = useState(false);
   const [posterOpen, setPosterOpen] = useState(false);
@@ -145,7 +151,7 @@ const GaplessPlayerBar = () => {
             set, the error is the one the listener needs to act on.
             The box is the dark page fill, not the cream card, so the text is
             text-foreground: text-card-foreground here measured 1.06:1. */}
-        {transport.error ? (
+        {transport.error && !oopsCoversError ? (
           <div
             role="alert"
             className="absolute inset-x-0 -top-12 mx-auto w-fit max-w-[92vw] px-4 py-2 rounded-[10px] bg-background/95 border border-destructive/50 shadow-lg flex items-center gap-3"

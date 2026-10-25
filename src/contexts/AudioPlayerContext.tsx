@@ -21,6 +21,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 import { SYNTHETIC_VERSION_DEFAULTS } from "@/lib/syntheticVersion";
+import {
+  fetchKnownGoodTape,
+  recordTapeOk,
+  reportPlaybackIssue,
+  PLAYS_OK_AFTER_SECONDS,
+  type KnownGoodTape,
+  type PlaybackFailure,
+} from "@/lib/playbackIssues";
 
 type NotableVersion = Database["public"]["Tables"]["notable_versions"]["Row"];
 type Song = Database["public"]["Tables"]["songs"]["Row"];
@@ -166,7 +174,45 @@ interface AudioPlayerContextValue extends AudioPlayerState {
    * refuses the autoplay. Safe to call repeatedly; a no-op on native/legacy.
    */
   unlockAudio: () => void;
+  /**
+   * The last tap that would not play for a reason a fix can address, with
+   * what has been done about it: filed (issueId), and a tape we know plays
+   * to offer instead (suggestion). PlaybackOopsCard renders it.
+   */
+  playbackOops: PlaybackOops | null;
+  dismissPlaybackOops: () => void;
+  /**
+   * For pages that look a night up themselves before handing the player a
+   * slot (the version picker, the Songbook pages): their "no tape of this
+   * night" goes through the same apology, report and suggestion.
+   */
+  reportPlaybackFailure: (failure: PlaybackFailure) => void;
 }
+
+/**
+ * `issueId` and `suggestion` arrive after the card does: `undefined` means
+ * still asking, `null` means asked and got nothing. The card says "it's been
+ * noted" only once issueId is a string — a report that failed to file must
+ * not be described as filed.
+ */
+export interface PlaybackOops extends PlaybackFailure {
+  key: number;
+  issueId: string | null | undefined;
+  suggestion: KnownGoodTape | null | undefined;
+}
+
+const failureFromSlot = (kind: PlaybackFailure["kind"], slot: PlayableSlot): PlaybackFailure => ({
+  kind,
+  songId: slot.song.id,
+  songTitle: slot.song.title,
+  showDate: slot.version?.show_date || null,
+  archiveUrl: slot.version?.archive_org_url ?? null,
+  trackUrl: slot.directTrackUrl ?? null,
+  slotId: slot.id,
+});
+
+/** navigator.onLine is only trustworthy when it says false. */
+const looksOffline = () => typeof navigator !== "undefined" && navigator.onLine === false;
 
 const noopTransport: PlayerTransport = {
   engine: "legacy",
@@ -201,6 +247,9 @@ const defaultAudioPlayerContext: AudioPlayerContextValue = {
   stopPlayback: () => undefined,
   advancePlaylist: async () => undefined,
   unlockAudio: () => undefined,
+  playbackOops: null,
+  dismissPlaybackOops: () => undefined,
+  reportPlaybackFailure: () => undefined,
 };
 
 const AudioPlayerContext = createContext<AudioPlayerContextValue>(defaultAudioPlayerContext);
@@ -309,6 +358,34 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     setTransportState((prev) => (prev.error === null ? prev : { ...prev, error: null }));
   }, []);
 
+  // ── "Oops — that one won't play" ────────────────────────────────────
+  const [playbackOops, setPlaybackOops] = useState<PlaybackOops | null>(null);
+  const oopsKeyRef = useRef(0);
+  const dismissPlaybackOops = useCallback(() => setPlaybackOops(null), []);
+  /**
+   * File a failure a fix can address and, unless `show` is false, put the
+   * apology card up while the report and a known-good suggestion come back.
+   *
+   * `show: false` is for a slot the queue skipped past on its own: the fan saw
+   * "Skipping…", not a dead tap. The catalog problem is still real, so it is
+   * still filed, but nobody is promised a notice they were never offered.
+   */
+  const raisePlaybackOops = useCallback((failure: PlaybackFailure, opts: { show?: boolean } = {}) => {
+    if (opts.show === false) {
+      void reportPlaybackIssue(failure, false);
+      return;
+    }
+    const key = ++oopsKeyRef.current;
+    setPlaybackOops({ ...failure, key, issueId: undefined, suggestion: undefined });
+    // Keyed, so a slow answer about an earlier failure cannot land on a later card.
+    const settle = (patch: Partial<PlaybackOops>) =>
+      setPlaybackOops((prev) => (prev && prev.key === key ? { ...prev, ...patch } : prev));
+    void reportPlaybackIssue(failure, true).then((issueId) => settle({ issueId }));
+    void fetchKnownGoodTape(failure).then((suggestion) => settle({ suggestion }));
+  }, []);
+  /** Track urls already recorded as playing, so a long track is counted once. */
+  const recordedOkRef = useRef(new Set<string>());
+
   /** Finalize the outgoing play event as "finished" when it actually ran to the end. */
   const maybeFinalizeFinished = (outgoingSlotId: string | null) => {
     const p = lastProgressRef.current;
@@ -347,6 +424,17 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
         lastProgressRef.current = { slotId: engineSlotIdRef.current, ...p };
         // Audio is actually coming out: the run of failures is over.
         if (p.currentTime > 0 && p.duration > 0) consecutiveErrorsRef.current = 0;
+        // Twenty seconds of real audio is what makes a tape one "we know
+        // plays" — the only kind the oops card may offer. Keyed on the slot
+        // the engine is on, so a gapless handoff is credited to the right one.
+        if (p.currentTime >= PLAYS_OK_AFTER_SECONDS) {
+          const slot = stateRef.current.playingSlot;
+          const url = slot?.directTrackUrl;
+          if (slot && url && slot.id === engineSlotIdRef.current && !recordedOkRef.current.has(url)) {
+            recordedOkRef.current.add(url);
+            recordTapeOk(slot);
+          }
+        }
         if (p.duration > 0) setPlayEventTrackDuration(p.duration * 1000);
       });
       engineRef.current = engine;
@@ -478,6 +566,9 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     // just invited ("Tap play to try again"), sat over a tape that was loading
     // fine, AND suppressed CrateDigging — which hides whenever an error is set.
     clearPlaybackError();
+    // Same for the apology card: this tap is the answer to it (often the very
+    // tape it offered), so it must not sit over the music that follows.
+    setPlaybackOops(null);
     setState({ playingSlot: slot, playlistMode, playlistIndex, playlistSlots, activeSetlistId });
 
     // Resolve direct track URL in background if missing
@@ -515,6 +606,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
               ? `Skipping ${slot.song.title} — couldn't reach the Archive`
               : `Skipping ${slot.song.title} — not on this tape`,
           );
+          if (!cantReach) raisePlaybackOops(failureFromSlot("not_on_tape", slot), { show: false });
           void advancePlaylistRef.current(1);
         } else {
           setPlaybackError(
@@ -523,6 +615,9 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
               : "That song isn't on this tape.",
             slot.id,
           );
+          // Only the answer about the music is filed. "Couldn't reach" is the
+          // network, and the retry the bar already offers is the fix for it.
+          if (!cantReach) raisePlaybackOops(failureFromSlot("not_on_tape", slot));
         }
         return;
       }
@@ -545,7 +640,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
         );
       }
     } else if (!slot.version?.archive_org_url) {
-      const { slot: resolved, unreachable: cantReach } = await resolveSlot(slot);
+      const { slot: resolved, unreachable: cantReach, uncertain } = await resolveSlot(slot);
       if (resolved?.version?.archive_org_url) {
         audioDebug.setSlot(resolved.id, resolved.song.title, resolved.version.archive_org_url, resolved.directTrackUrl ?? null);
         // `seq` as well as the id: the id alone is not identity enough when
@@ -572,15 +667,19 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
           return;
         }
         audioDebug.log("context", "no audio found for song", { song: slot.song.title, unreachable: cantReach }, "error");
-        toast.error(
-          cantReach
-            ? "Couldn't reach the Archive just now — tap play to try again."
-            : "No tape of this one circulates yet",
-        );
+        if (cantReach) {
+          toast.error("Couldn't reach the Archive just now — tap play to try again.");
+        } else if (uncertain) {
+          toast.error("No tape of this one circulates yet");
+        } else {
+          // The card says it in the house voice, files it, and offers a tape
+          // we know plays. A toast as well would be two messages for one tap.
+          raisePlaybackOops(failureFromSlot("no_tape", slot));
+        }
         setState({ playingSlot: null, playlistMode: false, playlistIndex: 0, playlistSlots: [], activeSetlistId: null });
       }
     }
-  }, [engineMode, getEngine, setPlaybackError, clearPlaybackError]);
+  }, [engineMode, getEngine, setPlaybackError, clearPlaybackError, raisePlaybackOops]);
 
   /** Resolve a slot: ensure it has an archive URL and directTrackUrl */
   /**
@@ -598,6 +697,13 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     slot: PlayableSlot | null;
     /** A lookup FAILED rather than answering. Transient: worth asking again. */
     unreachable: boolean;
+    /**
+     * Absent, but from the one branch that cannot tell absent from a failed
+     * request (the generic search swallows its errors). Good enough for the
+     * old toast; not good enough to FILE a report and promise a fix notice,
+     * because a miss there is more often the network than the catalog.
+     */
+    uncertain?: boolean;
   }
   const ok = (s: PlayableSlot): ResolveOutcome => ({ slot: s, unreachable: false });
   const absent = (): ResolveOutcome => ({ slot: null, unreachable: false });
@@ -779,8 +885,8 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     }
     // findArchiveRecording swallows its own errors and caches null, so this
     // branch genuinely cannot tell the two apart — reported as absent, which
-    // is the conservative read.
-    return absent();
+    // is the conservative read for a toast, and flagged so nothing is filed.
+    return { slot: null, unreachable: false, uncertain: true };
   };
 
   const playSetlist = useCallback(async (slots: PlayableSlot[], setlistId?: string) => {
@@ -800,6 +906,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     // tape that was playing.
     playSingleSeqRef.current++;
     clearPlaybackError(); // same reason as playSingle: a new run is a new attempt
+    setPlaybackOops(null);
     // Play All clears playingSlot and leaves it null until the first track
     // resolves, so nothing else marks this wait as busy. Named so the card can
     // say which song it is hunting for.
@@ -828,9 +935,11 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     // earned it. This is the same distinction playSingle makes, which the
     // first version of the fix threaded through the single-tap path only.
     let anyUnreachable = false;
+    let anyUncertain = false;
     for (let i = 0; i < sorted.length; i++) {
-      const { slot: resolved, unreachable: cantReach } = await resolveSlot(sorted[i]);
+      const { slot: resolved, unreachable: cantReach, uncertain } = await resolveSlot(sorted[i]);
       if (cantReach) anyUnreachable = true;
+      if (uncertain) anyUncertain = true;
       // Bail out if a newer playSetlist call has superseded this one.
       if (seq !== playSetlistSeqRef.current) {
         audioDebug.log("context", "playSetlist superseded, aborting", { seq, current: playSetlistSeqRef.current, setlistId }, "warn");
@@ -853,11 +962,19 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
       // tape either circulates or it does not — but only say that when we got
       // an answer.
       setCueingTitle(null);
-      toast.error(
-        anyUnreachable
-          ? "Couldn't reach the Archive just now — try again"
-          : "No tape circulating for any of these yet",
-      );
+      if (anyUnreachable) {
+        toast.error("Couldn't reach the Archive just now — try again");
+      } else if (anyUncertain) {
+        toast.error("No tape circulating for any of these yet");
+      } else {
+        raisePlaybackOops({
+          kind: "none_in_setlist",
+          songId: sorted[0]?.song.id ?? null,
+          songTitle: sorted[0]?.song.title ?? "Setlist",
+          showDate: null,
+          setlistId: setlistId ?? null,
+        });
+      }
       return;
     }
 
@@ -879,7 +996,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
       playlistSlots: sorted,
       activeSetlistId: setlistId || null,
     });
-  }, [engineMode, getEngine, clearPlaybackError]);
+  }, [engineMode, getEngine, clearPlaybackError, raisePlaybackOops]);
 
   const advancePlaylist: (dir: number) => Promise<void> = useCallback(async (dir: number) => {
     const { playlistIndex, playlistSlots } = stateRef.current;
@@ -967,12 +1084,16 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
       void finalizePlayEvent("error");
       consecutiveErrorsRef.current += 1;
       const st = stateRef.current;
+      // Offline, the tape is not the problem and there is nothing to file.
+      const failed = st.playingSlot && !looksOffline() ? failureFromSlot("wont_play", st.playingSlot) : null;
       if (st.playlistMode && consecutiveErrorsRef.current <= 3) {
+        if (failed) raisePlaybackOops(failed, { show: false });
         void advancePlaylist(1); // keep the queue moving past a broken track
       } else {
         // Previously just a toast, which left a dead bar sitting on a track
         // that would never play and no way back other than closing it.
         setPlaybackError("That tape won't play. The source may be offline.");
+        if (failed) raisePlaybackOops(failed);
       }
     },
     onPlayBlocked: () => {
@@ -1384,7 +1505,12 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AudioPlayerContext.Provider value={{ ...state, transport, playSingle, playSetlist, queueSetlist, stopPlayback, advancePlaylist, unlockAudio }}>
+    <AudioPlayerContext.Provider
+      value={{
+        ...state, transport, playSingle, playSetlist, queueSetlist, stopPlayback, advancePlaylist, unlockAudio,
+        playbackOops, dismissPlaybackOops, reportPlaybackFailure: raisePlaybackOops,
+      }}
+    >
       {children}
     </AudioPlayerContext.Provider>
   );

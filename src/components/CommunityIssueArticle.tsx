@@ -50,7 +50,7 @@ export const formatIssueDate = (iso: string | null): string => {
 };
 
 const CommunityIssueArticle = ({ issue }: { issue: CommunityIssue }) => {
-  const { playSingle, playSetlist, playingSlot } = useAudioPlayer();
+  const { playSingle, playSetlist, playingSlot, reportPlaybackFailure } = useAudioPlayer();
   const { user } = useAuth();
   const navigate = useNavigate();
   const isOwner = !!user && user.id === issue.creatorId;
@@ -141,7 +141,7 @@ const CommunityIssueArticle = ({ issue }: { issue: CommunityIssue }) => {
     // have not earned — the resolver asks the Archive, and its two failure
     // modes are kept apart in the catch below.
     if (!night.archiveUrl && !night.showDate) {
-      toast.info("No tape of this night circulates yet");
+      reportPlaybackFailure({ kind: "no_tape", songId: issue.songId, songTitle: issue.title, showDate: null });
       return;
     }
     try {

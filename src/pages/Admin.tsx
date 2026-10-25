@@ -6,6 +6,7 @@ import { Shield, Users, ArrowLeft, Loader2, Calendar, Mail, User, Trash2, ListMu
 import { Button } from "@/components/ui/button";
 import LiveVisitorsWidget from "@/components/LiveVisitorsWidget";
 import ModerationQueueWidget from "@/components/ModerationQueueWidget";
+import AdminPlaybackIssuesWidget from "@/components/AdminPlaybackIssuesWidget";
 import PresenceDebugPanel from "@/components/PresenceDebugPanel";
 import FunnelWidget from "@/components/FunnelWidget";
 import AuthFunnelWidget from "@/components/AuthFunnelWidget";
@@ -475,6 +476,8 @@ const Admin = () => {
 
         {/* Live Visitors */}
         <ModerationQueueWidget enabled={isAdmin} />
+
+        <AdminPlaybackIssuesWidget enabled={isAdmin} />
 
         <LiveVisitorsWidget enabled={isAdmin} />
 
