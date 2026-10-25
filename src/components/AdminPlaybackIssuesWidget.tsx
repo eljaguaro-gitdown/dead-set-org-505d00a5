@@ -26,7 +26,7 @@ const rpc = (fn: string, args?: Record<string, unknown>): PromiseLike<{ data: an
     rpc: (fn: string, args?: Record<string, unknown>) => PromiseLike<{ data: any; error: any }>;
   }).rpc(fn, args);
 
-interface Issue {
+interface TapeIssue {
   id: string;
   kind: string;
   status: string;
@@ -52,7 +52,7 @@ const KIND_LABEL: Record<string, string> = {
 };
 
 const AdminPlaybackIssuesWidget = ({ enabled }: { enabled: boolean }) => {
-  const [issues, setIssues] = useState<Issue[]>([]);
+  const [issues, setIssues] = useState<TapeIssue[]>([]);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
 
@@ -71,7 +71,7 @@ const AdminPlaybackIssuesWidget = ({ enabled }: { enabled: boolean }) => {
     if (enabled) void load();
   }, [enabled, load]);
 
-  const setStatus = async (issue: Issue, status: "open" | "fixed" | "verified" | "wont_fix") => {
+  const setStatus = async (issue: TapeIssue, status: "open" | "fixed" | "verified" | "wont_fix") => {
     let note: string | null = null;
     if (status === "fixed") {
       note = window.prompt("What was wrong, and what fixed it? (kept with the issue)", issue.fix_note ?? "");
