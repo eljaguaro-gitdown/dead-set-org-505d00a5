@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { ChevronRight, ArrowLeft, Loader2 } from "lucide-react";
 import { groupEditions, type BuildNoteEntry, type Edition } from "@/lib/buildNotes";
+import CommunityFixesList from "@/components/CommunityFixesList";
 
 type ChangelogTag = "fix" | "new" | "improved" | "beta";
 
@@ -78,6 +79,8 @@ const Updates = () => {
           <h1 className="font-display text-4xl md:text-5xl text-[#c9a84c]">Build Notes</h1>
           <p className="font-mono text-sm text-[#a09880] mt-2">What's changing, week by week</p>
         </header>
+
+        <CommunityFixesList />
 
         {loading ? (
           <div className="flex justify-center py-20">

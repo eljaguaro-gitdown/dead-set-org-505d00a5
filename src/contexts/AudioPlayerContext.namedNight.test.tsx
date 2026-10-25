@@ -192,7 +192,10 @@ describe("resolveSlot — a slot that names its night", () => {
       await result.current.playSingle(guideSlot(0, "1980-05-16"));
     });
 
-    await waitFor(() => expect(toastError).toHaveBeenCalled());
+    // Said by the oops card now (and filed); the claim is the same: this
+    // night has no tape, and no other night is played in its place.
+    await waitFor(() => expect(result.current.playbackOops?.kind).toBe("no_tape"));
+    expect(result.current.playbackOops?.showDate).toBe("1980-05-16");
     expect(result.current.playingSlot).toBeNull();
     // Falling back here is what put the prose and the music on different shows.
     expect(findArchiveRecording).not.toHaveBeenCalled();

@@ -83,7 +83,7 @@ const GOOD = {
 };
 
 const Harness = () => {
-  const { playSingle, playSetlist, stopPlayback, transport, playingSlot } = useAudioPlayer();
+  const { playSingle, playSetlist, stopPlayback, transport, playingSlot, playbackOops } = useAudioPlayer();
   return (
     <>
       <button onClick={() => void playSetlist([A], "set-1")}>playAll</button>
@@ -98,6 +98,7 @@ const Harness = () => {
       <div data-testid="cue">{transport.cueingTitle ?? ""}</div>
       <div data-testid="err">{transport.error ?? ""}</div>
       <div data-testid="now">{playingSlot?.song.title ?? ""}</div>
+      <div data-testid="oops">{playbackOops?.kind ?? ""}</div>
     </>
   );
 };
@@ -154,7 +155,9 @@ describe("cueingTitle", () => {
     vi.mocked(fetch).mockResolvedValue(json({ files: [], metadata: {} }));
     render(<AudioPlayerProvider><Harness /></AudioPlayerProvider>);
     fireEvent.click(screen.getByText("playAll"));
-    await waitFor(() => expect(mocks.error).toHaveBeenCalled());
+    // An answer ("none of these are on tape") is said by the oops card now,
+    // not a toast. What this test guards is unchanged: the busy label clears.
+    await waitFor(() => expect(screen.getByTestId("oops").textContent).toBe("none_in_setlist"));
     expect(cue()).toBe("");
   });
 

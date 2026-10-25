@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 import { useGlobalPlayerHeight } from "@/hooks/useGlobalPlayerHeight";
 import { charlieArtFor } from "@/lib/charlieArt";
+import { useClaimBottom } from "@/lib/bottomCardClaims";
 
 /**
  * "We're going digging" — what the screen says between the tap and the sound.
@@ -88,6 +89,10 @@ const CrateDigging = () => {
     const t = window.setTimeout(() => setVisible(true), SHOW_AFTER_MS);
     return () => window.clearTimeout(t);
   }, [digging, playingSlot?.id, transport.cueingTitle]);
+
+  // Under the install banner on a first visit, which is exactly when a new
+  // visitor taps play and waits. See bottomCardClaims.
+  useClaimBottom("crate-digging", visible && digging);
 
   if (!visible || !digging) return null;
 

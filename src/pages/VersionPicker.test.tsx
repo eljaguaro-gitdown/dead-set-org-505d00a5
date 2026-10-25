@@ -18,6 +18,7 @@ let searchParams = new URLSearchParams();
 const setSearchParams = vi.fn();
 const playSingle = vi.fn();
 const playSetlist = vi.fn();
+const reportPlaybackFailure = vi.fn();
 
 vi.mock("react-router-dom", async () => {
   const actual = await vi.importActual<typeof import("react-router-dom")>("react-router-dom");
@@ -38,6 +39,7 @@ vi.mock("@/contexts/AudioPlayerContext", () => ({
     playSetlist,
     unlockAudio: vi.fn(),
     playingSlot: null,
+    reportPlaybackFailure,
   }),
 }));
 
@@ -107,6 +109,7 @@ beforeEach(() => {
   navigate.mockReset();
   playSingle.mockReset();
   playSetlist.mockReset();
+  reportPlaybackFailure.mockReset();
   mockUser = null;
   searchParams = new URLSearchParams();
   findManyArchiveRecordings.mockClear();
@@ -292,11 +295,26 @@ describe("VersionPicker — when the Archive cannot be asked", () => {
     expect(playSingle).not.toHaveBeenCalled();
   });
 
-  it("still says 'no tape circulates' when the night genuinely has none", async () => {
+  it("still answers 'no tape' when the night genuinely has none", async () => {
+    // Said by the oops card now (apology, report, a tape we know plays), not a
+    // toast. The claim is unchanged: a miss is an answer about the music, and
+    // it must never be reported as "couldn't reach the Archive".
     findRecordingForDate.mockResolvedValue(null);
     await playUnstoredVersion();
-    await waitFor(() => expect(toastInfo).toHaveBeenCalledWith(expect.stringMatching(/no tape/i)));
+    await waitFor(() =>
+      expect(reportPlaybackFailure).toHaveBeenCalledWith(
+        expect.objectContaining({ kind: "no_tape", songTitle: expect.any(String), showDate: expect.stringMatching(/^\d{4}-\d{2}-\d{2}/) }),
+      ),
+    );
     expect(toastError).not.toHaveBeenCalled();
+    expect(playSingle).not.toHaveBeenCalled();
+  });
+
+  it("does not file a report when the Archive could not be asked", async () => {
+    unaskable();
+    await playUnstoredVersion();
+    await waitFor(() => expect(toastError).toHaveBeenCalled());
+    expect(reportPlaybackFailure).not.toHaveBeenCalled();
   });
 
   /**

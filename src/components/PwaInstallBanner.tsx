@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { X, Share, Plus, MoreVertical, Download } from "lucide-react";
 import { isNativeApp } from "@/lib/nativeApp";
+import { useBottomClaimed } from "@/lib/bottomCardClaims";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
@@ -11,6 +12,8 @@ const PwaInstallBanner = () => {
   const [showBanner, setShowBanner] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [platform, setPlatform] = useState<"ios" | "android" | "other">("other");
+  // A card about what the fan just did holds the bottom; the pitch waits.
+  const bottomClaimed = useBottomClaimed();
 
   useEffect(() => {
     // Only show on mobile, not in standalone mode, not in iframe
@@ -66,7 +69,7 @@ const PwaInstallBanner = () => {
     localStorage.setItem("pwa-banner-dismissed", String(Date.now()));
   }, []);
 
-  if (!showBanner) return null;
+  if (!showBanner || bottomClaimed) return null;
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 animate-in slide-in-from-bottom duration-500 safe-area-bottom">
