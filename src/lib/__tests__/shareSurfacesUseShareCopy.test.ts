@@ -1,6 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { readFileSync, readdirSync, statSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { listSourceFiles, readSource } from "@/test/sourceFiles";
 import {
   shareAppCopy,
   shareCollabCopy,
@@ -30,18 +29,6 @@ import {
  * So every exported builder is invoked and its output checked.
  */
 
-/** The repo's src/, resolved the way the other source-scanning tests here do. */
-const SRC = resolve(__dirname, "../..");
-
-const walk = (dir: string): string[] =>
-  readdirSync(dir).flatMap((entry) => {
-    const full = join(dir, entry);
-    if (statSync(full).isDirectory()) {
-      return entry === "__tests__" || entry === "ui" ? [] : walk(full);
-    }
-    return /\.tsx?$/.test(entry) ? [full] : [];
-  });
-
 /** Strip comments so a rule quoted in a docstring cannot satisfy its own test. */
 const stripComments = (src: string) =>
   src.replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:])\/\/.*$/gm, "$1");
@@ -54,17 +41,18 @@ const stripComments = (src: string) =>
  * centralised in one module, which is what the rule is really protecting
  * against. If a caption ever starts carrying a shared link, delete this line.
  */
-const CAPTION_MODULE = "lib/instagramShare.ts";
+const CAPTION_MODULE = "src/lib/instagramShare.ts";
 
-const files = walk(SRC).filter(
-  (f) => !f.endsWith("shareCopy.ts") && !f.endsWith(CAPTION_MODULE),
+/** Repo paths ("src/lib/shareSong.ts"), forward slashes on every platform. */
+const files = listSourceFiles("src", { skipDirs: ["__tests__", "ui"] }).filter(
+  (f) => !f.endsWith("shareCopy.ts") && f !== CAPTION_MODULE,
 );
 
 it("the caption exemption still points at a file that exists", () => {
   // An exemption whose target was renamed silently stops exempting anything,
   // and worse, silently stops being reviewed.
   expect(files.some((f) => f.endsWith("lib/instagramShare.ts"))).toBe(false);
-  expect(() => readFileSync(join(SRC, CAPTION_MODULE), "utf8")).not.toThrow();
+  expect(() => readSource(CAPTION_MODULE)).not.toThrow();
 });
 
 describe("every share surface gets its copy from shareCopy", () => {
@@ -86,9 +74,7 @@ describe("every share surface gets its copy from shareCopy", () => {
       .replace(/\\u\{26A1\}|\\u26a1/gi, "⚡");
 
   const offendersWhere = (pred: (lit: string) => boolean): string[] =>
-    files
-      .filter((f) => literals(readFileSync(f, "utf8")).some(pred))
-      .map((f) => f.replace(SRC, "src/"));
+    files.filter((f) => literals(readSource(f)).some(pred));
 
   /**
    * The brand stamp is shareCopy's to say. This catches a template literal, a
@@ -101,12 +87,10 @@ describe("every share surface gets its copy from shareCopy", () => {
 
   /** The rose/bolt skeleton retyped at a call site, escaped emoji included. */
   it("no file outside shareCopy retypes the rose/bolt share skeleton", () => {
-    const offenders = files
-      .filter((f) => {
-        const lits = literals(readFileSync(f, "utf8")).map(unescapeEmoji);
-        return lits.some((l) => l.includes("🌹")) && lits.some((l) => l.includes("⚡"));
-      })
-      .map((f) => f.replace(SRC, "src/"));
+    const offenders = files.filter((f) => {
+      const lits = literals(readSource(f)).map(unescapeEmoji);
+      return lits.some((l) => l.includes("🌹")) && lits.some((l) => l.includes("⚡"));
+    });
     expect(offenders).toEqual([]);
   });
 
@@ -140,12 +124,12 @@ describe("every share surface gets its copy from shareCopy", () => {
   it("no surface appends a url to a payload's text", () => {
     const offenders: string[] = [];
     for (const file of files) {
-      for (const lit of literals(readFileSync(file, "utf8"))) {
+      for (const lit of literals(readSource(file))) {
         if (!lit.startsWith("`")) continue;
         // The whole expression inside ${...}, not just its first identifier.
         const exprs = [...lit.matchAll(/\$\{([^}]*)\}/g)].map((m) => m[1].trim());
         if (exprs.some(isTextIdent) && exprs.some(isUrlIdent)) {
-          offenders.push(`${file.replace(SRC, "src/")}  ${lit}`);
+          offenders.push(`${file}  ${lit}`);
         }
       }
     }
@@ -155,7 +139,7 @@ describe("every share surface gets its copy from shareCopy", () => {
   it("no surface concatenates a payload's text with a url", () => {
     const offenders: string[] = [];
     for (const file of files) {
-      const src = stripComments(readFileSync(file, "utf8"));
+      const src = stripComments(readSource(file));
       // Per statement, not by pairing adjacent identifiers: a lazy regex
       // matched the `n` inside a "\n" separator as the second identifier and
       // never reached `linkToShare`, so the concatenated form walked through.
@@ -163,7 +147,7 @@ describe("every share surface gets its copy from shareCopy", () => {
         if (!stmt.includes("+")) continue;
         const idents = stmt.match(/[A-Za-z_$][\w$.]*/g) ?? [];
         if (idents.some(isTextIdent) && idents.some(isUrlIdent)) {
-          offenders.push(`${file.replace(SRC, "src/")}  ${stmt.trim()}`);
+          offenders.push(`${file}  ${stmt.trim()}`);
         }
       }
     }
@@ -178,7 +162,7 @@ describe("every share surface gets its copy from shareCopy", () => {
   it("every navigator.share that passes a url passes the url-less body as text", () => {
     const offenders: string[] = [];
     for (const file of files) {
-      const src = stripComments(readFileSync(file, "utf8"));
+      const src = stripComments(readSource(file));
       for (const m of src.matchAll(/navigator\.share\(\{([^}]*)\}/g)) {
         const args = m[1];
         // SHORTHAND counts: `navigator.share({ title, text, url })` passes the
@@ -192,7 +176,7 @@ describe("every share surface gets its copy from shareCopy", () => {
         if (!prop("url")) continue; // files-only shares are exempt
         const text = prop("text");
         if (text && isTextIdent(text)) {
-          offenders.push(`${file.replace(SRC, "src/")}  text: ${text}`);
+          offenders.push(`${file}  text: ${text}`);
         }
       }
     }
@@ -200,7 +184,7 @@ describe("every share surface gets its copy from shareCopy", () => {
   });
 
   it("ShareDropdown requires `share` and keeps no fallback", () => {
-    const src = readFileSync(join(SRC, "components/ShareDropdown.tsx"), "utf8");
+    const src = readSource("src/components/ShareDropdown.tsx");
     // Typed as SharePayload rather than a structural copy, which could drift
     // from it — and did, once `body` was added.
     expect(src).toMatch(/^\s*share: SharePayload;\s*$/m);
@@ -211,15 +195,15 @@ describe("every share surface gets its copy from shareCopy", () => {
 
   it("every ShareDropdown caller passes share=", () => {
     const callers = files.filter((f) =>
-      /<ShareDropdown/.test(readFileSync(f, "utf8")),
+      /<ShareDropdown/.test(readSource(f)),
     );
     expect(callers.length).toBeGreaterThanOrEqual(4);
     for (const file of callers) {
-      const src = readFileSync(file, "utf8");
+      const src = readSource(file);
       const opens = src.match(/<ShareDropdown/g)?.length ?? 0;
       // Count real prop passes, not the literal string "share=" in a comment.
       const passes = stripComments(src).match(/\bshare=\{/g)?.length ?? 0;
-      expect(passes, `${file.replace(SRC, "src/")} passes share=`).toBe(opens);
+      expect(passes, `${file} passes share=`).toBe(opens);
     }
   });
 });
