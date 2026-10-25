@@ -1,7 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { readFileSync } from "node:fs";
-import { execSync } from "node:child_process";
-import { resolve } from "node:path";
+import { listSourceFiles, readSource } from "@/test/sourceFiles";
 
 /**
  * The Songbook numbers its entries "Vol. N", never "Issue 001".
@@ -43,11 +41,7 @@ const LABEL = /\bissue\s*(?:no\.?\s*)?[#:.\-]?\s*(?:\$\{|\{|\d)/i;
 /** `"Issue " + n` — the concatenation form the pattern above cannot reach. */
 const CONCAT = /\bissue\s*["'`]\s*\+/i;
 
-const root = resolve(__dirname, "../../..");
-const files = execSync("git ls-files 'src/**/*.tsx' 'src/**/*.ts'", { cwd: root, encoding: "utf8" })
-  .split("\n")
-  .filter(Boolean)
-  .filter((f) => !/\.test\.|\/__tests__\//.test(f));
+const files = listSourceFiles("src").filter((f) => !/\.test\.|\/__tests__\//.test(f));
 
 describe("the Songbook numbers its entries Vol. N", () => {
   it("scans a real list of files (guards against the glob going empty)", () => {
@@ -56,7 +50,7 @@ describe("the Songbook numbers its entries Vol. N", () => {
 
   it("still finds the surfaces that print an issue number", () => {
     const printers = files.filter((rel) =>
-      /issue_number|issueNumber/.test(readFileSync(resolve(root, rel), "utf8")),
+      /issue_number|issueNumber/.test(readSource(rel)),
     );
     // Songbook, SongFeature, VersionPicker, and the home page's
     // SongbookSpotlightCard (which took over from HeroSection) today. If a refactor
@@ -67,7 +61,7 @@ describe("the Songbook numbers its entries Vol. N", () => {
   it("no surface labels an entry 'Issue <number>'", () => {
     const offenders: string[] = [];
     for (const rel of files) {
-      readFileSync(resolve(root, rel), "utf8")
+      readSource(rel)
         .split("\n")
         .forEach((line, n) => {
           if (LABEL.test(line) || CONCAT.test(line))

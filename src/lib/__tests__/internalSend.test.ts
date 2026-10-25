@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
-import { readFileSync, readdirSync, existsSync } from "fs";
+import { readdirSync, existsSync } from "fs";
 import { join } from "path";
+import { REPO_ROOT, readSource } from "@/test/sourceFiles";
 import { INTERNAL_SEND_HEADER, internalSendToken } from "../../../supabase/functions/_shared/internalSend";
 import { describeBearer } from "../../../supabase/functions/_shared/requireAdmin";
 import { authorizeSend, type SendAuthorizationDeps } from "../../../supabase/functions/send-transactional-email/authorize";
@@ -29,10 +30,9 @@ const jwt = (payload: object) => `${b64url('{"alg":"HS256","typ":"JWT"}')}.${b64
 const ARRIVED = `Bearer ${jwt({ role: "service_role", exp: 1 })}`;
 
 const TEMPLATE_NAMES = [
-  ...readFileSync(
-    join(process.cwd(), "supabase/functions/_shared/transactional-email-templates/registry.ts"),
-    "utf8",
-  ).matchAll(/^ {2}'([a-z-]+)':/gm),
+  ...readSource("supabase/functions/_shared/transactional-email-templates/registry.ts").matchAll(
+    /^ {2}'([a-z-]+)':/gm,
+  ),
 ].map((m) => m[1]);
 
 describe("internalSendToken", () => {
@@ -117,7 +117,7 @@ describe("describeBearer names the kind of credential and never the credential",
 
 // Comments are stripped, so a commented-out line does not count.
 const source = (p: string) =>
-  readFileSync(join(process.cwd(), p), "utf8").replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:])\/\/[^\n]*/g, "$1");
+  readSource(p).replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:])\/\/[^\n]*/g, "$1");
 
 /** The full `functions.invoke('send-transactional-email', …)` call, counted by parentheses. */
 const invokeCalls = (src: string) => {
@@ -136,7 +136,7 @@ const invokeCalls = (src: string) => {
 };
 
 describe("every function that invokes send-transactional-email sends the header", () => {
-  const dir = join(process.cwd(), "supabase/functions");
+  const dir = join(REPO_ROOT, "supabase/functions");
   const callers = readdirSync(dir)
     .filter((f) => existsSync(join(dir, f, "index.ts")))
     .map((f) => ({ name: f, src: source(`supabase/functions/${f}/index.ts`) }))
