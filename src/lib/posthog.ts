@@ -1,5 +1,7 @@
 import posthog from "posthog-js";
 
+declare const __BUILD_SHA__: string;
+
 const projectToken = import.meta.env.VITE_PUBLIC_POSTHOG_PROJECT_TOKEN;
 const apiHost = import.meta.env.VITE_PUBLIC_POSTHOG_HOST;
 
@@ -59,6 +61,17 @@ export const initializePostHog = () => {
     // behaviour, it is what the active Error tracking signal source watches,
     // and PrivacyInfo.xcprivacy already declares CrashData. Flip it off here if
     // that trade stops being worth it.
+    //
+    // Every event carries the commit it was built from. A Lovable publish
+    // leaves no timestamp anywhere we can read (no GitHub deployment, nothing
+    // in the Lovable API), so "before or after the release?" was answered by
+    // inference — and the 2026-10-16 service-worker fix could only be dated
+    // by the moment its own effect appeared. With this, a release went live
+    // at the first event carrying its sha. `loaded` runs before posthog-js
+    // schedules the initial $pageview, so the landing pageview is tagged too.
+    loaded: (ph) => {
+      ph.register({ build_sha: typeof __BUILD_SHA__ !== "undefined" ? __BUILD_SHA__ : "unknown" });
+    },
   });
 
   Object.assign(window, { posthog });
