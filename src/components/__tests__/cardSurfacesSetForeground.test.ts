@@ -1,7 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { readFileSync } from "node:fs";
-import { execSync } from "node:child_process";
-import { resolve } from "node:path";
+import { listSourceFiles, readSource } from "@/test/sourceFiles";
 
 /**
  * Any overlay painted on `bg-card` must also set `text-card-foreground`.
@@ -62,10 +60,7 @@ const literals = (tag: string): string =>
 const SETS_FOREGROUND = /(?<![\w:-])text-card-foreground\b/;
 const ON_CARD = /(?<![\w:-])bg-card\b/;
 
-const root = resolve(__dirname, "../../..");
-const files = execSync("git ls-files 'src/**/*.tsx'", { cwd: root, encoding: "utf8" })
-  .split("\n")
-  .filter(Boolean);
+const files = listSourceFiles("src", { match: /\.tsx$/ });
 
 describe("overlays on the cream card set their own foreground", () => {
   it("scans a real list of files (guards against the glob going empty)", () => {
@@ -75,7 +70,7 @@ describe("overlays on the cream card set their own foreground", () => {
   it("finds the Content tags it claims to check", () => {
     let seen = 0;
     for (const rel of files) {
-      const src = readFileSync(resolve(root, rel), "utf8");
+      const src = readSource(rel);
       for (const p of PRIMITIVES) {
         let i = src.indexOf(`<${p}Content`);
         while (i !== -1) { seen++; i = src.indexOf(`<${p}Content`, i + 1); }
@@ -89,7 +84,7 @@ describe("overlays on the cream card set their own foreground", () => {
   it("no overlay on bg-card inherits the page colour", () => {
     const offenders: string[] = [];
     for (const rel of files) {
-      const src = readFileSync(resolve(root, rel), "utf8");
+      const src = readSource(rel);
       for (const p of PRIMITIVES) {
         let i = src.indexOf(`<${p}Content`);
         while (i !== -1) {

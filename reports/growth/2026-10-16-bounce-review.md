@@ -166,3 +166,16 @@ None of these is done here. Each is Jay's call, and replay and autocapture have 
 - The release doc's baseline (780 plays, 242 setlists, etc.) is Supabase data and contains no bounce metric, so no bounce baseline from 2026-10-03 exists beyond PostHog's 09-20 to 10-03 window.
 - Releases inside the post window overlap: the 10-04 front door, 10-06 publish (play above the fold, share copy), 10-08 home Songbook card, 10-09 player bar message. Deploy times were not checked, so no clean before/after for any single one.
 - The live site could not be reached from this sandbox, so the reload hypothesis and the sw.js failure are unobserved in a browser.
+
+## Result — verified 2026-10-24
+
+**The fix works. Duplicate share on first-ever home-entry sessions: 0 of 13 after the publish, against 31 of 49 (63%) before.** The before figure comes from my re-derivation of this report's query (shared filter, T0); the report itself said 34/48 = 71%, and the gap is in how "first-ever" is cut, not in the shape. Both the 1s and 2s definitions give 0/13 after the publish. Returning-person sessions: 0 of 5 after.
+
+- **The threshold is met however the next sessions go.** It asked for 15 sessions under 15%. With 0 of 13 in hand, two duplicates in the next two sessions would still read 2/15 = 13%.
+- **Live code:** `www.dead-set.org` serves `4172085` (the sha baked into the `/admin` chunk) and its `index.html` carries the `hadController` guard.
+- **Browser trace (the confirmation this report said was missing):** a first visit in a profile with no service worker and empty caches. The worker installed and took control of the page, there was one document load of `/`, and the navigation type stayed `navigate` rather than `reload`. PostHog was opted out for the probe, so it is not in the 0/13. Chromium only, no iOS Safari trace.
+- **When it went live, which is the weak link.** The publish was never recorded in `web_releases` (RELEASING.md step 2a; the latest row is `560b75e`, 2026-10-09). Nothing else records it either: no GitHub deployment, no Lovable message. What bounds it: the old bundle `index-B52mVBrn.js` was last seen in an exception at 10-12 19:25 UTC, and the new `index-BSSo9Hvn.js` was first seen 10-20 21:53. Within that range the duplicates stop sharply. The last one was 10-20 06:08 (3 of the 4 first-ever sessions since the merge had one), and the next 13 have none. The owner loaded `/admin` at 10-20 06:34, which fits a publish followed by a look at the sync badge. **Read the publish as about 10-20 06:10–06:34 UTC.** If it had gone out right after the 10-16 merge instead, the post-fix count would be 3/17 = 18%, inconclusive by this report's thresholds. The sharp stop and the browser trace both argue against that.
+- **What this unlocks:** PostHog's built-in bounce rate should now be close to the corrected one for sessions after 10-20, so from here on it can be read directly. That makes first-ever corrected bounce after 10-20 the baseline this report asked for.
+- **What it does not answer:** the effect on bounce or play rate. The report already said so (several months of traffic for a detectable change).
+
+So the next release can be dated by a query instead of this, events now carry `build_sha`. It was added after this verification, so the first event carrying a given sha is when that build went live.
