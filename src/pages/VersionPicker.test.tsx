@@ -19,6 +19,8 @@ const setSearchParams = vi.fn();
 const playSingle = vi.fn();
 const playSetlist = vi.fn();
 const reportPlaybackFailure = vi.fn();
+/** The oops card's state, as the page sees it. */
+let mockOops: { key: number } | null = null;
 
 vi.mock("react-router-dom", async () => {
   const actual = await vi.importActual<typeof import("react-router-dom")>("react-router-dom");
@@ -40,6 +42,7 @@ vi.mock("@/contexts/AudioPlayerContext", () => ({
     unlockAudio: vi.fn(),
     playingSlot: null,
     reportPlaybackFailure,
+    playbackOops: mockOops,
   }),
 }));
 
@@ -58,7 +61,22 @@ vi.mock("@/lib/archiveOrg", () => ({
 
 const toastError = vi.fn();
 const toastInfo = vi.fn();
-vi.mock("sonner", () => ({ toast: { error: (m: string) => toastError(m), info: (m: string) => toastInfo(m), success: vi.fn() } }));
+const toastInfoOptions = vi.fn();
+const toastDismiss = vi.fn();
+vi.mock("sonner", () => ({
+  toast: {
+    error: (m: string) => toastError(m),
+    // toastInfo gets the message alone, on purpose: several assertions below
+    // are `not.toHaveBeenCalledWith(stringMatching(...))`, and a second
+    // argument would make every one of them pass vacuously.
+    info: (m: string, o?: unknown) => {
+      toastInfoOptions(m, o);
+      return toastInfo(m);
+    },
+    success: vi.fn(),
+    dismiss: (id?: unknown) => toastDismiss(id),
+  },
+}));
 
 const SONGS = [
   { id: "song-1", title: "Shakedown Street", times_played: 165, first_played: "1978-08-31", last_played: "1995-07-06" },
@@ -117,6 +135,9 @@ beforeEach(() => {
   findRecordingForDate.mockResolvedValue(null);
   toastError.mockReset();
   toastInfo.mockReset();
+  toastInfoOptions.mockReset();
+  toastDismiss.mockReset();
+  mockOops = null;
   setSearchParams.mockReset();
   window.HTMLElement.prototype.scrollIntoView = vi.fn();
 });
@@ -369,5 +390,48 @@ describe("VersionPicker — when the Archive cannot be asked", () => {
     // Both milestones render the line, so this is findAll — a findByText here
     // throws on the second match and reads like the code failed.
     expect((await screen.findAllByText(/No tape of this night circulates/i)).length).toBe(2);
+  });
+});
+
+/**
+ * The hero leads with the debut. With no tape of it, the tap falls through to
+ * the top pick and a toast says "starting with the next best thing". The
+ * 2026-10-26 gate found that toast fired BEFORE the fallback was looked up: it
+ * was false whenever the fallback had no tape either, and either way it sat
+ * over the oops card's suggestion for its whole four seconds.
+ */
+describe("VersionPicker — the hero's fallback to the next best thing", () => {
+  const NEXT_BEST = /next best thing/;
+  const STORED_TOP = VERSIONS[0].archive_org_url;
+  afterEach(() => {
+    VERSIONS[0].archive_org_url = STORED_TOP;
+  });
+  const tapHero = async () =>
+    fireEvent.click(await screen.findByRole("button", { name: /^Play Shakedown Street, /i }));
+
+  it("never announces it when the next best thing has no tape either", async () => {
+    // No tape of the debut, and the top pick carries none to fall back on.
+    VERSIONS[0].archive_org_url = null;
+    await openPage();
+    await tapHero();
+    await waitFor(() => expect(reportPlaybackFailure).toHaveBeenCalledWith(expect.objectContaining({ kind: "no_tape" })));
+    expect(playSingle).not.toHaveBeenCalled();
+    expect(toastInfo).not.toHaveBeenCalledWith(expect.stringMatching(NEXT_BEST));
+  });
+
+  it("says it once the fallback starts, and takes it down when the card comes after", async () => {
+    const view = render(<VersionPicker />);
+    await screen.findByText("Shakedown Street");
+    await tapHero();
+    await waitFor(() => expect(playSingle).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(toastInfo).toHaveBeenCalledWith(expect.stringMatching(NEXT_BEST)));
+    const id = (toastInfoOptions.mock.calls.find(([msg]) => NEXT_BEST.test(String(msg)))?.[1] as { id?: unknown })?.id;
+    expect(id).toEqual(expect.any(String));
+    expect(toastDismiss).not.toHaveBeenCalled();
+    // The fallback tape then fails inside the player (the song is not on it,
+    // or it will not spin), and the oops card goes up.
+    mockOops = { key: 1 };
+    view.rerender(<VersionPicker />);
+    expect(toastDismiss).toHaveBeenCalledWith(id);
   });
 });

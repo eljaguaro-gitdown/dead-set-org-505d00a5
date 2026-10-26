@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Play, X } from "lucide-react";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
@@ -9,10 +9,9 @@ import { useClaimBottom } from "@/lib/bottomCardClaims";
 import { isNativeApp } from "@/lib/nativeApp";
 import {
   NOTED_LINE,
-  SIGNED_IN_PROMISE,
-  SIGNED_OUT_PROMISE,
   knownGoodToSlot,
   oopsCopy,
+  oopsPromise,
   rememberPendingFollow,
   setPlaybackCredit,
   shortShowDate,
@@ -42,6 +41,18 @@ const PlaybackOopsCard = () => {
   const [creditFailed, setCreditFailed] = useState(false);
   useClaimBottom("playback-oops", !!oops);
 
+  // The card is about a tap on the page the fan was on. Root-mounted, it used
+  // to follow them across routes and could sit over the landing picker. A
+  // query-string change (?n=, ?then=share) is the same page, so only the path
+  // counts. The suggestion needs no exception: it plays in place, and that
+  // tap takes the card down itself.
+  const pathRef = useRef(location.pathname);
+  useEffect(() => {
+    if (pathRef.current === location.pathname) return;
+    pathRef.current = location.pathname;
+    dismissPlaybackOops();
+  }, [location.pathname, dismissPlaybackOops]);
+
   // A new failure starts unticked: credit is asked for each time, never assumed.
   useEffect(() => {
     setCredit(false);
@@ -53,6 +64,7 @@ const PlaybackOopsCard = () => {
   if (!oops) return null;
 
   const { headline, detail } = oopsCopy(oops);
+  const promise = oopsPromise(oops.kind);
   const noted = typeof oops.issueId === "string";
   const suggestion = oops.suggestion ?? null;
 
@@ -111,7 +123,7 @@ const PlaybackOopsCard = () => {
             <p className="font-body text-sm leading-snug text-card-foreground">{NOTED_LINE}</p>
             {user ? (
               <>
-                <p className="font-body text-sm leading-snug text-card-foreground">{SIGNED_IN_PROMISE}</p>
+                <p className="font-body text-sm leading-snug text-card-foreground">{promise.signedIn}</p>
                 {/* Web only: the iOS app shows no credits (App Review 1.2; see
                     CommunityFixesList), so it must not ask for one either. */}
                 {!isNativeApp() && (
@@ -122,7 +134,7 @@ const PlaybackOopsCard = () => {
                     onChange={(e) => void toggleCredit(e.target.checked)}
                     className="h-4 w-4 shrink-0 accent-[hsl(var(--dead-dark))]"
                   />
-                  Credit me by name on Build Notes when it is
+                  {promise.credit}
                 </label>
                 )}
                 {creditFailed && (
@@ -140,7 +152,7 @@ const PlaybackOopsCard = () => {
                 >
                   Sign in
                 </button>{" "}
-                {SIGNED_OUT_PROMISE.replace(/^Sign in /, "")}
+                {promise.signedOut.replace(/^Sign in /, "")}
               </p>
             )}
           </div>

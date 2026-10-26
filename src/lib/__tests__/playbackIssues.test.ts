@@ -12,6 +12,7 @@ import {
   isArchiveTrackUrl,
   knownGoodToSlot,
   oopsCopy,
+  oopsPromise,
   recordTapeOk,
   rememberPendingFollow,
   reportPlaybackIssue,
@@ -73,9 +74,30 @@ describe("what the card says", () => {
 
   it("never says AI, tool, or ticket", () => {
     const all = (["not_on_tape", "no_tape", "wont_play", "none_in_setlist"] as const)
-      .flatMap((kind) => Object.values(oopsCopy({ kind, songTitle: "X", showDate: "1977-05-08" })))
+      .flatMap((kind) => [
+        ...Object.values(oopsCopy({ kind, songTitle: "X", showDate: "1977-05-08" })),
+        ...Object.values(oopsPromise(kind)),
+      ])
       .join(" ");
     expect(all).not.toMatch(/\bAI\b|\btool\b|\bticket\b|algorithm/i);
+  });
+
+  it("promises a fix only where one can come; elsewhere, only if a tape turns up", () => {
+    // "No tape exists" closes an issue and tells nobody. For a missing night
+    // that is the usual end, so "as soon as it's fixed" would be broken there.
+    expect(oopsPromise("no_tape")).toEqual({
+      signedIn: "If one turns up, we'll let you know.",
+      signedOut: "Sign in and we'll let you know if one turns up.",
+      credit: "Credit me by name on Build Notes if it does",
+    });
+    expect(oopsPromise("none_in_setlist")).toEqual(oopsPromise("no_tape"));
+    for (const kind of ["not_on_tape", "wont_play"] as const) {
+      expect(oopsPromise(kind)).toEqual({
+        signedIn: "We'll let you know as soon as it's fixed.",
+        signedOut: "Sign in and we'll let you know as soon as it's fixed.",
+        credit: "Credit me by name on Build Notes when it is",
+      });
+    }
   });
 });
 

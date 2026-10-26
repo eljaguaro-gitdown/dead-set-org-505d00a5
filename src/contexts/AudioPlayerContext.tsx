@@ -385,6 +385,15 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
   }, []);
   /** Track urls already recorded as playing, so a long track is counted once. */
   const recordedOkRef = useRef(new Set<string>());
+  /**
+   * The slot and track the engine last reported broken. `gapless` says it
+   * twice for one dead track — the <audio> element's error event, then the
+   * play() promise rejecting with it, in the same task — and each used to
+   * file a report, re-raise the card and advance the queue. Cleared by a fresh
+   * tap and by moving to another slot, so coming back to the track and having
+   * it fail again is a new failure, not an echo.
+   */
+  const lastEngineErrorRef = useRef<string | null>(null);
 
   /** Finalize the outgoing play event as "finished" when it actually ran to the end. */
   const maybeFinalizeFinished = (outgoingSlotId: string | null) => {
@@ -569,6 +578,8 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     // Same for the apology card: this tap is the answer to it (often the very
     // tape it offered), so it must not sit over the music that follows.
     setPlaybackOops(null);
+    // A retry keeps the slot id, so the slot-change reset below cannot see it.
+    lastEngineErrorRef.current = null;
     setState({ playingSlot: slot, playlistMode, playlistIndex, playlistSlots, activeSetlistId });
 
     // Resolve direct track URL in background if missing
@@ -597,7 +608,11 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
             { song: slot.song.title, seq, current: playSingleSeqRef.current }, "warn");
           return;
         }
-        if (playlistMode) {
+        // Skipping needs somewhere to skip TO. On the last slot it used to
+        // say "Skipping…" and then "End of setlist", with no apology for the
+        // song the fan had just tapped — so the last one fails like a single
+        // tap instead.
+        if (playlistMode && playlistIndex < playlistSlots.length - 1) {
           // Both of these SKIP, so neither may promise to keep looking — the
           // old "Still looking…" was followed immediately by advancePlaylist
           // and, with the Archive down, by "End of setlist".
@@ -907,6 +922,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     playSingleSeqRef.current++;
     clearPlaybackError(); // same reason as playSingle: a new run is a new attempt
     setPlaybackOops(null);
+    lastEngineErrorRef.current = null;
     // Play All clears playingSlot and leaves it null until the first track
     // resolves, so nothing else marks this wait as busy. Named so the card can
     // say which song it is hunting for.
@@ -1075,6 +1091,17 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     onError: (error) => {
       if (engineMode !== "gapless") return;
       audioDebug.log("context", "gapless engine error", { error: String(error) }, "error");
+      const broken = stateRef.current.playingSlot;
+      const errorKey = broken ? `${broken.id}|${broken.directTrackUrl ?? ""}` : null;
+      if (errorKey && errorKey === lastEngineErrorRef.current) {
+        // The same dead track, said twice. Everything below has already
+        // happened once for it: a second pass filed a second report, raised
+        // the card again, advanced the queue twice and counted one bad track
+        // as two toward the cap of three.
+        audioDebug.log("context", "repeat engine error for the same track ignored", { slot: broken?.id }, "warn");
+        return;
+      }
+      lastEngineErrorRef.current = errorKey;
       captureAudioEvent("audio_error", {
         engine: "gapless",
         message: String(error),
@@ -1086,7 +1113,13 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
       const st = stateRef.current;
       // Offline, the tape is not the problem and there is nothing to file.
       const failed = st.playingSlot && !looksOffline() ? failureFromSlot("wont_play", st.playingSlot) : null;
-      if (st.playlistMode && consecutiveErrorsRef.current <= 3) {
+      // The same test advancePlaylist makes. A dead LAST track used to be
+      // "skipped" into nothing: a quiet report, then "End of setlist" (twice,
+      // before the repeat above was caught) and no word that the song the set
+      // was heading for never played. With nothing after it, it is the fan's
+      // dead tap, and it gets the card and the bar's error like one.
+      const somethingAfter = st.playlistIndex < st.playlistSlots.length - 1;
+      if (st.playlistMode && somethingAfter && consecutiveErrorsRef.current <= 3) {
         if (failed) raisePlaybackOops(failed, { show: false });
         void advancePlaylist(1); // keep the queue moving past a broken track
       } else {
@@ -1189,6 +1222,13 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     advancePlaylistRef.current = advancePlaylist;
   }, [advancePlaylist]);
+
+  // Another slot is another tape. Both of a dead track's errors arrive in one
+  // task, long before the render that moves the queue on, so this never
+  // clears the marker between them.
+  useEffect(() => {
+    lastEngineErrorRef.current = null;
+  }, [state.playingSlot?.id]);
 
   // No reset on slot change. It used to live here, and since every error
   // advances to a new slot it zeroed the count each time: on 2026-09-23 a
