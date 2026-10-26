@@ -136,6 +136,22 @@ describe("a tap that will not play, for a reason a fix can address", () => {
     expect(reportCalls()[0][1]).toEqual(expect.objectContaining({ p_kind: "not_on_tape", p_notify: false }));
     expect(oops()).toBeNull();
   });
+
+  it("the LAST slot has nothing to skip to: it is the fan's dead tap, and gets the card", async () => {
+    // Was "Skipping Eyes of the World — not on this tape", then "End of
+    // setlist", and no word to the fan about the song they had just tapped.
+    archive(WRONG_TAPE);
+    mount();
+    const last = { ...STORED, id: "last", position: 1 };
+    act(() => void ctx.playSingle(last, { slots: [{ ...STORED, id: "first" }, last] }));
+    await waitFor(() => expect(oops()?.kind).toBe("not_on_tape"), { timeout: 5000 });
+    expect(oops()?.slotId).toBe("last");
+    expect(screen.getByTestId("err").textContent).toBe("That song isn't on this tape.");
+    expect(reportCalls()).toHaveLength(1);
+    expect(reportCalls()[0][1]).toEqual(expect.objectContaining({ p_kind: "not_on_tape", p_notify: true }));
+    expect(mocks.info).not.toHaveBeenCalledWith(expect.stringMatching(/^Skipping/));
+    expect(mocks.info).not.toHaveBeenCalledWith("End of setlist");
+  });
 });
 
 describe("nothing is filed about what we could not ask", () => {

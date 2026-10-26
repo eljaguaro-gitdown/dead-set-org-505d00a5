@@ -122,12 +122,23 @@ const fmtDate = (iso: string | null) => {
   return `${months[m - 1]} ${d}, ${y}`;
 };
 
+/** One id, so the oops card can take the hero's fallback toast down. */
+const HERO_FALLBACK_TOAST = "version-picker-hero-fallback";
+
 const VersionPicker = () => {
   const { slug } = useParams<{ slug: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { playSingle, playSetlist, unlockAudio, playingSlot, reportPlaybackFailure } = useAudioPlayer();
+  const { playSingle, playSetlist, unlockAudio, playingSlot, reportPlaybackFailure, playbackOops } = useAudioPlayer();
+  // The fallback tape can still fail AFTER the toast, inside the player — the
+  // song is not on it, or it will not spin. The card says so then, and the
+  // toast promising "the next best thing" must not sit on top of it, both
+  // because it is no longer true and because it covers the card's suggestion.
+  useEffect(() => {
+    if (playbackOops) toast.dismiss(HERO_FALLBACK_TOAST);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [playbackOops?.key]);
 
   const [song, setSong] = useState<PickerSong | null>(null);
   const [versions, setVersions] = useState<PickerVersion[]>([]);
@@ -489,8 +500,12 @@ const VersionPicker = () => {
         return;
       }
       if (topVersion) {
-        toast.info("No tape of the debut circulates — starting with the next best thing");
-        await playVersion(topVersion, "hero_fallback");
+        // Said only once the next best thing has a tape to start. Toasted
+        // first, it was false whenever the fallback missed too, and it sat
+        // over the oops card's suggestion for its whole four seconds.
+        if (await playVersion(topVersion, "hero_fallback")) {
+          toast.info("No tape of the debut circulates — starting with the next best thing", { id: HERO_FALLBACK_TOAST });
+        }
       } else {
         // An answer about the music: apologise, file it, offer one we know plays.
         reportPlaybackFailure({ kind: "no_tape", songId: song.id, songTitle: song.title, showDate: song.first_played ?? null });
@@ -572,9 +587,10 @@ const VersionPicker = () => {
    * Play one version. Most ranked versions carry no archive_org_url — the
    * research recorded the night, not the tape — so the recording is resolved
    * by date on demand rather than making the page wait for 15 lookups.
+   * Resolves true once a tape has been handed to the player.
    */
-  const playVersion = async (v: PickerVersion, origin: PlayOrigin = "version") => {
-    if (!song || !v.show_date) return;
+  const playVersion = async (v: PickerVersion, origin: PlayOrigin = "version"): Promise<boolean> => {
+    if (!song || !v.show_date) return false;
     unlockAudio();
     let url = v.archive_org_url;
     let directTrackUrl: string | null = null;
@@ -589,13 +605,13 @@ const VersionPicker = () => {
         tape = await findRecordingForDate(song.title, v.show_date);
       } catch {
         toast.error("Couldn't reach the Archive — try again");
-        return;
+        return false;
       } finally {
         setResolving(null);
       }
       if (!tape?.url) {
         reportPlaybackFailure({ kind: "no_tape", songId: song.id, songTitle: song.title, showDate: v.show_date });
-        return;
+        return false;
       }
       url = tape.url;
       directTrackUrl = tape.directTrackUrl ?? null;
@@ -622,6 +638,7 @@ const VersionPicker = () => {
       directTrackUrl,
     } as PlayableSlot);
     capturePlayed(origin, false);
+    return true;
   };
 
   /** Everything on screen, in order, as one queue. */

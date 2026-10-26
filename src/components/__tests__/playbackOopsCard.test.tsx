@@ -18,6 +18,7 @@ const m = vi.hoisted(() => ({
   setPlaybackCredit: vi.fn(async () => true),
   rememberPendingFollow: vi.fn(),
   capture: vi.fn(),
+  location: { pathname: "/versions/althea", search: "?n=1" },
 }));
 
 vi.mock("@/contexts/AudioPlayerContext", () => ({
@@ -29,7 +30,7 @@ vi.mock("@/lib/posthog", () => ({ captureEvent: m.capture }));
 vi.mock("react-router-dom", async () => ({
   ...(await vi.importActual<typeof import("react-router-dom")>("react-router-dom")),
   useNavigate: () => m.navigate,
-  useLocation: () => ({ pathname: "/versions/althea", search: "?n=1" }),
+  useLocation: () => m.location,
 }));
 vi.mock("@/lib/playbackIssues", async () => ({
   ...(await vi.importActual<typeof import("@/lib/playbackIssues")>("@/lib/playbackIssues")),
@@ -63,6 +64,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   m.oops = null;
   m.user = null;
+  m.location = { pathname: "/versions/althea", search: "?n=1" };
   m.setPlaybackCredit.mockResolvedValue(true);
   asWeb();
 });
@@ -190,5 +192,59 @@ describe("the oops card", () => {
     m.oops = { ...base };
     const { container } = render(<PlaybackOopsCard />);
     expect((container.querySelector("[data-playback-oops]") as HTMLElement).style.bottom).toBe("76px");
+  });
+});
+
+/**
+ * Root-mounted, the card followed the fan from the page they tapped on to
+ * wherever they went next, and could sit over the landing picker.
+ */
+describe("the card stays on the page it belongs to", () => {
+  it("leaving the page takes it down", () => {
+    m.oops = { ...base };
+    const { rerender } = render(<PlaybackOopsCard />);
+    expect(m.dismiss).not.toHaveBeenCalled();
+    m.location = { pathname: "/", search: "" };
+    rerender(<PlaybackOopsCard />);
+    expect(m.dismiss).toHaveBeenCalledTimes(1);
+  });
+
+  it("a query-string change is the same page, and leaves it up", () => {
+    m.oops = { ...base };
+    const { rerender } = render(<PlaybackOopsCard />);
+    m.location = { pathname: "/versions/althea", search: "?n=1&then=share" };
+    rerender(<PlaybackOopsCard />);
+    expect(m.dismiss).not.toHaveBeenCalled();
+  });
+});
+
+/**
+ * "As soon as it's fixed" is a promise about a fix. For a night no tape of
+ * which turned up, the usual end is the admin's "No tape exists", which tells
+ * nobody — so the promise there is conditional, and silence keeps it.
+ */
+describe("what the card promises depends on what a fix can be", () => {
+  it.each(["no_tape", "none_in_setlist"] as const)("%s, signed in: if one turns up", (kind) => {
+    m.oops = { ...base, kind, issueId: "issue-1" };
+    m.user = { id: "u1" };
+    render(<PlaybackOopsCard />);
+    expect(text("If one turns up, we'll let you know.")).not.toBeNull();
+    expect(text("We'll let you know as soon as it's fixed.")).toBeNull();
+    expect(screen.getByRole("checkbox", { name: "Credit me by name on Build Notes if it does" })).not.toBeChecked();
+  });
+
+  it("no_tape, signed out: the invitation carries the same condition", () => {
+    m.oops = { ...base, kind: "no_tape", issueId: "issue-1" };
+    render(<PlaybackOopsCard />);
+    expect(text("Sign in and we'll let you know if one turns up.")).not.toBeNull();
+    expect(text("Sign in and we'll let you know as soon as it's fixed.")).toBeNull();
+  });
+
+  it.each(["not_on_tape", "wont_play"] as const)("%s keeps the promise of a fix", (kind) => {
+    m.oops = { ...base, kind, issueId: "issue-1" };
+    m.user = { id: "u1" };
+    render(<PlaybackOopsCard />);
+    expect(text("We'll let you know as soon as it's fixed.")).not.toBeNull();
+    expect(screen.getByRole("checkbox", { name: "Credit me by name on Build Notes when it is" })).toBeInTheDocument();
   });
 });

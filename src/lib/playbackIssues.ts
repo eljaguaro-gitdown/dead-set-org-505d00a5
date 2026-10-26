@@ -105,6 +105,28 @@ export const NOTED_LINE = "We're on it, and thanks to you this community project
 export const SIGNED_IN_PROMISE = "We'll let you know as soon as it's fixed.";
 export const SIGNED_OUT_PROMISE = "Sign in and we'll let you know as soon as it's fixed.";
 
+/**
+ * What the card promises, which depends on what a fix can be. A wrong tape or
+ * a dead link is ours to fix. "No tape of that night turned up" often has no
+ * fix: the admin queue's "No tape exists" (wont_fix) closes it and tells nobody,
+ * because there is nothing to tell. So for those kinds the promise is
+ * conditional, and both outcomes keep it: if a tape turns up and is verified,
+ * the playback-fixed email goes out as before; if none exists, silence is what
+ * was promised. ("As soon as it's fixed" was broken in the second case.)
+ */
+export const oopsPromise = (kind: PlaybackIssueKind) =>
+  kind === "no_tape" || kind === "none_in_setlist"
+    ? {
+        signedIn: "If one turns up, we'll let you know.",
+        signedOut: "Sign in and we'll let you know if one turns up.",
+        credit: "Credit me by name on Build Notes if it does",
+      }
+    : {
+        signedIn: SIGNED_IN_PROMISE,
+        signedOut: SIGNED_OUT_PROMISE,
+        credit: "Credit me by name on Build Notes when it is",
+      };
+
 const buildSha = () => (typeof __BUILD_SHA__ !== "undefined" ? __BUILD_SHA__ : "unknown");
 
 /**
