@@ -458,8 +458,11 @@ const VersionPicker = () => {
   /** Play the debut; fall through to the top pick when no tape of it exists. */
   const playHero = async () => {
     if (!song) return;
+    // The page this tap was made on, for an answer that comes back after the
+    // lookup: a fan who has left it is not shown the card (reportPlaybackFailure).
+    const from = window.location.pathname;
     if (!heroIsDebut || !song.first_played) {
-      if (topVersion) await playVersion(topVersion, "hero_top");
+      if (topVersion) await playVersion(topVersion, "hero_top", from);
       return;
     }
     unlockAudio();
@@ -503,12 +506,12 @@ const VersionPicker = () => {
         // Said only once the next best thing has a tape to start. Toasted
         // first, it was false whenever the fallback missed too, and it sat
         // over the oops card's suggestion for its whole four seconds.
-        if (await playVersion(topVersion, "hero_fallback")) {
+        if (await playVersion(topVersion, "hero_fallback", from)) {
           toast.info("No tape of the debut circulates — starting with the next best thing", { id: HERO_FALLBACK_TOAST });
         }
       } else {
         // An answer about the music: apologise, file it, offer one we know plays.
-        reportPlaybackFailure({ kind: "no_tape", songId: song.id, songTitle: song.title, showDate: song.first_played ?? null });
+        reportPlaybackFailure({ kind: "no_tape", songId: song.id, songTitle: song.title, showDate: song.first_played ?? null }, { from });
       }
     } catch {
       // Could not ask the Archive. Say that, not "no tape circulates" — the
@@ -589,7 +592,11 @@ const VersionPicker = () => {
    * by date on demand rather than making the page wait for 15 lookups.
    * Resolves true once a tape has been handed to the player.
    */
-  const playVersion = async (v: PickerVersion, origin: PlayOrigin = "version"): Promise<boolean> => {
+  const playVersion = async (
+    v: PickerVersion,
+    origin: PlayOrigin = "version",
+    from = window.location.pathname,
+  ): Promise<boolean> => {
     if (!song || !v.show_date) return false;
     unlockAudio();
     let url = v.archive_org_url;
@@ -610,7 +617,7 @@ const VersionPicker = () => {
         setResolving(null);
       }
       if (!tape?.url) {
-        reportPlaybackFailure({ kind: "no_tape", songId: song.id, songTitle: song.title, showDate: v.show_date });
+        reportPlaybackFailure({ kind: "no_tape", songId: song.id, songTitle: song.title, showDate: v.show_date }, { from });
         return false;
       }
       url = tape.url;

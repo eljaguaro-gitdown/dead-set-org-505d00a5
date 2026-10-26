@@ -185,8 +185,12 @@ interface AudioPlayerContextValue extends AudioPlayerState {
    * For pages that look a night up themselves before handing the player a
    * slot (the version picker, the Songbook pages): their "no tape of this
    * night" goes through the same apology, report and suggestion.
+   *
+   * `from` is the path the tap was made on. Pass it whenever an await sits
+   * between the tap and this call: if the fan has left that page by the time
+   * the answer comes back, the card is not shown on the page they went to.
    */
-  reportPlaybackFailure: (failure: PlaybackFailure) => void;
+  reportPlaybackFailure: (failure: PlaybackFailure, opts?: { from?: string }) => void;
 }
 
 /**
@@ -213,6 +217,9 @@ const failureFromSlot = (kind: PlaybackFailure["kind"], slot: PlayableSlot): Pla
 
 /** navigator.onLine is only trustworthy when it says false. */
 const looksOffline = () => typeof navigator !== "undefined" && navigator.onLine === false;
+
+/** The page the fan is on. Only the path counts, as for PlaybackOopsCard's own dismissal. */
+const currentPath = () => (typeof window === "undefined" ? "" : window.location.pathname);
 
 const noopTransport: PlayerTransport = {
   engine: "legacy",
@@ -297,6 +304,16 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
   const engineRef = useRef<GaplessEngine | NativeEngine | null>(null);
   /** Slot id the engine is currently on — dedupes sync-effect reloads. */
   const engineSlotIdRef = useRef<string | null>(null);
+  /**
+   * Bumped by every fresh tap, so the anchor effect runs even when the tap
+   * changes nothing it can see. That effect keys on the slot's id and track
+   * url, and a second tap on the same dead row changes neither: the engine
+   * was never asked again, the card and the bar's error cleared, nothing was
+   * filed, and the bar sat on Pause at 0:00 / 0:00 (2026-10-26 gate, run 5).
+   * Only playSingle bumps it, in the same batch as the slot it sets, so a
+   * late resolve from an abandoned tap can never move it.
+   */
+  const [anchorTick, setAnchorTick] = useState(0);
   /** True when the next playingSlot change came from an engine callback. */
   const engineDrivenRef = useRef(false);
   /** Generation token for the background resolve-and-append loop. */
@@ -369,9 +386,22 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
    * `show: false` is for a slot the queue skipped past on its own: the fan saw
    * "Skipping…", not a dead tap. The catalog problem is still real, so it is
    * still filed, but nobody is promised a notice they were never offered.
+   *
+   * `from` is the page the tap was made on, for an answer that comes back
+   * after an await. A fan who has left that page never sees the card: it
+   * used to land on whatever page they had gone to, after the card's own
+   * route-change dismissal had already run. So it is filed the quiet way too.
    */
-  const raisePlaybackOops = useCallback((failure: PlaybackFailure, opts: { show?: boolean } = {}) => {
-    if (opts.show === false) {
+  const raisePlaybackOops = useCallback((
+    failure: PlaybackFailure,
+    opts: { show?: boolean; from?: string } = {},
+  ) => {
+    const leftThePage = opts.from !== undefined && opts.from !== currentPath();
+    if (leftThePage) {
+      audioDebug.log("context", "oops for a page the fan has left — filed, not shown",
+        { song: failure.songTitle, from: opts.from, now: currentPath() }, "warn");
+    }
+    if (opts.show === false || leftThePage) {
       void reportPlaybackIssue(failure, false);
       return;
     }
@@ -531,11 +561,51 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     setState({ playingSlot: null, playlistMode: false, playlistIndex: 0, playlistSlots: [], activeSetlistId: null });
   }, []);
 
+  /**
+   * A slot the fan pressed play on that would not resolve, with nothing after
+   * it to skip to. One definition for the two ways to get here, a tap and a
+   * queue that runs out on that slot, because the second used to play the
+   * song before it, say "End of setlist", and file nothing.
+   *
+   * With a recording, the bar stays on that song with the reason and a
+   * retry, and the engine is stopped: whatever it still holds is a different
+   * song from the one the bar now names. With no recording the bar cannot
+   * draw at all (GlobalAudioPlayer needs one), so the player stops, as it
+   * always has for a tap on a night that would not resolve.
+   *
+   * Either way only an answer about the music is filed with the card.
+   * "Couldn't reach" is the network, and asking again is the fix for it.
+   */
+  const failUnresolvedSlot = useCallback((slot: PlayableSlot, outcome: ResolveOutcome, from: string) => {
+    if (slot.version?.archive_org_url) {
+      engineRef.current?.clear();
+      if (outcome.unreachable) {
+        setPlaybackError("Couldn't reach the Archive just now. Tap play to try again.", slot.id);
+      } else {
+        setPlaybackError("That song isn't on this tape.", slot.id);
+        raisePlaybackOops(failureFromSlot("not_on_tape", slot), { from });
+      }
+      return;
+    }
+    stopPlayback();
+    if (outcome.unreachable) {
+      toast.error("Couldn't reach the Archive just now — tap play to try again.");
+    } else if (outcome.uncertain) {
+      // The generic search cannot tell absent from failed (see resolveSlot).
+      toast.error("No tape of this one circulates yet");
+    } else {
+      // The card says it in the house voice, files it, and offers a tape
+      // we know plays. A toast as well would be two messages for one tap.
+      raisePlaybackOops(failureFromSlot("no_tape", slot), { from });
+    }
+  }, [setPlaybackError, raisePlaybackOops, stopPlayback]);
+
   const playSingle = useCallback(async (
     slot: PlayableSlot,
     playlistContext?: { slots: PlayableSlot[]; setlistId?: string | null },
   ) => {
     audioDebug.log("context", "playSingle", { id: slot.id, song: slot.song.title, hasUrl: !!slot.version?.archive_org_url, hasDirect: !!slot.directTrackUrl, withContext: !!playlistContext });
+    const from = currentPath(); // the page this tap was made on
     playSetlistSeqRef.current++; // invalidate any in-flight playSetlist
     // See stopPlayback: without this the digging card stayed up over a tape
     // that was already playing — measured at 31s in a real browser, until an
@@ -581,6 +651,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     // A retry keeps the slot id, so the slot-change reset below cannot see it.
     lastEngineErrorRef.current = null;
     setState({ playingSlot: slot, playlistMode, playlistIndex, playlistSlots, activeSetlistId });
+    setAnchorTick((n) => n + 1); // see anchorTick: the same slot again must still reach the engine
 
     // Resolve direct track URL in background if missing
     if (!slot.directTrackUrl && slot.version?.archive_org_url) {
@@ -624,15 +695,9 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
           if (!cantReach) raisePlaybackOops(failureFromSlot("not_on_tape", slot), { show: false });
           void advancePlaylistRef.current(1);
         } else {
-          setPlaybackError(
-            cantReach
-              ? "Couldn't reach the Archive just now. Tap play to try again."
-              : "That song isn't on this tape.",
-            slot.id,
-          );
           // Only the answer about the music is filed. "Couldn't reach" is the
           // network, and the retry the bar already offers is the fix for it.
-          if (!cantReach) raisePlaybackOops(failureFromSlot("not_on_tape", slot));
+          failUnresolvedSlot(slot, { slot: null, unreachable: cantReach }, from);
         }
         return;
       }
@@ -682,19 +747,10 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
           return;
         }
         audioDebug.log("context", "no audio found for song", { song: slot.song.title, unreachable: cantReach }, "error");
-        if (cantReach) {
-          toast.error("Couldn't reach the Archive just now — tap play to try again.");
-        } else if (uncertain) {
-          toast.error("No tape of this one circulates yet");
-        } else {
-          // The card says it in the house voice, files it, and offers a tape
-          // we know plays. A toast as well would be two messages for one tap.
-          raisePlaybackOops(failureFromSlot("no_tape", slot));
-        }
-        setState({ playingSlot: null, playlistMode: false, playlistIndex: 0, playlistSlots: [], activeSetlistId: null });
+        failUnresolvedSlot(slot, { slot: null, unreachable: cantReach, uncertain }, from);
       }
     }
-  }, [engineMode, getEngine, setPlaybackError, clearPlaybackError, raisePlaybackOops]);
+  }, [engineMode, getEngine, clearPlaybackError, raisePlaybackOops, failUnresolvedSlot]);
 
   /** Resolve a slot: ensure it has an archive URL and directTrackUrl */
   /**
@@ -916,6 +972,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
     const seq = ++playSetlistSeqRef.current;
+    const from = currentPath(); // the page Play All was pressed on
     // Supersession runs BOTH ways. Without this, a slow single tap that failed
     // after Play All had started cleared its playingSlot and toasted over the
     // tape that was playing.
@@ -989,7 +1046,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
           songTitle: sorted[0]?.song.title ?? "Setlist",
           showDate: null,
           setlistId: setlistId ?? null,
-        });
+        }, { from });
       }
       return;
     }
@@ -1017,10 +1074,21 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
   const advancePlaylist: (dir: number) => Promise<void> = useCallback(async (dir: number) => {
     const { playlistIndex, playlistSlots } = stateRef.current;
     engineSlotIdRef.current = null; // user-driven jump — the sync effect re-anchors the queue
+    // playSingle, playSetlist and stopPlayback all move this on. A skip that
+    // was still resolving when the fan tapped something else used to land
+    // anyway, taking the player back into the old queue.
+    const seq = playSetlistSeqRef.current;
+    const from = currentPath();
     audioDebug.log("context", "advancePlaylist", { dir, fromIndex: playlistIndex });
 
+    let unresolved: { slot: PlayableSlot; index: number; outcome: ResolveOutcome } | null = null;
     for (let i = playlistIndex + dir; i >= 0 && i < playlistSlots.length; i += dir) {
-      const { slot: resolved } = await resolveSlot(playlistSlots[i]);
+      const outcome = await resolveSlot(playlistSlots[i]);
+      if (seq !== playSetlistSeqRef.current) {
+        audioDebug.log("context", "advancePlaylist superseded, aborting", { seq, current: playSetlistSeqRef.current }, "warn");
+        return;
+      }
+      const resolved = outcome.slot;
       if (resolved?.version?.archive_org_url) {
         audioDebug.setSlot(resolved.id, resolved.song.title, resolved.version.archive_org_url, resolved.directTrackUrl ?? null);
         // Advancing through this path is gapped by definition: legacy remounts
@@ -1033,13 +1101,28 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
         }));
         return;
       }
+      unresolved = { slot: playlistSlots[i], index: i, outcome };
       audioDebug.log("context", "skipping unresolved slot in playlist", { index: i, song: playlistSlots[i].song.title }, "warn");
+    }
+
+    // The set ran out on a night that would not resolve. The fan pressed play
+    // on that night (it was in the run they started), so it fails exactly as
+    // a tap on it would: see failUnresolvedSlot. It used to play the song
+    // before it, say "End of setlist", and file nothing (2026-10-26 gate,
+    // run 5). Backwards, running out is only the start of the set.
+    if (dir > 0 && unresolved) {
+      const { slot, index, outcome } = unresolved;
+      audioDebug.log("context", "set ends on an unresolved slot", { index, song: slot.song.title, unreachable: outcome.unreachable }, "error");
+      audioDebug.setSlot(slot.id, slot.song.title, slot.version?.archive_org_url ?? null, null);
+      setState((prev) => ({ ...prev, playlistIndex: index, playingSlot: slot }));
+      failUnresolvedSlot(slot, outcome, from);
+      return;
     }
 
     audioDebug.log("context", "end of setlist", {});
     stopPlayback();
     toast.info("End of setlist");
-  }, [stopPlayback, engineMode]);
+  }, [stopPlayback, engineMode, failUnresolvedSlot]);
 
   // ── Engine bridge: engine → state ───────────────────────────────────
   // Fresh closures every render; the long-lived engine delegates through the ref.
@@ -1216,7 +1299,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
       void resolveAndAppendUpcoming(gen, slot.id);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [engineMode, state.playingSlot?.id, state.playingSlot?.directTrackUrl, getEngine, resolveAndAppendUpcoming]);
+  }, [engineMode, state.playingSlot?.id, state.playingSlot?.directTrackUrl, anchorTick, getEngine, resolveAndAppendUpcoming]);
 
   // Keep the forward ref pointed at the live advancePlaylist.
   useEffect(() => {
@@ -1246,11 +1329,19 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
       if (stateRef.current.playingSlot?.id !== slot.id) return;
       if (stateRef.current.playingSlot?.directTrackUrl) return;
       audioDebug.log("context", "resolution timed out", { song: slot.song.title }, "error");
-      setPlaybackError("Still looking for that tape. Archive.org may be slow right now.", slot.id);
+      // A slot that already has its answer is not still being looked for. A
+      // failed resolve leaves the slot without a track, which is all this
+      // checks, so 25s after "That song isn't on this tape." the bar used to
+      // change its mind to "Still looking for that tape."
+      setTransportState((prev) =>
+        prev.error?.slotId === slot.id
+          ? prev
+          : { ...prev, error: { slotId: slot.id, message: "Still looking for that tape. Archive.org may be slow right now." } },
+      );
     }, RESOLVE_TIMEOUT_MS);
     return () => window.clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [engineMode, state.playingSlot?.id, state.playingSlot?.directTrackUrl, setPlaybackError]);
+  }, [engineMode, state.playingSlot?.id, state.playingSlot?.directTrackUrl]);
 
   // Stall watchdog — the gapless counterpart to the 25s detector that lives in
   // AudioPlayer.tsx and never runs on this path. Deliberately passive: it
@@ -1491,7 +1582,10 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
       setTransportState((prev) => (prev.autoplayBlocked ? { ...prev, autoplayBlocked: false } : prev));
       engineRef.current?.togglePlayPause();
     },
+    // Moving on is an answer to the card too, like any fresh tap: it is about
+    // the song being left, and it used to sit over the next one.
     next: () => {
+      setPlaybackOops(null);
       const st = stateRef.current;
       const engine = engineRef.current;
       if (engineMode === "gapless" && engine && st.playingSlot) {
@@ -1507,6 +1601,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
       void advancePlaylist(1);
     },
     previous: () => {
+      setPlaybackOops(null);
       const st = stateRef.current;
       const engine = engineRef.current;
       if (engineMode === "gapless" && engine && st.playingSlot) {
