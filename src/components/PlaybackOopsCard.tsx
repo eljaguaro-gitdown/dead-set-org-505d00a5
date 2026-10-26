@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useGlobalPlayerHeight } from "@/hooks/useGlobalPlayerHeight";
 import { captureEvent } from "@/lib/posthog";
 import { useClaimBottom } from "@/lib/bottomCardClaims";
+import { isNativeApp } from "@/lib/nativeApp";
 import {
   NOTED_LINE,
   SIGNED_IN_PROMISE,
@@ -111,6 +112,9 @@ const PlaybackOopsCard = () => {
             {user ? (
               <>
                 <p className="font-body text-sm leading-snug text-card-foreground">{SIGNED_IN_PROMISE}</p>
+                {/* Web only: the iOS app shows no credits (App Review 1.2; see
+                    CommunityFixesList), so it must not ask for one either. */}
+                {!isNativeApp() && (
                 <label className="flex min-h-[36px] cursor-pointer items-center gap-2 font-body text-sm text-card-foreground">
                   <input
                     type="checkbox"
@@ -120,6 +124,7 @@ const PlaybackOopsCard = () => {
                   />
                   Credit me by name on Build Notes when it is
                 </label>
+                )}
                 {creditFailed && (
                   <p className="font-ticket text-[11px] text-card-foreground">
                     Couldn't save that just now. Try the box again.
