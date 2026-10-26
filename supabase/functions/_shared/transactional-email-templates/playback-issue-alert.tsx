@@ -91,8 +91,8 @@ const PlaybackIssueAlertEmail = ({
 
         <Hr style={divider} />
         <Text style={footer}>
-          The fan was told it has been noted. Mark it fixed when it is; the first real play of that night
-          verifies it and tells everyone waiting.
+          The fan was told it has been noted. Mark it fixed when it is; a signed-in fan's play of that night,
+          or yours, verifies it and tells everyone waiting.
         </Text>
       </Container>
     </Body>

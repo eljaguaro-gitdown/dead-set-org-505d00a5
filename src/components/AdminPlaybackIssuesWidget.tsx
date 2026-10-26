@@ -12,8 +12,10 @@ import { shortShowDate } from "@/lib/playbackIssues";
  *
  *   open      a fan hit it (repeats add to report_count, not new rows)
  *   fixed     someone corrected the data or the code
- *   verified  it has been heard playing — either the first real 20s play of
- *             that night after it was marked fixed, or by hand here. This is
+ *   verified  it has been heard playing — either a SIGNED-IN fan's first real
+ *             20s play of that night after it was marked fixed (an anonymous
+ *             play counts as evidence but verifies nothing: the anon key is
+ *             public), or by hand here. This is
  *             what emails the fans who asked to hear, and puts the names of
  *             those who said yes on Build Notes.
  *   wont_fix  the night genuinely has no tape; nothing to tell anyone
@@ -95,7 +97,7 @@ const AdminPlaybackIssuesWidget = ({ enabled }: { enabled: boolean }) => {
     }
     toast.success(
       status === "fixed"
-        ? "Marked fixed. It verifies itself the first time that night plays."
+        ? "Marked fixed. It verifies itself when a signed-in fan next plays that night, or mark it verified once you've heard it."
         : status === "verified"
           ? "Verified. The fans who asked are being told."
           : status === "wont_fix"

@@ -17,7 +17,8 @@ import type { TemplateEntry } from './registry.ts'
 
 // "We'll let you know as soon as it's fixed." Sent by the notify_playback_fixed
 // trigger the moment a tape a fan flagged is verified playing again — either by
-// the first real play of that night after the fix, or by hand from /admin.
+// a signed-in fan's first real play of that night after the fix, or by hand
+// from /admin.
 // One per fan per issue (idempotency key playback-fixed-<issue>-<user>).
 
 const SITE_URL = 'https://dead-set.org'
