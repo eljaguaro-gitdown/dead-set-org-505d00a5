@@ -6,13 +6,69 @@ Connect, Lovable Cloud, and the Supabase auth config, and a session that reads
 only the repo will draw confident wrong conclusions. That happened repeatedly on
 2026-09-17; the corrections are banked in `CLAUDE.md`.
 
-**Last updated:** 2026-10-02. **Build 27 was rejected a second time**, under
-**5.1.1(v)** (account deletion) and **1.2** (user-generated content). The fixes
-merged to `main` in PR #79 (`93a894c`). **The next submission is build 29**,
-which nothing has built yet. Submission ID
-`f8593d8a-e9fc-4a91-a4b5-dabad5b63632`.
+**Last updated:** 2026-10-26 (builds 30 and 31, below). Before that: 2026-10-02/03.
+**Build 27 was rejected a second time** (2026-09-30), under **5.1.1(v)** (account
+deletion) and **1.2** (user-generated content). The fixes merged to `main` in PR
+#79 (`93a894c`). Builds 29 and 30 have been uploaded since; **31 is planned**.
+Submission ID `f8593d8a-e9fc-4a91-a4b5-dabad5b63632`.
 
-## Rejection 2 — 2026-09-30: start here
+## Builds 30 and 31 — 2026-10-26: start here
+
+**What this update could not see.** App Store Connect is not visible from a repo
+session. So whether build 29 or 30 was submitted, is in review, or was approved
+after 2026-10-03 is **not known here**. The resubmission row further down
+("Recording on build 29 … resubmit: Not done") has not been re-checked. **Open
+App Store Connect before submitting anything.** Everything in this section comes
+from the GitHub Actions run history and the repo. Each build number is read out
+of its own run's log, not derived from a story about it (see CLAUDE.md).
+
+| Build | Run | Dispatched (UTC) | Ref / sha | Carries | State |
+|---|---|---|---|---|---|
+| 29 | run 28 (`37159763930`) | 2026-10-03 22:50:07 | branch `release/build-29` @ `c9bcdbf` | The 1.2 / 5.1.1(v) fixes; same code as the web publish of that night | `Upload succeeded` 22:53:27. Submission status since: not recorded |
+| 30 | run 29 (`37717128769`) | 2026-10-08 02:17:19 | `main` @ `dffd778` | `46e85d3` (PR #96: report and block on community Songbook issues; fan notes go through the house-rules filter). That is the web release recorded at 02:16:38 the same night, on gate 7 PASS WITH NOTES (`76ace26`, code-identical). Plus a Lovable `types.ts` regeneration only (`c016dc6`, `dffd778`) | `Upload succeeded` 02:20:49; the log shows `CURRENT_PROJECT_VERSION = 30`. Missing from this doc until now. Submission status: not recorded |
+| 31 | run 30 (**not dispatched**) | — | `main` @ `1cd7438`, or the merge of PR #128 if the gate blocks iOS (below) | Everything after build 30: PRs #97–#127 (list below) | **Planned.** Waits for a pass-class iOS grade from `/pre-release` gate run 3. Number = run_number 30 + `BUILD_NUMBER_OFFSET` 1 |
+
+**Build 31 carries, beyond build 30:**
+- **#125–#127, the "oops, that one won't play" flow.** A tapped song that will
+  not play gets an apology and a tape known to play. The problem is filed. A
+  signed-in fan is emailed when it is fixed and verified. The database side
+  (`20261025020000`, `20261026020000`) is applied in production, and
+  `send-transactional-email` is deployed with the two new templates. Only
+  `20261027000000` (the cap fix) waits on gate run 3.
+- **#117, #120, #121:** the home Songbook card (weekly rotation, first/last-night
+  stubs) and its fixes. The player bar's "Couldn't reach the Archive" message is
+  now readable.
+- **#122:** first-time visitors are no longer reloaded when the service worker
+  installs (web behaviour; the reload guard sits in `index.html`).
+- **#123:** analytics events carry `build_sha`.
+- **#98, #100, #108, #109, #113, #115, #116:** admin and email-pipeline work
+  (who may send which email, internal-send header, admin checks). Not
+  fan-facing.
+- **#124:** test-only.
+
+**Check before submitting build 31:**
+1. **App Review 1.2 and the new credits.** Build Notes now lists fans who said
+   yes to credit for a fix (`community_fixes()`). The names pass the language
+   filter, but the list has no report, hide or withdraw control. The gate said
+   this should block an iOS build. **Draft PR #128** hides the credits, the
+   credit opt-in and the "your name's on Build Notes" line inside the native
+   app (`isNativeApp()`). The web keeps them. If #128 ships in 31, the reviewer
+   sees no fan names on Build Notes.
+2. **Privacy.** A playback report records the song and night and, for a
+   signed-in fan, their user ID. `PrivacyInfo.xcprivacy` already declares
+   Product Interaction, Customer Support and User ID, so no manifest change
+   looks needed. Confirm the App Store Connect privacy label says the same.
+3. **The native player.** "A tape we know plays" is recorded from the engine's
+   progress, and `NativeEngine` implements the same `subscribeProgress`. That
+   path has not been seen on a device.
+4. **Update this table** with build 31's run id, sha and `Upload succeeded`
+   time, read from its own log, once it exists.
+
+---
+
+*Below: the state as of 2026-10-03.*
+
+## Rejection 2 — 2026-09-30 (the context for builds 29–31)
 
 Reviewed on an **iPad Air 11-inch (M3)**, which shows the iPhone layout in
 compatibility mode. **Read
