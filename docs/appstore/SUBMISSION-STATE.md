@@ -6,13 +6,13 @@ Connect, Lovable Cloud, and the Supabase auth config, and a session that reads
 only the repo will draw confident wrong conclusions. That happened repeatedly on
 2026-09-17; the corrections are banked in `CLAUDE.md`.
 
-**Last updated:** 2026-10-26 (builds 30 and 31, below; build 31 uploaded 04:16 UTC). Before that: 2026-10-02/03.
+**Last updated:** 2026-10-26 (builds 30–32, below; build 32 uploaded 05:35 UTC). Before that: 2026-10-02/03.
 **Build 27 was rejected a second time** (2026-09-30), under **5.1.1(v)** (account
 deletion) and **1.2** (user-generated content). The fixes merged to `main` in PR
-#79 (`93a894c`). Builds 29, 30 and **31** have been uploaded since. 31 is the gated review candidate.
+#79 (`93a894c`). Builds 29, 30, 31 and **32** have been uploaded since. **32 is the current gated review candidate**: same code as the live web (`6d98516`).
 Submission ID `f8593d8a-e9fc-4a91-a4b5-dabad5b63632`.
 
-## Builds 30 and 31 — 2026-10-26: start here
+## Builds 30–32 — 2026-10-26: start here
 
 **What this update could not see.** App Store Connect is not visible from a repo
 session. So whether build 29 or 30 was submitted, is in review, or was approved
@@ -27,8 +27,9 @@ of its own run's log, not derived from a story about it (see CLAUDE.md).
 | 29 | run 28 (`37159763930`) | 2026-10-03 22:50:07 | branch `release/build-29` @ `c9bcdbf` | The 1.2 / 5.1.1(v) fixes; same code as the web publish of that night | `Upload succeeded` 22:53:27. Submission status since: not recorded |
 | 30 | run 29 (`37717128769`) | 2026-10-08 02:17:19 | `main` @ `dffd778` | `46e85d3` (PR #96: report and block on community Songbook issues; fan notes go through the house-rules filter). That is the web release recorded at 02:16:38 the same night, on gate 7 PASS WITH NOTES (`76ace26`, code-identical). Plus a Lovable `types.ts` regeneration only (`c016dc6`, `dffd778`) | `Upload succeeded` 02:20:49; the log shows `CURRENT_PROJECT_VERSION = 30`. Missing from this doc until now. Submission status: not recorded |
 | 31 | run 30 (`40267931973`) | 2026-10-26 04:13:17 | `main` @ `a0531d2` (PR #128 merged on top of the web release `30b5f3f`) | Everything after build 30: PRs #97–#128 (list below). In the native app the Build Notes credits are hidden (#128) | `Upload succeeded` 04:16:00. The log shows `CURRENT_PROJECT_VERSION = 31` and `** EXPORT SUCCEEDED **`; the run concluded success 04:16:08. **Gated:** `/pre-release` run 3 (on `30b5f3f`, iOS blocked for review on 1.2), then a scoped run 4 on `a0531d2`, PASS WITH NOTES as the App Review / external-TestFlight candidate. **Confirm 31 in App Store Connect.** Not submitted |
+| 32 | run 31 (`40274784745`) | 2026-10-26 05:32:40 | `main` @ `6d98516`, **the same sha as the live web** (published 05:32 UTC, recorded in `web_releases`) | Build 31 plus PR #131: one report per dead track (the gapless engine fired onError twice), an honest "if one turns up" promise for nights that may have no tape, the oops card stays on its page, a dead last track in a queue gets the card, and the hero's fallback toast no longer covers the suggestion | `Upload succeeded` 05:35:40. The log shows `CURRENT_PROJECT_VERSION = 32` and `** EXPORT SUCCEEDED **`; the run concluded success 05:35:45. **Gated:** `/pre-release` run 5 on `6d98516`, PASS WITH NOTES for both the web publish and this build as the App Review / external-TestFlight candidate. Native credit hiding (#128) re-verified in iOS emulation. **Confirm 32 in App Store Connect.** Not submitted. **Supersedes 31 for submission** |
 
-**Build 31 carries, beyond build 30:**
+**Build 31 carries, beyond build 30** (and build 32 carries all of it, plus #131 as in the table):
 - **#125–#127, the "oops, that one won't play" flow.** A tapped song that will
   not play gets an apology and a tape known to play. The problem is filed. A
   signed-in fan is emailed when it is fixed and verified. The database side
@@ -46,7 +47,7 @@ of its own run's log, not derived from a story about it (see CLAUDE.md).
   fan-facing.
 - **#124:** test-only.
 
-**Check before submitting build 31:**
+**Check before submitting build 32** (the same items held for 31):
 1. **App Review 1.2 and the new credits: handled in 31.** Build Notes lists fans
    who said yes to credit for a fix (`community_fixes()`). The names pass the
    language filter, but the list has no report, hide or withdraw control, and
