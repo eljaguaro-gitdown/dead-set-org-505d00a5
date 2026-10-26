@@ -210,6 +210,23 @@ describe("one dead track is one failure, however many times the engine says so",
     expect(reports()[0][1]).toEqual(expect.objectContaining({ p_kind: "wont_play", p_notify: false }));
     expect(result.current.playbackOops).toBeNull();
   });
+
+  it("going back to it and having it fail again is a new failure, not an echo", async () => {
+    // Without the slot-change reset, the marker still named this track when
+    // the fan went back to it, so its next failure was dropped as a repeat:
+    // no report, no skip, a dead bar sitting on it in silence.
+    const NEXT: PlayableSlot = { ...SLOT, id: "cornell-fire", position: 1, song: { id: SONG, title: "Fire on the Mountain" } };
+    const { result } = renderHook(() => useAudioPlayer(), { wrapper });
+    await act(async () => { await result.current.playSingle(SLOT, { slots: [SLOT, NEXT] }); });
+    await waitFor(() => expect(queues.length).toBeGreaterThan(0));
+    await act(async () => { engineFails(FIRST); engineFails(SECOND); });
+    await waitFor(() => expect(result.current.playingSlot?.id).toBe("cornell-fire"));
+    await act(async () => { result.current.transport.previous(); });
+    await waitFor(() => expect(result.current.playingSlot?.id).toBe("cornell-scarlet"));
+    await act(async () => { engineFails(FIRST); });
+    await waitFor(() => expect(reports()).toHaveLength(2));
+    await waitFor(() => expect(result.current.playingSlot?.id).toBe("cornell-fire"));
+  });
 });
 
 /**
