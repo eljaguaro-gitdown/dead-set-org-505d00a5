@@ -37,6 +37,8 @@ vi.mock("@/lib/playbackIssues", async () => ({
 
 import FixedTapeNotice from "@/components/FixedTapeNotice";
 
+const asNative = () => Object.assign(window, { Capacitor: { isNativePlatform: () => true } });
+const asWeb = () => { delete (window as unknown as { Capacitor?: unknown }).Capacitor; };
 const ALTHEA: FixedTape = { issueId: "i1", songId: "song-1", songTitle: "Althea", showDate: "1979-08-04", creditOk: false };
 const p = (s: string) => screen.queryByText((_, el) => el?.tagName === "P" && el.textContent?.trim() === s);
 
@@ -46,6 +48,7 @@ beforeEach(() => {
   m.oops = null;
   m.order = [];
   m.fixed = [];
+  asWeb();
 });
 
 describe("we let you know when it's fixed", () => {
@@ -81,6 +84,18 @@ describe("we let you know when it's fixed", () => {
         p("You flagged it, we fixed it, and it's been checked. Thanks for making this better. Your name's on Build Notes."),
       ).not.toBeNull(),
     );
+  });
+
+  it("in the iOS app, never says the name is on Build Notes: the app shows no credits", async () => {
+    asNative();
+    m.user = { id: "u1" };
+    m.fixed = [{ ...ALTHEA, creditOk: true }];
+    render(<FixedTapeNotice />);
+    await waitFor(() =>
+      expect(p("You flagged it, we fixed it, and it's been checked. Thanks for making this better.")).not.toBeNull(),
+    );
+    expect(screen.queryByText(/on Build Notes/)).toBeNull();
+    asWeb();
   });
 
   it("Spin it plays that night through the normal by-night path, and marks it seen", async () => {

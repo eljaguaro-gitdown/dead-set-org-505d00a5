@@ -40,6 +40,8 @@ vi.mock("@/lib/playbackIssues", async () => ({
 import PlaybackOopsCard from "@/components/PlaybackOopsCard";
 import { useBottomClaimed } from "@/lib/bottomCardClaims";
 
+const asNative = () => Object.assign(window, { Capacitor: { isNativePlatform: () => true } });
+const asWeb = () => { delete (window as unknown as { Capacitor?: unknown }).Capacitor; };
 const ClaimProbe = () => <span data-testid="claimed">{String(useBottomClaimed())}</span>;
 
 const TRACK = "https://archive.org/download/gd77-05-08.sbd/althea.mp3";
@@ -62,6 +64,7 @@ beforeEach(() => {
   m.oops = null;
   m.user = null;
   m.setPlaybackCredit.mockResolvedValue(true);
+  asWeb();
 });
 
 describe("the oops card", () => {
@@ -95,6 +98,18 @@ describe("the oops card", () => {
     expect(text(NOTED)).not.toBeNull();
     expect(text("We'll let you know as soon as it's fixed.")).not.toBeNull();
     expect(screen.getByRole("checkbox", { name: "Credit me by name on Build Notes when it is" })).not.toBeChecked();
+  });
+
+  it("in the iOS app: noted and the promise, but no credit asked for (App Review 1.2)", () => {
+    asNative();
+    m.oops = { ...base, issueId: "issue-1" };
+    m.user = { id: "u1" };
+    render(<PlaybackOopsCard />);
+    expect(text(NOTED)).not.toBeNull();
+    expect(text("We'll let you know as soon as it's fixed.")).not.toBeNull();
+    expect(screen.queryByRole("checkbox")).toBeNull();
+    expect(screen.queryByText(/Credit me/i)).toBeNull();
+    asWeb();
   });
 
   it("ticking credit is the fan's yes, sent for this issue", async () => {

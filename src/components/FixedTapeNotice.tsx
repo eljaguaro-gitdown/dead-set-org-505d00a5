@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useGlobalPlayerHeight } from "@/hooks/useGlobalPlayerHeight";
 import { captureEvent } from "@/lib/posthog";
 import { useClaimBottom } from "@/lib/bottomCardClaims";
+import { isNativeApp } from "@/lib/nativeApp";
 import { SYNTHETIC_VERSION_DEFAULTS } from "@/lib/syntheticVersion";
 import {
   claimPendingFollows,
@@ -101,7 +102,8 @@ const FixedTapeNotice = () => {
         </p>
         <p className="font-body text-sm leading-snug text-card-foreground">
           You flagged it, we fixed it, and it's been checked. Thanks for making this better.
-          {current.creditOk ? " Your name's on Build Notes." : ""}
+          {/* The iOS app's Build Notes shows no credits, so there the line would be false. */}
+          {current.creditOk && !isNativeApp() ? " Your name's on Build Notes." : ""}
         </p>
         <div className="mt-2.5 flex items-center gap-2">
           {current.songId && (
