@@ -34,7 +34,12 @@ class FakeAudioContext {
 vi.stubGlobal("AudioContext", FakeAudioContext);
 
 const { queues, rpc } = vi.hoisted(() => ({
-  queues: [] as Array<{ opts: Record<string, (info?: unknown) => void> }>,
+  queues: [] as Array<{
+    opts: Record<string, (info?: unknown) => void>;
+    addTrack: ReturnType<typeof vi.fn>;
+    gotoTrack: ReturnType<typeof vi.fn>;
+    destroy: ReturnType<typeof vi.fn>;
+  }>,
   rpc: vi.fn(),
 }));
 
@@ -95,6 +100,7 @@ vi.mock("@/integrations/supabase/client", () => ({
 }));
 
 import { toast } from "sonner";
+import { findRecordingForDate, findTrackInRecordingDetailed } from "@/lib/archiveOrg";
 import { AudioPlayerProvider, useAudioPlayer, type PlayableSlot } from "@/contexts/AudioPlayerContext";
 import { SYNTHETIC_VERSION_DEFAULTS } from "@/lib/syntheticVersion";
 import { resetPlayedHere } from "@/lib/playbackIssues";
@@ -134,9 +140,12 @@ beforeEach(() => {
   rpc.mockImplementation(async (fn: string) =>
     fn === "report_playback_issue" ? { data: "issue-1", error: null } : { data: [], error: null },
   );
+  vi.mocked(findTrackInRecordingDetailed).mockReset().mockImplementation(async () => ({ url: TRACK, unreachable: false }));
+  vi.mocked(findRecordingForDate).mockReset().mockImplementation(async () => null);
 });
 afterEach(() => {
   online = true;
+  vi.useRealTimers();
 });
 
 const start = async () => {
@@ -174,6 +183,12 @@ describe("'that tape won't play' on the engine that ships", () => {
  * report_count and re-raising the card — and two "End of setlist" toasts.
  */
 const engineFails = (message: string) => queues[queues.length - 1].opts.onError(new Error(message) as unknown);
+/**
+ * Queues a track was actually loaded into: one per engine.load(). Counting
+ * constructions would miscount, because unlock() builds an empty queue on
+ * the first gesture of a session as well.
+ */
+const loads = () => queues.filter((q) => q.addTrack.mock.calls.length > 0);
 const FIRST = "HTML5 audio error on track 0 (code 4): MEDIA_ELEMENT_ERROR";
 const SECOND = "NotSupportedError: The element has no supported sources.";
 
@@ -189,13 +204,66 @@ describe("one dead track is one failure, however many times the engine says so",
     expect(result.current.playbackOops?.issueId).toBe("issue-1");
   });
 
-  it("a fresh tap on the same tape is a fresh attempt, and may fail again", async () => {
+  it("a fresh tap on the same tape is a fresh attempt: the engine is asked again, and may fail again", async () => {
+    // Found in a real browser by the 2026-10-26 gate (run 5). The second tap
+    // changed neither the slot id nor the track url the anchor effect keys
+    // on, so the engine was never asked again: the card and the error cleared,
+    // nothing was filed, and the bar sat on Pause at 0:00 / 0:00. This test
+    // used to fire the second failure on the FIRST tap's queue, which passed
+    // whether or not the tap had reached the engine.
     const { result } = await start();
     await act(async () => { engineFails(FIRST); });
     await act(async () => { engineFails(SECOND); });
+    await waitFor(() => expect(reports()).toHaveLength(1));
+    expect(loads()).toHaveLength(1);
     await act(async () => { await result.current.playSingle(SLOT); });
-    await act(async () => { engineFails(FIRST); });
+    await waitFor(() => expect(loads()).toHaveLength(2));
+    expect(loads()[1].addTrack).toHaveBeenCalledWith(TRACK, expect.anything());
+    expect(loads()[1].gotoTrack).toHaveBeenCalledWith(0, true);
+    await pastThrottle();
+    expect(loads()).toHaveLength(2); // one tap, one load
+    await act(async () => { loads()[1].opts.onError(new Error(FIRST) as unknown); });
     await waitFor(() => expect(reports()).toHaveLength(2));
+    expect(result.current.playbackOops?.kind).toBe("wont_play");
+    expect(result.current.transport.error).toBe("That tape won't play. The source may be offline.");
+  });
+
+  it("a tape healed onto a new track still reports when that track fails too", async () => {
+    // N03 in the gate's mutation run: the repeat key carries the track url as
+    // well as the slot id. Here the old track's failure lands while the tap
+    // is re-reading the tape, which records it against this slot; the read
+    // then heals onto another track of the same slot. Keyed on the id alone,
+    // that track's own failure was taken for an echo and swallowed.
+    const HEALED = `https://archive.org/download/${IDENT}/gd77-05-08eaton-d3t02.mp3`;
+    const { result } = await start();
+    let read: (v: { url: string; unreachable: boolean }) => void = () => undefined;
+    vi.mocked(findTrackInRecordingDetailed).mockImplementationOnce(() => new Promise((r) => { read = r; }));
+    await act(async () => { void result.current.playSingle({ ...SLOT, directTrackUrl: null }); });
+    await act(async () => { loads()[0].opts.onError(new Error(FIRST) as unknown); });
+    await waitFor(() => expect(reports()).toHaveLength(1));
+    await act(async () => { read({ url: HEALED, unreachable: false }); });
+    await waitFor(() => expect(loads()).toHaveLength(2));
+    expect(loads()[1].addTrack).toHaveBeenCalledWith(HEALED, expect.anything());
+    await act(async () => { loads()[1].opts.onError(new Error(FIRST) as unknown); });
+    await waitFor(() => expect(reports()).toHaveLength(2));
+    expect(reports()[1][1]).toEqual(expect.objectContaining({ p_kind: "wont_play", p_track_url: HEALED }));
+  });
+
+  it("a slow tap overtaken by a second tap on the same slot changes nothing when it lands", async () => {
+    // The re-anchor above must not undo the stale-tap guards: the first tap's
+    // late answer may not move the player, nor reach the engine.
+    const LATE = `https://archive.org/download/${IDENT}/gd77-05-08eaton-d1t01.mp3`;
+    const { result } = renderHook(() => useAudioPlayer(), { wrapper });
+    let read: (v: { url: string; unreachable: boolean }) => void = () => undefined;
+    vi.mocked(findTrackInRecordingDetailed).mockImplementationOnce(() => new Promise((r) => { read = r; }));
+    await act(async () => { void result.current.playSingle({ ...SLOT, directTrackUrl: null }); });
+    await act(async () => { await result.current.playSingle(SLOT); });
+    await waitFor(() => expect(loads()).toHaveLength(1));
+    await act(async () => { read({ url: LATE, unreachable: false }); });
+    await pastThrottle();
+    expect(result.current.playingSlot?.directTrackUrl).toBe(TRACK);
+    expect(loads()).toHaveLength(1);
+    expect(loads()[0].addTrack).toHaveBeenCalledWith(TRACK, expect.anything());
   });
 
   it("in a queue, it is skipped once and filed once", async () => {
@@ -294,5 +362,213 @@ describe("a tape we know plays", () => {
     await pastThrottle();
     await act(async () => { progress(90); });
     expect(recorded()).toHaveLength(1);
+  });
+});
+
+/** A night with no stored tape, looked up by date: how a Songbook ladder row arrives. */
+const night = (id: string, position: number, show_date: string): PlayableSlot => ({
+  id,
+  song: { id: SONG, title: "Shakedown Street" },
+  setNumber: 1,
+  position,
+  segueToNext: false,
+  version: { ...SYNTHETIC_VERSION_DEFAULTS, id: `v-${id}`, song_id: SONG, show_date, archive_org_url: null },
+  directTrackUrl: null,
+});
+/** A stored tape that does not carry its song, with no night to look it up by instead. */
+const STORED_WITHOUT: PlayableSlot = {
+  ...SLOT,
+  id: "stored-without",
+  position: 1,
+  song: { id: SONG, title: "Morning Dew" },
+  version: { ...SLOT.version!, show_date: "" },
+  directTrackUrl: null,
+};
+const OPENER: PlayableSlot = { ...SLOT, id: "opener", position: 0 };
+const noMorningDew = () =>
+  vi.mocked(findTrackInRecordingDetailed).mockImplementation(async (_url: string, title: string) =>
+    title === "Morning Dew" ? { url: null, unreachable: false } : { url: TRACK, unreachable: false },
+  );
+
+/**
+ * #131 gave a dead last slot the card on the tap path and the engine path.
+ * Play All's own resolve loop was the third way to reach the last slot, and
+ * the 2026-10-26 gate (run 5) watched it in a browser: the song before it
+ * played, then one "End of setlist", with no card and no report.
+ */
+describe("a Play All that runs out on a night that will not resolve", () => {
+  const playToTheEnd = async (last: PlayableSlot) => {
+    const hook = renderHook(() => useAudioPlayer(), { wrapper });
+    await act(async () => { await hook.result.current.playSetlist([OPENER, last]); });
+    await waitFor(() => expect(loads()).toHaveLength(1));
+    await act(async () => { loads()[0].opts.onEnded(); });
+    return hook;
+  };
+
+  it("a night with no tape: the card for that night, filed, and no 'End of setlist'", async () => {
+    const { result } = await playToTheEnd(night("last-night", 1, "1991-09-10"));
+    await waitFor(() => expect(result.current.playbackOops?.kind).toBe("no_tape"));
+    expect(result.current.playbackOops).toEqual(expect.objectContaining({ slotId: "last-night", showDate: "1991-09-10" }));
+    await waitFor(() => expect(reports()).toHaveLength(1));
+    expect(reports()[0][1]).toEqual(expect.objectContaining({ p_kind: "no_tape", p_show_date: "1991-09-10", p_notify: true }));
+    expect(vi.mocked(toast.info)).not.toHaveBeenCalledWith("End of setlist");
+    // With no recording the bar cannot draw (GlobalAudioPlayer), so the player
+    // stops, as it does for a tap on a night with no tape.
+    expect(result.current.playingSlot).toBeNull();
+  });
+
+  it("a stored tape without the song: the bar stays on it with the reason, and a retry that works", async () => {
+    noMorningDew();
+    const { result } = await playToTheEnd(STORED_WITHOUT);
+    await waitFor(() => expect(result.current.playbackOops?.kind).toBe("not_on_tape"));
+    expect(result.current.playingSlot?.id).toBe("stored-without");
+    expect(result.current.transport.error).toBe("That song isn't on this tape.");
+    await waitFor(() => expect(reports()).toHaveLength(1));
+    expect(reports()[0][1]).toEqual(expect.objectContaining({ p_kind: "not_on_tape", p_notify: true }));
+    expect(vi.mocked(toast.info)).not.toHaveBeenCalledWith("End of setlist");
+
+    vi.mocked(findTrackInRecordingDetailed).mockImplementation(async () => ({ url: TRACK, unreachable: false }));
+    await act(async () => { result.current.transport.retry(); });
+    await waitFor(() => expect(loads()).toHaveLength(2));
+    expect(result.current.transport.error).toBeNull();
+  });
+
+  it("an Archive that does not answer about the last night: the network message, nothing filed", async () => {
+    // A rejection, not a null: findRecordingForDate throws when it could not ask.
+    vi.mocked(findRecordingForDate).mockRejectedValue(new Error("archive.org 503"));
+    const { result } = await playToTheEnd(night("last-night", 1, "1991-09-10"));
+    await waitFor(() =>
+      expect(vi.mocked(toast.error)).toHaveBeenCalledWith("Couldn't reach the Archive just now — tap play to try again."),
+    );
+    expect(result.current.playbackOops).toBeNull();
+    expect(reports()).toHaveLength(0);
+    expect(vi.mocked(toast.info)).not.toHaveBeenCalledWith("End of setlist");
+  });
+
+  it("a stored tape that could not be read: the bar says so and offers the retry, nothing filed", async () => {
+    vi.mocked(findTrackInRecordingDetailed).mockImplementation(async (_url: string, title: string) =>
+      title === "Morning Dew" ? { url: null, unreachable: true } : { url: TRACK, unreachable: false },
+    );
+    const { result } = await playToTheEnd(STORED_WITHOUT);
+    await waitFor(() => expect(result.current.transport.error).toBe("Couldn't reach the Archive just now. Tap play to try again."));
+    expect(result.current.playingSlot?.id).toBe("stored-without");
+    expect(result.current.playbackOops).toBeNull();
+    expect(reports()).toHaveLength(0);
+  });
+
+  it("Next on the song before it: that song stops, rather than playing on under the last one's name", async () => {
+    noMorningDew();
+    const { result } = renderHook(() => useAudioPlayer(), { wrapper });
+    await act(async () => { await result.current.playSetlist([OPENER, STORED_WITHOUT]); });
+    await waitFor(() => expect(loads()).toHaveLength(1));
+    const playing = loads()[0];
+    expect(playing.destroy).not.toHaveBeenCalled();
+    await act(async () => { result.current.transport.next(); });
+    await waitFor(() => expect(result.current.transport.error).toBe("That song isn't on this tape."));
+    expect(result.current.playingSlot?.id).toBe("stored-without");
+    await waitFor(() => expect(playing.destroy).toHaveBeenCalled());
+  });
+
+  it("Previous off the front of the set is still just the end of it", async () => {
+    const { result } = renderHook(() => useAudioPlayer(), { wrapper });
+    await act(async () => { await result.current.playSingle(OPENER, { slots: [night("first-night", -1, "1991-09-10"), OPENER] }); });
+    await waitFor(() => expect(loads()).toHaveLength(1));
+    await act(async () => { result.current.transport.previous(); });
+    await waitFor(() => expect(vi.mocked(toast.info)).toHaveBeenCalledWith("End of setlist"));
+    expect(result.current.playbackOops).toBeNull();
+    expect(reports()).toHaveLength(0);
+  });
+});
+
+/**
+ * The resolve watchdog's only test was "the slot has no track yet", and a
+ * resolve that FAILED leaves the slot without a track too. 25s after "That
+ * song isn't on this tape." the bar changed its mind to "Still looking for
+ * that tape" (seen in a browser on 6d98516).
+ */
+describe("the resolve watchdog", () => {
+  const LONE: PlayableSlot = { ...STORED_WITHOUT, id: "lone", position: 0 };
+
+  it("does not overwrite an answer it arrives after", async () => {
+    vi.useFakeTimers();
+    noMorningDew();
+    const { result } = renderHook(() => useAudioPlayer(), { wrapper });
+    await act(async () => { await result.current.playSingle(LONE); });
+    expect(result.current.transport.error).toBe("That song isn't on this tape.");
+    await act(async () => { await vi.advanceTimersByTimeAsync(26_000); });
+    expect(result.current.transport.error).toBe("That song isn't on this tape.");
+  });
+
+  it("still speaks up for a tape that is genuinely still being looked for", async () => {
+    vi.useFakeTimers();
+    vi.mocked(findTrackInRecordingDetailed).mockImplementation(() => new Promise(() => undefined));
+    const { result } = renderHook(() => useAudioPlayer(), { wrapper });
+    await act(async () => { void result.current.playSingle(LONE); });
+    expect(result.current.transport.error).toBeNull();
+    await act(async () => { await vi.advanceTimersByTimeAsync(26_000); });
+    expect(result.current.transport.error).toBe("Still looking for that tape. Archive.org may be slow right now.");
+  });
+});
+
+describe("moving on takes the card down", () => {
+  const A: PlayableSlot = { ...SLOT, id: "a", position: 0 };
+  const B: PlayableSlot = { ...SLOT, id: "b", position: 1 };
+  const C: PlayableSlot = { ...SLOT, id: "c", position: 2 };
+  const somethingElse = { kind: "no_tape" as const, songId: SONG, songTitle: "Althea", showDate: "1979-12-26" };
+
+  it("Next and Previous, as any fresh tap does", async () => {
+    const { result } = renderHook(() => useAudioPlayer(), { wrapper });
+    await act(async () => { await result.current.playSingle(B, { slots: [A, B, C] }); });
+    await waitFor(() => expect(loads()).toHaveLength(1));
+    act(() => result.current.reportPlaybackFailure(somethingElse));
+    expect(result.current.playbackOops).not.toBeNull();
+    act(() => result.current.transport.next());
+    expect(result.current.playbackOops).toBeNull();
+    act(() => result.current.reportPlaybackFailure(somethingElse));
+    expect(result.current.playbackOops).not.toBeNull();
+    act(() => result.current.transport.previous());
+    expect(result.current.playbackOops).toBeNull();
+  });
+});
+
+/**
+ * advancePlaylist had no supersession check at all. A skip still resolving
+ * when the fan tapped something else landed anyway: on a hit it took the
+ * player back into the old queue, and with the last-night handling above, a
+ * miss would have stopped the new tape and raised a card over it.
+ */
+describe("a skip still resolving when the fan taps something else", () => {
+  const NEXT = night("next-night", 1, "1978-09-16");
+  const OTHER: PlayableSlot = { ...SLOT, id: "other", song: { id: SONG, title: "Fire on the Mountain" } };
+
+  const skipThenTap = async () => {
+    const answers: Array<(v: unknown) => void> = [];
+    vi.mocked(findRecordingForDate).mockImplementation(() => new Promise((r) => { answers.push(r); }) as never);
+    const hook = renderHook(() => useAudioPlayer(), { wrapper });
+    await act(async () => { await hook.result.current.playSetlist([OPENER, NEXT]); });
+    await waitFor(() => expect(loads()).toHaveLength(1));
+    await act(async () => { hook.result.current.transport.next(); });
+    await waitFor(() => expect(answers.length).toBeGreaterThan(0));
+    await act(async () => { await hook.result.current.playSingle(OTHER); });
+    const answer = async (v: unknown) => {
+      await act(async () => { answers.forEach((a) => a(v)); });
+      await pastThrottle();
+    };
+    return { ...hook, answer };
+  };
+
+  it("a hit does not take the player back into the old queue", async () => {
+    const { result, answer } = await skipThenTap();
+    await answer({ url: `https://archive.org/details/${IDENT}`, date: "1978-09-16", venue: null, directTrackUrl: TRACK });
+    expect(result.current.playingSlot?.id).toBe("other");
+    expect(result.current.playlistMode).toBe(false);
+  });
+
+  it("a miss neither stops the new tape nor raises a card over it", async () => {
+    const { result, answer } = await skipThenTap();
+    await answer(null);
+    expect(result.current.playingSlot?.id).toBe("other");
+    expect(result.current.playbackOops).toBeNull();
+    expect(reports()).toHaveLength(0);
   });
 });

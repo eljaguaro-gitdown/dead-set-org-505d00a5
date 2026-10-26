@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, waitFor, cleanup, fireEvent } from "@testing-library/react";
+import { render, screen, waitFor, cleanup, fireEvent, act } from "@testing-library/react";
 
 /**
  * The gating rule, stated by Jay and easy to regress silently:
@@ -325,10 +325,30 @@ describe("VersionPicker — when the Archive cannot be asked", () => {
     await waitFor(() =>
       expect(reportPlaybackFailure).toHaveBeenCalledWith(
         expect.objectContaining({ kind: "no_tape", songTitle: expect.any(String), showDate: expect.stringMatching(/^\d{4}-\d{2}-\d{2}/) }),
+        { from: window.location.pathname },
       ),
     );
     expect(toastError).not.toHaveBeenCalled();
     expect(playSingle).not.toHaveBeenCalled();
+  });
+
+  it("names the page the tap was made on, not the one the answer lands on", async () => {
+    // The card for this answer is only shown if the fan is still on that
+    // page (AudioPlayerContext.raisePlaybackOops). Read at report time, the
+    // path would always be the current one and the check could never fire.
+    let answer: (v: null) => void = () => undefined;
+    findRecordingForDate.mockImplementation(() => new Promise((r) => { answer = r; }));
+    window.history.pushState({}, "", "/versions/shakedown-street");
+    try {
+      await playUnstoredVersion();
+      await waitFor(() => expect(findRecordingForDate).toHaveBeenCalled());
+      window.history.pushState({}, "", "/songbook");
+      await act(async () => answer(null));
+      await waitFor(() => expect(reportPlaybackFailure).toHaveBeenCalled());
+      expect(reportPlaybackFailure.mock.calls[0][1]).toEqual({ from: "/versions/shakedown-street" });
+    } finally {
+      window.history.pushState({}, "", "/");
+    }
   });
 
   it("does not file a report when the Archive could not be asked", async () => {
@@ -414,7 +434,9 @@ describe("VersionPicker — the hero's fallback to the next best thing", () => {
     VERSIONS[0].archive_org_url = null;
     await openPage();
     await tapHero();
-    await waitFor(() => expect(reportPlaybackFailure).toHaveBeenCalledWith(expect.objectContaining({ kind: "no_tape" })));
+    await waitFor(() =>
+      expect(reportPlaybackFailure).toHaveBeenCalledWith(expect.objectContaining({ kind: "no_tape" }), { from: window.location.pathname }),
+    );
     expect(playSingle).not.toHaveBeenCalled();
     expect(toastInfo).not.toHaveBeenCalledWith(expect.stringMatching(NEXT_BEST));
   });

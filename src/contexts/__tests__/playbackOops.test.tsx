@@ -129,12 +129,31 @@ describe("a tap that will not play, for a reason a fix can address", () => {
   });
 
   it("a slot the QUEUE skipped is filed, but the fan is promised nothing", async () => {
+    // The next slot is a song that IS on this tape, so the queue has somewhere
+    // to go. It used to be a second copy of the dead slot, which made it the
+    // case below, and pinned "End of setlist" with no card as correct.
+    archive(WRONG_TAPE);
+    mount();
+    const next = { ...STORED, id: "next", position: 1, song: { id: SONG, title: "Sugaree" } };
+    act(() => void ctx.playSingle(STORED, { slots: [STORED, next] }));
+    await waitFor(() => expect(ctx.playingSlot?.id).toBe("next"), { timeout: 5000 });
+    expect(reportCalls()).toHaveLength(1);
+    expect(reportCalls()[0][1]).toEqual(expect.objectContaining({ p_kind: "not_on_tape", p_notify: false }));
+    expect(oops()).toBeNull();
+  });
+
+  it("skipped onto a last slot that will not resolve either: the card is for that one", async () => {
+    // Listed as a residual of #131: a dead slot followed only by unresolvable
+    // ones still ended in "End of setlist" with no card.
     archive(WRONG_TAPE);
     mount();
     act(() => void ctx.playSingle(STORED, { slots: [STORED, { ...STORED, id: "next", position: 1 }] }));
-    await waitFor(() => expect(reportCalls().length).toBeGreaterThan(0), { timeout: 5000 });
+    await waitFor(() => expect(oops()?.slotId).toBe("next"), { timeout: 5000 });
+    await waitFor(() => expect(reportCalls()).toHaveLength(2));
     expect(reportCalls()[0][1]).toEqual(expect.objectContaining({ p_kind: "not_on_tape", p_notify: false }));
-    expect(oops()).toBeNull();
+    expect(reportCalls()[1][1]).toEqual(expect.objectContaining({ p_kind: "not_on_tape", p_notify: true }));
+    expect(screen.getByTestId("err").textContent).toBe("That song isn't on this tape.");
+    expect(mocks.info).not.toHaveBeenCalledWith("End of setlist");
   });
 
   it("the LAST slot has nothing to skip to: it is the fan's dead tap, and gets the card", async () => {
@@ -247,5 +266,122 @@ describe("the card belongs to one tap", () => {
     await waitFor(() => expect(oops()).not.toBeNull(), { timeout: 5000 });
     act(() => ctx.dismissPlaybackOops());
     expect(oops()).toBeNull();
+  });
+});
+
+/**
+ * Seen in a real browser by the 2026-10-26 gate (run 5): a tap whose answer
+ * came back after the fan had moved on raised its card on the page they had
+ * gone to. The card takes itself down on a route change, but that had already
+ * happened by the time the answer arrived.
+ */
+describe("an answer that comes back after the fan has left the page", () => {
+  /** Hold every Archive answer until `release`, so a navigation can cross it. */
+  const held = (meta: unknown) => {
+    let release: () => void = () => undefined;
+    const gate = new Promise<void>((r) => { release = r; });
+    vi.mocked(fetch).mockImplementation(async (input) => {
+      await gate;
+      return String(input).includes("advancedsearch") ? json({ response: { docs: [] } }) : json(meta);
+    });
+    return () => act(async () => { release(); });
+  };
+  const at = (path: string) => window.history.pushState({}, "", path);
+  afterEach(() => at("/"));
+  /** Each its own night: archiveOrg caches an answer per night for the session. */
+  const nightOf = (id: string, show_date: string): PlayableSlot => ({ ...NIGHT, id, version: version({ show_date, archive_org_url: null }) });
+
+  it("a tap's own lookup: filed the quiet way, and no card on the page they went to", async () => {
+    const release = held(WRONG_TAPE);
+    mount();
+    at("/songbook/eyes-of-the-world");
+    act(() => void ctx.playSingle(nightOf("left-1", "1975-03-23")));
+    at("/songbook");
+    await release();
+    await waitFor(() => expect(reportCalls()).toHaveLength(1), { timeout: 5000 });
+    expect(reportCalls()[0][1]).toEqual(expect.objectContaining({ p_kind: "no_tape", p_notify: false }));
+    expect(oops()).toBeNull();
+  });
+
+  it("staying on the page, the same slow answer still gets the card", async () => {
+    const release = held(WRONG_TAPE);
+    mount();
+    at("/songbook/eyes-of-the-world");
+    act(() => void ctx.playSingle(nightOf("stayed-1", "1976-06-03")));
+    await release();
+    await waitFor(() => expect(oops()?.kind).toBe("no_tape"), { timeout: 5000 });
+    expect(reportCalls()[0][1]).toEqual(expect.objectContaining({ p_notify: true }));
+  });
+
+  it("a query-string change is the same page, as it is for the card's own dismissal", async () => {
+    const release = held(WRONG_TAPE);
+    mount();
+    at("/songbook/eyes-of-the-world");
+    act(() => void ctx.playSingle(nightOf("query-1", "1976-06-04")));
+    at("/songbook/eyes-of-the-world?then=share");
+    await release();
+    await waitFor(() => expect(oops()?.kind).toBe("no_tape"), { timeout: 5000 });
+  });
+
+  it("the last stored tape of a tap: the bar still says why, but the card stays off the new page", async () => {
+    const release = held(WRONG_TAPE);
+    mount();
+    at("/setlist/abc");
+    const last = { ...STORED, id: "left-last", position: 1 };
+    act(() => void ctx.playSingle(last, { slots: [{ ...STORED, id: "left-first" }, last] }));
+    at("/");
+    await release();
+    await waitFor(() => expect(reportCalls()).toHaveLength(1), { timeout: 5000 });
+    expect(reportCalls()[0][1]).toEqual(expect.objectContaining({ p_kind: "not_on_tape", p_notify: false }));
+    expect(oops()).toBeNull();
+    // The global bar is still on the song and still says why.
+    expect(screen.getByTestId("err").textContent).toBe("That song isn't on this tape.");
+  });
+
+  it("Play All with nothing in it that plays: the same", async () => {
+    const release = held(WRONG_TAPE);
+    mount();
+    at("/songbook/eyes-of-the-world");
+    let done: Promise<void> = Promise.resolve();
+    act(() => { done = ctx.playSetlist([nightOf("set-1", "1977-04-30"), nightOf("set-2", "1977-05-01")], "77777777-7777-4777-8777-777777777777"); });
+    at("/songbook");
+    await release();
+    await act(async () => { await done; });
+    await waitFor(() => expect(reportCalls()).toHaveLength(1), { timeout: 5000 });
+    expect(reportCalls()[0][1]).toEqual(expect.objectContaining({ p_kind: "none_in_setlist", p_notify: false }));
+    expect(oops()).toBeNull();
+  });
+
+  it("a page's own report carries the page it was tapped on, and is held to it", async () => {
+    mount();
+    const failure = { kind: "no_tape" as const, songId: SONG, songTitle: "Eyes of the World", showDate: "1974-06-18" };
+    at("/songbook");
+    act(() => ctx.reportPlaybackFailure(failure, { from: "/versions/eyes-of-the-world" }));
+    expect(oops()).toBeNull();
+    await waitFor(() => expect(reportCalls()).toHaveLength(1));
+    expect(reportCalls()[0][1]).toEqual(expect.objectContaining({ p_notify: false }));
+
+    act(() => ctx.reportPlaybackFailure(failure, { from: "/songbook" }));
+    expect(oops()?.kind).toBe("no_tape");
+    act(() => ctx.dismissPlaybackOops());
+    // A synchronous report, with no await to cross, needs no page at all.
+    act(() => ctx.reportPlaybackFailure(failure));
+    expect(oops()?.kind).toBe("no_tape");
+  });
+});
+
+describe("a queue that runs out on a night with no tape, through the real resolver", () => {
+  it("gets the card for that night instead of 'End of setlist'", async () => {
+    archive(GOOD_TAPE);
+    mount();
+    const first = { ...STORED, id: "q-first" };
+    const lastNight = { ...NIGHT, id: "q-last", position: 1, version: version({ show_date: "1978-07-08", archive_org_url: null }) };
+    await act(async () => { await ctx.playSingle(first, { slots: [first, lastNight] }); });
+    await waitFor(() => expect(ctx.playingSlot?.directTrackUrl).toBeTruthy(), { timeout: 5000 });
+    await act(async () => { await ctx.advancePlaylist(1); });
+    await waitFor(() => expect(oops()?.kind).toBe("no_tape"), { timeout: 5000 });
+    expect(oops()).toEqual(expect.objectContaining({ slotId: "q-last", showDate: "1978-07-08" }));
+    expect(reportCalls()[0][1]).toEqual(expect.objectContaining({ p_kind: "no_tape", p_notify: true }));
+    expect(mocks.info).not.toHaveBeenCalledWith("End of setlist");
   });
 });
