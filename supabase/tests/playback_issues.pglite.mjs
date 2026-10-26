@@ -1,6 +1,7 @@
 // Real-Postgres test for the playback-issues migrations:
 //   supabase/migrations/20261025020000_playback_issues.sql
 //   supabase/migrations/20261026020000_playback_issues_hardening.sql
+//   supabase/migrations/20261027000000_record_tape_ok_cap.sql
 // Not part of vitest: it needs PGlite (WASM Postgres), which is deliberately NOT
 // a project dependency (bun.lock cannot be regenerated outside Lovable's
 // registry; see CLAUDE.md). To run it:
@@ -8,7 +9,8 @@
 //   mkdir -p /tmp/pglite && (cd /tmp/pglite && npm init -y && npm i @electric-sql/pglite@0.5.11)
 //   node supabase/tests/playback_issues.pglite.mjs /tmp/pglite \
 //     supabase/migrations/20261025020000_playback_issues.sql \
-//     supabase/migrations/20261026020000_playback_issues_hardening.sql
+//     supabase/migrations/20261026020000_playback_issues_hardening.sql \
+//     supabase/migrations/20261027000000_record_tape_ok_cap.sql
 //
 // Exits 0 with "all N assertions passed". The migrations are applied
 // unmodified, in order, twice, and once more with data in them. Stubbed:
@@ -20,8 +22,8 @@
 // public` looks like it closes a function when it does not. That is how the
 // 2026-10-25 gate's M1 got past the first version of this file.
 //
-// Run with only the first migration, this file FAILS. That is expected: the
-// second migration exists to fix what the failures name.
+// Run with fewer than all three migrations, this file FAILS. That is
+// expected: each later migration exists to fix what the failures name.
 import { readFileSync } from "fs";
 import { pathToFileURL } from "url";
 import path from "path";
@@ -219,6 +221,27 @@ await played(null, S1, "1979-08-04", null, TRACK("gd1980-05-16.sbd.x", "althea.m
 eq(await tapes(), 0, "a Dead tape of a DIFFERENT night is never recorded under this one");
 await played(null, S1, "1977-03-02", null, TRACK("gd77-02-30.sbd.x", "althea.mp3"));
 eq(await tapes(), 0, "an impossible date in the identifier is no match, and no error");
+await played(null, S1, "1066-10-14", null, TRACK("gd1066-10-14.sbd.x", "althea.mp3"));
+eq(await tapes(), 0, "a year the band never played is no match (gd1066-10-14, which the gate stored)");
+await played(null, S1, "2099-01-01", null, TRACK("gd2099-01-01.sbd.x", "althea.mp3"));
+eq(await tapes(), 0, "nor is a year still to come (gd2099-01-01)");
+// Both ends of 1965–1995, from both sides, in both identifier forms. Called as
+// the owner, because nobody else may call the helper.
+const isNight = async (id, date) =>
+  (await db.query("select public.playback_track_matches_night($1, $2) as m", [TRACK(id, "t.mp3"), date])).rows[0].m;
+for (const [id, date, want] of [
+  ["gd1964-12-31.sbd", "1964-12-31", false],
+  ["gd1965-01-01.sbd", "1965-01-01", true],
+  ["gd1995-12-31.sbd", "1995-12-31", true],
+  ["gd1996-01-01.sbd", "1996-01-01", false],
+  ["gd64-12-31.sbd", "1964-12-31", false],
+  ["gd65-12-04.sbd", "1965-12-04", true],
+  ["gd95-07-09.sbd", "1995-07-09", true],
+  ["gd96-01-01.sbd", "1996-01-01", false],
+  ["gd00-01-01.sbd", "1900-01-01", false],
+]) {
+  eq(await isNight(id, date), want, `${id} ${want ? "is" : "is not"} a night the band could have played`);
+}
 await played(null, S1, null, null, GOOD_79);
 eq(await tapes(), 0, "a play with no night cannot be checked, so it does not count");
 eq((await issue(id1)).status, "fixed", "and none of that verifies anything");
@@ -309,6 +332,20 @@ for (let i = 0; i < 60; i++) {
   await played(null, S2, d, null, TRACK(`gd${d}.cap${i}`, "bertha.mp3"));
 }
 eq((await db.query("select count(*)::int as n from public.verified_tapes where first_ok_at > now() - interval '1 hour'")).rows[0].n, 40, `at most 40 new tapes enter the pool an hour, across everyone (${tapesBefore} were already in)`);
+
+// A full cap holds back the tape, never the fix (gate note 1 on 2d81fb3).
+// The hour's 40 new tapes went to anonymous plays just above. A member then
+// plays a tape nobody has stored, of a night an admin has marked fixed.
+const held = await report(U1, { kind: "wont_play", song: S2, title: "Bertha", date: "1985-06-30", archive: null });
+eq(await report(U3, { kind: "wont_play", song: S2, title: "Bertha", date: "1985-06-30", archive: null }), held, "two fans wait on a Bertha that will not play");
+await as(ADMIN, "select public.set_playback_issue_status($1, 'fixed', null)", [held]);
+const HELD_TRACK = TRACK("gd1985-06-30.sbd.held", "bertha.mp3");
+await played(MEMBER, S2, "1985-06-30", null, HELD_TRACK);
+eq((await db.query("select count(*)::int as n from public.verified_tapes where track_url = $1", [HELD_TRACK])).rows[0].n, 0, "with the hour's cap full, the member's new tape is not stored");
+row = await issue(held);
+eq([row.status, row.verified_via, row.verified_by], ["verified", "playback", MEMBER], "but the play still verifies the fix: 40 anonymous calls an hour cannot hold it back");
+ok(row.closed_at !== null, "and closes it");
+eq((await calls("playback-fixed")).filter((b) => b.idempotencyKey.includes(held)).map((b) => b.recipientEmail).sort(), ["u1@example.test", "u3@example.test"], "and both fans waiting on it are emailed");
 
 const alertsBefore = (await calls("playback-issue-alert")).length;
 const ids = [];
