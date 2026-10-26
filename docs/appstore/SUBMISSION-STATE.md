@@ -6,10 +6,10 @@ Connect, Lovable Cloud, and the Supabase auth config, and a session that reads
 only the repo will draw confident wrong conclusions. That happened repeatedly on
 2026-09-17; the corrections are banked in `CLAUDE.md`.
 
-**Last updated:** 2026-10-26 (builds 30 and 31, below). Before that: 2026-10-02/03.
+**Last updated:** 2026-10-26 (builds 30 and 31, below; build 31 uploaded 04:16 UTC). Before that: 2026-10-02/03.
 **Build 27 was rejected a second time** (2026-09-30), under **5.1.1(v)** (account
 deletion) and **1.2** (user-generated content). The fixes merged to `main` in PR
-#79 (`93a894c`). Builds 29 and 30 have been uploaded since; **31 is planned**.
+#79 (`93a894c`). Builds 29, 30 and **31** have been uploaded since. 31 is the gated review candidate.
 Submission ID `f8593d8a-e9fc-4a91-a4b5-dabad5b63632`.
 
 ## Builds 30 and 31 — 2026-10-26: start here
@@ -26,7 +26,7 @@ of its own run's log, not derived from a story about it (see CLAUDE.md).
 |---|---|---|---|---|---|
 | 29 | run 28 (`37159763930`) | 2026-10-03 22:50:07 | branch `release/build-29` @ `c9bcdbf` | The 1.2 / 5.1.1(v) fixes; same code as the web publish of that night | `Upload succeeded` 22:53:27. Submission status since: not recorded |
 | 30 | run 29 (`37717128769`) | 2026-10-08 02:17:19 | `main` @ `dffd778` | `46e85d3` (PR #96: report and block on community Songbook issues; fan notes go through the house-rules filter). That is the web release recorded at 02:16:38 the same night, on gate 7 PASS WITH NOTES (`76ace26`, code-identical). Plus a Lovable `types.ts` regeneration only (`c016dc6`, `dffd778`) | `Upload succeeded` 02:20:49; the log shows `CURRENT_PROJECT_VERSION = 30`. Missing from this doc until now. Submission status: not recorded |
-| 31 | run 30 (**not dispatched**) | — | `main` @ `1cd7438`, or the merge of PR #128 if the gate blocks iOS (below) | Everything after build 30: PRs #97–#127 (list below) | **Planned.** Waits for a pass-class iOS grade from `/pre-release` gate run 3. Number = run_number 30 + `BUILD_NUMBER_OFFSET` 1 |
+| 31 | run 30 (`40267931973`) | 2026-10-26 04:13:17 | `main` @ `a0531d2` (PR #128 merged on top of the web release `30b5f3f`) | Everything after build 30: PRs #97–#128 (list below). In the native app the Build Notes credits are hidden (#128) | `Upload succeeded` 04:16:00. The log shows `CURRENT_PROJECT_VERSION = 31` and `** EXPORT SUCCEEDED **`; the run concluded success 04:16:08. **Gated:** `/pre-release` run 3 (on `30b5f3f`, iOS blocked for review on 1.2), then a scoped run 4 on `a0531d2`, PASS WITH NOTES as the App Review / external-TestFlight candidate. **Confirm 31 in App Store Connect.** Not submitted |
 
 **Build 31 carries, beyond build 30:**
 - **#125–#127, the "oops, that one won't play" flow.** A tapped song that will
@@ -47,22 +47,29 @@ of its own run's log, not derived from a story about it (see CLAUDE.md).
 - **#124:** test-only.
 
 **Check before submitting build 31:**
-1. **App Review 1.2 and the new credits.** Build Notes now lists fans who said
-   yes to credit for a fix (`community_fixes()`). The names pass the language
-   filter, but the list has no report, hide or withdraw control. The gate said
-   this should block an iOS build. **Draft PR #128** hides the credits, the
-   credit opt-in and the "your name's on Build Notes" line inside the native
-   app (`isNativeApp()`). The web keeps them. If #128 ships in 31, the reviewer
-   sees no fan names on Build Notes.
+1. **App Review 1.2 and the new credits: handled in 31.** Build Notes lists fans
+   who said yes to credit for a fix (`community_fixes()`). The names pass the
+   language filter, but the list has no report, hide or withdraw control, and
+   the gate blocked an iOS review build on it. **PR #128 is merged and in build
+   31.** Inside the native app (`isNativeApp()`) it hides the credits, the
+   credit opt-in, and the "your name's on Build Notes" line. The web keeps
+   them. Gate run 4 confirmed it in a native-mode emulation
+   (`Capacitor.getPlatform()` = "ios"). A reviewer sees no fan names on Build
+   Notes. The web (`30b5f3f`) and build 31 (`a0531d2`) differ only by #128,
+   which is inert on the web.
 2. **Privacy.** A playback report records the song and night and, for a
    signed-in fan, their user ID. `PrivacyInfo.xcprivacy` already declares
    Product Interaction, Customer Support and User ID, so no manifest change
    looks needed. Confirm the App Store Connect privacy label says the same.
-3. **The native player.** "A tape we know plays" is recorded from the engine's
-   progress, and `NativeEngine` implements the same `subscribeProgress`. That
-   path has not been seen on a device.
-4. **Update this table** with build 31's run id, sha and `Upload succeeded`
-   time, read from its own log, once it exists.
+3. **On a device (TestFlight is the place)**, from gate run 4:
+   - "A tape we know plays" is recorded from the engine's progress, and
+     `NativeEngine` errors should reach the oops report. Neither path has been
+     seen on a device.
+   - With no player bar, the oops card ends 12px above the screen bottom and
+     overlaps a 34px home-indicator inset by about 22px. This is the same
+     pattern as CrateDigging, already in builds 29 and 30.
+4. **App Store Connect:** confirm which state builds 29 and 30 are in before
+   choosing what to submit. This repo cannot see it.
 
 ---
 
