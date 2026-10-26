@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.5"
+    PostgrestVersion: "14.4"
   }
   public: {
     Tables: {
@@ -1157,6 +1157,135 @@ export type Database = {
         }
         Relationships: []
       }
+      playback_issue_reporters: {
+        Row: {
+          credit_ok: boolean
+          issue_id: string
+          notified_at: string | null
+          reported_at: string
+          seen_at: string | null
+          user_id: string
+          wants_notice: boolean
+        }
+        Insert: {
+          credit_ok?: boolean
+          issue_id: string
+          notified_at?: string | null
+          reported_at?: string
+          seen_at?: string | null
+          user_id: string
+          wants_notice?: boolean
+        }
+        Update: {
+          credit_ok?: boolean
+          issue_id?: string
+          notified_at?: string | null
+          reported_at?: string
+          seen_at?: string | null
+          user_id?: string
+          wants_notice?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "playback_issue_reporters_issue_id_fkey"
+            columns: ["issue_id"]
+            isOneToOne: false
+            referencedRelation: "playback_issues"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "playback_issue_reporters_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "dispatch_recipients"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      playback_issues: {
+        Row: {
+          archive_url: string | null
+          closed_at: string | null
+          dedupe_key: string
+          first_reported_at: string
+          fix_note: string | null
+          fixed_at: string | null
+          id: string
+          kind: string
+          last_build_sha: string | null
+          last_reported_at: string
+          report_count: number
+          setlist_id: string | null
+          show_date: string | null
+          song_id: string | null
+          song_title: string
+          status: string
+          track_url: string | null
+          verified_at: string | null
+          verified_by: string | null
+          verified_via: string | null
+        }
+        Insert: {
+          archive_url?: string | null
+          closed_at?: string | null
+          dedupe_key: string
+          first_reported_at?: string
+          fix_note?: string | null
+          fixed_at?: string | null
+          id?: string
+          kind: string
+          last_build_sha?: string | null
+          last_reported_at?: string
+          report_count?: number
+          setlist_id?: string | null
+          show_date?: string | null
+          song_id?: string | null
+          song_title: string
+          status?: string
+          track_url?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
+          verified_via?: string | null
+        }
+        Update: {
+          archive_url?: string | null
+          closed_at?: string | null
+          dedupe_key?: string
+          first_reported_at?: string
+          fix_note?: string | null
+          fixed_at?: string | null
+          id?: string
+          kind?: string
+          last_build_sha?: string | null
+          last_reported_at?: string
+          report_count?: number
+          setlist_id?: string | null
+          show_date?: string | null
+          song_id?: string | null
+          song_title?: string
+          status?: string
+          track_url?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
+          verified_via?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "playback_issues_song_id_fkey"
+            columns: ["song_id"]
+            isOneToOne: false
+            referencedRelation: "songs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "playback_issues_verified_by_fkey"
+            columns: ["verified_by"]
+            isOneToOne: false
+            referencedRelation: "dispatch_recipients"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       podcast_applications: {
         Row: {
           created_at: string
@@ -1788,6 +1917,44 @@ export type Database = {
           },
         ]
       }
+      verified_tapes: {
+        Row: {
+          archive_url: string | null
+          first_ok_at: string
+          last_ok_at: string
+          ok_count: number
+          show_date: string | null
+          song_id: string
+          track_url: string
+        }
+        Insert: {
+          archive_url?: string | null
+          first_ok_at?: string
+          last_ok_at?: string
+          ok_count?: number
+          show_date?: string | null
+          song_id: string
+          track_url: string
+        }
+        Update: {
+          archive_url?: string | null
+          first_ok_at?: string
+          last_ok_at?: string
+          ok_count?: number
+          show_date?: string | null
+          song_id?: string
+          track_url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "verified_tapes_song_id_fkey"
+            columns: ["song_id"]
+            isOneToOne: false
+            referencedRelation: "songs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       visitor_attribution: {
         Row: {
           first_landing_path: string | null
@@ -1905,6 +2072,30 @@ export type Database = {
       }
     }
     Functions: {
+      admin_playback_issues: {
+        Args: { p_include_closed?: boolean }
+        Returns: {
+          archive_url: string
+          credited: number
+          first_reported_at: string
+          fix_note: string
+          fixed_at: string
+          followers: number
+          id: string
+          kind: string
+          last_build_sha: string
+          last_reported_at: string
+          report_count: number
+          setlist_id: string
+          show_date: string
+          song_id: string
+          song_title: string
+          status: string
+          track_url: string
+          verified_at: string
+          verified_via: string
+        }[]
+      }
       claim_email_idempotency: {
         Args: {
           _key: string
@@ -1914,6 +2105,16 @@ export type Database = {
         Returns: boolean
       }
       cleanup_expired_drafts: { Args: never; Returns: number }
+      community_fixes: {
+        Args: { p_limit?: number }
+        Returns: {
+          credited: string[]
+          issue_id: string
+          show_date: string
+          song_title: string
+          verified_at: string
+        }[]
+      }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
@@ -1931,6 +2132,7 @@ export type Database = {
         Args: { _user_id: string }
         Returns: string
       }
+      follow_playback_issue: { Args: { p_issue_id: string }; Returns: boolean }
       get_admin_traffic_stats: {
         Args: never
         Returns: {
@@ -1985,6 +2187,7 @@ export type Database = {
         Args: { p_user_id?: string; p_visitor_id: string }
         Returns: undefined
       }
+      mark_fixed_tape_seen: { Args: { p_issue_id: string }; Returns: undefined }
       move_to_dlq: {
         Args: {
           dlq_name: string
@@ -1993,6 +2196,17 @@ export type Database = {
           source_queue: string
         }
         Returns: number
+      }
+      my_fixed_tapes: {
+        Args: never
+        Returns: {
+          credit_ok: boolean
+          issue_id: string
+          show_date: string
+          song_id: string
+          song_title: string
+          verified_at: string
+        }[]
       }
       next_slots_to_check: {
         Args: { _limit?: number; _stale_days?: number }
@@ -2003,6 +2217,13 @@ export type Database = {
         }[]
       }
       objectionable_terms: { Args: never; Returns: string[] }
+      playback_archive_url_ok: { Args: { p_url: string }; Returns: boolean }
+      playback_creditable_name: { Args: { p_name: string }; Returns: boolean }
+      playback_track_matches_night: {
+        Args: { p_date: string; p_url: string }
+        Returns: boolean
+      }
+      playback_track_url_ok: { Args: { p_url: string }; Returns: boolean }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }
         Returns: {
@@ -2015,13 +2236,58 @@ export type Database = {
         Args: { _setlist_id: string }
         Returns: undefined
       }
+      record_tape_ok: {
+        Args: {
+          p_archive_url: string
+          p_show_date: string
+          p_song_id: string
+          p_track_url: string
+        }
+        Returns: undefined
+      }
       refresh_admin_traffic_stats: { Args: never; Returns: undefined }
+      report_playback_issue: {
+        Args: {
+          p_archive_url: string
+          p_build_sha: string
+          p_kind: string
+          p_notify?: boolean
+          p_setlist_id: string
+          p_show_date: string
+          p_song_id: string
+          p_song_title: string
+          p_track_url: string
+        }
+        Returns: string
+      }
       send_featured_setlist_email_today: { Args: never; Returns: undefined }
+      set_playback_credit: {
+        Args: { p_credit: boolean; p_issue_id: string }
+        Returns: boolean
+      }
+      set_playback_issue_status: {
+        Args: { p_issue_id: string; p_note?: string; p_status: string }
+        Returns: undefined
+      }
       setlist_has_share_token: {
         Args: { _setlist_id: string }
         Returns: boolean
       }
       slot_notes_text: { Args: { p_notes: string }; Returns: string }
+      suggest_known_good_tape: {
+        Args: {
+          p_exclude_date: string
+          p_exclude_track: string
+          p_song_id: string
+        }
+        Returns: {
+          archive_url: string
+          show_date: string
+          song_id: string
+          song_title: string
+          track_url: string
+        }[]
+      }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
