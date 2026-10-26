@@ -429,6 +429,36 @@ describe("VersionPicker — the hero's fallback to the next best thing", () => {
   const tapHero = async () =>
     fireEvent.click(await screen.findByRole("button", { name: /^Play Shakedown Street, /i }));
 
+  it("falling back to the top pick, that pick's report still names the page the tap was made on", async () => {
+    // P18 in the 2026-10-26 gate's mutation run (run 6). The fallback is a
+    // second lookup that starts only after the debut's has answered, so if it
+    // read the page for itself it would read wherever the fan had gone by then.
+    VERSIONS[0].archive_org_url = null;
+    const answers: Array<(v: null) => void> = [];
+    findRecordingForDate.mockImplementation(() => new Promise((r) => { answers.push(r); }));
+    const answerAll = () => act(async () => { answers.splice(0).forEach((a) => a(null)); });
+    window.history.pushState({}, "", "/versions/shakedown-street");
+    try {
+      await openPage();
+      const before = findRecordingForDate.mock.calls.length;
+      await tapHero();
+      await waitFor(() => expect(findRecordingForDate.mock.calls.length).toBeGreaterThan(before));
+      window.history.pushState({}, "", "/songbook");
+      const debutAsked = findRecordingForDate.mock.calls.length;
+      await answerAll(); // no tape of the debut: on to the top pick
+      await waitFor(() => expect(findRecordingForDate.mock.calls.length).toBeGreaterThan(debutAsked));
+      expect(findRecordingForDate.mock.calls[findRecordingForDate.mock.calls.length - 1][1]).toBe(VERSIONS[0].show_date);
+      await answerAll(); // none of the top pick either
+      await waitFor(() => expect(reportPlaybackFailure).toHaveBeenCalled());
+      expect(reportPlaybackFailure.mock.calls[0]).toEqual([
+        expect.objectContaining({ kind: "no_tape", showDate: VERSIONS[0].show_date }),
+        { from: "/versions/shakedown-street" },
+      ]);
+    } finally {
+      window.history.pushState({}, "", "/");
+    }
+  });
+
   it("with nothing to fall back on, its own report names the page the tap was made on", async () => {
     // The hero files the debut's "no tape" itself only when there is no top
     // pick to try next; otherwise playVersion files it. Neither may read the

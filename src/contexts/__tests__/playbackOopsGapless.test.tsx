@@ -572,3 +572,178 @@ describe("a skip still resolving when the fan taps something else", () => {
     expect(reports()).toHaveLength(0);
   });
 });
+
+/**
+ * The 2026-10-26 gate (run 6) BLOCKED #133 on this. Previous, Next and the
+ * engine's own advances move the player without a newer tap, so the
+ * stale-tap `seq` checks cannot see them; and failUnresolvedSlot stops the
+ * engine. A late "not on this tape" about the last row therefore stopped song
+ * 3, which Previous had put on, and put a card about the last row over it. A
+ * late 503 stopped it in silence: no card, no alert, no report.
+ */
+describe("a late answer about a slot the player has since left", () => {
+  const row = (id: string, position: number, title: string, carried = true): PlayableSlot => ({
+    ...SLOT,
+    id,
+    position,
+    song: { id: SONG, title },
+    version: { ...SLOT.version!, show_date: "" },
+    directTrackUrl: carried ? TRACK : null,
+  });
+  const R1 = row("r1", 0, "Bertha");
+  const R2 = row("r2", 1, "Sugaree");
+  const R3 = row("r3", 2, "Sugar Magnolia");
+  const R4 = row("r4", 3, "Casey Jones");
+  const SET = [R1, R2, R3, R4];
+
+  /** Every read of `title`'s tape waits for `answer`, however many there are. */
+  const holdTape = (title: string) => {
+    const waiting: Array<(v: { url: string | null; unreachable: boolean }) => void> = [];
+    vi.mocked(findTrackInRecordingDetailed).mockImplementation((_url: string, t: string) =>
+      t === title ? new Promise((r) => { waiting.push(r); }) : Promise.resolve({ url: TRACK, unreachable: false }),
+    );
+    return async (v: { url: string | null; unreachable: boolean }) => {
+      await act(async () => { waiting.forEach((r) => r(v)); });
+      await pastThrottle();
+    };
+  };
+
+  /**
+   * Row 2 plays; `tapped` is tapped and its tape held; then `move` (Previous
+   * or Next). The tapped row carries no track, so the engine never queued it
+   * and the move goes through advancePlaylist, as it did in the browser.
+   */
+  const tapThenMove = async (tapped: PlayableSlot, move: "previous" | "next") => {
+    const answer = holdTape(tapped.song.title);
+    const set = SET.map((r) => (r.id === tapped.id ? { ...r, directTrackUrl: null } : r));
+    const { result } = renderHook(() => useAudioPlayer(), { wrapper });
+    await act(async () => { await result.current.playSingle(R2, { slots: set }); });
+    await waitFor(() => expect(loads()).toHaveLength(1));
+    await act(async () => { void result.current.playSingle({ ...tapped, directTrackUrl: null }, { slots: set }); });
+    await act(async () => { result.current.transport[move](); });
+    return { result, answer };
+  };
+
+  it("Previous, then 'not on this tape' for the last row: song 3 plays on, and it is filed quietly", async () => {
+    const { result, answer } = await tapThenMove(R4, "previous");
+    await waitFor(() => expect(result.current.playingSlot?.id).toBe("r3"));
+    await waitFor(() => expect(loads()).toHaveLength(2));
+    const playing = loads()[1];
+    await answer({ url: null, unreachable: false });
+    expect(playing.destroy).not.toHaveBeenCalled();
+    expect(loads()).toHaveLength(2);
+    expect(result.current.playingSlot?.id).toBe("r3");
+    expect(result.current.transport.error).toBeNull();
+    expect(result.current.playbackOops).toBeNull();
+    await waitFor(() => expect(reports()).toHaveLength(1));
+    expect(reports()[0][1]).toEqual(expect.objectContaining({ p_kind: "not_on_tape", p_notify: false }));
+  });
+
+  it("Previous, then a 503 for the last row: song 3 plays on, and nothing is filed", async () => {
+    const { result, answer } = await tapThenMove(R4, "previous");
+    await waitFor(() => expect(result.current.playingSlot?.id).toBe("r3"));
+    await waitFor(() => expect(loads()).toHaveLength(2));
+    const playing = loads()[1];
+    await answer({ url: null, unreachable: true });
+    expect(playing.destroy).not.toHaveBeenCalled();
+    expect(result.current.playingSlot?.id).toBe("r3");
+    expect(result.current.transport.error).toBeNull();
+    expect(result.current.playbackOops).toBeNull();
+    expect(reports()).toHaveLength(0);
+  });
+
+  it("Next, then 'not on this tape' for the row it left: no second skip, and the set does not end", async () => {
+    // A middle row takes the "Skipping…" branch, which advanced the queue
+    // again from wherever the fan had gone: from the last row, into "End of
+    // setlist", stopping it.
+    const { result, answer } = await tapThenMove(R3, "next");
+    await waitFor(() => expect(result.current.playingSlot?.id).toBe("r4"));
+    await waitFor(() => expect(loads()).toHaveLength(2));
+    const playing = loads()[1];
+    await answer({ url: null, unreachable: false });
+    expect(playing.destroy).not.toHaveBeenCalled();
+    expect(result.current.playingSlot?.id).toBe("r4");
+    expect(result.current.transport.error).toBeNull();
+    expect(vi.mocked(toast.info)).not.toHaveBeenCalledWith(expect.stringMatching(/^Skipping/));
+    expect(vi.mocked(toast.info)).not.toHaveBeenCalledWith("End of setlist");
+    await waitFor(() => expect(reports()).toHaveLength(1));
+    expect(reports()[0][1]).toEqual(expect.objectContaining({ p_kind: "not_on_tape", p_notify: false }));
+  });
+
+  it("Previous, then 'no tape of this night' for a last row with no recording: song 3 plays on", async () => {
+    // A night with no tape stops the player (failUnresolvedSlot), so the same
+    // late answer about it stopped song 3 too.
+    const LAST_NIGHT = night("r4-night", 3, "1991-09-10");
+    const set = [R1, R2, R3, LAST_NIGHT];
+    const waiting: Array<(v: null) => void> = [];
+    vi.mocked(findRecordingForDate).mockImplementation(() => new Promise((r) => { waiting.push(r); }) as never);
+    const { result } = renderHook(() => useAudioPlayer(), { wrapper });
+    await act(async () => { await result.current.playSingle(R2, { slots: set }); });
+    await waitFor(() => expect(loads()).toHaveLength(1));
+    await act(async () => { void result.current.playSingle(LAST_NIGHT, { slots: set }); });
+    await act(async () => { result.current.transport.previous(); });
+    await waitFor(() => expect(result.current.playingSlot?.id).toBe("r3"));
+    await waitFor(() => expect(loads()).toHaveLength(2));
+    const playing = loads()[1];
+    await act(async () => { waiting.forEach((r) => r(null)); });
+    await pastThrottle();
+    expect(playing.destroy).not.toHaveBeenCalled();
+    expect(result.current.playingSlot?.id).toBe("r3");
+    expect(result.current.playbackOops).toBeNull();
+    await waitFor(() => expect(reports()).toHaveLength(1));
+    expect(reports()[0][1]).toEqual(expect.objectContaining({ p_kind: "no_tape", p_notify: false }));
+  });
+
+  it("the queue running out onto a held last row, then Previous: the answer does not stop the song Previous chose", async () => {
+    // advancePlaylist's own resolve has the same hole: its supersession check
+    // watched seq, which Previous does not move.
+    const answer = holdTape(R4.song.title);
+    const set = [R1, R2, R3, { ...R4, directTrackUrl: null }];
+    const { result } = renderHook(() => useAudioPlayer(), { wrapper });
+    await act(async () => { await result.current.playSingle(R3, { slots: set }); });
+    await waitFor(() => expect(loads()).toHaveLength(1));
+    await act(async () => { loads()[0].opts.onEnded(); });
+    await act(async () => { result.current.transport.previous(); });
+    await waitFor(() => expect(result.current.playingSlot?.id).toBe("r2"));
+    await waitFor(() => expect(loads()).toHaveLength(2));
+    const playing = loads()[1];
+    await answer({ url: null, unreachable: false });
+    expect(playing.destroy).not.toHaveBeenCalled();
+    expect(result.current.playingSlot?.id).toBe("r2");
+    expect(result.current.transport.error).toBeNull();
+    expect(result.current.playbackOops).toBeNull();
+  });
+
+  it("the engine moving on by itself, then 'not on this tape' for the tapped row: the new song plays on", async () => {
+    const answer = holdTape(R4.song.title);
+    const set = [R1, R2, R3, { ...R4, directTrackUrl: null }];
+    const { result } = renderHook(() => useAudioPlayer(), { wrapper });
+    await act(async () => { await result.current.playSingle(R2, { slots: set }); });
+    await waitFor(() => expect(loads()).toHaveLength(1));
+    await waitFor(() => expect(loads()[0].addTrack).toHaveBeenCalledTimes(2)); // R2, then R3 appended
+    await act(async () => { void result.current.playSingle(set[3], { slots: set }); });
+    // R2 finishes while the tapped row is still being read, and the queue the
+    // engine still holds carries on into R3: a gapless advance, no tap at all.
+    await act(async () => { loads()[0].opts.onStartNewTrack({ index: 1, isPlaying: true, currentTime: 0, duration: 300 }); });
+    await waitFor(() => expect(result.current.playingSlot?.id).toBe("r3"));
+    await answer({ url: null, unreachable: false });
+    expect(loads()[0].destroy).not.toHaveBeenCalled();
+    expect(result.current.playingSlot?.id).toBe("r3");
+    expect(result.current.transport.error).toBeNull();
+    expect(result.current.playbackOops).toBeNull();
+  });
+
+  it("with the player still on the row, the same late answer still fails it like a tap", async () => {
+    // The control: the guard is about having moved, not about being late.
+    const answer = holdTape(R4.song.title);
+    const { result } = renderHook(() => useAudioPlayer(), { wrapper });
+    await act(async () => { await result.current.playSingle(R2, { slots: SET }); });
+    await waitFor(() => expect(loads()).toHaveLength(1));
+    await act(async () => { void result.current.playSingle({ ...R4, directTrackUrl: null }, { slots: SET }); });
+    await answer({ url: null, unreachable: false });
+    expect(result.current.playingSlot?.id).toBe("r4");
+    expect(result.current.transport.error).toBe("That song isn't on this tape.");
+    await waitFor(() => expect(result.current.playbackOops?.kind).toBe("not_on_tape"));
+    expect(loads()[0].destroy).toHaveBeenCalled();
+  });
+});

@@ -275,7 +275,19 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
   });
 
   const stateRef = useRef(state);
-  useEffect(() => { stateRef.current = state; }, [state]);
+  /**
+   * The slot the player is on, for "has the player moved off this slot while
+   * I was resolving?". It mirrors state.playingSlot like stateRef, but
+   * playSingle also writes it in the tap itself. stateRef alone lags until the
+   * tap's render commits, and a resolve can answer before that (from cache, or
+   * inside a batched act() in tests); the answer then looked like it was about
+   * a slot the player had left, and a live tap was dropped.
+   */
+  const onSlotIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    stateRef.current = state;
+    onSlotIdRef.current = state.playingSlot?.id ?? null;
+  }, [state]);
 
   // Monotonic token for playSetlist calls — protects against race conditions
   // when the user taps "Play" on Setlist B while Setlist A is still resolving
@@ -640,6 +652,20 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     }
 
     const seq = ++playSingleSeqRef.current;
+    /**
+     * The player can move off this slot without a newer tap: Previous, Next,
+     * the engine advancing on its own, closing the bar. None of those moves
+     * playSingleSeqRef, so the `seq` checks below cannot see them, and an
+     * answer about a slot the player has left must not act on what is playing
+     * NOW. failUnresolvedSlot stops the engine, so it stopped song 3 for a late
+     * "not on this tape" about the last row (2026-10-26 gate, run 6).
+     *
+     * Read from onSlotIdRef, which this tap sets below, not from stateRef,
+     * which still names the previous slot until this tap's render commits.
+     * Kept out of failUnresolvedSlot because advancePlaylist calls that
+     * straight after its own setState, before either ref has caught up.
+     */
+    const leftThisSlot = () => onSlotIdRef.current !== slot.id;
     // A fresh tap is a fresh attempt: drop any error left over from the last
     // one. Without this the banner from a failed tap survived the retry it had
     // just invited ("Tap play to try again"), sat over a tape that was loading
@@ -651,6 +677,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     // A retry keeps the slot id, so the slot-change reset below cannot see it.
     lastEngineErrorRef.current = null;
     setState({ playingSlot: slot, playlistMode, playlistIndex, playlistSlots, activeSetlistId });
+    onSlotIdRef.current = slot.id; // see onSlotIdRef: in the tap, not on commit
     setAnchorTick((n) => n + 1); // see anchorTick: the same slot again must still reach the engine
 
     // Resolve direct track URL in background if missing
@@ -677,6 +704,14 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
         if (seq !== playSingleSeqRef.current) {
           audioDebug.log("context", "stale resolve failure ignored — a newer tap owns the player",
             { song: slot.song.title, seq, current: playSingleSeqRef.current }, "warn");
+          return;
+        }
+        // Before the skip as well as the failure: a late skip advanced the
+        // queue again from wherever the fan had gone, and ended the set.
+        if (leftThisSlot()) {
+          audioDebug.log("context", "answer for a slot the player has left — filed, nothing stopped",
+            { song: slot.song.title, now: onSlotIdRef.current, unreachable: cantReach }, "warn");
+          if (!cantReach) raisePlaybackOops(failureFromSlot("not_on_tape", slot), { show: false });
           return;
         }
         // Skipping needs somewhere to skip TO. On the last slot it used to
@@ -744,6 +779,13 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
         if (seq !== playSingleSeqRef.current) {
           audioDebug.log("context", "stale resolve failure ignored — a newer tap owns the player",
             { song: slot.song.title, seq, current: playSingleSeqRef.current }, "warn");
+          return;
+        }
+        // failUnresolvedSlot stops the player for a night with no tape.
+        if (leftThisSlot()) {
+          audioDebug.log("context", "answer for a slot the player has left — filed, nothing stopped",
+            { song: slot.song.title, now: onSlotIdRef.current, unreachable: cantReach }, "warn");
+          if (!cantReach && !uncertain) raisePlaybackOops(failureFromSlot("no_tape", slot), { show: false });
           return;
         }
         audioDebug.log("context", "no audio found for song", { song: slot.song.title, unreachable: cantReach }, "error");
@@ -1078,14 +1120,20 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     // was still resolving when the fan tapped something else used to land
     // anyway, taking the player back into the old queue.
     const seq = playSetlistSeqRef.current;
+    // ...and so does the player moving off the slot this started from, which
+    // Previous, Next and the engine do without touching seq (see playSingle's
+    // leftThisSlot). A queue-end resolve that answered after Previous
+    // otherwise stopped the song Previous had just put on.
+    const startedOn = onSlotIdRef.current;
     const from = currentPath();
     audioDebug.log("context", "advancePlaylist", { dir, fromIndex: playlistIndex });
 
     let unresolved: { slot: PlayableSlot; index: number; outcome: ResolveOutcome } | null = null;
     for (let i = playlistIndex + dir; i >= 0 && i < playlistSlots.length; i += dir) {
       const outcome = await resolveSlot(playlistSlots[i]);
-      if (seq !== playSetlistSeqRef.current) {
-        audioDebug.log("context", "advancePlaylist superseded, aborting", { seq, current: playSetlistSeqRef.current }, "warn");
+      if (seq !== playSetlistSeqRef.current || onSlotIdRef.current !== startedOn) {
+        audioDebug.log("context", "advancePlaylist superseded, aborting",
+          { seq, current: playSetlistSeqRef.current, startedOn, now: onSlotIdRef.current }, "warn");
         return;
       }
       const resolved = outcome.slot;
