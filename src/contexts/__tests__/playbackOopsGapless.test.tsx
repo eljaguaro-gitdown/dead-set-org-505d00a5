@@ -100,7 +100,7 @@ vi.mock("@/integrations/supabase/client", () => ({
 }));
 
 import { toast } from "sonner";
-import { findRecordingForDate, findTrackInRecordingDetailed } from "@/lib/archiveOrg";
+import { findArchiveRecording, findRecordingForDate, findTrackInRecordingDetailed } from "@/lib/archiveOrg";
 import { AudioPlayerProvider, useAudioPlayer, type PlayableSlot } from "@/contexts/AudioPlayerContext";
 import { SYNTHETIC_VERSION_DEFAULTS } from "@/lib/syntheticVersion";
 import { resetPlayedHere } from "@/lib/playbackIssues";
@@ -142,6 +142,8 @@ beforeEach(() => {
   );
   vi.mocked(findTrackInRecordingDetailed).mockReset().mockImplementation(async () => ({ url: TRACK, unreachable: false }));
   vi.mocked(findRecordingForDate).mockReset().mockImplementation(async () => null);
+  // clearAllMocks keeps implementations, so a test that holds this one would leak.
+  vi.mocked(findArchiveRecording).mockReset().mockImplementation(async () => null);
 });
 afterEach(() => {
   online = true;
@@ -745,5 +747,183 @@ describe("a late answer about a slot the player has since left", () => {
     expect(result.current.transport.error).toBe("That song isn't on this tape.");
     await waitFor(() => expect(result.current.playbackOops?.kind).toBe("not_on_tape"));
     expect(loads()[0].destroy).toHaveBeenCalled();
+  });
+
+  /**
+   * Q09 in the 2026-10-26 gate (run 7). The no-recording branch files a late
+   * answer only when it is an answer about the music: `!cantReach &&
+   * !uncertain`. The test above for this branch answers null, a definite "no
+   * tape of this night", so either conjunct could be deleted with every test
+   * green, and a 503 would have been filed as `no_tape`. There is no kind for
+   * "could not ask" (see PlaybackIssueKind), so the right thing to file for
+   * either answer here is nothing at all: no report_playback_issue call, quiet
+   * or otherwise.
+   *
+   * Two ways for a row with no recording to fail without an answer, one per
+   * conjunct: a dated night whose lookup THROWS (findRecordingForDate rejects
+   * when it could not ask), and an undated row whose generic search comes back
+   * empty (findArchiveRecording swallows its errors, so empty is "uncertain").
+   */
+  const noAnswer = (how: "unreachable" | "uncertain") => {
+    const pending: Array<() => void> = [];
+    if (how === "unreachable") {
+      vi.mocked(findRecordingForDate).mockImplementation(
+        () => new Promise((_, rej) => { pending.push(() => rej(new Error("archive.org 503"))); }) as never,
+      );
+    } else {
+      vi.mocked(findArchiveRecording).mockImplementation(
+        () => new Promise((res) => { pending.push(() => res(null)); }) as never,
+      );
+    }
+    const last = how === "unreachable" ? night("r4-night", 3, "1991-09-10") : night("r4-undated", 3, "");
+    const settle = async () => {
+      await act(async () => { pending.forEach((p) => p()); });
+      await pastThrottle();
+    };
+    return { last, set: [R1, R2, R3, last], pending, settle };
+  };
+  const NO_ANSWER = [
+    ["a night whose lookup could not reach the Archive", "unreachable"],
+    ["an undated row whose search came back empty", "uncertain"],
+  ] as const;
+
+  it.each(NO_ANSWER)("Previous, then no answer for the last row (%s): song 3 plays on, nothing filed, nothing said", async (_how, how) => {
+    const { last, set, pending, settle } = noAnswer(how);
+    const { result } = renderHook(() => useAudioPlayer(), { wrapper });
+    await act(async () => { await result.current.playSingle(R2, { slots: set }); });
+    await waitFor(() => expect(loads()).toHaveLength(1));
+    await act(async () => { void result.current.playSingle(last, { slots: set }); });
+    await waitFor(() => expect(pending.length).toBeGreaterThanOrEqual(2)); // the queue's read, and the tap's
+    await act(async () => { result.current.transport.previous(); });
+    await waitFor(() => expect(result.current.playingSlot?.id).toBe("r3"));
+    await waitFor(() => expect(loads()).toHaveLength(2));
+    const playing = loads()[1];
+    await settle();
+    expect(playing.destroy).not.toHaveBeenCalled();
+    expect(result.current.playingSlot?.id).toBe("r3");
+    expect(result.current.transport.error).toBeNull();
+    expect(result.current.playbackOops).toBeNull();
+    expect(vi.mocked(toast.error)).not.toHaveBeenCalled();
+    // What reaches report_playback_issue: nothing, so in particular no `no_tape`.
+    expect(reports()).toHaveLength(0);
+  });
+
+  it.each(NO_ANSWER)("the control: still on the last row, the same answer (%s) stops it and says so, and files nothing", async (_how, how) => {
+    // Without this, the test above would pass just as well if the answer
+    // never reached playSingle at all.
+    const { last, set, pending, settle } = noAnswer(how);
+    const { result } = renderHook(() => useAudioPlayer(), { wrapper });
+    await act(async () => { await result.current.playSingle(R2, { slots: set }); });
+    await waitFor(() => expect(loads()).toHaveLength(1));
+    await act(async () => { void result.current.playSingle(last, { slots: set }); });
+    await waitFor(() => expect(pending.length).toBeGreaterThanOrEqual(2));
+    await settle();
+    expect(result.current.playingSlot).toBeNull();
+    expect(vi.mocked(toast.error)).toHaveBeenCalledWith(
+      how === "unreachable"
+        ? "Couldn't reach the Archive just now — tap play to try again."
+        : "No tape of this one circulates yet",
+    );
+    expect(result.current.playbackOops).toBeNull();
+    expect(reports()).toHaveLength(0);
+  });
+
+  /**
+   * Q14 in the same gate run. advancePlaylist checks `startedOn` after every
+   * slot it reads, not only the first. The queue-end test above holds the very
+   * next row, so the check that refuses it runs on the loop's first iteration,
+   * and a check made only there would pass it. Here the row after song 3 is a
+   * night with no tape, so the loop skips it (its first iteration, which the
+   * check passes) and is reading the last row, its SECOND iteration, when
+   * Previous moves the player. Previous does not start a newer run, so `seq`
+   * is unchanged and `startedOn` is the only thing that can refuse.
+   *
+   * Both answers are wrong to act on: a miss would stop song 2 and put a card
+   * about the last row over it, and a hit would take the player back to it.
+   */
+  it.each([
+    ["'not on this tape'", { url: null, unreachable: false }],
+    ["its tape", { url: TRACK, unreachable: false }],
+  ] as const)("the queue skipping a dead night, then Previous while it reads the row after: %s for that row moves nothing", async (_what, reply) => {
+    const answer = holdTape(R4.song.title);
+    const last: PlayableSlot = { ...R4, position: 4, directTrackUrl: null };
+    const set = [R1, R2, R3, night("gap", 3, "1991-09-10"), last];
+    const readsOfLast = () =>
+      vi.mocked(findTrackInRecordingDetailed).mock.calls.filter(([, title]) => title === R4.song.title).length;
+    const { result } = renderHook(() => useAudioPlayer(), { wrapper });
+    await act(async () => { await result.current.playSingle(R3, { slots: set }); });
+    await waitFor(() => expect(loads()).toHaveLength(1));
+    await waitFor(() => expect(readsOfLast()).toBe(1)); // the engine's own queue, reading ahead
+    await act(async () => { loads()[0].opts.onEnded(); });
+    // The advance has passed the gap and is now waiting on the last row.
+    await waitFor(() => expect(readsOfLast()).toBe(2));
+    expect(result.current.playingSlot?.id).toBe("r3");
+    await act(async () => { result.current.transport.previous(); });
+    await waitFor(() => expect(result.current.playingSlot?.id).toBe("r2"));
+    await waitFor(() => expect(loads()).toHaveLength(2));
+    const playing = loads()[1];
+    await answer(reply);
+    expect(playing.destroy).not.toHaveBeenCalled();
+    expect(loads()).toHaveLength(2);
+    expect(result.current.playingSlot?.id).toBe("r2");
+    expect(result.current.playlistIndex).toBe(1);
+    expect(result.current.transport.error).toBeNull();
+    expect(result.current.playbackOops).toBeNull();
+    expect(reports()).toHaveLength(0);
+  });
+});
+
+/**
+ * Q13 in the 2026-10-26 gate (run 7). advancePlaylist refuses a stale run on
+ * either of two grounds: `seq !== playSetlistSeqRef.current` (a newer run has
+ * started) or `onSlotIdRef.current !== startedOn` (the player has moved off
+ * the slot it started from). The second half has its own tests above:
+ * Previous moves the player without starting a newer run. The first had none.
+ * Every newer run the tests above start is on a DIFFERENT slot, so the id half
+ * refuses it as well, and the seq half could be deleted with every test green.
+ *
+ * The seq half is the only refusal when the newer run starts on the SAME slot
+ * the advance started from: Play All pressed again on the same set, while a
+ * Next is still reading the next tape. Each of the two halves needs a fixture
+ * that makes the other one true, or the half under test cannot be reached.
+ * The second case puts a dead night in between, so the refusal happens on the
+ * loop's second iteration rather than its first.
+ */
+describe("Play All pressed again while Next is still reading the next tape", () => {
+  const OPENING: PlayableSlot = { ...SLOT, id: "opening", position: 0, song: { id: SONG, title: "Bertha" } };
+  const NEXT_ROW: PlayableSlot = {
+    ...SLOT,
+    id: "next-row",
+    position: 2,
+    song: { id: SONG, title: "Sugaree" },
+    version: { ...SLOT.version!, show_date: "" },
+    directTrackUrl: null,
+  };
+
+  it.each([
+    ["the next row", false],
+    ["the row after a night that will not resolve", true],
+  ] as const)("the old Next's answer for %s does not take the player off the restarted set", async (_where, gap) => {
+    const waiting: Array<(v: { url: string | null; unreachable: boolean }) => void> = [];
+    vi.mocked(findTrackInRecordingDetailed).mockImplementation((_url: string, title: string) =>
+      title === NEXT_ROW.song.title
+        ? new Promise((r) => { waiting.push(r); })
+        : Promise.resolve({ url: TRACK, unreachable: false }),
+    );
+    const set = gap ? [OPENING, night("gap", 1, "1991-09-10"), NEXT_ROW] : [OPENING, NEXT_ROW];
+    const { result } = renderHook(() => useAudioPlayer(), { wrapper });
+    await act(async () => { await result.current.playSetlist(set, "set-1"); });
+    await waitFor(() => expect(loads()).toHaveLength(1));
+    await waitFor(() => expect(waiting).toHaveLength(1)); // the engine's own queue, reading ahead
+    await act(async () => { result.current.transport.next(); });
+    await waitFor(() => expect(waiting).toHaveLength(2)); // Next's advance, waiting on the same tape
+    expect(result.current.playingSlot?.id).toBe("opening");
+    // A newer run, starting on the slot the advance started from.
+    await act(async () => { await result.current.playSetlist(set, "set-1"); });
+    expect(result.current.playingSlot?.id).toBe("opening");
+    await act(async () => { waiting.forEach((r) => r({ url: TRACK, unreachable: false })); });
+    await pastThrottle();
+    expect(result.current.playingSlot?.id).toBe("opening");
+    expect(result.current.playlistIndex).toBe(0);
   });
 });
