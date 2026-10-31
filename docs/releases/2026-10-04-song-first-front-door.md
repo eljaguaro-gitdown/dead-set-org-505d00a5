@@ -116,20 +116,34 @@ back — look at new visitors arriving on a `/versions/` URL.
 
 Written down so the review does not read a design change as a result.
 
-- **2026-10-08 — the Songbook card under the picker was redesigned and now
-  rotates weekly** (`src/lib/songbookSpotlight.ts`,
-  `SongbookSpotlightCard.tsx`). It was a play button for Vol. 2's benchmark
-  version. It is now the issue in miniature: headline, first-to-last lifespan,
-  a stub that plays the first or the last time they played the song, and the
-  sleeper count. It changes song every Monday (UTC), walking the editorial
-  issues and then the community entries. The first week is still Crazy
-  Fingers; **Oct 12 is Shakedown Street and Oct 19 is Althea**, both inside the
-  window. The card plays on the home page without passing through the
-  picker, so a rise in home-page plays here can come *out of*
-  `version_picker_viewed`. Segment by `songbook_spotlight_played` (carries
-  `slug` and `night`) before reading the primary ratio. **Live only from the
-  publish that carries it**: check the `/admin` sync badge for the sha rather
-  than assuming the merge date.
+- **Live 2026-10-09 01:21 UTC (`47e5139`, PR #117): the Songbook card under the
+  picker was redesigned and now rotates weekly** (`src/lib/songbookSpotlight.ts`,
+  `SongbookSpotlightCard.tsx`). Before that publish it was a play button for
+  Vol. 2's benchmark version, so read everything up to 01:21 UTC on 10-09 as
+  the old card. Tabs opened before the publish kept the old card until they
+  were reloaded.
+  - **What the card is now:** the issue in miniature: headline, first-to-last
+    lifespan, and a stub that plays the first or the last time they played the
+    song.
+    - Editorial weeks add the sleeper count.
+    - Community weeks show "N nights worth knowing" instead, with no headline,
+      and name nobody.
+  - **Weeks inside the window:** the card changes song every Monday (UTC),
+    walking the editorial issues and then the community entries.
+    - Oct 5 week: Crazy Fingers.
+    - **Oct 12: Shakedown Street**, the only change of song inside the window.
+    - Oct 19 (Althea) falls after the 10-18 review.
+    - Those weeks hold only if no new editorial issue is published first. A new
+      issue takes the card for its first seven days and shifts every week after it.
+  - **Reading the primary ratio:** the card plays on the home page without
+    passing through the picker, so a rise in home-page plays can come *out of*
+    `version_picker_viewed`. Segment by `songbook_spotlight_played` (carries
+    `slug`, `kind` and `night`) first.
+  - **Event names that changed meaning:** `landing_cta_clicked` with
+    `cta_id: hero_songbook_play` / `hero_songbook_read` kept its ids and changed
+    meaning at the publish. Before it, they were the old card's play button and
+    its "read Vol. 2" link. After it, they are the new card's stub and footer.
+    Do not compare counts across the publish as if they were one control.
 
 ## Known gaps on launch day
 
