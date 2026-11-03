@@ -389,6 +389,121 @@ async function findTrackInner(
   return { url: null, unreachable: false };
 }
 
+/**
+ * The other addresses a /download/ track can be streamed from: the item's own
+ * servers, as the metadata API lists them, in the order it lists them.
+ *
+ * Why this exists. `archive.org/download/<id>/<file>` is a redirect, and the
+ * Archive picks the mirror. On 2026-10-31 it sent about 11 of 12 requests for
+ * Jack Straw 10/19/71 (that song's debut) to a mirror answering 500. A full GET
+ * came back as an HTML error page, which Safari reports as MediaError code 4.
+ * The item's own servers (`workable_servers`, with `dir`) returned 206 every
+ * time. The tape was fine. The player gave up on the first error.
+ *
+ * The player only calls this after the Archive's own routing has failed. The
+ * redirect stays the first try for every track, because a mirror the Archive
+ * routes around is its decision to make, not ours.
+ *
+ * Two answers, kept apart for the same reason as findTrackInRecordingDetailed:
+ *
+ *   urls        — the metadata read, and these are its servers. Empty means
+ *                 the item lists none, which is an answer. Cached per
+ *                 identifier for the session, since every track of an item
+ *                 lives on the same servers.
+ *   unreachable — the metadata request failed: a rejection, a timeout (on the
+ *                 headers or the body), a 5xx or 429 after its retry, or a
+ *                 body that was not JSON. We
+ *                 learned nothing. Not cached, so the next failure asks again.
+ *
+ * Never throws. A failing status is a resolved promise, so a `catch` at the
+ * call site could not have seen one anyway.
+ */
+export async function archiveMirrorUrls(
+  trackUrl: string,
+): Promise<{ urls: string[]; unreachable: boolean }> {
+  const m = trackUrl.match(/^https:\/\/archive\.org\/download\/([^/?#]+)\/([^?#]+)$/);
+  if (!m) return { urls: [], unreachable: false };
+  const [, identifier, file] = m;
+  let roots = mirrorRoots.get(identifier);
+  if (!roots) {
+    const read = await readItemServers(identifier);
+    if (!read) return { urls: [], unreachable: true };
+    roots = read;
+    mirrorRoots.set(identifier, roots);
+  }
+  return { urls: roots.map((root) => `${root}/${file}`), unreachable: false };
+}
+
+/** identifier → `https://<server><dir>` for each of the item's own servers. */
+const mirrorRoots = new Map<string, string[]>();
+
+/** Test seam: forget every item's servers. */
+export function resetArchiveMirrors(): void {
+  mirrorRoots.clear();
+}
+
+/** Only an Archive host. A response must never be able to point the player anywhere else. */
+const ARCHIVE_HOST = /^[a-z0-9-]+(?:\.[a-z0-9-]+)*\.archive\.org$/i;
+
+/**
+ * fetchArchive's timer covers the headers only: it is cleared once fetch()
+ * resolves. A body that then stops arriving left a failover looking forever,
+ * with the bar busy and nothing filed. Give the body the same cap.
+ */
+async function readJsonWithin(res: Response, ms = ARCHIVE_TIMEOUT_MS): Promise<any> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      res.json(),
+      new Promise<never>((_, reject) => {
+        timer = setTimeout(() => reject(new Error("archive.org body timed out")), ms);
+      }),
+    ]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/** The item's server roots, or null when the metadata could not be read. */
+async function readItemServers(identifier: string): Promise<string[] | null> {
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const res = await fetchArchive(`https://archive.org/metadata/${identifier}`);
+      if (res.status >= 500 || res.status === 429) {
+        if (attempt === 0) {
+          await new Promise((r) => setTimeout(r, 600));
+          continue;
+        }
+        return null;
+      }
+      // A 404 is an answer: there is no such item, so it has no servers.
+      if (!res.ok) return [];
+      const meta = await readJsonWithin(res);
+      const dir = meta?.dir;
+      if (typeof dir !== "string" || !/^\/[^?#\s]*$/.test(dir)) return [];
+      const hosts = [
+        ...(Array.isArray(meta.workable_servers) ? meta.workable_servers : []),
+        meta.d1,
+        meta.d2,
+        meta.server,
+      ];
+      const roots: string[] = [];
+      for (const host of hosts) {
+        if (typeof host !== "string" || !ARCHIVE_HOST.test(host)) continue;
+        const root = `https://${host}${dir}`;
+        if (!roots.includes(root)) roots.push(root);
+      }
+      return roots;
+    } catch {
+      if (attempt === 0) {
+        await new Promise((r) => setTimeout(r, 600));
+        continue;
+      }
+    }
+  }
+  return null;
+}
+
 /** The fields we ask advancedsearch.php for, and the only ones we read. */
 interface ArchiveSearchDoc {
   identifier: string;

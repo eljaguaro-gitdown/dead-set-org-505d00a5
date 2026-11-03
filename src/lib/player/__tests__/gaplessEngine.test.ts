@@ -86,6 +86,49 @@ describe("GaplessEngine", () => {
     expect(q.gotoTrack).toHaveBeenCalledWith(0, true);
   });
 
+  it("resumes partway in when asked, seeking only once the track has been started", async () => {
+    // A track reloaded from another server after it died mid-play. Seeking
+    // before gotoTrack is lost: a track that has not started ignores SEEK.
+    const engine = new GaplessEngine(makeCallbacks());
+    engine.load(tracks.slice(0, 1), 0, true, 312.5);
+    await flush();
+    const q = lastQueue() as FakeQueueInstance & { seek: ReturnType<typeof vi.fn> };
+    expect(q.seek).toHaveBeenCalledTimes(1);
+    expect(q.seek).toHaveBeenCalledWith(312.5);
+    expect(q.gotoTrack.mock.invocationCallOrder[0]).toBeLessThan(q.seek.mock.invocationCallOrder[0]);
+  });
+
+  it("reports errors from the current queue only, never from one a load or clear replaced", async () => {
+    // A dead track reports twice (element error, then play() rejection), and
+    // a failover can load the next server between the two.
+    const cbs = makeCallbacks();
+    const engine = new GaplessEngine(cbs);
+    engine.load(tracks.slice(0, 1), 0, true);
+    await flush();
+    const first = lastQueue() as unknown as { opts: { onError: (e: Error) => void } };
+    first.opts.onError(new Error("HTML5 audio error on track 0 (code 4)"));
+    expect(cbs.onError).toHaveBeenCalledTimes(1);
+
+    engine.load(tracks.slice(1, 2), 0, true); // the generation moves on synchronously
+    first.opts.onError(new Error("NotSupportedError: The element has no supported sources."));
+    expect(cbs.onError).toHaveBeenCalledTimes(1);
+    await flush();
+    const second = lastQueue() as unknown as { opts: { onError: (e: Error) => void } };
+    second.opts.onError(new Error("HTML5 audio error on track 0 (code 4)"));
+    expect(cbs.onError).toHaveBeenCalledTimes(2);
+
+    engine.clear();
+    second.opts.onError(new Error("late"));
+    expect(cbs.onError).toHaveBeenCalledTimes(2);
+  });
+
+  it("starts at the top by default: no seek at all", async () => {
+    const engine = new GaplessEngine(makeCallbacks());
+    engine.load(tracks, 0, true);
+    await flush();
+    expect((lastQueue() as unknown as { seek: ReturnType<typeof vi.fn> }).seek).not.toHaveBeenCalled();
+  });
+
   it("maps queue indices back to slot ids in onTrackStarted", async () => {
     const cbs = makeCallbacks();
     const engine = new GaplessEngine(cbs);

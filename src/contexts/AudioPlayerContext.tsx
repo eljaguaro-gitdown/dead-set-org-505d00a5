@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useCallback, useRef, useEffect, useMemo, type ReactNode } from "react";
-import { archiveKeyDate, findArchiveRecording, findRecordingForDate, findTrackInRecordingDetailed } from "@/lib/archiveOrg";
+import { archiveKeyDate, archiveMirrorUrls, findArchiveRecording, findRecordingForDate, findTrackInRecordingDetailed } from "@/lib/archiveOrg";
 import { audioDebug } from "@/lib/audioDebug";
 import {
   startPlayEvent,
@@ -23,6 +23,7 @@ import type { Database } from "@/integrations/supabase/types";
 import { SYNTHETIC_VERSION_DEFAULTS } from "@/lib/syntheticVersion";
 import {
   fetchKnownGoodTape,
+  isArchiveTrackUrl,
   recordTapeOk,
   reportPlaybackIssue,
   PLAYS_OK_AFTER_SECONDS,
@@ -436,6 +437,23 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
    * it fail again is a new failure, not an echo.
    */
   const lastEngineErrorRef = useRef<string | null>(null);
+  /**
+   * Slots now streaming from one of their item's own servers, because the
+   * Archive's routing sent them to a mirror that failed (see archiveMirrorUrls).
+   * `url` is the server the engine is on now, `next` the next one to try. The
+   * slot's own /download/ url stays on the slot: it is what gets filed and
+   * what record_tape_ok accepts.
+   *
+   * Every queue the anchor effect loads starts on the Archive's own routing,
+   * so it clears this. A slot's track url only changes through that effect
+   * (it runs on every change of it), so an entry here is always about the url
+   * the slot carries now. A fresh tap goes back to the redirect.
+   */
+  const failoverRef = useRef(new Map<string, { url: string; next: number }>());
+  /** Bumped per failover, so a stale one clears only its own busy state. */
+  const failoverTokenRef = useRef(0);
+  /** The slot whose servers are being looked up. transport.isLoading covers it. */
+  const [failingOver, setFailingOver] = useState<{ slotId: string; token: number } | null>(null);
 
   /** Finalize the outgoing play event as "finished" when it actually ran to the end. */
   const maybeFinalizeFinished = (outgoingSlotId: string | null) => {
@@ -502,9 +520,10 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     return `${Number(m[2])}/${Number(m[3])}/${m[1].slice(2)}`;
   };
 
-  const toEngineTrack = (slot: PlayableSlot): EngineTrack => ({
+  /** `url` is for a failover, which streams the slot's track from another server. */
+  const toEngineTrack = (slot: PlayableSlot, url = slot.directTrackUrl!): EngineTrack => ({
     slotId: slot.id,
-    url: slot.directTrackUrl!,
+    url,
     metadata: {
       title: slot.song.title,
       // The iOS lock screen shows only title + artist (album appears just in
@@ -623,6 +642,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     // that was already playing — measured at 31s in a real browser, until an
     // unrelated stall error happened to hide it.
     setCueingTitle(null);
+    setFailingOver(null); // a failover still looking is about the last attempt
     engineSlotIdRef.current = null; // force the engine to (re)anchor on this slot
     // We're inside the user's tap — unlock the AudioContext while the gesture
     // window is open, before any async resolution starts.
@@ -1026,6 +1046,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     // resolves, so nothing else marks this wait as busy. Named so the card can
     // say which song it is hunting for.
     setCueingTitle(slots[0]?.song.title ?? null);
+    setFailingOver(null); // see playSingle
     engineSlotIdRef.current = null; // force the engine to (re)anchor on the new setlist
     // Inside the user's tap — unlock audio before async track resolution starts.
     if (engineMode === "gapless") getEngine().unlock();
@@ -1223,7 +1244,10 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
       if (engineMode !== "gapless") return;
       audioDebug.log("context", "gapless engine error", { error: String(error) }, "error");
       const broken = stateRef.current.playingSlot;
-      const errorKey = broken ? `${broken.id}|${broken.directTrackUrl ?? ""}` : null;
+      const onServer = broken ? failoverRef.current.get(broken.id) : undefined;
+      // Keyed on the address that failed, so each server a failover tries is
+      // its own failure while an echo of any one of them is still an echo.
+      const errorKey = broken ? `${broken.id}|${onServer?.url ?? broken.directTrackUrl ?? ""}` : null;
       if (errorKey && errorKey === lastEngineErrorRef.current) {
         // The same dead track, said twice. Everything below has already
         // happened once for it: a second pass filed a second report, raised
@@ -1233,32 +1257,16 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
       lastEngineErrorRef.current = errorKey;
-      captureAudioEvent("audio_error", {
-        engine: "gapless",
-        message: String(error),
-        track_url: stateRef.current.playingSlot?.directTrackUrl ?? null,
-        playback_method: lastProgressRef.current.playbackType ?? "HTML5",
-      });
-      void finalizePlayEvent("error");
-      consecutiveErrorsRef.current += 1;
-      const st = stateRef.current;
-      // Offline, the tape is not the problem and there is nothing to file.
-      const failed = st.playingSlot && !looksOffline() ? failureFromSlot("wont_play", st.playingSlot) : null;
-      // The same test advancePlaylist makes. A dead LAST track used to be
-      // "skipped" into nothing: a quiet report, then "End of setlist" (twice,
-      // before the repeat above was caught) and no word that the song the set
-      // was heading for never played. With nothing after it, it is the fan's
-      // dead tap, and it gets the card and the bar's error like one.
-      const somethingAfter = st.playlistIndex < st.playlistSlots.length - 1;
-      if (st.playlistMode && somethingAfter && consecutiveErrorsRef.current <= 3) {
-        if (failed) raisePlaybackOops(failed, { show: false });
-        void advancePlaylist(1); // keep the queue moving past a broken track
-      } else {
-        // Previously just a toast, which left a dead bar sitting on a track
-        // that would never play and no way back other than closing it.
-        setPlaybackError("That tape won't play. The source may be offline.");
-        if (failed) raisePlaybackOops(failed);
+      // Before anything counts it as dead: the address failed, and the tape
+      // may still be fine on the item's own servers. Not offline, where no
+      // server will answer, and not in the app, whose engine cannot say
+      // which item failed (see failOver).
+      const engine = engineRef.current;
+      if (broken && engine instanceof GaplessEngine && !looksOffline() && isArchiveTrackUrl(broken.directTrackUrl)) {
+        void failOver(engine, broken, broken.directTrackUrl, onServer?.next ?? 0, String(error));
+        return;
       }
+      trackWontPlay(String(error));
     },
     onPlayBlocked: () => {
       if (engineMode !== "gapless") return;
@@ -1273,6 +1281,105 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
       else pausePlayEvent();
       setTransportState((prev) => (prev.isPlaying === isPlaying ? prev : { ...prev, isPlaying }));
     },
+  };
+
+  /**
+   * Stream the playing slot's track from the next of its item's own servers,
+   * at the position it died, because the address it was on failed.
+   *
+   * Nothing here counts as a dead track. Nothing is filed, no card goes up,
+   * the bar shows no error, and the 3-strike cap does not move. Only when
+   * there is no server left to try does the track go to trackWontPlay, once.
+   *
+   * The answer comes back after an await, so it acts only if the engine is
+   * still where it was. Two things say so:
+   *
+   *   engineSlotIdRef — every way of leaving this slot moves it straight away.
+   *     A tap, Play All, Next and Previous, closing the bar and Retry set it
+   *     to null at once, before their own lookups answer (Next pressed during
+   *     this lookup used to let the failover restart the song the fan was
+   *     leaving). The engine advancing on its own sets it to the next slot.
+   *   resolveGenRef — Next then Previous comes back to this slot, on a queue
+   *     the anchor effect has since rebuilt from the redirect.
+   *
+   * A late answer about a slot the player has left acts on nothing and files
+   * nothing: the fallback servers were never tried.
+   *
+   * GaplessEngine only. NativeEngine's error event does not say which item
+   * failed, and AVQueuePlayer reports a failed PRELOAD of the next track the
+   * same way, so a failover there would reload a track that is playing fine.
+   * Its plugin also skips the failed item itself before this could act. The
+   * app keeps its old behaviour until the plugin names the item.
+   */
+  const failOver = async (
+    engine: GaplessEngine,
+    slot: PlayableSlot,
+    trackUrl: string,
+    next: number,
+    message: string,
+  ) => {
+    const gen = resolveGenRef.current;
+    const token = ++failoverTokenRef.current;
+    const p = lastProgressRef.current;
+    const resumeAt = p.slotId === slot.id ? p.currentTime : 0;
+    setFailingOver({ slotId: slot.id, token });
+    const { urls, unreachable: cantReach } = await archiveMirrorUrls(trackUrl);
+    setFailingOver((cur) => (cur?.token === token ? null : cur));
+    if (gen !== resolveGenRef.current || engineSlotIdRef.current !== slot.id) {
+      audioDebug.log("context", "failover answer for a slot the player has left — dropped",
+        { song: slot.song.title, now: engineSlotIdRef.current }, "warn");
+      return;
+    }
+    const url = urls[next];
+    if (!url) {
+      audioDebug.log("context", cantReach ? "couldn't read the item's servers" : "no server left to try",
+        { song: slot.song.title, tried: next, servers: urls.length }, "error");
+      trackWontPlay(message);
+      return;
+    }
+    audioDebug.log("context", "failing over to the item's own server", { song: slot.song.title, url, resumeAt });
+    captureAudioEvent("audio_failover", {
+      engine: "gapless",
+      message,
+      track_url: trackUrl,
+      stream_url: url,
+      attempt: next + 1,
+      resume_at: resumeAt,
+    });
+    failoverRef.current.set(slot.id, { url, next: next + 1 });
+    const queueGen = ++resolveGenRef.current; // and stops the last queue's append loop
+    engine.load([toEngineTrack(slot, url)], 0, true, resumeAt);
+    if (stateRef.current.playlistMode) void resolveAndAppendUpcoming(queueGen, slot.id);
+  };
+
+  /** The playing track would not play from any address we know of. */
+  const trackWontPlay = (message: string) => {
+    captureAudioEvent("audio_error", {
+      engine: "gapless",
+      message,
+      track_url: stateRef.current.playingSlot?.directTrackUrl ?? null,
+      playback_method: lastProgressRef.current.playbackType ?? "HTML5",
+    });
+    void finalizePlayEvent("error");
+    consecutiveErrorsRef.current += 1;
+    const st = stateRef.current;
+    // Offline, the tape is not the problem and there is nothing to file.
+    const failed = st.playingSlot && !looksOffline() ? failureFromSlot("wont_play", st.playingSlot) : null;
+    // The same test advancePlaylist makes. A dead LAST track used to be
+    // "skipped" into nothing: a quiet report, then "End of setlist" (twice,
+    // before the repeat above was caught) and no word that the song the set
+    // was heading for never played. With nothing after it, it is the fan's
+    // dead tap, and it gets the card and the bar's error like one.
+    const somethingAfter = st.playlistIndex < st.playlistSlots.length - 1;
+    if (st.playlistMode && somethingAfter && consecutiveErrorsRef.current <= 3) {
+      if (failed) raisePlaybackOops(failed, { show: false });
+      void advancePlaylist(1); // keep the queue moving past a broken track
+    } else {
+      // Previously just a toast, which left a dead bar sitting on a track
+      // that would never play and no way back other than closing it.
+      setPlaybackError("That tape won't play. The source may be offline.");
+      if (failed) raisePlaybackOops(failed);
+    }
   };
 
   /**
@@ -1342,6 +1449,11 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     const gen = ++resolveGenRef.current;
     const engine = getEngine();
     audioDebug.log("context", "gapless: anchoring queue", { song: slot.song.title });
+    failoverRef.current.clear(); // every track in this queue is on the Archive's own routing
+    // This queue starts at the top. The last tick may be this very song from
+    // an earlier play, and a failover before the first new tick would resume
+    // there (2026-11-02 gate on PR #138: resume_at ~16 on a fresh tap).
+    lastProgressRef.current = { slotId: null, currentTime: 0, duration: 0 };
     engine.load([toEngineTrack(slot)], 0, true);
     if (stateRef.current.playlistMode) {
       void resolveAndAppendUpcoming(gen, slot.id);
@@ -1589,7 +1701,9 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
   const transport: PlayerTransport = {
     engine: engineMode,
     isPlaying: engineMode === "gapless" ? transportState.isPlaying : false,
-    isLoading: !!state.playingSlot && !state.playingSlot.directTrackUrl,
+    isLoading:
+      !!state.playingSlot &&
+      (!state.playingSlot.directTrackUrl || failingOver?.slotId === state.playingSlot.id),
     cueingTitle,
     autoplayBlocked: transportState.autoplayBlocked,
     error:

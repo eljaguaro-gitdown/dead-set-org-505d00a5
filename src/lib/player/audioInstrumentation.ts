@@ -14,6 +14,8 @@ type AudioEvent =
   | "audio_track_advanced"
   | "audio_segue_completed"
   | "audio_error"
+  /** A track's address failed and it moved to one of its item's own servers. Not an error: see audio_error for those. */
+  | "audio_failover"
   | "audio_autoplay_blocked";
 
 type PostHogGlobal = {
