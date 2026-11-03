@@ -410,8 +410,9 @@ async function findTrackInner(
  *                 the item lists none, which is an answer. Cached per
  *                 identifier for the session, since every track of an item
  *                 lives on the same servers.
- *   unreachable — the metadata request failed: a rejection, a timeout, a 5xx
- *                 or 429 after its retry, or a body that was not JSON. We
+ *   unreachable — the metadata request failed: a rejection, a timeout (on the
+ *                 headers or the body), a 5xx or 429 after its retry, or a
+ *                 body that was not JSON. We
  *                 learned nothing. Not cached, so the next failure asks again.
  *
  * Never throws. A failing status is a resolved promise, so a `catch` at the
@@ -444,6 +445,25 @@ export function resetArchiveMirrors(): void {
 /** Only an Archive host. A response must never be able to point the player anywhere else. */
 const ARCHIVE_HOST = /^[a-z0-9-]+(?:\.[a-z0-9-]+)*\.archive\.org$/i;
 
+/**
+ * fetchArchive's timer covers the headers only: it is cleared once fetch()
+ * resolves. A body that then stops arriving left a failover looking forever,
+ * with the bar busy and nothing filed. Give the body the same cap.
+ */
+async function readJsonWithin(res: Response, ms = ARCHIVE_TIMEOUT_MS): Promise<any> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      res.json(),
+      new Promise<never>((_, reject) => {
+        timer = setTimeout(() => reject(new Error("archive.org body timed out")), ms);
+      }),
+    ]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 /** The item's server roots, or null when the metadata could not be read. */
 async function readItemServers(identifier: string): Promise<string[] | null> {
   for (let attempt = 0; attempt < 2; attempt++) {
@@ -458,7 +478,7 @@ async function readItemServers(identifier: string): Promise<string[] | null> {
       }
       // A 404 is an answer: there is no such item, so it has no servers.
       if (!res.ok) return [];
-      const meta = await res.json();
+      const meta = await readJsonWithin(res);
       const dir = meta?.dir;
       if (typeof dir !== "string" || !/^\/[^?#\s]*$/.test(dir)) return [];
       const hosts = [

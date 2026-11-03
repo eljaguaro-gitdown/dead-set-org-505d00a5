@@ -1291,11 +1291,17 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
    * the bar shows no error, and the 3-strike cap does not move. Only when
    * there is no server left to try does the track go to trackWontPlay, once.
    *
-   * The answer comes back after an await, so it acts only if the player is
-   * where it was: on the same slot (Next, Previous and the engine advancing on
-   * its own all move it), with no newer tap (a re-tap of the same slot keeps
-   * its id), and on the same queue (Next then Previous comes back to the same
-   * slot, on a queue the anchor effect has since rebuilt from the redirect).
+   * The answer comes back after an await, so it acts only if the engine is
+   * still where it was. Two things say so:
+   *
+   *   engineSlotIdRef — every way of leaving this slot moves it straight away.
+   *     A tap, Play All, Next and Previous, closing the bar and Retry set it
+   *     to null at once, before their own lookups answer (Next pressed during
+   *     this lookup used to let the failover restart the song the fan was
+   *     leaving). The engine advancing on its own sets it to the next slot.
+   *   resolveGenRef — Next then Previous comes back to this slot, on a queue
+   *     the anchor effect has since rebuilt from the redirect.
+   *
    * A late answer about a slot the player has left acts on nothing and files
    * nothing: the fallback servers were never tried.
    *
@@ -1312,7 +1318,6 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     next: number,
     message: string,
   ) => {
-    const seq = playSingleSeqRef.current;
     const gen = resolveGenRef.current;
     const token = ++failoverTokenRef.current;
     const p = lastProgressRef.current;
@@ -1320,9 +1325,9 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     setFailingOver({ slotId: slot.id, token });
     const { urls, unreachable: cantReach } = await archiveMirrorUrls(trackUrl);
     setFailingOver((cur) => (cur?.token === token ? null : cur));
-    if (seq !== playSingleSeqRef.current || gen !== resolveGenRef.current || onSlotIdRef.current !== slot.id) {
+    if (gen !== resolveGenRef.current || engineSlotIdRef.current !== slot.id) {
       audioDebug.log("context", "failover answer for a slot the player has left — dropped",
-        { song: slot.song.title, now: onSlotIdRef.current }, "warn");
+        { song: slot.song.title, now: engineSlotIdRef.current }, "warn");
       return;
     }
     const url = urls[next];
@@ -1342,8 +1347,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
       resume_at: resumeAt,
     });
     failoverRef.current.set(slot.id, { url, next: next + 1 });
-    engineSlotIdRef.current = slot.id;
-    const queueGen = ++resolveGenRef.current;
+    const queueGen = ++resolveGenRef.current; // and stops the last queue's append loop
     engine.load([toEngineTrack(slot, url)], 0, true, resumeAt);
     if (stateRef.current.playlistMode) void resolveAndAppendUpcoming(queueGen, slot.id);
   };
@@ -1446,6 +1450,10 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     const engine = getEngine();
     audioDebug.log("context", "gapless: anchoring queue", { song: slot.song.title });
     failoverRef.current.clear(); // every track in this queue is on the Archive's own routing
+    // This queue starts at the top. The last tick may be this very song from
+    // an earlier play, and a failover before the first new tick would resume
+    // there (2026-11-02 gate on PR #138: resume_at ~16 on a fresh tap).
+    lastProgressRef.current = { slotId: null, currentTime: 0, duration: 0 };
     engine.load([toEngineTrack(slot)], 0, true);
     if (stateRef.current.playlistMode) {
       void resolveAndAppendUpcoming(gen, slot.id);

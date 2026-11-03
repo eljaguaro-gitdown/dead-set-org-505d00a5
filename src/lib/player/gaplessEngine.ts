@@ -267,7 +267,17 @@ export class GaplessEngine {
     this.notifyPlayState(false);
   }
 
+  /**
+   * A queue belongs to the load that was current when it was made, and its
+   * errors are reported only while that load still is. One dead track
+   * reports twice, as the element's error event and then the play()
+   * rejection, and the context's failover can reload the track between the
+   * two when it already knows the item's servers. The second report then
+   * came from a queue that no longer existed and was taken for a failure of
+   * the server just put on (2026-11-02 gate on PR #138).
+   */
   private async createQueue(): Promise<GaplessQueue> {
+    const gen = this.generation;
     const mod = await import("gapless");
     const Queue = mod.Queue ?? mod.default;
     return new Queue({
@@ -287,7 +297,13 @@ export class GaplessEngine {
         this.notifyPlayState(false);
         this.callbacks.onQueueEnded();
       },
-      onError: (error) => this.callbacks.onError(error),
+      onError: (error) => {
+        if (gen !== this.generation) {
+          audioDebug.log("gapless", "error from a replaced queue ignored", { error: String(error) }, "warn");
+          return;
+        }
+        this.callbacks.onError(error);
+      },
       onPlayBlocked: () => {
         this.notifyPlayState(false);
         this.callbacks.onPlayBlocked();

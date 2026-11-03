@@ -498,3 +498,147 @@ describe("a late failover answer about a slot the player has left acts on nothin
     expect(result.current.playingSlot).toBeNull();
   });
 });
+
+/**
+ * One dead track reports twice: the element's error event, then the play()
+ * rejection after it. With the servers not yet known, a network round trip
+ * sits between the failover and that second report, so both carry the same
+ * key and the second is an echo. Once the servers are cached, the lookup
+ * answers in microtasks, and the failover has already put the next server on
+ * when the rejection lands. It then read as that server failing: server 0 was
+ * skipped, and a one-server item filed wont_play over a healthy server. In a
+ * real Chrome, 5 of 6 second taps went silent and 3 of 3 one-server second
+ * taps filed (2026-11-02 gate on PR #138). Every test before these fired both
+ * reports in one synchronous burst, which is only the cold case.
+ */
+const microtaskCheckpoint = async () => { for (let i = 0; i < 50; i++) await Promise.resolve(); };
+const ECHO = "NotSupportedError: The element has no supported sources.";
+/** The element's error, then the play() rejection, with the microtasks between them run. */
+const failsWithEcho = async (q: FakeQueueT) => {
+  fails(q);
+  await microtaskCheckpoint();
+  fails(q, ECHO);
+};
+
+describe("a failure said twice, when the item's servers are already known", () => {
+  it("a second tap on the same song goes to the first server, not past it", async () => {
+    const { result } = await play(JACK);
+    await act(async () => { fails(loads()[0]); });
+    await waitFor(() => expect(loads()).toHaveLength(2)); // the servers are cached now
+    await act(async () => { await result.current.playSingle(JACK); });
+    await waitFor(() => expect(loads()).toHaveLength(3));
+    expect(firstTrackOf(loads()[2])).toBe(JACK.directTrackUrl);
+    await act(async () => { await failsWithEcho(loads()[2]); });
+    await pastThrottle();
+    expect(loads()).toHaveLength(4);
+    expect(firstTrackOf(loads()[3])).toBe(JACK_ON(0));
+    expect(events("audio_failover")).toHaveLength(2);
+    expect(reports()).toHaveLength(0);
+    expect(result.current.transport.error).toBeNull();
+  });
+
+  it("a one-server item plays from its server on the second tap, and nothing is filed", async () => {
+    fetchMock.mockImplementation(async () => ok({ ...META, workable_servers: ["ia600906.us.archive.org"], d1: undefined, d2: undefined }));
+    const { result } = await play(JACK);
+    await act(async () => { fails(loads()[0]); });
+    await waitFor(() => expect(loads()).toHaveLength(2));
+    await act(async () => { await result.current.playSingle(JACK); });
+    await waitFor(() => expect(loads()).toHaveLength(3));
+    await act(async () => { await failsWithEcho(loads()[2]); });
+    await pastThrottle();
+    expect(firstTrackOf(loads()[3])).toBe(JACK_ON(0));
+    expect(reports()).toHaveLength(0);
+    expect(events("audio_error")).toHaveLength(0);
+    expect(result.current.transport.error).toBeNull();
+    expect(result.current.playbackOops).toBeNull();
+  });
+
+  it("a first server that is itself dead still gives the second its turn", async () => {
+    const { result } = await play(JACK);
+    await act(async () => { fails(loads()[0]); });
+    await waitFor(() => expect(loads()).toHaveLength(2)); // on server 0, servers cached
+    await act(async () => { await failsWithEcho(loads()[1]); });
+    await pastThrottle();
+    expect(loads()).toHaveLength(3);
+    expect(firstTrackOf(loads()[2])).toBe(JACK_ON(1));
+    expect(reports()).toHaveLength(0);
+    expect(result.current.transport.error).toBeNull();
+  });
+
+  it("a real failure of the server just put on is still a failure", async () => {
+    // Reports are dropped from the queue a failover replaced, never from the
+    // one it loaded.
+    const { result } = await play(JACK);
+    await act(async () => { await failsWithEcho(loads()[0]); });
+    await waitFor(() => expect(loads()).toHaveLength(2));
+    await act(async () => { await failsWithEcho(loads()[1]); });
+    await waitFor(() => expect(loads()).toHaveLength(3));
+    await act(async () => { await failsWithEcho(loads()[2]); });
+    await waitFor(() => expect(reports()).toHaveLength(1));
+    await pastThrottle();
+    expect(reports()).toHaveLength(1);
+    expect(loads()).toHaveLength(3);
+    await waitFor(() => expect(result.current.transport.error).toBe(WONT_PLAY));
+  });
+});
+
+describe("where a failover resumes, and what it leaves alone", () => {
+  it("a fresh tap on a song already heard starts at the top, not where the last play reached", async () => {
+    // lastProgressRef was only ever overwritten by a tick, so a re-tap whose
+    // redirect died before its first tick resumed at the old play's position.
+    const { result } = await play(JACK);
+    await pastThrottle();
+    await act(async () => { progress(loads()[0], 300); });
+    await act(async () => { await result.current.playSingle(JACK); });
+    await waitFor(() => expect(loads()).toHaveLength(2));
+    await act(async () => { fails(loads()[1]); });
+    await waitFor(() => expect(loads()).toHaveLength(3));
+    expect(firstTrackOf(loads()[2])).toBe(JACK_ON(0));
+    expect(loads()[2].seek).not.toHaveBeenCalled();
+  });
+
+  it("Next pressed while the servers are looked up: the song being left is not restarted", async () => {
+    const UNRESOLVED_UNCLE: PlayableSlot = { ...UNCLE, directTrackUrl: null };
+    const { result } = await play(JACK, [JACK, UNRESOLVED_UNCLE]);
+    const pending: Array<(v: { url: string | null; unreachable: boolean }) => void> = [];
+    vi.mocked(findTrackInRecordingDetailed).mockImplementation(() => new Promise((r) => { pending.push(r); }));
+    const answer = holdMetadata();
+    await act(async () => { fails(loads()[0]); });
+    // Next waits on song 2's tape: the player has not moved yet, but the fan has.
+    await act(async () => { void result.current.advancePlaylist(1); });
+    await waitFor(() => expect(pending.length).toBeGreaterThan(0));
+    await act(async () => { answer(); });
+    await pastThrottle();
+    expect(everyLoadedUrl()).not.toContain(JACK_ON(0));
+    await act(async () => { pending.forEach((r) => r({ url: UNCLE.directTrackUrl!, unreachable: false })); });
+    await waitFor(() => expect(result.current.playingSlot?.id).toBe("me-and-my-uncle"));
+    await waitFor(() => expect(firstTrackOf(loads()[loads().length - 1])).toBe(UNCLE.directTrackUrl));
+    expect(everyLoadedUrl()).not.toContain(JACK_ON(0));
+    expect(reports()).toHaveLength(0);
+  });
+
+  it("the rest of the set is queued once behind the server, not by the old queue's loop as well", async () => {
+    const pending: Array<(v: { url: string | null; unreachable: boolean }) => void> = [];
+    vi.mocked(findTrackInRecordingDetailed).mockImplementation(() => new Promise((r) => { pending.push(r); }));
+    const UNRESOLVED_UNCLE: PlayableSlot = { ...UNCLE, directTrackUrl: null };
+    const { result } = await play(JACK, [JACK, UNRESOLVED_UNCLE]);
+    await waitFor(() => expect(pending.length).toBe(1)); // the anchor's loop is reading song 2
+    await act(async () => { fails(loads()[0]); });
+    await waitFor(() => expect(loads()).toHaveLength(2));
+    await waitFor(() => expect(pending.length).toBe(2)); // the failover's loop reads it too
+    await act(async () => { pending.forEach((r) => r({ url: UNCLE.directTrackUrl!, unreachable: false })); });
+    await pastThrottle();
+    expect(loads()[1].addTrack.mock.calls.filter((c) => c[0] === UNCLE.directTrackUrl)).toHaveLength(1);
+    expect(result.current.playingSlot?.id).toBe("jack-straw");
+  });
+
+  it("a track not on a /download/ address is not failed over: it is dead at once, and nothing is asked", async () => {
+    const DIRECT: PlayableSlot = { ...JACK, directTrackUrl: JACK_ON(1) };
+    const { result } = await play(DIRECT);
+    await act(async () => { fails(loads()[0]); });
+    await waitFor(() => expect(reports()).toHaveLength(1));
+    await waitFor(() => expect(result.current.transport.error).toBe(WONT_PLAY));
+    expect(metadataCalls()).toHaveLength(0);
+    expect(loads()).toHaveLength(1);
+  });
+});

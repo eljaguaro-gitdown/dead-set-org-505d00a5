@@ -70,10 +70,23 @@ describe("archiveMirrorUrls", () => {
     ]);
   });
 
+  it("uses `server` when it is the only host the item names", async () => {
+    fetchMock.mockResolvedValue(ok({ dir: DIR, server: "ia800906.us.archive.org" }));
+    const { urls } = await archiveMirrorUrls(TRACK);
+    expect(urls).toEqual([`https://ia800906.us.archive.org${DIR}/${FILE}`]);
+  });
+
   it("never offers a host outside archive.org, whatever the response says", async () => {
     fetchMock.mockResolvedValue(ok({
       ...META,
-      workable_servers: ["evil.example.com", "archive.org.evil.com", "ia600906.us.archive.org", 42],
+      workable_servers: [
+        "evil.example.com",
+        "archive.org.evil.com",
+        "ia600906.us.archive.org.evil.com",
+        "evil-archive-org",
+        "ia600906.us.archive.org",
+        42,
+      ],
       d1: "https://ia800906.us.archive.org",
       d2: null,
       server: undefined,
@@ -113,6 +126,30 @@ describe("archiveMirrorUrls", () => {
     expect(metadataCalls()).toHaveLength(2);
     fetchMock.mockReset().mockResolvedValue(ok(META));
     expect((await archiveMirrorUrls(TRACK)).urls).toHaveLength(2);
+  });
+
+  it("a plain 500, the status the sick mirror's metadata could answer with, is unreachable too", async () => {
+    fetchMock.mockResolvedValue(status(500));
+    expect(await archiveMirrorUrls(TRACK)).toEqual({ urls: [], unreachable: true });
+    expect(metadataCalls()).toHaveLength(2);
+  });
+
+  it("a body that stops arriving is given up on, not waited for forever", async () => {
+    // fetch()'s abort timer is cleared once the headers arrive, so a stalled
+    // body used to leave the lookup, and the bar's busy state, pending for good.
+    vi.useFakeTimers();
+    try {
+      fetchMock.mockResolvedValue({ ok: true, status: 200, json: () => new Promise(() => undefined) } as unknown as Response);
+      let answer: unknown = null;
+      void archiveMirrorUrls(TRACK).then((r) => { answer = r; });
+      await vi.advanceTimersByTimeAsync(11_000);
+      expect(answer).toBeNull();
+      await vi.advanceTimersByTimeAsync(20_000); // 12s, the retry's 0.6s wait, 12s again
+      expect(answer).toEqual({ urls: [], unreachable: true });
+      expect(metadataCalls()).toHaveLength(2);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("a 429 is the Archive asking us to slow down, not an answer", async () => {
