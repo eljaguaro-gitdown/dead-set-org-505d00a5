@@ -33,9 +33,10 @@ git -C C:/Dev/dead-set-tape-desk fetch -q origin
 git -C C:/Dev/dead-set-tape-desk checkout -q --detach origin/main
 ```
 
-If `package-lock.json` differs from the hash stored in
-`C:/Dev/dead-set-tape-desk/node_modules/.tape-desk-lock`, or that file is missing,
-run `npm ci --no-audit --no-fund` there and write the new hash. If `npm ci` fails,
+Compare `git -C C:/Dev/dead-set-tape-desk hash-object package-lock.json` with
+the hash stored in `C:/Dev/dead-set-tape-desk/node_modules/.tape-desk-lock`. If
+they differ, or that file is missing, run `npm ci --no-audit --no-fund` there and
+write the new hash to that file. If `npm ci` fails,
 report it verbatim and stop.
 
 ## 2. Read the reports
