@@ -204,11 +204,12 @@ each surface, and the failure modes** — read it before shipping anything.
 
 ## Agent team & routing
 
-Three subagents live in .claude/agents/. Dispatch rules:
+Four subagents live in .claude/agents/. Dispatch rules:
 
 - **growth-analyst** — anything involving PostHog, funnels, conversion, or "why did this number move." Runs weekly via /growth-weekly (Mondays). Also dispatch proactively after shipping changes to landing, builder entry, auth, or share surfaces. Read-only on src/; writes only to reports/growth/.
 - **community-steward** — anything community-facing: backstage updates, Founding Deadhead emails/replies, Instagram briefs, tasteLexicon proposals. Invoke via /steward. Drafts only — a human (Jay or the Community Steward) sends everything. The human steward's operating plan is docs/community-steward-playbook.md.
 - **qa-release** — MANDATORY before any Lovable publish or App Store build. Invoke via /pre-release. No session may trigger deploy_project without a current PASS verdict from qa-release. A BLOCK verdict stops the release — no exceptions, no "small fix" bypasses.
+- **tape-triage** — read-only QA for a fan's playback report (`playback_issues`). Dispatched by **/tape-desk**, which an hourly scheduled task in the Claude desktop app runs. The desk is the triage → product → engineering → gate loop behind "we'll let you know as soon as it's fixed". It tickets each report as a public GitHub issue labelled `tape`, opens one fix PR per cause, and stops at merge, publish, data fixes and the admin card's buttons, which are the owner's. Playbook: [`docs/tape-desk.md`](docs/tape-desk.md). Evidence comes from [`scripts/tape-desk/probe.ts`](scripts/tape-desk/probe.ts), which runs the player's own resolver; never write a second matcher for triage.
 
 Separation of duties: analysts and gates never edit app code; build sessions never grade their own release. When qa-release or growth-analyst surfaces a repeated mistake, add the correction to this file (compounding engineering).
 
