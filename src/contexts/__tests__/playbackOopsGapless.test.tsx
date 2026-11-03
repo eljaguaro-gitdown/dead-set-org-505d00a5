@@ -78,6 +78,9 @@ vi.mock("@/lib/archiveOrg", () => ({
   findRecordingForDate: vi.fn(async () => null),
   findTrackInRecording: vi.fn(async () => TRACK),
   findTrackInRecordingDetailed: vi.fn(async () => ({ url: TRACK, unreachable: false })),
+  // An item that lists no other server, so an engine error here is a dead
+  // track and not a failover. mirrorFailover.test.tsx covers the servers.
+  archiveMirrorUrls: vi.fn(async () => ({ urls: [], unreachable: false })),
 }));
 vi.mock("@/lib/playEventTracker", () => ({
   startPlayEvent: vi.fn(async () => undefined),
@@ -100,7 +103,7 @@ vi.mock("@/integrations/supabase/client", () => ({
 }));
 
 import { toast } from "sonner";
-import { findArchiveRecording, findRecordingForDate, findTrackInRecordingDetailed } from "@/lib/archiveOrg";
+import { archiveMirrorUrls, findArchiveRecording, findRecordingForDate, findTrackInRecordingDetailed } from "@/lib/archiveOrg";
 import { AudioPlayerProvider, useAudioPlayer, type PlayableSlot } from "@/contexts/AudioPlayerContext";
 import { SYNTHETIC_VERSION_DEFAULTS } from "@/lib/syntheticVersion";
 import { resetPlayedHere } from "@/lib/playbackIssues";
@@ -144,6 +147,7 @@ beforeEach(() => {
   vi.mocked(findRecordingForDate).mockReset().mockImplementation(async () => null);
   // clearAllMocks keeps implementations, so a test that holds this one would leak.
   vi.mocked(findArchiveRecording).mockReset().mockImplementation(async () => null);
+  vi.mocked(archiveMirrorUrls).mockReset().mockImplementation(async () => ({ urls: [], unreachable: false }));
 });
 afterEach(() => {
   online = true;

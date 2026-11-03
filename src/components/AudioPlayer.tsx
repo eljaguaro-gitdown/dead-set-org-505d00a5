@@ -5,7 +5,8 @@ import { Play, Pause, Volume2, VolumeX, X, Loader2, Cast, ChevronRight, GripHori
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import PosterModal from "@/components/PosterModal";
 import { EraMotif, eraNameFromDate } from "@/components/EraArt";
-import { findTrackInRecording, matchScore } from "@/lib/archiveOrg";
+import { archiveMirrorUrls, findTrackInRecording, matchScore } from "@/lib/archiveOrg";
+import { isArchiveTrackUrl } from "@/lib/playbackIssues";
 import { audioDebug } from "@/lib/audioDebug";
 import { isNativeApp } from "@/lib/nativeApp";
 import {
@@ -84,6 +85,68 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
   // Reset whenever the resolved track src changes (new track or re-resolution).
   const retriedRef = useRef<boolean>(false);
   const [retrying, setRetrying] = useState(false);
+  /** What the element is playing now, for "is this answer still about it?". */
+  const srcRef = useRef<string | undefined>(undefined);
+  srcRef.current = tracks[currentTrack]?.src;
+  /**
+   * The track this player moved onto one of its item's own servers, and the
+   * next server to try. Kept when the src goes back to `trackUrl` (the retry
+   * below re-resolves to it), so a track whose servers are all spent is not
+   * started over: without that, the two loops fed each other forever.
+   */
+  const failoverRef = useRef<{ trackUrl: string; url: string; next: number } | null>(null);
+
+  // Point the element at `url` and pick up where the last one stopped.
+  const swapSource = useCallback((url: string, resumeAt: number) => {
+    setTracks((prev) => {
+      const copy = [...prev];
+      if (copy[currentTrack]) copy[currentTrack] = { ...copy[currentTrack], src: url };
+      return copy;
+    });
+    // Give React a tick to apply the new src, then reload + seek + play.
+    setTimeout(() => {
+      const el = audioRef.current;
+      if (!el) return;
+      try {
+        el.load();
+        const onLoaded = () => {
+          try { if (resumeAt > 1) el.currentTime = Math.max(0, resumeAt - 1); } catch {}
+          el.play().catch(() => {});
+          el.removeEventListener("loadedmetadata", onLoaded);
+        };
+        el.addEventListener("loadedmetadata", onLoaded);
+      } catch {}
+      lastTimeUpdateRef.current = Date.now();
+      setRetrying(false);
+      setPlaying(true);
+    }, 50);
+  }, [currentTrack]);
+
+  /**
+   * The address failed. The tape may still be fine on its item's own servers
+   * (see archiveMirrorUrls), so try those, in order, before anything below
+   * treats the track as dead. True when a server was put on.
+   */
+  const failOver = useCallback(async (): Promise<boolean> => {
+    const src = tracks[currentTrack]?.src;
+    const at = failoverRef.current;
+    const trackUrl = at?.url === src ? at.trackUrl : src;
+    if (!isArchiveTrackUrl(trackUrl) || navigator.onLine === false) return false;
+    const next = at?.trackUrl === trackUrl ? at.next : 0;
+    const resumeAt = audioRef.current?.currentTime ?? 0;
+    const { urls } = await archiveMirrorUrls(trackUrl);
+    // Moved on while we asked: whatever is playing now is not ours to touch.
+    if (srcRef.current !== src) return true;
+    const url = urls[next];
+    if (!url) {
+      audioDebug.log("player", "no server left to try", { song: songTitle, tried: next }, "warn");
+      return false;
+    }
+    failoverRef.current = { trackUrl, url, next: next + 1 };
+    audioDebug.log("player", "failing over to the item's own server", { song: songTitle, url, resumeAt }, "warn");
+    swapSource(url, resumeAt);
+    return true;
+  }, [tracks, currentTrack, songTitle, swapSource]);
 
   // Re-resolve the current song's track URL from archive.org and swap it in.
   // Used by the retry flow when playback stalls or errors mid-song.
@@ -108,28 +171,7 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
         setRetrying(false);
         return false;
       }
-      setTracks((prev) => {
-        const copy = [...prev];
-        if (copy[currentTrack]) copy[currentTrack] = { ...copy[currentTrack], src: finalUrl };
-        return copy;
-      });
-      // Give React a tick to apply the new src, then reload + seek + play.
-      setTimeout(() => {
-        const el = audioRef.current;
-        if (!el) return;
-        try {
-          el.load();
-          const onLoaded = () => {
-            try { if (resumeAt > 1) el.currentTime = Math.max(0, resumeAt - 1); } catch {}
-            el.play().catch(() => {});
-            el.removeEventListener("loadedmetadata", onLoaded);
-          };
-          el.addEventListener("loadedmetadata", onLoaded);
-        } catch {}
-        lastTimeUpdateRef.current = Date.now();
-        setRetrying(false);
-        setPlaying(true);
-      }, 50);
+      swapSource(finalUrl, resumeAt);
       audioDebug.log("player", "retry applied", { song: songTitle, url: finalUrl, resumeAt });
       return true;
     } catch (e) {
@@ -137,7 +179,7 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
       setRetrying(false);
       return false;
     }
-  }, [archiveUrl, songTitle, tracks, currentTrack]);
+  }, [archiveUrl, songTitle, tracks, currentTrack, swapSource]);
 
   // Reset the retry budget whenever we switch tracks or the resolved src changes.
   useEffect(() => {
@@ -619,6 +661,10 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
     audioDebug.log("player", "audio element error", { song: songTitle, src }, "error");
     audioDebug.setPlaybackState("error");
     console.warn("[AudioPlayer] audio error", { songTitle, src: track?.src });
+
+    // A mirror that fails is not a dead tape. Nothing below runs while one of
+    // the item's own servers is still left to try.
+    if (await failOver()) return;
 
     // Try one retry before giving up. Re-resolves the track URL and reloads.
     if (!retriedRef.current) {

@@ -81,8 +81,16 @@ export class GaplessEngine {
 
   // ── queue lifecycle ────────────────────────────────────────────────
 
-  /** Replace the queue with `tracks`, starting playback at `startIndex`. */
-  load(tracks: EngineTrack[], startIndex = 0, autoplay = true): void {
+  /**
+   * Replace the queue with `tracks`, starting playback at `startIndex`.
+   *
+   * `startAt` resumes the first track partway in, for a track reloaded from
+   * another server after it died mid-play. The seek goes in straight after
+   * gotoTrack, in the same op: by then the track is in its html5 state, which
+   * holds the seek until the element has metadata. Before gotoTrack it would
+   * be lost, because a track that has not started ignores SEEK.
+   */
+  load(tracks: EngineTrack[], startIndex = 0, autoplay = true, startAt = 0): void {
     const gen = ++this.generation;
     this.desiredTransportState = autoplay ? "playing" : "paused";
     this.enqueueOp(async () => {
@@ -100,6 +108,7 @@ export class GaplessEngine {
       }
       if (tracks.length > 0) {
         queue.gotoTrack(startIndex, autoplay && this.desiredTransportState === "playing");
+        if (startAt > 0) queue.seek(startAt);
       }
     });
   }

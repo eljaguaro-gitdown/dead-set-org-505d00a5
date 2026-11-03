@@ -86,6 +86,25 @@ describe("GaplessEngine", () => {
     expect(q.gotoTrack).toHaveBeenCalledWith(0, true);
   });
 
+  it("resumes partway in when asked, seeking only once the track has been started", async () => {
+    // A track reloaded from another server after it died mid-play. Seeking
+    // before gotoTrack is lost: a track that has not started ignores SEEK.
+    const engine = new GaplessEngine(makeCallbacks());
+    engine.load(tracks.slice(0, 1), 0, true, 312.5);
+    await flush();
+    const q = lastQueue() as FakeQueueInstance & { seek: ReturnType<typeof vi.fn> };
+    expect(q.seek).toHaveBeenCalledTimes(1);
+    expect(q.seek).toHaveBeenCalledWith(312.5);
+    expect(q.gotoTrack.mock.invocationCallOrder[0]).toBeLessThan(q.seek.mock.invocationCallOrder[0]);
+  });
+
+  it("starts at the top by default: no seek at all", async () => {
+    const engine = new GaplessEngine(makeCallbacks());
+    engine.load(tracks, 0, true);
+    await flush();
+    expect((lastQueue() as unknown as { seek: ReturnType<typeof vi.fn> }).seek).not.toHaveBeenCalled();
+  });
+
   it("maps queue indices back to slot ids in onTrackStarted", async () => {
     const cbs = makeCallbacks();
     const engine = new GaplessEngine(cbs);
