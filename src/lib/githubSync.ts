@@ -67,10 +67,16 @@ export interface CompareResponse {
  * `main`. Everything else — `docs/`, `*.md`, `.github/` — is not.
  */
 export const shipsInApp = (path: string): boolean =>
-  /^(src\/|ios\/|android\/|public\/|supabase\/functions\/)/.test(path) ||
+  // The build stamp (.github/workflows/stamp-build-sha.yml) is the one file
+  // under src/ that is ABOUT a build rather than part of it: main's tip is a
+  // stamp commit whose only change is this file, and a build of the commit it
+  // stamps IS main's app code. Counting it would put every build one commit
+  // "behind" forever.
+  path !== "src/buildInfo.ts" &&
+  (/^(src\/|ios\/|android\/|public\/|supabase\/functions\/)/.test(path) ||
   /^(index\.html|package\.json|bun\.lock|package-lock\.json|vite\.config\.ts|capacitor\.config\.ts|tailwind\.config\.ts)$/.test(
     path,
-  );
+  ));
 
 // Inverted on purpose. The key is the branch's status relative to the build;
 // the value is the build's status relative to the branch, which is what the

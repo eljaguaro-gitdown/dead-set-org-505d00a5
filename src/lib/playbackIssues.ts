@@ -2,6 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { SYNTHETIC_VERSION_DEFAULTS } from "@/lib/syntheticVersion";
 import type { PlayableSlot } from "@/contexts/AudioPlayerContext";
+import { buildSha } from "@/lib/buildSha";
 
 /**
  * "Oops — that one won't play." The client half of
@@ -17,8 +18,6 @@ const rpc = (fn: string, args?: Record<string, unknown>): PromiseLike<{ data: an
   (supabase as unknown as {
     rpc: (fn: string, args?: Record<string, unknown>) => PromiseLike<{ data: any; error: any }>;
   }).rpc(fn, args);
-
-declare const __BUILD_SHA__: string;
 
 /**
  * Failures a fix can address. Network failures ("couldn't reach the Archive",
@@ -126,8 +125,6 @@ export const oopsPromise = (kind: PlaybackIssueKind) =>
         signedOut: SIGNED_OUT_PROMISE,
         credit: "Credit me by name on Build Notes when it is",
       };
-
-const buildSha = () => (typeof __BUILD_SHA__ !== "undefined" ? __BUILD_SHA__ : "unknown");
 
 /**
  * File the failure. Resolves with the issue id, or null if it could not be
