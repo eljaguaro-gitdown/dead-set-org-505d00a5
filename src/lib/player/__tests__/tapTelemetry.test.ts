@@ -58,6 +58,14 @@ describe("one tap, one answer", () => {
     expect(seen[1]).toMatchObject({ kind: "not_on_tape", stage: "match" });
   });
 
+  it("settles once even when two failures race: the second is dropped", () => {
+    claimTap("other", { slotId: "n1" });
+    tapFailed("unreachable", "metadata");
+    tapFailed("timeout");
+    expect(events()).toEqual(["play_requested", "play_failed"]);
+    expect(seen[1]).toMatchObject({ kind: "unreachable", stage: "metadata" });
+  });
+
   it("an explicit stage on failure wins over the tracked one", () => {
     claimTap("other", { slotId: "n1" });
     tapStage("redirect");

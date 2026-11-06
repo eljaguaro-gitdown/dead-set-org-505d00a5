@@ -488,11 +488,13 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
         onError: (error) => engineCbRef.current.onError(error),
         onPlayBlocked: () => engineCbRef.current.onPlayBlocked(),
         onPlayStateChanged: (isPlaying) => engineCbRef.current.onPlayStateChanged(isPlaying),
+        // The tap's answer: the first tick with real time, unthrottled.
+        onSound: (slotId) => tapFirstSound(slotId ?? engineSlotIdRef.current),
       });
       // Track duration + per-slot progress for analytics at the throttled rate.
       engine.subscribeProgress((p) => {
         lastProgressRef.current = { slotId: engineSlotIdRef.current, ...p };
-        // The tap's answer: the first tick with real time. Later ticks no-op.
+        // The native engine has no onSound; its ticks are not throttled here.
         if (p.currentTime > 0) tapFirstSound(engineSlotIdRef.current);
         // Audio is actually coming out: the run of failures is over.
         if (p.currentTime > 0 && p.duration > 0) consecutiveErrorsRef.current = 0;

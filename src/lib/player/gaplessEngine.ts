@@ -47,6 +47,13 @@ export interface EngineCallbacks {
   onPlayBlocked: () => void;
   /** Fired only on transitions, never per tick. */
   onPlayStateChanged: (isPlaying: boolean) => void;
+  /**
+   * Every tick with real time, UNTHROTTLED. The progress subscribers are
+   * notified at ~4Hz, which is right for a clock and wrong for a stopwatch:
+   * tap-to-sound measured through them read up to 250ms late. Cheap to
+   * call per tick — the receiver settles once and returns.
+   */
+  onSound?: (slotId: string | null) => void;
 }
 
 const PROGRESS_NOTIFY_INTERVAL_MS = 250;
@@ -291,7 +298,12 @@ export class GaplessEngine {
       // that survives backgrounding on iOS; everywhere else stays HYBRID.
       webAudioIsDisabled: isIOS(),
       volume: this.volume,
-      onProgress: (info) => this.handleProgress(info),
+      onProgress: (info) => {
+        // A replaced queue is torn down, but a tick already in flight from it
+        // must not be read as the new queue's sound.
+        if (gen !== this.generation) return;
+        this.handleProgress(info);
+      },
       onStartNewTrack: (info) => this.handleStartNewTrack(info),
       onEnded: () => {
         this.notifyPlayState(false);
@@ -327,6 +339,7 @@ export class GaplessEngine {
   }
 
   private handleProgress(info: TrackInfo): void {
+    if (info.currentTime > 0) this.callbacks.onSound?.(this.slotIds[info.index] ?? null);
     this.progressRef.current = {
       currentTime: info.currentTime,
       duration: Number.isFinite(info.duration) ? info.duration : 0,

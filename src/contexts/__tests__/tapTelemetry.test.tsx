@@ -144,6 +144,36 @@ describe("the player's half of the tap contract", () => {
     expect(seen[2].tap_id).not.toBe(seen[0].tap_id);
   });
 
+  it("prefetching the NEXT slot must not relabel the leg the fan's tap is on", async () => {
+    // A tapped slot with its track in hand is at "redirect". The queue behind
+    // it has a stored tape that needs metadata; the prefetch resolves it. The
+    // tap's own stage must stay where the tap is.
+    let metadataAsked = 0;
+    vi.mocked(fetch).mockImplementation(async (url) => {
+      if (String(url).includes("/metadata/")) {
+        metadataAsked++;
+        return json({ files: [{ name: "Althea.mp3", format: "VBR MP3" }], metadata: {} });
+      }
+      return json(EMPTY_SEARCH);
+    });
+    const Queue = () => {
+      const { playSingle, stopPlayback } = useAudioPlayer();
+      const next = stored("b", "gd-b");
+      return (
+        <>
+          <button onClick={() => void playSingle(READY, { slots: [READY, next], setlistId: null })}>readyInQueue</button>
+          <button onClick={() => stopPlayback()}>stop</button>
+        </>
+      );
+    };
+    render(<AudioPlayerProvider><Queue /></AudioPlayerProvider>);
+    fireEvent.click(screen.getByText("readyInQueue"));
+    await waitFor(() => expect(metadataAsked).toBeGreaterThan(0));
+    await new Promise((r) => setTimeout(r, 20));
+    fireEvent.click(screen.getByText("stop"));
+    expect(last()).toMatchObject({ event: "play_failed", kind: "stopped", stage: "redirect" });
+  });
+
   it("Next pressed while a tap is still waiting settles it as superseded", async () => {
     vi.mocked(fetch).mockImplementation(() => new Promise<Response>(() => {}));
     render(<AudioPlayerProvider><Harness /></AudioPlayerProvider>);
