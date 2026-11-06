@@ -3,6 +3,7 @@ import { Play, Loader2, Pause, ChevronDown, ListPlus, Disc3, Sparkles } from "lu
 import { supabase } from "@/integrations/supabase/client";
 import { useAudioPlayer, type PlayableSlot } from "@/contexts/AudioPlayerContext";
 import { captureEvent, captureException } from "@/lib/posthog";
+import { beginTap } from "@/lib/player/tapTelemetry";
 import { toast } from "sonner";
 import {
   DropdownMenu,
@@ -133,6 +134,7 @@ const PlaySetlistButton = ({
       return;
     }
 
+    beginTap("setlist_button", { hasPrecomputed: false });
     await runWithSlots(async (playable) => {
       await playSetlist(playable, setlistId);
       captureEvent("setlist_play_started", {
@@ -145,6 +147,7 @@ const PlaySetlistButton = ({
   };
 
   const handleMode = async (mode: PlayMode) => {
+    if (mode === "all" || mode === "openers") beginTap("setlist_button", { hasPrecomputed: false });
     if (mode === "all") {
       await runWithSlots(async (playable) => {
         await playSetlist(playable, setlistId);

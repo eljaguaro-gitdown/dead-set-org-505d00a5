@@ -17,6 +17,7 @@ import {
 import { NativeEngine } from "@/lib/player/nativeEngine";
 import { isNativeApp } from "@/lib/nativeApp";
 import { captureAudioEvent, archiveIdentifierFromUrl } from "@/lib/player/audioInstrumentation";
+import { activeTap, claimTap, tapFailed, tapFirstSound, tapSlot, tapStage, surfaceFromPath, type TapStage } from "@/lib/player/tapTelemetry";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
@@ -491,6 +492,8 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
       // Track duration + per-slot progress for analytics at the throttled rate.
       engine.subscribeProgress((p) => {
         lastProgressRef.current = { slotId: engineSlotIdRef.current, ...p };
+        // The tap's answer: the first tick with real time. Later ticks no-op.
+        if (p.currentTime > 0) tapFirstSound(engineSlotIdRef.current);
         // Audio is actually coming out: the run of failures is over.
         if (p.currentTime > 0 && p.duration > 0) consecutiveErrorsRef.current = 0;
         // Twenty seconds of real audio is what makes a tape one "we know
@@ -579,6 +582,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
 
   const stopPlayback = useCallback(() => {
     audioDebug.log("context", "stopPlayback");
+    tapFailed("stopped"); // a tap still waiting for sound got none
     playSetlistSeqRef.current++; // invalidate any in-flight playSetlist
     // A busy flag set by one entry point has to be cleared by EVERY path that
     // supersedes it, not just the one that re-sets it. "The newer run owns it"
@@ -608,6 +612,12 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
    * "Couldn't reach" is the network, and asking again is the fix for it.
    */
   const failUnresolvedSlot = useCallback((slot: PlayableSlot, outcome: ResolveOutcome, from: string) => {
+    tapFailed(
+      outcome.unreachable ? "unreachable"
+        : outcome.uncertain ? "uncertain"
+        : slot.version?.archive_org_url ? "not_on_tape"
+        : "no_tape",
+    );
     if (slot.version?.archive_org_url) {
       engineRef.current?.clear();
       if (outcome.unreachable) {
@@ -637,6 +647,16 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
   ) => {
     audioDebug.log("context", "playSingle", { id: slot.id, song: slot.song.title, hasUrl: !!slot.version?.archive_org_url, hasDirect: !!slot.directTrackUrl, withContext: !!playlistContext });
     const from = currentPath(); // the page this tap was made on
+    // The tap's clock. A surface with an await before this call began it
+    // already (beginTap) and this takes it over; otherwise it starts here,
+    // which is still inside the handler for every other surface.
+    claimTap(surfaceFromPath(from), {
+      slotId: slot.id,
+      songId: slot.song.id,
+      showDate: slot.version?.show_date ?? null,
+      hasPrecomputed: !!slot.directTrackUrl,
+    });
+    if (slot.directTrackUrl) tapStage("redirect"); // nothing to look up: the browser is fetching
     playSetlistSeqRef.current++; // invalidate any in-flight playSetlist
     // See stopPlayback: without this the digging card stayed up over a tape
     // that was already playing — measured at 31s in a real browser, until an
@@ -747,6 +767,8 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
               ? `Skipping ${slot.song.title} — couldn't reach the Archive`
               : `Skipping ${slot.song.title} — not on this tape`,
           );
+          // The tapped night did not play; the queue moving on is not its sound.
+          tapFailed(cantReach ? "unreachable" : "not_on_tape");
           if (!cantReach) raisePlaybackOops(failureFromSlot("not_on_tape", slot), { show: false });
           void advancePlaylistRef.current(1);
         } else {
@@ -759,6 +781,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
       if (resolved) {
         audioDebug.setDirectTrackUrl(resolved.directTrackUrl ?? null);
         audioDebug.log("context", "resolved direct track", { url: resolved.directTrackUrl });
+        if (seq === playSingleSeqRef.current) tapStage("redirect");
         // `seq` as well as the id: the id alone is not identity enough when
         // two controls can legitimately build the same slot, and a late
         // resolve from an abandoned tap then lands on the current one. The
@@ -778,6 +801,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
       const { slot: resolved, unreachable: cantReach, uncertain } = await resolveSlot(slot);
       if (resolved?.version?.archive_org_url) {
         audioDebug.setSlot(resolved.id, resolved.song.title, resolved.version.archive_org_url, resolved.directTrackUrl ?? null);
+        if (seq === playSingleSeqRef.current) tapStage("redirect");
         // `seq` as well as the id: the id alone is not identity enough when
         // two controls can legitimately build the same slot, and a late
         // resolve from an abandoned tap then lands on the current one. The
@@ -842,8 +866,22 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
   const absent = (): ResolveOutcome => ({ slot: null, unreachable: false });
   const unreachable = (): ResolveOutcome => ({ slot: null, unreachable: true });
 
+  /**
+   * Stage the tap only when this resolve is FOR the tap's slot: resolveSlot
+   * also runs for prefetch and the append loop, which must not relabel the
+   * leg the fan's own tap is on.
+   */
+  const stageFor = (slot: PlayableSlot, stage: TapStage) => {
+    if (activeTap()?.slotId === slot.id) tapStage(stage);
+  };
+  // By name, not instanceof: tests mock @/lib/archiveOrg without the class,
+  // and a bare instanceof against undefined throws out of the catch.
+  const isArchiveUnreachable = (e: unknown) =>
+    !!e && typeof e === "object" && (e as { name?: string }).name === "ArchiveUnreachable";
+
   const resolveSlot = async (slot: PlayableSlot): Promise<ResolveOutcome> => {
     if (slot.version?.archive_org_url && slot.directTrackUrl) return ok(slot);
+    stageFor(slot, "lookup");
 
     // Prefer a server-precomputed direct track URL over a live archive.org
     // round-trip. Misses (private/uncrawled slots, synthetic ids) fall through
@@ -865,6 +903,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     if (slot.version?.archive_org_url && !slot.directTrackUrl) {
       // Has a specific show URL — find the track WITHIN that recording
       audioDebug.log("resolve", "findTrackInRecording", { url: slot.version.archive_org_url, song: slot.song.title });
+      stageFor(slot, "metadata");
       // Detailed, not the plain one: a 5xx or a dead connection makes
       // fetchMetadataWithFallback return a FAILED result rather than throwing,
       // so a `catch` here could never see it. That is why the first version of
@@ -902,6 +941,8 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
       if (directUrl) {
         return ok({ ...slot, directTrackUrl: directUrl });
       }
+      // Read the tape, no track matched: the matcher is the leg that failed.
+      if (!trackUnreachable) stageFor(slot, "match");
 
       // The stored recording does not contain this song. That happens because
       // a stored archive URL is not evidence of anything: ai-deadhead took
@@ -919,6 +960,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
       let healUnreachable = false;
       if (night) {
         audioDebug.log("resolve", "stored tape lacks the song — re-resolving the night", { song: slot.song.title, date: night }, "warn");
+        stageFor(slot, "lookup");
         try {
           const dated = await findRecordingForDate(slot.song.title, night);
           if (dated?.directTrackUrl) {
@@ -932,6 +974,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
           // findRecordingForDate THROWS on a failed request, deliberately, so
           // this is "could not ask", never "the song is not here".
           healUnreachable = true;
+          if (isArchiveUnreachable(e)) stageFor(slot, "metadata");
           audioDebug.log("resolve", "night re-resolve failed", { song: slot.song.title, error: String(e) }, "warn");
         }
       }
@@ -943,6 +986,11 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
       audioDebug.log("resolve", "song is not on any readable tape of this night",
         { song: slot.song.title, unreachable: healUnreachable }, healUnreachable ? "warn" : "error");
       console.warn(`[QA] Could not resolve direct track for "${slot.song.title}" in ${slot.version.archive_org_url}`);
+      // The leg that decided the verdict, not the last one tried: an
+      // unreadable stored tape is a metadata failure even after the night
+      // search answered with nothing, and a read tape with no match is the
+      // matcher's answer however the heal went.
+      if (!healUnreachable) stageFor(slot, trackUnreachable ? "metadata" : "match");
       return healUnreachable || trackUnreachable ? unreachable() : absent();
     }
 
@@ -962,6 +1010,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     let nightUnreachable = false;
     if (namedNight) {
       audioDebug.log("resolve", "findRecordingForDate", { song: slot.song.title, date: namedNight });
+      stageFor(slot, "lookup");
       // findRecordingForDate THROWS on a failed request, deliberately, to keep
       // "could not ask the Archive" distinct from "no tape of this night
       // circulates" — and it caches neither. Its sibling findArchiveRecording
@@ -987,8 +1036,12 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
           });
         }
         audioDebug.log("resolve", "no tape found for named night", { song: slot.song.title, date: namedNight }, "warn");
+        // The night was searched and its tapes read; none carried the song.
+        if (dated) stageFor(slot, "match");
       } catch (e) {
         nightUnreachable = true;
+        // The search answered and a tape would not: that leg, not the search.
+        if (isArchiveUnreachable(e)) stageFor(slot, "metadata");
         audioDebug.log(
           "resolve",
           "named-night lookup failed — treating as unresolved, not as 'no tape'",
@@ -1003,6 +1056,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
 
     // No archive URL and no night — a generic search is all that is left.
     audioDebug.log("resolve", "findArchiveRecording (generic search)", { song: slot.song.title });
+    stageFor(slot, "lookup");
     const result = await findArchiveRecording(slot.song.title);
     if (result?.directTrackUrl) {
       return ok({
@@ -1035,6 +1089,12 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     }
     const seq = ++playSetlistSeqRef.current;
     const from = currentPath(); // the page Play All was pressed on
+    claimTap(surfaceFromPath(from), {
+      slotId: slots[0]?.id ?? null,
+      songId: slots[0]?.song.id ?? null,
+      showDate: slots[0]?.version?.show_date ?? null,
+      hasPrecomputed: !!slots[0]?.directTrackUrl,
+    });
     // Supersession runs BOTH ways. Without this, a slow single tap that failed
     // after Play All had started cleared its playingSlot and toasted over the
     // tape that was playing.
@@ -1073,6 +1133,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     let anyUnreachable = false;
     let anyUncertain = false;
     for (let i = 0; i < sorted.length; i++) {
+      if (seq === playSetlistSeqRef.current) tapSlot(sorted[i].id); // the tap follows the hunt
       const { slot: resolved, unreachable: cantReach, uncertain } = await resolveSlot(sorted[i]);
       if (cantReach) anyUnreachable = true;
       if (uncertain) anyUncertain = true;
@@ -1098,6 +1159,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
       // tape either circulates or it does not — but only say that when we got
       // an answer.
       setCueingTitle(null);
+      tapFailed(anyUnreachable ? "unreachable" : anyUncertain ? "uncertain" : "none_in_setlist");
       if (anyUnreachable) {
         toast.error("Couldn't reach the Archive just now — try again");
       } else if (anyUncertain) {
@@ -1125,6 +1187,8 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     }
 
     audioDebug.setSlot(startSlot.id, startSlot.song.title, startSlot.version?.archive_org_url ?? null, startSlot.directTrackUrl ?? null);
+    tapSlot(startSlot.id);
+    tapStage("redirect");
     setState({
       playingSlot: startSlot,
       playlistMode: true,
@@ -1272,6 +1336,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
       if (engineMode !== "gapless") return;
       audioDebug.log("context", "autoplay blocked", {}, "warn");
       captureAudioEvent("audio_autoplay_blocked", { engine: "gapless" });
+      tapFailed("autoplay_blocked", "gesture");
       setTransportState((prev) => ({ ...prev, autoplayBlocked: true }));
     },
     onPlayStateChanged: (isPlaying) => {
@@ -1354,6 +1419,9 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
 
   /** The playing track would not play from any address we know of. */
   const trackWontPlay = (message: string) => {
+    // With a duration the redirect was followed and bytes arrived; without,
+    // the address itself failed.
+    tapFailed("wont_play", lastProgressRef.current.duration > 0 ? "buffer" : "redirect");
     captureAudioEvent("audio_error", {
       engine: "gapless",
       message,
@@ -1489,6 +1557,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
       if (stateRef.current.playingSlot?.id !== slot.id) return;
       if (stateRef.current.playingSlot?.directTrackUrl) return;
       audioDebug.log("context", "resolution timed out", { song: slot.song.title }, "error");
+      tapFailed("timeout");
       // A slot that already has its answer is not still being looked for. A
       // failed resolve leaves the slot without a track, which is all this
       // checks, so 25s after "That song isn't on this tape." the bar used to
@@ -1748,6 +1817,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     // the song being left, and it used to sit over the next one.
     next: () => {
       setPlaybackOops(null);
+      tapFailed("superseded"); // the fan moved on from a tap still waiting
       const st = stateRef.current;
       const engine = engineRef.current;
       if (engineMode === "gapless" && engine && st.playingSlot) {
@@ -1764,6 +1834,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     },
     previous: () => {
       setPlaybackOops(null);
+      tapFailed("superseded");
       const st = stateRef.current;
       const engine = engineRef.current;
       if (engineMode === "gapless" && engine && st.playingSlot) {

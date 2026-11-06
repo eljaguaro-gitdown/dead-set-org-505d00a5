@@ -5,6 +5,7 @@ import { findRecordingForDate, type ArchiveResult } from "@/lib/archiveOrg";
 import { trackCtaClick } from "@/lib/trackCtaClick";
 import { captureEvent } from "@/lib/posthog";
 import { unlockAudioInGesture } from "@/lib/player/gestureUnlock";
+import { beginTap } from "@/lib/player/tapTelemetry";
 import {
   preferredEnd,
   spotlightSlot,
@@ -416,6 +417,7 @@ const SongbookSpotlightCard = ({ spotlight: s }: { spotlight: SongbookSpotlight 
       return;
     }
     unlockAudioInGesture();
+    beginTap("songbook_spotlight", { songId: s.songId ?? null, showDate: end.date, hasPrecomputed: !!found?.directTrackUrl });
     trackCtaClick("hero_songbook_play", "audio");
     captureEvent("songbook_spotlight_played", {
       slug: s.slug,

@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useMemo } from "react";
 import { Star, Wand2, Search, Disc3, Play, X } from "lucide-react";
 import { useAudioPlayer, type PlayableSlot } from "@/contexts/AudioPlayerContext";
+import { beginTap } from "@/lib/player/tapTelemetry";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -1050,6 +1051,7 @@ const CosmicCharlieDialog = ({
                               // Charlie's picks name a night, never a track.
                               directTrackUrl: null,
                             };
+                            beginTap("charlie", { songId: selectedSong?.id ?? null, showDate: v.showDate ?? null, hasPrecomputed: false });
                             playSingle(slot);
                           }}
                         >

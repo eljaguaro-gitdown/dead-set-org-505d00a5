@@ -54,6 +54,7 @@ import {
 import { buildGuideSongs } from "@/lib/listeningGuide";
 import TapeHunt from "@/components/TapeHunt";
 import { captureEvent } from "@/lib/posthog";
+import { beginTap } from "@/lib/player/tapTelemetry";
 
 /** Which control started the audio — one per play path on this page. */
 type PlayOrigin =
@@ -466,6 +467,8 @@ const VersionPicker = () => {
       return;
     }
     unlockAudio();
+    // Clock from the finger: the night may still need looking up.
+    beginTap("version_picker", { songId: song.id, showDate: song.first_played, hasPrecomputed: !!ftp?.directTrackUrl });
     setHeroResolving(true);
     try {
       // Keep the whole recording, not just its address. findRecordingForDate
@@ -566,6 +569,7 @@ const VersionPicker = () => {
   const playMilestone = (m: MilestoneEntry) => {
     if (!song || !m.archiveUrl) return;
     unlockAudio();
+    beginTap("version_picker", { songId: song.id, showDate: m.date, hasPrecomputed: !!m.directTrackUrl });
     playSingle({
       id: `picker-${song.id}-${m.kind}`,
       song: { id: song.id, title: song.title },
@@ -599,6 +603,7 @@ const VersionPicker = () => {
   ): Promise<boolean> => {
     if (!song || !v.show_date) return false;
     unlockAudio();
+    beginTap("version_picker", { songId: song.id, showDate: v.show_date, hasPrecomputed: false });
     let url = v.archive_org_url;
     let directTrackUrl: string | null = null;
     if (!url) {
@@ -668,6 +673,7 @@ const VersionPicker = () => {
   const playAllInner = async () => {
     if (!song) return;
     unlockAudio();
+    beginTap("version_picker", { songId: song.id, showDate: null, hasPrecomputed: false });
     const withTape = shown.filter((v) => v.archive_org_url && v.show_date);
     if (withTape.length === 0) {
       toast.info("Nothing here has a tape attached yet — play one to go find it");

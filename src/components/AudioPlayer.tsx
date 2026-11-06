@@ -7,6 +7,7 @@ import PosterModal from "@/components/PosterModal";
 import { EraMotif, eraNameFromDate } from "@/components/EraArt";
 import { archiveMirrorUrls, findTrackInRecording, matchScore } from "@/lib/archiveOrg";
 import { isArchiveTrackUrl } from "@/lib/playbackIssues";
+import { tapFailed, tapFirstSound } from "@/lib/player/tapTelemetry";
 import { audioDebug } from "@/lib/audioDebug";
 import { isNativeApp } from "@/lib/nativeApp";
 import {
@@ -240,6 +241,7 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
       const identifier = getIdentifier(archiveUrl);
       if (!identifier) {
         setError("Invalid archive.org URL");
+        tapFailed("no_tape", "lookup");
         setLoading(false);
         return;
       }
@@ -278,6 +280,7 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
         if (audioFiles.length === 0) {
           audioDebug.log("player", "no audio files in recording", { identifier }, "error");
           setError("No audio files found");
+          tapFailed("not_on_tape", "match");
         } else {
           setTracks(audioFiles);
           let bestIdx = -1;   // no match yet — do NOT default to 0
@@ -302,12 +305,14 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
           } else {
             audioDebug.log("player", "no track above threshold — refusing to play wrong audio", { song: songTitle, identifier, total: audioFiles.length, bestScore }, "warn");
             setError(`Couldn't find "${songTitle}" in this recording`);
+            tapFailed("not_on_tape", "match");
           }
         }
       } catch (e) {
         if (!cancelled) {
           audioDebug.log("player", "metadata fetch failed", { identifier, error: String(e) }, "error");
           setError("Couldn't load audio from archive.org");
+          tapFailed("unreachable", "metadata");
         }
       }
       if (!cancelled) setLoading(false);
@@ -484,6 +489,11 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
       audioDebug.setPlaybackState("playing");
       try { navigator.mediaSession.playbackState = "playing"; } catch {}
     };
+    // The tap's answer on this engine: the element's own clock moving.
+    const onTimeUpdate = () => {
+      if (el.currentTime > 0) tapFirstSound();
+    };
+    el.addEventListener("timeupdate", onTimeUpdate);
     const onPause = () => {
       // Ignore pause events fired during end-of-track teardown.
       if (el.ended) return;
@@ -496,6 +506,7 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
     return () => {
       el.removeEventListener("play", onPlay);
       el.removeEventListener("pause", onPause);
+      el.removeEventListener("timeupdate", onTimeUpdate);
     };
   }, []);
 
@@ -675,6 +686,7 @@ const AudioPlayer = ({ archiveUrl, songTitle, showDate, venue, autoPlay = false,
     // Retry failed (or already used). In playlist mode, advance past the
     // broken track so the queue keeps moving.
     void finalizePlayEvent("error");
+    tapFailed("wont_play", "buffer");
     if (singleTrackMode && onEnded) {
       setPlaying(false);
       onEnded();
