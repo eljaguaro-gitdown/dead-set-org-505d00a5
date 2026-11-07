@@ -55,7 +55,7 @@ import { buildGuideSongs } from "@/lib/listeningGuide";
 import TapeHunt from "@/components/TapeHunt";
 import { captureEvent } from "@/lib/posthog";
 import { findNight } from "@/lib/tapeIndex";
-import { abandonPendingTap, beginTap } from "@/lib/player/tapTelemetry";
+import { beginTap } from "@/lib/player/tapTelemetry";
 
 /** Which control started the audio — one per play path on this page. */
 type PlayOrigin =
@@ -132,7 +132,7 @@ const VersionPicker = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { playSingle, playSetlist, unlockAudio, playingSlot, reportPlaybackFailure, playbackOops } = useAudioPlayer();
+  const { playSingle, playSetlist, unlockAudio, playingSlot, reportPlaybackFailure, playbackOops, startPlanB } = useAudioPlayer();
   // The fallback tape can still fail AFTER the toast, inside the player — the
   // song is not on it, or it will not spin. The card says so then, and the
   // toast promising "the next best thing" must not sit on top of it, both
@@ -521,8 +521,11 @@ const VersionPicker = () => {
     } catch {
       // Could not ask the Archive. Say that, not "no tape circulates" — the
       // whole point of the resolver throwing is that the two are different.
-      toast.error("Couldn't reach the Archive — try again");
-      abandonPendingTap("unreachable", "lookup");
+      // Could not ask the Archive: music from a tape we know plays, if there
+      // is one; the honest toast if not.
+      void startPlanB({ songId: song.id, songTitle: song.title, showDate: song.first_played ?? null }).then((ok) => {
+        if (!ok) toast.error("Couldn't reach the Archive — try again");
+      });
     } finally {
       setHeroResolving(false);
     }
@@ -620,8 +623,11 @@ const VersionPicker = () => {
       try {
         tape = await findNight(song.title, v.show_date, song.id);
       } catch {
-        toast.error("Couldn't reach the Archive — try again");
-      abandonPendingTap("unreachable", "lookup");
+        // Could not ask the Archive: music from a tape of this song we know
+        // plays, if there is one; the honest toast if not.
+        void startPlanB({ songId: song.id, songTitle: song.title, showDate: v.show_date }).then((ok) => {
+          if (!ok) toast.error("Couldn't reach the Archive — try again");
+        });
         return false;
       } finally {
         setResolving(null);

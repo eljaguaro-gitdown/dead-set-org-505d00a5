@@ -209,6 +209,13 @@ interface AudioPlayerContextValue extends AudioPlayerState {
    */
   planB: PlanBState | null;
   dismissPlanB: () => void;
+  /**
+   * For a surface whose OWN lookup could not reach the Archive: try Plan B
+   * now rather than leave the fan with only a toast. Resolves false when there
+   * is no sure thing (show the toast then). Nothing is filed: it was the
+   * network, and asking again is the fix for that.
+   */
+  startPlanB: (args: { songId: string | null; songTitle: string; showDate: string | null }) => Promise<boolean>;
 }
 
 export interface PlanBState {
@@ -287,6 +294,7 @@ const defaultAudioPlayerContext: AudioPlayerContextValue = {
   reportPlaybackFailure: () => undefined,
   planB: null,
   dismissPlanB: () => undefined,
+  startPlanB: async () => false,
 };
 
 const AudioPlayerContext = createContext<AudioPlayerContextValue>(defaultAudioPlayerContext);
@@ -1937,6 +1945,14 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     void planBOrCard(failure, failure.kind === "wont_play" ? "wont_play" : "no_tape", opts.from);
   }, [planBOrCard]);
 
+  const startPlanB = useCallback(
+    (args: { songId: string | null; songTitle: string; showDate: string | null }) => {
+      abandonPendingTap("unreachable", "lookup");
+      return tryPlanB({ songId: args.songId, songTitle: args.songTitle, failedDate: args.showDate, reason: "slow", from: currentPath() });
+    },
+    [tryPlanB],
+  );
+
   // ── The silence ceiling ────────────────────────────────────────────────
   // Any tap still without sound or an answer at PLAN_B_AFTER_MS — inside the
   // player or still in a surface's own lookup — has waited long enough. It is
@@ -2104,7 +2120,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     <AudioPlayerContext.Provider
       value={{
         ...state, transport, playSingle, playSetlist, queueSetlist, stopPlayback, advancePlaylist, unlockAudio,
-        playbackOops, dismissPlaybackOops, reportPlaybackFailure, planB, dismissPlanB,
+        playbackOops, dismissPlaybackOops, reportPlaybackFailure, planB, dismissPlanB, startPlanB,
       }}
     >
       {children}

@@ -26,7 +26,7 @@
 import { useEffect, useRef } from "react";
 import { useAudioPlayer, type PlayableSlot } from "@/contexts/AudioPlayerContext";
 import { findNight } from "@/lib/tapeIndex";
-import { abandonPendingTap, beginTap, type TapSurface } from "@/lib/player/tapTelemetry";
+import { beginTap, type TapSurface } from "@/lib/player/tapTelemetry";
 import { unlockAudioInGesture } from "@/lib/player/gestureUnlock";
 import { spotlightSlot } from "@/lib/songbookSpotlight";
 import { SYNTHETIC_VERSION_DEFAULTS } from "@/lib/syntheticVersion";
@@ -79,10 +79,11 @@ const MARKS: Array<[keyof TapeBenchMarks, string]> = [
 ];
 
 const TapeBenchDock = () => {
-  const { playSingle, unlockAudio, reportPlaybackFailure } = useAudioPlayer();
+  const { playSingle, unlockAudio, reportPlaybackFailure, startPlanB } = useAudioPlayer();
   const observer = useRef<MutationObserver | null>(null);
 
   useEffect(() => () => observer.current?.disconnect(), []);
+  const at = (window as BenchWindow & { __tapebenchAt?: { x: number; y: number } }).__tapebenchAt ?? { x: 12, y: 12 };
 
   const watch = (marks: TapeBenchMarks) => {
     observer.current?.disconnect();
@@ -175,7 +176,7 @@ const TapeBenchDock = () => {
       } catch (e) {
         // As VersionPicker does: the Archive could not be asked.
         marks.lookupError = String(e).slice(0, 120);
-        abandonPendingTap("unreachable", "lookup");
+        void startPlanB({ songId: spec.songId, songTitle: spec.title, showDate: spec.showDate });
         return;
       }
     }
@@ -189,7 +190,9 @@ const TapeBenchDock = () => {
       onClick={() => void onClick()}
       // Out of the way of everything the bench measures, but a real target:
       // the iOS policy shim and WebKit's own activation both need a real click.
-      style={{ position: "fixed", top: 0, left: 0, width: 24, height: 24, opacity: 0.01, zIndex: 2147483647 }}
+      // Positioned by the bench where a row would be (window.__tapebenchAt),
+      // so the card answers next to it as it would for a real row.
+      style={{ position: "fixed", top: at.y - 12, left: at.x - 12, width: 24, height: 24, opacity: 0.01, zIndex: 2147483647 }}
       aria-hidden="true"
       tabIndex={-1}
     />

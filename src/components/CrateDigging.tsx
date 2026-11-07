@@ -1,4 +1,4 @@
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 import { useGlobalPlayerHeight } from "@/hooks/useGlobalPlayerHeight";
 import { charlieArtFor } from "@/lib/charlieArt";
@@ -39,8 +39,8 @@ import { subscribeTaps, tapAge, waitingTap, type Tap } from "@/lib/player/tapTel
 export const SHOW_AFTER_MS = 250;
 /** Past this, say the Archive is slow rather than repeat the song's name. */
 export const ESCALATE_AFTER_MS = 3_000;
-/** The sheet's height in layout, for keeping it clear of the player and the screen's edge. */
-const SHEET_H = 230;
+/** Until the sheet has measured itself: a phone-width sheet runs ~310–340 px. */
+const SHEET_H_GUESS = 340;
 
 /** Where the last tap landed, for putting the answer next to it. */
 let lastPointer: { x: number; y: number } | null = null;
@@ -118,6 +118,14 @@ const CrateDigging = () => {
   const tap = useWaitingTap();
   const [visible, setVisible] = useState(false);
   const [slow, setSlow] = useState(false);
+  // Measured, not assumed: at 320 px the sheet is half again as tall as at
+  // 1280, and an assumed height let it slide under the player.
+  const sheetRef = useRef<HTMLDivElement>(null);
+  const [sheetH, setSheetH] = useState(SHEET_H_GUESS);
+  useLayoutEffect(() => {
+    const h = sheetRef.current?.offsetHeight;
+    if (h && h !== sheetH) setSheetH(h);
+  });
 
   // Three shapes of one wait: a tap still waiting (any surface), a single tap
   // whose slot has no track yet, and Play All hunting with no slot at all.
@@ -151,11 +159,11 @@ const CrateDigging = () => {
   // Near the tapped row: below it when the tap was high on the screen, above
   // it when low — never over the player, never off the top.
   const vh = typeof window !== "undefined" ? window.innerHeight : 800;
-  const ceiling = vh - playerHeight - 12 - SHEET_H;
+  const ceiling = vh - playerHeight - 12 - sheetH;
   const y = lastPointer?.y;
   const top = Math.max(
     12,
-    Math.min(ceiling, y === undefined ? (vh - SHEET_H) / 2 : y < vh * 0.55 ? y + 28 : y - SHEET_H - 28),
+    Math.min(ceiling, y === undefined ? (vh - sheetH) / 2 : y < vh * 0.55 ? y + 28 : y - sheetH - 28),
   );
 
   return (
@@ -168,7 +176,7 @@ const CrateDigging = () => {
       className="fixed inset-x-0 z-50 flex justify-center px-4 pointer-events-none"
       style={{ top }}
     >
-      <div className="pointer-events-auto w-full max-w-[520px] rounded-md border-2 border-border bg-card px-5 py-4 text-card-foreground shadow-2xl motion-safe:animate-scale-in">
+      <div ref={sheetRef} className="pointer-events-auto w-full max-w-[520px] rounded-md border-2 border-border bg-card px-5 py-4 text-card-foreground shadow-2xl motion-safe:animate-scale-in">
         <div className="flex items-center gap-4">
           <img
             src={charlieArtFor(80)}
