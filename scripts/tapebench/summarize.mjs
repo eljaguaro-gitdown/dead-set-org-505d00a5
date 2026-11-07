@@ -76,6 +76,7 @@ const rows = run.taps.map((t) => {
     soundMs, failed: failed ? { kind: failed.kind, stage: failed.stage, ms: failed.ms } : null,
     planB: !!planB, ackMs, answerMs, blocked, success, benchError: t.benchError ?? null,
     writes: (t.stubbedWrites ?? []).length,
+    controlMs: typeof t.controlMs === "number" ? t.controlMs : null,
   };
 });
 
@@ -106,6 +107,13 @@ const metrics = {
   benchErrors: rows.filter((r) => r.benchError).length,
   envBlocked: envBlocked.length,
   stubbedWrites: rows.reduce((a, r) => a + r.writes, 0),
+  // The control (run.mjs runControl): a bare <audio> on the same track and
+  // network. Its time is the instrument's floor; the difference is the app's.
+  controlP50: pct(yes.filter((r) => r.controlMs !== null).map((r) => r.controlMs), 50),
+  controlP90: pct(yes.filter((r) => r.controlMs !== null).map((r) => r.controlMs), 90),
+  overheadP50: pct(yes.filter((r) => r.controlMs !== null && r.soundMs !== null).map((r) => r.soundMs - r.controlMs), 50),
+  overheadP90: pct(yes.filter((r) => r.controlMs !== null && r.soundMs !== null).map((r) => r.soundMs - r.controlMs), 90),
+  controlled: yes.filter((r) => r.controlMs !== null && r.soundMs !== null).length,
 };
 
 const pass = {
@@ -147,6 +155,8 @@ ${run.profile} · build \`${run.sha}\` · ${run.startedAt} · ${run.minutes} min
 | Autoplay blocked / NotSupportedError | ${metrics.blocked} taps | 0 | ${ok(pass.blocked)} |
 | No-tape nights covered by Plan B | ${rate(metrics.noTapePlanB.n, metrics.noTapePlanB.d)} | 100% | ${ok(pass.planB)} |
 | Unknown-truth nights that sounded (matcher) | ${rate(metrics.unknownSounded.n, metrics.unknownSounded.d)} | report | |
+| Floor: bare \`<audio>\` on the same track and network, p50 / p90 | ${fmtMs(metrics.controlP50)} / ${fmtMs(metrics.controlP90)} | report | |
+| App's share (tap − floor, ${metrics.controlled} taps), p50 / p90 | ${fmtMs(metrics.overheadP50)} / ${fmtMs(metrics.overheadP90)} | report | |
 | Production writes stubbed | ${metrics.stubbedWrites} | (none reached production) | |
 
 **Verdict:** ${allPass ? "**ALL TARGETS MET**" : "targets not met"}
@@ -160,5 +170,7 @@ ${Object.keys(failures).length === 0 ? "- none" : Object.entries(failures).sort(
 const outDir = path.join(root, "scripts/tapebench/reports");
 fs.mkdirSync(outDir, { recursive: true });
 fs.writeFileSync(path.join(outDir, `${run.runId}.json`), JSON.stringify({ runId: run.runId, profile: run.profile, sha: run.sha, startedAt: run.startedAt, settings: run.settings, metrics, pass, allPass, failures, rows }, null, 1));
+// Always printed, so a CI run's log carries the result even without its artifact.
+console.log(md);
 if (!process.argv.includes("--no-status")) fs.appendFileSync(path.join(root, "docs/playback-sprint/STATUS.md"), md);
 process.stdout.write(md);

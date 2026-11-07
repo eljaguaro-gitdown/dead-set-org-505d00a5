@@ -15,17 +15,40 @@
 import net from "node:net";
 
 export function startThrottleProxy({ rttMs = 170, downMbps = 9, upMbps = 1.5, upstream = process.env.HTTPS_PROXY || process.env.https_proxy } = {}) {
-  if (!upstream) throw new Error("throttle proxy: no HTTPS_PROXY to chain to");
-  const up = new URL(upstream);
+  // With no egress proxy (a CI runner), tunnels go straight to the host.
+  const up = upstream ? new URL(upstream) : null;
   const half = rttMs / 2;
   const bucket = { down: 0, up: 0 };
   const bytes = { down: 0, up: 0 };
   /** Hosts the session's egress refused — the sandbox's limits, not the player's. Reset per tap. */
   const refused = new Set();
+  /** Tunnels opened, by host — how many connections a tap cost. Reset per tap. */
+  const tunnels = new Map();
 
-  /** Write `chunk` to `dst` when latency and the shared bucket allow, in order. */
+  /**
+   * Write `chunk` to `dst` when latency and the shared bucket allow, IN ORDER.
+   *
+   * One FIFO and one pump timer per direction of each tunnel. An earlier
+   * version gave every chunk its own setTimeout, and Node does not promise to
+   * fire two timers of different durations in creation order when they fall
+   * due in the same millisecond. A swapped pair of TLS records is a corrupt
+   * stream: WebKit reported "Error reading data from TLS socket: Decryption
+   * has failed", the player failed over to a mirror, and the bench charged the
+   * app several seconds for a fault in the bench.
+   */
   const scheduler = (dst, dir, mbps) => {
+    const queue = [];
+    let timer = null;
     let lastAt = 0;
+    const pump = () => {
+      timer = null;
+      const now = Date.now();
+      while (queue.length && queue[0].at <= now) {
+        const { chunk } = queue.shift();
+        if (!dst.destroyed) dst.write(chunk);
+      }
+      if (queue.length) timer = setTimeout(pump, Math.max(1, queue[0].at - now));
+    };
     return (chunk) => {
       const now = Date.now();
       const arrive = now + half;
@@ -35,7 +58,8 @@ export function startThrottleProxy({ rttMs = 170, downMbps = 9, upMbps = 1.5, up
       const at = Math.max(start + cost, lastAt);
       lastAt = at;
       bytes[dir] += chunk.length;
-      setTimeout(() => { if (!dst.destroyed) dst.write(chunk); }, Math.max(0, at - now));
+      queue.push({ at, chunk });
+      if (!timer) timer = setTimeout(pump, Math.max(0, queue[0].at - now));
     };
   };
 
@@ -50,10 +74,14 @@ export function startThrottleProxy({ rttMs = 170, downMbps = 9, upMbps = 1.5, up
       const m = /^CONNECT\s+(\S+)\s+HTTP/i.exec(line);
       if (!m) { client.end("HTTP/1.1 405 Method Not Allowed\r\n\r\n"); return; }
       const target = m[1];
+      tunnels.set(target, (tunnels.get(target) ?? 0) + 1);
       const rest = head.slice(end + 4);
-      const upSock = net.connect(Number(up.port || 80), up.hostname, () => {
-        upSock.write(`CONNECT ${target} HTTP/1.1\r\nHost: ${target}\r\n\r\n`);
-      });
+      const [host, portStr] = target.split(":");
+      const upSock = up
+        ? net.connect(Number(up.port || 80), up.hostname, () => {
+            upSock.write(`CONNECT ${target} HTTP/1.1\r\nHost: ${target}\r\n\r\n`);
+          })
+        : net.connect(Number(portStr || 443), host, () => onUp(Buffer.from("HTTP/1.1 200 Connection Established\r\n\r\n")));
       let upHead = Buffer.alloc(0);
       const onUp = (d) => {
         upHead = Buffer.concat([upHead, d]);
@@ -75,7 +103,7 @@ export function startThrottleProxy({ rttMs = 170, downMbps = 9, upMbps = 1.5, up
           client.on("data", toUp);
         }, rttMs);
       };
-      upSock.on("data", onUp);
+      if (up) upSock.on("data", onUp);
       const kill = () => { client.destroy(); upSock.destroy(); };
       upSock.on("error", kill); client.on("error", kill);
       upSock.on("close", () => setTimeout(() => client.destroy(), half + 5));
@@ -91,6 +119,7 @@ export function startThrottleProxy({ rttMs = 170, downMbps = 9, upMbps = 1.5, up
         url: `http://127.0.0.1:${server.address().port}`,
         bytes,
         refused,
+        tunnels,
         close: () => new Promise((r) => server.close(() => r())),
       });
     });

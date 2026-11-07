@@ -1,0 +1,6 @@
+{
+  "why": "Request a TapeBench run on a GitHub runner by editing this file and pushing (see .github/workflows/tapebench.yml).",
+  "runs": [
+    { "profile": "webkit-iphone", "sample": 30, "workers": 3, "note": "CI smoke: first run on a GitHub runner" }
+  ]
+}

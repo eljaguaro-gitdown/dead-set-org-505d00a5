@@ -158,3 +158,32 @@ publish that carries it.
 table and in the Slipknot!, Eyes of the World, Bird Song and Ripple community guides.
 `select s.title, t.show_date from tape_index t join songs s on s.id = t.song_id where t.status <>
 'playable'` lists them. Correcting the dates is an editorial call, so I left it alone.
+
+## 2026-11-07 — The sandbox cannot measure Fast-4G latency; the bench moves to a GitHub runner, with a control
+
+**What was seen.** After the HTML5-only fix, throttled WebKit taps still took 4–8 s. One tap, traced request by request:
+
+- The app handed the track to the audio element **372 ms** after the tap, with the index read included.
+- Everything after that belonged to the media stack and the network.
+
+Three separate faults sat in that remainder:
+
+1. **The bench corrupted its own streams.** The throttle proxy gave every chunk its own `setTimeout`, and Node does not order two timers of different durations that fall due in the same millisecond. Swapped TLS records produced WebKit's "Decryption has failed", and the player failed over to a mirror for a fault that was the bench's. Fixed with one FIFO and one pump timer per direction.
+2. **Playwright's WebKit is WebKitGTK, and its media stack is GStreamer, not AVFoundation.** It opened six or seven fresh connections, each a range request, before the first sample.
+3. **This sandbox's egress is slower than Fast-4G before any throttle.** It measured 1.7–5 Mbps from two Archive servers, typically ~2.3, and adds ~0.4 s of TLS through the egress proxy.
+
+**The control.** A bare `<audio>` element with no app code, on the same track:
+
+| Browser | Unthrottled | Throttled |
+|---|---|---|
+| WebKit | 3.3–3.5 s | 4.7–7.0 s |
+| Chromium | 3.7–4.5 s | — |
+
+On a smoke run of 9 taps, the control itself took 3.1–13.3 s, or never sounded in 15 s. No player code could reach a 1.5 s p50 on that instrument, so scoring the target there would grade the sandbox.
+
+**Decision.**
+
+- TapeBench gets a **control**: after every tap, a bare element plays the exact track the player requested, in a fresh context on the same network. Reports show the floor and the app's share (tap minus floor) beside the absolute numbers. The Exit Target itself is unchanged.
+- The bench can run on a **GitHub-hosted runner** (`.github/workflows/tapebench.yml`), which has no egress proxy. The throttle proxy now dials hosts directly when there is no upstream, so "Fast-4G" there is the network the report names.
+- `run.mjs` takes a lock, because two overlapping runs earlier today shared a CPU and a rebuilt bundle and measured neither build.
+- The deciding runs will be the runner's, if it can run them. If WebKitGTK's connection pattern alone keeps the floor above 1.5 s even there, that is an owner decision about the instrument, not a code change, and it goes to the owner with the floor numbers.

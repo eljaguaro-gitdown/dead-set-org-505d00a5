@@ -52,12 +52,16 @@ const settleAfterMs = Number(arg("settle", "1500"));
 const listenMs = Number(arg("listen", "20000"));
 const port = Number(arg("port", "4173"));
 const note = arg("note", "");
+// --no-control skips the bare-element control (half the Archive traffic).
+const withControl = !flag("no-control");
 // A different build's output to serve (the baseline worktree's dist-bench).
 const distDir = path.resolve(arg("dist", path.join(root, "dist-bench")));
 
+// This sandbox's preinstalled Chromium; a CI runner uses Playwright's own.
+const SANDBOX_CHROME = "/opt/pw-browsers/chromium-1243/chrome-linux64/chrome";
 const PROFILES = {
   "webkit-iphone": { browser: webkit, device: devices["iPhone 15"], throttle: { rttMs: 170, downMbps: 9, upMbps: 1.5 }, shim: true },
-  "chromium-desktop": { browser: chromium, device: { viewport: { width: 1280, height: 800 } }, throttle: { rttMs: 0, downMbps: 0, upMbps: 0 }, shim: false, launch: { executablePath: "/opt/pw-browsers/chromium-1243/chrome-linux64/chrome", args: ["--autoplay-policy=no-user-gesture-required"] } },
+  "chromium-desktop": { browser: chromium, device: { viewport: { width: 1280, height: 800 } }, throttle: { rttMs: 0, downMbps: 0, upMbps: 0 }, shim: false, launch: { ...(fs.existsSync(SANDBOX_CHROME) ? { executablePath: SANDBOX_CHROME } : {}), args: ["--autoplay-policy=no-user-gesture-required"] } },
 };
 const profile = PROFILES[profileName];
 if (!profile) throw new Error(`unknown profile ${profileName}`);
@@ -140,6 +144,9 @@ async function runTap(browser, proxyUrl, tap) {
   await ctx.addInitScript(() => { try { localStorage.setItem("pwa_install_dismissed", String(Date.now())); } catch { /* */ } });
   const page = await ctx.newPage();
   const consoleErrors = [];
+  // The first audio the player asked for: what the control below replays.
+  let mediaUrl = null;
+  page.on("request", (q) => { if (!mediaUrl && /archive\.org\/.+\.(mp3|ogg|flac|m4a)(\?|$)/i.test(q.url())) mediaUrl = q.url(); });
   page.on("console", (m) => { if (m.type() === "error" || /NotSupportedError|NotAllowedError|MediaError|HTML5 audio error/.test(m.text())) consoleErrors.push(m.text().slice(0, 200)); });
   page.on("pageerror", (e) => consoleErrors.push(`pageerror: ${String(e).slice(0, 200)}`));
   const result = { id: tap.id, surface: tap.surface, title: tap.title, showDate: tap.showDate };
@@ -168,6 +175,7 @@ async function runTap(browser, proxyUrl, tap) {
       barError: document.querySelector("[data-player-error]")?.textContent?.trim() ?? null,
       oops: document.querySelector("[data-playback-oops]")?.textContent?.replace(/\s+/g, " ").trim().slice(0, 160) ?? null,
     }));
+    result.mediaUrl = mediaUrl;
     Object.assign(result, state, { consoleErrors: consoleErrors.slice(0, 8), stubbedWrites: writes, timing: { loadMs: t.loaded - t.start, totalMs: Date.now() - t.start } });
   } catch (e) {
     result.benchError = String(e).slice(0, 300);
@@ -177,7 +185,66 @@ async function runTap(browser, proxyUrl, tap) {
   return result;
 }
 
+/**
+ * The control: a bare <audio> element, no app code at all, handed the exact
+ * track the player asked for, in a fresh context on the same throttled
+ * network, a moment after the tap. Its time to first sound is the floor this
+ * browser and this network put under ANY player, so the app's own share of a
+ * tap is (tap's first sound − control's first sound).
+ *
+ * Why it exists (DECISIONS.md, 2026-11-07): Playwright's WebKit is WebKitGTK,
+ * whose media stack is GStreamer, not the AVFoundation an iPhone uses. It
+ * opens a fresh connection for every range request it makes while probing an
+ * mp3 (six or seven before the first sample), and this sandbox's egress to
+ * the Archive measured 1.7–5 Mbps — under the Fast-4G profile before any
+ * throttle is applied. A bare element on the Archive took 3.3 s unthrottled
+ * and 4.7–7.0 s throttled. Without a control the bench grades the instrument.
+ */
+async function runControl(browser, proxyUrl, url) {
+  const ctx = await browser.newContext({ proxy: { server: proxyUrl, bypass: "127.0.0.1,localhost" } });
+  try {
+    const page = await ctx.newPage();
+    await page.setContent("<p>control</p>");
+    return await page.evaluate(async (u) => {
+      const a = new Audio();
+      const t0 = performance.now();
+      a.src = u;
+      a.play().catch(() => {});
+      return await new Promise((res) => {
+        const iv = setInterval(() => {
+          if (a.currentTime > 0) { clearInterval(iv); a.pause(); a.removeAttribute("src"); a.load(); res(Math.round(performance.now() - t0)); }
+          else if (a.error || performance.now() - t0 > 15000) { clearInterval(iv); res(null); }
+        }, 25);
+      });
+    }, url);
+  } catch {
+    return null;
+  } finally {
+    await ctx.close().catch(() => {});
+  }
+}
+
+/**
+ * One run at a time. On 2026-11-07 a run that had not exited kept tapping
+ * while a second one started: six workers shared one CPU and the sandbox's
+ * egress, and a rebuild swapped dist-bench under the first run's server, so
+ * both reports measured a machine that was not the one described in them.
+ */
+function takeLock() {
+  const lock = path.join(root, "scripts/tapebench/reports/raw/.lock");
+  fs.mkdirSync(path.dirname(lock), { recursive: true });
+  try {
+    const pid = Number(fs.readFileSync(lock, "utf8"));
+    if (pid && pid !== process.pid) { process.kill(pid, 0); throw new Error(`another TapeBench run is live (pid ${pid}); stop it first`); }
+  } catch (e) {
+    if (/another TapeBench/.test(String(e))) throw e; // ESRCH / ENOENT: stale or absent
+  }
+  fs.writeFileSync(lock, String(process.pid));
+  process.on("exit", () => { try { if (Number(fs.readFileSync(lock, "utf8")) === process.pid) fs.unlinkSync(lock); } catch { /* */ } });
+}
+
 async function main() {
+  takeLock();
   const preview = await startPreview();
   // A browser that dies mid-run (a container restart, an OOM) is relaunched
   // rather than failing every tap after it as a bench error.
@@ -196,12 +263,15 @@ async function main() {
     while (next < corpus.length) {
       const tap = corpus[next++];
       proxy.refused.clear();
+      proxy.tunnels.clear();
       let r = await runTap(await ensureBrowser(), proxy.url, tap);
       if (r.benchError && /has been closed/.test(r.benchError)) {
         proxy.refused.clear();
         r = await runTap(await ensureBrowser(), proxy.url, tap); // once more, on a live browser
       }
       r.sandboxRefused = [...proxy.refused];
+      r.tunnels = Object.fromEntries(proxy.tunnels);
+      if (withControl && r.mediaUrl) r.controlMs = await runControl(await ensureBrowser(), proxy.url, r.mediaUrl);
       results.push(r);
       const sound = r.taps?.find((x) => x.event === "play_first_sound");
       const failed = r.taps?.find((x) => x.event === "play_failed");
@@ -218,7 +288,7 @@ async function main() {
     note,
     startedAt: new Date(started).toISOString(),
     minutes: Math.round((Date.now() - started) / 600) / 100,
-    settings: { settleAfterMs, listenMs, workers, throttle: profile.throttle, iosShim: profile.shim, device: profileName === "webkit-iphone" ? "iPhone 15" : "desktop 1280x800" },
+    settings: { control: withControl, upstream: process.env.HTTPS_PROXY ? "sandbox egress proxy" : "direct", settleAfterMs, listenMs, workers, throttle: profile.throttle, iosShim: profile.shim, device: profileName === "webkit-iphone" ? "iPhone 15" : "desktop 1280x800" },
     taps: results,
   };
   const rawDir = path.join(root, "scripts/tapebench/reports/raw");
