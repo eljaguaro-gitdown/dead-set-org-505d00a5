@@ -1,4 +1,4 @@
-import { Suspense } from "react";
+import { Suspense, lazy } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -25,6 +25,10 @@ import NativeAuthCallback from "@/components/NativeAuthCallback";
 import Index from "./pages/Index";
 
 // Lazy-load all other routes to reduce initial bundle size
+// TapeBench's dock (scripts/tapebench). Only a build with VITE_TAPEBENCH=1
+// contains it: the env constant is replaced at build time, so in every other
+// build this is `null` and the import is dropped.
+const TapeBenchDock = import.meta.env.VITE_TAPEBENCH === "1" ? lazy(() => import("@/lib/tapebench/TapeBenchDock")) : null;
 const Auth = lazyWithReload(() => import("./pages/Auth"));
 const Builder = lazyWithReload(() => import("./pages/Builder"));
 const MySetlists = lazyWithReload(() => import("./pages/MySetlists"));
@@ -103,6 +107,11 @@ const App = () => (
                 `relative z-10` would trap it under the player's z-40. */}
             <CrateDigging />
             <PlaybackOopsCard />
+            {TapeBenchDock && (
+              <Suspense fallback={null}>
+                <TapeBenchDock />
+              </Suspense>
+            )}
             <FixedTapeNotice />
             <ReturnToSetlistPill />
             <NativeAuthCallback />

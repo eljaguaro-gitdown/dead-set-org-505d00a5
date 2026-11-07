@@ -1,0 +1,489 @@
+{
+ "corpusVersion": 1,
+ "labels": {
+  "songbook_spotlight:08e1ec90-db5c-4e41-b6b1-1b75d3d528ca:1978-08-18:first": {
+   "id": "songbook_spotlight:08e1ec90-db5c-4e41-b6b1-1b75d3d528ca:1978-08-18:first",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd78-08-18.sbd.tzuriel.11504.sbeok.shnf",
+   "track": "https://archive.org/download/gd78-08-18.sbd.tzuriel.11504.sbeok.shnf/ShakeDownStreetOuttakes_Track06.mp3",
+   "ms": 10283,
+   "labelledAt": "2026-11-07T00:07:59.359Z"
+  },
+  "songbook_spotlight:08e1ec90-db5c-4e41-b6b1-1b75d3d528ca:1995-07-09:last": {
+   "id": "songbook_spotlight:08e1ec90-db5c-4e41-b6b1-1b75d3d528ca:1995-07-09:last",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd95-07-09.sbd.7233.sbeok.shnf",
+   "track": "https://archive.org/download/gd95-07-09.sbd.7233.sbeok.shnf/gd1995-07-09d1t08.mp3",
+   "ms": 5535,
+   "labelledAt": "2026-11-07T00:08:05.044Z"
+  },
+  "songbook_spotlight:108a28bb-01f5-487d-9067-9d75531a5f38:1975-02-28:first": {
+   "id": "songbook_spotlight:108a28bb-01f5-487d-9067-9d75531a5f38:1975-02-28:first",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd1975-02-28.sbd.smith.93779.sbeok.flac16",
+   "track": "https://archive.org/download/gd1975-02-28.sbd.smith.93779.sbeok.flac16/gd1975-02-28d1t01.mp3",
+   "ms": 1558,
+   "labelledAt": "2026-11-07T00:08:06.753Z"
+  },
+  "songbook_spotlight:108a28bb-01f5-487d-9067-9d75531a5f38:1995-07-05:last": {
+   "id": "songbook_spotlight:108a28bb-01f5-487d-9067-9d75531a5f38:1995-07-05:last",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd1995-07-05.sbd.larson.35170.flac16",
+   "track": "https://archive.org/download/gd1995-07-05.sbd.larson.35170.flac16/gd95-07-05sbdd1t10.mp3",
+   "ms": 1742,
+   "labelledAt": "2026-11-07T00:08:08.646Z"
+  },
+  "songbook_spotlight:839f47ea-fe61-449e-9640-9c78c5736954:1979-08-04:first": {
+   "id": "songbook_spotlight:839f47ea-fe61-449e-9640-9c78c5736954:1979-08-04:first",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd79-08-04.sbd.munder.9578.sbeok.shnf",
+   "track": "https://archive.org/download/gd79-08-04.sbd.munder.9578.sbeok.shnf/gd79-08-04d1t08.mp3",
+   "ms": 2548,
+   "labelledAt": "2026-11-07T00:08:11.345Z"
+  },
+  "songbook_spotlight:839f47ea-fe61-449e-9640-9c78c5736954:1995-07-08:last": {
+   "id": "songbook_spotlight:839f47ea-fe61-449e-9640-9c78c5736954:1995-07-08:last",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd95-07-08.sbd.10071.sbeok.shnf",
+   "track": "https://archive.org/download/gd95-07-08.sbd.10071.sbeok.shnf/gd95-07-08d1t04.mp3",
+   "ms": 1431,
+   "labelledAt": "2026-11-07T00:08:12.928Z"
+  },
+  "songbook_spotlight:e6d782d3-f9c2-447c-b1b3-f120425d88ca:1970-08-18:first": {
+   "id": "songbook_spotlight:e6d782d3-f9c2-447c-b1b3-f120425d88ca:1970-08-18:first",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd70-08-18.aud.yerys.1346.sbeok.shnf",
+   "track": "https://archive.org/download/gd70-08-18.aud.yerys.1346.sbeok.shnf/gd70-08-18d1t05.mp3",
+   "ms": 1804,
+   "labelledAt": "2026-11-07T00:08:14.882Z"
+  },
+  "songbook_spotlight:e6d782d3-f9c2-447c-b1b3-f120425d88ca:1989-09-27:last": {
+   "id": "songbook_spotlight:e6d782d3-f9c2-447c-b1b3-f120425d88ca:1989-09-27:last",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd1989-09-27.145209.s1.aud.flac1644",
+   "track": "https://archive.org/download/gd1989-09-27.145209.s1.aud.flac1644/gd1980-09-27s1t11.mp3",
+   "ms": 2799,
+   "labelledAt": "2026-11-07T00:08:17.833Z"
+  },
+  "songbook_spotlight:4ad288ab-044e-43b0-85af-9d3aff2b6ad7:1971-02-19:first": {
+   "id": "songbook_spotlight:4ad288ab-044e-43b0-85af-9d3aff2b6ad7:1971-02-19:first",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd71-02-19.sbd.orf.1029.sbeok.shnf",
+   "track": "https://archive.org/download/gd71-02-19.sbd.orf.1029.sbeok.shnf/d2t04.mp3",
+   "ms": 2161,
+   "labelledAt": "2026-11-07T00:08:20.145Z"
+  },
+  "songbook_spotlight:4ad288ab-044e-43b0-85af-9d3aff2b6ad7:1995-06-30:last": {
+   "id": "songbook_spotlight:4ad288ab-044e-43b0-85af-9d3aff2b6ad7:1995-06-30:last",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd95-06-30.schoeps.3376.sbeok.shnf",
+   "track": "https://archive.org/download/gd95-06-30.schoeps.3376.sbeok.shnf/gd95-06-30d1t07.mp3",
+   "ms": 2288,
+   "labelledAt": "2026-11-07T00:08:22.585Z"
+  },
+  "songbook_spotlight:c8e62063-bdcd-45b2-819c-b1843fb1d54b:1966-07-03:first": {
+   "id": "songbook_spotlight:c8e62063-bdcd-45b2-819c-b1843fb1d54b:1966-07-03:first",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd1966-07-03.139751.sbd.miller.clugston.flac1648",
+   "track": "https://archive.org/download/gd1966-07-03.139751.sbd.miller.clugston.flac1648/Gd66-07-03T05ViolaLeeBlues.mp3",
+   "ms": 14578,
+   "labelledAt": "2026-11-07T00:08:37.313Z"
+  },
+  "songbook_spotlight:c8e62063-bdcd-45b2-819c-b1843fb1d54b:1970-02-14:last": {
+   "id": "songbook_spotlight:c8e62063-bdcd-45b2-819c-b1843fb1d54b:1970-02-14:last",
+   "truth": "unknown",
+   "reason": "could not ask the Archive: ArchiveUnreachable: archive.org unreadable for all 2 candidate recordings",
+   "ms": 43486,
+   "labelledAt": "2026-11-07T00:09:20.950Z"
+  },
+  "songbook_spotlight:a1bf0b53-2e4c-4d7b-a481-742e9b6b7c23:1973-02-09:first": {
+   "id": "songbook_spotlight:a1bf0b53-2e4c-4d7b-a481-742e9b6b7c23:1973-02-09:first",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd73-02-09.sbd.bertha-fink.14939.sbeok.shnf",
+   "track": "https://archive.org/download/gd73-02-09.sbd.bertha-fink.14939.sbeok.shnf/gd73-02-09Berthad2t10.mp3",
+   "ms": 1752,
+   "labelledAt": "2026-11-07T00:09:22.853Z"
+  },
+  "songbook_spotlight:a1bf0b53-2e4c-4d7b-a481-742e9b6b7c23:1995-07-06:last": {
+   "id": "songbook_spotlight:a1bf0b53-2e4c-4d7b-a481-742e9b6b7c23:1995-07-06:last",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd95-07-06.NEWsbd.30888.sbeok.shnf_shn",
+   "track": "https://archive.org/download/gd95-07-06.NEWsbd.30888.sbeok.shnf_shn/gd95-07-06d1t08.mp3",
+   "ms": 2864,
+   "labelledAt": "2026-11-07T00:09:25.869Z"
+  },
+  "songbook_spotlight:525b2b5f-5371-4220-8d72-3e9c56550e63:1972-06-17:first": {
+   "id": "songbook_spotlight:525b2b5f-5371-4220-8d72-3e9c56550e63:1972-06-17:first",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd1972-06-17.shure.melton.miller.116272.flac16",
+   "track": "https://archive.org/download/gd1972-06-17.shure.melton.miller.116272.flac16/gd72-06-17s1t12.mp3",
+   "ms": 824,
+   "labelledAt": "2026-11-07T00:09:26.845Z"
+  },
+  "songbook_spotlight:525b2b5f-5371-4220-8d72-3e9c56550e63:1995-07-06:last": {
+   "id": "songbook_spotlight:525b2b5f-5371-4220-8d72-3e9c56550e63:1995-07-06:last",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd95-07-06.NEWsbd.30888.sbeok.shnf_shn",
+   "track": "https://archive.org/download/gd95-07-06.NEWsbd.30888.sbeok.shnf_shn/gd95-07-06d2t07.mp3",
+   "ms": 503,
+   "labelledAt": "2026-11-07T00:09:27.500Z"
+  },
+  "songbook_spotlight:00692cb0-0090-4843-a956-a3c3aeced63d:1974-06-20:first": {
+   "id": "songbook_spotlight:00692cb0-0090-4843-a956-a3c3aeced63d:1974-06-20:first",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd74-06-20.sbd.clugston.2179.sbeok.shnf",
+   "track": "https://archive.org/download/gd74-06-20.sbd.clugston.2179.sbeok.shnf/gd74-6-20d2t06.mp3",
+   "ms": 2490,
+   "labelledAt": "2026-11-07T00:09:30.141Z"
+  },
+  "songbook_spotlight:00692cb0-0090-4843-a956-a3c3aeced63d:1995-06-22:last": {
+   "id": "songbook_spotlight:00692cb0-0090-4843-a956-a3c3aeced63d:1995-06-22:last",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd95-06-22.naks.18802.sbeok.shnf",
+   "track": "https://archive.org/download/gd95-06-22.naks.18802.sbeok.shnf/gd95-06-22d2t02.wav.mp3",
+   "ms": 700,
+   "labelledAt": "2026-11-07T00:09:31.112Z"
+  },
+  "version_picker:0b0f02e4-4c1a-4a4b-914a-fa317e86b4a8:1978-01-06:first": {
+   "id": "version_picker:0b0f02e4-4c1a-4a4b-914a-fa317e86b4a8:1978-01-06:first",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd78-01-06.sbd.clugston.6953.sbeok.shnf",
+   "track": "https://archive.org/download/gd78-01-06.sbd.clugston.6953.sbeok.shnf/gd78-01-06d2t05.mp3",
+   "ms": 1247,
+   "labelledAt": "2026-11-07T00:09:32.511Z"
+  },
+  "version_picker:0b0f02e4-4c1a-4a4b-914a-fa317e86b4a8:1995-07-09:last": {
+   "id": "version_picker:0b0f02e4-4c1a-4a4b-914a-fa317e86b4a8:1995-07-09:last",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd95-07-09.sbd.7233.sbeok.shnf",
+   "track": "https://archive.org/download/gd95-07-09.sbd.7233.sbeok.shnf/gd1995-07-09d2t03.mp3",
+   "ms": 1337,
+   "labelledAt": "2026-11-07T00:09:33.999Z"
+  },
+  "version_picker:5382fb24-d4ee-4073-bcfb-edcab7a2d860:1974-10-18:first": {
+   "id": "version_picker:5382fb24-d4ee-4073-bcfb-edcab7a2d860:1974-10-18:first",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd1974-10-18.sbd.fink-nayfield-ferguson.225.shnf",
+   "track": "https://archive.org/download/gd1974-10-18.sbd.fink-nayfield-ferguson.225.shnf/gd74-10-18d1t03.mp3",
+   "ms": 5368,
+   "labelledAt": "2026-11-07T00:09:39.519Z"
+  },
+  "version_picker:5382fb24-d4ee-4073-bcfb-edcab7a2d860:1995-07-09:last": {
+   "id": "version_picker:5382fb24-d4ee-4073-bcfb-edcab7a2d860:1995-07-09:last",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd95-07-09.sbd.7233.sbeok.shnf",
+   "track": "https://archive.org/download/gd95-07-09.sbd.7233.sbeok.shnf/gd1995-07-09d2t03.mp3",
+   "ms": 2988,
+   "labelledAt": "2026-11-07T00:09:42.658Z"
+  },
+  "version_picker:07c80ec4-1ae9-4236-bf9f-b1ab71b45fc1:1967-08-05:first": {
+   "id": "version_picker:07c80ec4-1ae9-4236-bf9f-b1ab71b45fc1:1967-08-05:first",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd1967-08-05.169430.sbd.flegel.flac1648",
+   "track": "https://archive.org/download/gd1967-08-05.169430.sbd.flegel.flac1648/04%20That's%20It%20For%20The%20Other%20One.mp3",
+   "ms": 12436,
+   "labelledAt": "2026-11-07T00:09:55.245Z"
+  },
+  "version_picker:07c80ec4-1ae9-4236-bf9f-b1ab71b45fc1:1995-07-08:last": {
+   "id": "version_picker:07c80ec4-1ae9-4236-bf9f-b1ab71b45fc1:1995-07-08:last",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd95-07-08.sbd.10071.sbeok.shnf",
+   "track": "https://archive.org/download/gd95-07-08.sbd.10071.sbeok.shnf/gd95-07-08d2t05.mp3",
+   "ms": 2195,
+   "labelledAt": "2026-11-07T00:09:57.590Z"
+  },
+  "version_picker:a712edf9-6474-44ce-8486-0243aab7d9e2:1971-02-18:first": {
+   "id": "version_picker:a712edf9-6474-44ce-8486-0243aab7d9e2:1971-02-18:first",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd71-02-18.sbd.orf.107.sbeok.shnf",
+   "track": "https://archive.org/download/gd71-02-18.sbd.orf.107.sbeok.shnf/gd-1971-02-18-d2-t07.wav.mp3",
+   "ms": 1606,
+   "labelledAt": "2026-11-07T00:09:59.347Z"
+  },
+  "version_picker:a712edf9-6474-44ce-8486-0243aab7d9e2:1995-07-09:last": {
+   "id": "version_picker:a712edf9-6474-44ce-8486-0243aab7d9e2:1995-07-09:last",
+   "truth": "unknown",
+   "reason": "tapes of the night exist; no track matched the title",
+   "identifier": "gd95-07-09.sbd.7233.sbeok.shnf",
+   "track": null,
+   "ms": 30448,
+   "labelledAt": "2026-11-07T00:10:29.946Z"
+  },
+  "version_picker:8fce1729-ec24-4172-a123-f385111a4342:1968-01-17:first": {
+   "id": "version_picker:8fce1729-ec24-4172-a123-f385111a4342:1968-01-17:first",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd1968-01-17.sbd.cotsman.11795.shnf",
+   "track": "https://archive.org/download/gd1968-01-17.sbd.cotsman.11795.shnf/gd68-01-17d1t04.mp3",
+   "ms": 10286,
+   "labelledAt": "2026-11-07T00:10:40.383Z"
+  },
+  "version_picker:8fce1729-ec24-4172-a123-f385111a4342:1995-07-08:last": {
+   "id": "version_picker:8fce1729-ec24-4172-a123-f385111a4342:1995-07-08:last",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd95-07-08.sbd.10071.sbeok.shnf",
+   "track": "https://archive.org/download/gd95-07-08.sbd.10071.sbeok.shnf/gd95-07-08d1t09.mp3",
+   "ms": 551,
+   "labelledAt": "2026-11-07T00:10:41.085Z"
+  },
+  "version_picker:4461e4d5-3fa3-4136-87dc-61bcc6f0ff6f:1965-11-03:first": {
+   "id": "version_picker:4461e4d5-3fa3-4136-87dc-61bcc6f0ff6f:1965-11-03:first",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd65-11-03.sbd.vernon.9044.sbeok.shnf",
+   "track": "https://archive.org/download/gd65-11-03.sbd.vernon.9044.sbeok.shnf/gd65-11-03d1t05.mp3",
+   "ms": 1978,
+   "labelledAt": "2026-11-07T00:10:43.214Z"
+  },
+  "version_picker:4461e4d5-3fa3-4136-87dc-61bcc6f0ff6f:1995-07-08:last": {
+   "id": "version_picker:4461e4d5-3fa3-4136-87dc-61bcc6f0ff6f:1995-07-08:last",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd95-07-08.sbd.10071.sbeok.shnf",
+   "track": "https://archive.org/download/gd95-07-08.sbd.10071.sbeok.shnf/gd95-07-08d1t10.mp3",
+   "ms": 882,
+   "labelledAt": "2026-11-07T00:10:44.247Z"
+  },
+  "version_picker:0a15ece0-85ff-4ba3-8906-544320e5eef0:1975-06-04:first": {
+   "id": "version_picker:0a15ece0-85ff-4ba3-8906-544320e5eef0:1975-06-04:first",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd1975-06-04.145777.sbd.pcm.dalton.miller.noel.flac16",
+   "track": "https://archive.org/download/gd1975-06-04.145777.sbd.pcm.dalton.miller.noel.flac16/gd75-06-04.t03.mp3",
+   "ms": 4994,
+   "labelledAt": "2026-11-07T00:10:49.391Z"
+  },
+  "version_picker:0a15ece0-85ff-4ba3-8906-544320e5eef0:1995-06-22:last": {
+   "id": "version_picker:0a15ece0-85ff-4ba3-8906-544320e5eef0:1995-06-22:last",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd95-06-22.naks.18802.sbeok.shnf",
+   "track": "https://archive.org/download/gd95-06-22.naks.18802.sbeok.shnf/gd95-06-22d2t03.wav.mp3",
+   "ms": 1539,
+   "labelledAt": "2026-11-07T00:10:51.081Z"
+  },
+  "version_picker:7c57164a-31bd-48d0-847d-febec72345ff:1974-03-23:first": {
+   "id": "version_picker:7c57164a-31bd-48d0-847d-febec72345ff:1974-03-23:first",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd1974-03-23.sbd.clugston-orf.1995.sbeok.shnf",
+   "track": "https://archive.org/download/gd1974-03-23.sbd.clugston-orf.1995.sbeok.shnf/gd74-3-23Newd1t07.mp3",
+   "ms": 1281,
+   "labelledAt": "2026-11-07T00:10:52.514Z"
+  },
+  "version_picker:7c57164a-31bd-48d0-847d-febec72345ff:1995-07-02:last": {
+   "id": "version_picker:7c57164a-31bd-48d0-847d-febec72345ff:1995-07-02:last",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd95-07-02.aud.unk.12578.sbeok.shnf",
+   "track": "https://archive.org/download/gd95-07-02.aud.unk.12578.sbeok.shnf/gd95-07-02d01t09.mp3",
+   "ms": 1343,
+   "labelledAt": "2026-11-07T00:10:54.007Z"
+  },
+  "version_picker:c845666a-43c4-4da4-b468-d88ff2b9f141:1977-03-18:first": {
+   "id": "version_picker:c845666a-43c4-4da4-b468-d88ff2b9f141:1977-03-18:first",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd77-03-18.sbd.unknown.254.sbeok.shnf",
+   "track": "https://archive.org/download/gd77-03-18.sbd.unknown.254.sbeok.shnf/gd77-03-18-d2t02.mp3",
+   "ms": 691,
+   "labelledAt": "2026-11-07T00:10:54.850Z"
+  },
+  "version_picker:c845666a-43c4-4da4-b468-d88ff2b9f141:1995-07-02:last": {
+   "id": "version_picker:c845666a-43c4-4da4-b468-d88ff2b9f141:1995-07-02:last",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd95-07-02.aud.unk.12578.sbeok.shnf",
+   "track": "https://archive.org/download/gd95-07-02.aud.unk.12578.sbeok.shnf/gd95-07-02d02t01.mp3",
+   "ms": 641,
+   "labelledAt": "2026-11-07T00:10:55.642Z"
+  },
+  "version_picker:d5ce7d48-b941-4882-8517-84bda198dcc8:1975-03-01:first": {
+   "id": "version_picker:d5ce7d48-b941-4882-8517-84bda198dcc8:1975-03-01:first",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd1975-03-01.145786.sbd.gans.miller.noel.flac1644",
+   "track": "https://archive.org/download/gd1975-03-01.145786.sbd.gans.miller.noel.flac1644/gd75.xx.xx.s3.t09.mp3",
+   "ms": 1183,
+   "labelledAt": "2026-11-07T00:10:56.976Z"
+  },
+  "version_picker:d5ce7d48-b941-4882-8517-84bda198dcc8:1995-06-22:last": {
+   "id": "version_picker:d5ce7d48-b941-4882-8517-84bda198dcc8:1995-06-22:last",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd95-06-22.naks.18802.sbeok.shnf",
+   "track": "https://archive.org/download/gd95-06-22.naks.18802.sbeok.shnf/gd95-06-22d2t01.wav.mp3",
+   "ms": 730,
+   "labelledAt": "2026-11-07T00:10:57.857Z"
+  },
+  "version_picker:00692cb0-0090-4843-a956-a3c3aeced63d:1974-06-20:first": {
+   "id": "version_picker:00692cb0-0090-4843-a956-a3c3aeced63d:1974-06-20:first",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd74-06-20.sbd.clugston.2179.sbeok.shnf",
+   "track": "https://archive.org/download/gd74-06-20.sbd.clugston.2179.sbeok.shnf/gd74-6-20d2t06.mp3",
+   "ms": 1,
+   "labelledAt": "2026-11-07T00:10:58.009Z"
+  },
+  "version_picker:00692cb0-0090-4843-a956-a3c3aeced63d:1995-06-22:last": {
+   "id": "version_picker:00692cb0-0090-4843-a956-a3c3aeced63d:1995-06-22:last",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd95-06-22.naks.18802.sbeok.shnf",
+   "track": "https://archive.org/download/gd95-06-22.naks.18802.sbeok.shnf/gd95-06-22d2t02.wav.mp3",
+   "ms": 0,
+   "labelledAt": "2026-11-07T00:10:58.160Z"
+  },
+  "version_picker:197a2f1b-1182-4482-9e2f-ef9968161ed9:1967-10-22:first": {
+   "id": "version_picker:197a2f1b-1182-4482-9e2f-ef9968161ed9:1967-10-22:first",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd1967-10-22.sbd.yerys.1525.shnf",
+   "track": "https://archive.org/download/gd1967-10-22.sbd.yerys.1525.shnf/gd67-10-22d1t07.mp3",
+   "ms": 2796,
+   "labelledAt": "2026-11-07T00:11:01.107Z"
+  },
+  "version_picker:197a2f1b-1182-4482-9e2f-ef9968161ed9:1985-09-03:last": {
+   "id": "version_picker:197a2f1b-1182-4482-9e2f-ef9968161ed9:1985-09-03:last",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd85-09-03.oade.sacks.7691.sbeok.shnf",
+   "track": "https://archive.org/download/gd85-09-03.oade.sacks.7691.sbeok.shnf/gd85-09-03d2t01.mp3",
+   "ms": 1690,
+   "labelledAt": "2026-11-07T00:11:02.948Z"
+  },
+  "version_picker:bfc707a7-3a7b-4622-a6be-543d15350ff2:1973-06-10:nv-dd069445": {
+   "id": "version_picker:bfc707a7-3a7b-4622-a6be-543d15350ff2:1973-06-10:nv-dd069445",
+   "truth": "yes",
+   "reason": "song found on the stored recording",
+   "identifier": "gd73-06-10.sbd.hollister.174.sbeok.shnf",
+   "track": "https://archive.org/download/gd73-06-10.sbd.hollister.174.sbeok.shnf/FOLLOW-ME%20%40BYPIKENO.mp3",
+   "ms": 290,
+   "labelledAt": "2026-11-07T00:11:03.389Z"
+  },
+  "version_picker:595b69ee-5ad0-4b2a-9b4f-b1b1d7aa7431:1972-08-27:nv-a89e9b48": {
+   "id": "version_picker:595b69ee-5ad0-4b2a-9b4f-b1b1d7aa7431:1972-08-27:nv-a89e9b48",
+   "truth": "yes",
+   "reason": "song found on the stored recording",
+   "identifier": "gd72-08-27.sbd.orf.3328.sbeok.shnf",
+   "track": "https://archive.org/download/gd72-08-27.sbd.orf.3328.sbeok.shnf/gd1972-08-27d1t09-orf.mp3",
+   "ms": 167,
+   "labelledAt": "2026-11-07T00:11:03.708Z"
+  },
+  "version_picker:595b69ee-5ad0-4b2a-9b4f-b1b1d7aa7431:1971-08-06:nv-f15cf9c9": {
+   "id": "version_picker:595b69ee-5ad0-4b2a-9b4f-b1b1d7aa7431:1971-08-06:nv-f15cf9c9",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd71-08-06.aud.bertrando.yerys.129.sbeok.shnf",
+   "track": "https://archive.org/download/gd71-08-06.aud.bertrando.yerys.129.sbeok.shnf/gd08-06-71d1t01.mp3",
+   "ms": 1712,
+   "labelledAt": "2026-11-07T00:11:05.571Z"
+  },
+  "version_picker:51a67828-2412-4d75-abf3-d07f60f40989:1974-02-24:nv-2e295521": {
+   "id": "version_picker:51a67828-2412-4d75-abf3-d07f60f40989:1974-02-24:nv-2e295521",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd74-02-24.sbd.windsor.199.sbefail.shnf",
+   "track": "https://archive.org/download/gd74-02-24.sbd.windsor.199.sbefail.shnf/GD_022474_D4_T01.mp3",
+   "ms": 1382,
+   "labelledAt": "2026-11-07T00:11:07.104Z"
+  },
+  "version_picker:51a67828-2412-4d75-abf3-d07f60f40989:1973-11-11:nv-04d1736f": {
+   "id": "version_picker:51a67828-2412-4d75-abf3-d07f60f40989:1973-11-11:nv-04d1736f",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd73-11-11.sbd.schlissel.14105.sbeok.shnf",
+   "track": "https://archive.org/download/gd73-11-11.sbd.schlissel.14105.sbeok.shnf/gd73-11-11d3t01.mp3",
+   "ms": 1504,
+   "labelledAt": "2026-11-07T00:11:08.759Z"
+  },
+  "version_picker:a1bf0b53-2e4c-4d7b-a481-742e9b6b7c23:1973-02-09:nv-6e5ec71a": {
+   "id": "version_picker:a1bf0b53-2e4c-4d7b-a481-742e9b6b7c23:1973-02-09:nv-6e5ec71a",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd73-02-09.sbd.bertha-fink.14939.sbeok.shnf",
+   "track": "https://archive.org/download/gd73-02-09.sbd.bertha-fink.14939.sbeok.shnf/gd73-02-09Berthad2t10.mp3",
+   "ms": 0,
+   "labelledAt": "2026-11-07T00:11:08.909Z"
+  },
+  "version_picker:a712edf9-6474-44ce-8486-0243aab7d9e2:1973-11-17:nv-29696d11": {
+   "id": "version_picker:a712edf9-6474-44ce-8486-0243aab7d9e2:1973-11-17:nv-29696d11",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd73-11-17.sbd.gardner.4749.sbeok.shnf",
+   "track": "https://archive.org/download/gd73-11-17.sbd.gardner.4749.sbeok.shnf/gd1973-11-17d2t04.mp3",
+   "ms": 1159,
+   "labelledAt": "2026-11-07T00:11:10.219Z"
+  },
+  "version_picker:7c57164a-31bd-48d0-847d-febec72345ff:1974-03-23:nv-607d99c0": {
+   "id": "version_picker:7c57164a-31bd-48d0-847d-febec72345ff:1974-03-23:nv-607d99c0",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd1974-03-23.sbd.clugston-orf.1995.sbeok.shnf",
+   "track": "https://archive.org/download/gd1974-03-23.sbd.clugston-orf.1995.sbeok.shnf/gd74-3-23Newd1t07.mp3",
+   "ms": 0,
+   "labelledAt": "2026-11-07T00:11:10.372Z"
+  },
+  "version_picker:1a39f0b7-0210-459c-b289-80d70b11f192:1973-02-09:nv-ff6b384e": {
+   "id": "version_picker:1a39f0b7-0210-459c-b289-80d70b11f192:1973-02-09:nv-ff6b384e",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd73-02-09.sbd.bertha-fink.14939.sbeok.shnf",
+   "track": "https://archive.org/download/gd73-02-09.sbd.bertha-fink.14939.sbeok.shnf/gd73-02-09Berthad1t13.mp3",
+   "ms": 610,
+   "labelledAt": "2026-11-07T00:11:11.133Z"
+  },
+  "version_picker:582346e2-34eb-4686-a635-accb3e86f22e:1970-05-02:nv-ac4d8e0e": {
+   "id": "version_picker:582346e2-34eb-4686-a635-accb3e86f22e:1970-05-02:nv-ac4d8e0e",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd1970-05-02.138227.sbd.miller.flac1648",
+   "track": "https://archive.org/download/gd1970-05-02.138227.sbd.miller.flac1648/13UncleJohnsBand.mp3",
+   "ms": 677,
+   "labelledAt": "2026-11-07T00:11:11.962Z"
+  },
+  "version_picker:ab16eee3-60a3-4a83-bbff-4d6160f56402:1971-08-06:nv-8a3722f8": {
+   "id": "version_picker:ab16eee3-60a3-4a83-bbff-4d6160f56402:1971-08-06:nv-8a3722f8",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd71-08-06.aud.bertrando.yerys.129.sbeok.shnf",
+   "track": "https://archive.org/download/gd71-08-06.aud.bertrando.yerys.129.sbeok.shnf/gd08-06-71d1t10.mp3",
+   "ms": 752,
+   "labelledAt": "2026-11-07T00:11:12.864Z"
+  },
+  "version_picker:af3f111f-c8d2-46b1-a111-2f3899d39b7e:1972-05-26:nv-a4bdb37c": {
+   "id": "version_picker:af3f111f-c8d2-46b1-a111-2f3899d39b7e:1972-05-26:nv-a4bdb37c",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd72-05-26.sbd.hollister.12758.sbeok.shnf",
+   "track": "https://archive.org/download/gd72-05-26.sbd.hollister.12758.sbeok.shnf/gd720526-d1t02.mp3",
+   "ms": 3610,
+   "labelledAt": "2026-11-07T00:11:16.625Z"
+  }
+ }
+}

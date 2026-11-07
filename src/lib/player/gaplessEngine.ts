@@ -17,6 +17,7 @@
 import type { Queue as GaplessQueue, TrackInfo, TrackMetadata, PlaybackType } from "gapless";
 import { audioDebug } from "@/lib/audioDebug";
 import { preferPlaybackAudioSession } from "@/lib/player/audioSession";
+import { blessAudioElements, withBlessedAudio } from "@/lib/player/blessedAudio";
 
 // True on any iOS runtime: Safari, a home-screen PWA, or the Capacitor
 // WKWebView shell. iPadOS ≥13 masquerades as MacIntel but exposes touch.
@@ -110,9 +111,13 @@ export class GaplessEngine {
       }
       this.queue = queue;
       this.slotIds = tracks.map((t) => t.slotId);
-      for (const t of tracks) {
-        queue.addTrack(t.url, { metadata: t.metadata });
-      }
+      // gapless builds each track's <audio> in addTrack. Hand it the elements
+      // started in the tap, so iOS lets them play now (see blessedAudio.ts).
+      withBlessedAudio(() => {
+        for (const t of tracks) {
+          queue.addTrack(t.url, { metadata: t.metadata });
+        }
+      });
       if (tracks.length > 0) {
         queue.gotoTrack(startIndex, autoplay && this.desiredTransportState === "playing");
         if (startAt > 0) queue.seek(startAt);
@@ -126,7 +131,8 @@ export class GaplessEngine {
     this.enqueueOp(async () => {
       if (gen !== this.generation || this.destroyed || !this.queue) return;
       this.slotIds.push(track.slotId);
-      this.queue.addTrack(track.url, { metadata: track.metadata });
+      const queue = this.queue;
+      withBlessedAudio(() => queue.addTrack(track.url, { metadata: track.metadata }));
     });
   }
 
@@ -220,6 +226,9 @@ export class GaplessEngine {
    */
   unlock(): void {
     preferPlaybackAudioSession();
+    // Synchronously, here in the tap — not in the op below, which runs after
+    // any queued work and an async import, possibly past the gesture.
+    blessAudioElements();
     this.enqueueOp(async () => {
       if (this.destroyed) return;
       if (!this.queue) this.queue = await this.createQueue();

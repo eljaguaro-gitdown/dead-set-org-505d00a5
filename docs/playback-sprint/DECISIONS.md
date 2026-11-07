@@ -41,3 +41,38 @@ carry the stamped sha. Until that is observed the fix is verified in simulation 
 
 **What would reverse it.** Lovable exposing the commit at build time (an env var in its builder),
 which would make `VITE_BUILD_SHA` the whole answer and the stamp commits noise.
+
+## 2026-11-07 — Two trial bench taps wrote to production. Owner: please close one report
+
+**What happened.** The first two trial runs of TapeBench (2026-11-06 23:51 and 2026-11-07
+00:02 UTC) used a build that still carried the production PostHog token and Supabase writes.
+They filed **one playback report**, `playback_issues.id = f4ee4c35-7e5c-477d-a2ca-846f60dcab1b`
+("Drums", 1995-07-09, `wont_play`, report_count 2), and added about six `page_visits` rows on
+`/versions/drums` and `/versions/space`. The report is false. The tape was fine. This sandbox's
+egress refused the Archive mirror (`ia803101.us.archive.org`) the track redirected to. No fan
+reported it and no fan follows it, so no email is owed.
+
+**Owner action.** Close `f4ee4c35…` as *No tape exists* (wont_fix), which notifies nobody, or
+leave it for the tape desk with this note. I did not touch it, because the brief forbids pressing
+admin buttons and deleting production data.
+
+**Decision.** Bench builds are made with `VITE_PUBLIC_POSTHOG_PROJECT_TOKEN=` and
+`VITE_PUBLIC_POSTHOG_HOST=` (empty), and `scripts/tapebench/run.mjs` answers every non-GET to
+Supabase inside the browser. It lets through only read-only RPCs (`suggest_known_good_tape`, the
+tape index lookup). PostHog and `track-visit` never leave the page. Each tap's report lists the
+writes it stubbed, so a bench run can show it wrote nothing.
+
+## 2026-11-07 — Headless WebKit enforces no autoplay rule, so the bench emulates iOS's
+
+**Finding.** Playwright WebKit 26.0 (headless, Linux) resolves `play()` with no user gesture.
+A stock WebKit bench can therefore never reproduce the field's 10 `audio_autoplay_blocked` events,
+and would report 0 for the target metric whether or not the bug is fixed.
+
+**Decision.** The `webkit-iphone` profile injects `scripts/tapebench/iosPolicyShim.js`. It
+rejects `play()` with `NotAllowedError` unless the element was already started from a gesture,
+or the page is within 1 s of a trusted tap. That is WebKit's transient-activation model and
+iOS's per-element blessing. It is a model and not an iPhone, and the field events are the
+check on it (`play_failed` with `stage: "gesture"`).
+
+**What would reverse it.** A real-device run (owner's phone, `?debug=audio`) that disagrees with
+the shim, or field `play_failed stage=gesture` staying above 0 after the fix ships.
