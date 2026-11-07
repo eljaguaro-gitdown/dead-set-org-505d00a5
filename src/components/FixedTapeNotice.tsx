@@ -79,7 +79,7 @@ const FixedTapeNotice = () => {
         segueToNext: false,
         directTrackUrl: null,
       };
-      beginTap("fixed_tape", { songId: current.songId, showDate: current.showDate, hasPrecomputed: false });
+      beginTap("fixed_tape", { songId: current.songId, title: current.songTitle, showDate: current.showDate, hasPrecomputed: false });
       void playSingle(slot);
     } else if (current.songId) {
       navigate(`/song/${current.songId}`);

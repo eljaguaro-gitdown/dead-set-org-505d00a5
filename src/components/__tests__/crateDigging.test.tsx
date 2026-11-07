@@ -21,10 +21,12 @@ const state = vi.hoisted(() => ({
   playingSlot: null as PlayableSlot | null,
   error: null as string | null,
   cueingTitle: null as string | null,
+  planB: null as unknown,
 }));
 
 vi.mock("@/contexts/AudioPlayerContext", () => ({
   useAudioPlayer: () => ({
+    planB: state.planB,
     playingSlot: state.playingSlot,
     transport: {
       error: state.error,
@@ -37,7 +39,9 @@ vi.mock("@/contexts/AudioPlayerContext", () => ({
 vi.mock("@/hooks/useGlobalPlayerHeight", () => ({ useGlobalPlayerHeight: () => 96 }));
 vi.mock("@/lib/charlieArt", () => ({ charlieArtFor: () => "/charlie.jpg" }));
 
-import CrateDigging from "@/components/CrateDigging";
+import CrateDigging, { TapAck, SHOW_AFTER_MS, ESCALATE_AFTER_MS } from "@/components/CrateDigging";
+import { beginTap, claimTap, resetTaps, tapFirstSound } from "@/lib/player/tapTelemetry";
+import { fireEvent } from "@testing-library/react";
 
 const slot = (over: Partial<PlayableSlot> = {}): PlayableSlot =>
   ({
@@ -56,10 +60,15 @@ beforeEach(() => {
   state.playingSlot = null;
   state.error = null;
   state.cueingTitle = null;
+  state.planB = null;
+  resetTaps();
 });
 afterEach(() => vi.useRealTimers());
 
 const advance = (ms: number) => act(() => { vi.advanceTimersByTime(ms); });
+/** jsdom has no PointerEvent; a MouseEvent of that type carries the coordinates. */
+const pointer = (x: number, y: number) =>
+  document.body.dispatchEvent(new MouseEvent("pointerdown", { clientX: x, clientY: y, bubbles: true }));
 
 describe("CrateDigging", () => {
   it("shows nothing before the threshold, while still digging", () => {
@@ -68,10 +77,12 @@ describe("CrateDigging", () => {
     // stayed green. Hold `digging` true and pin the boundary itself.
     state.playingSlot = slot();
     render(<CrateDigging />);
-    advance(449);
+    advance(SHOW_AFTER_MS - 1);
     expect(screen.queryByRole("status")).toBeNull();
     advance(2);
     expect(screen.getByRole("status")).toBeInTheDocument();
+    // The sprint's target: every tap acknowledged within 300 ms.
+    expect(SHOW_AFTER_MS).toBeLessThanOrEqual(300);
   });
 
   it("a resolve that beats the threshold never flashes the card", () => {
@@ -143,23 +154,29 @@ describe("CrateDigging", () => {
   });
 
   it("clears the player bar by measuring it, never by assuming a height", () => {
+    // A tap low on the screen, right above the bar: the sheet must go above
+    // it, and its bottom edge (230 px tall) must stay clear of the MEASURED
+    // bar. 96 is the mocked player height; the bar is drag-resizable and has
+    // two implementations of different heights, so a constant would be wrong.
+    pointer(100, window.innerHeight - 20);
     state.playingSlot = slot();
     render(<CrateDigging />);
     advance(500);
-    // 96 is the mocked player height; the bar is drag-resizable and has two
-    // implementations of different heights, so a constant here would be wrong.
-    expect(screen.getByRole("status")).toHaveStyle({ bottom: "108px" });
+    const top = parseFloat((screen.getByRole("status") as HTMLElement).style.top);
+    expect(Number.isFinite(top)).toBe(true);
+    expect(top + 230).toBeLessThanOrEqual(window.innerHeight - 96 - 12);
   });
+
 
   it("restarts the wait when the reader taps a different night", () => {
     state.playingSlot = slot();
     const { rerender } = render(<CrateDigging />);
-    advance(300);
+    advance(SHOW_AFTER_MS - 50);
     state.playingSlot = slot({ id: "slot-2", song: { id: "s2", title: "Bertha" } });
     rerender(<CrateDigging />);
-    advance(300); // 600ms total, but only 300ms on THIS slot
+    advance(SHOW_AFTER_MS - 50); // past the threshold in total, but not on THIS slot
     expect(screen.queryByRole("status")).toBeNull();
-    advance(200);
+    advance(100);
     expect(screen.getByRole("status").textContent).toContain("Bertha");
   });
 });
@@ -212,3 +229,49 @@ describe("it is mounted, and it does not swallow taps", () => {
     expect(card.className).toContain("pointer-events-auto");
   });
 });
+
+describe("the 2026-11 sprint's louder wait", () => {
+  it("escalates at 3 s: the Archive is slow, and it says so", () => {
+    state.playingSlot = slot();
+    render(<CrateDigging />);
+    advance(SHOW_AFTER_MS + 10);
+    expect(screen.getByRole("status").textContent).toContain("Finding Eyes of the World · 2/9/73");
+    advance(ESCALATE_AFTER_MS);
+    expect(screen.getByRole("status").textContent).toContain("The Archive's taking its time — still digging");
+  });
+
+  it("covers a wait that has not reached the player yet (a surface's own lookup)", () => {
+    render(<CrateDigging />);
+    act(() => { beginTap("version_picker", { songId: "s", title: "Althea", showDate: "1980-05-16" }); });
+    advance(SHOW_AFTER_MS + 10);
+    expect(screen.getByRole("status").textContent).toContain("Finding Althea · 5/16/80");
+  });
+
+  it("goes the moment the tap is answered with sound", () => {
+    render(<CrateDigging />);
+    act(() => { beginTap("version_picker", { songId: "s", title: "Althea" }); claimTap("other", { slotId: "x" }); });
+    advance(SHOW_AFTER_MS + 10);
+    expect(screen.getByRole("status")).toBeInTheDocument();
+    act(() => tapFirstSound("x"));
+    expect(screen.queryByRole("status")).toBeNull();
+  });
+
+  it("steps aside for Plan B, which says something truer", () => {
+    state.playingSlot = slot();
+    state.planB = { key: 1 };
+    render(<CrateDigging />);
+    advance(SHOW_AFTER_MS + 10);
+    expect(screen.queryByRole("status")).toBeNull();
+  });
+
+  it("TapAck marks the finger at once — no timer at all", () => {
+    render(<TapAck />);
+    pointer(120, 300);
+    act(() => { beginTap("version_picker", { songId: "s", title: "Althea" }); });
+    const ack = document.querySelector("[data-tap-ack]") as HTMLElement;
+    expect(ack).not.toBeNull();
+    expect(ack.style.left).toBe("120px");
+    expect(ack.style.top).toBe("300px");
+  });
+});
+

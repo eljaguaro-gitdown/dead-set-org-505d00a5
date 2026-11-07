@@ -71,6 +71,8 @@ export type TapFailKind =
 
 export interface TapMeta {
   songId?: string | null;
+  /** For the screen only (the digging card); never sent to analytics. */
+  title?: string | null;
   showDate?: string | null;
   /** The tap came with a track url already in hand (index hit, known-good tape). */
   hasPrecomputed?: boolean | null;
@@ -104,6 +106,18 @@ export interface TapRecord {
 let pending: Tap | null = null;
 /** The tap the player is working on. */
 let active: Tap | null = null;
+
+/** The last trusted pointer or key gesture, on the tap clock. */
+let lastGestureAt = -1e9;
+if (typeof window !== "undefined") {
+  for (const ev of ["pointerdown", "keydown", "touchend"]) {
+    try {
+      window.addEventListener(ev, (e) => { if ((e as Event).isTrusted !== false) lastGestureAt = now(); }, true);
+    } catch { /* no window events: tests, odd webviews */ }
+  }
+}
+/** True when a real gesture happened within `ms` — i.e. a call is a fan's tap, not a late answer. */
+export const recentGesture = (ms = 1500): boolean => now() - lastGestureAt <= ms;
 
 /** A surface's tap is the player's next claim only for this long. */
 const PENDING_TTL_MS = 30_000;
@@ -179,7 +193,32 @@ function settle(tap: Tap, record: Omit<TapRecord, "tap_id" | "surface" | "at">):
   if (tap.settled) return;
   tap.settled = true;
   emit({ ...record, tap_id: tap.id, surface: tap.surface, at: Date.now() });
+  notify();
 }
+
+// ── For the screen: is a tap waiting for its answer? ────────────────────
+// The digging card and the Plan B watchdog both key on this, so a wait that
+// happens BEFORE the player is called (the version picker looking a night
+// up) is acknowledged exactly like one inside it.
+const tapListeners = new Set<() => void>();
+function notify(): void {
+  tapListeners.forEach((l) => {
+    try { l(); } catch { /* a listener must not break the tap */ }
+  });
+}
+/** Subscribe to changes of the waiting tap. Returns an unsubscribe. */
+export function subscribeTaps(cb: () => void): () => void {
+  tapListeners.add(cb);
+  return () => tapListeners.delete(cb);
+}
+/** The tap still waiting for sound or an answer — begun or claimed — or null. */
+export function waitingTap(): Tap | null {
+  if (active && !active.settled) return active;
+  if (pending && !pending.claimed && !pending.settled) return pending;
+  return null;
+}
+/** Milliseconds since a tap began, on the same clock its records use. */
+export const tapAge = (tap: Tap): number => now() - tap.startedAt;
 
 /**
  * Begin a tap in a surface's handler, synchronously, before any await. The
@@ -188,6 +227,7 @@ function settle(tap: Tap, record: Omit<TapRecord, "tap_id" | "surface" | "at">):
 export function beginTap(surface: TapSurface, meta: TapMeta = {}): Tap {
   const tap = mint(surface, meta);
   pending = tap;
+  notify();
   return tap;
 }
 
@@ -215,6 +255,8 @@ export function claimTap(fallbackSurface: TapSurface, meta: TapMeta = {}): Tap {
   tap.claimed = true;
   pending = null;
   active = tap;
+  if (meta.title && !tap.title) tap.title = meta.title;
+  notify();
   return tap;
 }
 
@@ -226,6 +268,14 @@ export function tapStage(stage: TapStage): void {
 /** The slot the active tap ended up on (Play All picks its first playable slot late). */
 export function tapSlot(slotId: string | null): void {
   if (active && !active.settled) active.slotId = slotId;
+}
+
+/** A pending tap that never reached the player (the lookup failed first). */
+export function abandonPendingTap(kind: TapFailKind, stage?: TapStage): void {
+  if (pending && !pending.claimed && !pending.settled) {
+    settle(pending, { event: "play_failed", ms: Math.round(now() - pending.startedAt), kind, stage: stage ?? pending.stage });
+    pending = null;
+  }
 }
 
 /**
@@ -253,6 +303,7 @@ export const activeTap = (): Tap | null => active;
 export function resetTaps(): void {
   pending = null;
   active = null;
+  notify();
   try {
     if (typeof window !== "undefined") (window as TapWindow).__deadSetTaps = [];
   } catch {

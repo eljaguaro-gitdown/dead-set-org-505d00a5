@@ -8,8 +8,9 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AudioPlayerProvider } from "@/contexts/AudioPlayerContext";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import GlobalAudioPlayer from "@/components/GlobalAudioPlayer";
-import CrateDigging from "@/components/CrateDigging";
+import CrateDigging, { TapAck } from "@/components/CrateDigging";
 import PlaybackOopsCard from "@/components/PlaybackOopsCard";
+import PlanBCard from "@/components/PlanBCard";
 import FixedTapeNotice from "@/components/FixedTapeNotice";
 import ReturnToSetlistPill from "@/components/ReturnToSetlistPill";
 import VisitorTracker from "@/components/VisitorTracker";
@@ -106,7 +107,9 @@ const App = () => (
             {/* Sibling of the player, not inside a page: PageLayout's
                 `relative z-10` would trap it under the player's z-40. */}
             <CrateDigging />
+            <TapAck />
             <PlaybackOopsCard />
+            <PlanBCard />
             {TapeBenchDock && (
               <Suspense fallback={null}>
                 <TapeBenchDock />

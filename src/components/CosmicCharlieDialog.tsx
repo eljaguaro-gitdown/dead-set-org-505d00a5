@@ -1052,7 +1052,7 @@ const CosmicCharlieDialog = ({
                               // Charlie's picks name a night, never a track.
                               directTrackUrl: null,
                             };
-                            beginTap("charlie", { songId: selectedSong?.id ?? null, showDate: v.showDate ?? null, hasPrecomputed: false });
+                            beginTap("charlie", { songId: selectedSong?.id ?? null, title: exploreResult?.songTitle ?? null, showDate: v.showDate ?? null, hasPrecomputed: false });
                             playSingle(slot);
                           }}
                         >

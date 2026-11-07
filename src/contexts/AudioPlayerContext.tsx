@@ -18,13 +18,16 @@ import { NativeEngine } from "@/lib/player/nativeEngine";
 import { isNativeApp } from "@/lib/nativeApp";
 import { captureAudioEvent, archiveIdentifierFromUrl } from "@/lib/player/audioInstrumentation";
 import { askIndex, findNight, findSongDefault } from "@/lib/tapeIndex";
-import { activeTap, claimTap, tapFailed, tapFirstSound, tapSlot, tapStage, surfaceFromPath, type TapStage } from "@/lib/player/tapTelemetry";
+import { abandonPendingTap, activeTap, beginTap, claimTap, recentGesture, subscribeTaps, tapAge, tapFailed, tapFirstSound, tapSlot, tapStage, surfaceFromPath, waitingTap, type Tap, type TapStage } from "@/lib/player/tapTelemetry";
+import { findSureThing, isPlanBEnabled, PLAN_B_AFTER_MS, type PlanBReason } from "@/lib/player/planB";
+import { captureEvent } from "@/lib/posthog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 import { SYNTHETIC_VERSION_DEFAULTS } from "@/lib/syntheticVersion";
 import {
   fetchKnownGoodTape,
+  knownGoodToSlot,
   isArchiveTrackUrl,
   recordTapeOk,
   reportPlaybackIssue,
@@ -200,6 +203,22 @@ interface AudioPlayerContextValue extends AudioPlayerState {
    * the answer comes back, the card is not shown on the page they went to.
    */
   reportPlaybackFailure: (failure: PlaybackFailure, opts?: { from?: string }) => void;
+  /**
+   * Plan B is playing: a version of the same song we know plays, started
+   * because the tapped night could not make a sound. PlanBCard renders it.
+   */
+  planB: PlanBState | null;
+  dismissPlanB: () => void;
+}
+
+export interface PlanBState {
+  key: number;
+  reason: PlanBReason;
+  songTitle: string;
+  /** The night that would not play, as an ISO date, when there was one. */
+  failedDate: string | null;
+  /** The night now playing instead. */
+  sureDate: string | null;
 }
 
 /**
@@ -266,6 +285,8 @@ const defaultAudioPlayerContext: AudioPlayerContextValue = {
   playbackOops: null,
   dismissPlaybackOops: () => undefined,
   reportPlaybackFailure: () => undefined,
+  planB: null,
+  dismissPlanB: () => undefined,
 };
 
 const AudioPlayerContext = createContext<AudioPlayerContextValue>(defaultAudioPlayerContext);
@@ -434,6 +455,69 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     void reportPlaybackIssue(failure, true).then((issueId) => settle({ issueId }));
     void fetchKnownGoodTape(failure).then((suggestion) => settle({ suggestion }));
   }, []);
+  // ── Plan B ────────────────────────────────────────────────────────────
+  const [planB, setPlanB] = useState<PlanBState | null>(null);
+  const planBKeyRef = useRef(0);
+  /** Set just before Plan B calls playSingle, so that call does not clear its own card. */
+  const planBTapRef = useRef(false);
+  /** The night Plan B stood in for, so a surface's LATE answer about it cannot interrupt Plan B. */
+  const planBForRef = useRef<{ songId: string | null; date: string | null; at: number } | null>(null);
+  /** playSingle is defined below; Plan B reaches it through this. */
+  const playSingleRef = useRef<(slot: PlayableSlot) => void>(() => undefined);
+  const dismissPlanB = useCallback(() => setPlanB(null), []);
+
+  /**
+   * Start a version of this song we know plays. Resolves true when it is
+   * starting — or when the fan has moved on meanwhile, so nothing should be
+   * said at all — and false when there is no sure thing (or Plan B is off),
+   * so the caller falls back to the apology card.
+   */
+  const tryPlanB = useCallback(async (args: {
+    songId: string | null | undefined;
+    songTitle: string;
+    failedDate: string | null | undefined;
+    failedTrack?: string | null;
+    reason: PlanBReason;
+    from?: string;
+  }): Promise<boolean> => {
+    if (!isPlanBEnabled()) return false;
+    const single = playSingleSeqRef.current;
+    const set = playSetlistSeqRef.current;
+    const tape = await findSureThing({
+      songId: args.songId,
+      songTitle: args.songTitle,
+      excludeDate: args.failedDate ?? null,
+      excludeTrack: args.failedTrack ?? null,
+    });
+    if (!tape) return false;
+    if (single !== playSingleSeqRef.current || set !== playSetlistSeqRef.current) return true; // the fan moved on
+    if (args.from !== undefined && args.from !== currentPath()) return true; // and left the page
+    const key = ++planBKeyRef.current;
+    const failedDate = archiveKeyDate(args.failedDate ?? null);
+    audioDebug.log("context", "plan B: a sure thing instead", { song: args.songTitle, failed: failedDate, sure: tape.showDate, reason: args.reason });
+    try { captureEvent("plan_b_started", { reason: args.reason, song_id: args.songId ?? null }); } catch { /* never block the tape */ }
+    planBForRef.current = { songId: args.songId ?? null, date: failedDate, at: Date.now() };
+    beginTap("plan_b", { songId: tape.songId, title: tape.songTitle, showDate: tape.showDate, hasPrecomputed: true });
+    planBTapRef.current = true;
+    setPlanB({ key, reason: args.reason, songTitle: args.songTitle, failedDate, sureDate: tape.showDate });
+    playSingleRef.current({ ...knownGoodToSlot(tape), streamUrl: tape.streamUrl ?? null });
+    return true;
+  }, []);
+
+  /** A failure a fix can address: Plan B if we have one (filed, the fan follows it), else the card. */
+  const planBOrCard = useCallback(async (failure: PlaybackFailure, reason: PlanBReason, from?: string) => {
+    const started = await tryPlanB({
+      songId: failure.songId,
+      songTitle: failure.songTitle,
+      failedDate: failure.showDate,
+      failedTrack: failure.trackUrl ?? null,
+      reason,
+      from,
+    });
+    if (started) void reportPlaybackIssue(failure, true);
+    else raisePlaybackOops(failure, { from });
+  }, [tryPlanB, raisePlaybackOops]);
+
   /** Track urls already recorded as playing, so a long track is counted once. */
   const recordedOkRef = useRef(new Set<string>());
   /**
@@ -592,6 +676,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
   const stopPlayback = useCallback(() => {
     audioDebug.log("context", "stopPlayback");
     tapFailed("stopped"); // a tap still waiting for sound got none
+    setPlanB(null);
     playSetlistSeqRef.current++; // invalidate any in-flight playSetlist
     // A busy flag set by one entry point has to be cleared by EVERY path that
     // supersedes it, not just the one that re-sets it. "The newer run owns it"
@@ -627,34 +712,54 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
         : slot.version?.archive_org_url ? "not_on_tape"
         : "no_tape",
     );
+    // Plan B after every one of these: the fan pressed play on THIS song, and
+    // a version of it we know plays is music now. The honest message goes up
+    // first; Plan B's own tap clears it when the sure thing starts.
+    const night = { songId: slot.song.id, songTitle: slot.song.title, failedDate: slot.version?.show_date ?? null, failedTrack: slot.directTrackUrl ?? null, from };
     if (slot.version?.archive_org_url) {
       engineRef.current?.clear();
       if (outcome.unreachable) {
         setPlaybackError("Couldn't reach the Archive just now. Tap play to try again.", slot.id);
+        void tryPlanB({ ...night, reason: "slow" });
       } else {
         setPlaybackError("That song isn't on this tape.", slot.id);
-        raisePlaybackOops(failureFromSlot("not_on_tape", slot), { from });
+        void planBOrCard(failureFromSlot("not_on_tape", slot), "no_tape", from);
       }
       return;
     }
     stopPlayback();
     if (outcome.unreachable) {
       toast.error("Couldn't reach the Archive just now — tap play to try again.");
+      void tryPlanB({ ...night, reason: "slow" });
     } else if (outcome.uncertain) {
       // The generic search cannot tell absent from failed (see resolveSlot).
       toast.error("No tape of this one circulates yet");
+      void tryPlanB({ ...night, reason: "no_tape" });
     } else {
       // The card says it in the house voice, files it, and offers a tape
-      // we know plays. A toast as well would be two messages for one tap.
-      raisePlaybackOops(failureFromSlot("no_tape", slot), { from });
+      // we know plays — or Plan B plays one. A toast as well would be two
+      // messages for one tap.
+      void planBOrCard(failureFromSlot("no_tape", slot), "no_tape", from);
     }
-  }, [setPlaybackError, raisePlaybackOops, stopPlayback]);
+  }, [setPlaybackError, stopPlayback, tryPlanB, planBOrCard]);
 
   const playSingle = useCallback(async (
     slot: PlayableSlot,
     playlistContext?: { slots: PlayableSlot[]; setlistId?: string | null },
   ) => {
     audioDebug.log("context", "playSingle", { id: slot.id, song: slot.song.title, hasUrl: !!slot.version?.archive_org_url, hasDirect: !!slot.directTrackUrl, withContext: !!playlistContext });
+    const isPlanB = planBTapRef.current;
+    planBTapRef.current = false;
+    // A surface that looked the night up itself can answer AFTER Plan B
+    // has stepped in for that very night. Its late call is not a tap — no
+    // gesture came with it — and must not cut Plan B off mid-song.
+    const stoodIn = planBForRef.current;
+    if (!isPlanB && stoodIn && !recentGesture() && stoodIn.songId === slot.song.id &&
+        stoodIn.date === archiveKeyDate(slot.version?.show_date) && Date.now() - stoodIn.at < 60_000) {
+      audioDebug.log("context", "late answer for the night Plan B stood in for — ignored", { song: slot.song.title }, "warn");
+      return;
+    }
+    if (!isPlanB) { setPlanB(null); planBForRef.current = null; }
     const from = currentPath(); // the page this tap was made on
     // The tap's clock. A surface with an await before this call began it
     // already (beginTap) and this takes it over; otherwise it starts here,
@@ -662,6 +767,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     claimTap(surfaceFromPath(from), {
       slotId: slot.id,
       songId: slot.song.id,
+      title: slot.song.title,
       showDate: slot.version?.show_date ?? null,
       hasPrecomputed: !!slot.directTrackUrl,
     });
@@ -1134,6 +1240,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     claimTap(surfaceFromPath(from), {
       slotId: slots[0]?.id ?? null,
       songId: slots[0]?.song.id ?? null,
+      title: slots[0]?.song.title ?? null,
       showDate: slots[0]?.version?.show_date ?? null,
       hasPrecomputed: !!slots[0]?.directTrackUrl,
     });
@@ -1142,6 +1249,8 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     // tape that was playing.
     playSingleSeqRef.current++;
     clearPlaybackError(); // same reason as playSingle: a new run is a new attempt
+    setPlanB(null);
+    planBForRef.current = null;
     setPlaybackOops(null);
     lastEngineErrorRef.current = null;
     // Play All clears playingSlot and leaves it null until the first track
@@ -1494,7 +1603,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
       // Previously just a toast, which left a dead bar sitting on a track
       // that would never play and no way back other than closing it.
       setPlaybackError("That tape won't play. The source may be offline.");
-      if (failed) raisePlaybackOops(failed);
+      if (failed) void planBOrCard(failed, "wont_play");
     }
   };
 
@@ -1815,6 +1924,77 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
   // Transport surface (Phase 1 gapless swap). Stable enough to rebuild per
   // render — the provider value object is fresh each render regardless, and
   // progress deliberately flows through refs/subscriptions, never state.
+  // playSingle for Plan B, which is defined above it.
+  playSingleRef.current = (slot) => void playSingle(slot);
+
+  /**
+   * What surfaces call when THEIR lookup found no tape (the version picker,
+   * the Songbook pages). Their tap never reached the player, so it is
+   * settled here, and the failure goes through Plan B like any other.
+   */
+  const reportPlaybackFailure = useCallback((failure: PlaybackFailure, opts: { from?: string } = {}) => {
+    abandonPendingTap(failure.kind === "no_tape" ? "no_tape" : "not_on_tape", "lookup");
+    void planBOrCard(failure, failure.kind === "wont_play" ? "wont_play" : "no_tape", opts.from);
+  }, [planBOrCard]);
+
+  // ── The silence ceiling ────────────────────────────────────────────────
+  // Any tap still without sound or an answer at PLAN_B_AFTER_MS — inside the
+  // player or still in a surface's own lookup — has waited long enough. It is
+  // settled as a timeout and Plan B steps in. Replaces the 25 s wait the
+  // resolve watchdog below used to be the only end to (kept as a backstop).
+  const onSilenceRef = useRef<(t: Tap) => void>(() => undefined);
+  onSilenceRef.current = (t: Tap) => {
+    const st = stateRef.current;
+    // Play All keeps hunting down its list on its own; Plan B is for a tap.
+    if (st.playlistMode && st.playlistSlots.length > 1) return;
+    const slot = st.playingSlot;
+    tapFailed("timeout");
+    abandonPendingTap("timeout");
+    const songTitle = t.title ?? slot?.song.title;
+    if (!songTitle) return;
+    audioDebug.log("context", "silence ceiling reached", { song: songTitle, ms: Math.round(tapAge(t)) }, "warn");
+    void tryPlanB({
+      songId: t.songId ?? slot?.song.id,
+      songTitle,
+      failedDate: t.showDate ?? slot?.version?.show_date ?? null,
+      failedTrack: slot?.directTrackUrl ?? null,
+      reason: "slow",
+    }).then((ok) => {
+      if (!ok && slot && stateRef.current.playingSlot?.id === slot.id) {
+        setPlaybackError("Still looking for that tape. Archive.org may be slow right now.", slot.id);
+      }
+    });
+  };
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    let watching: string | null = null;
+    const check = () => {
+      const t = waitingTap();
+      if (!t) {
+        if (timer) clearTimeout(timer);
+        timer = undefined;
+        watching = null;
+        return;
+      }
+      if (t.id === watching) return;
+      if (timer) clearTimeout(timer);
+      watching = t.id;
+      // Plan B's own tap is not chained to another Plan B; its failure
+      // falls through to the ordinary messages.
+      if (t.surface === "plan_b") return;
+      timer = setTimeout(() => {
+        const still = waitingTap();
+        if (still && still.id === t.id) onSilenceRef.current(still);
+      }, Math.max(0, PLAN_B_AFTER_MS - tapAge(t)));
+    };
+    const off = subscribeTaps(check);
+    check();
+    return () => {
+      off();
+      if (timer) clearTimeout(timer);
+    };
+  }, []);
+
   const transport: PlayerTransport = {
     engine: engineMode,
     isPlaying: engineMode === "gapless" ? transportState.isPlaying : false,
@@ -1924,7 +2104,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     <AudioPlayerContext.Provider
       value={{
         ...state, transport, playSingle, playSetlist, queueSetlist, stopPlayback, advancePlaylist, unlockAudio,
-        playbackOops, dismissPlaybackOops, reportPlaybackFailure: raisePlaybackOops,
+        playbackOops, dismissPlaybackOops, reportPlaybackFailure, planB, dismissPlanB,
       }}
     >
       {children}

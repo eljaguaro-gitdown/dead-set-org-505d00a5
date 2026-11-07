@@ -92,7 +92,7 @@ const PlaybackOopsCard = () => {
   const playSuggestion = () => {
     if (!suggestion) return;
     captureEvent("playback_oops_suggestion_played", { same_song: suggestion.songId === oops.songId });
-    beginTap("oops_suggestion", { songId: suggestion.songId, showDate: suggestion.showDate, hasPrecomputed: true });
+    beginTap("oops_suggestion", { songId: suggestion.songId, title: suggestion.songTitle, showDate: suggestion.showDate, hasPrecomputed: true });
     void playSingle(knownGoodToSlot(suggestion));
   };
 

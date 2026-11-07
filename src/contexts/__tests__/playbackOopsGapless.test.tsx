@@ -526,12 +526,13 @@ describe("moving on takes the card down", () => {
     const { result } = renderHook(() => useAudioPlayer(), { wrapper });
     await act(async () => { await result.current.playSingle(B, { slots: [A, B, C] }); });
     await waitFor(() => expect(loads()).toHaveLength(1));
+    // The card waits on Plan B's look for a sure thing (none here) first.
     act(() => result.current.reportPlaybackFailure(somethingElse));
-    expect(result.current.playbackOops).not.toBeNull();
+    await waitFor(() => expect(result.current.playbackOops).not.toBeNull());
     act(() => result.current.transport.next());
     expect(result.current.playbackOops).toBeNull();
     act(() => result.current.reportPlaybackFailure(somethingElse));
-    expect(result.current.playbackOops).not.toBeNull();
+    await waitFor(() => expect(result.current.playbackOops).not.toBeNull());
     act(() => result.current.transport.previous());
     expect(result.current.playbackOops).toBeNull();
   });

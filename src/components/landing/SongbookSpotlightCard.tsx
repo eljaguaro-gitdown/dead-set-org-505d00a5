@@ -418,7 +418,7 @@ const SongbookSpotlightCard = ({ spotlight: s }: { spotlight: SongbookSpotlight 
       return;
     }
     unlockAudioInGesture();
-    beginTap("songbook_spotlight", { songId: s.songId ?? null, showDate: end.date, hasPrecomputed: !!found?.directTrackUrl });
+    beginTap("songbook_spotlight", { songId: s.songId ?? null, title: s.title, showDate: end.date, hasPrecomputed: !!found?.directTrackUrl });
     trackCtaClick("hero_songbook_play", "audio");
     captureEvent("songbook_spotlight_played", {
       slug: s.slug,

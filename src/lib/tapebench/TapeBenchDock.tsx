@@ -26,7 +26,7 @@
 import { useEffect, useRef } from "react";
 import { useAudioPlayer, type PlayableSlot } from "@/contexts/AudioPlayerContext";
 import { findNight } from "@/lib/tapeIndex";
-import { beginTap, type TapSurface } from "@/lib/player/tapTelemetry";
+import { abandonPendingTap, beginTap, type TapSurface } from "@/lib/player/tapTelemetry";
 import { unlockAudioInGesture } from "@/lib/player/gestureUnlock";
 import { spotlightSlot } from "@/lib/songbookSpotlight";
 import { SYNTHETIC_VERSION_DEFAULTS } from "@/lib/syntheticVersion";
@@ -51,6 +51,7 @@ export interface TapeBenchMarks {
   barError?: number;
   toast?: number;
   autoplayPrompt?: number;
+  planB?: number;
   lookupError?: string;
 }
 
@@ -74,6 +75,7 @@ const MARKS: Array<[keyof TapeBenchMarks, string]> = [
   ["barError", "[data-player-error]"],
   ["toast", "[data-sonner-toast]"],
   ["autoplayPrompt", '[aria-label="Tap to start the tape"]'],
+  ["planB", "[data-plan-b]"],
 ];
 
 const TapeBenchDock = () => {
@@ -121,7 +123,7 @@ const TapeBenchDock = () => {
 
     if (spec.surface === "songbook_spotlight") {
       unlockAudioInGesture();
-      beginTap("songbook_spotlight", { songId: spec.songId, showDate: spec.showDate, hasPrecomputed: false });
+      beginTap("songbook_spotlight", { songId: spec.songId, title: spec.title, showDate: spec.showDate, hasPrecomputed: false });
       void playSingle(
         spotlightSlot(
           { slug: `bench-${spec.songId}`, songId: spec.songId, title: spec.title },
@@ -155,7 +157,7 @@ const TapeBenchDock = () => {
     // The version picker's playVersion (and the hero, which is playVersion on
     // the debut), for the picker, the landing pick and a reported night.
     unlockAudio();
-    beginTap(SURFACE[spec.surface], { songId: spec.songId, showDate: spec.showDate, hasPrecomputed: false });
+    beginTap(SURFACE[spec.surface], { songId: spec.songId, title: spec.title, showDate: spec.showDate, hasPrecomputed: false });
     let url = spec.archiveUrl;
     let track: string | null = null;
     let stream: string | null = null;
@@ -171,7 +173,9 @@ const TapeBenchDock = () => {
         track = tape.directTrackUrl ?? null;
         stream = tape.streamUrl ?? null;
       } catch (e) {
+        // As VersionPicker does: the Archive could not be asked.
         marks.lookupError = String(e).slice(0, 120);
+        abandonPendingTap("unreachable", "lookup");
         return;
       }
     }
