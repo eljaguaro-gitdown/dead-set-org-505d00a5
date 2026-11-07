@@ -98,7 +98,18 @@ if (sampleN && sampleN < corpus.length) {
 
 async function startPreview() {
   if (!fs.existsSync(path.join(distDir, "index.html"))) throw new Error(`build first: VITE_TAPEBENCH=1 npx vite build --outDir ${distDir}`);
-  const proc = spawn("npx", ["vite", "preview", "--outDir", distDir, "--port", String(port), "--strictPort", "--host", "127.0.0.1"], { cwd: root, stdio: ["ignore", "pipe", "pipe"] });
+  // Refuse a port something already answers on. On 2026-11-07 a previous
+  // run's server was still up, this run's could not bind, the poll below
+  // reached the OLD one, and an "after" benchmark measured the "before"
+  // build (45 autoplay blocks, no Plan B) under the after label.
+  try {
+    await fetch(`http://127.0.0.1:${port}/`);
+    throw new Error(`port ${port} is already serving something; stop it first (a previous run's preview?)`);
+  } catch (e) {
+    if (/already serving/.test(String(e))) throw e; // ECONNREFUSED: free, as it should be
+  }
+  // vite itself, not `npx vite`: kill() on the npx wrapper left vite running.
+  const proc = spawn(process.execPath, [path.join(root, "node_modules/vite/bin/vite.js"), "preview", "--outDir", distDir, "--port", String(port), "--strictPort", "--host", "127.0.0.1"], { cwd: root, stdio: ["ignore", "pipe", "pipe"] });
   // Poll the server rather than parse its (coloured) banner.
   proc.stdout.resume(); proc.stderr.resume();
   const deadline = Date.now() + 30000;

@@ -1,9 +1,7 @@
 {
-  "why": "Request a TapeBench run on a GitHub runner by editing this file and pushing (see .github/workflows/tapebench.yml). Before/after on one runner, one network, one seeded 60-tap sample.",
+  "why": "Request a TapeBench run on a GitHub runner by editing this file and pushing (see .github/workflows/tapebench.yml). Re-run of the AFTER half: run 42329920045's after runs served the before build (a leftover preview server; fixed in run.mjs).",
   "runs": [
-    { "profile": "webkit-iphone", "sample": 60, "workers": 2, "note": "BEFORE: pre-sprint player (0383bf5 engine) + tap telemetry only", "build": { "sha": "c5fbc3b", "restore": { "0383bf5": ["src/lib/player/gaplessEngine.ts", "src/lib/player/gestureUnlock.ts"] } } },
-    { "profile": "chromium-iphone", "sample": 60, "workers": 2, "note": "BEFORE: pre-sprint player (0383bf5 engine) + tap telemetry only", "build": { "sha": "c5fbc3b", "restore": { "0383bf5": ["src/lib/player/gaplessEngine.ts", "src/lib/player/gestureUnlock.ts"] } } },
-    { "profile": "webkit-iphone", "sample": 60, "workers": 2, "note": "AFTER: the sprint" },
-    { "profile": "chromium-iphone", "sample": 60, "workers": 2, "note": "AFTER: the sprint" }
+    { "profile": "webkit-iphone", "sample": 60, "workers": 2, "note": "AFTER (re-run): the sprint as published" },
+    { "profile": "chromium-iphone", "sample": 60, "workers": 2, "note": "AFTER (re-run): the sprint as published" }
   ]
 }
