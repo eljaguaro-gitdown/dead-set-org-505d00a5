@@ -130,3 +130,31 @@ track today (`resolver_found_tape`), so the tape itself is fine.
 `onPreloadError`, not `onError`. The preloaded track is loaded again when the queue reaches it, and
 a real failure then is reported as the current track's. **Reverse it:** a test or field trace where
 a preload failure was the only signal of a dead current track.
+
+## 2026-11-07 — Medleys and bad nights: the nights are wrong, not the matcher
+
+**Finding.** The tape index read every candidate tape for 691 offerable nights. 99 nights have
+recordings, but none carries the song. I checked 27 of them by hand, including all five reported
+Slipknot! nights and the 16 such nights in the bench corpus. No track title on the top tapes
+contains the song's name, even partially or inside a medley. The few shared words were unrelated
+songs ("Six Days On The Road" for "Going Down the Road Feeling Bad"). None of those tapes has an
+untitled track either. The matcher already handles segue suites ("Help > Slip > Franklin's").
+So these are wrong dates in `songs.first_played/last_played` and in community guides, such as Bird
+Song and Playing in the Band at the 1995-07-09 final show, and Caution at 1966-07-03. They are not
+matcher misses. The single real matcher gap was "Lady with a Fan", filed as "Terrapin Station" on
+the 1977-02-26 debut. The shared matcher now treats a suite as containing the song it opens with,
+and only that song.
+
+**Decision.** The index stores those nights as `no_match` (6 with no recording at all as
+`no_tape`). The version picker and community issues show "No tape of it from this night" before
+the tap, and a tap goes straight to Plan B. I closed the five Slipknot! reports
+(1976-06-09, 1977-04-27, 1983-10-06, 1990-03-22, 1991-09-06) as `wont_fix` with the cause in
+`fix_note`. That status emails nobody; only `verified` does. I closed the false "Drums" report the
+same way. Help on the Way 1977-06-09 stays open with its cause noted: a preload failure was
+misattributed to the playing track. The fix is code, so the owner marks it verified after the web
+publish that carries it.
+
+**Owner follow-up (data, not code).** The 99 `no_match` nights point at wrong dates in the songs
+table and in the Slipknot!, Eyes of the World, Bird Song and Ripple community guides.
+`select s.title, t.show_date from tape_index t join songs s on s.id = t.song_id where t.status <>
+'playable'` lists them. Correcting the dates is an editorial call, so I left it alone.
