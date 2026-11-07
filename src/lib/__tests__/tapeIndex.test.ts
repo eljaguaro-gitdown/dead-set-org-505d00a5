@@ -46,7 +46,7 @@ const row = (o: Record<string, unknown>) => ({
   track_url: "https://archive.org/download/gd71/t01.mp3", servers: ["https://ia800107.us.archive.org/1/items/gd71"], file_name: "t01.mp3", duration_s: 300, ...o,
 });
 
-const fetchSpy = vi.fn(async () => ({ ok: true }) as Response);
+const fetchSpy = vi.fn(async (_url: string, _init?: RequestInit) => ({ ok: true }) as Response);
 beforeEach(() => {
   resetTapeIndex(); resetArchiveMirrors();
   db.rows = []; db.calls = []; db.delayMs = 0; db.fail = false;
