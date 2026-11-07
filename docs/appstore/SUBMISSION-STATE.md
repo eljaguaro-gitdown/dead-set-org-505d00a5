@@ -12,6 +12,30 @@ deletion) and **1.2** (user-generated content). The fixes merged to `main` in PR
 #79 (`93a894c`). Builds 29, 30, 31 and **32** have been uploaded since. **32 is the current gated review candidate**: same code as the live web (`6d98516`).
 Submission ID `f8593d8a-e9fc-4a91-a4b5-dabad5b63632`.
 
+## Build 33 — what it should carry (playback sprint, 2026-11-07). NOT built or submitted
+
+The playback sprint (`docs/playback-sprint/`) changed the shared player, which Capacitor bundles,
+so build 33 carries it once the web release is gated and published. Nobody has dispatched a
+TestFlight build for it. That is the owner's step.
+
+What reaches the app, and how:
+
+| Change | In the app? | Why |
+|---|---|---|
+| Tape index (`tape_index`, `src/lib/tapeIndex.ts`): no Archive search at tap time | Yes | It lives in `AudioPlayerContext`, which `NativeEngine` sits behind |
+| Streams from the item's own server (`streamUrl`) | Yes | `toEngineTrack` hands `NativeEngine` the same url; AVPlayer streams it |
+| 4 s request budget, 8 s night ceiling, raced variants | Yes | `src/lib/archiveOrg.ts` is shared |
+| 8 s silence ceiling and Plan B (`planB.ts`, `PlanBCard`) | Yes | Context-level; it is driven by the tap telemetry, which native progress also feeds |
+| Louder digging card and tap mark | Yes | Root-mounted React |
+| Tap telemetry (`play_requested` / `play_first_sound` / `play_failed`) | Yes | Native progress ticks call `tapFirstSound` through `subscribeProgress` |
+| iOS gesture fix (blessed `<audio>` pool) | **No, by design** | The app plays through AVQueuePlayer, which has no web autoplay rule. The pool is created but never used there |
+| Preload error not treated as the current track's (`errorTrackIndex`) | **No** | GaplessEngine only. `NativeEngine`'s error event does not name the item (see the failover note in `AudioPlayerContext`) |
+| Mirror failover (PR #138) | **No** | Unchanged: still GaplessEngine-only for the same reason |
+
+Before dispatching build 33, check that the web release carrying these is live (the `/admin` sync
+badge) and that the gate's PASS names the same sha. The App Review surfaces (report, block, delete,
+terms) are untouched by the sprint.
+
 ## Builds 30–32 — 2026-10-26: start here
 
 **What this update could not see.** App Store Connect is not visible from a repo
