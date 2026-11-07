@@ -94,9 +94,14 @@ Deno.serve(async (req) => {
   if (!UUID.test(songId) || !DAY.test(day) || day < "1965-01-01" || day > "1995-12-31" || (ident && !IDENT.test(ident))) {
     return json({ error: "bad key" }, 400);
   }
-  const { data: fresh } = await db.from("tape_index").select("verified_at").eq("song_id", songId).eq("show_date", day)
-    .order("verified_at", { ascending: false }).limit(1);
-  if (fresh?.[0] && Date.now() - Date.parse(fresh[0].verified_at) < COOLDOWN_MS && !ident) return json({ cached: true });
+  // The cooldown applies to a named recording too, keyed by its own row. It
+  // used to be skipped whenever an identifier was supplied, so one public
+  // caller could loop a valid key and make this function read the Archive
+  // on every call (pre-release gate, 2026-11-07).
+  let freshQ = db.from("tape_index").select("verified_at").eq("song_id", songId).eq("show_date", day);
+  if (ident) freshQ = freshQ.eq("identifier", ident);
+  const { data: fresh } = await freshQ.order("verified_at", { ascending: false }).limit(1);
+  if (fresh?.[0] && Date.now() - Date.parse(fresh[0].verified_at) < COOLDOWN_MS) return json({ cached: true });
   const { data: song } = await db.from("songs").select("title").eq("id", songId).maybeSingle();
   if (!song?.title) return json({ error: "unknown song" }, 404);
   const r = await resolveNight(fetch, { songId, songTitle: song.title, showDate: day, storedIdentifier: ident });
