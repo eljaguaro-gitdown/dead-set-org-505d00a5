@@ -33,7 +33,10 @@ jobs:
   stamp:
     name: Write src/buildInfo.ts
     # The stamp commit itself must not be stamped: that would loop forever.
-    if: ${{ !startsWith(github.event.head_commit.message, 'chore: stamp build') }}
+    # Quoted: the ': ' inside 'chore: stamp build' ends a plain YAML scalar,
+    # and unquoted it made the whole file invalid — every push showed a failed
+    # run named after the file, and main would never have been stamped.
+    if: "!startsWith(github.event.head_commit.message, 'chore: stamp build')"
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
