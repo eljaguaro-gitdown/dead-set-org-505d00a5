@@ -27,6 +27,8 @@ const db = vi.hoisted(() => ({
   tables: {} as Record<string, Array<Record<string, unknown>>>,
   verified: null as null | Record<string, unknown>,
   rpc: [] as Array<[string, Record<string, unknown>]>,
+  /** How long the sure-thing lookup takes; on a phone it is not instant. */
+  sureDelayMs: 0,
 }));
 vi.mock("@/integrations/supabase/client", () => {
   const builder = (table: string) => {
@@ -47,7 +49,10 @@ vi.mock("@/integrations/supabase/client", () => {
       from: (t: string) => builder(t),
       rpc: vi.fn(async (fn: string, args: Record<string, unknown>) => {
         db.rpc.push([fn, args]);
-        if (fn === "suggest_known_good_tape") return { data: db.verified ? [db.verified] : [], error: null };
+        if (fn === "suggest_known_good_tape") {
+          if (db.sureDelayMs) await new Promise((r) => setTimeout(r, db.sureDelayMs));
+          return { data: db.verified ? [db.verified] : [], error: null };
+        }
         if (fn === "report_playback_issue") return { data: "11111111-0000-4000-8000-000000000000", error: null };
         return { data: null, error: null };
       }),
@@ -59,6 +64,7 @@ vi.mock("@/integrations/supabase/client", () => {
 import { AudioPlayerProvider, useAudioPlayer, type PlayableSlot } from "@/contexts/AudioPlayerContext";
 import { SYNTHETIC_VERSION_DEFAULTS } from "@/lib/syntheticVersion";
 import { resetTapeIndex } from "@/lib/tapeIndex";
+import { resetSureThings, PLAN_B_AFTER_MS, SILENCE_LIMIT_MS } from "@/lib/player/planB";
 import { resetArchiveMirrors } from "@/lib/archiveOrg";
 import { beginTap, resetTaps, type TapRecord } from "@/lib/player/tapTelemetry";
 
@@ -93,9 +99,9 @@ const seen: TapRecord[] = [];
 const listen = (e: Event) => seen.push((e as CustomEvent<TapRecord>).detail);
 
 beforeEach(() => {
-  queues.length = 0; seen.length = 0; db.rpc = []; db.verified = null;
+  queues.length = 0; seen.length = 0; db.rpc = []; db.verified = null; db.sureDelayMs = 0;
   db.tables = { tape_index: [indexRow({}), indexRow({ show_date: "1983-10-06", identifier: "", status: "no_tape", is_song_default: false, track_url: null, servers: [] })] };
-  resetTapeIndex(); resetArchiveMirrors(); resetTaps();
+  resetTapeIndex(); resetArchiveMirrors(); resetTaps(); resetSureThings();
   window.addEventListener("deadset:tap", listen);
   fetchSpy.mockClear(); vi.stubGlobal("fetch", fetchSpy);
   try { localStorage.removeItem("plan_b"); } catch { /* */ }
@@ -151,14 +157,18 @@ describe("Plan B", () => {
     expect(screen.getByTestId("planb").textContent).toBe("");
   });
 
-  it("eight seconds of silence is the ceiling: the tap times out and Plan B plays", async () => {
-    vi.useFakeTimers({ shouldAdvanceTime: true });
+  it("eight seconds of silence is the ceiling: the tap times out and Plan B is on screen BEFORE 8 s", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: false });
+    db.sureDelayMs = 1_000; // a lookup started AT the ceiling would land past 8 s
     render(<AudioPlayerProvider><Harness slot={night("1977-05-09")} /></AudioPlayerProvider>);
     fireEvent.click(screen.getByText("tap"));
-    await vi.advanceTimersByTimeAsync(7_500);
+    await vi.advanceTimersByTimeAsync(PLAN_B_AFTER_MS - 10);
     expect(screen.getByTestId("planb").textContent).toBe("");
-    await vi.advanceTimersByTimeAsync(1_000);
-    await waitFor(() => expect(screen.getByTestId("planb").textContent).toBe("slow|1972-08-27|1977-05-09"));
+    // The sure thing was looked up while the tap was still silent...
+    expect(db.rpc.filter(([fn]) => fn === "suggest_known_good_tape").length).toBe(1);
+    // ...so at the ceiling the answer lands at once, inside the 8 s limit.
+    await vi.advanceTimersByTimeAsync(SILENCE_LIMIT_MS - PLAN_B_AFTER_MS - 10);
+    expect(screen.getByTestId("planb").textContent).toBe("slow|1972-08-27|1977-05-09");
     expect(seen.find((r) => r.event === "play_failed")).toEqual(expect.objectContaining({ kind: "timeout" }));
     expect(reports()).toEqual([]); // slow is the network, not something to fix: nothing filed
   });

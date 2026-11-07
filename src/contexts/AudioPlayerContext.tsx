@@ -19,7 +19,7 @@ import { isNativeApp } from "@/lib/nativeApp";
 import { captureAudioEvent, archiveIdentifierFromUrl } from "@/lib/player/audioInstrumentation";
 import { askIndex, findNight, findSongDefault } from "@/lib/tapeIndex";
 import { abandonPendingTap, activeTap, beginTap, claimTap, recentGesture, subscribeTaps, tapAge, tapFailed, tapFirstSound, tapSlot, tapStage, surfaceFromPath, waitingTap, type Tap, type TapStage } from "@/lib/player/tapTelemetry";
-import { findSureThing, isPlanBEnabled, PLAN_B_AFTER_MS, type PlanBReason } from "@/lib/player/planB";
+import { findSureThing, isPlanBEnabled, PLAN_B_AFTER_MS, PLAN_B_PREFETCH_MS, type PlanBReason } from "@/lib/player/planB";
 import { captureEvent } from "@/lib/posthog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -1983,21 +1983,36 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
   };
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout> | undefined;
+    let prefetch: ReturnType<typeof setTimeout> | undefined;
     let watching: string | null = null;
+    const stop = () => {
+      if (timer) clearTimeout(timer);
+      if (prefetch) clearTimeout(prefetch);
+      timer = prefetch = undefined;
+    };
     const check = () => {
       const t = waitingTap();
       if (!t) {
-        if (timer) clearTimeout(timer);
-        timer = undefined;
+        stop();
         watching = null;
         return;
       }
       if (t.id === watching) return;
-      if (timer) clearTimeout(timer);
+      stop();
       watching = t.id;
       // Plan B's own tap is not chained to another Plan B; its failure
       // falls through to the ordinary messages.
       if (t.surface === "plan_b") return;
+      // Look the sure thing up while the tap is still waiting, so that at the
+      // ceiling the card and the tape can start at once (findSureThing caches).
+      prefetch = setTimeout(() => {
+        const still = waitingTap();
+        if (!still || still.id !== t.id || !isPlanBEnabled()) return;
+        const slot = stateRef.current.playingSlot;
+        const songTitle = t.title ?? slot?.song.title;
+        if (!songTitle) return;
+        void findSureThing({ songId: t.songId ?? slot?.song.id, songTitle, excludeDate: t.showDate ?? slot?.version?.show_date ?? null });
+      }, Math.max(0, PLAN_B_PREFETCH_MS - tapAge(t)));
       timer = setTimeout(() => {
         const still = waitingTap();
         if (still && still.id === t.id) onSilenceRef.current(still);
@@ -2007,7 +2022,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     check();
     return () => {
       off();
-      if (timer) clearTimeout(timer);
+      stop();
     };
   }, []);
 

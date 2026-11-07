@@ -11,6 +11,12 @@
  *   - a blessed element stays blessed when its src changes.
  * Everything else rejects with NotAllowedError, exactly as Safari does.
  *
+ * navigator.userActivation reports the same window. iOS Safari 16.4+ has the
+ * API; headless Playwright WebKit has it too but answers isActive: true at
+ * all times (measured 2026-11-07), so code that asks it — the engine's
+ * blessing pool, before a non-gesture Plan B — saw a gesture that a phone
+ * would not report.
+ *
  * ACTIVATION_MS is WebKit's transient-activation window. It is a model,
  * not a measurement of a real iPhone; DECISIONS.md says so, and the field
  * events (play_failed stage=gesture) are what confirm or refute it.
@@ -21,6 +27,10 @@
   for (const ev of ["pointerdown", "pointerup", "touchend", "click", "keydown"]) {
     window.addEventListener(ev, (e) => { if (e.isTrusted) lastGesture = performance.now(); }, true);
   }
+  try {
+    const ua = { get isActive() { return performance.now() - lastGesture <= ACTIVATION_MS; }, get hasBeenActive() { return lastGesture > 0; } };
+    Object.defineProperty(Navigator.prototype, "userActivation", { get: () => ua, configurable: true });
+  } catch { /* leave the native one */ }
   const blessed = new WeakSet();
   const nativePlay = HTMLMediaElement.prototype.play;
   window.__iosShim = { blocked: 0, blessed: 0, allowedByActivation: 0 };

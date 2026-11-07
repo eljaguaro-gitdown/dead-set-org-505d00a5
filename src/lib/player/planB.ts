@@ -21,8 +21,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { isArchiveTrackUrl, asIsoDate, asUuid, type KnownGoodTape } from "@/lib/playbackIssues";
 import { streamUrlFor } from "@/lib/tapeIndex";
 
-/** Silence longer than this is not a wait, it is a failure (the brief's ceiling). */
-export const PLAN_B_AFTER_MS = 8_000;
+/** The brief's ceiling: no tap may sit longer than this without an answer. */
+export const SILENCE_LIMIT_MS = 8_000;
+/**
+ * When Plan B steps in. Under the limit, not at it: at exactly 8 s the card
+ * rendered a few ms after the limit, so every slow tap that Plan B rescued
+ * still counted as a silent wait (24 of 59 on the 2026-11-07 runner sample).
+ */
+export const PLAN_B_AFTER_MS = 7_600;
+/** When the sure thing is looked up for a tap that is still silent, so it is ready at PLAN_B_AFTER_MS. */
+export const PLAN_B_PREFETCH_MS = 4_000;
 const FIND_BUDGET_MS = 2_500;
 
 export interface SureThing extends KnownGoodTape {
@@ -90,6 +98,11 @@ async function fromIndex(songId: string, songTitle: string, excludeDate: string 
 }
 
 /** A version of this song we know plays, other than the one that failed. Never throws. */
+/** Recent answers, so a prefetch at 4 s makes the 7.6 s answer immediate. */
+const sureCache = new Map<string, { at: number; p: Promise<SureThing | null> }>();
+const SURE_TTL_MS = 60_000;
+export function resetSureThings(): void { sureCache.clear(); }
+
 export async function findSureThing(args: {
   songId: string | null | undefined;
   songTitle: string;
@@ -100,13 +113,23 @@ export async function findSureThing(args: {
   if (!songId) return null;
   const excludeDate = asIsoDate(args.excludeDate ?? null);
   const excludeTrack = args.excludeTrack ?? null;
-  return within(
+  // Keyed without the track: a prefetch may not know which track is failing
+  // yet. If the cached answer IS that track, ask again rather than offer it.
+  const key = `${songId}|${excludeDate ?? ""}`;
+  const hit = sureCache.get(key);
+  if (hit && Date.now() - hit.at < SURE_TTL_MS) {
+    const tape = await hit.p;
+    if (!tape || !excludeTrack || tape.trackUrl !== excludeTrack) return tape;
+  }
+  const p = within(
     (async () =>
       (await fromVerified(songId, excludeDate, excludeTrack).catch(() => null)) ??
       (await fromIndex(songId, args.songTitle, excludeDate, excludeTrack).catch(() => null)))(),
     FIND_BUDGET_MS,
     null,
   );
+  sureCache.set(key, { at: Date.now(), p });
+  return p;
 }
 
 export type PlanBReason = "no_tape" | "slow" | "wont_play";
