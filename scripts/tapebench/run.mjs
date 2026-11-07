@@ -52,6 +52,8 @@ const settleAfterMs = Number(arg("settle", "1500"));
 const listenMs = Number(arg("listen", "20000"));
 const port = Number(arg("port", "4173"));
 const note = arg("note", "");
+// A different build's output to serve (the baseline worktree's dist-bench).
+const distDir = path.resolve(arg("dist", path.join(root, "dist-bench")));
 
 const PROFILES = {
   "webkit-iphone": { browser: webkit, device: devices["iPhone 15"], throttle: { rttMs: 170, downMbps: 9, upMbps: 1.5 }, shim: true },
@@ -61,7 +63,7 @@ const profile = PROFILES[profileName];
 if (!profile) throw new Error(`unknown profile ${profileName}`);
 if (flag("no-shim")) profile.shim = false;
 
-const sha = (() => { try { return require("node:child_process").execSync("git rev-parse --short HEAD", { cwd: root }).toString().trim(); } catch { return "unknown"; } })();
+const sha = arg("sha", "") || (() => { try { return require("node:child_process").execSync("git rev-parse --short HEAD", { cwd: root }).toString().trim(); } catch { return "unknown"; } })();
 const runId = `${new Date().toISOString().replace(/[:.]/g, "").slice(0, 15)}-${profileName}-${sha}`;
 const shimSource = fs.readFileSync(path.join(root, "scripts/tapebench/iosPolicyShim.js"), "utf8");
 
@@ -69,10 +71,26 @@ let corpus = JSON.parse(fs.readFileSync(path.join(root, corpusPath), "utf8")).ta
 if (only) corpus = corpus.filter((t) => only.split(",").includes(t.surface));
 if (ids) { const want = new Set(ids.split(",")); corpus = corpus.filter((t) => want.has(t.id)); }
 if (limit) corpus = corpus.slice(0, limit);
+// --sample N: a stratified, seeded sample for iteration runs (the owner
+// approved ~120-tap runs while iterating; the full corpus decides the target).
+const sampleN = Number(arg("sample", "0"));
+if (sampleN && sampleN < corpus.length) {
+  let seed = 7;
+  const rnd = () => ((seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff);
+  const by = new Map();
+  for (const t of corpus) (by.get(t.surface) ?? by.set(t.surface, []).get(t.surface)).push(t);
+  const out = [];
+  for (const [, list] of by) {
+    const want = Math.max(1, Math.round((list.length / corpus.length) * sampleN));
+    const shuffled = [...list].sort(() => rnd() - 0.5);
+    out.push(...shuffled.slice(0, want));
+  }
+  corpus = out;
+}
 
 async function startPreview() {
-  if (!fs.existsSync(path.join(root, "dist-bench/index.html"))) throw new Error("build first: VITE_TAPEBENCH=1 npx vite build --outDir dist-bench");
-  const proc = spawn("npx", ["vite", "preview", "--outDir", "dist-bench", "--port", String(port), "--strictPort", "--host", "127.0.0.1"], { cwd: root, stdio: ["ignore", "pipe", "pipe"] });
+  if (!fs.existsSync(path.join(distDir, "index.html"))) throw new Error(`build first: VITE_TAPEBENCH=1 npx vite build --outDir ${distDir}`);
+  const proc = spawn("npx", ["vite", "preview", "--outDir", distDir, "--port", String(port), "--strictPort", "--host", "127.0.0.1"], { cwd: root, stdio: ["ignore", "pipe", "pipe"] });
   // Poll the server rather than parse its (coloured) banner.
   proc.stdout.resume(); proc.stderr.resume();
   const deadline = Date.now() + 30000;
@@ -161,7 +179,15 @@ async function runTap(browser, proxyUrl, tap) {
 
 async function main() {
   const preview = await startPreview();
-  const browser = await profile.browser.launch({ ...(profile.launch ?? {}) });
+  // A browser that dies mid-run (a container restart, an OOM) is relaunched
+  // rather than failing every tap after it as a bench error.
+  let browser = await profile.browser.launch({ ...(profile.launch ?? {}) });
+  let relaunching = null;
+  const ensureBrowser = async () => {
+    if (browser.isConnected()) return browser;
+    relaunching ??= profile.browser.launch({ ...(profile.launch ?? {}) }).then((b) => { browser = b; relaunching = null; return b; });
+    return relaunching;
+  };
   const proxies = await Promise.all(Array.from({ length: workers }, () => startThrottleProxy(profile.throttle)));
   const results = [];
   let next = 0;
@@ -169,7 +195,13 @@ async function main() {
   await Promise.all(proxies.map(async (proxy, w) => {
     while (next < corpus.length) {
       const tap = corpus[next++];
-      const r = await runTap(browser, proxy.url, tap);
+      proxy.refused.clear();
+      let r = await runTap(await ensureBrowser(), proxy.url, tap);
+      if (r.benchError && /has been closed/.test(r.benchError)) {
+        proxy.refused.clear();
+        r = await runTap(await ensureBrowser(), proxy.url, tap); // once more, on a live browser
+      }
+      r.sandboxRefused = [...proxy.refused];
       results.push(r);
       const sound = r.taps?.find((x) => x.event === "play_first_sound");
       const failed = r.taps?.find((x) => x.event === "play_failed");

@@ -79,7 +79,10 @@ const rows = run.taps.map((t) => {
   };
 });
 
-const valid = rows.filter((r) => !r.benchError);
+// A tap whose stream the SANDBOX's egress refused measured this machine's
+// network policy, not the player. Reported, never scored.
+const envBlocked = rows.filter((r, i) => (run.taps[i].sandboxRefused ?? []).length > 0 && r.soundMs === null);
+const valid = rows.filter((r) => !r.benchError && !envBlocked.includes(r));
 const yes = valid.filter((r) => r.label === "yes");
 const no = valid.filter((r) => r.label === "no");
 const unknown = valid.filter((r) => r.label === "unknown" || r.label === "unlabelled");
@@ -100,7 +103,8 @@ const metrics = {
   blocked,
   noTapePlanB: { n: noCovered, d: no.length },
   unknownSounded: { n: unknown.filter((r) => r.soundMs !== null).length, d: unknown.length },
-  benchErrors: rows.length - valid.length,
+  benchErrors: rows.filter((r) => r.benchError).length,
+  envBlocked: envBlocked.length,
   stubbedWrites: rows.reduce((a, r) => a + r.writes, 0),
 };
 
@@ -130,7 +134,7 @@ const ok = (b) => (b ? "PASS" : "fail");
 const md = `
 ### Run \`${run.runId}\`
 
-${run.profile} · build \`${run.sha}\` · ${run.startedAt} · ${run.minutes} min · ${valid.length} taps scored (${metrics.benchErrors} bench errors)${run.note ? ` · ${run.note}` : ""}
+${run.profile} · build \`${run.sha}\` · ${run.startedAt} · ${run.minutes} min · ${valid.length} taps scored (${metrics.benchErrors} bench errors, ${metrics.envBlocked} blocked by the sandbox's network policy and not scored)${run.note ? ` · ${run.note}` : ""}
 
 | Metric | Value | Target | |
 |---|---|---|---|

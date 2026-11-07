@@ -20,6 +20,8 @@ export function startThrottleProxy({ rttMs = 170, downMbps = 9, upMbps = 1.5, up
   const half = rttMs / 2;
   const bucket = { down: 0, up: 0 };
   const bytes = { down: 0, up: 0 };
+  /** Hosts the session's egress refused — the sandbox's limits, not the player's. Reset per tap. */
+  const refused = new Set();
 
   /** Write `chunk` to `dst` when latency and the shared bucket allow, in order. */
   const scheduler = (dst, dir, mbps) => {
@@ -59,7 +61,7 @@ export function startThrottleProxy({ rttMs = 170, downMbps = 9, upMbps = 1.5, up
         if (e < 0) return;
         upSock.removeListener("data", onUp);
         const status = upHead.slice(0, e).toString().split("\r\n")[0];
-        if (!/ 200 /.test(status)) { client.end(`${status}\r\n\r\n`); upSock.destroy(); return; }
+        if (!/ 200 /.test(status)) { refused.add(target.replace(/:\d+$/, "")); client.end(`${status}\r\n\r\n`); upSock.destroy(); return; }
         // The tunnel's own setup costs a round trip on a real phone too.
         setTimeout(() => {
           if (client.destroyed) { upSock.destroy(); return; }
@@ -88,6 +90,7 @@ export function startThrottleProxy({ rttMs = 170, downMbps = 9, upMbps = 1.5, up
       resolve({
         url: `http://127.0.0.1:${server.address().port}`,
         bytes,
+        refused,
         close: () => new Promise((r) => server.close(() => r())),
       });
     });
