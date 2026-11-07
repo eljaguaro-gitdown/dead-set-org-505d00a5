@@ -67,6 +67,28 @@ export function errorTrackIndex(error: unknown): number | null {
 
 const PROGRESS_NOTIFY_INTERVAL_MS = 250;
 
+/** The <audio> elements a gapless Queue's tracks hold (Track.audio; Queue._tracks is not public API). */
+function audioElementsOf(queue: unknown): HTMLMediaElement[] {
+  try {
+    const tracks = (queue as { _tracks?: Array<{ audio?: unknown }> })._tracks;
+    if (!Array.isArray(tracks)) return [];
+    return tracks.map((t) => t?.audio).filter((a): a is HTMLMediaElement => typeof HTMLMediaElement !== "undefined" && a instanceof HTMLMediaElement);
+  } catch {
+    return [];
+  }
+}
+
+/** Stop an element's network use for good: no src, then load() to abort the fetch. */
+function releaseSource(el: HTMLMediaElement): void {
+  try {
+    el.pause();
+    el.removeAttribute("src");
+    el.load();
+  } catch {
+    /* best effort */
+  }
+}
+
 export class GaplessEngine {
   readonly progressRef: { current: ProgressSnapshot } = {
     current: { currentTime: 0, duration: 0 },
@@ -278,12 +300,19 @@ export class GaplessEngine {
 
   private teardownQueue(): void {
     if (this.queue) {
+      // gapless's destroy() pauses each track's <audio> but leaves its src,
+      // so an abandoned tape went on downloading beside the one replacing it.
+      // On a phone that is the same radio: Plan B, started because the first
+      // tape was slow, shared the link with that slow tape (TapeBench,
+      // 2026-11-07). Take the elements first, then release their sources.
+      const elements = audioElementsOf(this.queue);
       try {
         this.queue.pause();
         this.queue.destroy();
       } catch {
         /* noop */
       }
+      for (const el of elements) releaseSource(el);
       this.queue = null;
     }
     this.slotIds = [];

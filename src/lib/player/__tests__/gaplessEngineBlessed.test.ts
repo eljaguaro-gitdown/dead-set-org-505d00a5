@@ -11,7 +11,8 @@ vi.mock("gapless", () => {
   class FakeQueue {
     constructor(o: Record<string, unknown>) { opts.push(o); }
     // Exactly what gapless's Track constructor does: `new Audio()`.
-    addTrack = vi.fn(() => { built.push(new Audio()); });
+    _tracks: Array<{ audio: HTMLAudioElement }> = [];
+    addTrack = vi.fn(() => { const audio = new Audio(); built.push(audio); this._tracks.push({ audio }); });
     gotoTrack = vi.fn();
     play = vi.fn();
     pause = vi.fn();
@@ -40,6 +41,7 @@ beforeEach(() => {
     return Promise.resolve();
   });
   vi.spyOn(HTMLMediaElement.prototype, "pause").mockImplementation(() => undefined);
+  vi.spyOn(HTMLMediaElement.prototype, "load").mockImplementation(() => undefined);
 });
 afterEach(() => vi.restoreAllMocks());
 
@@ -113,5 +115,20 @@ describe("the playback method", () => {
   it("stays HYBRID on a desktop, where the segue is sample-accurate", async () => {
     const o = await optsOf("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/130 Safari/537.36");
     expect(o.playbackMethod).toBe("HYBRID");
+  });
+});
+
+describe("GaplessEngine releases a replaced tape", () => {
+  it("a new load stops the old tape's download: its element loses its src", async () => {
+    const engine = new GaplessEngine(cb);
+    engine.unlock();
+    engine.load([{ slotId: "slow", url: "https://archive.org/download/x/slow.mp3" }], 0, true);
+    await vi.waitFor(() => expect(built).toHaveLength(1));
+    const old = built[0];
+    old.src = "https://ia800.us.archive.org/1/items/x/slow.mp3";
+    engine.load([{ slotId: "planb", url: "https://archive.org/download/y/sure.mp3" }], 0, true);
+    await vi.waitFor(() => expect(built).toHaveLength(2));
+    expect(old.hasAttribute("src")).toBe(false);
+    expect(built[1]).not.toBe(old);
   });
 });
