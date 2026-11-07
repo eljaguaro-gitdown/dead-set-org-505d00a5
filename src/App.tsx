@@ -1,4 +1,4 @@
-import { Suspense } from "react";
+import { Suspense, lazy } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -8,8 +8,9 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AudioPlayerProvider } from "@/contexts/AudioPlayerContext";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import GlobalAudioPlayer from "@/components/GlobalAudioPlayer";
-import CrateDigging from "@/components/CrateDigging";
+import CrateDigging, { TapAck } from "@/components/CrateDigging";
 import PlaybackOopsCard from "@/components/PlaybackOopsCard";
+import PlanBCard from "@/components/PlanBCard";
 import FixedTapeNotice from "@/components/FixedTapeNotice";
 import ReturnToSetlistPill from "@/components/ReturnToSetlistPill";
 import VisitorTracker from "@/components/VisitorTracker";
@@ -25,6 +26,10 @@ import NativeAuthCallback from "@/components/NativeAuthCallback";
 import Index from "./pages/Index";
 
 // Lazy-load all other routes to reduce initial bundle size
+// TapeBench's dock (scripts/tapebench). Only a build with VITE_TAPEBENCH=1
+// contains it: the env constant is replaced at build time, so in every other
+// build this is `null` and the import is dropped.
+const TapeBenchDock = import.meta.env.VITE_TAPEBENCH === "1" ? lazy(() => import("@/lib/tapebench/TapeBenchDock")) : null;
 const Auth = lazyWithReload(() => import("./pages/Auth"));
 const Builder = lazyWithReload(() => import("./pages/Builder"));
 const MySetlists = lazyWithReload(() => import("./pages/MySetlists"));
@@ -102,7 +107,14 @@ const App = () => (
             {/* Sibling of the player, not inside a page: PageLayout's
                 `relative z-10` would trap it under the player's z-40. */}
             <CrateDigging />
+            <TapAck />
             <PlaybackOopsCard />
+            <PlanBCard />
+            {TapeBenchDock && (
+              <Suspense fallback={null}>
+                <TapeBenchDock />
+              </Suspense>
+            )}
             <FixedTapeNotice />
             <ReturnToSetlistPill />
             <NativeAuthCallback />

@@ -1,0 +1,74 @@
+# Stamp the commit sha into the tree, so a build made without git can still
+# say which commit it is.
+#
+# Why: Lovable's publish build has no git binary and no .git directory, so
+# `vite.config.ts` could not name the commit, and from the 2026-11-03 publish
+# every PostHog event and every playback report carried build_sha "unknown".
+# A pre-commit hook cannot do this job either — a commit's sha depends on its
+# own tree, so no file inside it can carry it. The sha of the CODE commit can
+# travel in a second commit, which is what this writes: src/buildInfo.ts with
+# the sha of the push that triggered it, committed as "chore: stamp build".
+#
+# scripts/build-sha/resolve.mjs makes every build of that code — Lovable (no
+# git, reads the file), CI and the iOS workflow (git, HEAD is the stamp) —
+# report the same sha, the code commit. The admin sync badge treats the
+# stamp file as not shipping (src/lib/githubSync.ts), so a build of the code
+# commit reads as in sync with a main whose tip is its stamp.
+#
+# [skip ci] on the stamp commit: CI already ran on the code commit, and the
+# only change is one generated line. Lovable's GitHub sync is a webhook, not a
+# workflow, so it still sees the push.
+
+name: Stamp build sha
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: stamp-build-sha
+  cancel-in-progress: false
+
+jobs:
+  stamp:
+    name: Write src/buildInfo.ts
+    # The stamp commit itself must not be stamped: that would loop forever.
+    # Quoted: the ': ' inside 'chore: stamp build' ends a plain YAML scalar,
+    # and unquoted it made the whole file invalid — every push showed a failed
+    # run named after the file, and main would never have been stamped.
+    if: "!startsWith(github.event.head_commit.message, 'chore: stamp build')"
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Write the file
+        id: write
+        run: |
+          # Stamp the sha of the push that triggered this run, even if main
+          # has moved since: that is the code this stamp describes.
+          out=$(node scripts/build-sha/stamp.mjs "${GITHUB_SHA}")
+          echo "$out"
+          echo "changed=$([ "$out" = unchanged ] && echo no || echo yes)" >> "$GITHUB_OUTPUT"
+
+      - name: Commit and push
+        if: steps.write.outputs.changed == 'yes'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/buildInfo.ts
+          git commit -m "chore: stamp build ${GITHUB_SHA} [skip ci]"
+          # main may have moved while this ran. Rebase and retry a few times;
+          # the stamp still names the sha it was written for.
+          for attempt in 1 2 3 4; do
+            if git push origin HEAD:main; then exit 0; fi
+            git fetch origin main
+            git rebase origin/main || { git rebase --abort; exit 1; }
+            sleep $((attempt * 2))
+          done
+          exit 1

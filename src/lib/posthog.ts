@@ -1,6 +1,5 @@
 import posthog from "posthog-js";
-
-declare const __BUILD_SHA__: string;
+import { buildSha } from "@/lib/buildSha";
 
 const projectToken = import.meta.env.VITE_PUBLIC_POSTHOG_PROJECT_TOKEN;
 const apiHost = import.meta.env.VITE_PUBLIC_POSTHOG_HOST;
@@ -70,7 +69,7 @@ export const initializePostHog = () => {
     // at the first event carrying its sha. `loaded` runs before posthog-js
     // schedules the initial $pageview, so the landing pageview is tagged too.
     loaded: (ph) => {
-      ph.register({ build_sha: typeof __BUILD_SHA__ !== "undefined" ? __BUILD_SHA__ : "unknown" });
+      ph.register({ build_sha: buildSha() });
     },
   });
 

@@ -9,6 +9,10 @@ vi.mock("@/lib/webReleases", async (orig) => ({
   fetchLatestRelease: vi.fn(async () => latest.value),
 }));
 
+// No committed stamp either: these tests are about the release-log fallback,
+// which only runs when neither the define nor src/buildInfo.ts knows.
+vi.mock("@/buildInfo", () => ({ BUILD_INFO: { sha: "", stampedAt: "" } }));
+
 import GitHubSyncBadge from "@/components/GitHubSyncBadge";
 
 const SHA = "7acddcfa39f9a9f9e7e09b47e9e210a99f324ba5";

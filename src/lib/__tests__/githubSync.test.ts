@@ -16,6 +16,20 @@ describe("shipsInApp", () => {
     }
   });
 
+  it("does not count the build stamp, which is about a build rather than part of one", () => {
+    expect(shipsInApp("src/buildInfo.ts")).toBe(false);
+    // ...while everything else under src/ still does.
+    expect(shipsInApp("src/buildInfo.test.ts")).toBe(true);
+    expect(shipsInApp("src/lib/buildSha.ts")).toBe(true);
+  });
+
+  it("calls a main whose only extra commit is the stamp in sync (docs-only)", () => {
+    const v = classifyCompare({ status: "ahead", ahead_by: 1, behind_by: 0, files: [{ filename: "src/buildInfo.ts" }] });
+    expect(v.status).toBe("behind");
+    expect(v.docsOnly).toBe(true);
+    expect(v.appFiles).toEqual([]);
+  });
+
   it("does not count docs, migrations or CI config", () => {
     for (const path of [
       "docs/appstore/SUBMISSION-STATE.md",

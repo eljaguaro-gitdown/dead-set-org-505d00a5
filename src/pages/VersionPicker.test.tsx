@@ -19,6 +19,8 @@ const setSearchParams = vi.fn();
 const playSingle = vi.fn();
 const playSetlist = vi.fn();
 const reportPlaybackFailure = vi.fn();
+/** Plan B for an unaskable night: no sure thing by default, so the toast shows. */
+const startPlanB = vi.fn(async (..._a: unknown[]) => false);
 /** The oops card's state, as the page sees it. */
 let mockOops: { key: number } | null = null;
 
@@ -42,6 +44,7 @@ vi.mock("@/contexts/AudioPlayerContext", () => ({
     unlockAudio: vi.fn(),
     playingSlot: null,
     reportPlaybackFailure,
+    startPlanB,
     playbackOops: mockOops,
   }),
 }));
@@ -128,6 +131,8 @@ beforeEach(() => {
   playSingle.mockReset();
   playSetlist.mockReset();
   reportPlaybackFailure.mockReset();
+  startPlanB.mockReset();
+  startPlanB.mockResolvedValue(false);
   mockUser = null;
   searchParams = new URLSearchParams();
   findManyArchiveRecordings.mockClear();
@@ -307,6 +312,17 @@ describe("VersionPicker — when the Archive cannot be asked", () => {
     await waitFor(() => expect(toastError).toHaveBeenCalledWith(expect.stringMatching(/couldn't reach the archive/i)));
     // The two are different claims and must never be collapsed.
     expect(toastInfo).not.toHaveBeenCalledWith(expect.stringMatching(/no tape/i));
+  });
+
+  it("asks Plan B first — for THIS song on THIS night — and says nothing more when it plays", async () => {
+    unaskable();
+    startPlanB.mockResolvedValueOnce(true);
+    await playUnstoredVersion();
+    await waitFor(() => expect(startPlanB).toHaveBeenCalled());
+    // The ROW's night (v2, 1989-04-02), not the song's debut (1978-08-31).
+    expect(startPlanB.mock.calls[0][0]).toEqual({ songId: "song-1", songTitle: "Shakedown Street", showDate: "1989-04-02" });
+    await new Promise((r) => setTimeout(r, 20));
+    expect(toastError).not.toHaveBeenCalled();
   });
 
   it("does not try to play anything", async () => {

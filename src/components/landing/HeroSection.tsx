@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAudioPlayer, type PlayableSlot } from "@/contexts/AudioPlayerContext";
 import { loadWeeklySpotlight, type SongbookSpotlight } from "@/lib/songbookSpotlight";
 import { unlockAudioInGesture } from "@/lib/player/gestureUnlock";
+import { beginTap } from "@/lib/player/tapTelemetry";
 import SongbookSpotlightCard, { SongbookSpotlightSkeleton } from "@/components/landing/SongbookSpotlightCard";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
@@ -139,6 +140,8 @@ const HeroSection = (_props: HeroSectionProps) => {
       return;
     }
     unlockAudioInGesture();
+    // The slots (and whether they are precomputed) are read after the tap.
+    beginTap("landing_hero", { hasPrecomputed: null });
     trackCtaClick("hero_now_spinning_play", "audio");
     setHeroLoading(true);
     try {

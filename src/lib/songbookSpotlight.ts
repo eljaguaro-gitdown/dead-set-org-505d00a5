@@ -344,7 +344,7 @@ export const spotlightSlotId = (s: Pick<SongbookSpotlight, "slug">, which: End):
 export const spotlightSlot = (
   s: Pick<SongbookSpotlight, "slug" | "songId" | "title">,
   end: LifespanEnd,
-  found?: { url: string; directTrackUrl?: string | null; venue?: string | null } | null,
+  found?: { url: string; directTrackUrl?: string | null; streamUrl?: string | null; venue?: string | null } | null,
 ): PlayableSlot => {
   const id = spotlightSlotId(s, end.which);
   const track = found?.directTrackUrl ? found : null;
@@ -361,6 +361,7 @@ export const spotlightSlot = (
       archive_org_url: track?.url ?? end.archiveUrl,
     },
     directTrackUrl: track?.directTrackUrl ?? null,
+    streamUrl: track?.streamUrl ?? null,
     setNumber: 1,
     position: 0,
     segueToNext: false,

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Play } from "lucide-react";
 import { useAudioPlayer, type PlayableSlot } from "@/contexts/AudioPlayerContext";
+import { beginTap } from "@/lib/player/tapTelemetry";
 import { useAuth } from "@/hooks/useAuth";
 import { useGlobalPlayerHeight } from "@/hooks/useGlobalPlayerHeight";
 import { captureEvent } from "@/lib/posthog";
@@ -78,6 +79,7 @@ const FixedTapeNotice = () => {
         segueToNext: false,
         directTrackUrl: null,
       };
+      beginTap("fixed_tape", { songId: current.songId, title: current.songTitle, showDate: current.showDate, hasPrecomputed: false });
       void playSingle(slot);
     } else if (current.songId) {
       navigate(`/song/${current.songId}`);

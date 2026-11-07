@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { archiveMirrorUrls, resetArchiveMirrors } from "@/lib/archiveOrg";
+import { ARCHIVE_TIMEOUT_MS, archiveMirrorUrls, resetArchiveMirrors } from "@/lib/archiveOrg";
 
 /**
  * The item's own servers, for a track whose /download/ redirect landed on a
@@ -142,9 +142,11 @@ describe("archiveMirrorUrls", () => {
       fetchMock.mockResolvedValue({ ok: true, status: 200, json: () => new Promise(() => undefined) } as unknown as Response);
       let answer: unknown = null;
       void archiveMirrorUrls(TRACK).then((r) => { answer = r; });
-      await vi.advanceTimersByTimeAsync(11_000);
+      // Not given up early: still waiting just before the first body cap...
+      await vi.advanceTimersByTimeAsync(ARCHIVE_TIMEOUT_MS - 500);
       expect(answer).toBeNull();
-      await vi.advanceTimersByTimeAsync(20_000); // 12s, the retry's 0.6s wait, 12s again
+      // ...and answered once the cap, the retry's 0.6s wait and the cap again have run.
+      await vi.advanceTimersByTimeAsync(ARCHIVE_TIMEOUT_MS + 600 + 1_000);
       expect(answer).toEqual({ urls: [], unreachable: true });
       expect(metadataCalls()).toHaveLength(2);
     } finally {

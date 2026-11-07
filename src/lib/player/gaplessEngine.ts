@@ -17,6 +17,7 @@
 import type { Queue as GaplessQueue, TrackInfo, TrackMetadata, PlaybackType } from "gapless";
 import { audioDebug } from "@/lib/audioDebug";
 import { preferPlaybackAudioSession } from "@/lib/player/audioSession";
+import { blessAudioElements, withBlessedAudio } from "@/lib/player/blessedAudio";
 
 // True on any iOS runtime: Safari, a home-screen PWA, or the Capacitor
 // WKWebView shell. iPadOS ≥13 masquerades as MacIntel but exposes touch.
@@ -47,9 +48,46 @@ export interface EngineCallbacks {
   onPlayBlocked: () => void;
   /** Fired only on transitions, never per tick. */
   onPlayStateChanged: (isPlaying: boolean) => void;
+  /**
+   * Every tick with real time, UNTHROTTLED. The progress subscribers are
+   * notified at ~4Hz, which is right for a clock and wrong for a stopwatch:
+   * tap-to-sound measured through them read up to 250ms late. Cheap to
+   * call per tick — the receiver settles once and returns.
+   */
+  onSound?: (slotId: string | null) => void;
+  /** A queued track that is not playing failed to load ahead of time. Not the current track's failure. */
+  onPreloadError?: (slotId: string | null, error: Error) => void;
+}
+
+/** "HTML5 audio error on track 3 (code 4): …" → 3. Null when the error names no track (a play() rejection). */
+export function errorTrackIndex(error: unknown): number | null {
+  const m = /\bon track (\d+)\b/.exec(String((error as Error)?.message ?? error));
+  return m ? Number(m[1]) : null;
 }
 
 const PROGRESS_NOTIFY_INTERVAL_MS = 250;
+
+/** The <audio> elements a gapless Queue's tracks hold (Track.audio; Queue._tracks is not public API). */
+function audioElementsOf(queue: unknown): HTMLMediaElement[] {
+  try {
+    const tracks = (queue as { _tracks?: Array<{ audio?: unknown }> })._tracks;
+    if (!Array.isArray(tracks)) return [];
+    return tracks.map((t) => t?.audio).filter((a): a is HTMLMediaElement => typeof HTMLMediaElement !== "undefined" && a instanceof HTMLMediaElement);
+  } catch {
+    return [];
+  }
+}
+
+/** Stop an element's network use for good: no src, then load() to abort the fetch. */
+function releaseSource(el: HTMLMediaElement): void {
+  try {
+    el.pause();
+    el.removeAttribute("src");
+    el.load();
+  } catch {
+    /* best effort */
+  }
+}
 
 export class GaplessEngine {
   readonly progressRef: { current: ProgressSnapshot } = {
@@ -103,9 +141,13 @@ export class GaplessEngine {
       }
       this.queue = queue;
       this.slotIds = tracks.map((t) => t.slotId);
-      for (const t of tracks) {
-        queue.addTrack(t.url, { metadata: t.metadata });
-      }
+      // gapless builds each track's <audio> in addTrack. Hand it the elements
+      // started in the tap, so iOS lets them play now (see blessedAudio.ts).
+      withBlessedAudio(() => {
+        for (const t of tracks) {
+          queue.addTrack(t.url, { metadata: t.metadata });
+        }
+      });
       if (tracks.length > 0) {
         queue.gotoTrack(startIndex, autoplay && this.desiredTransportState === "playing");
         if (startAt > 0) queue.seek(startAt);
@@ -119,7 +161,8 @@ export class GaplessEngine {
     this.enqueueOp(async () => {
       if (gen !== this.generation || this.destroyed || !this.queue) return;
       this.slotIds.push(track.slotId);
-      this.queue.addTrack(track.url, { metadata: track.metadata });
+      const queue = this.queue;
+      withBlessedAudio(() => queue.addTrack(track.url, { metadata: track.metadata }));
     });
   }
 
@@ -213,6 +256,9 @@ export class GaplessEngine {
    */
   unlock(): void {
     preferPlaybackAudioSession();
+    // Synchronously, here in the tap — not in the op below, which runs after
+    // any queued work and an async import, possibly past the gesture.
+    blessAudioElements();
     this.enqueueOp(async () => {
       if (this.destroyed) return;
       if (!this.queue) this.queue = await this.createQueue();
@@ -254,12 +300,19 @@ export class GaplessEngine {
 
   private teardownQueue(): void {
     if (this.queue) {
+      // gapless's destroy() pauses each track's <audio> but leaves its src,
+      // so an abandoned tape went on downloading beside the one replacing it.
+      // On a phone that is the same radio: Plan B, started because the first
+      // tape was slow, shared the link with that slow tape (TapeBench,
+      // 2026-11-07). Take the elements first, then release their sources.
+      const elements = audioElementsOf(this.queue);
       try {
         this.queue.pause();
         this.queue.destroy();
       } catch {
         /* noop */
       }
+      for (const el of elements) releaseSource(el);
       this.queue = null;
     }
     this.slotIds = [];
@@ -280,18 +333,33 @@ export class GaplessEngine {
     const gen = this.generation;
     const mod = await import("gapless");
     const Queue = mod.Queue ?? mod.default;
-    return new Queue({
-      playbackMethod: "HYBRID",
-      preloadNumTracks: 2,
+    // eslint-disable-next-line prefer-const
+    let queue: GaplessQueue;
+    queue = new Queue({
       // iOS (Safari, home-screen PWA, and the Capacitor shell alike)
       // suspends Web Audio contexts when the app backgrounds or the screen
-      // locks, killing playback mid-show. HTML5 <audio> keeps playing —
-      // and in the native shell UIBackgroundModes/AVAudioSession make it
-      // first-class. Trade sample-accurate segue scheduling for playback
-      // that survives backgrounding on iOS; everywhere else stays HYBRID.
-      webAudioIsDisabled: isIOS(),
+      // locks, killing playback mid-show. HTML5 <audio> keeps playing. So
+      // iOS plays HTML5 only: segues lose sample accuracy, playback survives.
+      //
+      // This used to be `webAudioIsDisabled: isIOS()` — an option of the OLD
+      // gapless API that gapless 4 (Queue.ts) does not read at all. Found by
+      // the playback sprint's bench (2026-11-07): every iPhone ran full HYBRID,
+      // which HEADs and then downloads the ENTIRE mp3 into memory beside the
+      // streaming element, to decode it and hand the song over to Web Audio
+      // mid-play. On a phone the two downloads share the radio, so the stream
+      // the fan is waiting on started seconds late (most bench taps passed the
+      // 8 s ceiling); and the mid-song hand-off is exactly what this comment
+      // meant to avoid — plausibly the field's NotSupportedError ~30 s into a
+      // track. HTML5_ONLY skips the fetch, the decode and the hand-off.
+      playbackMethod: isIOS() ? "HTML5_ONLY" : "HYBRID",
+      preloadNumTracks: 2,
       volume: this.volume,
-      onProgress: (info) => this.handleProgress(info),
+      onProgress: (info) => {
+        // A replaced queue is torn down, but a tick already in flight from it
+        // must not be read as the new queue's sound.
+        if (gen !== this.generation) return;
+        this.handleProgress(info);
+      },
       onStartNewTrack: (info) => this.handleStartNewTrack(info),
       onEnded: () => {
         this.notifyPlayState(false);
@@ -300,6 +368,23 @@ export class GaplessEngine {
       onError: (error) => {
         if (gen !== this.generation) {
           audioDebug.log("gapless", "error from a replaced queue ignored", { error: String(error) }, "warn");
+          return;
+        }
+        // gapless names the track an element error came from. One that is
+        // NOT the current track is a PRELOAD failing — the next song's
+        // address, fetched ahead. It used to be reported as the current
+        // track dying: the context failed over a song that was playing fine,
+        // restarted it from another server, and on 2026-11-06 filed
+        // "Help on the Way won't play" 34 s into a Help on the Way that was
+        // playing (the preload was Slipknot!). The preloaded track is not
+        // lost: when the queue reaches it, it is loaded again and its own
+        // failure, if it still fails, is reported then, as the current track.
+        const failedIndex = errorTrackIndex(error);
+        const current = queue.currentTrackIndex;
+        if (failedIndex !== null && failedIndex !== current) {
+          audioDebug.log("gapless", "preload error for a track that is not playing — not the current track's failure",
+            { error: String(error), failedIndex, current }, "warn");
+          this.callbacks.onPreloadError?.(this.slotIds[failedIndex] ?? null, error);
           return;
         }
         this.callbacks.onError(error);
@@ -312,6 +397,7 @@ export class GaplessEngine {
         ? { onDebug: (msg: string) => audioDebug.log("gapless", msg) }
         : {}),
     });
+    return queue;
   }
 
   private handleStartNewTrack(info: TrackInfo): void {
@@ -327,6 +413,7 @@ export class GaplessEngine {
   }
 
   private handleProgress(info: TrackInfo): void {
+    if (info.currentTime > 0) this.callbacks.onSound?.(this.slotIds[info.index] ?? null);
     this.progressRef.current = {
       currentTime: info.currentTime,
       duration: Number.isFinite(info.duration) ? info.duration : 0,

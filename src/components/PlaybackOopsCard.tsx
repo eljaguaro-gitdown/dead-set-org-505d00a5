@@ -5,6 +5,7 @@ import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 import { useAuth } from "@/hooks/useAuth";
 import { useGlobalPlayerHeight } from "@/hooks/useGlobalPlayerHeight";
 import { captureEvent } from "@/lib/posthog";
+import { beginTap } from "@/lib/player/tapTelemetry";
 import { useClaimBottom } from "@/lib/bottomCardClaims";
 import { isNativeApp } from "@/lib/nativeApp";
 import {
@@ -91,6 +92,7 @@ const PlaybackOopsCard = () => {
   const playSuggestion = () => {
     if (!suggestion) return;
     captureEvent("playback_oops_suggestion_played", { same_song: suggestion.songId === oops.songId });
+    beginTap("oops_suggestion", { songId: suggestion.songId, title: suggestion.songTitle, showDate: suggestion.showDate, hasPrecomputed: true });
     void playSingle(knownGoodToSlot(suggestion));
   };
 

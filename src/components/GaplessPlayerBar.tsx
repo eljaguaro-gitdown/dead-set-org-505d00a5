@@ -154,6 +154,7 @@ const GaplessPlayerBar = () => {
         {transport.error && !oopsCoversError ? (
           <div
             role="alert"
+            data-player-error
             className="absolute inset-x-0 -top-12 mx-auto w-fit max-w-[92vw] px-4 py-2 rounded-[10px] bg-background/95 border border-destructive/50 shadow-lg flex items-center gap-3"
           >
             <span className="text-sm text-foreground font-body truncate">

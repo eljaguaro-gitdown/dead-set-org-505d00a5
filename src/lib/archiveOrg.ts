@@ -10,6 +10,12 @@ export interface ArchiveResult {
   venue: string | null;
   /** Direct track URL for the specific song if found */
   directTrackUrl?: string | null;
+  /**
+   * The same track on the item's own server, when the tape index knows it
+   * (src/lib/tapeIndex.ts). The engine streams from here and skips the
+   * /download/ redirect; directTrackUrl stays the track's identity.
+   */
+  streamUrl?: string | null;
 }
 
 /**
@@ -55,116 +61,13 @@ export function isYearInWindow(
   return Number.isFinite(yr) && yr >= yearStart && yr <= yearEnd;
 }
 
-/**
- * Normalize a string for fuzzy comparison: lowercase, drop apostrophes, then
- * everything non-alphanumeric becomes a space. Strip file extensions and the
- * common "d1t03 - " / "03 - " track-number prefixes that come from archive.org.
- */
-function normalize(s: string): string {
-  return s
-    .toLowerCase()
-    .replace(/\bgood\s+times\s+blues\b/g, "good time blues")
-    // Real audio extensions only. The old /\.[^.]+$/ also truncated any title
-    // with an abbreviation in it — "c.c. rider" became "c.c" — so a track and a
-    // song could only match when both happened to be mangled identically.
-    .replace(/\.(flac|mp3|ogg|oga|shn|m4a|aac|wav|aiff?|opus|wma|ape)$/i, "")
-    .replace(/^d\d+t\d+\s*[-.]?\s*/i, "") // strip "d1t03 - " prefix
-    .replace(/^t?\d+\s*[-.]?\s*/, "")     // strip "03 - " or "t03." prefix
-    .replace(/[''`]/g, "")                // drop apostrophes (truckin' = truckin)
-    .replace(/[^a-z0-9]+/g, " ")          // any other non-alnum → space
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-/** Collapse all whitespace — used for whole-string comparisons that should
- * ignore spacing/hyphenation differences ("Half-Step" vs "Half Step"). */
-function compact(s: string): string {
-  return normalize(s).replace(/\s+/g, "");
-}
-
-const STOP_WORDS = new Set([
-  "the", "a", "an", "of", "in", "on", "to", "and", "is", "it", "be",
-  "at", "for", "with", "my", "i", "you", "your", "as", "or", "by",
-]);
-
-/** Tokenize + stem common Dead-isms. "playin" → "playing", "darkstar" stays. */
-function tokens(s: string): string[] {
-  return normalize(s)
-    .split(" ")
-    .filter(Boolean)
-    .map((t) => (t === "in" ? t : t.replace(/in$/, "ing")));
-}
-
-/**
- * Score one title against one song, with no medley handling — see matchScore.
- *
- * Strict by design: short substring overlaps that previously caused
- * "Mississippi Half Step" → "St. Stephen" (because "step" ⊂ "stephen") now
- * score 0. We only credit *whole-token* equality for the word-overlap path.
- */
-function scoreTitlePair(trackTitle: string, songTitle: string): number {
-  const ct = compact(trackTitle);
-  const cs = compact(songTitle);
-  if (!ct || !cs) return 0;
-
-  // Whole-string matches (ignoring spacing/punctuation).
-  if (ct === cs) return 100;
-  if (cs.length >= 4 && ct.includes(cs)) return 90;
-  if (ct.length >= 4 && cs.includes(ct)) return 85;
-
-  // Significant-word overlap with strict equality (no substring fuzz).
-  const trackTok = tokens(trackTitle).filter((t) => t.length > 1);
-  const songTok = tokens(songTitle).filter((t) => t.length > 1);
-  const trackSig = new Set(trackTok.filter((t) => !STOP_WORDS.has(t)));
-  const songSig = new Set(songTok.filter((t) => !STOP_WORDS.has(t)));
-  if (trackSig.size === 0 || songSig.size === 0) return 0;
-
-  const overlap = [...songSig].filter((t) => trackSig.has(t)).length;
-
-  // Same significant-word set — different ordering / fillers.
-  if (overlap === songSig.size && overlap === trackSig.size) return 95;
-  // Track contains every significant word of the song (song is a prefix/short form).
-  if (overlap === songSig.size) return 80;
-  // Song contains every significant word of the track (e.g. archive used short title).
-  if (overlap === trackSig.size && overlap >= 2) return 70;
-
-  return 0;
-}
-
-/**
- * Segue markers that join several songs under one track title. Tapers write the
- * whole suite as one file — "Help > Slipknot > Franklin's Tower", "Scarlet ->
- * Fire" — because that is how it was played.
- */
-const SEGUE_SPLIT = /\s*(?:->|-->|→|>)\s*/;
-
-/**
- * Score how well a track title matches the desired song title.
- * Returns 0 for no match, higher is better. Threshold for a real match is 60.
- *
- * Strict by design: short substring overlaps that previously caused
- * "Mississippi Half Step" → "St. Stephen" (because "step" ⊂ "stephen") now
- * score 0. We only credit *whole-token* equality for the word-overlap path.
- *
- * Medleys are scored per segment. Against the whole string a suite scores 0 —
- * "Help > Slipknot > Franklin" shares one significant word with "Help on the
- * Way" and loses on every rule — so every medley-titled tape looked like it did
- * not contain the song. That was tolerable while the browser offered versions
- * the player might still refuse; once the browser started filtering on this
- * score, it began hiding real tapes. The segue is the product here, so a suite
- * genuinely does contain each of its songs.
- */
-function matchScore(trackTitle: string, songTitle: string): number {
-  const direct = scoreTitlePair(trackTitle, songTitle);
-  if (direct === 100) return direct;
-
-  const segments = trackTitle.split(SEGUE_SPLIT).map((s) => s.trim()).filter(Boolean);
-  if (segments.length < 2) return direct;
-
-  // Best segment wins, never worse than the whole-string score. A tape with a
-  // dedicated track for the song still scores 100 and outranks the suite.
-  return segments.reduce((best, seg) => Math.max(best, scoreTitlePair(seg, songTitle)), direct);
-}
+import {
+  findBestTrack,
+  isRestrictedItem,
+  itemServerRoots,
+  matchScore,
+  normalize,
+} from "../../supabase/functions/_shared/tapeMatch.ts";
 
 export { matchScore, normalize };
 
@@ -179,7 +82,22 @@ export { matchScore, normalize };
  * (defined as !directTrackUrl) true forever. The player now has a watchdog,
  * but failing fast at the source is better than being rescued at 25s.
  */
-const ARCHIVE_TIMEOUT_MS = 12_000;
+/**
+ * Per request, to the headers. Was 12 s; with a retry and a `.flacNN`
+ * variant behind it, one lookup could run ~37 s before giving an answer
+ * (the CLAUDE.md correction on summing serial legs). A healthy Archive
+ * answers a metadata or search request in well under a second, so 4 s is a
+ * wide margin for a slow phone and a short wait for a dead mirror. Raise it
+ * only with bench evidence (docs/playback-sprint).
+ */
+export const ARCHIVE_TIMEOUT_MS = 4_000;
+/**
+ * The whole of one night's lookup — search plus every candidate's metadata.
+ * Past it, whatever has not answered is "could not ask", never "no tape".
+ */
+export const NIGHT_BUDGET_MS = 8_000;
+/** Candidate tapes of a night read at once. Ranked order is kept: the best-ranked match still wins. */
+const CANDIDATE_CONCURRENCY = 3;
 
 async function fetchArchive(url: string): Promise<Response> {
   const controller = new AbortController();
@@ -189,82 +107,6 @@ async function fetchArchive(url: string): Promise<Response> {
   } finally {
     clearTimeout(timer);
   }
-}
-
-/**
- * True when the band has asked the Archive to stream an item rather than
- * serve it as files. Soundboards carry this; audience tapes generally do not.
- *
- * Per archive.org's own Grateful Dead collection page: "Audience-made Grateful
- * Dead concert recordings are available as downloads while available
- * soundboards are accessible in streaming format only."
- *
- * We only ever stream, and MP3 derivatives are what archive.org's own player
- * streams, so this is not about withholding playback — it is about never
- * reaching for a restricted lossless ORIGINAL on those items. Doing so earns a
- * 403 (feeding the error rate) and is the one place the App Review notes'
- * claim that the band's policy is honored could be shown false.
- */
-function isRestrictedItem(meta: { metadata?: Record<string, unknown> } | null): boolean {
-  const md: Record<string, unknown> = meta?.metadata ?? {};
-  if (String(md["access-restricted-item"]).toLowerCase() === "true") return true;
-  const collection = md.collection;
-  const list = Array.isArray(collection) ? collection : collection ? [collection] : [];
-  return list.some((c: unknown) => String(c).toLowerCase() === "stream_only");
-}
-
-function isAudioFile(f: any): boolean {
-  const fmt = f.format || "";
-  const name = (f.name || "").toLowerCase();
-  return (
-    fmt === "VBR MP3" ||
-    fmt === "Ogg Vorbis" ||
-    fmt === "Flac" ||
-    fmt === "24bit Flac" ||
-    name.endsWith(".mp3") ||
-    name.endsWith(".ogg") ||
-    name.endsWith(".flac")
-  );
-}
-
-function isMp3(f: any): boolean {
-  return f.format === "VBR MP3" || (f.name || "").toLowerCase().endsWith(".mp3");
-}
-
-/** Lossy derivatives archive.org generates for streaming — never the original. */
-function isDerivative(f: { name?: string; format?: string }): boolean {
-  const name = (f.name || "").toLowerCase();
-  return (
-    f.format === "VBR MP3" ||
-    f.format === "Ogg Vorbis" ||
-    name.endsWith(".mp3") ||
-    name.endsWith(".ogg")
-  );
-}
-
-function findBestTrack(
-  files: any[],
-  songTitle: string,
-  opts: { restricted?: boolean } = {},
-): { file: any; score: number } | null {
-  // On a restricted item only derivatives are eligible. Elsewhere FLAC stays
-  // a last resort — it loses to MP3 on ties below, and AVPlayer cannot stream
-  // it on iOS anyway, but it is better than nothing on the web.
-  const audioFiles = files.filter(opts.restricted ? isDerivative : isAudioFile);
-  let bestScore = 0;
-  let bestFile: any = null;
-  for (const f of audioFiles) {
-    const title = f.title || f.name || "";
-    const score = matchScore(title, songTitle);
-    // MP3 wins ties: FLAC originals and their MP3 derivatives carry the same
-    // title, but raw FLAC won't stream through AVPlayer in the iOS app —
-    // MP3 plays everywhere.
-    if (score > bestScore || (score === bestScore && bestFile && !isMp3(bestFile) && isMp3(f))) {
-      bestScore = score;
-      bestFile = f;
-    }
-  }
-  return bestFile && bestScore >= 60 ? { file: bestFile, score: bestScore } : null;
 }
 
 /**
@@ -296,38 +138,52 @@ async function fetchMetadataWithFallback(
   if (/\.flac\d*$/i.test(identifier)) {
     variants.push(identifier.replace(/\.flac\d*$/i, ""));
   }
-  // Sticky across variants: if ANY attempt failed to complete, we never got a
-  // clean answer about this item, whatever a later variant returned.
+  // Asked AT ONCE, not one after the other: the second variant used to wait
+  // out the first one's timeout and retry before it was even tried. The
+  // first variant still wins whenever it has files — the same preference as
+  // before, without the wait.
+  const settled = await rankedBatch(
+    variants.map((id) => readVariant(id).then((r) => ({ hit: r.kind === "read" ? r : null, r }))),
+    RANK_GRACE_MS,
+  );
+  for (const x of settled) if (x?.hit) return x.r;
+  // Sticky across variants: if ANY attempt failed to complete — or never
+  // answered at all — we never got a clean answer about this item.
+  return {
+    kind: "failed",
+    unreachable: settled.some((x) => !x || (x.r.kind === "failed" && x.r.unreachable)),
+  };
+}
+
+async function readVariant(id: string): Promise<MetadataResult> {
   let unreachable = false;
-  for (const id of variants) {
-    // One retry for transient archive.org failures (504/503 are common).
-    for (let attempt = 0; attempt < 2; attempt++) {
-      try {
-        const res = await fetchArchive(`https://archive.org/metadata/${id}`);
-        if (!res.ok) {
-          if (res.status >= 500 || res.status === 429) {
-            // A server failure is not an answer about the music, even after
-            // the retry is spent.
-            unreachable = true;
-            if (attempt === 0) {
-              await new Promise((r) => setTimeout(r, 600));
-              continue;
-            }
+  // One retry for transient archive.org failures (504/503 are common).
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const res = await fetchArchive(`https://archive.org/metadata/${id}`);
+      if (!res.ok) {
+        if (res.status >= 500 || res.status === 429) {
+          // A server failure is not an answer about the music, even after
+          // the retry is spent.
+          unreachable = true;
+          if (attempt === 0) {
+            await new Promise((r) => setTimeout(r, 600));
+            continue;
           }
-          break;
-        }
-        const meta = await res.json();
-        const files = meta.files || [];
-        if (files.length > 0) {
-          return { kind: "read", files, resolvedId: id, restricted: isRestrictedItem(meta) };
         }
         break;
-      } catch {
-        unreachable = true;
-        if (attempt === 0) {
-          await new Promise((r) => setTimeout(r, 600));
-          continue;
-        }
+      }
+      const meta = await readJsonWithin(res);
+      const files = meta.files || [];
+      if (files.length > 0) {
+        return { kind: "read", files, resolvedId: id, restricted: isRestrictedItem(meta) };
+      }
+      break;
+    } catch {
+      unreachable = true;
+      if (attempt === 0) {
+        await new Promise((r) => setTimeout(r, 600));
+        continue;
       }
     }
   }
@@ -437,13 +293,19 @@ export async function archiveMirrorUrls(
 /** identifier → `https://<server><dir>` for each of the item's own servers. */
 const mirrorRoots = new Map<string, string[]>();
 
+/**
+ * Seed an item's servers from the tape index, so a failover off a broken
+ * address needs no metadata read. Only Archive roots are accepted.
+ */
+export function primeMirrorRoots(identifier: string, roots: string[]): void {
+  const ok = roots.filter((r) => /^https:\/\/[a-z0-9-]+(?:\.[a-z0-9-]+)*\.archive\.org\/[^?#\s]*$/i.test(r));
+  if (identifier && ok.length > 0 && !mirrorRoots.has(identifier)) mirrorRoots.set(identifier, ok);
+}
+
 /** Test seam: forget every item's servers. */
 export function resetArchiveMirrors(): void {
   mirrorRoots.clear();
 }
-
-/** Only an Archive host. A response must never be able to point the player anywhere else. */
-const ARCHIVE_HOST = /^[a-z0-9-]+(?:\.[a-z0-9-]+)*\.archive\.org$/i;
 
 /**
  * fetchArchive's timer covers the headers only: it is cleared once fetch()
@@ -479,20 +341,7 @@ async function readItemServers(identifier: string): Promise<string[] | null> {
       // A 404 is an answer: there is no such item, so it has no servers.
       if (!res.ok) return [];
       const meta = await readJsonWithin(res);
-      const dir = meta?.dir;
-      if (typeof dir !== "string" || !/^\/[^?#\s]*$/.test(dir)) return [];
-      const hosts = [
-        ...(Array.isArray(meta.workable_servers) ? meta.workable_servers : []),
-        meta.d1,
-        meta.d2,
-        meta.server,
-      ];
-      const roots: string[] = [];
-      for (const host of hosts) {
-        if (typeof host !== "string" || !ARCHIVE_HOST.test(host)) continue;
-        const root = `https://${host}${dir}`;
-        if (!roots.includes(root)) roots.push(root);
-      }
+      const roots = itemServerRoots(meta);
       return roots;
     } catch {
       if (attempt === 0) {
@@ -558,33 +407,102 @@ export class ArchiveUnreachable extends Error {
  * accepted it — the same two-copies divergence this function's own docstring
  * warns about, one level down.
  */
+/**
+ * How long a lower-ranked hit waits for a higher-ranked tape that has not
+ * answered. Rank still wins whenever the better tape answers in time; past
+ * this, a tape of the right night that IS answering beats waiting out a slow
+ * mirror's full timeout.
+ */
+export const RANK_GRACE_MS = 1_200;
+
+/**
+ * Settle a batch of ranked lookups. Returns as soon as the best-ranked hit is
+ * known to be best (everything ranked above it has answered without one), or
+ * once a hit exists and `graceMs` has passed. Unsettled slots come back as
+ * undefined: not answered, so not evidence of anything.
+ */
+export async function rankedBatch<T extends { hit: unknown }>(
+  lookups: Array<Promise<T>>,
+  graceMs: number,
+): Promise<Array<T | undefined>> {
+  const results: Array<T | undefined> = lookups.map(() => undefined);
+  const settled = lookups.map(() => false);
+  return new Promise((resolve) => {
+    let graceUp = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    let done = false;
+    const finish = () => {
+      if (done) return;
+      done = true;
+      if (timer) clearTimeout(timer);
+      resolve(results.slice());
+    };
+    const evaluate = () => {
+      if (settled.every(Boolean)) return finish();
+      for (let i = 0; i < results.length; i++) {
+        if (!settled[i]) {
+          // A higher-ranked tape is still out. Only the grace lets a later hit through.
+          if (graceUp && results.some((r) => r?.hit)) return finish();
+          return;
+        }
+        if (results[i]?.hit) return finish(); // everything above it answered: it is the best
+      }
+    };
+    timer = setTimeout(() => {
+      graceUp = true;
+      evaluate();
+    }, graceMs);
+    lookups.forEach((p, i) =>
+      p.then(
+        (r) => { results[i] = r; settled[i] = true; evaluate(); },
+        () => { settled[i] = true; evaluate(); },
+      ),
+    );
+  });
+}
+
 async function pickRecordingWithTrack(
   docs: ArchiveSearchDoc[],
   songTitle: string,
+  deadline = Date.now() + NIGHT_BUDGET_MS,
 ): Promise<ArchiveResult | null> {
   let unreachable = 0;
-  for (const doc of docs) {
+  const check = async (doc: ArchiveSearchDoc): Promise<{ hit: ArchiveResult | null; unreachable: boolean }> => {
     const identifier = doc.identifier;
     try {
       const metaRes = await fetchArchive(`https://archive.org/metadata/${identifier}`);
-      if (!metaRes.ok) {
-        unreachable++;
-        continue;
-      }
-      const meta = await metaRes.json();
+      if (!metaRes.ok) return { hit: null, unreachable: true };
+      const meta = await readJsonWithin(metaRes);
       const best = findBestTrack(meta.files || [], songTitle, {
         restricted: isRestrictedItem(meta),
       });
-      if (best) {
-        return {
+      if (!best) return { hit: null, unreachable: false };
+      return {
+        hit: {
           url: `https://archive.org/details/${identifier}`,
           date: doc.date ? doc.date.split("T")[0] : null,
           venue: doc.venue || meta.metadata?.venue || meta.metadata?.coverage || null,
           directTrackUrl: `https://archive.org/download/${identifier}/${encodeURIComponent(best.file.name)}`,
-        };
-      }
+        },
+        unreachable: false,
+      };
     } catch {
-      unreachable++;
+      return { hit: null, unreachable: true };
+    }
+  };
+  // A few at a time, in ranked order. Within a batch the best-ranked match
+  // wins, so the answer is the one the old one-by-one walk gave — it just
+  // stops waiting on a slow tape before asking the next.
+  for (let i = 0; i < docs.length; i += CANDIDATE_CONCURRENCY) {
+    if (Date.now() >= deadline) {
+      // Out of time with tapes unread: we did not learn they lack the song.
+      unreachable += docs.length - i;
+      break;
+    }
+    const batch = await rankedBatch(docs.slice(i, i + CANDIDATE_CONCURRENCY).map(check), RANK_GRACE_MS);
+    for (const r of batch) {
+      if (r?.hit) return r.hit;
+      if (!r || r.unreachable) unreachable++;
     }
   }
   if (unreachable > 0) throw new ArchiveUnreachable(unreachable);

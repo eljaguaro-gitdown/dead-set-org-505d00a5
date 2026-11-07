@@ -19,7 +19,8 @@ import ShareFlow from "@/components/ShareFlow";
 import ShowPlate from "@/components/ShowPlate";
 import TapeHunt from "@/components/TapeHunt";
 import { toast } from "sonner";
-import { archiveKey, archiveKeyDate, findArchiveRecordings, findRecordingForDate, matchScore, type ArchiveResult } from "@/lib/archiveOrg";
+import { findNight, findSongDefault } from "@/lib/tapeIndex";
+import { archiveKey, archiveKeyDate, findRecordingForDate, matchScore, type ArchiveResult } from "@/lib/archiveOrg";
 import { useFavoriteSongs } from "@/hooks/useFavoriteSongs";
 import type { Database } from "@/integrations/supabase/types";
 import { trackCtaClick } from "@/lib/trackCtaClick";
@@ -330,21 +331,38 @@ const SetlistPoster = () => {
       // six-night guide deduped to one lookup and all six rows were handed
       // whichever tape of that song draws best — one night, repeated six
       // times, under six cards describing six different shows.
-      const dated = new Map<string, { title: string; date: string }>();
-      const undatedTitles = new Set<string>();
+      const dated = new Map<string, { title: string; date: string; songId: string }>();
+      const undatedTitles = new Map<string, string>(); // title → song id
       for (const slot of unresolved) {
         const date = archiveKeyDate(slot.version?.show_date);
-        if (date) dated.set(archiveKey(slot.song.title, date), { title: slot.song.title, date });
-        else undatedTitles.add(slot.song.title);
+        if (date) dated.set(archiveKey(slot.song.title, date), { title: slot.song.title, date, songId: slot.song.id });
+        else undatedTitles.set(slot.song.title, slot.song.id);
       }
 
       const nextResolved: Record<string, ArchiveResult | null> = {};
 
-      if (undatedTitles.size > 0) {
-        const results = await findArchiveRecordings(Array.from(undatedTitles));
+      // The index first, one small read per song, and the Archive's search
+      // only for a song it misses (findSongDefault falls back on its own).
+      // This used to run the generic Archive search for EVERY undated title
+      // as the page loaded: on Fast-4G those searches filled the link, and a
+      // fan who tapped in the first seconds waited ~3 s for the tap's own
+      // first request (TapeBench, 2026-11-07), though the index already held
+      // a playable answer for every one of those songs. The answers are
+      // cached in tapeIndex, so the tap reuses them instead of asking again.
+      const undated = Array.from(undatedTitles.entries());
+      for (let i = 0; i < undated.length; i += 4) {
+        const batch = await Promise.all(
+          undated.slice(i, i + 4).map(async ([title, songId]) => {
+            try {
+              return [title, await findSongDefault(title, songId)] as const;
+            } catch {
+              return null; // could not ask: leave it unset, the tap retries
+            }
+          })
+        );
         if (cancelled) return;
-        undatedTitles.forEach((title) => {
-          nextResolved[archiveKey(title, null)] = results.get(title) ?? null;
+        batch.forEach((entry) => {
+          if (entry) nextResolved[archiveKey(entry[0], null)] = entry[1];
         });
       }
 
@@ -353,9 +371,9 @@ const SetlistPoster = () => {
       const entries = Array.from(dated.entries());
       for (let i = 0; i < entries.length; i += 4) {
         const batch = await Promise.all(
-          entries.slice(i, i + 4).map(async ([key, { title, date }]) => {
+          entries.slice(i, i + 4).map(async ([key, { title, date, songId }]) => {
             try {
-              return [key, await findRecordingForDate(title, date)] as const;
+              return [key, await findNight(title, date, songId)] as const;
             } catch {
               // findRecordingForDate throws when the Archive could not be
               // asked. Leave the key UNSET rather than writing null: null here
@@ -497,6 +515,7 @@ const SetlistPoster = () => {
       position: slot.position,
       segueToNext: slot.segue_to_next || false,
       directTrackUrl: resolvedArchive?.directTrackUrl || null,
+      streamUrl: resolvedArchive?.streamUrl ?? null,
     };
   }, [resolvedArchives]);
 

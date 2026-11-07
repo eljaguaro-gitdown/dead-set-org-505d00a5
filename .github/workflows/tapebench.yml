@@ -1,0 +1,96 @@
+# TapeBench on a GitHub runner: real browsers, the real Archive, a Fast-4G
+# throttle applied over a network that is faster than Fast-4G.
+#
+# Why not run it where the sprint is developed: that sandbox reaches the
+# Archive through an egress proxy that measured 1.7–5 Mbps, below the 9 Mbps
+# profile before any throttle, and adds ~0.4 s to every new TLS connection. A
+# bare <audio> element, with no app code, took 3.3 s unthrottled there. The
+# bench graded the sandbox, not the player (docs/playback-sprint/DECISIONS.md,
+# 2026-11-07). A hosted runner has no such proxy, so the throttle proxy dials
+# hosts directly and the profile is the network the report describes.
+#
+# Trigger: push a change to scripts/tapebench/ci-request.json (each entry is
+# one run), or run it by hand. Writes nothing to production — run.mjs stubs
+# every non-GET to Supabase and blocks analytics. No secrets: the Supabase
+# values it builds with are the publishable ones committed in .env.
+#
+# Cost: ubuntu minutes within the account's included Actions allowance; a
+# full 335-tap run is ~40 min of runner time.
+
+name: TapeBench
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ["claude/**"]
+    paths: ["scripts/tapebench/ci-request.json"]
+
+concurrency:
+  group: tapebench
+  cancel-in-progress: false
+
+jobs:
+  bench:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # a run may build an older commit (the baseline)
+      - uses: oven-sh/setup-bun@v2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+      - name: Install browsers
+        run: npx playwright install --with-deps webkit chromium
+      - name: Build the bench bundle
+        # PostHog blanked: a benchmark is not a fan.
+        run: VITE_TAPEBENCH=1 VITE_PUBLIC_POSTHOG_PROJECT_TOKEN= VITE_PUBLIC_POSTHOG_HOST= npx vite build --outDir dist-bench
+      - name: Network check (what the throttle sits on)
+        run: |
+          U=https://ia800503.us.archive.org/31/items/gd1989-09-27.145209.s1.aud.flac1644/gd1980-09-27s1t11.mp3
+          for i in 1 2 3; do curl -s -o /dev/null -r $((i*400000))-$((i*400000+1048575)) -w "1MB tls=%{time_appconnect}s ttfb=%{time_starttransfer}s total=%{time_total}s\n" "$U"; done
+      - name: Run
+        run: |
+          set -e
+          n=$(node -e 'console.log(require("./scripts/tapebench/ci-request.json").runs.length)')
+          for i in $(seq 0 $((n-1))); do
+            args=$(node -e '
+              const r = require("./scripts/tapebench/ci-request.json").runs['"$i"'];
+              const a = ["--profile", r.profile, "--workers", String(r.workers ?? 3)];
+              if (r.sample) a.push("--sample", String(r.sample));
+              if (r.ids) a.push("--ids", r.ids);
+              if (!r.build) a.push("--sha", process.env.GITHUB_SHA.slice(0, 7));
+              console.log(a.map((x) => JSON.stringify(x)).join(" "));')
+            note=$(node -e 'console.log(require("./scripts/tapebench/ci-request.json").runs['"$i"'].note || "")')
+            # A run may name an older build: {"build": {"sha": "...", "restore": {"<sha>": ["path", ...]}}}.
+            # It is built in its own worktree and served with --dist; the bench
+            # itself (run.mjs, proxy, shim, corpus) is always this commit's.
+            dist=""
+            bsha=$(node -e 'const b=require("./scripts/tapebench/ci-request.json").runs['"$i"'].build; console.log(b ? b.sha : "")')
+            if [ -n "$bsha" ]; then
+              rm -rf /tmp/build-$i && git worktree add -f /tmp/build-$i "$bsha"
+              node -e 'const b=require("./scripts/tapebench/ci-request.json").runs['"$i"'].build; for (const [from, files] of Object.entries(b.restore || {})) console.log(from + " " + files.join(" "))' | while read from files; do
+                git -C /tmp/build-$i checkout "$from" -- $files
+              done
+              ln -s "$PWD/node_modules" /tmp/build-$i/node_modules
+              (cd /tmp/build-$i && VITE_TAPEBENCH=1 VITE_PUBLIC_POSTHOG_PROJECT_TOKEN= VITE_PUBLIC_POSTHOG_HOST= npx vite build --outDir dist-bench)
+              dist="--dist /tmp/build-$i/dist-bench"
+              args="$args --sha \"build-$bsha\""
+            fi
+            eval node scripts/tapebench/run.mjs $args $dist --note "\"GitHub runner · $note\"" > run-$i.out
+            raw=$(tail -1 run-$i.out)
+            node scripts/tapebench/summarize.mjs "$raw" --no-status | tee -a summary.md
+          done
+          cat summary.md >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tapebench-${{ github.run_number }}
+          path: |
+            scripts/tapebench/reports/*.json
+            scripts/tapebench/reports/raw/*.json
+            summary.md
+          retention-days: 14

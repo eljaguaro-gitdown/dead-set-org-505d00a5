@@ -36,6 +36,11 @@ const { fake } = vi.hoisted(() => {
 });
 
 vi.mock("posthog-js", () => ({ default: fake }));
+// The committed stamp (src/buildInfo.ts) stands in for a missing define, so
+// these cases pin the define alone: an empty stamp. buildShaStamp.test covers
+// the fallback.
+const stamp = vi.hoisted(() => ({ sha: "" }));
+vi.mock("@/buildInfo", () => ({ BUILD_INFO: stamp }));
 
 const SHA = "4172085362a741715a28b7ea63df1323211cb205";
 
@@ -84,5 +89,16 @@ describe("PostHog events carry the build they came from", () => {
   it("says 'unknown' when the build constant is not defined at all", async () => {
     const [pageview] = await landOnSite();
     expect(pageview.properties.build_sha).toBe("unknown");
+  });
+
+  it("reads the committed stamp when the define is unknown — Lovable's git-less build", async () => {
+    vi.stubGlobal("__BUILD_SHA__", "unknown");
+    stamp.sha = SHA;
+    try {
+      const [pageview] = await landOnSite();
+      expect(pageview.properties.build_sha).toBe(SHA);
+    } finally {
+      stamp.sha = "";
+    }
   });
 });

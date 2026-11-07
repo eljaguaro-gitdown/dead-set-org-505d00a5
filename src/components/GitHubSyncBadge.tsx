@@ -2,9 +2,8 @@ import { useEffect, useState } from "react";
 import { CheckCircle2, AlertTriangle, GitBranch, RefreshCw, Loader2 } from "lucide-react";
 import { classifyCompare, type SyncVerdict } from "@/lib/githubSync";
 import { fetchLatestRelease, releaseCoversBuild, type RecordedRelease } from "@/lib/webReleases";
+import { buildSha, buildShaShort } from "@/lib/buildSha";
 
-declare const __BUILD_SHA__: string;
-declare const __BUILD_SHA_SHORT__: string;
 declare const __BUILD_TIME__: string;
 
 const REPO = "eljaguaro-gitdown/dead-set-org-505d00a5";
@@ -40,8 +39,10 @@ const plural = (n: number, noun: string): string =>
   `${n} ${noun}${n === 1 ? "" : "s"}`;
 
 const GitHubSyncBadge = () => {
-  const localSha = typeof __BUILD_SHA__ !== "undefined" ? __BUILD_SHA__ : "unknown";
-  const localShort = typeof __BUILD_SHA_SHORT__ !== "undefined" ? __BUILD_SHA_SHORT__ : "unknown";
+  // The define, or the stamped file when the build could not see git — see
+  // src/lib/buildSha.ts. "unknown" only when neither knows.
+  const localSha = buildSha();
+  const localShort = buildShaShort();
   const buildTime = typeof __BUILD_TIME__ !== "undefined" ? __BUILD_TIME__ : "";
 
   const [remote, setRemote] = useState<RemoteInfo | null>(null);

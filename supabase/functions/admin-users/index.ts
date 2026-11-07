@@ -1,6 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import { POSTHOG_EXTERNAL_TRAFFIC_WHERE, queryPostHog } from "../_shared/posthogQuery.ts";
 import { buildAdminTrafficSql, toAdminTraffic } from "./traffic.ts";
+import { buildTapHealthSql, toTapHealth } from "./taps.ts";
 import { checkAdmin } from "../_shared/requireAdmin.ts";
 
 const corsHeaders = {
@@ -297,11 +298,13 @@ Deno.serve(async (req) => {
     // to come from page_visits, which counted every Lovable preview reload
     // and admin session as a visitor. See traffic.ts. queryPostHog never
     // throws; a failure gives null, which the dashboard shows as "—".
-    const [usersRes, profilesRes, setlistCountsRes, trafficRows] = await Promise.all([
+    const [usersRes, profilesRes, setlistCountsRes, trafficRows, tapRows] = await Promise.all([
       adminClient.auth.admin.listUsers({ perPage: 200 }),
       adminClient.from("profiles").select("user_id, display_name, avatar_url"),
       adminClient.from("setlists").select("creator_id").limit(20000),
       queryPostHog("admin-users traffic", buildAdminTrafficSql(POSTHOG_EXTERNAL_TRAFFIC_WHERE)),
+      // Field tap health (playback sprint). Same filter, same "—" on no answer.
+      queryPostHog("admin-users taps", buildTapHealthSql(POSTHOG_EXTERNAL_TRAFFIC_WHERE)),
     ]);
 
     if (usersRes.error) throw usersRes.error;
@@ -317,6 +320,7 @@ Deno.serve(async (req) => {
     });
 
     const traffic = toAdminTraffic(trafficRows);
+    const taps = toTapHealth(tapRows);
 
     const result = (users || []).map((u: any) => {
       const profile = profileMap.get(u.id);
@@ -335,6 +339,7 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({
       users: result,
       traffic,
+      taps,
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

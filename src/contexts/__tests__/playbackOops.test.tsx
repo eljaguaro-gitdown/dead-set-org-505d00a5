@@ -361,12 +361,14 @@ describe("an answer that comes back after the fan has left the page", () => {
     await waitFor(() => expect(reportCalls()).toHaveLength(1));
     expect(reportCalls()[0][1]).toEqual(expect.objectContaining({ p_notify: false }));
 
+    // The card now waits on Plan B's look for a sure thing (none here), so it
+    // arrives a moment later rather than in the same tick.
     act(() => ctx.reportPlaybackFailure(failure, { from: "/songbook" }));
-    expect(oops()?.kind).toBe("no_tape");
+    await waitFor(() => expect(oops()?.kind).toBe("no_tape"));
     act(() => ctx.dismissPlaybackOops());
-    // A synchronous report, with no await to cross, needs no page at all.
+    // A report with no page named is not held to one.
     act(() => ctx.reportPlaybackFailure(failure));
-    expect(oops()?.kind).toBe("no_tape");
+    await waitFor(() => expect(oops()?.kind).toBe("no_tape"));
   });
 });
 

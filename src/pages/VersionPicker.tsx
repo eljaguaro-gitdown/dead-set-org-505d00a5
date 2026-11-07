@@ -54,6 +54,9 @@ import {
 import { buildGuideSongs } from "@/lib/listeningGuide";
 import TapeHunt from "@/components/TapeHunt";
 import { captureEvent } from "@/lib/posthog";
+import { findNight, prefetchNights } from "@/lib/tapeIndex";
+import NoTapeNote from "@/components/NoTapeNote";
+import { beginTap } from "@/lib/player/tapTelemetry";
 
 /** Which control started the audio — one per play path on this page. */
 type PlayOrigin =
@@ -130,7 +133,7 @@ const VersionPicker = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { playSingle, playSetlist, unlockAudio, playingSlot, reportPlaybackFailure, playbackOops } = useAudioPlayer();
+  const { playSingle, playSetlist, unlockAudio, playingSlot, reportPlaybackFailure, playbackOops, startPlanB } = useAudioPlayer();
   // The fallback tape can still fail AFTER the toast, inside the player — the
   // song is not on it, or it will not spin. The card says so then, and the
   // toast promising "the next best thing" must not sit on top of it, both
@@ -379,7 +382,7 @@ const VersionPicker = () => {
       const found = await Promise.all(
         Array.from(new Set(needed)).map(async (d) => {
           try {
-            const tape = await findRecordingForDate(song.title, d);
+            const tape = await findNight(song.title, d, song.id);
             return [d, tape as MilestoneTape | null] as const;
           } catch {
             unchecked.add(d);
@@ -410,6 +413,16 @@ const VersionPicker = () => {
   const cutoff = sleeperCutoff(versions);
   const theSleepers = useMemo(() => sleeperList(versions), [versions]);
   const shown = sleepersOnly ? theSleepers : versions;
+  // Warm the tape index for every night on screen: the tap that follows reads
+  // from memory, and a night with no tape is marked before anyone taps it.
+  useEffect(() => {
+    if (!song) return;
+    prefetchNights([
+      ...versions.map((v) => ({ songId: song.id, showDate: v.show_date })),
+      { songId: song.id, showDate: song.first_played },
+      { songId: song.id, showDate: song.last_played },
+    ]);
+  }, [song, versions]);
   const source = versions.find((v) => v.source_url);
   /** Highest-voted night — the fallback when the debut has no tape. */
   const topVersion = versions[0] ?? null;
@@ -466,6 +479,8 @@ const VersionPicker = () => {
       return;
     }
     unlockAudio();
+    // Clock from the finger: the night may still need looking up.
+    beginTap("version_picker", { songId: song.id, title: song.title, showDate: song.first_played, hasPrecomputed: !!ftp?.directTrackUrl });
     setHeroResolving(true);
     try {
       // Keep the whole recording, not just its address. findRecordingForDate
@@ -477,7 +492,7 @@ const VersionPicker = () => {
         (ftp?.archiveUrl
           ? { url: ftp.archiveUrl, directTrackUrl: ftp.directTrackUrl ?? null }
           : null) ??
-        (await findRecordingForDate(song.title, song.first_played));
+        (await findNight(song.title, song.first_played, song.id));
       const url = tape?.url ?? null;
       if (url) {
         playSingle({
@@ -497,6 +512,7 @@ const VersionPicker = () => {
           position: 0,
           segueToNext: false,
           directTrackUrl: tape?.directTrackUrl ?? null,
+          streamUrl: (tape as { streamUrl?: string | null } | null)?.streamUrl ?? null,
         } as PlayableSlot);
         captureEvent("version_picker_played_debut", { song_id: song.id, song_title: song.title });
         capturePlayed("hero_debut", true);
@@ -516,7 +532,11 @@ const VersionPicker = () => {
     } catch {
       // Could not ask the Archive. Say that, not "no tape circulates" — the
       // whole point of the resolver throwing is that the two are different.
-      toast.error("Couldn't reach the Archive — try again");
+      // Could not ask the Archive: music from a tape we know plays, if there
+      // is one; the honest toast if not.
+      void startPlanB({ songId: song.id, songTitle: song.title, showDate: song.first_played ?? null }).then((ok) => {
+        if (!ok) toast.error("Couldn't reach the Archive — try again");
+      });
     } finally {
       setHeroResolving(false);
     }
@@ -566,6 +586,7 @@ const VersionPicker = () => {
   const playMilestone = (m: MilestoneEntry) => {
     if (!song || !m.archiveUrl) return;
     unlockAudio();
+    beginTap("version_picker", { songId: song.id, title: song.title, showDate: m.date, hasPrecomputed: !!m.directTrackUrl });
     playSingle({
       id: `picker-${song.id}-${m.kind}`,
       song: { id: song.id, title: song.title },
@@ -599,8 +620,10 @@ const VersionPicker = () => {
   ): Promise<boolean> => {
     if (!song || !v.show_date) return false;
     unlockAudio();
+    beginTap("version_picker", { songId: song.id, title: song.title, showDate: v.show_date, hasPrecomputed: false });
     let url = v.archive_org_url;
     let directTrackUrl: string | null = null;
+    let streamUrl: string | null = null;
     if (!url) {
       // setResolving(null) used to sit after the await, so a rejection skipped
       // it: the button stayed disabled under "Looking for the tape…" forever,
@@ -609,9 +632,13 @@ const VersionPicker = () => {
       setResolving(v.id);
       let tape: Awaited<ReturnType<typeof findRecordingForDate>> = null;
       try {
-        tape = await findRecordingForDate(song.title, v.show_date);
+        tape = await findNight(song.title, v.show_date, song.id);
       } catch {
-        toast.error("Couldn't reach the Archive — try again");
+        // Could not ask the Archive: music from a tape of this song we know
+        // plays, if there is one; the honest toast if not.
+        void startPlanB({ songId: song.id, songTitle: song.title, showDate: v.show_date }).then((ok) => {
+          if (!ok) toast.error("Couldn't reach the Archive — try again");
+        });
         return false;
       } finally {
         setResolving(null);
@@ -622,6 +649,7 @@ const VersionPicker = () => {
       }
       url = tape.url;
       directTrackUrl = tape.directTrackUrl ?? null;
+      streamUrl = tape.streamUrl ?? null;
     }
     playSingle({
       id: `picker-${song.id}-${v.id}`,
@@ -643,6 +671,7 @@ const VersionPicker = () => {
       position: 0,
       segueToNext: false,
       directTrackUrl,
+      streamUrl,
     } as PlayableSlot);
     capturePlayed(origin, false);
     return true;
@@ -668,6 +697,7 @@ const VersionPicker = () => {
   const playAllInner = async () => {
     if (!song) return;
     unlockAudio();
+    beginTap("version_picker", { songId: song.id, title: song.title, showDate: null, hasPrecomputed: false });
     const withTape = shown.filter((v) => v.archive_org_url && v.show_date);
     if (withTape.length === 0) {
       toast.info("Nothing here has a tape attached yet — play one to go find it");
@@ -1267,6 +1297,7 @@ const VersionPicker = () => {
                           {v.venue}{v.city ? ` · ${v.city}` : ""}
                         </p>
                       )}
+                      <NoTapeNote songId={song.id} showDate={v.show_date} className="mt-1.5" />
                     </div>
                     <button
                       type="button"

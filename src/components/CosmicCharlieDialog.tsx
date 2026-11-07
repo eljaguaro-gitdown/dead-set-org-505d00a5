@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect, useMemo } from "react";
 import { Star, Wand2, Search, Disc3, Play, X } from "lucide-react";
 import { useAudioPlayer, type PlayableSlot } from "@/contexts/AudioPlayerContext";
+import { findNight } from "@/lib/tapeIndex";
+import { beginTap } from "@/lib/player/tapTelemetry";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -387,7 +389,7 @@ const CosmicCharlieDialog = ({
       const found = await Promise.all(
         Array.from(new Set(needed)).map(async (d) => {
           try {
-            const tape = await findRecordingForDate(exploreResult.songTitle, d);
+            const tape = await findNight(exploreResult.songTitle, d, selectedSong?.id);
             return [d, tape as MilestoneTape | null] as const;
           } catch {
             unchecked.add(d);
@@ -1050,6 +1052,7 @@ const CosmicCharlieDialog = ({
                               // Charlie's picks name a night, never a track.
                               directTrackUrl: null,
                             };
+                            beginTap("charlie", { songId: selectedSong?.id ?? null, title: exploreResult?.songTitle ?? null, showDate: v.showDate ?? null, hasPrecomputed: false });
                             playSingle(slot);
                           }}
                         >

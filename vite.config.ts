@@ -4,6 +4,7 @@ import path from "path";
 import fs from "fs";
 import { execSync } from "child_process";
 import { componentTagger } from "lovable-tagger";
+import { parseBuildInfo, resolveBuildSha } from "./scripts/build-sha/resolve.mjs";
 
 function safeExec(cmd: string): string {
   try {
@@ -52,8 +53,25 @@ function readGitSha(): string {
   return "";
 }
 
-const BUILD_SHA =
-  process.env.VITE_BUILD_SHA || safeExec("git rev-parse HEAD") || readGitSha() || "unknown";
+// Precedence lives in scripts/build-sha/resolve.mjs (tested). In short: an
+// explicit VITE_BUILD_SHA, then git — reading THROUGH a "chore: stamp build"
+// commit to the code commit it stamps — then the committed src/buildInfo.ts,
+// which is what Lovable's git-less publish build reads. The same code reports
+// the same sha from every builder.
+const stampedSha = (() => {
+  try {
+    return parseBuildInfo(fs.readFileSync(path.resolve(__dirname, "src/buildInfo.ts"), "utf8"));
+  } catch {
+    return "";
+  }
+})();
+const BUILD_SHA = resolveBuildSha({
+  env: process.env.VITE_BUILD_SHA,
+  gitHead: safeExec("git rev-parse HEAD") || readGitSha(),
+  gitHeadSubject: safeExec("git log -1 --format=%s"),
+  gitParent: safeExec("git rev-parse HEAD^"),
+  stamped: stampedSha,
+});
 const BUILD_SHA_SHORT = BUILD_SHA.slice(0, 7);
 const BUILD_TIME =
   process.env.VITE_BUILD_TIME ||
