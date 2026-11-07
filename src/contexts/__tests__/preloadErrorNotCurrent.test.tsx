@@ -23,7 +23,7 @@ vi.mock("gapless", () => {
 });
 vi.mock("@/lib/playEventTracker", () => ({ startPlayEvent: vi.fn(async () => undefined), finalizePlayEvent: vi.fn(async () => undefined), pausePlayEvent: vi.fn(), resumePlayEvent: vi.fn(), setPlayEventTrackDuration: vi.fn() }));
 vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn(), info: vi.fn() } }));
-const rpc = vi.hoisted(() => vi.fn(async () => ({ data: null, error: null })));
+const rpc = vi.hoisted(() => vi.fn(async (_fn: string, _args?: unknown) => ({ data: null, error: null })));
 vi.mock("@/integrations/supabase/client", () => ({
   supabase: {
     rpc,

@@ -82,7 +82,22 @@ export { matchScore, normalize };
  * (defined as !directTrackUrl) true forever. The player now has a watchdog,
  * but failing fast at the source is better than being rescued at 25s.
  */
-const ARCHIVE_TIMEOUT_MS = 12_000;
+/**
+ * Per request, to the headers. Was 12 s; with a retry and a `.flacNN`
+ * variant behind it, one lookup could run ~37 s before giving an answer
+ * (the CLAUDE.md correction on summing serial legs). A healthy Archive
+ * answers a metadata or search request in well under a second, so 4 s is a
+ * wide margin for a slow phone and a short wait for a dead mirror. Raise it
+ * only with bench evidence (docs/playback-sprint).
+ */
+export const ARCHIVE_TIMEOUT_MS = 4_000;
+/**
+ * The whole of one night's lookup — search plus every candidate's metadata.
+ * Past it, whatever has not answered is "could not ask", never "no tape".
+ */
+export const NIGHT_BUDGET_MS = 8_000;
+/** Candidate tapes of a night read at once. Ranked order is kept: the best-ranked match still wins. */
+const CANDIDATE_CONCURRENCY = 3;
 
 async function fetchArchive(url: string): Promise<Response> {
   const controller = new AbortController();
@@ -123,38 +138,52 @@ async function fetchMetadataWithFallback(
   if (/\.flac\d*$/i.test(identifier)) {
     variants.push(identifier.replace(/\.flac\d*$/i, ""));
   }
-  // Sticky across variants: if ANY attempt failed to complete, we never got a
-  // clean answer about this item, whatever a later variant returned.
+  // Asked AT ONCE, not one after the other: the second variant used to wait
+  // out the first one's timeout and retry before it was even tried. The
+  // first variant still wins whenever it has files — the same preference as
+  // before, without the wait.
+  const settled = await rankedBatch(
+    variants.map((id) => readVariant(id).then((r) => ({ hit: r.kind === "read" ? r : null, r }))),
+    RANK_GRACE_MS,
+  );
+  for (const x of settled) if (x?.hit) return x.r;
+  // Sticky across variants: if ANY attempt failed to complete — or never
+  // answered at all — we never got a clean answer about this item.
+  return {
+    kind: "failed",
+    unreachable: settled.some((x) => !x || (x.r.kind === "failed" && x.r.unreachable)),
+  };
+}
+
+async function readVariant(id: string): Promise<MetadataResult> {
   let unreachable = false;
-  for (const id of variants) {
-    // One retry for transient archive.org failures (504/503 are common).
-    for (let attempt = 0; attempt < 2; attempt++) {
-      try {
-        const res = await fetchArchive(`https://archive.org/metadata/${id}`);
-        if (!res.ok) {
-          if (res.status >= 500 || res.status === 429) {
-            // A server failure is not an answer about the music, even after
-            // the retry is spent.
-            unreachable = true;
-            if (attempt === 0) {
-              await new Promise((r) => setTimeout(r, 600));
-              continue;
-            }
+  // One retry for transient archive.org failures (504/503 are common).
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const res = await fetchArchive(`https://archive.org/metadata/${id}`);
+      if (!res.ok) {
+        if (res.status >= 500 || res.status === 429) {
+          // A server failure is not an answer about the music, even after
+          // the retry is spent.
+          unreachable = true;
+          if (attempt === 0) {
+            await new Promise((r) => setTimeout(r, 600));
+            continue;
           }
-          break;
-        }
-        const meta = await res.json();
-        const files = meta.files || [];
-        if (files.length > 0) {
-          return { kind: "read", files, resolvedId: id, restricted: isRestrictedItem(meta) };
         }
         break;
-      } catch {
-        unreachable = true;
-        if (attempt === 0) {
-          await new Promise((r) => setTimeout(r, 600));
-          continue;
-        }
+      }
+      const meta = await readJsonWithin(res);
+      const files = meta.files || [];
+      if (files.length > 0) {
+        return { kind: "read", files, resolvedId: id, restricted: isRestrictedItem(meta) };
+      }
+      break;
+    } catch {
+      unreachable = true;
+      if (attempt === 0) {
+        await new Promise((r) => setTimeout(r, 600));
+        continue;
       }
     }
   }
@@ -378,33 +407,102 @@ export class ArchiveUnreachable extends Error {
  * accepted it — the same two-copies divergence this function's own docstring
  * warns about, one level down.
  */
+/**
+ * How long a lower-ranked hit waits for a higher-ranked tape that has not
+ * answered. Rank still wins whenever the better tape answers in time; past
+ * this, a tape of the right night that IS answering beats waiting out a slow
+ * mirror's full timeout.
+ */
+export const RANK_GRACE_MS = 1_200;
+
+/**
+ * Settle a batch of ranked lookups. Returns as soon as the best-ranked hit is
+ * known to be best (everything ranked above it has answered without one), or
+ * once a hit exists and `graceMs` has passed. Unsettled slots come back as
+ * undefined: not answered, so not evidence of anything.
+ */
+export async function rankedBatch<T extends { hit: unknown }>(
+  lookups: Array<Promise<T>>,
+  graceMs: number,
+): Promise<Array<T | undefined>> {
+  const results: Array<T | undefined> = lookups.map(() => undefined);
+  const settled = lookups.map(() => false);
+  return new Promise((resolve) => {
+    let graceUp = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    let done = false;
+    const finish = () => {
+      if (done) return;
+      done = true;
+      if (timer) clearTimeout(timer);
+      resolve(results.slice());
+    };
+    const evaluate = () => {
+      if (settled.every(Boolean)) return finish();
+      for (let i = 0; i < results.length; i++) {
+        if (!settled[i]) {
+          // A higher-ranked tape is still out. Only the grace lets a later hit through.
+          if (graceUp && results.some((r) => r?.hit)) return finish();
+          return;
+        }
+        if (results[i]?.hit) return finish(); // everything above it answered: it is the best
+      }
+    };
+    timer = setTimeout(() => {
+      graceUp = true;
+      evaluate();
+    }, graceMs);
+    lookups.forEach((p, i) =>
+      p.then(
+        (r) => { results[i] = r; settled[i] = true; evaluate(); },
+        () => { settled[i] = true; evaluate(); },
+      ),
+    );
+  });
+}
+
 async function pickRecordingWithTrack(
   docs: ArchiveSearchDoc[],
   songTitle: string,
+  deadline = Date.now() + NIGHT_BUDGET_MS,
 ): Promise<ArchiveResult | null> {
   let unreachable = 0;
-  for (const doc of docs) {
+  const check = async (doc: ArchiveSearchDoc): Promise<{ hit: ArchiveResult | null; unreachable: boolean }> => {
     const identifier = doc.identifier;
     try {
       const metaRes = await fetchArchive(`https://archive.org/metadata/${identifier}`);
-      if (!metaRes.ok) {
-        unreachable++;
-        continue;
-      }
-      const meta = await metaRes.json();
+      if (!metaRes.ok) return { hit: null, unreachable: true };
+      const meta = await readJsonWithin(metaRes);
       const best = findBestTrack(meta.files || [], songTitle, {
         restricted: isRestrictedItem(meta),
       });
-      if (best) {
-        return {
+      if (!best) return { hit: null, unreachable: false };
+      return {
+        hit: {
           url: `https://archive.org/details/${identifier}`,
           date: doc.date ? doc.date.split("T")[0] : null,
           venue: doc.venue || meta.metadata?.venue || meta.metadata?.coverage || null,
           directTrackUrl: `https://archive.org/download/${identifier}/${encodeURIComponent(best.file.name)}`,
-        };
-      }
+        },
+        unreachable: false,
+      };
     } catch {
-      unreachable++;
+      return { hit: null, unreachable: true };
+    }
+  };
+  // A few at a time, in ranked order. Within a batch the best-ranked match
+  // wins, so the answer is the one the old one-by-one walk gave — it just
+  // stops waiting on a slow tape before asking the next.
+  for (let i = 0; i < docs.length; i += CANDIDATE_CONCURRENCY) {
+    if (Date.now() >= deadline) {
+      // Out of time with tapes unread: we did not learn they lack the song.
+      unreachable += docs.length - i;
+      break;
+    }
+    const batch = await rankedBatch(docs.slice(i, i + CANDIDATE_CONCURRENCY).map(check), RANK_GRACE_MS);
+    for (const r of batch) {
+      if (r?.hit) return r.hit;
+      if (!r || r.unreachable) unreachable++;
     }
   }
   if (unreachable > 0) throw new ArchiveUnreachable(unreachable);
