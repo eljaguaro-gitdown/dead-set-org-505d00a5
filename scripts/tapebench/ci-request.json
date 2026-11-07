@@ -1,7 +1,7 @@
 {
   "why": "Request a TapeBench run on a GitHub runner by editing this file and pushing (see .github/workflows/tapebench.yml).",
   "runs": [
-    { "profile": "webkit-iphone", "sample": 60, "workers": 2, "note": "60-tap sample after ack/blessing/settle fixes" },
-    { "profile": "chromium-desktop", "sample": 60, "workers": 2, "note": "60-tap sample after ack/blessing/settle fixes" }
+    { "profile": "webkit-iphone", "sample": 60, "workers": 2, "note": "60-tap sample: poster prefetch, Plan B at 7.6 s, shim activation, proxy drain" },
+    { "profile": "chromium-iphone", "sample": 60, "workers": 2, "note": "60-tap sample: first chromium-iphone run" }
   ]
 }

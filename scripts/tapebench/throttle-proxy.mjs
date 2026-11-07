@@ -40,6 +40,7 @@ export function startThrottleProxy({ rttMs = 170, downMbps = 9, upMbps = 1.5, up
     const queue = [];
     let timer = null;
     let lastAt = 0;
+    let ending = false;
     const pump = () => {
       timer = null;
       const now = Date.now();
@@ -48,8 +49,9 @@ export function startThrottleProxy({ rttMs = 170, downMbps = 9, upMbps = 1.5, up
         if (!dst.destroyed) dst.write(chunk);
       }
       if (queue.length) timer = setTimeout(pump, Math.max(1, queue[0].at - now));
+      else if (ending && !dst.destroyed) dst.end();
     };
-    return (chunk) => {
+    const send = (chunk) => {
       const now = Date.now();
       const arrive = now + half;
       const cost = mbps > 0 ? (chunk.length * 8) / (mbps * 1000) : 0; // ms on the wire
@@ -61,6 +63,21 @@ export function startThrottleProxy({ rttMs = 170, downMbps = 9, upMbps = 1.5, up
       queue.push({ at, chunk });
       if (!timer) timer = setTimeout(pump, Math.max(0, queue[0].at - now));
     };
+    /**
+     * The far side closed: close this side once everything queued has been
+     * delivered. The first version destroyed the socket half an RTT after the
+     * close, while seconds of throttled bytes were still queued, so a response
+     * the Archive had finished sending arrived truncated ("Connection
+     * terminated unexpectedly") and the player failed over mid-song.
+     */
+    send.end = () => {
+      ending = true;
+      if (!timer && queue.length === 0 && !dst.destroyed) {
+        const lag = Math.max(0, lastAt - Date.now(), half);
+        setTimeout(() => { if (!dst.destroyed) dst.end(); }, lag);
+      }
+    };
+    return send;
   };
 
   const server = net.createServer((client) => {
@@ -101,13 +118,18 @@ export function startThrottleProxy({ rttMs = 170, downMbps = 9, upMbps = 1.5, up
           if (rest.length) toUp(rest);
           upSock.on("data", toClient);
           client.on("data", toUp);
+          // Half-close in order, after the queued bytes (see send.end).
+          upSock.on("end", () => toClient.end());
+          client.on("end", () => toUp.end());
         }, rttMs);
       };
       if (up) upSock.on("data", onUp);
       const kill = () => { client.destroy(); upSock.destroy(); };
       upSock.on("error", kill); client.on("error", kill);
-      upSock.on("close", () => setTimeout(() => client.destroy(), half + 5));
-      client.on("close", () => setTimeout(() => upSock.destroy(), half + 5));
+      // A close with no clean end (a reset) still tears the pair down; a clean
+      // end is handled above and waits for the queue.
+      upSock.on("close", (hadError) => { if (hadError) client.destroy(); });
+      client.on("close", (hadError) => { if (hadError) upSock.destroy(); });
     };
     client.on("data", onData);
     client.on("error", () => client.destroy());
