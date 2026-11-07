@@ -48,6 +48,47 @@ The first two tape-index migrations are already applied.
 
 **Also fixed in passing:** `stamp-build-sha.yml` was invalid YAML (`'chore: stamp build'` unquoted inside `${{ }}`). It had never run, and on main it would never have stamped. It is quoted now, and `workflowsParse.test.ts` parses every workflow.
 
+## Released 2026-11-07 — before / after
+
+**Live state:**
+- dead-set.org serves `8d646f1` (code `6ac7add`, merge of PR #148). The `web_releases` row was written 03:27:50Z.
+- PostHog events carry `build_sha` `8d646f1` from 04:08Z. The previous publish reported "unknown".
+- Edge functions (26) are deployed. `index-tapes` was probed live: bad key → 400, refresh without the internal header → 401, named-recording cooldown → `cached`.
+- Migration `20261107020000` is applied, with its constraint and function ACL verified.
+
+**Bench**, same GitHub runner, same seeded 60 taps, iOS autoplay rule emulated, Fast-4G throttle:
+- **Before:** run 42329920045, pre-sprint player (c5fbc3b with the 0383bf5 engine).
+- **After:** run 42335588642, build 941532b (published main plus the bench fix).
+
+The two ran about 45 min apart. The network floor (a bare `<audio>` on the same track) differs between them and is shown, because play success and time-to-sound depend on it. Acknowledgment, blocked plays and Plan B do not.
+
+| | WebKit iPhone before | WebKit iPhone after | Chromium iPhone before | Chromium iPhone after |
+|---|---|---|---|---|
+| Played (night has a tape, ≤ 15 s) | 3/52 (5.8%) | 23/52 (44.2%) | 7/52 (13.5%) | **52/52 (100%)** |
+| Tap-to-sound p50 / p90 (strict) | ∞ / ∞ | ∞ / ∞ | ∞ / ∞ | 1.62 s / 6.18 s |
+| Acknowledged ≤ 300 ms | 0/59 (p50 1.35 s) | **59/59 (p50 28 ms)** | 0/59 (p50 1.69 s) | **59/59 (p50 3 ms)** |
+| Silent wait > 8 s | 15 | 1 | 5 | **0** |
+| Autoplay blocked | 42 | **0** | 45 | **0** |
+| No-tape nights given a sure thing | 0/6 | 5/6 | 0/6 | **6/6** |
+| Floor p50 / p90 (network + browser, no app) | 10.94 / 14.16 s | 7.66 / 13.19 s | 9.28 / 12.70 s | 2.35 / 3.60 s |
+
+**Exit target:** not met. It needs two full-corpus runs at least 2 h apart.
+- **Chromium iPhone:** passes play success, acknowledgment, silent waits, blocked and Plan B. It misses p50 (1.62 s against 1.5) and p90 (6.18 s against 3.0); the floor's own p90 is 3.6 s.
+- **WebKit iPhone:** passes acknowledgment and blocked. It misses play success (44%; WebKitGTK's floor reaches 13 s at p90, and 29 taps hit the 7.6 s ceiling), silent waits (1), Plan B (5/6), and the app's share (p50 1.06 s, p90 4.14 s, against 300 ms and 1.0 s).
+- **Field gate:** real iPhones, ≥ 100 taps in 7 days. Collecting from now on the admin card.
+
+**Field, 30 days before release:**
+- 59 plays started by 17 fans.
+- 7 autoplay blocks (3 fans).
+- 10 oops cards (1 fan), 1 audio error.
+- `playback_issues`: 1 open, 1 verified, 6 wont_fix.
+
+**Bench bugs found today**, each of which had been grading the instrument rather than the app:
+1. Per-chunk timers reordered TLS records.
+2. Tunnels were closed before their queues drained.
+3. Runs overlapped.
+4. A leftover preview server made run 42329920045's AFTER half re-measure the BEFORE build. Fixed in `941532b`; that half was discarded and re-run.
+
 ## Runs
 
 Sandbox runs below the baseline are for diagnosis; the deciding runs are the runner's.
