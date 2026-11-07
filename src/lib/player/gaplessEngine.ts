@@ -55,6 +55,14 @@ export interface EngineCallbacks {
    * call per tick — the receiver settles once and returns.
    */
   onSound?: (slotId: string | null) => void;
+  /** A queued track that is not playing failed to load ahead of time. Not the current track's failure. */
+  onPreloadError?: (slotId: string | null, error: Error) => void;
+}
+
+/** "HTML5 audio error on track 3 (code 4): …" → 3. Null when the error names no track (a play() rejection). */
+export function errorTrackIndex(error: unknown): number | null {
+  const m = /\bon track (\d+)\b/.exec(String((error as Error)?.message ?? error));
+  return m ? Number(m[1]) : null;
 }
 
 const PROGRESS_NOTIFY_INTERVAL_MS = 250;
@@ -296,7 +304,9 @@ export class GaplessEngine {
     const gen = this.generation;
     const mod = await import("gapless");
     const Queue = mod.Queue ?? mod.default;
-    return new Queue({
+    // eslint-disable-next-line prefer-const
+    let queue: GaplessQueue;
+    queue = new Queue({
       playbackMethod: "HYBRID",
       preloadNumTracks: 2,
       // iOS (Safari, home-screen PWA, and the Capacitor shell alike)
@@ -323,6 +333,23 @@ export class GaplessEngine {
           audioDebug.log("gapless", "error from a replaced queue ignored", { error: String(error) }, "warn");
           return;
         }
+        // gapless names the track an element error came from. One that is
+        // NOT the current track is a PRELOAD failing — the next song's
+        // address, fetched ahead. It used to be reported as the current
+        // track dying: the context failed over a song that was playing fine,
+        // restarted it from another server, and on 2026-11-06 filed
+        // "Help on the Way won't play" 34 s into a Help on the Way that was
+        // playing (the preload was Slipknot!). The preloaded track is not
+        // lost: when the queue reaches it, it is loaded again and its own
+        // failure, if it still fails, is reported then, as the current track.
+        const failedIndex = errorTrackIndex(error);
+        const current = queue.currentTrackIndex;
+        if (failedIndex !== null && failedIndex !== current) {
+          audioDebug.log("gapless", "preload error for a track that is not playing — not the current track's failure",
+            { error: String(error), failedIndex, current }, "warn");
+          this.callbacks.onPreloadError?.(this.slotIds[failedIndex] ?? null, error);
+          return;
+        }
         this.callbacks.onError(error);
       },
       onPlayBlocked: () => {
@@ -333,6 +360,7 @@ export class GaplessEngine {
         ? { onDebug: (msg: string) => audioDebug.log("gapless", msg) }
         : {}),
     });
+    return queue;
   }
 
   private handleStartNewTrack(info: TrackInfo): void {

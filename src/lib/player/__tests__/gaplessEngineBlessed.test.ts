@@ -75,3 +75,16 @@ describe("GaplessEngine plays through elements started in the tap", () => {
     expect(started).not.toContain(built[0]);
   });
 });
+
+import { errorTrackIndex } from "@/lib/player/gaplessEngine";
+
+describe("errorTrackIndex", () => {
+  it("reads the failing track from gapless's element error", () => {
+    expect(errorTrackIndex(new Error("HTML5 audio error on track 3 (code 4): MEDIA_ERR_SRC_NOT_SUPPORTED"))).toBe(3);
+    expect(errorTrackIndex(new Error("HTML5 audio error on track 0 (code 2): network"))).toBe(0);
+  });
+  it("is null for an error that names no track — a play() rejection is about the current one", () => {
+    expect(errorTrackIndex(new DOMException("The operation is not supported.", "NotSupportedError"))).toBeNull();
+    expect(errorTrackIndex("boom")).toBeNull();
+  });
+});

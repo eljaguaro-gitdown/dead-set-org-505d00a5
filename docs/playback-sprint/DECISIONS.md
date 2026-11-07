@@ -76,3 +76,57 @@ check on it (`play_failed` with `stage: "gesture"`).
 
 **What would reverse it.** A real-device run (owner's phone, `?debug=audio`) that disagrees with
 the shim, or field `play_failed stage=gesture` staying above 0 after the fix ships.
+
+## 2026-11-07 — Owner approvals received
+
+The owner approved three things in writing in the session on 2026-11-07:
+
+1. **Apply the tape-index migrations to production before the gate.** Done the same day:
+   `20261107010000_tape_index.sql` and `20261107011000_tape_index_refresh.sql`, applied through
+   Lovable `query_database`. Checked after applying: anon can SELECT and cannot INSERT on
+   `tape_index`, authenticated cannot DELETE, anon cannot EXECUTE `tape_index_candidates`, and the
+   `tape-index-refresh` cron job exists. It calls `index-tapes`, which does not exist until the
+   function is deployed, so its calls fail harmlessly until then.
+2. **Ask the Lovable agent to deploy edge functions once the gate passes**, including `index-tapes`.
+3. **Iterate on a ~120-tap sample** and spend the full 335-tap corpus only on the two runs that
+   decide the exit target.
+
+## 2026-11-07 — One PR, not one per workstream
+
+**Decision.** The brief asks for one PR per workstream. This session may push only to
+`claude/dead-set-playback-sprint-k87tl2`, so the work ships as one PR. Its commits are grouped by
+workstream: attribution, telemetry, iOS gesture, tape index, fail-fast, card, Plan B.
+**Reverse it:** if the owner allows more branches, split the commits into separate PRs.
+
+## 2026-11-07 — Legacy AudioPlayer is out of the iOS gesture fix
+
+**Decision.** The blessed-element pool covers `GaplessEngine` (every iOS Safari since 14.1 has Web
+Audio, so it selects gapless) and the hero/spotlight unlock. It does not cover the legacy
+`AudioPlayer`. Its `<audio>` is React-rendered after the slot resolves, so adopting a pooled element
+means swapping a node React owns. Legacy is reached only through `localStorage.player_engine =
+"legacy"` or a browser with no Web Audio. **Reverse it:** field `play_failed stage=gesture` with
+`engine: legacy`.
+
+## 2026-11-07 — Index hits stream from the item's own server
+
+**Decision.** When the tape index knows a track's item servers, the engine streams from
+`servers[0]` and skips the `/download/` redirect, which saves one round trip per tap. If that
+fails, it tries the item's other servers, then the redirect. The `/download/` url stays the
+track's identity (reports, verified tapes, failover keys). Previously the redirect was always
+tried first, "because a mirror the Archive routes around is its decision to make". The sprint brief
+asks for this change. PR #138 had already found the redirect's mirror broken while the item's
+servers were healthy. **Reverse it:** field `audio_failover` events concentrated on
+`ia*.us.archive.org` first-attempt streams.
+
+## 2026-11-07 — A failing PRELOAD is not the playing track failing (Help on the Way lead)
+
+**Finding.** `gapless` names the track an element error came from ("HTML5 audio error on track N").
+The engine passed every error on as the current track's. On 2026-11-06 a fan's Help on the Way 1977-06-09
+played for 34 s, then was failed over and filed `wont_play`, and the queue moved to Slipknot!.
+That fits a preload of track N+1 failing on a broken mirror. The probe finds the Help on the Way
+track today (`resolver_found_tape`), so the tape itself is fine.
+
+**Decision.** `GaplessEngine` reports an error for a track other than `currentTrackIndex` as
+`onPreloadError`, not `onError`. The preloaded track is loaded again when the queue reaches it, and
+a real failure then is reported as the current track's. **Reverse it:** a test or field trace where
+a preload failure was the only signal of a dead current track.
