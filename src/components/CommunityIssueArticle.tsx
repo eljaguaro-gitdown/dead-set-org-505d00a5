@@ -1,3 +1,5 @@
+import NoTapeNote from "@/components/NoTapeNote";
+import { prefetchNights } from "@/lib/tapeIndex";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, Play, Loader2 } from "lucide-react";
@@ -81,6 +83,11 @@ const CommunityIssueArticle = ({ issue }: { issue: CommunityIssue }) => {
   const playQueue = useMemo(() => communityPlaylist(issue), [issue]);
   /** Derived from the picks, never written for them — see communityFindings. */
   const findings = useMemo(() => communityFindings(issue), [issue]);
+
+  // Warm the tape index for the issue's nights (see VersionPicker).
+  useEffect(() => {
+    prefetchNights(issue.nights.map((n) => ({ songId: issue.songId, showDate: n.showDate })));
+  }, [issue]);
 
   const playAll = async () => {
     if (cueing) return;
@@ -367,6 +374,7 @@ const CommunityIssueArticle = ({ issue }: { issue: CommunityIssue }) => {
                         {night.venue}
                       </span>
                     )}
+                    <NoTapeNote songId={issue.songId} showDate={night.showDate} />
                   </span>
                 </button>
                 {night.note && (

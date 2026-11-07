@@ -54,7 +54,8 @@ import {
 import { buildGuideSongs } from "@/lib/listeningGuide";
 import TapeHunt from "@/components/TapeHunt";
 import { captureEvent } from "@/lib/posthog";
-import { findNight } from "@/lib/tapeIndex";
+import { findNight, prefetchNights } from "@/lib/tapeIndex";
+import NoTapeNote from "@/components/NoTapeNote";
 import { beginTap } from "@/lib/player/tapTelemetry";
 
 /** Which control started the audio — one per play path on this page. */
@@ -412,6 +413,16 @@ const VersionPicker = () => {
   const cutoff = sleeperCutoff(versions);
   const theSleepers = useMemo(() => sleeperList(versions), [versions]);
   const shown = sleepersOnly ? theSleepers : versions;
+  // Warm the tape index for every night on screen: the tap that follows reads
+  // from memory, and a night with no tape is marked before anyone taps it.
+  useEffect(() => {
+    if (!song) return;
+    prefetchNights([
+      ...versions.map((v) => ({ songId: song.id, showDate: v.show_date })),
+      { songId: song.id, showDate: song.first_played },
+      { songId: song.id, showDate: song.last_played },
+    ]);
+  }, [song, versions]);
   const source = versions.find((v) => v.source_url);
   /** Highest-voted night — the fallback when the debut has no tape. */
   const topVersion = versions[0] ?? null;
@@ -1286,6 +1297,7 @@ const VersionPicker = () => {
                           {v.venue}{v.city ? ` · ${v.city}` : ""}
                         </p>
                       )}
+                      <NoTapeNote songId={song.id} showDate={v.show_date} className="mt-1.5" />
                     </div>
                     <button
                       type="button"

@@ -48,6 +48,13 @@ const db = supabase as unknown as { from: (t: string) => any };
 const nightCache = new Map<string, Promise<IndexRow[] | null>>();
 const songDefaultCache = new Map<string, Promise<IndexRow | null>>();
 const asked = new Set<string>();
+/** Answers already in hand, for the screen to read synchronously. */
+const settledNights = new Map<string, IndexRow[] | null>();
+const nightListeners = new Set<() => void>();
+const remember = (k: string, rows: IndexRow[] | null) => {
+  settledNights.set(k, rows);
+  nightListeners.forEach((l) => { try { l(); } catch { /* */ } });
+};
 
 const keyOf = (songId: string, day: string) => `${songId}@${day}`;
 const withBudget = <T,>(p: PromiseLike<T>, fallback: T, ms = INDEX_BUDGET_MS): Promise<T> =>
@@ -72,6 +79,7 @@ export function readNight(songId: string, showDate: string): Promise<IndexRow[] 
     null,
   ).then((rows) => {
     if (rows === null) nightCache.delete(k); // a failed read is not remembered
+    else remember(k, rows);
     return rows;
   });
   nightCache.set(k, p);
@@ -101,7 +109,9 @@ export function prefetchNights(keys: Array<{ songId: string; showDate: string | 
     const key = keyOf(k.songId, k.day);
     const p = batch.then((rows) => {
       if (rows === null) { nightCache.delete(key); return null; }
-      return rows.filter((r) => r.song_id === k.songId && r.show_date.slice(0, 10) === k.day);
+      const mine = rows.filter((r) => r.song_id === k.songId && r.show_date.slice(0, 10) === k.day);
+      remember(key, mine);
+      return mine;
     });
     nightCache.set(key, p);
   }
@@ -210,8 +220,27 @@ export async function findSongDefault(songTitle: string, songId?: string | null)
   return findArchiveRecording(songTitle);
 }
 
+/**
+ * What the index already knows about a night, without asking: "none" when it
+ * knows no tape carries the song, "playable" when it has a track, null when
+ * it has not been read (or holds nothing). For marking a row BEFORE the tap.
+ */
+export function peekNight(songId: string | null | undefined, showDate: string | null | undefined): "playable" | "none" | null {
+  const day = (showDate || "").slice(0, 10);
+  if (!songId || !DAY.test(day)) return null;
+  const rows = settledNights.get(keyOf(songId, day));
+  const def = rows?.find((r) => r.is_default);
+  if (!def) return null;
+  return def.status === "playable" ? "playable" : "none";
+}
+export function subscribeNights(cb: () => void): () => void {
+  nightListeners.add(cb);
+  return () => nightListeners.delete(cb);
+}
+
 /** Test seam. */
 export function resetTapeIndex(): void {
+  settledNights.clear();
   nightCache.clear();
   songDefaultCache.clear();
   asked.clear();
