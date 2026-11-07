@@ -1891,6 +1891,62 @@ export type Database = {
         }
         Relationships: []
       }
+      tape_index: {
+        Row: {
+          duration_s: number | null
+          file_name: string | null
+          identifier: string
+          is_default: boolean
+          is_song_default: boolean
+          match_score: number | null
+          servers: string[]
+          show_date: string
+          song_id: string
+          status: string
+          title_on_tape: string | null
+          track_url: string | null
+          verified_at: string
+        }
+        Insert: {
+          duration_s?: number | null
+          file_name?: string | null
+          identifier?: string
+          is_default?: boolean
+          is_song_default?: boolean
+          match_score?: number | null
+          servers?: string[]
+          show_date: string
+          song_id: string
+          status: string
+          title_on_tape?: string | null
+          track_url?: string | null
+          verified_at?: string
+        }
+        Update: {
+          duration_s?: number | null
+          file_name?: string | null
+          identifier?: string
+          is_default?: boolean
+          is_song_default?: boolean
+          match_score?: number | null
+          servers?: string[]
+          show_date?: string
+          song_id?: string
+          status?: string
+          title_on_tape?: string | null
+          track_url?: string | null
+          verified_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tape_index_song_id_fkey"
+            columns: ["song_id"]
+            isOneToOne: false
+            referencedRelation: "songs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           id: string
@@ -2286,6 +2342,15 @@ export type Database = {
           song_id: string
           song_title: string
           track_url: string
+        }[]
+      }
+      tape_index_candidates: {
+        Args: { p_limit?: number }
+        Returns: {
+          show_date: string
+          song_id: string
+          song_title: string
+          stored_identifier: string
         }[]
       }
     }
