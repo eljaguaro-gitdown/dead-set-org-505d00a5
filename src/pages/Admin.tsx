@@ -1,3 +1,4 @@
+import AdminTapHealth, { readTapHealth, type TapHealth } from "@/components/AdminTapHealth";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -60,6 +61,7 @@ const Admin = () => {
   const { user, loading: authLoading } = useAuth();
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [traffic, setTraffic] = useState<TrafficStats | null>(null);
+  const [taps, setTaps] = useState<TapHealth | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [backstage, setBackstage] = useState<BackstageData>({ wishlist: [], bugs: [], shares: [] });
@@ -98,6 +100,7 @@ const Admin = () => {
     } else {
       setUsers(usersRes.data.users || []);
       setTraffic(readAdminTraffic(usersRes.data.traffic));
+      setTaps(readTapHealth(usersRes.data.taps));
     }
     const bsData = {
       wishlist: (wishlistRes.data as any[]) || [],
@@ -455,6 +458,8 @@ const Admin = () => {
               : "From PostHog: dead-set.org only, internal accounts and bots excluded."}
           </p>
         </div>
+
+        <AdminTapHealth taps={taps} loading={loading} />
 
         {/* Conversion Funnel */}
         <FunnelWidget
