@@ -35,6 +35,8 @@ jobs:
     timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # a run may build an older commit (the baseline)
       - uses: oven-sh/setup-bun@v2
       - uses: actions/setup-node@v4
         with:
@@ -60,10 +62,25 @@ jobs:
               const a = ["--profile", r.profile, "--workers", String(r.workers ?? 3)];
               if (r.sample) a.push("--sample", String(r.sample));
               if (r.ids) a.push("--ids", r.ids);
-              a.push("--sha", process.env.GITHUB_SHA.slice(0, 7));
+              if (!r.build) a.push("--sha", process.env.GITHUB_SHA.slice(0, 7));
               console.log(a.map((x) => JSON.stringify(x)).join(" "));')
             note=$(node -e 'console.log(require("./scripts/tapebench/ci-request.json").runs['"$i"'].note || "")')
-            eval node scripts/tapebench/run.mjs $args --note "\"GitHub runner · $note\"" > run-$i.out
+            # A run may name an older build: {"build": {"sha": "...", "restore": {"<sha>": ["path", ...]}}}.
+            # It is built in its own worktree and served with --dist; the bench
+            # itself (run.mjs, proxy, shim, corpus) is always this commit's.
+            dist=""
+            bsha=$(node -e 'const b=require("./scripts/tapebench/ci-request.json").runs['"$i"'].build; console.log(b ? b.sha : "")')
+            if [ -n "$bsha" ]; then
+              rm -rf /tmp/build-$i && git worktree add -f /tmp/build-$i "$bsha"
+              node -e 'const b=require("./scripts/tapebench/ci-request.json").runs['"$i"'].build; for (const [from, files] of Object.entries(b.restore || {})) console.log(from + " " + files.join(" "))' | while read from files; do
+                git -C /tmp/build-$i checkout "$from" -- $files
+              done
+              ln -s "$PWD/node_modules" /tmp/build-$i/node_modules
+              (cd /tmp/build-$i && VITE_TAPEBENCH=1 VITE_PUBLIC_POSTHOG_PROJECT_TOKEN= VITE_PUBLIC_POSTHOG_HOST= npx vite build --outDir dist-bench)
+              dist="--dist /tmp/build-$i/dist-bench"
+              args="$args --sha \"build-$bsha\""
+            fi
+            eval node scripts/tapebench/run.mjs $args $dist --note "\"GitHub runner · $note\"" > run-$i.out
             raw=$(tail -1 run-$i.out)
             node scripts/tapebench/summarize.mjs "$raw" --no-status | tee -a summary.md
           done
