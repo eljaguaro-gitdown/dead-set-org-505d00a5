@@ -4,7 +4,8 @@
 //
 //   node supabase/tests/tape_index.pglite.mjs /tmp/pglite \
 //     supabase/migrations/20261107010000_tape_index.sql \
-//     supabase/migrations/20261107011000_tape_index_refresh.sql
+//     supabase/migrations/20261107011000_tape_index_refresh.sql \
+//     supabase/migrations/20261107020000_tape_index_stored_recordings.sql
 //
 // Stubs production's DEFAULT PRIVILEGES (ALL on new tables to anon and
 // authenticated) before applying, because that is what makes a forgotten
@@ -14,7 +15,7 @@ import { pathToFileURL } from "url";
 import path from "path";
 import assert from "assert/strict";
 
-const [pgliteDir, migrationPath, refreshPath] = process.argv.slice(2);
+const [pgliteDir, migrationPath, refreshPath, storedPath] = process.argv.slice(2);
 const { PGlite } = await import(pathToFileURL(path.join(pgliteDir, "node_modules/@electric-sql/pglite/dist/index.js")).href);
 const db = new PGlite();
 let n = 0;
@@ -98,6 +99,36 @@ if (refreshPath) {
   await db.exec(`update public.tape_index set verified_at = now() - interval '8 days' where show_date = '1971-02-18'`);
   const stale = (await db.query(`select count(*)::int c from public.tape_index_candidates(100) where show_date = '1971-02-18'`)).rows[0].c;
   ok(stale === 1, "a night not verified for a week comes back as a candidate");
+}
+
+if (storedPath) {
+  // Before the fix: a slot that names a recording on a night the index has
+  // already answered is never queued, because the night's DEFAULT row counts.
+  await db.exec(`update public.tape_index set verified_at = now() where show_date = '1971-02-18'`);
+  await db.exec(`insert into public.notable_versions (song_id, show_date, archive_org_url) values ('${S}', '1971-02-18', 'https://archive.org/details/gd71-02-18.aud.other')`);
+  const before = (await db.query(`select count(*)::int c from public.tape_index_candidates(100) where stored_identifier = 'gd71-02-18.aud.other'`)).rows[0].c;
+  ok(before === 0, "(the old candidates function hides a named recording behind the night's default)");
+  await rejects(`insert into public.tape_index (song_id, show_date, identifier, status) values ('${S}', '1971-02-18', 'gd71-02-18.aud.other', 'no_match')`, "(the old constraint refuses a not-on-this-recording row)");
+
+  const stored = readFileSync(storedPath, "utf8");
+  await db.exec(stored);
+  await db.exec(stored);
+  ok(true, "the stored-recordings migration applies twice");
+  const after = (await db.query(`select count(*)::int c from public.tape_index_candidates(100) where stored_identifier = 'gd71-02-18.aud.other'`)).rows[0].c;
+  ok(after === 1, "a named recording on an answered night is now a candidate");
+  const plain = (await db.query(`select count(*)::int c from public.tape_index_candidates(100) where show_date = '1971-02-18' and stored_identifier is null`)).rows[0].c;
+  ok(plain === 0, "the night itself is still seen through its default");
+
+  await db.exec(`insert into public.tape_index (song_id, show_date, identifier, status) values ('${S}', '1971-02-18', 'gd71-02-18.aud.other', 'no_match')`);
+  ok(true, "a not-on-this-recording row goes in");
+  const gone = (await db.query(`select count(*)::int c from public.tape_index_candidates(100) where stored_identifier = 'gd71-02-18.aud.other'`)).rows[0].c;
+  ok(gone === 0, "and once recorded, the named recording is no longer queued every hour");
+
+  await rejects(`insert into public.tape_index (song_id, show_date, identifier, status, is_default) values ('${S}', '1971-02-20', 'x', 'no_match', true)`, "a named no_match row cannot be a night's answer");
+  await rejects(`insert into public.tape_index (song_id, show_date, identifier, status) values ('${S}', '1971-02-20', 'x', 'no_tape')`, "no_tape still names no item");
+  await rejects(`insert into public.tape_index (song_id, show_date, identifier, status, track_url) values ('${S}', '1971-02-20', 'x', 'no_match', 'https://archive.org/download/x/y.mp3')`, "a no_match row carries no track");
+  const can = async (role) => (await db.query(`select has_function_privilege('${role}', 'public.tape_index_candidates(integer)', 'EXECUTE') as v`)).rows[0].v;
+  ok(!(await can("anon")) && !(await can("authenticated")), "the replaced function is still closed to anon and authenticated");
 }
 
 console.log(`all ${n} assertions passed`);

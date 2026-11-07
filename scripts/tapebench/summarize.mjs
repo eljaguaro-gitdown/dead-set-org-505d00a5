@@ -116,10 +116,16 @@ const metrics = {
   controlled: yes.filter((r) => r.controlMs !== null && r.soundMs !== null).length,
 };
 
+// Owner decision 2026-11-07 (DECISIONS.md): on WebKit the latency rows are
+// judged as the app's share over the bare-element floor, because WebKitGTK's
+// media stack alone is slower than the absolute target. A WebKit run with no
+// controls cannot pass them.
+const appShare = run.profile === "webkit-iphone";
+const shareOk = (v, max) => v !== null && v <= max && metrics.controlled > 0;
 const pass = {
   success: metrics.success.d > 0 && metrics.success.n / metrics.success.d >= 0.98,
-  p50: metrics.p50 !== null && metrics.p50 <= 1500,
-  p90: metrics.p90 !== null && metrics.p90 <= 3000,
+  p50: appShare ? shareOk(metrics.overheadP50, 300) : metrics.p50 !== null && metrics.p50 <= 1500,
+  p90: appShare ? shareOk(metrics.overheadP90, 1000) : metrics.p90 !== null && metrics.p90 <= 3000,
   ack: metrics.ack300.n === metrics.ack300.d,
   silent: metrics.silentOver8s === 0,
   blocked: metrics.blocked === 0,
@@ -147,8 +153,8 @@ ${run.profile} · build \`${run.sha}\` · ${run.startedAt} · ${run.minutes} min
 | Metric | Value | Target | |
 |---|---|---|---|
 | Play success (night has a tape → sound ≤ 15 s) | ${rate(metrics.success.n, metrics.success.d)} | ≥ 98% | ${ok(pass.success)} |
-| Tap-to-first-sound p50 (strict) | ${fmtMs(metrics.p50)} | ≤ 1.5 s | ${ok(pass.p50)} |
-| Tap-to-first-sound p90 (strict) | ${fmtMs(metrics.p90)} | ≤ 3.0 s | ${ok(pass.p90)} |
+| Tap-to-first-sound p50 (strict) | ${fmtMs(metrics.p50)} | ${appShare ? "report (WebKit: judged as app's share)" : "≤ 1.5 s"} | ${appShare ? "" : ok(pass.p50)} |
+| Tap-to-first-sound p90 (strict) | ${fmtMs(metrics.p90)} | ${appShare ? "report (WebKit: judged as app's share)" : "≤ 3.0 s"} | ${appShare ? "" : ok(pass.p90)} |
 | — over taps that sounded: p50 / p90 | ${fmtMs(metrics.p50Sounded)} / ${fmtMs(metrics.p90Sounded)} | | |
 | Acknowledged within 300 ms | ${rate(metrics.ack300.n, metrics.ack300.d)} (p50 ${fmtMs(metrics.ackP50)}) | every tap | ${ok(pass.ack)} |
 | Silent wait over 8 s | ${metrics.silentOver8s} taps | 0 | ${ok(pass.silent)} |
@@ -156,7 +162,7 @@ ${run.profile} · build \`${run.sha}\` · ${run.startedAt} · ${run.minutes} min
 | No-tape nights covered by Plan B | ${rate(metrics.noTapePlanB.n, metrics.noTapePlanB.d)} | 100% | ${ok(pass.planB)} |
 | Unknown-truth nights that sounded (matcher) | ${rate(metrics.unknownSounded.n, metrics.unknownSounded.d)} | report | |
 | Floor: bare \`<audio>\` on the same track and network, p50 / p90 | ${fmtMs(metrics.controlP50)} / ${fmtMs(metrics.controlP90)} | report | |
-| App's share (tap − floor, ${metrics.controlled} taps), p50 / p90 | ${fmtMs(metrics.overheadP50)} / ${fmtMs(metrics.overheadP90)} | report | |
+| App's share (tap − floor, ${metrics.controlled} taps), p50 / p90 | ${fmtMs(metrics.overheadP50)} / ${fmtMs(metrics.overheadP90)} | ${appShare ? "≤ 300 ms / ≤ 1.0 s" : "report"} | ${appShare ? `${ok(pass.p50)} / ${ok(pass.p90)}` : ""} |
 | Production writes stubbed | ${metrics.stubbedWrites} | (none reached production) | |
 
 **Verdict:** ${allPass ? "**ALL TARGETS MET**" : "targets not met"}

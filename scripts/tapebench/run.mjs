@@ -61,6 +61,10 @@ const distDir = path.resolve(arg("dist", path.join(root, "dist-bench")));
 const SANDBOX_CHROME = "/opt/pw-browsers/chromium-1243/chrome-linux64/chrome";
 const PROFILES = {
   "webkit-iphone": { browser: webkit, device: devices["iPhone 15"], throttle: { rttMs: 170, downMbps: 9, upMbps: 1.5 }, shim: true },
+  // Owner decision 2026-11-07 (DECISIONS.md): the absolute latency targets are
+  // judged here. Chromium, iPhone 15 viewport/UA/touch (so isIOS() is true and
+  // the player takes its iOS path), the iOS autoplay shim, Fast-4G.
+  "chromium-iphone": { browser: chromium, device: (({ defaultBrowserType, ...d }) => d)(devices["iPhone 15"]), throttle: { rttMs: 170, downMbps: 9, upMbps: 1.5 }, shim: true, launch: { ...(fs.existsSync(SANDBOX_CHROME) ? { executablePath: SANDBOX_CHROME } : {}) } },
   "chromium-desktop": { browser: chromium, device: { viewport: { width: 1280, height: 800 } }, throttle: { rttMs: 0, downMbps: 0, upMbps: 0 }, shim: false, launch: { ...(fs.existsSync(SANDBOX_CHROME) ? { executablePath: SANDBOX_CHROME } : {}), args: ["--autoplay-policy=no-user-gesture-required"] } },
 };
 const profile = PROFILES[profileName];
@@ -146,7 +150,14 @@ async function runTap(browser, proxyUrl, tap) {
   const consoleErrors = [];
   // The first audio the player asked for: what the control below replays.
   let mediaUrl = null;
-  page.on("request", (q) => { if (!mediaUrl && /archive\.org\/.+\.(mp3|ogg|flac|m4a)(\?|$)/i.test(q.url())) mediaUrl = q.url(); });
+  let mediaAt = null;
+  let clickedAt = null;
+  page.on("request", (q) => {
+    if (!mediaUrl && /archive\.org\/.+\.(mp3|ogg|flac|m4a)(\?|$)/i.test(q.url())) {
+      mediaUrl = q.url();
+      mediaAt = clickedAt === null ? null : Date.now() - clickedAt;
+    }
+  });
   page.on("console", (m) => { if (m.type() === "error" || /NotSupportedError|NotAllowedError|MediaError|HTML5 audio error/.test(m.text())) consoleErrors.push(m.text().slice(0, 200)); });
   page.on("pageerror", (e) => consoleErrors.push(`pageerror: ${String(e).slice(0, 200)}`));
   const result = { id: tap.id, surface: tap.surface, title: tap.title, showDate: tap.showDate };
@@ -156,6 +167,7 @@ async function runTap(browser, proxyUrl, tap) {
     t.loaded = Date.now();
     await page.waitForTimeout(settleAfterMs);
     await page.evaluate((spec) => { window.__tapebenchSpec = spec; window.__deadSetTaps = []; }, tap);
+    clickedAt = Date.now();
     await page.click("#tapebench-tap", { force: true });
     const t0 = Date.now();
     // Listen until the tap settles (then 6 s more, to catch a Plan B sound
@@ -186,6 +198,9 @@ async function runTap(browser, proxyUrl, tap) {
       oops: document.querySelector("[data-playback-oops]")?.textContent?.replace(/\s+/g, " ").trim().slice(0, 160) ?? null,
     }));
     result.mediaUrl = mediaUrl;
+    // Click to the player's first request for audio: the part of a tap that
+    // is the app's alone (index read, resolve), before the media stack starts.
+    result.mediaAtMs = mediaAt;
     Object.assign(result, state, { consoleErrors: consoleErrors.slice(0, 8), stubbedWrites: writes, timing: { loadMs: t.loaded - t.start, totalMs: Date.now() - t.start } });
   } catch (e) {
     result.benchError = String(e).slice(0, 300);
@@ -285,7 +300,7 @@ async function main() {
       results.push(r);
       const sound = r.taps?.find((x) => x.event === "play_first_sound");
       const failed = r.taps?.find((x) => x.event === "play_failed");
-      process.stderr.write(`[${results.length}/${corpus.length}] w${w} ${tap.surface.padEnd(18)} ${String(tap.title).slice(0, 22).padEnd(22)} ${tap.showDate ?? "          "} ${sound ? `sound ${sound.ms}ms` : failed ? `FAILED ${failed.kind}@${failed.stage} ${failed.ms}ms` : r.benchError ? `BENCH ${r.benchError.slice(0, 60)}` : "no answer"}\n`);
+      process.stderr.write(`[${results.length}/${corpus.length}] w${w} ${tap.surface.padEnd(18)} ${String(tap.title).slice(0, 22).padEnd(22)} ${tap.showDate ?? "          "} ${sound ? `sound ${sound.ms}ms` : failed ? `FAILED ${failed.kind}@${failed.stage} ${failed.ms}ms` : r.benchError ? `BENCH ${r.benchError.slice(0, 60)}` : "no answer"} | media@${r.mediaAtMs ?? "-"} ctl ${r.controlMs ?? "-"} ack ${r.marks?.ack ?? "-"} crate ${r.marks?.crate ?? "-"}\n`);
     }
   }));
   await browser.close();
@@ -298,7 +313,7 @@ async function main() {
     note,
     startedAt: new Date(started).toISOString(),
     minutes: Math.round((Date.now() - started) / 600) / 100,
-    settings: { control: withControl, upstream: process.env.HTTPS_PROXY ? "sandbox egress proxy" : "direct", settleAfterMs, listenMs, workers, throttle: profile.throttle, iosShim: profile.shim, device: profileName === "webkit-iphone" ? "iPhone 15" : "desktop 1280x800" },
+    settings: { control: withControl, upstream: process.env.HTTPS_PROXY ? "sandbox egress proxy" : "direct", settleAfterMs, listenMs, workers, throttle: profile.throttle, iosShim: profile.shim, device: /iphone/.test(profileName) ? "iPhone 15" : "desktop 1280x800" },
     taps: results,
   };
   const rawDir = path.join(root, "scripts/tapebench/reports/raw");

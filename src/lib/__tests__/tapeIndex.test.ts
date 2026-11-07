@@ -107,6 +107,17 @@ describe("askIndex", () => {
     expect(await askIndex(S, "1971-02-18", "unread")).toEqual({ kind: "miss" });
   });
 
+  it("a named recording the index knows lacks the song goes straight to the night's tape", async () => {
+    db.rows = [row({}), row({ identifier: "stored", is_default: false, status: "no_match", track_url: null, servers: [] })];
+    const a = await askIndex(S, "1971-02-18", "stored");
+    expect(a.kind === "hit" && a.result.directTrackUrl).toBe(row({}).track_url);
+  });
+
+  it("…and is a miss when the night has no playable tape of its own", async () => {
+    db.rows = [row({ status: "no_match", identifier: "", track_url: null, servers: [] }), row({ identifier: "stored", is_default: false, status: "no_match", track_url: null, servers: [] })];
+    expect(await askIndex(S, "1971-02-18", "stored")).toEqual({ kind: "miss" });
+  });
+
   it("an index slower than its budget is a miss, not a wait", async () => {
     db.rows = [row({})];
     db.delayMs = INDEX_BUDGET_MS + 400;

@@ -125,7 +125,10 @@ export async function resolveNight(
     const item = await readItem(fetchFn, args.storedIdentifier, counter);
     if (item.meta) {
       const row = playableRow(args.songId, day, item.id, item.meta, args.songTitle, false);
-      if (row) rows.push(row);
+      // Not on this recording: say so under its own identifier, so the slot
+      // that names it can skip a live read that will fail, and the refresh
+      // does not queue it again every hour (migration 20261107020000).
+      rows.push(row ?? { song_id: args.songId, show_date: day, identifier: args.storedIdentifier, status: "no_match", is_default: false, track_url: null, servers: [], file_name: null, title_on_tape: null, duration_s: null, match_score: null });
     } else if (item.unreachable) unreachable++;
   }
 
@@ -148,6 +151,9 @@ export async function resolveNight(
   }
 
   for (const doc of docs) {
+    // Only a playable row can become the night's answer; a "not on this
+    // recording" row for the same item means this doc is skipped.
+    if (rows.some((r) => r.identifier === doc.identifier && r.status !== "playable")) continue;
     const already = rows.find((r) => r.identifier === doc.identifier);
     if (already) { already.is_default = true; return { rows, unreachable: false, requests: counter.n }; }
     const item = await readItem(fetchFn, doc.identifier, counter);

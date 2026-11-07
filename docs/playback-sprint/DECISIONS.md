@@ -187,3 +187,20 @@ On a smoke run of 9 taps, the control itself took 3.1–13.3 s, or never sounded
 - The bench can run on a **GitHub-hosted runner** (`.github/workflows/tapebench.yml`), which has no egress proxy. The throttle proxy now dials hosts directly when there is no upstream, so "Fast-4G" there is the network the report names.
 - `run.mjs` takes a lock, because two overlapping runs earlier today shared a CPU and a rebuilt bundle and measured neither build.
 - The deciding runs will be the runner's, if it can run them. If WebKitGTK's connection pattern alone keeps the floor above 1.5 s even there, that is an owner decision about the instrument, not a code change, and it goes to the owner with the floor numbers.
+
+## 2026-11-07 — Owner decision: how the latency rows are judged
+
+Asked with the evidence above. On a GitHub runner:
+
+- The Archive served 2.5–4.7 Mbps per connection.
+- A bare `<audio>` took 4.46 s at p50 and 7.65 s at p90 under Fast-4G, with no app code at all.
+
+**The owner chose "app's share + field":**
+
+| Where | What is judged |
+|---|---|
+| **WebKit iPhone (bench)** | Latency is the tap minus the bare-element floor on the same track and network. Pass is **p50 ≤ 300 ms, p90 ≤ 1.0 s**. Every other row stays absolute: success ≥ 98% in 15 s, acknowledgment ≤ 300 ms on every tap, 0 silent waits over 8 s, 0 blocked, 100% Plan B on no-tape nights. |
+| **Chromium iPhone (bench, new profile `chromium-iphone`)** | Chromium with the iPhone 15 viewport, user agent and touch, so the player takes its iOS path (HTML5-only, the iOS shim), under the same Fast-4G throttle. The absolute **p50 ≤ 1.5 s / p90 ≤ 3.0 s** apply here, along with every other row. |
+| **Field** | After publish, with ≥ 100 taps in 7 days, on the admin card: success ≥ 97% and p90 ≤ 3.5 s, from real iPhones. |
+
+**Exit** is both bench profiles passing, on two full-corpus runs at least 2 h apart. The absolute WebKit numbers are still printed in every report.

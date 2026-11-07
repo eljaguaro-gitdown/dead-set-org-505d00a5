@@ -175,8 +175,16 @@ export async function askIndex(songId: string | null | undefined, showDate: stri
     return { kind: "miss" };
   }
   if (storedIdentifier) {
-    const own = rows.find((r) => r.identifier === storedIdentifier && r.status === "playable");
-    if (own) return { kind: "hit", result: toResult(own) };
+    const own = rows.find((r) => r.identifier === storedIdentifier);
+    if (own?.status === "playable") return { kind: "hit", result: toResult(own) };
+    // The named recording is known NOT to carry the song. The live path would
+    // read its metadata (seconds on a phone) only to find that, then heal to
+    // the night's best tape; the index already holds that tape, so go there.
+    if (own?.status === "no_match") {
+      const def = rows.find((r) => r.is_default && r.status === "playable");
+      if (def) return { kind: "hit", result: toResult(def) };
+      return { kind: "miss" };
+    }
     // The night is indexed but not this recording: say nothing about it, and
     // let the live path read it (it may carry the song). Fill it in for later.
     requestIndexing(songId, showDate, storedIdentifier);

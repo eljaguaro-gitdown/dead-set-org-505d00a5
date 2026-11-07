@@ -94,6 +94,28 @@ describe("resolveNight", () => {
     expect(r.rows.map((x) => [x.identifier, x.is_default])).toEqual([["stored", false], ["best", true]]);
   });
 
+  it("a named recording that lacks the song is recorded as such under its own id — never as the night's answer", async () => {
+    const f = fake({
+      "metadata/stored": () => item([{ name: "s.mp3", title: "Sugaree" }]),
+      advancedsearch: () => search("stored", "best"),
+      "metadata/best": () => item([{ name: "b.mp3", title: "Bertha" }]),
+    });
+    const r = await resolveNight(f, { songId: S, songTitle: "Bertha", showDate: "1977-05-08", storedIdentifier: "stored" });
+    expect(r.rows.map((x) => [x.identifier, x.status, x.is_default])).toEqual([["stored", "no_match", false], ["best", "playable", true]]);
+    // The search listed "stored" first; it was not re-read, and not made the default.
+    expect(f.mock.calls.filter((c) => String(c[0]).includes("metadata/stored"))).toHaveLength(1);
+  });
+
+  it("a named recording that could not be READ stores nothing for it — unreachable is not no_match", async () => {
+    const f = fake({
+      "metadata/stored": () => json({}, 503),
+      advancedsearch: () => search("best"),
+      "metadata/best": () => item([{ name: "b.mp3", title: "Bertha" }]),
+    });
+    const r = await resolveNight(f, { songId: S, songTitle: "Bertha", showDate: "1977-05-08", storedIdentifier: "stored" });
+    expect(r.rows.some((x) => x.identifier === "stored")).toBe(false);
+  });
+
   it("when the stored recording IS the night's best, it is one row and the default", async () => {
     const f = fake({
       "metadata/a": () => item([{ name: "s.mp3", title: "Bertha" }]),
