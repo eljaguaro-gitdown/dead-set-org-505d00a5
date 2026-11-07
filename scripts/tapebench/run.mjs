@@ -163,8 +163,18 @@ async function runTap(browser, proxyUrl, tap) {
     let settledAt = null;
     while (Date.now() - t0 < listenMs) {
       await page.waitForTimeout(250);
-      const settled = await page.evaluate(() => (window.__deadSetTaps || []).some((r) => r.event !== "play_requested"));
-      if (settled && settledAt === null) settledAt = Date.now();
+      // Settled = every tap on the page has its answer, Plan B's included. The
+      // first version settled on the FIRST answer, so a no-tape night's
+      // play_failed started the 6 s clock while Plan B was still cueing; on a
+      // slow network 3 of 4 Plan B tapes sounded after the bench stopped
+      // listening and scored as "no Plan B".
+      const settled = await page.evaluate(() => {
+        const recs = window.__deadSetTaps || [];
+        const asked = recs.filter((r) => r.event === "play_requested");
+        return asked.length > 0 && asked.every((q) => recs.some((r) => r.tap_id === q.tap_id && r.event !== "play_requested"));
+      });
+      if (!settled) settledAt = null;
+      else if (settledAt === null) settledAt = Date.now();
       if (settledAt !== null && Date.now() - settledAt > 6000) break;
     }
     const state = await page.evaluate(() => ({

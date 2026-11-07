@@ -36,10 +36,27 @@ type AudioCtor = typeof Audio;
 const nativeAudio = (): AudioCtor | null =>
   typeof window !== "undefined" && typeof window.Audio === "function" ? window.Audio : null;
 
+/** False only when the browser reports, definitely, that no user activation is live. */
+const hasActivation = (): boolean => {
+  try {
+    const ua = (typeof navigator !== "undefined" ? (navigator as Navigator & { userActivation?: { isActive: boolean } }).userActivation : undefined);
+    return ua ? ua.isActive : true;
+  } catch {
+    return true;
+  }
+};
+
 /** Call synchronously inside a tap, before any await. Best effort; never throws. */
 export function blessAudioElements(size = BLESSED_POOL_SIZE): void {
   const Native = nativeAudio();
   if (!Native) return;
+  // Outside a gesture the blessing cannot work: iOS refuses the silent play,
+  // logs NotAllowedError, and the element is no more blessed than a fresh
+  // one. Plan B starts this way, 8 s after the tap; the bench's iOS shim
+  // counted each of those refusals as autoplay_blocked (14 of 32 taps) while
+  // Plan B itself played. Where the browser can say there is no activation,
+  // skip. Where it cannot (older Safari, jsdom), try as before.
+  if (!hasActivation()) return;
   while (pool.length < size) {
     try {
       const el = new Native();

@@ -40,6 +40,21 @@ describe("blessAudioElements", () => {
     expect(playSpy).toHaveBeenCalledTimes(BLESSED_POOL_SIZE + 1);
   });
 
+  it("does not try outside a gesture when the browser says there is none (Plan B at 8 s)", () => {
+    const nav = navigator as Navigator & { userActivation?: { isActive: boolean } };
+    Object.defineProperty(nav, "userActivation", { value: { isActive: false }, configurable: true });
+    try {
+      blessAudioElements();
+      expect(playSpy).not.toHaveBeenCalled();
+      expect(blessedPoolSize()).toBe(0);
+      Object.defineProperty(nav, "userActivation", { value: { isActive: true }, configurable: true });
+      blessAudioElements();
+      expect(playSpy).toHaveBeenCalledTimes(BLESSED_POOL_SIZE);
+    } finally {
+      delete (nav as { userActivation?: unknown }).userActivation;
+    }
+  });
+
   it("survives a browser that refuses even the silent play", () => {
     playSpy.mockImplementation(() => Promise.reject(new DOMException("no", "NotAllowedError")));
     expect(() => blessAudioElements(2)).not.toThrow();

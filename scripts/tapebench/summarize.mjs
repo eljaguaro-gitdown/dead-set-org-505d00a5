@@ -170,7 +170,5 @@ ${Object.keys(failures).length === 0 ? "- none" : Object.entries(failures).sort(
 const outDir = path.join(root, "scripts/tapebench/reports");
 fs.mkdirSync(outDir, { recursive: true });
 fs.writeFileSync(path.join(outDir, `${run.runId}.json`), JSON.stringify({ runId: run.runId, profile: run.profile, sha: run.sha, startedAt: run.startedAt, settings: run.settings, metrics, pass, allPass, failures, rows }, null, 1));
-// Always printed, so a CI run's log carries the result even without its artifact.
-console.log(md);
 if (!process.argv.includes("--no-status")) fs.appendFileSync(path.join(root, "docs/playback-sprint/STATUS.md"), md);
 process.stdout.write(md);

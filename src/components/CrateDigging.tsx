@@ -84,19 +84,33 @@ const Bear = ({ color, delay, width = 64 }: { color: string; delay: number; widt
 const useWaitingTap = (): Tap | null =>
   useSyncExternalStore(subscribeTaps, waitingTap, () => null);
 
-/** At the finger, at once. */
+/**
+ * At the finger, at once — in the same render as the tap.
+ *
+ * It used to set its position in a useEffect, which runs after paint and then
+ * renders again: two passes and a frame behind the tap. Under load the bench
+ * measured 325 and 426 ms from click to ring, over the 300 ms target, on taps
+ * whose crate card was itself on time. The position is now captured while
+ * rendering the tap that the click's own (synchronous) store update flushes,
+ * so the ring is in the DOM when the click handler returns.
+ */
 export const TapAck = () => {
   const tap = useWaitingTap();
-  const [at, setAt] = useState<{ x: number; y: number; id: string } | null>(null);
-  useEffect(() => {
-    if (!tap || !lastPointer) { setAt(null); return; }
-    // Only for a tap this pointer started, not one begun by an earlier one.
-    if (tapAge(tap) > 600) return;
-    setAt({ ...lastPointer, id: tap.id });
-    const t = window.setTimeout(() => setAt(null), 1_400);
+  const seen = useRef<{ x: number; y: number; id: string } | null>(null);
+  const [goneId, setGoneId] = useState<string | null>(null);
+  // Only for a tap this pointer started, not one begun by an earlier one.
+  if (tap && seen.current?.id !== tap.id && lastPointer && tapAge(tap) <= 600) {
+    seen.current = { ...lastPointer, id: tap.id };
+  }
+  const at = seen.current;
+  const live = !!at && !!tap && tap.id === at.id && goneId !== at.id;
+  useLayoutEffect(() => {
+    if (!live || !at) return;
+    const id = at.id;
+    const t = window.setTimeout(() => setGoneId(id), 1_400);
     return () => window.clearTimeout(t);
-  }, [tap?.id]); // eslint-disable-line react-hooks/exhaustive-deps
-  if (!at || !tap || tap.id !== at.id) return null;
+  }, [live, at?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  if (!live || !at) return null;
   return (
     <div
       data-tap-ack

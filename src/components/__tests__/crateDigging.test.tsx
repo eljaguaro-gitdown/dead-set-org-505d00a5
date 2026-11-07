@@ -273,5 +273,29 @@ describe("the 2026-11 sprint's louder wait", () => {
     expect(ack.style.left).toBe("120px");
     expect(ack.style.top).toBe("300px");
   });
+
+  it("TapAck stays where the tap was when the finger moves before it leaves", () => {
+    const { rerender } = render(<TapAck />);
+    pointer(120, 300);
+    act(() => { beginTap("version_picker", { songId: "s", title: "Althea" }); });
+    pointer(10, 10); // a stray touch, no new tap
+    rerender(<TapAck />);
+    expect((document.querySelector("[data-tap-ack]") as HTMLElement).style.left).toBe("120px");
+  });
+
+  it("TapAck leaves after 1.4 s and comes back for the next tap, at the new finger", () => {
+    render(<TapAck />);
+    pointer(120, 300);
+    act(() => { beginTap("version_picker", { songId: "s", title: "Althea" }); });
+    advance(1_399);
+    expect(document.querySelector("[data-tap-ack]")).not.toBeNull();
+    advance(2);
+    expect(document.querySelector("[data-tap-ack]")).toBeNull();
+    pointer(40, 90);
+    act(() => { beginTap("version_picker", { songId: "s2", title: "Bertha" }); });
+    const ack = document.querySelector("[data-tap-ack]") as HTMLElement;
+    expect(ack).not.toBeNull();
+    expect(ack.style.left).toBe("40px");
+  });
 });
 
