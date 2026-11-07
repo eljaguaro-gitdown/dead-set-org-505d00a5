@@ -54,6 +54,7 @@ import {
 import { buildGuideSongs } from "@/lib/listeningGuide";
 import TapeHunt from "@/components/TapeHunt";
 import { captureEvent } from "@/lib/posthog";
+import { findNight } from "@/lib/tapeIndex";
 import { beginTap } from "@/lib/player/tapTelemetry";
 
 /** Which control started the audio — one per play path on this page. */
@@ -380,7 +381,7 @@ const VersionPicker = () => {
       const found = await Promise.all(
         Array.from(new Set(needed)).map(async (d) => {
           try {
-            const tape = await findRecordingForDate(song.title, d);
+            const tape = await findNight(song.title, d, song.id);
             return [d, tape as MilestoneTape | null] as const;
           } catch {
             unchecked.add(d);
@@ -480,7 +481,7 @@ const VersionPicker = () => {
         (ftp?.archiveUrl
           ? { url: ftp.archiveUrl, directTrackUrl: ftp.directTrackUrl ?? null }
           : null) ??
-        (await findRecordingForDate(song.title, song.first_played));
+        (await findNight(song.title, song.first_played, song.id));
       const url = tape?.url ?? null;
       if (url) {
         playSingle({
@@ -500,6 +501,7 @@ const VersionPicker = () => {
           position: 0,
           segueToNext: false,
           directTrackUrl: tape?.directTrackUrl ?? null,
+          streamUrl: (tape as { streamUrl?: string | null } | null)?.streamUrl ?? null,
         } as PlayableSlot);
         captureEvent("version_picker_played_debut", { song_id: song.id, song_title: song.title });
         capturePlayed("hero_debut", true);
@@ -606,6 +608,7 @@ const VersionPicker = () => {
     beginTap("version_picker", { songId: song.id, showDate: v.show_date, hasPrecomputed: false });
     let url = v.archive_org_url;
     let directTrackUrl: string | null = null;
+    let streamUrl: string | null = null;
     if (!url) {
       // setResolving(null) used to sit after the await, so a rejection skipped
       // it: the button stayed disabled under "Looking for the tape…" forever,
@@ -614,7 +617,7 @@ const VersionPicker = () => {
       setResolving(v.id);
       let tape: Awaited<ReturnType<typeof findRecordingForDate>> = null;
       try {
-        tape = await findRecordingForDate(song.title, v.show_date);
+        tape = await findNight(song.title, v.show_date, song.id);
       } catch {
         toast.error("Couldn't reach the Archive — try again");
         return false;
@@ -627,6 +630,7 @@ const VersionPicker = () => {
       }
       url = tape.url;
       directTrackUrl = tape.directTrackUrl ?? null;
+      streamUrl = tape.streamUrl ?? null;
     }
     playSingle({
       id: `picker-${song.id}-${v.id}`,
@@ -648,6 +652,7 @@ const VersionPicker = () => {
       position: 0,
       segueToNext: false,
       directTrackUrl,
+      streamUrl,
     } as PlayableSlot);
     capturePlayed(origin, false);
     return true;

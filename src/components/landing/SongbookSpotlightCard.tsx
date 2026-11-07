@@ -5,6 +5,7 @@ import { findRecordingForDate, type ArchiveResult } from "@/lib/archiveOrg";
 import { trackCtaClick } from "@/lib/trackCtaClick";
 import { captureEvent } from "@/lib/posthog";
 import { unlockAudioInGesture } from "@/lib/player/gestureUnlock";
+import { findNight } from "@/lib/tapeIndex";
 import { beginTap } from "@/lib/player/tapTelemetry";
 import {
   preferredEnd,
@@ -376,7 +377,7 @@ const SongbookSpotlightCard = ({ spotlight: s }: { spotlight: SongbookSpotlight 
     if (!end.date || end.archiveUrl) return;
     tried.current.add(cue);
     let cancelled = false;
-    findRecordingForDate(s.title, end.date).then(
+    findNight(s.title, end.date, s.songId).then(
       (hit) => {
         if (cancelled) return;
         if (hit?.directTrackUrl) {

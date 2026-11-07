@@ -19,6 +19,7 @@ import ShareFlow from "@/components/ShareFlow";
 import ShowPlate from "@/components/ShowPlate";
 import TapeHunt from "@/components/TapeHunt";
 import { toast } from "sonner";
+import { findNight } from "@/lib/tapeIndex";
 import { archiveKey, archiveKeyDate, findArchiveRecordings, findRecordingForDate, matchScore, type ArchiveResult } from "@/lib/archiveOrg";
 import { useFavoriteSongs } from "@/hooks/useFavoriteSongs";
 import type { Database } from "@/integrations/supabase/types";
@@ -330,11 +331,11 @@ const SetlistPoster = () => {
       // six-night guide deduped to one lookup and all six rows were handed
       // whichever tape of that song draws best — one night, repeated six
       // times, under six cards describing six different shows.
-      const dated = new Map<string, { title: string; date: string }>();
+      const dated = new Map<string, { title: string; date: string; songId: string }>();
       const undatedTitles = new Set<string>();
       for (const slot of unresolved) {
         const date = archiveKeyDate(slot.version?.show_date);
-        if (date) dated.set(archiveKey(slot.song.title, date), { title: slot.song.title, date });
+        if (date) dated.set(archiveKey(slot.song.title, date), { title: slot.song.title, date, songId: slot.song.id });
         else undatedTitles.add(slot.song.title);
       }
 
@@ -353,9 +354,9 @@ const SetlistPoster = () => {
       const entries = Array.from(dated.entries());
       for (let i = 0; i < entries.length; i += 4) {
         const batch = await Promise.all(
-          entries.slice(i, i + 4).map(async ([key, { title, date }]) => {
+          entries.slice(i, i + 4).map(async ([key, { title, date, songId }]) => {
             try {
-              return [key, await findRecordingForDate(title, date)] as const;
+              return [key, await findNight(title, date, songId)] as const;
             } catch {
               // findRecordingForDate throws when the Archive could not be
               // asked. Leave the key UNSET rather than writing null: null here
@@ -497,6 +498,7 @@ const SetlistPoster = () => {
       position: slot.position,
       segueToNext: slot.segue_to_next || false,
       directTrackUrl: resolvedArchive?.directTrackUrl || null,
+      streamUrl: resolvedArchive?.streamUrl ?? null,
     };
   }, [resolvedArchives]);
 

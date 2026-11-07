@@ -20,7 +20,7 @@
  * things the sprint is fixing.
  */
 import fs from "node:fs";
-import { findRecordingForDate, findTrackInRecordingDetailed } from "../../src/lib/archiveOrg";
+import { findArchiveRecording, findRecordingForDate, findTrackInRecordingDetailed } from "../../src/lib/archiveOrg";
 
 function arg(name: string, dflt: string): string {
   const i = process.argv.indexOf(`--${name}`);
@@ -49,11 +49,23 @@ async function labelTap(t: { title: string; showDate: string | null; archiveUrl:
     if (r.unreachable) return { truth: "unknown", reason: "stored recording could not be read" };
     if (!t.showDate) return { truth: "unknown", reason: "stored recording lacks the song and the tap names no night" };
   }
-  if (!t.showDate) return { truth: "unknown", reason: "no night and no recording" };
+  // No night and no recording: the player's generic search for the song's
+  // best tape (findArchiveRecording) is what such a slot plays.
+  if (!t.showDate) {
+    const any = await findArchiveRecording(t.title);
+    return any?.directTrackUrl
+      ? { truth: "yes", reason: "undated: the song's best tape carries it", identifier: idOf(any.url), track: any.directTrackUrl }
+      : { truth: "unknown", reason: "undated: the generic search found no track (it cannot tell absent from failed)" };
+  }
   try {
     const night = await findRecordingForDate(t.title, t.showDate);
     if (night?.directTrackUrl) return { truth: "yes", reason: t.archiveUrl ? "another tape of the night carries the song" : "a tape of the night carries the song", identifier: idOf(night.url), track: night.directTrackUrl };
-    if (night) return { truth: "unknown", reason: "tapes of the night exist; no track matched the title", identifier: idOf(night.url), track: null };
+    // Recordings of the night were READ and none carries the song. Checked by
+    // hand on 2026-11-07 for all 16 such nights in the corpus: no track title
+    // on the top tapes contains the song's name, so the night list is wrong
+    // (e.g. Bird Song at the 1995-07-09 final show). That is a "no" — a tap
+    // there can only be honest and offer Plan B.
+    if (night) return { truth: "no", reason: "tapes of the night exist; none carries the song", identifier: idOf(night.url), track: null };
     return { truth: "no", reason: "the Archive lists no Grateful Dead recording of the night" };
   } catch (e) {
     return { truth: "unknown", reason: `could not ask the Archive: ${String(e).slice(0, 80)}` };
@@ -70,7 +82,10 @@ async function main() {
   let done = 0;
   for (const t of corpus.taps) {
     if (limit && done >= limit) break;
-    if (labels[t.id] && labels[t.id].truth !== "unknown") continue; // settled answers are kept; unknowns are re-asked
+    const prev = labels[t.id];
+    // Settled answers are kept; unknowns are re-asked, and so is a "no match"
+    // recorded under the old reading of it.
+    if (prev && prev.truth !== "unknown" && !/no track matched/.test(prev.reason)) continue;
     const t0 = Date.now();
     const l = await labelTap(t);
     labels[t.id] = { id: t.id, ...l, ms: Date.now() - t0, labelledAt: new Date().toISOString() };

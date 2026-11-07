@@ -102,10 +102,12 @@
   },
   "songbook_spotlight:c8e62063-bdcd-45b2-819c-b1843fb1d54b:1970-02-14:last": {
    "id": "songbook_spotlight:c8e62063-bdcd-45b2-819c-b1843fb1d54b:1970-02-14:last",
-   "truth": "unknown",
-   "reason": "could not ask the Archive: ArchiveUnreachable: archive.org unreadable for all 2 candidate recordings",
-   "ms": 43486,
-   "labelledAt": "2026-11-07T00:09:20.950Z"
+   "truth": "no",
+   "reason": "tapes of the night exist; none carries the song",
+   "identifier": "gd70-02-14.early-late.sbd.cotsman.18115.sbeok.shnf",
+   "track": null,
+   "ms": 4009,
+   "labelledAt": "2026-11-07T00:21:50.569Z"
   },
   "songbook_spotlight:a1bf0b53-2e4c-4d7b-a481-742e9b6b7c23:1973-02-09:first": {
    "id": "songbook_spotlight:a1bf0b53-2e4c-4d7b-a481-742e9b6b7c23:1973-02-09:first",
@@ -226,12 +228,12 @@
   },
   "version_picker:a712edf9-6474-44ce-8486-0243aab7d9e2:1995-07-09:last": {
    "id": "version_picker:a712edf9-6474-44ce-8486-0243aab7d9e2:1995-07-09:last",
-   "truth": "unknown",
-   "reason": "tapes of the night exist; no track matched the title",
+   "truth": "no",
+   "reason": "tapes of the night exist; none carries the song",
    "identifier": "gd95-07-09.sbd.7233.sbeok.shnf",
    "track": null,
-   "ms": 30448,
-   "labelledAt": "2026-11-07T00:10:29.946Z"
+   "ms": 3620,
+   "labelledAt": "2026-11-07T00:21:54.342Z"
   },
   "version_picker:8fce1729-ec24-4172-a123-f385111a4342:1968-01-17:first": {
    "id": "version_picker:8fce1729-ec24-4172-a123-f385111a4342:1968-01-17:first",
@@ -484,6 +486,2527 @@
    "track": "https://archive.org/download/gd72-05-26.sbd.hollister.12758.sbeok.shnf/gd720526-d1t02.mp3",
    "ms": 3610,
    "labelledAt": "2026-11-07T00:11:16.625Z"
+  },
+  "version_picker:66075d32-ad63-403b-8e07-251bb7dc0b31:1987-07-10:nv-223c0b8c": {
+   "id": "version_picker:66075d32-ad63-403b-8e07-251bb7dc0b31:1987-07-10:nv-223c0b8c",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd87-07-10.senn.lai.3859.sbeok.shnf",
+   "track": "https://archive.org/download/gd87-07-10.senn.lai.3859.sbeok.shnf/gd87-07-10d3t109.mp3",
+   "ms": 2314,
+   "labelledAt": "2026-11-07T00:11:19.089Z"
+  },
+  "version_picker:3ee42f5a-50d5-4127-977c-f5045e946657:1967-03-18:nv-07fedc56": {
+   "id": "version_picker:3ee42f5a-50d5-4127-977c-f5045e946657:1967-03-18:nv-07fedc56",
+   "truth": "yes",
+   "reason": "song found on the stored recording",
+   "identifier": "gd1967-03-18.156086.sbd.Flegel.flac1648",
+   "track": "https://archive.org/download/gd1967-03-18.156086.sbd.Flegel.flac1648/09%20The%20Golden%20Road%20(To%20Unlimited%20Devotion).mp3",
+   "ms": 144,
+   "labelledAt": "2026-11-07T00:11:19.385Z"
+  },
+  "version_picker:f86234d7-9d57-48c8-a5d4-9fac1f74eac2:1977-05-11:nv-1d9bebcb": {
+   "id": "version_picker:f86234d7-9d57-48c8-a5d4-9fac1f74eac2:1977-05-11:nv-1d9bebcb",
+   "truth": "yes",
+   "reason": "song found on the stored recording",
+   "identifier": "gd1977-05-11.sbd.yubah.6952.shnf",
+   "track": "https://archive.org/download/gd1977-05-11.sbd.yubah.6952.shnf/gd77-05-11D2T06.mp3",
+   "ms": 497,
+   "labelledAt": "2026-11-07T00:11:20.033Z"
+  },
+  "version_picker:08e1ec90-db5c-4e41-b6b1-1b75d3d528ca:1978-09-16:nv-42583b40": {
+   "id": "version_picker:08e1ec90-db5c-4e41-b6b1-1b75d3d528ca:1978-09-16:nv-42583b40",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd78-09-16.sbd.orf.2319.sbeok.shnf",
+   "track": "https://archive.org/download/gd78-09-16.sbd.orf.2319.sbeok.shnf/gd78-09-16d3t01.mp3",
+   "ms": 1549,
+   "labelledAt": "2026-11-07T00:11:21.734Z"
+  },
+  "version_picker:08e1ec90-db5c-4e41-b6b1-1b75d3d528ca:1978-11-24:nv-b126a8f6": {
+   "id": "version_picker:08e1ec90-db5c-4e41-b6b1-1b75d3d528ca:1978-11-24:nv-b126a8f6",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd78-11-24.sbd.prefm.13948.sbefail.shnf",
+   "track": "https://archive.org/download/gd78-11-24.sbd.prefm.13948.sbefail.shnf/GD-11-24-78-D3-T02.mp3",
+   "ms": 1096,
+   "labelledAt": "2026-11-07T00:11:22.982Z"
+  },
+  "version_picker:08e1ec90-db5c-4e41-b6b1-1b75d3d528ca:1979-10-31:nv-9ffdfdb2": {
+   "id": "version_picker:08e1ec90-db5c-4e41-b6b1-1b75d3d528ca:1979-10-31:nv-9ffdfdb2",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd79-10-31.sbd.miller.29410.sbeok.flacf",
+   "track": "https://archive.org/download/gd79-10-31.sbd.miller.29410.sbeok.flacf/gd79-10-31d2t02.mp3",
+   "ms": 1085,
+   "labelledAt": "2026-11-07T00:11:24.218Z"
+  },
+  "version_picker:08e1ec90-db5c-4e41-b6b1-1b75d3d528ca:1979-01-15:nv-ffe55ee6": {
+   "id": "version_picker:08e1ec90-db5c-4e41-b6b1-1b75d3d528ca:1979-01-15:nv-ffe55ee6",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd79-01-15.rolfe.wise-cohen.310.sbeok.shnf",
+   "track": "https://archive.org/download/gd79-01-15.rolfe.wise-cohen.310.sbeok.shnf/gd79-01-15d2t03.mp3",
+   "ms": 1119,
+   "labelledAt": "2026-11-07T00:11:25.488Z"
+  },
+  "version_picker:08e1ec90-db5c-4e41-b6b1-1b75d3d528ca:1979-10-25:nv-01da099d": {
+   "id": "version_picker:08e1ec90-db5c-4e41-b6b1-1b75d3d528ca:1979-10-25:nv-01da099d",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd79-10-25.sbd.set2.fishman.21271.sbefail.shnf",
+   "track": "https://archive.org/download/gd79-10-25.sbd.set2.fishman.21271.sbefail.shnf/gd1979-10-25d201.mp3",
+   "ms": 947,
+   "labelledAt": "2026-11-07T00:11:26.587Z"
+  },
+  "version_picker:08e1ec90-db5c-4e41-b6b1-1b75d3d528ca:1982-04-06:nv-39e36219": {
+   "id": "version_picker:08e1ec90-db5c-4e41-b6b1-1b75d3d528ca:1982-04-06:nv-39e36219",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd82-04-06.aud.dipietro.16768.sbeok.shnf",
+   "track": "https://archive.org/download/gd82-04-06.aud.dipietro.16768.sbeok.shnf/gd1982-04-06d02t01.mp3",
+   "ms": 1317,
+   "labelledAt": "2026-11-07T00:11:28.055Z"
+  },
+  "version_picker:08e1ec90-db5c-4e41-b6b1-1b75d3d528ca:1981-05-16:nv-fc1ef7f6": {
+   "id": "version_picker:08e1ec90-db5c-4e41-b6b1-1b75d3d528ca:1981-05-16:nv-fc1ef7f6",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd81-05-16.nak300-dmow.28007.sbeok.flacf",
+   "track": "https://archive.org/download/gd81-05-16.nak300-dmow.28007.sbeok.flacf/gd1981-05-16d2t01.mp3",
+   "ms": 1509,
+   "labelledAt": "2026-11-07T00:11:29.716Z"
+  },
+  "version_picker:08e1ec90-db5c-4e41-b6b1-1b75d3d528ca:1983-04-26:nv-71a177be": {
+   "id": "version_picker:08e1ec90-db5c-4e41-b6b1-1b75d3d528ca:1983-04-26:nv-71a177be",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd83-04-26.sbd.parrillo.2606.sbeok.shnf",
+   "track": "https://archive.org/download/gd83-04-26.sbd.parrillo.2606.sbeok.shnf/gd83-04-26d1t01.mp3",
+   "ms": 1221,
+   "labelledAt": "2026-11-07T00:11:31.088Z"
+  },
+  "version_picker:08e1ec90-db5c-4e41-b6b1-1b75d3d528ca:1981-03-28:nv-2e720478": {
+   "id": "version_picker:08e1ec90-db5c-4e41-b6b1-1b75d3d528ca:1981-03-28:nv-2e720478",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd81-03-28.fm.hanno.3306.sbefail.shnf",
+   "track": "https://archive.org/download/gd81-03-28.fm.hanno.3306.sbefail.shnf/gd81-03-28d1t07.mp3",
+   "ms": 1152,
+   "labelledAt": "2026-11-07T00:11:32.390Z"
+  },
+  "version_picker:08e1ec90-db5c-4e41-b6b1-1b75d3d528ca:1984-12-31:nv-4f32c132": {
+   "id": "version_picker:08e1ec90-db5c-4e41-b6b1-1b75d3d528ca:1984-12-31:nv-4f32c132",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd84-12-31.sbd.gorinsky.6395.sbeok.shnf",
+   "track": "https://archive.org/download/gd84-12-31.sbd.gorinsky.6395.sbeok.shnf/gd1984-12-31d1t01.mp3",
+   "ms": 2140,
+   "labelledAt": "2026-11-07T00:11:34.682Z"
+  },
+  "version_picker:08e1ec90-db5c-4e41-b6b1-1b75d3d528ca:1989-04-02:nv-28fc347c": {
+   "id": "version_picker:08e1ec90-db5c-4e41-b6b1-1b75d3d528ca:1989-04-02:nv-28fc347c",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd89-04-02.beyer.wiley.9206.sbeok.shnf",
+   "track": "https://archive.org/download/gd89-04-02.beyer.wiley.9206.sbeok.shnf/gd89-04-02d2t01.mp3",
+   "ms": 1663,
+   "labelledAt": "2026-11-07T00:11:36.498Z"
+  },
+  "version_picker:08e1ec90-db5c-4e41-b6b1-1b75d3d528ca:1987-09-18:nv-be4ef0c1": {
+   "id": "version_picker:08e1ec90-db5c-4e41-b6b1-1b75d3d528ca:1987-09-18:nv-be4ef0c1",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd87-09-18.sbd.samaritano.20025.sbeok.shnf",
+   "track": "https://archive.org/download/gd87-09-18.sbd.samaritano.20025.sbeok.shnf/gd1987-09-18d2t01.mp3",
+   "ms": 3082,
+   "labelledAt": "2026-11-07T00:11:39.731Z"
+  },
+  "version_picker:08e1ec90-db5c-4e41-b6b1-1b75d3d528ca:1991-09-10:nv-57e85a5f": {
+   "id": "version_picker:08e1ec90-db5c-4e41-b6b1-1b75d3d528ca:1991-09-10:nv-57e85a5f",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd91-09-10.sbd.sacks.511.sbeok.shnf",
+   "track": "https://archive.org/download/gd91-09-10.sbd.sacks.511.sbeok.shnf/gd91-09-10d1t01.mp3",
+   "ms": 2528,
+   "labelledAt": "2026-11-07T00:11:42.410Z"
+  },
+  "version_picker:08e1ec90-db5c-4e41-b6b1-1b75d3d528ca:1979-12-26:nv-e8745a81": {
+   "id": "version_picker:08e1ec90-db5c-4e41-b6b1-1b75d3d528ca:1979-12-26:nv-e8745a81",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd1979-12-26.sonyECM250.walker-scotton.miller.89187.sbeok.flac16",
+   "track": "https://archive.org/download/gd1979-12-26.sonyECM250.walker-scotton.miller.89187.sbeok.flac16/gd79-12-26d3t06.mp3",
+   "ms": 2189,
+   "labelledAt": "2026-11-07T00:11:44.750Z"
+  },
+  "version_picker:08e1ec90-db5c-4e41-b6b1-1b75d3d528ca:1985-06-30:nv-7f140fe4": {
+   "id": "version_picker:08e1ec90-db5c-4e41-b6b1-1b75d3d528ca:1985-06-30:nv-7f140fe4",
+   "truth": "yes",
+   "reason": "song found on the stored recording",
+   "identifier": "gd85-06-30.sbd.miller.30158.sbeok.flacf",
+   "track": "https://archive.org/download/gd85-06-30.sbd.miller.30158.sbeok.flacf/gd85-06-30d1t10.mp3",
+   "ms": 195,
+   "labelledAt": "2026-11-07T00:11:45.097Z"
+  },
+  "version_picker:51a67828-2412-4d75-abf3-d07f60f40989:1972-08-27:nv-5279db20": {
+   "id": "version_picker:51a67828-2412-4d75-abf3-d07f60f40989:1972-08-27:nv-5279db20",
+   "truth": "yes",
+   "reason": "song found on the stored recording",
+   "identifier": "gd72-08-27.sbd.orf.3328.sbeok.shnf",
+   "track": "https://archive.org/download/gd72-08-27.sbd.orf.3328.sbeok.shnf/gd1972-08-27d3t02-orf.mp3",
+   "ms": 321,
+   "labelledAt": "2026-11-07T00:11:45.569Z"
+  },
+  "version_picker:c5f1905e-0165-41e4-8da0-3cae344ac9fd:1972-08-27:nv-5b33a0cb": {
+   "id": "version_picker:c5f1905e-0165-41e4-8da0-3cae344ac9fd:1972-08-27:nv-5b33a0cb",
+   "truth": "yes",
+   "reason": "song found on the stored recording",
+   "identifier": "gd72-08-27.sbd.orf.3328.sbeok.shnf",
+   "track": "https://archive.org/download/gd72-08-27.sbd.orf.3328.sbeok.shnf/gd1972-08-27d3t06-orf.mp3",
+   "ms": 208,
+   "labelledAt": "2026-11-07T00:11:45.929Z"
+  },
+  "version_picker:0fd22bbc-9f76-409d-bc25-d5cb3ea8bf05:1972-08-27:nv-c7c2254f": {
+   "id": "version_picker:0fd22bbc-9f76-409d-bc25-d5cb3ea8bf05:1972-08-27:nv-c7c2254f",
+   "truth": "yes",
+   "reason": "song found on the stored recording",
+   "identifier": "gd72-08-27.sbd.orf.3328.sbeok.shnf",
+   "track": "https://archive.org/download/gd72-08-27.sbd.orf.3328.sbeok.shnf/gd1972-08-27d2t05-orf.mp3",
+   "ms": 236,
+   "labelledAt": "2026-11-07T00:11:46.315Z"
+  },
+  "version_picker:8fce1729-ec24-4172-a123-f385111a4342:1972-08-27:nv-b612ca9f": {
+   "id": "version_picker:8fce1729-ec24-4172-a123-f385111a4342:1972-08-27:nv-b612ca9f",
+   "truth": "yes",
+   "reason": "song found on the stored recording",
+   "identifier": "gd72-08-27.sbd.orf.3328.sbeok.shnf",
+   "track": "https://archive.org/download/gd72-08-27.sbd.orf.3328.sbeok.shnf/gd1972-08-27d1t07-orf.mp3",
+   "ms": 249,
+   "labelledAt": "2026-11-07T00:11:46.715Z"
+  },
+  "version_picker:09370ed8-42f4-450e-86b9-a20703dc8979:1972-08-27:nv-ad869f2a": {
+   "id": "version_picker:09370ed8-42f4-450e-86b9-a20703dc8979:1972-08-27:nv-ad869f2a",
+   "truth": "yes",
+   "reason": "song found on the stored recording",
+   "identifier": "gd72-08-27.sbd.orf.3328.sbeok.shnf",
+   "track": "https://archive.org/download/gd72-08-27.sbd.orf.3328.sbeok.shnf/gd1972-08-27d1t05-orf.mp3",
+   "ms": 282,
+   "labelledAt": "2026-11-07T00:11:47.149Z"
+  },
+  "version_picker:f51dd8e8-1150-444b-bb37-00ae8b577550:1972-08-27:nv-6a931bfe": {
+   "id": "version_picker:f51dd8e8-1150-444b-bb37-00ae8b577550:1972-08-27:nv-6a931bfe",
+   "truth": "yes",
+   "reason": "song found on the stored recording",
+   "identifier": "gd72-08-27.sbd.orf.3328.sbeok.shnf",
+   "track": "https://archive.org/download/gd72-08-27.sbd.orf.3328.sbeok.shnf/gd1972-08-27d2t03-orf.mp3",
+   "ms": 288,
+   "labelledAt": "2026-11-07T00:11:47.587Z"
+  },
+  "version_picker:59594f3b-3748-4c8b-9593-b9319b06862a:1977-05-08:nv-d7a80563": {
+   "id": "version_picker:59594f3b-3748-4c8b-9593-b9319b06862a:1977-05-08:nv-d7a80563",
+   "truth": "yes",
+   "reason": "song found on the stored recording",
+   "identifier": "gd77-05-08.sbd.hicks.4982.sbeok.shnf",
+   "track": "https://archive.org/download/gd77-05-08.sbd.hicks.4982.sbeok.shnf/gd77-05-08eaton-d3t01.mp3",
+   "ms": 482,
+   "labelledAt": "2026-11-07T00:11:48.221Z"
+  },
+  "version_picker:c845666a-43c4-4da4-b468-d88ff2b9f141:1977-05-08:nv-44e84ef8": {
+   "id": "version_picker:c845666a-43c4-4da4-b468-d88ff2b9f141:1977-05-08:nv-44e84ef8",
+   "truth": "yes",
+   "reason": "song found on the stored recording",
+   "identifier": "gd77-05-08.sbd.hicks.4982.sbeok.shnf",
+   "track": "https://archive.org/download/gd77-05-08.sbd.hicks.4982.sbeok.shnf/gd77-05-08eaton-d2t04.mp3",
+   "ms": 552,
+   "labelledAt": "2026-11-07T00:11:48.923Z"
+  },
+  "version_picker:108a28bb-01f5-487d-9067-9d75531a5f38:1976-06-22:nv-4acfc7bf": {
+   "id": "version_picker:108a28bb-01f5-487d-9067-9d75531a5f38:1976-06-22:nv-4acfc7bf",
+   "truth": "yes",
+   "reason": "song found on the stored recording",
+   "identifier": "gd1976-06-22.sbd.digitalrbb.miller.112218.flac16",
+   "track": "https://archive.org/download/gd1976-06-22.sbd.digitalrbb.miller.112218.flac16/gd76-06-22d1t04.mp3",
+   "ms": 921,
+   "labelledAt": "2026-11-07T00:11:49.995Z"
+  },
+  "version_picker:108a28bb-01f5-487d-9067-9d75531a5f38:1975-06-17:nv-eaaea49d": {
+   "id": "version_picker:108a28bb-01f5-487d-9067-9d75531a5f38:1975-06-17:nv-eaaea49d",
+   "truth": "yes",
+   "reason": "song found on the stored recording",
+   "identifier": "gd1975-06-17.sbd.GEMS.96125.flac16",
+   "track": "https://archive.org/download/gd1975-06-17.sbd.GEMS.96125.flac16/gd1975-06-17d1t03.mp3",
+   "ms": 516,
+   "labelledAt": "2026-11-07T00:11:50.662Z"
+  },
+  "version_picker:108a28bb-01f5-487d-9067-9d75531a5f38:1976-07-13:nv-aff14f2a": {
+   "id": "version_picker:108a28bb-01f5-487d-9067-9d75531a5f38:1976-07-13:nv-aff14f2a",
+   "truth": "yes",
+   "reason": "song found on the stored recording",
+   "identifier": "gd1976-07-13.152150.sbd.1stGen.miller.version2.t.flac16",
+   "track": "https://archive.org/download/gd1976-07-13.152150.sbd.1stGen.miller.version2.t.flac16/05%20Crazy%20Fingers.mp3",
+   "ms": 822,
+   "labelledAt": "2026-11-07T00:11:51.634Z"
+  },
+  "version_picker:108a28bb-01f5-487d-9067-9d75531a5f38:1976-06-09:nv-d0cbdae5": {
+   "id": "version_picker:108a28bb-01f5-487d-9067-9d75531a5f38:1976-06-09:nv-d0cbdae5",
+   "truth": "yes",
+   "reason": "song found on the stored recording",
+   "identifier": "gd1976-06-09.sbd.miller.95399.sbeok.flac16",
+   "track": "https://archive.org/download/gd1976-06-09.sbd.miller.95399.sbeok.flac16/gd76-06-09d1t05.mp3",
+   "ms": 288,
+   "labelledAt": "2026-11-07T00:11:52.073Z"
+  },
+  "version_picker:108a28bb-01f5-487d-9067-9d75531a5f38:1976-06-18:nv-16609de4": {
+   "id": "version_picker:108a28bb-01f5-487d-9067-9d75531a5f38:1976-06-18:nv-16609de4",
+   "truth": "yes",
+   "reason": "song found on the stored recording",
+   "identifier": "gd1976-06-18.165169.sony.ecm99.warburton.wagner.miller.t-flac1644",
+   "track": "https://archive.org/download/gd1976-06-18.165169.sony.ecm99.warburton.wagner.miller.t-flac1644/05%20Crazy%20Fingers.mp3",
+   "ms": 201,
+   "labelledAt": "2026-11-07T00:11:52.425Z"
+  },
+  "version_picker:108a28bb-01f5-487d-9067-9d75531a5f38:1976-06-14:nv-72fb491d": {
+   "id": "version_picker:108a28bb-01f5-487d-9067-9d75531a5f38:1976-06-14:nv-72fb491d",
+   "truth": "yes",
+   "reason": "song found on the stored recording",
+   "identifier": "gd1976-06-14.143026.sbd.betty.composite.dalton.miller.clugston.flac1644",
+   "track": "https://archive.org/download/gd1976-06-14.143026.sbd.betty.composite.dalton.miller.clugston.flac1644/Gd76-06-14S2t06CrazyFingers.mp3",
+   "ms": 5281,
+   "labelledAt": "2026-11-07T00:11:57.857Z"
+  },
+  "version_picker:108a28bb-01f5-487d-9067-9d75531a5f38:1976-09-30:nv-cd15ab24": {
+   "id": "version_picker:108a28bb-01f5-487d-9067-9d75531a5f38:1976-09-30:nv-cd15ab24",
+   "truth": "yes",
+   "reason": "song found on the stored recording",
+   "identifier": "gd1976-09-30.sbd.18107.shnf",
+   "track": "https://archive.org/download/gd1976-09-30.sbd.18107.shnf/gd76-09-30d1t01.mp3",
+   "ms": 997,
+   "labelledAt": "2026-11-07T00:11:59.005Z"
+  },
+  "version_picker:108a28bb-01f5-487d-9067-9d75531a5f38:1976-06-03:nv-673492fe": {
+   "id": "version_picker:108a28bb-01f5-487d-9067-9d75531a5f38:1976-06-03:nv-673492fe",
+   "truth": "yes",
+   "reason": "song found on the stored recording",
+   "identifier": "gd1976-06-03.139643.sbd.betty.pcm.kreider.miller.clugston.fixed.flac16",
+   "track": "https://archive.org/download/gd1976-06-03.139643.sbd.betty.pcm.kreider.miller.clugston.fixed.flac16/Gd76-06-03FixedT13CrazyFingers.mp3",
+   "ms": 564,
+   "labelledAt": "2026-11-07T00:11:59.721Z"
+  },
+  "version_picker:108a28bb-01f5-487d-9067-9d75531a5f38:1975-08-13:nv-57430e00": {
+   "id": "version_picker:108a28bb-01f5-487d-9067-9d75531a5f38:1975-08-13:nv-57430e00",
+   "truth": "yes",
+   "reason": "song found on the stored recording",
+   "identifier": "gd1975-08-13.155570.FM.flegel.flac1644",
+   "track": "https://archive.org/download/gd1975-08-13.155570.FM.flegel.flac1644/11%20Crazy%20Fingers.mp3",
+   "ms": 473,
+   "labelledAt": "2026-11-07T00:12:00.346Z"
+  },
+  "version_picker:108a28bb-01f5-487d-9067-9d75531a5f38:1982-10-10:nv-2e873146": {
+   "id": "version_picker:108a28bb-01f5-487d-9067-9d75531a5f38:1982-10-10:nv-2e873146",
+   "truth": "yes",
+   "reason": "song found on the stored recording",
+   "identifier": "gd1982-10-10.141523.sbd.pcm.dalton.miller.clugston.flac1644",
+   "track": "https://archive.org/download/gd1982-10-10.141523.sbd.pcm.dalton.miller.clugston.flac1644/Gd82-10-10T13CrazyFingers.mp3",
+   "ms": 563,
+   "labelledAt": "2026-11-07T00:12:01.060Z"
+  },
+  "version_picker:108a28bb-01f5-487d-9067-9d75531a5f38:1989-07-02:nv-c3852475": {
+   "id": "version_picker:108a28bb-01f5-487d-9067-9d75531a5f38:1989-07-02:nv-c3852475",
+   "truth": "yes",
+   "reason": "song found on the stored recording",
+   "identifier": "gd1989-07-02.138287.sbd.miller.flac24",
+   "track": "https://archive.org/download/gd1989-07-02.138287.sbd.miller.flac24/03CrazyFingers.mp3",
+   "ms": 535,
+   "labelledAt": "2026-11-07T00:12:01.745Z"
+  },
+  "version_picker:108a28bb-01f5-487d-9067-9d75531a5f38:1991-09-25:nv-2afc7ce4": {
+   "id": "version_picker:108a28bb-01f5-487d-9067-9d75531a5f38:1991-09-25:nv-2afc7ce4",
+   "truth": "yes",
+   "reason": "song found on the stored recording",
+   "identifier": "gd1991-09-25.149681.sbd.cm.miller.flac16",
+   "track": "https://archive.org/download/gd1991-09-25.149681.sbd.cm.miller.flac16/12%20Crazy%20Fingers.mp3",
+   "ms": 197,
+   "labelledAt": "2026-11-07T00:12:02.094Z"
+  },
+  "version_picker:108a28bb-01f5-487d-9067-9d75531a5f38:1990-09-15:nv-0336accd": {
+   "id": "version_picker:108a28bb-01f5-487d-9067-9d75531a5f38:1990-09-15:nv-0336accd",
+   "truth": "yes",
+   "reason": "song found on the stored recording",
+   "identifier": "gd1990-09-15.161622.UltraMatrix.sbd.cm.miller.t.flac1644",
+   "track": "https://archive.org/download/gd1990-09-15.161622.UltraMatrix.sbd.cm.miller.t.flac1644/13%20Crazy%20Fingers.mp3",
+   "ms": 992,
+   "labelledAt": "2026-11-07T00:12:03.238Z"
+  },
+  "version_picker:108a28bb-01f5-487d-9067-9d75531a5f38:1993-05-26:nv-9aea3cee": {
+   "id": "version_picker:108a28bb-01f5-487d-9067-9d75531a5f38:1993-05-26:nv-9aea3cee",
+   "truth": "yes",
+   "reason": "song found on the stored recording",
+   "identifier": "gd93-05-26.sbd.miller.27776.sbeok.flacf",
+   "track": "https://archive.org/download/gd93-05-26.sbd.miller.27776.sbeok.flacf/gd93-05-26d2t04.mp3",
+   "ms": 507,
+   "labelledAt": "2026-11-07T00:12:03.897Z"
+  },
+  "version_picker:108a28bb-01f5-487d-9067-9d75531a5f38:1993-03-24:nv-e96f3d98": {
+   "id": "version_picker:108a28bb-01f5-487d-9067-9d75531a5f38:1993-03-24:nv-e96f3d98",
+   "truth": "yes",
+   "reason": "song found on the stored recording",
+   "identifier": "gd1993-03-24.sbd.miller.109210.flac16",
+   "track": "https://archive.org/download/gd1993-03-24.sbd.miller.109210.flac16/gd93-03-24d2t05.mp3",
+   "ms": 435,
+   "labelledAt": "2026-11-07T00:12:04.484Z"
+  },
+  "version_picker:50f9f577-018a-4aaf-9636-d9e8c4f66c59:1995-07-08:last": {
+   "id": "version_picker:50f9f577-018a-4aaf-9636-d9e8c4f66c59:1995-07-08:last",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd95-07-08.sbd.10071.sbeok.shnf",
+   "track": "https://archive.org/download/gd95-07-08.sbd.10071.sbeok.shnf/gd95-07-08d1t07.mp3",
+   "ms": 855,
+   "labelledAt": "2026-11-07T00:12:05.491Z"
+  },
+  "version_picker:96be9281-a2fa-4944-a6ae-b9f4a0a42077:1995-07-08:last": {
+   "id": "version_picker:96be9281-a2fa-4944-a6ae-b9f4a0a42077:1995-07-08:last",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd95-07-08.sbd.10071.sbeok.shnf",
+   "track": "https://archive.org/download/gd95-07-08.sbd.10071.sbeok.shnf/gd95-07-08d2t01.mp3",
+   "ms": 356,
+   "labelledAt": "2026-11-07T00:12:05.997Z"
+  },
+  "version_picker:0f122f6a-7b81-4d1b-801a-0ffe7663744a:1966-05-19:first": {
+   "id": "version_picker:0f122f6a-7b81-4d1b-801a-0ffe7663744a:1966-05-19:first",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd66-05-19.sbd.lestatkat.6516.sbeok.shnf",
+   "track": "https://archive.org/download/gd66-05-19.sbd.lestatkat.6516.sbeok.shnf/gd1966-05-19d1t17.mp3",
+   "ms": 515,
+   "labelledAt": "2026-11-07T00:12:06.664Z"
+  },
+  "version_picker:d7b46a43-0f40-4259-a972-7a3434510836:1970-05-02:last": {
+   "id": "version_picker:d7b46a43-0f40-4259-a972-7a3434510836:1970-05-02:last",
+   "truth": "no",
+   "reason": "tapes of the night exist; none carries the song",
+   "identifier": "gd1970-05-02.138227.sbd.miller.flac1648",
+   "track": null,
+   "ms": 3335,
+   "labelledAt": "2026-11-07T00:21:57.829Z"
+  },
+  "version_picker:266d8722-f999-4cfe-a8ef-438b96483ae2:1986-12-01:first": {
+   "id": "version_picker:266d8722-f999-4cfe-a8ef-438b96483ae2:1986-12-01:first",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd1986-12-01.170842.sbd.miller.flac1648",
+   "track": "https://archive.org/download/gd1986-12-01.170842.sbd.miller.flac1648/01.%20Black%20Muddy%20River.mp3",
+   "ms": 2510,
+   "labelledAt": "2026-11-07T00:12:23.391Z"
+  },
+  "version_picker:50f9f577-018a-4aaf-9636-d9e8c4f66c59:1993-02-21:first": {
+   "id": "version_picker:50f9f577-018a-4aaf-9636-d9e8c4f66c59:1993-02-21:first",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd93-02-21.aud.seff.1055.sbeok.shnf",
+   "track": "https://archive.org/download/gd93-02-21.aud.seff.1055.sbeok.shnf/gd93-02-21d1t04.mp3",
+   "ms": 2047,
+   "labelledAt": "2026-11-07T00:12:25.590Z"
+  },
+  "version_picker:690782dc-b3df-4fce-b09f-ffc62b735a6c:1995-07-09:last": {
+   "id": "version_picker:690782dc-b3df-4fce-b09f-ffc62b735a6c:1995-07-09:last",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd95-07-09.sbd.7233.sbeok.shnf",
+   "track": "https://archive.org/download/gd95-07-09.sbd.7233.sbeok.shnf/gd1995-07-09d1t03.mp3",
+   "ms": 1245,
+   "labelledAt": "2026-11-07T00:12:26.987Z"
+  },
+  "version_picker:8eb1a43a-21d8-404a-b090-55036387ec6a:1969-02-19:first": {
+   "id": "version_picker:8eb1a43a-21d8-404a-b090-55036387ec6a:1969-02-19:first",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd69-02-19.sbd.cotsman.4511.sbeok.shnf",
+   "track": "https://archive.org/download/gd69-02-19.sbd.cotsman.4511.sbeok.shnf/gd68-06-19d1t02.mp3",
+   "ms": 1539,
+   "labelledAt": "2026-11-07T00:12:28.678Z"
+  },
+  "version_picker:595b69ee-5ad0-4b2a-9b4f-b1b1d7aa7431:1995-06-27:last": {
+   "id": "version_picker:595b69ee-5ad0-4b2a-9b4f-b1b1d7aa7431:1995-06-27:last",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd95-06-27.schoeps.10180.sbeok.shnf",
+   "track": "https://archive.org/download/gd95-06-27.schoeps.10180.sbeok.shnf/gd95-06-27d1t03.mp3",
+   "ms": 1048,
+   "labelledAt": "2026-11-07T00:12:29.878Z"
+  },
+  "version_picker:ee7e6b5a-6cb4-4f5c-ba22-49468aabb006:1992-02-21:first": {
+   "id": "version_picker:ee7e6b5a-6cb4-4f5c-ba22-49468aabb006:1992-02-21:first",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd92-02-21.smr-rehersal.8189.sbeok.shnf",
+   "track": "https://archive.org/download/gd92-02-21.smr-rehersal.8189.sbeok.shnf/smr_rehearsal01.mp3",
+   "ms": 1088,
+   "labelledAt": "2026-11-07T00:12:31.117Z"
+  },
+  "version_picker:39df80af-981c-43a8-aefa-86403cab6737:1969-12-04:first": {
+   "id": "version_picker:39df80af-981c-43a8-aefa-86403cab6737:1969-12-04:first",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd69-12-04.sbd.wizard.23975.sbeok.shnf",
+   "track": "https://archive.org/download/gd69-12-04.sbd.wizard.23975.sbeok.shnf/gd69-12-04d1t03.mp3",
+   "ms": 847,
+   "labelledAt": "2026-11-07T00:12:32.115Z"
+  },
+  "version_picker:f86234d7-9d57-48c8-a5d4-9fac1f74eac2:1976-06-03:first": {
+   "id": "version_picker:f86234d7-9d57-48c8-a5d4-9fac1f74eac2:1976-06-03:first",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd76-06-03.sbd.serafin.7719.sbeok.shnf",
+   "track": "https://archive.org/download/gd76-06-03.sbd.serafin.7719.sbeok.shnf/gd76-06-03d2t02.mp3",
+   "ms": 590,
+   "labelledAt": "2026-11-07T00:12:32.857Z"
+  },
+  "version_picker:e190ec00-0c80-4035-b4f9-f0279e61f760:1995-07-09:last": {
+   "id": "version_picker:e190ec00-0c80-4035-b4f9-f0279e61f760:1995-07-09:last",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd95-07-09.sbd.7233.sbeok.shnf",
+   "track": "https://archive.org/download/gd95-07-09.sbd.7233.sbeok.shnf/gd1995-07-09d1t06.mp3",
+   "ms": 1055,
+   "labelledAt": "2026-11-07T00:12:34.063Z"
+  },
+  "version_picker:192e8f0b-3e59-4c26-a8b9-6799e60d007f:1995-07-02:last": {
+   "id": "version_picker:192e8f0b-3e59-4c26-a8b9-6799e60d007f:1995-07-02:last",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd95-07-02.aud.unk.12578.sbeok.shnf",
+   "track": "https://archive.org/download/gd95-07-02.aud.unk.12578.sbeok.shnf/gd95-07-02d02t02.mp3",
+   "ms": 1051,
+   "labelledAt": "2026-11-07T00:12:35.266Z"
+  },
+  "version_picker:1e67efec-63af-4b22-9ac7-4e46120ff4ab:1995-07-09:last": {
+   "id": "version_picker:1e67efec-63af-4b22-9ac7-4e46120ff4ab:1995-07-09:last",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd95-07-09.sbd.7233.sbeok.shnf",
+   "track": "https://archive.org/download/gd95-07-09.sbd.7233.sbeok.shnf/gd1995-07-09d1t06.mp3",
+   "ms": 1031,
+   "labelledAt": "2026-11-07T00:12:36.448Z"
+  },
+  "version_picker:da74cd79-8366-4f3c-81fd-f34adfd8016c:1993-06-05:first": {
+   "id": "version_picker:da74cd79-8366-4f3c-81fd-f34adfd8016c:1993-06-05:first",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd93-06-05.sbd.wiley.8328.sbeok.shnf",
+   "track": "https://archive.org/download/gd93-06-05.sbd.wiley.8328.sbeok.shnf/gd93-06-05d1t08.mp3",
+   "ms": 1479,
+   "labelledAt": "2026-11-07T00:12:38.078Z"
+  },
+  "version_picker:c30c832d-7bf2-4b1f-80de-aea9cf550505:1967-01-27:first": {
+   "id": "version_picker:c30c832d-7bf2-4b1f-80de-aea9cf550505:1967-01-27:first",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd67-01-27.aud.hanno.16744.sbeok.shnf",
+   "track": "https://archive.org/download/gd67-01-27.aud.hanno.16744.sbeok.shnf/gd67-01-27t02.mp3",
+   "ms": 1763,
+   "labelledAt": "2026-11-07T00:12:39.993Z"
+  },
+  "version_picker:d67ca177-3f9d-414c-b3ce-64a1c0c76885:1995-03-24:last": {
+   "id": "version_picker:d67ca177-3f9d-414c-b3ce-64a1c0c76885:1995-03-24:last",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd95-03-24.akg.5668.sbeok.shnf",
+   "track": "https://archive.org/download/gd95-03-24.akg.5668.sbeok.shnf/gd95.03.24d1t4.mp3",
+   "ms": 1896,
+   "labelledAt": "2026-11-07T00:12:42.041Z"
+  },
+  "version_picker:839f47ea-fe61-449e-9640-9c78c5736954:1979-08-04:first": {
+   "id": "version_picker:839f47ea-fe61-449e-9640-9c78c5736954:1979-08-04:first",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd79-08-04.sbd.munder.9578.sbeok.shnf",
+   "track": "https://archive.org/download/gd79-08-04.sbd.munder.9578.sbeok.shnf/gd79-08-04d1t08.mp3",
+   "ms": 0,
+   "labelledAt": "2026-11-07T00:12:42.193Z"
+  },
+  "version_picker:af3f111f-c8d2-46b1-a111-2f3899d39b7e:1971-07-31:first": {
+   "id": "version_picker:af3f111f-c8d2-46b1-a111-2f3899d39b7e:1971-07-31:first",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd71-07-31.winberg.weiner.5678.gdADT05.sbefail.shnf",
+   "track": "https://archive.org/download/gd71-07-31.winberg.weiner.5678.gdADT05.sbefail.shnf/gd71-07-31d1t03.mp3",
+   "ms": 2350,
+   "labelledAt": "2026-11-07T00:12:44.693Z"
+  },
+  "version_picker:02f554d3-b3b3-4ecf-ba34-f6e7320419a0:1988-06-19:first": {
+   "id": "version_picker:02f554d3-b3b3-4ecf-ba34-f6e7320419a0:1988-06-19:first",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd88-06-19.sennheiser.ladner.17267.sbeok.shnf",
+   "track": "https://archive.org/download/gd88-06-19.sennheiser.ladner.17267.sbeok.shnf/gd1988-06-19d2t01.mp3",
+   "ms": 1757,
+   "labelledAt": "2026-11-07T00:12:46.601Z"
+  },
+  "version_picker:ab16eee3-60a3-4a83-bbff-4d6160f56402:1968-06-14:first": {
+   "id": "version_picker:ab16eee3-60a3-4a83-bbff-4d6160f56402:1968-06-14:first",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd68-06-14.aud.cotsman.16532.sbeok.shnf",
+   "track": "https://archive.org/download/gd68-06-14.aud.cotsman.16532.sbeok.shnf/gd68-06-14d1t03.mp3",
+   "ms": 1532,
+   "labelledAt": "2026-11-07T00:12:48.283Z"
+  },
+  "version_picker:a1bf0b53-2e4c-4d7b-a481-742e9b6b7c23:1973-02-09:first": {
+   "id": "version_picker:a1bf0b53-2e4c-4d7b-a481-742e9b6b7c23:1973-02-09:first",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd73-02-09.sbd.bertha-fink.14939.sbeok.shnf",
+   "track": "https://archive.org/download/gd73-02-09.sbd.bertha-fink.14939.sbeok.shnf/gd73-02-09Berthad2t10.mp3",
+   "ms": 0,
+   "labelledAt": "2026-11-07T00:12:48.435Z"
+  },
+  "version_picker:d7f3ce1e-b98d-4695-adc4-a8131d8d8482:1995-04-02:last": {
+   "id": "version_picker:d7f3ce1e-b98d-4695-adc4-a8131d8d8482:1995-04-02:last",
+   "truth": "no",
+   "reason": "tapes of the night exist; none carries the song",
+   "identifier": "gd95-04-02.sbd.11622.sbeok.shnf",
+   "track": null,
+   "ms": 4479,
+   "labelledAt": "2026-11-07T00:22:02.460Z"
+  },
+  "version_picker:02c26db0-24d1-446c-83ae-e9c2a506c2b2:1976-05-28:first": {
+   "id": "version_picker:02c26db0-24d1-446c-83ae-e9c2a506c2b2:1976-05-28:first",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd76-05-2x.sbd.vernon.9769.sbeok.shnf",
+   "track": "https://archive.org/download/gd76-05-2x.sbd.vernon.9769.sbeok.shnf/gd76-05-30d1t03.mp3",
+   "ms": 7070,
+   "labelledAt": "2026-11-07T00:13:03.104Z"
+  },
+  "version_picker:673f8f2a-8c36-4308-8bfb-adf6b3b4adb5:1968-01-17:first": {
+   "id": "version_picker:673f8f2a-8c36-4308-8bfb-adf6b3b4adb5:1968-01-17:first",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd1968-01-17.sbd.cotsman.11795.shnf",
+   "track": "https://archive.org/download/gd1968-01-17.sbd.cotsman.11795.shnf/gd68-01-17d1t05.mp3",
+   "ms": 617,
+   "labelledAt": "2026-11-07T00:13:03.872Z"
+  },
+  "version_picker:b337c4bd-7520-4b66-a2bd-481fbf548ce9:1990-03-26:last": {
+   "id": "version_picker:b337c4bd-7520-4b66-a2bd-481fbf548ce9:1990-03-26:last",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd1990-03-26.sbd.miller.87350.sbeok.flac16",
+   "track": "https://archive.org/download/gd1990-03-26.sbd.miller.87350.sbeok.flac16/gd90-03-26d2t01.mp3",
+   "ms": 897,
+   "labelledAt": "2026-11-07T00:13:04.920Z"
+  },
+  "version_picker:bfc707a7-3a7b-4622-a6be-543d15350ff2:1967-01-14:first": {
+   "id": "version_picker:bfc707a7-3a7b-4622-a6be-543d15350ff2:1967-01-14:first",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd67-01-14.sbd.vernon.9108.sbeok.shnf",
+   "track": "https://archive.org/download/gd67-01-14.sbd.vernon.9108.sbeok.shnf/gd67-01-14d1t01.mp3",
+   "ms": 1131,
+   "labelledAt": "2026-11-07T00:13:06.202Z"
+  },
+  "version_picker:de84d234-1594-40bd-92c8-7d874c6eff69:1995-06-21:last": {
+   "id": "version_picker:de84d234-1594-40bd-92c8-7d874c6eff69:1995-06-21:last",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd95-06-21.naks.5971.sbeok.shnf",
+   "track": "https://archive.org/download/gd95-06-21.naks.5971.sbeok.shnf/gd95-06-21d1t05.mp3",
+   "ms": 757,
+   "labelledAt": "2026-11-07T00:13:07.110Z"
+  },
+  "version_picker:a1bf0b53-2e4c-4d7b-a481-742e9b6b7c23:1995-07-06:last": {
+   "id": "version_picker:a1bf0b53-2e4c-4d7b-a481-742e9b6b7c23:1995-07-06:last",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd95-07-06.NEWsbd.30888.sbeok.shnf_shn",
+   "track": "https://archive.org/download/gd95-07-06.NEWsbd.30888.sbeok.shnf_shn/gd95-07-06d1t08.mp3",
+   "ms": 0,
+   "labelledAt": "2026-11-07T00:13:07.261Z"
+  },
+  "version_picker:99f7c11c-2670-4be6-b891-d235fc914ef9:1982-10-10:first": {
+   "id": "version_picker:99f7c11c-2670-4be6-b891-d235fc914ef9:1982-10-10:first",
+   "truth": "no",
+   "reason": "tapes of the night exist; none carries the song",
+   "identifier": "gd82-10-10.sbd.sacks.338.sbefail.shnf",
+   "track": null,
+   "ms": 3162,
+   "labelledAt": "2026-11-07T00:22:05.772Z"
+  },
+  "version_picker:1e67efec-63af-4b22-9ac7-4e46120ff4ab:1974-02-22:first": {
+   "id": "version_picker:1e67efec-63af-4b22-9ac7-4e46120ff4ab:1974-02-22:first",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd74-02-22.sbd.patched.sirmick.21539.sbeok.shnf",
+   "track": "https://archive.org/download/gd74-02-22.sbd.patched.sirmick.21539.sbeok.shnf/gd74-02-22d1t01.mp3",
+   "ms": 6232,
+   "labelledAt": "2026-11-07T00:13:24.306Z"
+  },
+  "version_picker:1d7b079a-5c93-4074-bee5-706fb21dc822:1977-02-26:first": {
+   "id": "version_picker:1d7b079a-5c93-4074-bee5-706fb21dc822:1977-02-26:first",
+   "truth": "no",
+   "reason": "tapes of the night exist; none carries the song",
+   "identifier": "gd77-02-26.sbd.alphadog.9752.sbeok.shnf",
+   "track": null,
+   "ms": 3872,
+   "labelledAt": "2026-11-07T00:22:09.796Z"
+  },
+  "version_picker:2ad4bf96-3c81-44cf-a1fe-62fba7b63e01:1995-07-05:last": {
+   "id": "version_picker:2ad4bf96-3c81-44cf-a1fe-62fba7b63e01:1995-07-05:last",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd1995-07-05.sbd.larson.35170.flac16",
+   "track": "https://archive.org/download/gd1995-07-05.sbd.larson.35170.flac16/gd95-07-05sbdd2t03.mp3",
+   "ms": 989,
+   "labelledAt": "2026-11-07T00:13:30.624Z"
+  },
+  "version_picker:daa42411-b275-4f19-a006-3e6c67a9bf3d:1995-07-08:last": {
+   "id": "version_picker:daa42411-b275-4f19-a006-3e6c67a9bf3d:1995-07-08:last",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd95-07-08.sbd.10071.sbeok.shnf",
+   "track": "https://archive.org/download/gd95-07-08.sbd.10071.sbeok.shnf/gd95-07-08d2t07.mp3",
+   "ms": 478,
+   "labelledAt": "2026-11-07T00:13:31.254Z"
+  },
+  "version_picker:58e39988-9ace-4570-814b-ef9d2ad6ecd9:1995-06-30:last": {
+   "id": "version_picker:58e39988-9ace-4570-814b-ef9d2ad6ecd9:1995-06-30:last",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd95-06-30.schoeps.3376.sbeok.shnf",
+   "track": "https://archive.org/download/gd95-06-30.schoeps.3376.sbeok.shnf/gd95-06-30d1t02.mp3",
+   "ms": 482,
+   "labelledAt": "2026-11-07T00:13:31.887Z"
+  },
+  "version_picker:9e25ef1d-7afe-43b3-98ec-08ca0366c313:1995-07-05:last": {
+   "id": "version_picker:9e25ef1d-7afe-43b3-98ec-08ca0366c313:1995-07-05:last",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd1995-07-05.sbd.larson.35170.flac16",
+   "track": "https://archive.org/download/gd1995-07-05.sbd.larson.35170.flac16/gd95-07-05sbdd1t02.mp3",
+   "ms": 514,
+   "labelledAt": "2026-11-07T00:13:32.553Z"
+  },
+  "version_picker:8d67d6bf-0a6b-4a44-846f-317d61b7a026:1975-04-02:first": {
+   "id": "version_picker:8d67d6bf-0a6b-4a44-846f-317d61b7a026:1975-04-02:first",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd75-04-02.sbd.backus.14290.sbeok.shnf",
+   "track": "https://archive.org/download/gd75-04-02.sbd.backus.14290.sbeok.shnf/gd1975-04-02T12.mp3",
+   "ms": 2343,
+   "labelledAt": "2026-11-07T00:13:35.048Z"
+  },
+  "version_picker:83fb2ad9-cabe-4c47-92b4-ded45aee54f0:1971-04-29:last": {
+   "id": "version_picker:83fb2ad9-cabe-4c47-92b4-ded45aee54f0:1971-04-29:last",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd71-04-29.sbd.frisco.16782.sbeok.shnf",
+   "track": "https://archive.org/download/gd71-04-29.sbd.frisco.16782.sbeok.shnf/gd71-04-29d3t01.mp3",
+   "ms": 631,
+   "labelledAt": "2026-11-07T00:13:35.829Z"
+  },
+  "version_picker:4d02971c-840e-4ed1-91d4-7eac8dd709b2:1995-06-25:last": {
+   "id": "version_picker:4d02971c-840e-4ed1-91d4-7eac8dd709b2:1995-06-25:last",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd95-06-25.sbd.2236.sbefail.shnf",
+   "track": "https://archive.org/download/gd95-06-25.sbd.2236.sbefail.shnf/gd95-06-25d3t03.mp3",
+   "ms": 494,
+   "labelledAt": "2026-11-07T00:13:36.474Z"
+  },
+  "version_picker:66075d32-ad63-403b-8e07-251bb7dc0b31:1982-09-15:first": {
+   "id": "version_picker:66075d32-ad63-403b-8e07-251bb7dc0b31:1982-09-15:first",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd1982-09-15.sbd.miller.124586.flac16",
+   "track": "https://archive.org/download/gd1982-09-15.sbd.miller.124586.flac16/gd82-09-15s2t11.mp3",
+   "ms": 719,
+   "labelledAt": "2026-11-07T00:13:37.343Z"
+  },
+  "version_picker:448bd0b3-6293-45e9-b790-e799b50419d3:1995-06-30:last": {
+   "id": "version_picker:448bd0b3-6293-45e9-b790-e799b50419d3:1995-06-30:last",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd95-06-30.schoeps.3376.sbeok.shnf",
+   "track": "https://archive.org/download/gd95-06-30.schoeps.3376.sbeok.shnf/gd95-06-30d2t04.mp3",
+   "ms": 520,
+   "labelledAt": "2026-11-07T00:13:38.014Z"
+  },
+  "version_picker:69456821-7ece-455e-be96-bff92b9f1c2b:1995-06-27:last": {
+   "id": "version_picker:69456821-7ece-455e-be96-bff92b9f1c2b:1995-06-27:last",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd95-06-27.schoeps.10180.sbeok.shnf",
+   "track": "https://archive.org/download/gd95-06-27.schoeps.10180.sbeok.shnf/gd95-06-27d1t05.mp3",
+   "ms": 899,
+   "labelledAt": "2026-11-07T00:13:39.064Z"
+  },
+  "version_picker:9e25ef1d-7afe-43b3-98ec-08ca0366c313:1973-02-09:first": {
+   "id": "version_picker:9e25ef1d-7afe-43b3-98ec-08ca0366c313:1973-02-09:first",
+   "truth": "no",
+   "reason": "tapes of the night exist; none carries the song",
+   "identifier": "gd73-02-09.sbd.bertha-fink.14939.sbeok.shnf",
+   "track": null,
+   "ms": 4039,
+   "labelledAt": "2026-11-07T00:22:13.986Z"
+  },
+  "version_picker:30cbcc47-cee3-492f-8e44-73386b4fcba8:1995-06-25:last": {
+   "id": "version_picker:30cbcc47-cee3-492f-8e44-73386b4fcba8:1995-06-25:last",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd95-06-25.sbd.2236.sbefail.shnf",
+   "track": "https://archive.org/download/gd95-06-25.sbd.2236.sbefail.shnf/gd95-06-25d1t04.mp3",
+   "ms": 2188,
+   "labelledAt": "2026-11-07T00:13:49.925Z"
+  },
+  "version_picker:4749553c-1b70-4d1f-9804-d3632be15649:1995-07-01:last": {
+   "id": "version_picker:4749553c-1b70-4d1f-9804-d3632be15649:1995-07-01:last",
+   "truth": "no",
+   "reason": "the Archive lists no Grateful Dead recording of the night",
+   "ms": 522,
+   "labelledAt": "2026-11-07T00:13:50.597Z"
+  },
+  "version_picker:546214c9-b36f-4cf5-8464-32db3de1546a:1990-07-21:last": {
+   "id": "version_picker:546214c9-b36f-4cf5-8464-32db3de1546a:1990-07-21:last",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd90-07-21.sbd.conner.7832.sbeok.shnf",
+   "track": "https://archive.org/download/gd90-07-21.sbd.conner.7832.sbeok.shnf/gd90-07-21d1t06.mp3",
+   "ms": 2312,
+   "labelledAt": "2026-11-07T00:13:53.061Z"
+  },
+  "version_picker:6a4e4af4-71be-4f57-bdc6-bd0ebbad4d16:1971-09-30:first": {
+   "id": "version_picker:6a4e4af4-71be-4f57-bdc6-bd0ebbad4d16:1971-09-30:first",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd71-09-30.sbd.cousinit.18109.sbeok.shnf",
+   "track": "https://archive.org/download/gd71-09-30.sbd.cousinit.18109.sbeok.shnf/gd71-09-30d1t08.mp3",
+   "ms": 1650,
+   "labelledAt": "2026-11-07T00:13:54.863Z"
+  },
+  "version_picker:266d8722-f999-4cfe-a8ef-438b96483ae2:1995-07-09:last": {
+   "id": "version_picker:266d8722-f999-4cfe-a8ef-438b96483ae2:1995-07-09:last",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd95-07-09.sbd.7233.sbeok.shnf",
+   "track": "https://archive.org/download/gd95-07-09.sbd.7233.sbeok.shnf/gd1995-07-09d2t06.mp3",
+   "ms": 2000,
+   "labelledAt": "2026-11-07T00:13:57.014Z"
+  },
+  "version_picker:1769c7fb-ae2e-401f-9ee1-178095ce46d8:1995-07-06:last": {
+   "id": "version_picker:1769c7fb-ae2e-401f-9ee1-178095ce46d8:1995-07-06:last",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd95-07-06.NEWsbd.30888.sbeok.shnf_shn",
+   "track": "https://archive.org/download/gd95-07-06.NEWsbd.30888.sbeok.shnf_shn/gd95-07-06d1t05.mp3",
+   "ms": 1493,
+   "labelledAt": "2026-11-07T00:13:58.658Z"
+  },
+  "version_picker:63fc76eb-f736-475a-8278-9851f063cb88:1995-07-09:last": {
+   "id": "version_picker:63fc76eb-f736-475a-8278-9851f063cb88:1995-07-09:last",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd95-07-09.sbd.7233.sbeok.shnf",
+   "track": "https://archive.org/download/gd95-07-09.sbd.7233.sbeok.shnf/gd1995-07-09d2t01.mp3",
+   "ms": 1389,
+   "labelledAt": "2026-11-07T00:14:00.198Z"
+  },
+  "version_picker:1ba63f85-4764-4ca6-bc0f-7c2cec8af6a6:1969-01-24:first": {
+   "id": "version_picker:1ba63f85-4764-4ca6-bc0f-7c2cec8af6a6:1969-01-24:first",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd69-01-24.sbd.kaplan.7922.sbeok.shnf",
+   "track": "https://archive.org/download/gd69-01-24.sbd.kaplan.7922.sbeok.shnf/gd69-01-24d1t05.mp3",
+   "ms": 1442,
+   "labelledAt": "2026-11-07T00:14:01.791Z"
+  },
+  "version_picker:f86234d7-9d57-48c8-a5d4-9fac1f74eac2:1995-07-09:last": {
+   "id": "version_picker:f86234d7-9d57-48c8-a5d4-9fac1f74eac2:1995-07-09:last",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd95-07-09.sbd.7233.sbeok.shnf",
+   "track": "https://archive.org/download/gd95-07-09.sbd.7233.sbeok.shnf/gd1995-07-09d1t09.mp3",
+   "ms": 2011,
+   "labelledAt": "2026-11-07T00:14:03.952Z"
+  },
+  "version_picker:84658a01-752d-4447-a8b5-4280223b8d59:1974-10-18:last": {
+   "id": "version_picker:84658a01-752d-4447-a8b5-4280223b8d59:1974-10-18:last",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd74-10-18.sbd.bertha-ashley.22796.sbeok.shnf",
+   "track": "https://archive.org/download/gd74-10-18.sbd.bertha-ashley.22796.sbeok.shnf/gd74-10-18Berthad1t13.mp3",
+   "ms": 2311,
+   "labelledAt": "2026-11-07T00:14:06.415Z"
+  },
+  "version_picker:3eca54b5-c955-4d25-8b75-a02af94a812c:1979-08-04:first": {
+   "id": "version_picker:3eca54b5-c955-4d25-8b75-a02af94a812c:1979-08-04:first",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd79-08-04.sbd.munder.9578.sbeok.shnf",
+   "track": "https://archive.org/download/gd79-08-04.sbd.munder.9578.sbeok.shnf/gd79-08-04d1t09.mp3",
+   "ms": 3494,
+   "labelledAt": "2026-11-07T00:14:10.060Z"
+  },
+  "version_picker:673f8f2a-8c36-4308-8bfb-adf6b3b4adb5:1974-06-30:last": {
+   "id": "version_picker:673f8f2a-8c36-4308-8bfb-adf6b3b4adb5:1974-06-30:last",
+   "truth": "no",
+   "reason": "tapes of the night exist; none carries the song",
+   "identifier": "gd74-06-30.sbd.weiner.17814.sbeok.shnf",
+   "track": null,
+   "ms": 5897,
+   "labelledAt": "2026-11-07T00:22:20.033Z"
+  },
+  "version_picker:0fd22bbc-9f76-409d-bc25-d5cb3ea8bf05:1971-10-19:first": {
+   "id": "version_picker:0fd22bbc-9f76-409d-bc25-d5cb3ea8bf05:1971-10-19:first",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd71-10-19.orefm.clugston.3301.sbeok.shnf",
+   "track": "https://archive.org/download/gd71-10-19.orefm.clugston.3301.sbeok.shnf/gd71-10-19d1t09.mp3",
+   "ms": 1161,
+   "labelledAt": "2026-11-07T00:14:43.489Z"
+  },
+  "version_picker:16c68402-47ee-48dc-9c8d-6b640a48e82c:1995-06-22:last": {
+   "id": "version_picker:16c68402-47ee-48dc-9c8d-6b640a48e82c:1995-06-22:last",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd95-06-22.naks.18802.sbeok.shnf",
+   "track": "https://archive.org/download/gd95-06-22.naks.18802.sbeok.shnf/gd95-06-22d1t03.wav.mp3",
+   "ms": 392,
+   "labelledAt": "2026-11-07T00:14:44.033Z"
+  },
+  "version_picker:09370ed8-42f4-450e-86b9-a20703dc8979:1971-02-19:first": {
+   "id": "version_picker:09370ed8-42f4-450e-86b9-a20703dc8979:1971-02-19:first",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd71-02-19.sbd.orf.1029.sbeok.shnf",
+   "track": "https://archive.org/download/gd71-02-19.sbd.orf.1029.sbeok.shnf/d2t06.mp3",
+   "ms": 669,
+   "labelledAt": "2026-11-07T00:14:44.854Z"
+  },
+  "version_picker:9c36a52b-18c9-4228-b8ee-9636daacac1d:1976-09-25:last": {
+   "id": "version_picker:9c36a52b-18c9-4228-b8ee-9636daacac1d:1976-09-25:last",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd76-09-25.sbd.aj.246.sbefail.shnf",
+   "track": "https://archive.org/download/gd76-09-25.sbd.aj.246.sbefail.shnf/gd76-09-25d2t07.mp3",
+   "ms": 1256,
+   "labelledAt": "2026-11-07T00:14:46.261Z"
+  },
+  "version_picker:c886c8fe-0d3c-4aa4-8ad3-fb2a82e73036:1970-06-07:first": {
+   "id": "version_picker:c886c8fe-0d3c-4aa4-8ad3-fb2a82e73036:1970-06-07:first",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd70-06-07.sbd.hollister.98.sbeok.shnf",
+   "track": "https://archive.org/download/gd70-06-07.sbd.hollister.98.sbeok.shnf/gd700607d1t04.wav.mp3",
+   "ms": 1243,
+   "labelledAt": "2026-11-07T00:14:47.656Z"
+  },
+  "version_picker:690782dc-b3df-4fce-b09f-ffc62b735a6c:1993-02-21:first": {
+   "id": "version_picker:690782dc-b3df-4fce-b09f-ffc62b735a6c:1993-02-21:first",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd93-02-21.aud.seff.1055.sbeok.shnf",
+   "track": "https://archive.org/download/gd93-02-21.aud.seff.1055.sbeok.shnf/gd93-02-21d1t03.mp3",
+   "ms": 331,
+   "labelledAt": "2026-11-07T00:14:48.138Z"
+  },
+  "version_picker:1769c7fb-ae2e-401f-9ee1-178095ce46d8:1971-12-31:first": {
+   "id": "version_picker:1769c7fb-ae2e-401f-9ee1-178095ce46d8:1971-12-31:first",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd71-12-31.fm.lanum.135.sbeok.shnf",
+   "track": "https://archive.org/download/gd71-12-31.fm.lanum.135.sbeok.shnf/gd71-12-31d3track02.wav.mp3",
+   "ms": 987,
+   "labelledAt": "2026-11-07T00:14:49.277Z"
+  },
+  "landing_pick:0b0f02e4-4c1a-4a4b-914a-fa317e86b4a8:1978-01-06:hero": {
+   "id": "landing_pick:0b0f02e4-4c1a-4a4b-914a-fa317e86b4a8:1978-01-06:hero",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd78-01-06.sbd.clugston.6953.sbeok.shnf",
+   "track": "https://archive.org/download/gd78-01-06.sbd.clugston.6953.sbeok.shnf/gd78-01-06d2t05.mp3",
+   "ms": 0,
+   "labelledAt": "2026-11-07T00:14:49.428Z"
+  },
+  "landing_pick:5382fb24-d4ee-4073-bcfb-edcab7a2d860:1974-10-18:hero": {
+   "id": "landing_pick:5382fb24-d4ee-4073-bcfb-edcab7a2d860:1974-10-18:hero",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd1974-10-18.sbd.fink-nayfield-ferguson.225.shnf",
+   "track": "https://archive.org/download/gd1974-10-18.sbd.fink-nayfield-ferguson.225.shnf/gd74-10-18d1t03.mp3",
+   "ms": 0,
+   "labelledAt": "2026-11-07T00:14:49.579Z"
+  },
+  "landing_pick:07c80ec4-1ae9-4236-bf9f-b1ab71b45fc1:1967-08-05:hero": {
+   "id": "landing_pick:07c80ec4-1ae9-4236-bf9f-b1ab71b45fc1:1967-08-05:hero",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd1967-08-05.169430.sbd.flegel.flac1648",
+   "track": "https://archive.org/download/gd1967-08-05.169430.sbd.flegel.flac1648/04%20That's%20It%20For%20The%20Other%20One.mp3",
+   "ms": 0,
+   "labelledAt": "2026-11-07T00:14:49.729Z"
+  },
+  "landing_pick:a712edf9-6474-44ce-8486-0243aab7d9e2:1971-02-18:hero": {
+   "id": "landing_pick:a712edf9-6474-44ce-8486-0243aab7d9e2:1971-02-18:hero",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd71-02-18.sbd.orf.107.sbeok.shnf",
+   "track": "https://archive.org/download/gd71-02-18.sbd.orf.107.sbeok.shnf/gd-1971-02-18-d2-t07.wav.mp3",
+   "ms": 0,
+   "labelledAt": "2026-11-07T00:14:49.880Z"
+  },
+  "landing_pick:8fce1729-ec24-4172-a123-f385111a4342:1968-01-17:hero": {
+   "id": "landing_pick:8fce1729-ec24-4172-a123-f385111a4342:1968-01-17:hero",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd1968-01-17.sbd.cotsman.11795.shnf",
+   "track": "https://archive.org/download/gd1968-01-17.sbd.cotsman.11795.shnf/gd68-01-17d1t04.mp3",
+   "ms": 0,
+   "labelledAt": "2026-11-07T00:14:50.031Z"
+  },
+  "landing_pick:4461e4d5-3fa3-4136-87dc-61bcc6f0ff6f:1965-11-03:hero": {
+   "id": "landing_pick:4461e4d5-3fa3-4136-87dc-61bcc6f0ff6f:1965-11-03:hero",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd65-11-03.sbd.vernon.9044.sbeok.shnf",
+   "track": "https://archive.org/download/gd65-11-03.sbd.vernon.9044.sbeok.shnf/gd65-11-03d1t05.mp3",
+   "ms": 0,
+   "labelledAt": "2026-11-07T00:14:50.182Z"
+  },
+  "landing_pick:0a15ece0-85ff-4ba3-8906-544320e5eef0:1975-06-04:hero": {
+   "id": "landing_pick:0a15ece0-85ff-4ba3-8906-544320e5eef0:1975-06-04:hero",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd1975-06-04.145777.sbd.pcm.dalton.miller.noel.flac16",
+   "track": "https://archive.org/download/gd1975-06-04.145777.sbd.pcm.dalton.miller.noel.flac16/gd75-06-04.t03.mp3",
+   "ms": 0,
+   "labelledAt": "2026-11-07T00:14:50.334Z"
+  },
+  "landing_pick:7c57164a-31bd-48d0-847d-febec72345ff:1974-03-23:hero": {
+   "id": "landing_pick:7c57164a-31bd-48d0-847d-febec72345ff:1974-03-23:hero",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd1974-03-23.sbd.clugston-orf.1995.sbeok.shnf",
+   "track": "https://archive.org/download/gd1974-03-23.sbd.clugston-orf.1995.sbeok.shnf/gd74-3-23Newd1t07.mp3",
+   "ms": 0,
+   "labelledAt": "2026-11-07T00:14:50.485Z"
+  },
+  "landing_pick:c845666a-43c4-4da4-b468-d88ff2b9f141:1977-03-18:hero": {
+   "id": "landing_pick:c845666a-43c4-4da4-b468-d88ff2b9f141:1977-03-18:hero",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd77-03-18.sbd.unknown.254.sbeok.shnf",
+   "track": "https://archive.org/download/gd77-03-18.sbd.unknown.254.sbeok.shnf/gd77-03-18-d2t02.mp3",
+   "ms": 0,
+   "labelledAt": "2026-11-07T00:14:50.636Z"
+  },
+  "landing_pick:d5ce7d48-b941-4882-8517-84bda198dcc8:1975-03-01:hero": {
+   "id": "landing_pick:d5ce7d48-b941-4882-8517-84bda198dcc8:1975-03-01:hero",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd1975-03-01.145786.sbd.gans.miller.noel.flac1644",
+   "track": "https://archive.org/download/gd1975-03-01.145786.sbd.gans.miller.noel.flac1644/gd75.xx.xx.s3.t09.mp3",
+   "ms": 0,
+   "labelledAt": "2026-11-07T00:14:50.787Z"
+  },
+  "landing_pick:00692cb0-0090-4843-a956-a3c3aeced63d:1974-06-20:hero": {
+   "id": "landing_pick:00692cb0-0090-4843-a956-a3c3aeced63d:1974-06-20:hero",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd74-06-20.sbd.clugston.2179.sbeok.shnf",
+   "track": "https://archive.org/download/gd74-06-20.sbd.clugston.2179.sbeok.shnf/gd74-6-20d2t06.mp3",
+   "ms": 0,
+   "labelledAt": "2026-11-07T00:14:50.939Z"
+  },
+  "landing_pick:197a2f1b-1182-4482-9e2f-ef9968161ed9:1967-10-22:hero": {
+   "id": "landing_pick:197a2f1b-1182-4482-9e2f-ef9968161ed9:1967-10-22:hero",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd1967-10-22.sbd.yerys.1525.shnf",
+   "track": "https://archive.org/download/gd1967-10-22.sbd.yerys.1525.shnf/gd67-10-22d1t07.mp3",
+   "ms": 0,
+   "labelledAt": "2026-11-07T00:14:51.089Z"
+  },
+  "landing_pick:66e851ef-7035-4a75-9947-0698ec199013:1971-05-29:hero": {
+   "id": "landing_pick:66e851ef-7035-4a75-9947-0698ec199013:1971-05-29:hero",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd71-05-29.aud.cotsman.19153.sbeok.shnf",
+   "track": "https://archive.org/download/gd71-05-29.aud.cotsman.19153.sbeok.shnf/gd71-05-29d1t04.mp3",
+   "ms": 751,
+   "labelledAt": "2026-11-07T00:14:51.991Z"
+  },
+  "landing_pick:83fb2ad9-cabe-4c47-92b4-ded45aee54f0:1967-01-27:hero": {
+   "id": "landing_pick:83fb2ad9-cabe-4c47-92b4-ded45aee54f0:1967-01-27:hero",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd67-01-27.aud.hanno.16744.sbeok.shnf",
+   "track": "https://archive.org/download/gd67-01-27.aud.hanno.16744.sbeok.shnf/gd67-01-27t05.mp3",
+   "ms": 410,
+   "labelledAt": "2026-11-07T00:14:52.553Z"
+  },
+  "landing_pick:30cbcc47-cee3-492f-8e44-73386b4fcba8:1969-06-11:hero": {
+   "id": "landing_pick:30cbcc47-cee3-492f-8e44-73386b4fcba8:1969-06-11:hero",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd1969-06-11.145953.aud.flac1644",
+   "track": "https://archive.org/download/gd1969-06-11.145953.aud.flac1644/s1t03%20gd69-06-11.flac",
+   "ms": 2089,
+   "labelledAt": "2026-11-07T00:14:54.793Z"
+  },
+  "landing_pick:d7f3ce1e-b98d-4695-adc4-a8131d8d8482:1975-03-23:hero": {
+   "id": "landing_pick:d7f3ce1e-b98d-4695-adc4-a8131d8d8482:1975-03-23:hero",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd1975-03-23.sbd.snack.18525.flac16",
+   "track": "https://archive.org/download/gd1975-03-23.sbd.snack.18525.flac16/snackd1t03.mp3",
+   "ms": 4324,
+   "labelledAt": "2026-11-07T00:14:59.269Z"
+  },
+  "landing_pick:39df80af-981c-43a8-aefa-86403cab6737:1969-12-04:hero": {
+   "id": "landing_pick:39df80af-981c-43a8-aefa-86403cab6737:1969-12-04:hero",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd69-12-04.sbd.wizard.23975.sbeok.shnf",
+   "track": "https://archive.org/download/gd69-12-04.sbd.wizard.23975.sbeok.shnf/gd69-12-04d1t03.mp3",
+   "ms": 0,
+   "labelledAt": "2026-11-07T00:14:59.420Z"
+  },
+  "landing_pick:78f6530c-2bac-4191-b2da-fce847d9b0a3:1969-05-10:hero": {
+   "id": "landing_pick:78f6530c-2bac-4191-b2da-fce847d9b0a3:1969-05-10:hero",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd69-05-10.sbd.tzuriel.1336.sbeok.shnf",
+   "track": "https://archive.org/download/gd69-05-10.sbd.tzuriel.1336.sbeok.shnf/gd69-05-10d1t01.mp3",
+   "ms": 1916,
+   "labelledAt": "2026-11-07T00:15:01.486Z"
+  },
+  "landing_pick:02f554d3-b3b3-4ecf-ba34-f6e7320419a0:1988-06-19:hero": {
+   "id": "landing_pick:02f554d3-b3b3-4ecf-ba34-f6e7320419a0:1988-06-19:hero",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd88-06-19.sennheiser.ladner.17267.sbeok.shnf",
+   "track": "https://archive.org/download/gd88-06-19.sennheiser.ladner.17267.sbeok.shnf/gd1988-06-19d2t01.mp3",
+   "ms": 0,
+   "labelledAt": "2026-11-07T00:15:01.636Z"
+  },
+  "landing_pick:c6e479e0-0cac-484f-84c6-96205fbebf41:1993-02-21:hero": {
+   "id": "landing_pick:c6e479e0-0cac-484f-84c6-96205fbebf41:1993-02-21:hero",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd93-02-21.aud.seff.1055.sbeok.shnf",
+   "track": "https://archive.org/download/gd93-02-21.aud.seff.1055.sbeok.shnf/gd93-02-21d1t09.mp3",
+   "ms": 443,
+   "labelledAt": "2026-11-07T00:15:02.230Z"
+  },
+  "landing_pick:8eb1a43a-21d8-404a-b090-55036387ec6a:1969-02-19:hero": {
+   "id": "landing_pick:8eb1a43a-21d8-404a-b090-55036387ec6a:1969-02-19:hero",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd69-02-19.sbd.cotsman.4511.sbeok.shnf",
+   "track": "https://archive.org/download/gd69-02-19.sbd.cotsman.4511.sbeok.shnf/gd68-06-19d1t02.mp3",
+   "ms": 0,
+   "labelledAt": "2026-11-07T00:15:02.381Z"
+  },
+  "landing_pick:3e7200c7-4825-4e9f-87ff-07d62d00e86a:1970-08-18:hero": {
+   "id": "landing_pick:3e7200c7-4825-4e9f-87ff-07d62d00e86a:1970-08-18:hero",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd70-08-18.aud.yerys.1346.sbeok.shnf",
+   "track": "https://archive.org/download/gd70-08-18.aud.yerys.1346.sbeok.shnf/gd70-08-18d1t06.mp3",
+   "ms": 634,
+   "labelledAt": "2026-11-07T00:15:03.169Z"
+  },
+  "landing_pick:02ea4de5-5ee5-40e9-99e0-bcdf6d8ddeb5:1981-11-11:hero": {
+   "id": "landing_pick:02ea4de5-5ee5-40e9-99e0-bcdf6d8ddeb5:1981-11-11:hero",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd1981-11-11.149798.akg224.dyche.flac1644",
+   "track": "https://archive.org/download/gd1981-11-11.149798.akg224.dyche.flac1644/gd1985-11-11d02t09.flac",
+   "ms": 1034,
+   "labelledAt": "2026-11-07T00:15:04.355Z"
+  },
+  "landing_pick:51a67828-2412-4d75-abf3-d07f60f40989:1967-11-14:hero": {
+   "id": "landing_pick:51a67828-2412-4d75-abf3-d07f60f40989:1967-11-14:hero",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd67-11-14.sbd.unknown.17417.sbefail.shnf",
+   "track": "https://archive.org/download/gd67-11-14.sbd.unknown.17417.sbefail.shnf/gd67-11-14d1t02.mp3",
+   "ms": 1168,
+   "labelledAt": "2026-11-07T00:15:05.674Z"
+  },
+  "landing_pick:09370ed8-42f4-450e-86b9-a20703dc8979:1971-02-19:hero": {
+   "id": "landing_pick:09370ed8-42f4-450e-86b9-a20703dc8979:1971-02-19:hero",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd71-02-19.sbd.orf.1029.sbeok.shnf",
+   "track": "https://archive.org/download/gd71-02-19.sbd.orf.1029.sbeok.shnf/d2t06.mp3",
+   "ms": 0,
+   "labelledAt": "2026-11-07T00:15:05.826Z"
+  },
+  "landing_pick:7a00a800-db6e-4631-b904-3d97423cb03b:1979-11-04:hero": {
+   "id": "landing_pick:7a00a800-db6e-4631-b904-3d97423cb03b:1979-11-04:hero",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd1979-11-04.142917.sbd.miller.flac1648",
+   "track": "https://archive.org/download/gd1979-11-04.142917.sbd.miller.flac1648/11AlabamaGetaway.mp3",
+   "ms": 1021,
+   "labelledAt": "2026-11-07T00:15:06.999Z"
+  },
+  "landing_pick:54547e6f-e620-4551-a263-de4abb422dc6:1969-08-21:hero": {
+   "id": "landing_pick:54547e6f-e620-4551-a263-de4abb422dc6:1969-08-21:hero",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd69-08-21.sbd.cotsman.13850.sbeok.shnf",
+   "track": "https://archive.org/download/gd69-08-21.sbd.cotsman.13850.sbeok.shnf/gd69-08-21d1t02.mp3",
+   "ms": 926,
+   "labelledAt": "2026-11-07T00:15:08.077Z"
+  },
+  "landing_pick:8ad7b487-3ae5-42c0-8dc6-e0cc7e17d362:1966-02-25:hero": {
+   "id": "landing_pick:8ad7b487-3ae5-42c0-8dc6-e0cc7e17d362:1966-02-25:hero",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd66-02-25.sbd.unknown.1593.sbefail.shnf",
+   "track": "https://archive.org/download/gd66-02-25.sbd.unknown.1593.sbefail.shnf/gd66-02-25d1t05.mp3",
+   "ms": 1175,
+   "labelledAt": "2026-11-07T00:15:09.403Z"
+  },
+  "landing_pick:1e67efec-63af-4b22-9ac7-4e46120ff4ab:1974-02-22:hero": {
+   "id": "landing_pick:1e67efec-63af-4b22-9ac7-4e46120ff4ab:1974-02-22:hero",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd74-02-22.sbd.patched.sirmick.21539.sbeok.shnf",
+   "track": "https://archive.org/download/gd74-02-22.sbd.patched.sirmick.21539.sbeok.shnf/gd74-02-22d1t01.mp3",
+   "ms": 0,
+   "labelledAt": "2026-11-07T00:15:09.554Z"
+  },
+  "landing_pick:e51fe05a-54eb-44dc-a097-2cef30dd3af7:1973-11-11:hero": {
+   "id": "landing_pick:e51fe05a-54eb-44dc-a097-2cef30dd3af7:1973-11-11:hero",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd73-11-11.sbd.schlissel.14105.sbeok.shnf",
+   "track": "https://archive.org/download/gd73-11-11.sbd.schlissel.14105.sbeok.shnf/gd73-11-11d2t04.mp3",
+   "ms": 387,
+   "labelledAt": "2026-11-07T00:15:10.092Z"
+  },
+  "landing_pick:2ad4bf96-3c81-44cf-a1fe-62fba7b63e01:1970-06-24:hero": {
+   "id": "landing_pick:2ad4bf96-3c81-44cf-a1fe-62fba7b63e01:1970-06-24:hero",
+   "truth": "no",
+   "reason": "tapes of the night exist; none carries the song",
+   "identifier": "gd_nrps70-06-24.aud.pcrp5.23062.sbeok.flacf",
+   "track": null,
+   "ms": 5053,
+   "labelledAt": "2026-11-07T00:22:25.236Z"
+  },
+  "landing_pick:839f47ea-fe61-449e-9640-9c78c5736954:1979-08-04:hero": {
+   "id": "landing_pick:839f47ea-fe61-449e-9640-9c78c5736954:1979-08-04:hero",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd79-08-04.sbd.munder.9578.sbeok.shnf",
+   "track": "https://archive.org/download/gd79-08-04.sbd.munder.9578.sbeok.shnf/gd79-08-04d1t08.mp3",
+   "ms": 0,
+   "labelledAt": "2026-11-07T00:15:32.197Z"
+  },
+  "landing_pick:31169c2d-59cd-4245-9dfa-726af415a794:1971-09-29:hero": {
+   "id": "landing_pick:31169c2d-59cd-4245-9dfa-726af415a794:1971-09-29:hero",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd71-09-29.sbd.cousinit.16891.sbeok.shnf",
+   "track": "https://archive.org/download/gd71-09-29.sbd.cousinit.16891.sbeok.shnf/gd71-09-29d1t13.mp3",
+   "ms": 2245,
+   "labelledAt": "2026-11-07T00:15:34.594Z"
+  },
+  "landing_pick:f56b634a-bf9d-4a7d-8675-7cec5e653808:1966-11-29:hero": {
+   "id": "landing_pick:f56b634a-bf9d-4a7d-8675-7cec5e653808:1966-11-29:hero",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd66-11-29.sbd.ret.20448.sbeok.shnf",
+   "track": "https://archive.org/download/gd66-11-29.sbd.ret.20448.sbeok.shnf/gd66-11-29d2t01.mp3",
+   "ms": 895,
+   "labelledAt": "2026-11-07T00:15:35.641Z"
+  },
+  "landing_pick:448bd0b3-6293-45e9-b790-e799b50419d3:1972-03-21:hero": {
+   "id": "landing_pick:448bd0b3-6293-45e9-b790-e799b50419d3:1972-03-21:hero",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd1972-03-21.sbd.miller.92395.sbeok.flac16",
+   "track": "https://archive.org/download/gd1972-03-21.sbd.miller.92395.sbeok.flac16/gd72-03-21d1t08.mp3",
+   "ms": 658,
+   "labelledAt": "2026-11-07T00:15:36.450Z"
+  },
+  "landing_pick:673f8f2a-8c36-4308-8bfb-adf6b3b4adb5:1968-01-17:hero": {
+   "id": "landing_pick:673f8f2a-8c36-4308-8bfb-adf6b3b4adb5:1968-01-17:hero",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd1968-01-17.sbd.cotsman.11795.shnf",
+   "track": "https://archive.org/download/gd1968-01-17.sbd.cotsman.11795.shnf/gd68-01-17d1t05.mp3",
+   "ms": 0,
+   "labelledAt": "2026-11-07T00:15:36.600Z"
+  },
+  "landing_pick:d67ca177-3f9d-414c-b3ce-64a1c0c76885:1969-06-21:hero": {
+   "id": "landing_pick:d67ca177-3f9d-414c-b3ce-64a1c0c76885:1969-06-21:hero",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd69-06-21.early-late.aud-sbd.cotsman.16334.sbeok.shnf",
+   "track": "https://archive.org/download/gd69-06-21.early-late.aud-sbd.cotsman.16334.sbeok.shnf/gd69-06-21d1t03.mp3",
+   "ms": 1968,
+   "labelledAt": "2026-11-07T00:15:38.719Z"
+  },
+  "landing_pick:546214c9-b36f-4cf5-8464-32db3de1546a:1989-02-07:hero": {
+   "id": "landing_pick:546214c9-b36f-4cf5-8464-32db3de1546a:1989-02-07:hero",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd89-02-07.sbd.wiley.9202.sbeok.shnf",
+   "track": "https://archive.org/download/gd89-02-07.sbd.wiley.9202.sbeok.shnf/gd89-02-07d1t05.mp3",
+   "ms": 1661,
+   "labelledAt": "2026-11-07T00:15:40.532Z"
+  },
+  "landing_pick:45278888-a6ff-444d-bab8-8a62682380ab:1970-07-11:hero": {
+   "id": "landing_pick:45278888-a6ff-444d-bab8-8a62682380ab:1970-07-11:hero",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd70-07-11.aud.cotsman.9379.sbefail.shnf",
+   "track": "https://archive.org/download/gd70-07-11.aud.cotsman.9379.sbefail.shnf/gd70-07-11d1t06.mp3",
+   "ms": 1239,
+   "labelledAt": "2026-11-07T00:15:41.923Z"
+  },
+  "landing_pick:266d8722-f999-4cfe-a8ef-438b96483ae2:1986-12-01:hero": {
+   "id": "landing_pick:266d8722-f999-4cfe-a8ef-438b96483ae2:1986-12-01:hero",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd1986-12-01.170842.sbd.miller.flac1648",
+   "track": "https://archive.org/download/gd1986-12-01.170842.sbd.miller.flac1648/01.%20Black%20Muddy%20River.mp3",
+   "ms": 0,
+   "labelledAt": "2026-11-07T00:15:42.074Z"
+  },
+  "setlist_poster:4ad288ab-044e-43b0-85af-9d3aff2b6ad7:1971-03-24:slot-61726805": {
+   "id": "setlist_poster:4ad288ab-044e-43b0-85af-9d3aff2b6ad7:1971-03-24:slot-61726805",
+   "truth": "no",
+   "reason": "tapes of the night exist; none carries the song",
+   "identifier": "gd71-03-24.sbd.cotsman.9501.sbeok.shnf",
+   "track": null,
+   "ms": 4088,
+   "labelledAt": "2026-11-07T00:22:29.476Z"
+  },
+  "setlist_poster:4ad288ab-044e-43b0-85af-9d3aff2b6ad7:1972-04-08:slot-e2137ebe": {
+   "id": "setlist_poster:4ad288ab-044e-43b0-85af-9d3aff2b6ad7:1972-04-08:slot-e2137ebe",
+   "truth": "no",
+   "reason": "tapes of the night exist; none carries the song",
+   "identifier": "gd72-04-08.sbd.giles-jeffm.2534.sbeok.shnf",
+   "track": null,
+   "ms": 8988,
+   "labelledAt": "2026-11-07T00:22:38.616Z"
+  },
+  "setlist_poster:4ad288ab-044e-43b0-85af-9d3aff2b6ad7:1995-07-09:slot-7d54989f": {
+   "id": "setlist_poster:4ad288ab-044e-43b0-85af-9d3aff2b6ad7:1995-07-09:slot-7d54989f",
+   "truth": "no",
+   "reason": "tapes of the night exist; none carries the song",
+   "identifier": "gd95-07-09.sbd.7233.sbeok.shnf",
+   "track": null,
+   "ms": 10910,
+   "labelledAt": "2026-11-07T00:22:49.677Z"
+  },
+  "setlist_poster:645c2007-3243-458f-b590-c903372d0ec1:1989-10-16:slot-f3efacfb": {
+   "id": "setlist_poster:645c2007-3243-458f-b590-c903372d0ec1:1989-10-16:slot-f3efacfb",
+   "truth": "yes",
+   "reason": "another tape of the night carries the song",
+   "identifier": "gd1989-10-16.140263.UltraMatrix.sbd.cm.miller.flac1644",
+   "track": "https://archive.org/download/gd1989-10-16.140263.UltraMatrix.sbd.cm.miller.flac1644/14PlayingInTheBandJam.mp3",
+   "ms": 2516,
+   "labelledAt": "2026-11-07T00:16:04.458Z"
+  },
+  "setlist_poster:51a67828-2412-4d75-abf3-d07f60f40989:1973-11-11:slot-e242f447": {
+   "id": "setlist_poster:51a67828-2412-4d75-abf3-d07f60f40989:1973-11-11:slot-e242f447",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd73-11-11.sbd.schlissel.14105.sbeok.shnf",
+   "track": "https://archive.org/download/gd73-11-11.sbd.schlissel.14105.sbeok.shnf/gd73-11-11d3t01.mp3",
+   "ms": 0,
+   "labelledAt": "2026-11-07T00:16:04.609Z"
+  },
+  "setlist_poster:1e67efec-63af-4b22-9ac7-4e46120ff4ab:1988-09-23:slot-c3d8d18a": {
+   "id": "setlist_poster:1e67efec-63af-4b22-9ac7-4e46120ff4ab:1988-09-23:slot-c3d8d18a",
+   "truth": "yes",
+   "reason": "song found on the stored recording",
+   "identifier": "gd88-09-23.sbd.miller.5291.sbeok.shnf",
+   "track": "https://archive.org/download/gd88-09-23.sbd.miller.5291.sbeok.shnf/gd88-09-23d2t09.mp3",
+   "ms": 592,
+   "labelledAt": "2026-11-07T00:16:05.352Z"
+  },
+  "setlist_poster:e6d782d3-f9c2-447c-b1b3-f120425d88ca:1970-08-18:slot-3dc71113": {
+   "id": "setlist_poster:e6d782d3-f9c2-447c-b1b3-f120425d88ca:1970-08-18:slot-3dc71113",
+   "truth": "yes",
+   "reason": "another tape of the night carries the song",
+   "identifier": "gd70-08-18.aud.yerys.1346.sbeok.shnf",
+   "track": "https://archive.org/download/gd70-08-18.aud.yerys.1346.sbeok.shnf/gd70-08-18d1t05.mp3",
+   "ms": 2417,
+   "labelledAt": "2026-11-07T00:16:07.920Z"
+  },
+  "setlist_poster:e6d782d3-f9c2-447c-b1b3-f120425d88ca:1971-04-29:slot-1b0b54eb": {
+   "id": "setlist_poster:e6d782d3-f9c2-447c-b1b3-f120425d88ca:1971-04-29:slot-1b0b54eb",
+   "truth": "yes",
+   "reason": "another tape of the night carries the song",
+   "identifier": "gd71-04-29.sbd.frisco.16782.sbeok.shnf",
+   "track": "https://archive.org/download/gd71-04-29.sbd.frisco.16782.sbeok.shnf/gd71-04-29d2t02.mp3",
+   "ms": 3596,
+   "labelledAt": "2026-11-07T00:16:11.667Z"
+  },
+  "setlist_poster:e6d782d3-f9c2-447c-b1b3-f120425d88ca:1980-09-25:slot-a7266e1d": {
+   "id": "setlist_poster:e6d782d3-f9c2-447c-b1b3-f120425d88ca:1980-09-25:slot-a7266e1d",
+   "truth": "yes",
+   "reason": "another tape of the night carries the song",
+   "identifier": "gd80-09-25.acoustic-sbd.hinko.18740.sbeok.shnf",
+   "track": "https://archive.org/download/gd80-09-25.acoustic-sbd.hinko.18740.sbeok.shnf/gd1980-09-25d1t09.mp3",
+   "ms": 6602,
+   "labelledAt": "2026-11-07T00:16:18.421Z"
+  },
+  "setlist_poster:e6d782d3-f9c2-447c-b1b3-f120425d88ca:1980-10-31:slot-3a217c01": {
+   "id": "setlist_poster:e6d782d3-f9c2-447c-b1b3-f120425d88ca:1980-10-31:slot-3a217c01",
+   "truth": "yes",
+   "reason": "another tape of the night carries the song",
+   "identifier": "gd80-10-31.sbd-preFM.cousinit.20377.sbeok.shnf",
+   "track": "https://archive.org/download/gd80-10-31.sbd-preFM.cousinit.20377.sbeok.shnf/gd80-10-31d1t09.mp3",
+   "ms": 3506,
+   "labelledAt": "2026-11-07T00:16:22.079Z"
+  },
+  "setlist_poster:e6d782d3-f9c2-447c-b1b3-f120425d88ca:1988-09-03:slot-1f7e77b5": {
+   "id": "setlist_poster:e6d782d3-f9c2-447c-b1b3-f120425d88ca:1988-09-03:slot-1f7e77b5",
+   "truth": "yes",
+   "reason": "another tape of the night carries the song",
+   "identifier": "gd88-09-03.sbd.miller.27749.sbeok.flacf",
+   "track": "https://archive.org/download/gd88-09-03.sbd.miller.27749.sbeok.flacf/gd88-09-03d2t12.mp3",
+   "ms": 7098,
+   "labelledAt": "2026-11-07T00:16:29.329Z"
+  },
+  "setlist_poster:e6d782d3-f9c2-447c-b1b3-f120425d88ca:1990-07-14:slot-0278c921": {
+   "id": "setlist_poster:e6d782d3-f9c2-447c-b1b3-f120425d88ca:1990-07-14:slot-0278c921",
+   "truth": "unknown",
+   "reason": "could not ask the Archive: ArchiveUnreachable: archive.org unreadable for all 1 candidate recordings",
+   "ms": 20908,
+   "labelledAt": "2026-11-07T00:23:10.737Z"
+  },
+  "setlist_poster:4ad288ab-044e-43b0-85af-9d3aff2b6ad7:1972-04-08:slot-e4024e16": {
+   "id": "setlist_poster:4ad288ab-044e-43b0-85af-9d3aff2b6ad7:1972-04-08:slot-e4024e16",
+   "truth": "no",
+   "reason": "tapes of the night exist; none carries the song",
+   "identifier": "gd72-04-08.sbd.giles-jeffm.2534.sbeok.shnf",
+   "track": null,
+   "ms": 5383,
+   "labelledAt": "2026-11-07T00:23:16.271Z"
+  },
+  "setlist_poster:a1bf0b53-2e4c-4d7b-a481-742e9b6b7c23:1973-02-09:slot-1a38b87e": {
+   "id": "setlist_poster:a1bf0b53-2e4c-4d7b-a481-742e9b6b7c23:1973-02-09:slot-1a38b87e",
+   "truth": "yes",
+   "reason": "song found on the stored recording",
+   "identifier": "gd73-02-09.sbd.bertha-fink.14939.sbeok.shnf",
+   "track": "https://archive.org/download/gd73-02-09.sbd.bertha-fink.14939.sbeok.shnf/gd73-02-09Berthad2t10.mp3",
+   "ms": 253,
+   "labelledAt": "2026-11-07T00:17:02.609Z"
+  },
+  "setlist_poster:a1bf0b53-2e4c-4d7b-a481-742e9b6b7c23:1978-11-24:slot-0894bba8": {
+   "id": "setlist_poster:a1bf0b53-2e4c-4d7b-a481-742e9b6b7c23:1978-11-24:slot-0894bba8",
+   "truth": "no",
+   "reason": "tapes of the night exist; none carries the song",
+   "identifier": "gd78-11-24.sbd.prefm.13948.sbefail.shnf",
+   "track": null,
+   "ms": 2872,
+   "labelledAt": "2026-11-07T00:23:19.294Z"
+  },
+  "setlist_poster:a1bf0b53-2e4c-4d7b-a481-742e9b6b7c23:1990-03-29:slot-91047627": {
+   "id": "setlist_poster:a1bf0b53-2e4c-4d7b-a481-742e9b6b7c23:1990-03-29:slot-91047627",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd90-03-29.aud-fob.set2.unknown.1317.sbeok.shnf",
+   "track": "https://archive.org/download/gd90-03-29.aud-fob.set2.unknown.1317.sbeok.shnf/gd90-03-29iid1t01.mp3",
+   "ms": 4830,
+   "labelledAt": "2026-11-07T00:17:15.212Z"
+  },
+  "setlist_poster:a1bf0b53-2e4c-4d7b-a481-742e9b6b7c23:1991-03-17:slot-94c9feb1": {
+   "id": "setlist_poster:a1bf0b53-2e4c-4d7b-a481-742e9b6b7c23:1991-03-17:slot-94c9feb1",
+   "truth": "no",
+   "reason": "tapes of the night exist; none carries the song",
+   "identifier": "gd91-03-17.sbd.miller.28295.sbeok.flacf",
+   "track": null,
+   "ms": 1818,
+   "labelledAt": "2026-11-07T00:23:21.264Z"
+  },
+  "setlist_poster:a1bf0b53-2e4c-4d7b-a481-742e9b6b7c23:1993-06-15:slot-13bafbb6": {
+   "id": "setlist_poster:a1bf0b53-2e4c-4d7b-a481-742e9b6b7c23:1993-06-15:slot-13bafbb6",
+   "truth": "no",
+   "reason": "tapes of the night exist; none carries the song",
+   "identifier": "gd93-06-15.sbd.gardner.10085.sbeok.shnf",
+   "track": null,
+   "ms": 2577,
+   "labelledAt": "2026-11-07T00:23:23.991Z"
+  },
+  "setlist_poster:a1bf0b53-2e4c-4d7b-a481-742e9b6b7c23:1991-06-17:slot-ae921d8d": {
+   "id": "setlist_poster:a1bf0b53-2e4c-4d7b-a481-742e9b6b7c23:1991-06-17:slot-ae921d8d",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd91-06-17.sbd.gardner.3591.sbeok.shnf",
+   "track": "https://archive.org/download/gd91-06-17.sbd.gardner.3591.sbeok.shnf/gd1991-06-17d1t01.mp3",
+   "ms": 7761,
+   "labelledAt": "2026-11-07T00:18:15.375Z"
+  },
+  "setlist_poster:a1bf0b53-2e4c-4d7b-a481-742e9b6b7c23:1995-07-06:slot-674a3891": {
+   "id": "setlist_poster:a1bf0b53-2e4c-4d7b-a481-742e9b6b7c23:1995-07-06:slot-674a3891",
+   "truth": "yes",
+   "reason": "song found on the stored recording",
+   "identifier": "gd95-07-06.NEWsbd.30888.sbeok.shnf_shn",
+   "track": "https://archive.org/download/gd95-07-06.NEWsbd.30888.sbeok.shnf_shn/gd95-07-06d1t08.mp3",
+   "ms": 239,
+   "labelledAt": "2026-11-07T00:18:15.766Z"
+  },
+  "setlist_poster:d7f3ce1e-b98d-4695-adc4-a8131d8d8482:x:slot-2fcdafad": {
+   "id": "setlist_poster:d7f3ce1e-b98d-4695-adc4-a8131d8d8482:x:slot-2fcdafad",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1975-06-17.143102.SonyECM-280.bertrando.dalton.sirmick.miller.fixed.flac1644",
+   "track": "https://archive.org/download/gd1975-06-17.143102.SonyECM-280.bertrando.dalton.sirmick.miller.fixed.flac1644/gd1975-06-17s2t01.mp3",
+   "ms": 1910,
+   "labelledAt": "2026-11-07T00:23:26.052Z"
+  },
+  "setlist_poster:7c57164a-31bd-48d0-847d-febec72345ff:x:slot-f974f1e1": {
+   "id": "setlist_poster:7c57164a-31bd-48d0-847d-febec72345ff:x:slot-f974f1e1",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1974-10-19.131694.sbd.boswell-smith.flac24",
+   "track": "https://archive.org/download/gd1974-10-19.131694.sbd.boswell-smith.flac24/gd1974-10-19s1t09_vbr.mp3",
+   "ms": 993,
+   "labelledAt": "2026-11-07T00:23:27.197Z"
+  },
+  "setlist_poster:84658a01-752d-4447-a8b5-4280223b8d59:x:slot-1a98216b": {
+   "id": "setlist_poster:84658a01-752d-4447-a8b5-4280223b8d59:x:slot-1a98216b",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1974-02-24.136142.5-1.tobin.flac1648",
+   "track": "https://archive.org/download/gd1974-02-24.136142.5-1.tobin.flac1648/gd1974-02-24s2t05.mp3",
+   "ms": 467,
+   "labelledAt": "2026-11-07T00:23:27.815Z"
+  },
+  "setlist_poster:d1b77f8e-4b87-4c71-b0db-e5f6077697a7:x:slot-24712572": {
+   "id": "setlist_poster:d1b77f8e-4b87-4c71-b0db-e5f6077697a7:x:slot-24712572",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1972-08-12.139784.sbd.boswell.smith.clugston.flac2496",
+   "track": "https://archive.org/download/gd1972-08-12.139784.sbd.boswell.smith.clugston.flac2496/Gd72-08-12S2T10MississippiHalf-step.mp3",
+   "ms": 2282,
+   "labelledAt": "2026-11-07T00:23:30.248Z"
+  },
+  "setlist_poster:f56b634a-bf9d-4a7d-8675-7cec5e653808:x:slot-1a2823ac": {
+   "id": "setlist_poster:f56b634a-bf9d-4a7d-8675-7cec5e653808:x:slot-1a2823ac",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1971-08-06.mtx.chappell.97015.flac16",
+   "track": "https://archive.org/download/gd1971-08-06.mtx.chappell.97015.flac16/gd71-08-06d2t06.mp3",
+   "ms": 874,
+   "labelledAt": "2026-11-07T00:23:31.274Z"
+  },
+  "setlist_poster:192e8f0b-3e59-4c26-a8b9-6799e60d007f:1988-09-23:slot-1d58bffc": {
+   "id": "setlist_poster:192e8f0b-3e59-4c26-a8b9-6799e60d007f:1988-09-23:slot-1d58bffc",
+   "truth": "yes",
+   "reason": "song found on the stored recording",
+   "identifier": "gd88-09-23.sbd.miller.5291.sbeok.shnf",
+   "track": "https://archive.org/download/gd88-09-23.sbd.miller.5291.sbeok.shnf/gd88-09-23d2t01.mp3",
+   "ms": 352,
+   "labelledAt": "2026-11-07T00:18:17.028Z"
+  },
+  "setlist_poster:525b2b5f-5371-4220-8d72-3e9c56550e63:x:slot-dd07fad0": {
+   "id": "setlist_poster:525b2b5f-5371-4220-8d72-3e9c56550e63:x:slot-dd07fad0",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1991-06-06.149638.sbd.cm.miller.flac16",
+   "track": "https://archive.org/download/gd1991-06-06.149638.sbd.cm.miller.flac16/18%20Stella%20Blue.mp3",
+   "ms": 930,
+   "labelledAt": "2026-11-07T00:23:32.355Z"
+  },
+  "setlist_poster:e6d782d3-f9c2-447c-b1b3-f120425d88ca:x:slot-3e32eb72": {
+   "id": "setlist_poster:e6d782d3-f9c2-447c-b1b3-f120425d88ca:x:slot-3e32eb72",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1980-10-11.fob-nak700.ellner-marino.gmb.89615.sbeok.flac16",
+   "track": "https://archive.org/download/gd1980-10-11.fob-nak700.ellner-marino.gmb.89615.sbeok.flac16/gd1980-10-11d1t10.mp3",
+   "ms": 577,
+   "labelledAt": "2026-11-07T00:23:33.083Z"
+  },
+  "setlist_poster:0fd22bbc-9f76-409d-bc25-d5cb3ea8bf05:x:slot-4487075b": {
+   "id": "setlist_poster:0fd22bbc-9f76-409d-bc25-d5cb3ea8bf05:x:slot-4487075b",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1972-08-12.139784.sbd.boswell.smith.clugston.flac2496",
+   "track": "https://archive.org/download/gd1972-08-12.139784.sbd.boswell.smith.clugston.flac2496/Gd72-08-12S1T13JackStraw.mp3",
+   "ms": 569,
+   "labelledAt": "2026-11-07T00:23:33.804Z"
+  },
+  "setlist_poster:54547e6f-e620-4551-a263-de4abb422dc6:x:slot-b2cce5bb": {
+   "id": "setlist_poster:54547e6f-e620-4551-a263-de4abb422dc6:x:slot-b2cce5bb",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1970-07-12.Weinberg.MAR.108156.flac16",
+   "track": "https://archive.org/download/gd1970-07-12.Weinberg.MAR.108156.flac16/disc201.mp3",
+   "ms": 801,
+   "labelledAt": "2026-11-07T00:23:34.757Z"
+  },
+  "setlist_poster:5382fb24-d4ee-4073-bcfb-edcab7a2d860:x:slot-7c53c0a1": {
+   "id": "setlist_poster:5382fb24-d4ee-4073-bcfb-edcab7a2d860:x:slot-7c53c0a1",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1991-06-17.137545.sbd.miller.flac24",
+   "track": "https://archive.org/download/gd1991-06-17.137545.sbd.miller.flac24/17Space.mp3",
+   "ms": 547,
+   "labelledAt": "2026-11-07T00:23:35.455Z"
+  },
+  "setlist_poster:d1b77f8e-4b87-4c71-b0db-e5f6077697a7:x:slot-c83c8b78": {
+   "id": "setlist_poster:d1b77f8e-4b87-4c71-b0db-e5f6077697a7:x:slot-c83c8b78",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1972-08-12.139784.sbd.boswell.smith.clugston.flac2496",
+   "track": "https://archive.org/download/gd1972-08-12.139784.sbd.boswell.smith.clugston.flac2496/Gd72-08-12S2T10MississippiHalf-step.mp3",
+   "ms": 0,
+   "labelledAt": "2026-11-07T00:23:35.607Z"
+  },
+  "setlist_poster:3e7200c7-4825-4e9f-87ff-07d62d00e86a:x:slot-30841e5e": {
+   "id": "setlist_poster:3e7200c7-4825-4e9f-87ff-07d62d00e86a:x:slot-30841e5e",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1971-08-06.mtx.chappell.97015.flac16",
+   "track": "https://archive.org/download/gd1971-08-06.mtx.chappell.97015.flac16/gd71-08-06d1t08.mp3",
+   "ms": 554,
+   "labelledAt": "2026-11-07T00:23:36.313Z"
+  },
+  "setlist_poster:93ab0b7f-bc04-4108-ae69-ad9092b3d415:x:slot-8ed4ae57": {
+   "id": "setlist_poster:93ab0b7f-bc04-4108-ae69-ad9092b3d415:x:slot-8ed4ae57",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1994-07-21.aud.unknown.larson.31804.shnf",
+   "track": "https://archive.org/download/gd1994-07-21.aud.unknown.larson.31804.shnf/gd94-07-21d1t09.mp3",
+   "ms": 1115,
+   "labelledAt": "2026-11-07T00:23:37.580Z"
+  },
+  "setlist_poster:7c57164a-31bd-48d0-847d-febec72345ff:x:slot-18b5b553": {
+   "id": "setlist_poster:7c57164a-31bd-48d0-847d-febec72345ff:x:slot-18b5b553",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1974-10-19.131694.sbd.boswell-smith.flac24",
+   "track": "https://archive.org/download/gd1974-10-19.131694.sbd.boswell-smith.flac24/gd1974-10-19s1t09_vbr.mp3",
+   "ms": 0,
+   "labelledAt": "2026-11-07T00:23:37.732Z"
+  },
+  "setlist_poster:d7f3ce1e-b98d-4695-adc4-a8131d8d8482:x:slot-b03ee9aa": {
+   "id": "setlist_poster:d7f3ce1e-b98d-4695-adc4-a8131d8d8482:x:slot-b03ee9aa",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1975-06-17.143102.SonyECM-280.bertrando.dalton.sirmick.miller.fixed.flac1644",
+   "track": "https://archive.org/download/gd1975-06-17.143102.SonyECM-280.bertrando.dalton.sirmick.miller.fixed.flac1644/gd1975-06-17s2t01.mp3",
+   "ms": 0,
+   "labelledAt": "2026-11-07T00:23:37.884Z"
+  },
+  "setlist_poster:59594f3b-3748-4c8b-9593-b9319b06862a:x:slot-5413e8fb": {
+   "id": "setlist_poster:59594f3b-3748-4c8b-9593-b9319b06862a:x:slot-5413e8fb",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1981-09-12.nak300.101497.flac16",
+   "track": "https://archive.org/download/gd1981-09-12.nak300.101497.flac16/GD19810912d2t04.mp3",
+   "ms": 438,
+   "labelledAt": "2026-11-07T00:23:38.473Z"
+  },
+  "setlist_poster:5382fb24-d4ee-4073-bcfb-edcab7a2d860:x:slot-47617d3a": {
+   "id": "setlist_poster:5382fb24-d4ee-4073-bcfb-edcab7a2d860:x:slot-47617d3a",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1991-06-17.137545.sbd.miller.flac24",
+   "track": "https://archive.org/download/gd1991-06-17.137545.sbd.miller.flac24/17Space.mp3",
+   "ms": 0,
+   "labelledAt": "2026-11-07T00:23:38.625Z"
+  },
+  "setlist_poster:d1b77f8e-4b87-4c71-b0db-e5f6077697a7:x:slot-e5dfc90c": {
+   "id": "setlist_poster:d1b77f8e-4b87-4c71-b0db-e5f6077697a7:x:slot-e5dfc90c",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1972-08-12.139784.sbd.boswell.smith.clugston.flac2496",
+   "track": "https://archive.org/download/gd1972-08-12.139784.sbd.boswell.smith.clugston.flac2496/Gd72-08-12S2T10MississippiHalf-step.mp3",
+   "ms": 0,
+   "labelledAt": "2026-11-07T00:23:38.777Z"
+  },
+  "setlist_poster:59594f3b-3748-4c8b-9593-b9319b06862a:x:slot-d669736e": {
+   "id": "setlist_poster:59594f3b-3748-4c8b-9593-b9319b06862a:x:slot-d669736e",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1981-09-12.nak300.101497.flac16",
+   "track": "https://archive.org/download/gd1981-09-12.nak300.101497.flac16/GD19810912d2t04.mp3",
+   "ms": 0,
+   "labelledAt": "2026-11-07T00:23:38.928Z"
+  },
+  "setlist_poster:4d02971c-840e-4ed1-91d4-7eac8dd709b2:x:slot-516539fa": {
+   "id": "setlist_poster:4d02971c-840e-4ed1-91d4-7eac8dd709b2:x:slot-516539fa",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1972-09-28.sbd.bertha.ashley.27584.sbefail.shnf",
+   "track": "https://archive.org/download/gd1972-09-28.sbd.bertha.ashley.27584.sbefail.shnf/gd72-09-28Berthad3t05.mp3",
+   "ms": 2347,
+   "labelledAt": "2026-11-07T00:23:41.427Z"
+  },
+  "setlist_poster:5382fb24-d4ee-4073-bcfb-edcab7a2d860:x:slot-4feae69b": {
+   "id": "setlist_poster:5382fb24-d4ee-4073-bcfb-edcab7a2d860:x:slot-4feae69b",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1991-06-17.137545.sbd.miller.flac24",
+   "track": "https://archive.org/download/gd1991-06-17.137545.sbd.miller.flac24/17Space.mp3",
+   "ms": 1,
+   "labelledAt": "2026-11-07T00:23:41.579Z"
+  },
+  "setlist_poster:5f74a5ec-055d-443a-9481-f51a3a15004a:x:slot-f447e31d": {
+   "id": "setlist_poster:5f74a5ec-055d-443a-9481-f51a3a15004a:x:slot-f447e31d",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1970-07-12.Weinberg.MAR.108156.flac16",
+   "track": "https://archive.org/download/gd1970-07-12.Weinberg.MAR.108156.flac16/disc204.mp3",
+   "ms": 510,
+   "labelledAt": "2026-11-07T00:23:42.241Z"
+  },
+  "setlist_poster:a1bf0b53-2e4c-4d7b-a481-742e9b6b7c23:x:slot-f486a6cb": {
+   "id": "setlist_poster:a1bf0b53-2e4c-4d7b-a481-742e9b6b7c23:x:slot-f486a6cb",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1981-09-12.nak300.101497.flac16",
+   "track": "https://archive.org/download/gd1981-09-12.nak300.101497.flac16/GD19810912d2t05.mp3",
+   "ms": 968,
+   "labelledAt": "2026-11-07T00:23:43.361Z"
+  },
+  "setlist_poster:78f6530c-2bac-4191-b2da-fce847d9b0a3:x:slot-3ca9d399": {
+   "id": "setlist_poster:78f6530c-2bac-4191-b2da-fce847d9b0a3:x:slot-3ca9d399",
+   "truth": "unknown",
+   "reason": "undated: the generic search found no track (it cannot tell absent from failed)",
+   "ms": 208,
+   "labelledAt": "2026-11-07T00:23:43.721Z"
+  },
+  "setlist_poster:595b69ee-5ad0-4b2a-9b4f-b1b1d7aa7431:x:slot-3f250399": {
+   "id": "setlist_poster:595b69ee-5ad0-4b2a-9b4f-b1b1d7aa7431:x:slot-3f250399",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1971-07-02.136638.pre-fm-GEMS.flac16",
+   "track": "https://archive.org/download/gd1971-07-02.136638.pre-fm-GEMS.flac16/gd71-07-02s1t02.mp3",
+   "ms": 735,
+   "labelledAt": "2026-11-07T00:23:44.607Z"
+  },
+  "setlist_poster:2ad4bf96-3c81-44cf-a1fe-62fba7b63e01:x:slot-96e193e6": {
+   "id": "setlist_poster:2ad4bf96-3c81-44cf-a1fe-62fba7b63e01:x:slot-96e193e6",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1985-02-18.170269.mtx.miksis.flac1648",
+   "track": "https://archive.org/download/gd1985-02-18.170269.mtx.miksis.flac1648/s2t05%20-%20Going%20Down%20The%20Road%20Feeling%20Bad.mp3",
+   "ms": 1117,
+   "labelledAt": "2026-11-07T00:23:45.876Z"
+  },
+  "setlist_poster:bfc707a7-3a7b-4622-a6be-543d15350ff2:x:slot-a6a967dc": {
+   "id": "setlist_poster:bfc707a7-3a7b-4622-a6be-543d15350ff2:x:slot-a6a967dc",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1969-05-23.141038.sbd.pcm.dalton.miller.clugston.flac1644",
+   "track": "https://archive.org/download/gd1969-05-23.141038.sbd.pcm.dalton.miller.clugston.flac1644/Gd69-05-23T02MorningDew.mp3",
+   "ms": 2647,
+   "labelledAt": "2026-11-07T00:23:48.675Z"
+  },
+  "setlist_poster:4ad288ab-044e-43b0-85af-9d3aff2b6ad7:1972-09-21:slot-b060a18a": {
+   "id": "setlist_poster:4ad288ab-044e-43b0-85af-9d3aff2b6ad7:1972-09-21:slot-b060a18a",
+   "truth": "yes",
+   "reason": "song found on the stored recording",
+   "identifier": "gd1972-09-21.152463.aud.lamarre.vernon.sirmick.flac16",
+   "track": "https://archive.org/download/gd1972-09-21.152463.aud.lamarre.vernon.sirmick.flac16/gd1972-09-21s1t02.flac",
+   "ms": 214,
+   "labelledAt": "2026-11-07T00:18:20.725Z"
+  },
+  "setlist_poster:bfc707a7-3a7b-4622-a6be-543d15350ff2:x:slot-32d5c8bb": {
+   "id": "setlist_poster:bfc707a7-3a7b-4622-a6be-543d15350ff2:x:slot-32d5c8bb",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1969-05-23.141038.sbd.pcm.dalton.miller.clugston.flac1644",
+   "track": "https://archive.org/download/gd1969-05-23.141038.sbd.pcm.dalton.miller.clugston.flac1644/Gd69-05-23T02MorningDew.mp3",
+   "ms": 0,
+   "labelledAt": "2026-11-07T00:23:48.827Z"
+  },
+  "setlist_poster:93ab0b7f-bc04-4108-ae69-ad9092b3d415:x:slot-5491f0fe": {
+   "id": "setlist_poster:93ab0b7f-bc04-4108-ae69-ad9092b3d415:x:slot-5491f0fe",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1994-07-21.aud.unknown.larson.31804.shnf",
+   "track": "https://archive.org/download/gd1994-07-21.aud.unknown.larson.31804.shnf/gd94-07-21d1t09.mp3",
+   "ms": 0,
+   "labelledAt": "2026-11-07T00:23:48.978Z"
+  },
+  "setlist_poster:07c80ec4-1ae9-4236-bf9f-b1ab71b45fc1:x:slot-555796a8": {
+   "id": "setlist_poster:07c80ec4-1ae9-4236-bf9f-b1ab71b45fc1:x:slot-555796a8",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1994-02-27.schoeps.wklitz-jones-clayton.watson.85709.flac16",
+   "track": "https://archive.org/download/gd1994-02-27.schoeps.wklitz-jones-clayton.watson.85709.flac16/gd1994-02-27set2t07.mp3",
+   "ms": 2118,
+   "labelledAt": "2026-11-07T00:23:51.248Z"
+  },
+  "setlist_poster:6067c2cd-c51a-473b-8edf-b242c63303b6:x:slot-491778c3": {
+   "id": "setlist_poster:6067c2cd-c51a-473b-8edf-b242c63303b6:x:slot-491778c3",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1991-06-17.137545.sbd.miller.flac24",
+   "track": "https://archive.org/download/gd1991-06-17.137545.sbd.miller.flac24/03BrownEyedWomen.mp3",
+   "ms": 1832,
+   "labelledAt": "2026-11-07T00:23:53.230Z"
+  },
+  "setlist_poster:f51dd8e8-1150-444b-bb37-00ae8b577550:x:slot-a8e39aa1": {
+   "id": "setlist_poster:f51dd8e8-1150-444b-bb37-00ae8b577550:x:slot-a8e39aa1",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1972-08-12.139784.sbd.boswell.smith.clugston.flac2496",
+   "track": "https://archive.org/download/gd1972-08-12.139784.sbd.boswell.smith.clugston.flac2496/Gd72-08-12S2T04HesGone.mp3",
+   "ms": 554,
+   "labelledAt": "2026-11-07T00:23:53.935Z"
+  },
+  "setlist_poster:5f74a5ec-055d-443a-9481-f51a3a15004a:1989-10-16:slot-78b993db": {
+   "id": "setlist_poster:5f74a5ec-055d-443a-9481-f51a3a15004a:1989-10-16:slot-78b993db",
+   "truth": "yes",
+   "reason": "song found on the stored recording",
+   "identifier": "gd89-10-16.dsbd.barrick.446.sbeok.shnf",
+   "track": "https://archive.org/download/gd89-10-16.dsbd.barrick.446.sbeok.shnf/gd10.16.89d3t06.mp3",
+   "ms": 204,
+   "labelledAt": "2026-11-07T00:18:21.838Z"
+  },
+  "setlist_poster:d14eae5e-209a-4402-9072-ce5b2b20b352:x:slot-10ce8c6d": {
+   "id": "setlist_poster:d14eae5e-209a-4402-9072-ce5b2b20b352:x:slot-10ce8c6d",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1991-06-17.137545.sbd.miller.flac24",
+   "track": "https://archive.org/download/gd1991-06-17.137545.sbd.miller.flac24/08MightAsWell.mp3",
+   "ms": 726,
+   "labelledAt": "2026-11-07T00:23:54.812Z"
+  },
+  "setlist_poster:d5714caf-1c96-4b1b-b888-869ed1031593:1989-10-16:slot-8033c0a2": {
+   "id": "setlist_poster:d5714caf-1c96-4b1b-b888-869ed1031593:1989-10-16:slot-8033c0a2",
+   "truth": "yes",
+   "reason": "song found on the stored recording",
+   "identifier": "gd89-10-16.dsbd.barrick.446.sbeok.shnf",
+   "track": "https://archive.org/download/gd89-10-16.dsbd.barrick.446.sbeok.shnf/gd10.16.89d1t03.mp3",
+   "ms": 223,
+   "labelledAt": "2026-11-07T00:18:22.364Z"
+  },
+  "setlist_poster:d1b77f8e-4b87-4c71-b0db-e5f6077697a7:x:slot-ae296c53": {
+   "id": "setlist_poster:d1b77f8e-4b87-4c71-b0db-e5f6077697a7:x:slot-ae296c53",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1972-08-12.139784.sbd.boswell.smith.clugston.flac2496",
+   "track": "https://archive.org/download/gd1972-08-12.139784.sbd.boswell.smith.clugston.flac2496/Gd72-08-12S2T10MississippiHalf-step.mp3",
+   "ms": 0,
+   "labelledAt": "2026-11-07T00:23:54.963Z"
+  },
+  "setlist_poster:cbf0af86-3376-46ef-8465-62409ab9ba09:x:slot-105b8aee": {
+   "id": "setlist_poster:cbf0af86-3376-46ef-8465-62409ab9ba09:x:slot-105b8aee",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1971-07-02.136638.pre-fm-GEMS.flac16",
+   "track": "https://archive.org/download/gd1971-07-02.136638.pre-fm-GEMS.flac16/gd71-07-02s1t06.mp3",
+   "ms": 430,
+   "labelledAt": "2026-11-07T00:23:55.546Z"
+  },
+  "setlist_poster:546214c9-b36f-4cf5-8464-32db3de1546a:x:slot-c3c4ba5e": {
+   "id": "setlist_poster:546214c9-b36f-4cf5-8464-32db3de1546a:x:slot-c3c4ba5e",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1990-06-15.143855.UltraMatrix.sbd.cm.miller.flac1644",
+   "track": "https://archive.org/download/gd1990-06-15.143855.UltraMatrix.sbd.cm.miller.flac1644/06JustALittleLight.mp3",
+   "ms": 884,
+   "labelledAt": "2026-11-07T00:23:56.580Z"
+  },
+  "setlist_poster:59594f3b-3748-4c8b-9593-b9319b06862a:x:slot-4af568d1": {
+   "id": "setlist_poster:59594f3b-3748-4c8b-9593-b9319b06862a:x:slot-4af568d1",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1981-09-12.nak300.101497.flac16",
+   "track": "https://archive.org/download/gd1981-09-12.nak300.101497.flac16/GD19810912d2t04.mp3",
+   "ms": 0,
+   "labelledAt": "2026-11-07T00:23:56.732Z"
+  },
+  "setlist_poster:3ee42f5a-50d5-4127-977c-f5045e946657:x:slot-ef1a27d2": {
+   "id": "setlist_poster:3ee42f5a-50d5-4127-977c-f5045e946657:x:slot-ef1a27d2",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd67-03-18.sbd.fink.10282.sbeok.shnf",
+   "track": "https://archive.org/download/gd67-03-18.sbd.fink.10282.sbeok.shnf/gd67-03-18d2t01.mp3",
+   "ms": 2268,
+   "labelledAt": "2026-11-07T00:23:59.151Z"
+  },
+  "setlist_poster:0851d4b3-ccc4-4763-b305-96a500e6cf44:x:slot-f3d74c9a": {
+   "id": "setlist_poster:0851d4b3-ccc4-4763-b305-96a500e6cf44:x:slot-f3d74c9a",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1971-07-02.136638.pre-fm-GEMS.flac16",
+   "track": "https://archive.org/download/gd1971-07-02.136638.pre-fm-GEMS.flac16/gd71-07-02s1t19.mp3",
+   "ms": 786,
+   "labelledAt": "2026-11-07T00:24:00.089Z"
+  },
+  "setlist_poster:4d49cd40-a02c-49d9-8c9f-9d2a3b1a0e3d:x:slot-5f6923be": {
+   "id": "setlist_poster:4d49cd40-a02c-49d9-8c9f-9d2a3b1a0e3d:x:slot-5f6923be",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1967-03-18.141400.sbd.dalton.miller.clugston.flac1648",
+   "track": "https://archive.org/download/gd1967-03-18.141400.sbd.dalton.miller.clugston.flac1648/Gd67-03-18T10CreamPuffWar.mp3",
+   "ms": 654,
+   "labelledAt": "2026-11-07T00:24:00.895Z"
+  },
+  "setlist_poster:bfc707a7-3a7b-4622-a6be-543d15350ff2:x:slot-4adb2fda": {
+   "id": "setlist_poster:bfc707a7-3a7b-4622-a6be-543d15350ff2:x:slot-4adb2fda",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1969-05-23.141038.sbd.pcm.dalton.miller.clugston.flac1644",
+   "track": "https://archive.org/download/gd1969-05-23.141038.sbd.pcm.dalton.miller.clugston.flac1644/Gd69-05-23T02MorningDew.mp3",
+   "ms": 0,
+   "labelledAt": "2026-11-07T00:24:01.048Z"
+  },
+  "setlist_poster:a712edf9-6474-44ce-8486-0243aab7d9e2:x:slot-7a11d9cd": {
+   "id": "setlist_poster:a712edf9-6474-44ce-8486-0243aab7d9e2:x:slot-7a11d9cd",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1991-06-17.137545.sbd.miller.flac24",
+   "track": "https://archive.org/download/gd1991-06-17.137545.sbd.miller.flac24/19PlayingInTheBand.mp3",
+   "ms": 667,
+   "labelledAt": "2026-11-07T00:24:01.866Z"
+  },
+  "setlist_poster:1ba63f85-4764-4ca6-bc0f-7c2cec8af6a6:1988-09-23:slot-a888d13f": {
+   "id": "setlist_poster:1ba63f85-4764-4ca6-bc0f-7c2cec8af6a6:1988-09-23:slot-a888d13f",
+   "truth": "yes",
+   "reason": "song found on the stored recording",
+   "identifier": "gd88-09-23.sbd.miller.5291.sbeok.shnf",
+   "track": "https://archive.org/download/gd88-09-23.sbd.miller.5291.sbeok.shnf/gd88-09-23d1t07.mp3",
+   "ms": 199,
+   "labelledAt": "2026-11-07T00:18:24.080Z"
+  },
+  "setlist_poster:1ba63f85-4764-4ca6-bc0f-7c2cec8af6a6:x:slot-e78b4fce": {
+   "id": "setlist_poster:1ba63f85-4764-4ca6-bc0f-7c2cec8af6a6:x:slot-e78b4fce",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1969-04-05.sbd.squirlin.65.sbeok.shnf",
+   "track": "https://archive.org/download/gd1969-04-05.sbd.squirlin.65.sbeok.shnf/gd69-04-05d1t01.mp3",
+   "ms": 6743,
+   "labelledAt": "2026-11-07T00:24:08.760Z"
+  },
+  "setlist_poster:f56b634a-bf9d-4a7d-8675-7cec5e653808:x:slot-0b6b6776": {
+   "id": "setlist_poster:f56b634a-bf9d-4a7d-8675-7cec5e653808:x:slot-0b6b6776",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1971-08-06.mtx.chappell.97015.flac16",
+   "track": "https://archive.org/download/gd1971-08-06.mtx.chappell.97015.flac16/gd71-08-06d2t06.mp3",
+   "ms": 0,
+   "labelledAt": "2026-11-07T00:24:08.912Z"
+  },
+  "setlist_poster:d1b77f8e-4b87-4c71-b0db-e5f6077697a7:x:slot-cc15276a": {
+   "id": "setlist_poster:d1b77f8e-4b87-4c71-b0db-e5f6077697a7:x:slot-cc15276a",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1972-08-12.139784.sbd.boswell.smith.clugston.flac2496",
+   "track": "https://archive.org/download/gd1972-08-12.139784.sbd.boswell.smith.clugston.flac2496/Gd72-08-12S2T10MississippiHalf-step.mp3",
+   "ms": 0,
+   "labelledAt": "2026-11-07T00:24:09.064Z"
+  },
+  "setlist_poster:a1bf0b53-2e4c-4d7b-a481-742e9b6b7c23:x:slot-e98eccc9": {
+   "id": "setlist_poster:a1bf0b53-2e4c-4d7b-a481-742e9b6b7c23:x:slot-e98eccc9",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1981-09-12.nak300.101497.flac16",
+   "track": "https://archive.org/download/gd1981-09-12.nak300.101497.flac16/GD19810912d2t05.mp3",
+   "ms": 0,
+   "labelledAt": "2026-11-07T00:24:09.215Z"
+  },
+  "setlist_poster:839f47ea-fe61-449e-9640-9c78c5736954:x:slot-58c91f75": {
+   "id": "setlist_poster:839f47ea-fe61-449e-9640-9c78c5736954:x:slot-58c91f75",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1982-07-28.134511.nak700.streeter.miller.flac24",
+   "track": "https://archive.org/download/gd1982-07-28.134511.nak700.streeter.miller.flac24/gd82-07-28s2t02.mp3",
+   "ms": 1922,
+   "labelledAt": "2026-11-07T00:24:11.289Z"
+  },
+  "setlist_poster:9c86f911-a647-491a-ad49-e9cabf37d0e3:x:slot-c0fa6ea6": {
+   "id": "setlist_poster:9c86f911-a647-491a-ad49-e9cabf37d0e3:x:slot-c0fa6ea6",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1990-06-23.163867.nak700.severson.miller.clugston.flac1648",
+   "track": "https://archive.org/download/gd1990-06-23.163867.nak700.severson.miller.clugston.flac1648/gd90-06-23%20s2t07%20Playin'%20Reprise.mp3",
+   "ms": 1076,
+   "labelledAt": "2026-11-07T00:24:12.517Z"
+  },
+  "setlist_poster:066b5344-117c-40bc-ad7f-59c6b7577fa0:x:slot-868d40c4": {
+   "id": "setlist_poster:066b5344-117c-40bc-ad7f-59c6b7577fa0:x:slot-868d40c4",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1978-07-08.125797.mtx.eichorn.sbeok.t-flac16",
+   "track": "https://archive.org/download/gd1978-07-08.125797.mtx.eichorn.sbeok.t-flac16/gd78-07-08d3t09.mp3",
+   "ms": 6712,
+   "labelledAt": "2026-11-07T00:24:19.381Z"
+  },
+  "setlist_poster:bfc707a7-3a7b-4622-a6be-543d15350ff2:x:slot-92b6fd93": {
+   "id": "setlist_poster:bfc707a7-3a7b-4622-a6be-543d15350ff2:x:slot-92b6fd93",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1969-05-23.141038.sbd.pcm.dalton.miller.clugston.flac1644",
+   "track": "https://archive.org/download/gd1969-05-23.141038.sbd.pcm.dalton.miller.clugston.flac1644/Gd69-05-23T02MorningDew.mp3",
+   "ms": 0,
+   "labelledAt": "2026-11-07T00:24:19.532Z"
+  },
+  "setlist_poster:4ad288ab-044e-43b0-85af-9d3aff2b6ad7:x:slot-7c214054": {
+   "id": "setlist_poster:4ad288ab-044e-43b0-85af-9d3aff2b6ad7:x:slot-7c214054",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1981-11-30.143852.fob.beyer.m160.streeter.miller.clugston.flac1648",
+   "track": "https://archive.org/download/gd1981-11-30.143852.fob.beyer.m160.streeter.miller.clugston.flac1648/Gd81-11-30S1t03BirdSong.mp3",
+   "ms": 1740,
+   "labelledAt": "2026-11-07T00:24:21.423Z"
+  },
+  "setlist_poster:9c86f911-a647-491a-ad49-e9cabf37d0e3:x:slot-a544365a": {
+   "id": "setlist_poster:9c86f911-a647-491a-ad49-e9cabf37d0e3:x:slot-a544365a",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1990-06-23.163867.nak700.severson.miller.clugston.flac1648",
+   "track": "https://archive.org/download/gd1990-06-23.163867.nak700.severson.miller.clugston.flac1648/gd90-06-23%20s2t07%20Playin'%20Reprise.mp3",
+   "ms": 0,
+   "labelledAt": "2026-11-07T00:24:21.574Z"
+  },
+  "setlist_poster:1a39f0b7-0210-459c-b289-80d70b11f192:x:slot-05a2b37f": {
+   "id": "setlist_poster:1a39f0b7-0210-459c-b289-80d70b11f192:x:slot-05a2b37f",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1973-11-14.sbd.hollister.14716.sbeok.shnf",
+   "track": "https://archive.org/download/gd1973-11-14.sbd.hollister.14716.sbeok.shnf/gd731114-d1t5.mp3",
+   "ms": 7769,
+   "labelledAt": "2026-11-07T00:24:29.495Z"
+  },
+  "setlist_poster:4ad288ab-044e-43b0-85af-9d3aff2b6ad7:1972-11-19:slot-5a4227d3": {
+   "id": "setlist_poster:4ad288ab-044e-43b0-85af-9d3aff2b6ad7:1972-11-19:slot-5a4227d3",
+   "truth": "yes",
+   "reason": "song found on the stored recording",
+   "identifier": "gd1972-11-19.132970.sbd.menke-lee-smith.flac24",
+   "track": "https://archive.org/download/gd1972-11-19.132970.sbd.menke-lee-smith.flac24/gd1972-11-19s1t05.mp3",
+   "ms": 637,
+   "labelledAt": "2026-11-07T00:18:26.540Z"
+  },
+  "setlist_poster:66075d32-ad63-403b-8e07-251bb7dc0b31:x:slot-f4733a2b": {
+   "id": "setlist_poster:66075d32-ad63-403b-8e07-251bb7dc0b31:x:slot-f4733a2b",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1990-07-08.149331.DAK-OTS.boedicker.flac1644",
+   "track": "https://archive.org/download/gd1990-07-08.149331.DAK-OTS.boedicker.flac1644/Disc01%2CTrack01%20Touch%20Of%20Grey.flac",
+   "ms": 2712,
+   "labelledAt": "2026-11-07T00:24:32.358Z"
+  },
+  "setlist_poster:4749553c-1b70-4d1f-9804-d3632be15649:x:slot-7d0735e1": {
+   "id": "setlist_poster:4749553c-1b70-4d1f-9804-d3632be15649:x:slot-7d0735e1",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1976-06-04.153709.sbd.martin.smith.clugston.flac1648",
+   "track": "https://archive.org/download/gd1976-06-04.153709.sbd.martin.smith.clugston.flac1648/gd76-06-04%20s1t09%20Lazy%20Lightning.mp3",
+   "ms": 2425,
+   "labelledAt": "2026-11-07T00:24:34.934Z"
+  },
+  "setlist_poster:582346e2-34eb-4686-a635-accb3e86f22e:x:slot-1ed159d1": {
+   "id": "setlist_poster:582346e2-34eb-4686-a635-accb3e86f22e:x:slot-1ed159d1",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1974-10-19.131694.sbd.boswell-smith.flac24",
+   "track": "https://archive.org/download/gd1974-10-19.131694.sbd.boswell-smith.flac24/gd1974-10-19s3t17_vbr.mp3",
+   "ms": 2204,
+   "labelledAt": "2026-11-07T00:24:37.290Z"
+  },
+  "setlist_poster:e6d782d3-f9c2-447c-b1b3-f120425d88ca:1980-10-04:slot-dd9dbc47": {
+   "id": "setlist_poster:e6d782d3-f9c2-447c-b1b3-f120425d88ca:1980-10-04:slot-dd9dbc47",
+   "truth": "yes",
+   "reason": "a tape of the night carries the song",
+   "identifier": "gd80-10-04.sbd.blanchard.14989.sbeok.shnf",
+   "track": "https://archive.org/download/gd80-10-04.sbd.blanchard.14989.sbeok.shnf/gd80-10-04d1t10.mp3",
+   "ms": 1329,
+   "labelledAt": "2026-11-07T00:18:28.477Z"
+  },
+  "setlist_poster:45278888-a6ff-444d-bab8-8a62682380ab:x:slot-8e7e586f": {
+   "id": "setlist_poster:45278888-a6ff-444d-bab8-8a62682380ab:x:slot-8e7e586f",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1974-10-19.131694.sbd.boswell-smith.flac24",
+   "track": "https://archive.org/download/gd1974-10-19.131694.sbd.boswell-smith.flac24/gd1974-10-19s1t06_vbr.mp3",
+   "ms": 2316,
+   "labelledAt": "2026-11-07T00:24:39.757Z"
+  },
+  "setlist_poster:c845666a-43c4-4da4-b468-d88ff2b9f141:x:slot-3485016c": {
+   "id": "setlist_poster:c845666a-43c4-4da4-b468-d88ff2b9f141:x:slot-3485016c",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1981-09-12.nak300.101497.flac16",
+   "track": "https://archive.org/download/gd1981-09-12.nak300.101497.flac16/GD19810912d2t02.mp3",
+   "ms": 1816,
+   "labelledAt": "2026-11-07T00:24:41.725Z"
+  },
+  "setlist_poster:4ad288ab-044e-43b0-85af-9d3aff2b6ad7:x:slot-a5b42bc0": {
+   "id": "setlist_poster:4ad288ab-044e-43b0-85af-9d3aff2b6ad7:x:slot-a5b42bc0",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1981-11-30.143852.fob.beyer.m160.streeter.miller.clugston.flac1648",
+   "track": "https://archive.org/download/gd1981-11-30.143852.fob.beyer.m160.streeter.miller.clugston.flac1648/Gd81-11-30S1t03BirdSong.mp3",
+   "ms": 0,
+   "labelledAt": "2026-11-07T00:24:41.877Z"
+  },
+  "setlist_poster:4461e4d5-3fa3-4136-87dc-61bcc6f0ff6f:x:slot-3b17e9b4": {
+   "id": "setlist_poster:4461e4d5-3fa3-4136-87dc-61bcc6f0ff6f:x:slot-3b17e9b4",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1971-07-02.136638.pre-fm-GEMS.flac16",
+   "track": "https://archive.org/download/gd1971-07-02.136638.pre-fm-GEMS.flac16/gd71-07-02s1t09.mp3",
+   "ms": 2007,
+   "labelledAt": "2026-11-07T00:24:44.034Z"
+  },
+  "setlist_poster:e6d782d3-f9c2-447c-b1b3-f120425d88ca:1970-08-18:slot-44042646": {
+   "id": "setlist_poster:e6d782d3-f9c2-447c-b1b3-f120425d88ca:1970-08-18:slot-44042646",
+   "truth": "yes",
+   "reason": "song found on the stored recording",
+   "identifier": "gd70-08-18.aud.yerys.1346.sbeok.shnf",
+   "track": "https://archive.org/download/gd70-08-18.aud.yerys.1346.sbeok.shnf/gd70-08-18d1t05.mp3",
+   "ms": 382,
+   "labelledAt": "2026-11-07T00:18:29.617Z"
+  },
+  "setlist_poster:d5ce7d48-b941-4882-8517-84bda198dcc8:x:slot-bb99610a": {
+   "id": "setlist_poster:d5ce7d48-b941-4882-8517-84bda198dcc8:x:slot-bb99610a",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1976-06-04.153709.sbd.martin.smith.clugston.flac1648",
+   "track": "https://archive.org/download/gd1976-06-04.153709.sbd.martin.smith.clugston.flac1648/gd76-06-04%20s1t13%20Help%20On%20The%20Way.mp3",
+   "ms": 1744,
+   "labelledAt": "2026-11-07T00:24:45.929Z"
+  },
+  "setlist_poster:de84d234-1594-40bd-92c8-7d874c6eff69:x:slot-c52161cc": {
+   "id": "setlist_poster:de84d234-1594-40bd-92c8-7d874c6eff69:x:slot-c52161cc",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1974-02-24.136142.5-1.tobin.flac1648",
+   "track": "https://archive.org/download/gd1974-02-24.136142.5-1.tobin.flac1648/gd1974-02-24s2t06.mp3",
+   "ms": 1695,
+   "labelledAt": "2026-11-07T00:24:47.776Z"
+  },
+  "setlist_poster:582346e2-34eb-4686-a635-accb3e86f22e:x:slot-2c20326a": {
+   "id": "setlist_poster:582346e2-34eb-4686-a635-accb3e86f22e:x:slot-2c20326a",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1974-10-19.131694.sbd.boswell-smith.flac24",
+   "track": "https://archive.org/download/gd1974-10-19.131694.sbd.boswell-smith.flac24/gd1974-10-19s3t17_vbr.mp3",
+   "ms": 0,
+   "labelledAt": "2026-11-07T00:24:47.927Z"
+  },
+  "setlist_poster:14dcda6f-41c7-4646-a0e0-f538f3c43eaa:x:slot-ec855cdf": {
+   "id": "setlist_poster:14dcda6f-41c7-4646-a0e0-f538f3c43eaa:x:slot-ec855cdf",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1968-02-14.167923.2nd.set.fm.smith.miller.clugston.flac2496",
+   "track": "https://archive.org/download/gd1968-02-14.167923.2nd.set.fm.smith.miller.clugston.flac2496/gd68-02-14%20s2t07%20Caution%20(Do%20Not%20Stop%20On%20Tracks).mp3",
+   "ms": 3010,
+   "labelledAt": "2026-11-07T00:24:51.088Z"
+  },
+  "setlist_poster:f86234d7-9d57-48c8-a5d4-9fac1f74eac2:x:slot-8418f978": {
+   "id": "setlist_poster:f86234d7-9d57-48c8-a5d4-9fac1f74eac2:x:slot-8418f978",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1989-04-05.nak100.holtz.jaz.100671.flac16",
+   "track": "https://archive.org/download/gd1989-04-05.nak100.holtz.jaz.100671.flac16/GD989-04-05trk10.mp3",
+   "ms": 1276,
+   "labelledAt": "2026-11-07T00:24:52.516Z"
+  },
+  "setlist_poster:c5f1905e-0165-41e4-8da0-3cae344ac9fd:1985-06-30:slot-b201e401": {
+   "id": "setlist_poster:c5f1905e-0165-41e4-8da0-3cae344ac9fd:1985-06-30:slot-b201e401",
+   "truth": "yes",
+   "reason": "song found on the stored recording",
+   "identifier": "gd1985-06-30.sbd.miller.89192.sbeok.flac16",
+   "track": "https://archive.org/download/gd1985-06-30.sbd.miller.89192.sbeok.flac16/gd85-06-30d2t09.mp3",
+   "ms": 215,
+   "labelledAt": "2026-11-07T00:18:30.739Z"
+  },
+  "setlist_poster:5382fb24-d4ee-4073-bcfb-edcab7a2d860:x:slot-e5d6e053": {
+   "id": "setlist_poster:5382fb24-d4ee-4073-bcfb-edcab7a2d860:x:slot-e5d6e053",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1991-06-17.137545.sbd.miller.flac24",
+   "track": "https://archive.org/download/gd1991-06-17.137545.sbd.miller.flac24/17Space.mp3",
+   "ms": 0,
+   "labelledAt": "2026-11-07T00:24:52.667Z"
+  },
+  "setlist_poster:3e7200c7-4825-4e9f-87ff-07d62d00e86a:x:slot-a88bdb66": {
+   "id": "setlist_poster:3e7200c7-4825-4e9f-87ff-07d62d00e86a:x:slot-a88bdb66",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1971-08-06.mtx.chappell.97015.flac16",
+   "track": "https://archive.org/download/gd1971-08-06.mtx.chappell.97015.flac16/gd71-08-06d1t08.mp3",
+   "ms": 0,
+   "labelledAt": "2026-11-07T00:24:52.819Z"
+  },
+  "setlist_poster:673f8f2a-8c36-4308-8bfb-adf6b3b4adb5:x:slot-69e2e112": {
+   "id": "setlist_poster:673f8f2a-8c36-4308-8bfb-adf6b3b4adb5:x:slot-69e2e112",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1969-05-23.141038.sbd.pcm.dalton.miller.clugston.flac1644",
+   "track": "https://archive.org/download/gd1969-05-23.141038.sbd.pcm.dalton.miller.clugston.flac1644/Gd69-05-23T06TheEleven.mp3",
+   "ms": 1330,
+   "labelledAt": "2026-11-07T00:24:54.301Z"
+  },
+  "setlist_poster:31169c2d-59cd-4245-9dfa-726af415a794:x:slot-12c44119": {
+   "id": "setlist_poster:31169c2d-59cd-4245-9dfa-726af415a794:x:slot-12c44119",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1974-10-19.131694.sbd.boswell-smith.flac24",
+   "track": "https://archive.org/download/gd1974-10-19.131694.sbd.boswell-smith.flac24/gd1974-10-19s3t21_vbr.mp3",
+   "ms": 1497,
+   "labelledAt": "2026-11-07T00:24:55.951Z"
+  },
+  "setlist_poster:654c273c-7f56-4ffc-af4b-5b9a527e0c96:x:slot-b1260ca7": {
+   "id": "setlist_poster:654c273c-7f56-4ffc-af4b-5b9a527e0c96:x:slot-b1260ca7",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd70-03-24.sbd.miller.32054.sbeok.flacf",
+   "track": "https://archive.org/download/gd70-03-24.sbd.miller.32054.sbeok.flacf/gd70-03-24d1t04.mp3",
+   "ms": 2513,
+   "labelledAt": "2026-11-07T00:24:58.616Z"
+  },
+  "setlist_poster:b337c4bd-7520-4b66-a2bd-481fbf548ce9:1989-10-16:slot-64d802c0": {
+   "id": "setlist_poster:b337c4bd-7520-4b66-a2bd-481fbf548ce9:1989-10-16:slot-64d802c0",
+   "truth": "yes",
+   "reason": "song found on the stored recording",
+   "identifier": "gd89-10-16.dsbd.barrick.446.sbeok.shnf",
+   "track": "https://archive.org/download/gd89-10-16.dsbd.barrick.446.sbeok.shnf/gd10.16.89d1t05.mp3",
+   "ms": 200,
+   "labelledAt": "2026-11-07T00:18:31.847Z"
+  },
+  "setlist_poster:4ad288ab-044e-43b0-85af-9d3aff2b6ad7:x:slot-68d52111": {
+   "id": "setlist_poster:4ad288ab-044e-43b0-85af-9d3aff2b6ad7:x:slot-68d52111",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1981-11-30.143852.fob.beyer.m160.streeter.miller.clugston.flac1648",
+   "track": "https://archive.org/download/gd1981-11-30.143852.fob.beyer.m160.streeter.miller.clugston.flac1648/Gd81-11-30S1t03BirdSong.mp3",
+   "ms": 0,
+   "labelledAt": "2026-11-07T00:24:58.767Z"
+  },
+  "setlist_poster:0b0f02e4-4c1a-4a4b-914a-fa317e86b4a8:x:slot-b7448688": {
+   "id": "setlist_poster:0b0f02e4-4c1a-4a4b-914a-fa317e86b4a8:x:slot-b7448688",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1981-09-12.nak300.101497.flac16",
+   "track": "https://archive.org/download/gd1981-09-12.nak300.101497.flac16/GD19810912d2t07.mp3",
+   "ms": 2313,
+   "labelledAt": "2026-11-07T00:25:01.231Z"
+  },
+  "setlist_poster:4870b3f0-1a22-4fc1-89ed-c745a9e860d8:x:slot-9c9ae1c1": {
+   "id": "setlist_poster:4870b3f0-1a22-4fc1-89ed-c745a9e860d8:x:slot-9c9ae1c1",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1983-03-31.sbd.miller.32306.sbeok.flac16",
+   "track": "https://archive.org/download/gd1983-03-31.sbd.miller.32306.sbeok.flac16/gd83-03-31d2t01.mp3",
+   "ms": 1768,
+   "labelledAt": "2026-11-07T00:25:03.150Z"
+  },
+  "setlist_poster:cbf0af86-3376-46ef-8465-62409ab9ba09:x:slot-454ce926": {
+   "id": "setlist_poster:cbf0af86-3376-46ef-8465-62409ab9ba09:x:slot-454ce926",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1971-07-02.136638.pre-fm-GEMS.flac16",
+   "track": "https://archive.org/download/gd1971-07-02.136638.pre-fm-GEMS.flac16/gd71-07-02s1t06.mp3",
+   "ms": 0,
+   "labelledAt": "2026-11-07T00:25:03.301Z"
+  },
+  "setlist_poster:4870b3f0-1a22-4fc1-89ed-c745a9e860d8:x:slot-e317cbee": {
+   "id": "setlist_poster:4870b3f0-1a22-4fc1-89ed-c745a9e860d8:x:slot-e317cbee",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1983-03-31.sbd.miller.32306.sbeok.flac16",
+   "track": "https://archive.org/download/gd1983-03-31.sbd.miller.32306.sbeok.flac16/gd83-03-31d2t01.mp3",
+   "ms": 0,
+   "labelledAt": "2026-11-07T00:25:03.452Z"
+  },
+  "setlist_poster:51a67828-2412-4d75-abf3-d07f60f40989:x:slot-815aba50": {
+   "id": "setlist_poster:51a67828-2412-4d75-abf3-d07f60f40989:x:slot-815aba50",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1972-08-21.139581.sbd.miller.sirmick.fixed.flac16",
+   "track": "https://archive.org/download/gd1972-08-21.139581.sbd.miller.sirmick.fixed.flac16/gd1972-08-21s2t03.mp3",
+   "ms": 2486,
+   "labelledAt": "2026-11-07T00:25:06.089Z"
+  },
+  "setlist_poster:d1b77f8e-4b87-4c71-b0db-e5f6077697a7:x:slot-41fc7dca": {
+   "id": "setlist_poster:d1b77f8e-4b87-4c71-b0db-e5f6077697a7:x:slot-41fc7dca",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1972-08-12.139784.sbd.boswell.smith.clugston.flac2496",
+   "track": "https://archive.org/download/gd1972-08-12.139784.sbd.boswell.smith.clugston.flac2496/Gd72-08-12S2T10MississippiHalf-step.mp3",
+   "ms": 0,
+   "labelledAt": "2026-11-07T00:25:06.241Z"
+  },
+  "setlist_poster:69456821-7ece-455e-be96-bff92b9f1c2b:x:slot-b334e180": {
+   "id": "setlist_poster:69456821-7ece-455e-be96-bff92b9f1c2b:x:slot-b334e180",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1972-08-12.139784.sbd.boswell.smith.clugston.flac2496",
+   "track": "https://archive.org/download/gd1972-08-12.139784.sbd.boswell.smith.clugston.flac2496/Gd72-08-12S2T02RambleOnRose.mp3",
+   "ms": 1762,
+   "labelledAt": "2026-11-07T00:25:08.154Z"
+  },
+  "setlist_poster:bfc707a7-3a7b-4622-a6be-543d15350ff2:x:slot-5dfc6adc": {
+   "id": "setlist_poster:bfc707a7-3a7b-4622-a6be-543d15350ff2:x:slot-5dfc6adc",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1969-05-23.141038.sbd.pcm.dalton.miller.clugston.flac1644",
+   "track": "https://archive.org/download/gd1969-05-23.141038.sbd.pcm.dalton.miller.clugston.flac1644/Gd69-05-23T02MorningDew.mp3",
+   "ms": 0,
+   "labelledAt": "2026-11-07T00:25:08.305Z"
+  },
+  "setlist_poster:07c80ec4-1ae9-4236-bf9f-b1ab71b45fc1:x:slot-fab8ecce": {
+   "id": "setlist_poster:07c80ec4-1ae9-4236-bf9f-b1ab71b45fc1:x:slot-fab8ecce",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1994-02-27.schoeps.wklitz-jones-clayton.watson.85709.flac16",
+   "track": "https://archive.org/download/gd1994-02-27.schoeps.wklitz-jones-clayton.watson.85709.flac16/gd1994-02-27set2t07.mp3",
+   "ms": 0,
+   "labelledAt": "2026-11-07T00:25:08.456Z"
+  },
+  "setlist_poster:51a67828-2412-4d75-abf3-d07f60f40989:x:slot-9d8072fc": {
+   "id": "setlist_poster:51a67828-2412-4d75-abf3-d07f60f40989:x:slot-9d8072fc",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1972-08-21.139581.sbd.miller.sirmick.fixed.flac16",
+   "track": "https://archive.org/download/gd1972-08-21.139581.sbd.miller.sirmick.fixed.flac16/gd1972-08-21s2t03.mp3",
+   "ms": 0,
+   "labelledAt": "2026-11-07T00:25:08.608Z"
+  },
+  "setlist_poster:645c2007-3243-458f-b590-c903372d0ec1:x:slot-fc48a522": {
+   "id": "setlist_poster:645c2007-3243-458f-b590-c903372d0ec1:x:slot-fc48a522",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1974-10-19.131694.sbd.boswell-smith.flac24",
+   "track": "https://archive.org/download/gd1974-10-19.131694.sbd.boswell-smith.flac24/gd1974-10-19s3t28_vbr.mp3",
+   "ms": 1771,
+   "labelledAt": "2026-11-07T00:25:10.530Z"
+  },
+  "setlist_poster:0b0f02e4-4c1a-4a4b-914a-fa317e86b4a8:x:slot-4ffcd1ba": {
+   "id": "setlist_poster:0b0f02e4-4c1a-4a4b-914a-fa317e86b4a8:x:slot-4ffcd1ba",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1981-09-12.nak300.101497.flac16",
+   "track": "https://archive.org/download/gd1981-09-12.nak300.101497.flac16/GD19810912d2t07.mp3",
+   "ms": 0,
+   "labelledAt": "2026-11-07T00:25:10.682Z"
+  },
+  "setlist_poster:d5ce7d48-b941-4882-8517-84bda198dcc8:x:slot-35ce7105": {
+   "id": "setlist_poster:d5ce7d48-b941-4882-8517-84bda198dcc8:x:slot-35ce7105",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1976-06-04.153709.sbd.martin.smith.clugston.flac1648",
+   "track": "https://archive.org/download/gd1976-06-04.153709.sbd.martin.smith.clugston.flac1648/gd76-06-04%20s1t13%20Help%20On%20The%20Way.mp3",
+   "ms": 0,
+   "labelledAt": "2026-11-07T00:25:10.834Z"
+  },
+  "setlist_poster:0851d4b3-ccc4-4763-b305-96a500e6cf44:x:slot-af1a94dc": {
+   "id": "setlist_poster:0851d4b3-ccc4-4763-b305-96a500e6cf44:x:slot-af1a94dc",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1971-07-02.136638.pre-fm-GEMS.flac16",
+   "track": "https://archive.org/download/gd1971-07-02.136638.pre-fm-GEMS.flac16/gd71-07-02s1t19.mp3",
+   "ms": 0,
+   "labelledAt": "2026-11-07T00:25:10.987Z"
+  },
+  "setlist_poster:a712edf9-6474-44ce-8486-0243aab7d9e2:x:slot-08a11ae4": {
+   "id": "setlist_poster:a712edf9-6474-44ce-8486-0243aab7d9e2:x:slot-08a11ae4",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1991-06-17.137545.sbd.miller.flac24",
+   "track": "https://archive.org/download/gd1991-06-17.137545.sbd.miller.flac24/19PlayingInTheBand.mp3",
+   "ms": 0,
+   "labelledAt": "2026-11-07T00:25:11.139Z"
+  },
+  "setlist_poster:582346e2-34eb-4686-a635-accb3e86f22e:x:slot-cf7589d0": {
+   "id": "setlist_poster:582346e2-34eb-4686-a635-accb3e86f22e:x:slot-cf7589d0",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1974-10-19.131694.sbd.boswell-smith.flac24",
+   "track": "https://archive.org/download/gd1974-10-19.131694.sbd.boswell-smith.flac24/gd1974-10-19s3t17_vbr.mp3",
+   "ms": 0,
+   "labelledAt": "2026-11-07T00:25:11.290Z"
+  },
+  "setlist_poster:bfc707a7-3a7b-4622-a6be-543d15350ff2:x:slot-94e772b8": {
+   "id": "setlist_poster:bfc707a7-3a7b-4622-a6be-543d15350ff2:x:slot-94e772b8",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1969-05-23.141038.sbd.pcm.dalton.miller.clugston.flac1644",
+   "track": "https://archive.org/download/gd1969-05-23.141038.sbd.pcm.dalton.miller.clugston.flac1644/Gd69-05-23T02MorningDew.mp3",
+   "ms": 0,
+   "labelledAt": "2026-11-07T00:25:11.442Z"
+  },
+  "setlist_poster:7c57164a-31bd-48d0-847d-febec72345ff:x:slot-cee9f97c": {
+   "id": "setlist_poster:7c57164a-31bd-48d0-847d-febec72345ff:x:slot-cee9f97c",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1974-10-19.131694.sbd.boswell-smith.flac24",
+   "track": "https://archive.org/download/gd1974-10-19.131694.sbd.boswell-smith.flac24/gd1974-10-19s1t09_vbr.mp3",
+   "ms": 0,
+   "labelledAt": "2026-11-07T00:25:11.593Z"
+  },
+  "setlist_poster:b9439ed0-c6af-43d7-aad7-bb07e8207f65:x:slot-126fc71a": {
+   "id": "setlist_poster:b9439ed0-c6af-43d7-aad7-bb07e8207f65:x:slot-126fc71a",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1984-04-14.139328.fob.schoeps.mk41.oade.bryant.miller.clugston.flac2496",
+   "track": "https://archive.org/download/gd1984-04-14.139328.fob.schoeps.mk41.oade.bryant.miller.clugston.flac2496/gd84-04-14s1t05.mp3",
+   "ms": 1911,
+   "labelledAt": "2026-11-07T00:25:13.656Z"
+  },
+  "setlist_poster:83fb2ad9-cabe-4c47-92b4-ded45aee54f0:x:slot-f8033113": {
+   "id": "setlist_poster:83fb2ad9-cabe-4c47-92b4-ded45aee54f0:x:slot-f8033113",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1968-02-14.167923.2nd.set.fm.smith.miller.clugston.flac2496",
+   "track": "https://archive.org/download/gd1968-02-14.167923.2nd.set.fm.smith.miller.clugston.flac2496/gd68-02-14%20s2t06%20Alligator.mp3",
+   "ms": 1857,
+   "labelledAt": "2026-11-07T00:25:15.664Z"
+  },
+  "setlist_poster:5382fb24-d4ee-4073-bcfb-edcab7a2d860:x:slot-752e681c": {
+   "id": "setlist_poster:5382fb24-d4ee-4073-bcfb-edcab7a2d860:x:slot-752e681c",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1991-06-17.137545.sbd.miller.flac24",
+   "track": "https://archive.org/download/gd1991-06-17.137545.sbd.miller.flac24/17Space.mp3",
+   "ms": 0,
+   "labelledAt": "2026-11-07T00:25:15.814Z"
+  },
+  "setlist_poster:5382fb24-d4ee-4073-bcfb-edcab7a2d860:x:slot-b7e6c63a": {
+   "id": "setlist_poster:5382fb24-d4ee-4073-bcfb-edcab7a2d860:x:slot-b7e6c63a",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1991-06-17.137545.sbd.miller.flac24",
+   "track": "https://archive.org/download/gd1991-06-17.137545.sbd.miller.flac24/17Space.mp3",
+   "ms": 0,
+   "labelledAt": "2026-11-07T00:25:15.966Z"
+  },
+  "setlist_poster:4ad288ab-044e-43b0-85af-9d3aff2b6ad7:x:slot-51d5b277": {
+   "id": "setlist_poster:4ad288ab-044e-43b0-85af-9d3aff2b6ad7:x:slot-51d5b277",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1981-11-30.143852.fob.beyer.m160.streeter.miller.clugston.flac1648",
+   "track": "https://archive.org/download/gd1981-11-30.143852.fob.beyer.m160.streeter.miller.clugston.flac1648/Gd81-11-30S1t03BirdSong.mp3",
+   "ms": 0,
+   "labelledAt": "2026-11-07T00:25:16.117Z"
+  },
+  "setlist_poster:59594f3b-3748-4c8b-9593-b9319b06862a:x:slot-12fcd853": {
+   "id": "setlist_poster:59594f3b-3748-4c8b-9593-b9319b06862a:x:slot-12fcd853",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1981-09-12.nak300.101497.flac16",
+   "track": "https://archive.org/download/gd1981-09-12.nak300.101497.flac16/GD19810912d2t04.mp3",
+   "ms": 0,
+   "labelledAt": "2026-11-07T00:25:16.269Z"
+  },
+  "setlist_poster:bfc707a7-3a7b-4622-a6be-543d15350ff2:x:slot-426596a8": {
+   "id": "setlist_poster:bfc707a7-3a7b-4622-a6be-543d15350ff2:x:slot-426596a8",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1969-05-23.141038.sbd.pcm.dalton.miller.clugston.flac1644",
+   "track": "https://archive.org/download/gd1969-05-23.141038.sbd.pcm.dalton.miller.clugston.flac1644/Gd69-05-23T02MorningDew.mp3",
+   "ms": 0,
+   "labelledAt": "2026-11-07T00:25:16.420Z"
+  },
+  "setlist_poster:a59e305f-0df6-4180-8cb2-60dbe7670af2:x:slot-f88985e5": {
+   "id": "setlist_poster:a59e305f-0df6-4180-8cb2-60dbe7670af2:x:slot-f88985e5",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1991-06-06.149638.sbd.cm.miller.flac16",
+   "track": "https://archive.org/download/gd1991-06-06.149638.sbd.cm.miller.flac16/03%20The%20Love%20Each%20Other.mp3",
+   "ms": 2464,
+   "labelledAt": "2026-11-07T00:25:19.036Z"
+  },
+  "setlist_poster:3e7200c7-4825-4e9f-87ff-07d62d00e86a:x:slot-7116960c": {
+   "id": "setlist_poster:3e7200c7-4825-4e9f-87ff-07d62d00e86a:x:slot-7116960c",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1971-08-06.mtx.chappell.97015.flac16",
+   "track": "https://archive.org/download/gd1971-08-06.mtx.chappell.97015.flac16/gd71-08-06d1t08.mp3",
+   "ms": 0,
+   "labelledAt": "2026-11-07T00:25:19.188Z"
+  },
+  "setlist_poster:ca15aa42-cf1e-42de-a52b-bceeb9f76fc4:x:slot-01475634": {
+   "id": "setlist_poster:ca15aa42-cf1e-42de-a52b-bceeb9f76fc4:x:slot-01475634",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1993-08-21.151100.sbd.miller.flac1648",
+   "track": "https://archive.org/download/gd1993-08-21.151100.sbd.miller.flac1648/13%20Good%20Morning%20Little%20Schoolgirl.mp3",
+   "ms": 3365,
+   "labelledAt": "2026-11-07T00:25:22.704Z"
+  },
+  "setlist_poster:2322288f-e443-4e94-941d-732f1a25af70:x:slot-ac2e8acf": {
+   "id": "setlist_poster:2322288f-e443-4e94-941d-732f1a25af70:x:slot-ac2e8acf",
+   "truth": "yes",
+   "reason": "undated: the song's best tape carries it",
+   "identifier": "gd1974-10-19.131694.sbd.boswell-smith.flac24",
+   "track": "https://archive.org/download/gd1974-10-19.131694.sbd.boswell-smith.flac24/gd1974-10-19s1t07_vbr.mp3",
+   "ms": 3913,
+   "labelledAt": "2026-11-07T00:25:26.769Z"
+  },
+  "issue:00692cb0-0090-4843-a956-a3c3aeced63d:1976-06-09:issue-e490c562": {
+   "id": "issue:00692cb0-0090-4843-a956-a3c3aeced63d:1976-06-09:issue-e490c562",
+   "truth": "no",
+   "reason": "tapes of the night exist; none carries the song",
+   "identifier": "gd1976-06-09.sbd.miller.95399.sbeok.flac16",
+   "track": null,
+   "ms": 17353,
+   "labelledAt": "2026-11-07T00:25:44.274Z"
+  },
+  "issue:00692cb0-0090-4843-a956-a3c3aeced63d:1977-04-27:issue-67e50d8e": {
+   "id": "issue:00692cb0-0090-4843-a956-a3c3aeced63d:1977-04-27:issue-67e50d8e",
+   "truth": "no",
+   "reason": "tapes of the night exist; none carries the song",
+   "identifier": "gd77-04-27.sbd.samaritano.20331.sbefail.shnf",
+   "track": null,
+   "ms": 3283,
+   "labelledAt": "2026-11-07T00:25:47.708Z"
+  },
+  "issue:00692cb0-0090-4843-a956-a3c3aeced63d:1991-09-06:issue-4a22e18b": {
+   "id": "issue:00692cb0-0090-4843-a956-a3c3aeced63d:1991-09-06:issue-4a22e18b",
+   "truth": "no",
+   "reason": "tapes of the night exist; none carries the song",
+   "identifier": "gd91-09-06.sbd.gardner.5560.sbeok.shnf",
+   "track": null,
+   "ms": 3187,
+   "labelledAt": "2026-11-07T00:25:51.047Z"
+  },
+  "issue:00692cb0-0090-4843-a956-a3c3aeced63d:1990-03-22:issue-c22c82d9": {
+   "id": "issue:00692cb0-0090-4843-a956-a3c3aeced63d:1990-03-22:issue-c22c82d9",
+   "truth": "no",
+   "reason": "tapes of the night exist; none carries the song",
+   "identifier": "gd90-03-22.sbd.bertha-ashley.21433.sbeok.shnf",
+   "track": null,
+   "ms": 2505,
+   "labelledAt": "2026-11-07T00:25:53.703Z"
+  },
+  "issue:00692cb0-0090-4843-a956-a3c3aeced63d:1983-10-06:issue-332246d7": {
+   "id": "issue:00692cb0-0090-4843-a956-a3c3aeced63d:1983-10-06:issue-332246d7",
+   "truth": "no",
+   "reason": "the Archive lists no Grateful Dead recording of the night",
+   "ms": 260,
+   "labelledAt": "2026-11-07T00:19:02.415Z"
+  },
+  "issue:d5ce7d48-b941-4882-8517-84bda198dcc8:1977-06-09:issue-af075e87": {
+   "id": "issue:d5ce7d48-b941-4882-8517-84bda198dcc8:1977-06-09:issue-af075e87",
+   "truth": "yes",
+   "reason": "song found on the stored recording",
+   "identifier": "gd1977-06-09.28614.sbeok.flac16",
+   "track": "https://archive.org/download/gd1977-06-09.28614.sbeok.flac16/gd77-06-09d2t03.mp3",
+   "ms": 684,
+   "labelledAt": "2026-11-07T00:19:03.251Z"
+  },
+  "issue:0fd22bbc-9f76-409d-bc25-d5cb3ea8bf05:1971-10-19:issue-d0916f90": {
+   "id": "issue:0fd22bbc-9f76-409d-bc25-d5cb3ea8bf05:1971-10-19:issue-d0916f90",
+   "truth": "yes",
+   "reason": "song found on the stored recording",
+   "identifier": "gd71-10-19.orefm.clugston.3301.sbeok.shnf",
+   "track": "https://archive.org/download/gd71-10-19.orefm.clugston.3301.sbeok.shnf/gd71-10-19d1t09.mp3",
+   "ms": 230,
+   "labelledAt": "2026-11-07T00:19:03.632Z"
   }
  }
 }

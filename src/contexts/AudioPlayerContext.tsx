@@ -17,6 +17,7 @@ import {
 import { NativeEngine } from "@/lib/player/nativeEngine";
 import { isNativeApp } from "@/lib/nativeApp";
 import { captureAudioEvent, archiveIdentifierFromUrl } from "@/lib/player/audioInstrumentation";
+import { askIndex, findNight, findSongDefault } from "@/lib/tapeIndex";
 import { activeTap, claimTap, tapFailed, tapFirstSound, tapSlot, tapStage, surfaceFromPath, type TapStage } from "@/lib/player/tapTelemetry";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -97,6 +98,12 @@ export interface PlayableSlot {
   segueToNext: boolean;
   /** Direct track URL resolved from Archive.org for this specific song */
   directTrackUrl?: string | null;
+  /**
+   * The same track on its item's own server, from the tape index. The engine
+   * streams this and skips the /download/ redirect; directTrackUrl stays the
+   * identity (reports, "it played", failover all key on it).
+   */
+  streamUrl?: string | null;
 }
 
 interface AudioPlayerState {
@@ -526,7 +533,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
   };
 
   /** `url` is for a failover, which streams the slot's track from another server. */
-  const toEngineTrack = (slot: PlayableSlot, url = slot.directTrackUrl!): EngineTrack => ({
+  const toEngineTrack = (slot: PlayableSlot, url = slot.streamUrl || slot.directTrackUrl!): EngineTrack => ({
     slotId: slot.id,
     url,
     metadata: {
@@ -902,6 +909,38 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
       return ok({ ...slot, version, directTrackUrl: precomputed.directTrackUrl });
     }
 
+    // The tape index, before any Archive request: a hit means the tap goes
+    // straight to bytes. It answers within its own short budget or not at
+    // all (a miss), so it can never make a tap slower than the live path.
+    // A night the index KNOWS has no tape is answered here too — but only
+    // for a slot that names no recording of its own.
+    const night = archiveKeyDate(slot.version?.show_date);
+    if (night) {
+      const storedId = slot.version?.archive_org_url?.match(/archive\.org\/details\/([^/?#]+)/)?.[1] ?? null;
+      const a = await askIndex(slot.song.id, night, storedId);
+      if (a.kind === "hit") {
+        audioDebug.log("resolve", "tape index hit", { song: slot.song.title, date: night, stream: !!a.result.streamUrl });
+        return ok({
+          ...slot,
+          version: {
+            ...(slot.version ?? SYNTHETIC_VERSION_DEFAULTS),
+            id: slot.version?.id ?? "",
+            song_id: slot.song.id,
+            show_date: night,
+            archive_org_url: slot.version?.archive_org_url ?? a.result.url,
+            venue: slot.version?.venue ?? null,
+          } as NotableVersion,
+          directTrackUrl: a.result.directTrackUrl ?? null,
+          streamUrl: a.result.streamUrl ?? null,
+        });
+      }
+      if (a.kind === "none" && !storedId) {
+        audioDebug.log("resolve", "tape index: no tape of this night carries the song", { song: slot.song.title, date: night, why: a.why });
+        stageFor(slot, a.why === "no_match" ? "match" : "lookup");
+        return absent();
+      }
+    }
+
     if (slot.version?.archive_org_url && !slot.directTrackUrl) {
       // Has a specific show URL — find the track WITHIN that recording
       audioDebug.log("resolve", "findTrackInRecording", { url: slot.version.archive_org_url, song: slot.song.title });
@@ -958,18 +997,18 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
       // that night that actually carries the song, rather than giving up on a
       // URL we never had reason to trust. This heals already-saved guides
       // without a migration.
-      const night = archiveKeyDate(slot.version.show_date);
       let healUnreachable = false;
       if (night) {
         audioDebug.log("resolve", "stored tape lacks the song — re-resolving the night", { song: slot.song.title, date: night }, "warn");
         stageFor(slot, "lookup");
         try {
-          const dated = await findRecordingForDate(slot.song.title, night);
+          const dated = await findNight(slot.song.title, night, slot.song.id);
           if (dated?.directTrackUrl) {
             return ok({
               ...slot,
               version: { ...slot.version, archive_org_url: dated.url },
               directTrackUrl: dated.directTrackUrl,
+              streamUrl: dated.streamUrl ?? null,
             });
           }
         } catch (e) {
@@ -1059,7 +1098,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     // No archive URL and no night — a generic search is all that is left.
     audioDebug.log("resolve", "findArchiveRecording (generic search)", { song: slot.song.title });
     stageFor(slot, "lookup");
-    const result = await findArchiveRecording(slot.song.title);
+    const result = await findSongDefault(slot.song.title, slot.song.id);
     if (result?.directTrackUrl) {
       return ok({
         ...slot,
@@ -1070,6 +1109,7 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
           city: null, era_id: null, rating: null, description: null,
         },
         directTrackUrl: result.directTrackUrl || null,
+        streamUrl: result.streamUrl ?? null,
       });
     }
     // findArchiveRecording swallows its own errors and caches null, so this
@@ -1390,7 +1430,13 @@ export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
     const p = lastProgressRef.current;
     const resumeAt = p.slotId === slot.id ? p.currentTime : 0;
     setFailingOver({ slotId: slot.id, token });
-    const { urls, unreachable: cantReach } = await archiveMirrorUrls(trackUrl);
+    const { urls: roots, unreachable: cantReach } = await archiveMirrorUrls(trackUrl);
+    // A slot that started on its item's own server (the tape index) tries the
+    // item's OTHER servers next, and the Archive's own redirect last — the
+    // one address it skipped to start fast.
+    const urls = slot.streamUrl
+      ? [...roots.filter((u) => u !== slot.streamUrl), trackUrl]
+      : roots;
     setFailingOver((cur) => (cur?.token === token ? null : cur));
     if (gen !== resolveGenRef.current || engineSlotIdRef.current !== slot.id) {
       audioDebug.log("context", "failover answer for a slot the player has left — dropped",

@@ -24,6 +24,7 @@ import { useFavoriteSongs } from "@/hooks/useFavoriteSongs";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { archiveKeyDate, findArchiveRecording, findRecordingForDate, type ArchiveResult } from "@/lib/archiveOrg";
+import { findNight } from "@/lib/tapeIndex";
 import type { Database } from "@/integrations/supabase/types";
 import { SYNTHETIC_VERSION_DEFAULTS } from "@/lib/syntheticVersion";
 
@@ -132,7 +133,7 @@ const SortableSlotItem = ({
     // in the window, which would link this row to a show it is not describing.
     const namedNight = archiveKeyDate(slot.version?.show_date);
     const lookup = namedNight
-      ? findRecordingForDate(slot.song.title, namedNight)
+      ? findNight(slot.song.title, namedNight, slot.song.id)
       : findArchiveRecording(
           slot.song.title,
           eraYearRange?.start ?? null,
@@ -194,6 +195,7 @@ const SortableSlotItem = ({
             const playSlot = {
               ...slot,
               directTrackUrl: archiveResult?.directTrackUrl || null,
+              streamUrl: archiveResult?.streamUrl ?? null,
               version: slot.version || (archiveResult ? {
                 ...SYNTHETIC_VERSION_DEFAULTS,
                 id: "", song_id: slot.song.id, show_date: archiveResult.date || "",
@@ -267,6 +269,7 @@ const SortableSlotItem = ({
                     const playSlot = {
                       ...slot,
                       directTrackUrl: archiveResult.directTrackUrl || null,
+                      streamUrl: archiveResult.streamUrl ?? null,
                       version: slot.version || {
                         ...SYNTHETIC_VERSION_DEFAULTS,
                         id: "",

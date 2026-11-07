@@ -25,7 +25,7 @@
  */
 import { useEffect, useRef } from "react";
 import { useAudioPlayer, type PlayableSlot } from "@/contexts/AudioPlayerContext";
-import { findRecordingForDate } from "@/lib/archiveOrg";
+import { findNight } from "@/lib/tapeIndex";
 import { beginTap, type TapSurface } from "@/lib/player/tapTelemetry";
 import { unlockAudioInGesture } from "@/lib/player/gestureUnlock";
 import { spotlightSlot } from "@/lib/songbookSpotlight";
@@ -158,22 +158,24 @@ const TapeBenchDock = () => {
     beginTap(SURFACE[spec.surface], { songId: spec.songId, showDate: spec.showDate, hasPrecomputed: false });
     let url = spec.archiveUrl;
     let track: string | null = null;
+    let stream: string | null = null;
     if (!url) {
       if (!spec.showDate) return;
       try {
-        const tape = await findRecordingForDate(spec.title, spec.showDate);
+        const tape = await findNight(spec.title, spec.showDate, spec.songId);
         if (!tape?.url) {
           reportPlaybackFailure({ kind: "no_tape", songId: spec.songId, songTitle: spec.title, showDate: spec.showDate });
           return;
         }
         url = tape.url;
         track = tape.directTrackUrl ?? null;
+        stream = tape.streamUrl ?? null;
       } catch (e) {
         marks.lookupError = String(e).slice(0, 120);
         return;
       }
     }
-    void playSingle(versionSlot(spec, url, track));
+    void playSingle({ ...versionSlot(spec, url, track), streamUrl: stream });
   };
 
   return (
