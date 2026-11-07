@@ -307,15 +307,23 @@ export class GaplessEngine {
     // eslint-disable-next-line prefer-const
     let queue: GaplessQueue;
     queue = new Queue({
-      playbackMethod: "HYBRID",
-      preloadNumTracks: 2,
       // iOS (Safari, home-screen PWA, and the Capacitor shell alike)
       // suspends Web Audio contexts when the app backgrounds or the screen
-      // locks, killing playback mid-show. HTML5 <audio> keeps playing —
-      // and in the native shell UIBackgroundModes/AVAudioSession make it
-      // first-class. Trade sample-accurate segue scheduling for playback
-      // that survives backgrounding on iOS; everywhere else stays HYBRID.
-      webAudioIsDisabled: isIOS(),
+      // locks, killing playback mid-show. HTML5 <audio> keeps playing. So
+      // iOS plays HTML5 only: segues lose sample accuracy, playback survives.
+      //
+      // This used to be `webAudioIsDisabled: isIOS()` — an option of the OLD
+      // gapless API that gapless 4 (Queue.ts) does not read at all. Found by
+      // the playback sprint's bench (2026-11-07): every iPhone ran full HYBRID,
+      // which HEADs and then downloads the ENTIRE mp3 into memory beside the
+      // streaming element, to decode it and hand the song over to Web Audio
+      // mid-play. On a phone the two downloads share the radio, so the stream
+      // the fan is waiting on started seconds late (most bench taps passed the
+      // 8 s ceiling); and the mid-song hand-off is exactly what this comment
+      // meant to avoid — plausibly the field's NotSupportedError ~30 s into a
+      // track. HTML5_ONLY skips the fetch, the decode and the hand-off.
+      playbackMethod: isIOS() ? "HTML5_ONLY" : "HYBRID",
+      preloadNumTracks: 2,
       volume: this.volume,
       onProgress: (info) => {
         // A replaced queue is torn down, but a tick already in flight from it

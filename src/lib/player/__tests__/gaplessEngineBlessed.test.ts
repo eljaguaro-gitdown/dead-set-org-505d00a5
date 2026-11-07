@@ -5,10 +5,11 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
  * addTrack — which runs after the Archive lookup, long after the tap — must be
  * one of the elements started IN the tap (GaplessEngine.unlock).
  */
-const { built } = vi.hoisted(() => ({ built: [] as HTMLAudioElement[] }));
+const { built, opts } = vi.hoisted(() => ({ built: [] as HTMLAudioElement[], opts: [] as Array<Record<string, unknown>> }));
+const lastOpts = () => opts[opts.length - 1];
 vi.mock("gapless", () => {
   class FakeQueue {
-    constructor(_opts: unknown) {}
+    constructor(o: Record<string, unknown>) { opts.push(o); }
     // Exactly what gapless's Track constructor does: `new Audio()`.
     addTrack = vi.fn(() => { built.push(new Audio()); });
     gotoTrack = vi.fn();
@@ -86,5 +87,31 @@ describe("errorTrackIndex", () => {
   it("is null for an error that names no track — a play() rejection is about the current one", () => {
     expect(errorTrackIndex(new DOMException("The operation is not supported.", "NotSupportedError"))).toBeNull();
     expect(errorTrackIndex("boom")).toBeNull();
+  });
+});
+
+describe("the playback method", () => {
+  // The fake queue records its options; gapless 4 reads playbackMethod and
+  // ignores the old webAudioIsDisabled entirely, so that option proves nothing.
+  const optsOf = async (ua: string) => {
+    const desc = Object.getOwnPropertyDescriptor(window.navigator, "userAgent");
+    Object.defineProperty(window.navigator, "userAgent", { value: ua, configurable: true });
+    try {
+      const { GaplessEngine: E } = await import("@/lib/player/gaplessEngine");
+      const engine = new E(cb);
+      engine.load([{ slotId: "s", url: "https://archive.org/download/x/a.mp3" }], 0, true);
+      await vi.waitFor(() => expect(built.length).toBeGreaterThan(0));
+      return lastOpts();
+    } finally {
+      if (desc) Object.defineProperty(window.navigator, "userAgent", desc);
+    }
+  };
+  it("is HTML5_ONLY on an iPhone — no full-file download beside the stream, no mid-song hand-off", async () => {
+    const o = await optsOf("Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Version/17.0 Mobile/15E148 Safari/604.1");
+    expect(o.playbackMethod).toBe("HTML5_ONLY");
+  });
+  it("stays HYBRID on a desktop, where the segue is sample-accurate", async () => {
+    const o = await optsOf("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/130 Safari/537.36");
+    expect(o.playbackMethod).toBe("HYBRID");
   });
 });

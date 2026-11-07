@@ -225,6 +225,8 @@ async function main() {
   fs.mkdirSync(rawDir, { recursive: true });
   fs.writeFileSync(path.join(rawDir, `${runId}.json`), JSON.stringify(report, null, 1));
   console.log(path.join("scripts/tapebench/reports/raw", `${runId}.json`));
+  // Open tunnels can keep the proxies' servers alive; the report is written.
+  process.exit(0);
 }
 
 main().catch((e) => { console.error(e); process.exit(1); });

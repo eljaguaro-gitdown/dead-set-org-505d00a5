@@ -29,6 +29,7 @@
     if (!blessed.has(this)) {
       if (!active) {
         window.__iosShim.blocked++;
+        (window.__iosShim.refusals ??= []).push({ src: String(this.currentSrc || this.src || "").slice(0, 120), at: Math.round(performance.now() - lastGesture), stack: String(new Error().stack || "").split("\n").slice(1, 6).join(" | ").slice(0, 400) });
         return Promise.reject(new DOMException(
           "The request is not allowed by the user agent or the platform in the current context, possibly because the user denied permission.",
           "NotAllowedError",
