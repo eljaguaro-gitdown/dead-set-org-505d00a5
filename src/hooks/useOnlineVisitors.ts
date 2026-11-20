@@ -5,27 +5,18 @@ import {
   subscribeToSync,
   type PresencePayload,
 } from "@/lib/presenceChannel";
+import { summarizePresence, type MergedVisitor } from "@/lib/presenceSummary";
 
-export interface OnlineVisitor {
-  visitor_id: string;
-  user_id: string | null;
-  display_name: string | null;
-  avatar_url: string | null;
-  page: string;
-  joined_at: string;
-}
-
-const isBetterPresence = (next: OnlineVisitor, current?: OnlineVisitor) => {
-  if (!current) return true;
-  if (next.user_id && !current.user_id) return true;
-  if (next.display_name && !current.display_name) return true;
-  return new Date(next.joined_at).getTime() < new Date(current.joined_at).getTime();
-};
+export type OnlineVisitor = MergedVisitor;
 
 /**
- * Admin-only: returns a live list of every visitor on the site.
+ * Admin-only: returns a live list of the people on the site.
  * Reads from the shared presence channel — does NOT track its own presence
  * (the broadcaster handles that for everyone, including the admin).
+ *
+ * Entries whose heartbeat has stopped are left out, a device's tabs count
+ * once (signed in if any of them is), and a user on two devices counts once.
+ * See src/lib/presenceSummary.ts.
  */
 export const useOnlineVisitors = (enabled: boolean) => {
   const [visitors, setVisitors] = useState<OnlineVisitor[]>([]);
@@ -37,28 +28,16 @@ export const useOnlineVisitors = (enabled: boolean) => {
 
     const recompute = () => {
       const state = getPresenceState<PresencePayload>();
-      const byKey = new Map<string, OnlineVisitor>();
-
-      Object.values(state).forEach((presences) => {
-        presences.forEach((presence) => {
-          const v = presence as unknown as OnlineVisitor;
-          if (!v?.visitor_id) return;
-          const dedupeKey = v.user_id || v.visitor_id;
-          const current = byKey.get(dedupeKey);
-          if (isBetterPresence(v, current)) {
-            byKey.set(dedupeKey, v);
-          }
-        });
-      });
-
-      setVisitors(
-        Array.from(byKey.values()).sort(
-          (a, b) => new Date(a.joined_at).getTime() - new Date(b.joined_at).getTime(),
-        ),
-      );
+      setVisitors(summarizePresence(state).visitors);
     };
 
-    return subscribeToSync(recompute);
+    const unsub = subscribeToSync(recompute);
+    // Ghosts age out on the clock, not on a channel event, so look again.
+    const id = setInterval(recompute, 15_000);
+    return () => {
+      unsub();
+      clearInterval(id);
+    };
   }, [enabled]);
 
   return visitors;

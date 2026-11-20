@@ -10,6 +10,7 @@ const pageName = (path: string) => {
   if (path.startsWith("/my-setlists")) return "My Setlists";
   if (path.startsWith("/backstage")) return "Backstage";
   if (path.startsWith("/auth")) return "Auth";
+  if (path.startsWith("/join/")) return "Invite link";
   if (path.startsWith("/profile")) return "Profile";
   if (path.startsWith("/messages")) return "Messages";
   if (path.startsWith("/updates")) return "Build Notes";

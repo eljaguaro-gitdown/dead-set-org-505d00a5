@@ -4,6 +4,7 @@ import {
   getPresenceChannel,
   subscribeToDebug,
   getDebugSnapshot,
+  refreshPresenceCounts,
   type PresenceStatus,
 } from "@/lib/presenceChannel";
 
@@ -35,9 +36,11 @@ const PresenceDebugPanel = () => {
     getPresenceChannel();
     const unsub = subscribeToDebug(setSnap);
     const id = setInterval(() => setTick((t) => t + 1), 1000);
+    const recount = setInterval(refreshPresenceCounts, 15_000);
     return () => {
       unsub();
       clearInterval(id);
+      clearInterval(recount);
     };
   }, []);
 
@@ -54,7 +57,14 @@ const PresenceDebugPanel = () => {
       </div>
 
       <dl className="divide-y divide-border">
-        <Row label="Tracked presences" value={String(snap.trackedCount)} mono />
+        {/* One entry per open connection (tab, app, preview), not per person.
+            Stale = no heartbeat for 75 s: a frozen tab or a dropped socket
+            the server has not let go of yet. Only live entries reach the
+            Live on Site card. */}
+        <Row label="Distinct visitors" value={String(snap.visitorCount)} mono />
+        <Row label="Live connections" value={String(snap.liveCount)} mono />
+        <Row label="Stale connections" value={String(snap.staleCount)} mono />
+        <Row label="Tracked presences (raw)" value={String(snap.trackedCount)} mono />
         <Row label="Last event" value={snap.lastEvent ?? "—"} mono />
         <Row label="Last sync" value={formatAge(snap.lastSyncAt)} />
         <Row label="Subscribed" value={formatAge(snap.subscribedAt)} />

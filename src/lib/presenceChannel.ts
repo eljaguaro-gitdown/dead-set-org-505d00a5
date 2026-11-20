@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { RealtimeChannel } from "@supabase/supabase-js";
+import { summarizePresence } from "@/lib/presenceSummary";
 
 /**
  * Shared presence channel singleton.
@@ -20,10 +21,18 @@ export interface PresencePayload {
   avatar_url: string | null;
   page: string;
   joined_at: string;
+  /** Stamped on every 30 s re-track. Lets readers tell a live tab from a ghost. */
+  beat_at?: string;
 }
 
 let channel: RealtimeChannel | null = null;
 let currentPayload: PresencePayload | null = null;
+// Set while reconnectPresenceChannel is tearing a channel down. Anything that
+// wants to track waits for it, because until removeChannel finishes the
+// realtime client still has the topic registered and supabase.channel() hands
+// back the DYING channel instead of a new one.
+let teardown: Promise<void> | null = null;
+const superseded = new WeakSet<RealtimeChannel>();
 const syncListeners = new Set<() => void>();
 
 export type PresenceStatus =
@@ -39,6 +48,9 @@ interface DebugSnapshot {
   lastSyncAt: number | null;
   lastEvent: "sync" | "join" | "leave" | null;
   trackedCount: number;
+  liveCount: number;
+  staleCount: number;
+  visitorCount: number;
   subscribedAt: number | null;
 }
 
@@ -47,6 +59,9 @@ let debug: DebugSnapshot = {
   lastSyncAt: null,
   lastEvent: null,
   trackedCount: 0,
+  liveCount: 0,
+  staleCount: 0,
+  visitorCount: 0,
   subscribedAt: null,
 };
 
@@ -73,15 +88,24 @@ export const subscribeToDebug = (cb: (s: DebugSnapshot) => void): (() => void) =
   };
 };
 
-const recomputeTrackedCount = () => {
-  if (!channel) return 0;
-  const state = channel.presenceState();
-  let n = 0;
+const recomputeCounts = () => {
+  if (!channel) return { trackedCount: 0, liveCount: 0, staleCount: 0, visitorCount: 0 };
+  const state = channel.presenceState<PresencePayload>() as unknown as Record<string, PresencePayload[]>;
+  let trackedCount = 0;
   Object.values(state).forEach((arr) => {
-    n += (arr as unknown[]).length;
+    trackedCount += arr.length;
   });
-  return n;
+  const s = summarizePresence(state);
+  return {
+    trackedCount,
+    liveCount: s.live,
+    staleCount: s.stale,
+    visitorCount: s.visitors.length,
+  };
 };
+
+/** Recount without waiting for a channel event: ghosts age out on the clock. */
+export const refreshPresenceCounts = () => setDebug(recomputeCounts());
 
 export const getOrCreateVisitorId = (): string => {
   let id = localStorage.getItem(VISITOR_ID_KEY);
@@ -96,7 +120,7 @@ const notifySync = (event: "sync" | "join" | "leave") => {
   setDebug({
     lastSyncAt: Date.now(),
     lastEvent: event,
-    trackedCount: recomputeTrackedCount(),
+    ...recomputeCounts(),
   });
   syncListeners.forEach((cb) => {
     try {
@@ -127,7 +151,7 @@ export const getPresenceChannel = (): RealtimeChannel => {
     .on("presence", { event: "join" }, () => notifySync("join"))
     .on("presence", { event: "leave" }, () => notifySync("leave"))
     .subscribe(async (status) => {
-      if (channel !== ch) return; // superseded by a reconnect
+      if (channel !== ch || superseded.has(ch)) return; // superseded by a reconnect
       const mapped: PresenceStatus =
         status === "SUBSCRIBED"
           ? "SUBSCRIBED"
@@ -159,25 +183,47 @@ export const getPresenceChannel = (): RealtimeChannel => {
  * reaches SUBSCRIBED.
  */
 export const reconnectPresenceChannel = async (): Promise<void> => {
-  if (channel) {
-    const dying = channel;
-    channel = null; // stop the old subscribe callback from re-tracking
-    try {
-      // untrack first: removeChannel resolves locally, so without an explicit
-      // leave the server can still be holding our old presence entry when the
-      // replacement channel tracks under the same key. That is how one idle
-      // admin accumulated 13 tracked presences that deduped to 1 visitor.
-      await dying.untrack();
-    } catch (e) {
-      console.warn("[presenceChannel] untrack failed", e);
+  // Focus and visibilitychange fire together when a phone unlocks; both used
+  // to start a teardown. One at a time.
+  if (teardown) return teardown;
+
+  const dying = channel;
+  teardown = (async () => {
+    if (dying) {
+      // Mark it first so its subscribe callback can no longer re-track, but
+      // leave `channel` pointing at it until it is gone: while the topic is
+      // still registered, a null here made getPresenceChannel() call
+      // supabase.channel(), which returned this same dying channel and
+      // subscribed it a second time.
+      superseded.add(dying);
+      try {
+        // untrack first: removeChannel resolves locally, so without an
+        // explicit leave the server can still hold our old entry when the
+        // replacement tracks under the same key. Bounded, because on a dead
+        // socket the push waits out the full channel timeout.
+        await Promise.race([
+          dying.untrack(),
+          new Promise((resolve) => setTimeout(resolve, 3_000)),
+        ]);
+      } catch (e) {
+        console.warn("[presenceChannel] untrack failed", e);
+      }
+      try {
+        await supabase.removeChannel(dying);
+      } catch (e) {
+        console.warn("[presenceChannel] removeChannel failed", e);
+      }
     }
-    try {
-      await supabase.removeChannel(dying);
-    } catch (e) {
-      console.warn("[presenceChannel] removeChannel failed", e);
-    }
+    channel = null;
+    setDebug({ status: "IDLE", subscribedAt: null });
+  })();
+
+  try {
+    await teardown;
+  } finally {
+    teardown = null;
   }
-  setDebug({ status: "IDLE", subscribedAt: null });
+
   if (currentPayload) {
     await trackPresence(currentPayload);
   } else {
@@ -188,6 +234,10 @@ export const reconnectPresenceChannel = async (): Promise<void> => {
 /** Update or set the local presence payload broadcast to others. */
 export const trackPresence = async (payload: PresencePayload): Promise<void> => {
   currentPayload = payload;
+  if (teardown) {
+    // The reconnect re-tracks currentPayload itself once the new channel is up.
+    return;
+  }
   const ch = getPresenceChannel();
   // track is safe to call before SUBSCRIBED — supabase queues until ready
   try {

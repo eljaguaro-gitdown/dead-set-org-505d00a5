@@ -1,4 +1,5 @@
 import { useNavigate, Link, useLocation } from "react-router-dom";
+import { consumePendingAuthTarget } from "@/lib/pendingAuthTarget";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
@@ -97,6 +98,14 @@ const Index = () => {
   // rendering (and the A/B redirect below) proceeds untouched.
   useEffect(() => {
     if (loading || !user) return;
+    // Email sign-up: the confirmation link opened this tab fresh on "/", so
+    // the sessionStorage markers below were never set here. Auth stashed the
+    // page the fan was headed to (an invite, a song) in localStorage.
+    const pendingTarget = consumePendingAuthTarget();
+    if (pendingTarget) {
+      navigate(pendingTarget, { replace: true });
+      return;
+    }
     let marker: string | null = null;
     try {
       marker = sessionStorage.getItem("post_oauth_redirect");
