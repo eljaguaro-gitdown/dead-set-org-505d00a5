@@ -52,6 +52,7 @@ export const usePresence = () => {
         avatar_url: avatarUrl,
         page: window.location.pathname,
         joined_at: new Date().toISOString(),
+        beat_at: new Date().toISOString(),
       };
 
       presenceRef.current = payload;
@@ -65,11 +66,13 @@ export const usePresence = () => {
       // "quiet" and "dead" are indistinguishable.
       heartbeat = setInterval(() => {
         if (!presenceRef.current) return;
-        const path = window.location.pathname;
-        const updated =
-          presenceRef.current.page === path
-            ? presenceRef.current
-            : { ...presenceRef.current, page: path };
+        // A fresh beat_at every time: it is how the admin tells this live
+        // tab from an entry the server is still holding for a frozen one.
+        const updated = {
+          ...presenceRef.current,
+          page: window.location.pathname,
+          beat_at: new Date().toISOString(),
+        };
         presenceRef.current = updated;
         trackPresence(updated);
       }, HEARTBEAT_INTERVAL);
@@ -87,7 +90,11 @@ export const usePresence = () => {
   useEffect(() => {
     if (!presenceRef.current) return;
     if (presenceRef.current.page === location.pathname) return;
-    const updated = { ...presenceRef.current, page: location.pathname };
+    const updated = {
+      ...presenceRef.current,
+      page: location.pathname,
+      beat_at: new Date().toISOString(),
+    };
     presenceRef.current = updated;
     trackPresence(updated);
   }, [location.pathname]);

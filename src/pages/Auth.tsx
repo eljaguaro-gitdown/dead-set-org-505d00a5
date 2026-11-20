@@ -19,6 +19,7 @@ import { describeAuthError } from "@/lib/authErrors";
 import { signInWithProvider, type OAuthProvider } from "@/lib/oauthSignIn";
 import TermsAgreement from "@/components/TermsAgreement";
 import { useTermsAgreement } from "@/hooks/useTermsAgreement";
+import { clearPendingAuthTarget, stashPendingAuthTarget } from "@/lib/pendingAuthTarget";
 
 
 const Auth = () => {
@@ -30,6 +31,13 @@ const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  // The address a confirmation link just went to. Until the fan edits the
+  // email field, the button says so instead of inviting another tap: on
+  // 2026-11-20 a new fan pressed it three more times and got three
+  // "only request this after N seconds" errors from Supabase.
+  const [awaitingConfirmation, setAwaitingConfirmation] = useState<string | null>(null);
+  const isAwaitingConfirmation =
+    isSignUp && !isForgot && awaitingConfirmation !== null && awaitingConfirmation === email;
   const { isInApp, appName } = useMemo(() => detectInAppBrowser(), []);
   // Native runs OAuth through ASWebAuthenticationSession (see
   // src/lib/oauthSignIn.ts), so Google and Apple work in the app. What stays
@@ -43,6 +51,8 @@ const Auth = () => {
   }, []);
 
   const smartRedirect = async (userId: string) => {
+    // Finished in this tab, so nothing needs carrying to a confirmation tab.
+    clearPendingAuthTarget();
     if (explicitRedirect) {
       navigate(explicitRedirect);
     } else {
@@ -91,6 +101,10 @@ const Auth = () => {
             provider: "email",
             userId: data.user?.id ?? null,
           });
+          // The confirmation link opens a new tab on "/"; carry the invite or
+          // song page they came for across to it. See pendingAuthTarget.ts.
+          stashPendingAuthTarget(explicitRedirect);
+          setAwaitingConfirmation(email);
           toast.success("Check your email to confirm your account!");
         }
       } else {
@@ -298,9 +312,17 @@ const Auth = () => {
             <Button
               type="submit"
               className="w-full h-12 text-base bg-primary text-primary-foreground hover:bg-primary/90 font-body"
-              disabled={loading}
+              disabled={loading || isAwaitingConfirmation}
             >
-              {loading ? "..." : isForgot ? "Send Reset Link" : isSignUp ? "Create my account" : "Sign In"}
+              {loading
+                ? "..."
+                : isForgot
+                  ? "Send Reset Link"
+                  : isAwaitingConfirmation
+                    ? "Check your inbox for the link"
+                    : isSignUp
+                      ? "Create my account"
+                      : "Sign In"}
             </Button>
             {!isSignUp && !isForgot && (
               <button
