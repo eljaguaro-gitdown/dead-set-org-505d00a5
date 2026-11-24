@@ -1,10 +1,10 @@
-# Proposed prompt for the `tape-desk-hourly` scheduled task
+# Prompt for the `tape-desk-hourly` scheduled task
 
-Not applied: this session's permissions refused `update_scheduled_task`.
-Paste it into the task in the Claude desktop app (Scheduled tasks → Tape desk
-(hourly) → edit), or allow the session to apply it. What it changes from the
-current prompt: the desk may merge and publish a tape-desk fix with a PASS gate
-and green CI (your yes on 2026-11-24). Every limit that protects fans stays.
+Applied on 2026-11-24, after the owner said yes. The task in the Claude desktop
+app (Scheduled tasks → Tape desk (hourly)) carries this text word for word.
+What it changed from the earlier prompt: the desk may merge and publish a
+tape-desk fix with a PASS gate and green CI. Every limit that protects fans
+stays. Change this file and the task together, or they drift.
 
 ---
 

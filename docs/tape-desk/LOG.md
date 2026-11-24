@@ -65,7 +65,7 @@ End-to-end checks in production:
 4. **`/songbook/bird-song` still offers "Play all 3 nights"** with all three marked "No tape of it from this night" (#150, out of scope).
 5. **Charlie's cached prose on `/versions/viola-lee-blues` describes a performance that didn't happen.** It's fan-facing copy, so the desk won't touch it.
 6. **The production-play harness for step 7.2 is not built.** No ticket reached it.
-7. **The hourly task's own prompt still says never merge.** Updating it was refused by this session's permissions. The proposed text is in [`hourly-task-prompt.proposed.md`](hourly-task-prompt.proposed.md).
+7. ~~The hourly task's own prompt still says never merge.~~ Applied on 2026-11-24 after the owner's yes; the text is in [`hourly-task-prompt.md`](hourly-task-prompt.md).
 
 **Decisions that need the owner:**
 
@@ -76,7 +76,7 @@ End-to-end checks in production:
 2. **Apply, or say no to, the four held tickets' repoints.**
 3. **The class-N pattern fix:** audit `songs.first_played/last_played` against JerryBase. 93 of the 114 no-tape nights are catalog first/last dates.
 4. **Whether Charlie's picks are checked against a setlist source** before a guide saves.
-5. **Paste the proposed hourly-task prompt**, or allow the session to apply it.
+5. ~~Paste the proposed hourly-task prompt.~~ Done 2026-11-24: the session applied it on the owner's yes.
 
 
 ## Blast radius, 2026-11-24 (every no_match / no_tape default in tape_index)
