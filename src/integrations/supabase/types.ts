@@ -1891,6 +1891,41 @@ export type Database = {
         }
         Relationships: []
       }
+      tape_desk_dispatches: {
+        Row: {
+          dispatched_at: string
+          github_status: number | null
+          id: number
+          issue_id: string
+          note: string | null
+          reason: string
+        }
+        Insert: {
+          dispatched_at?: string
+          github_status?: number | null
+          id?: never
+          issue_id: string
+          note?: string | null
+          reason: string
+        }
+        Update: {
+          dispatched_at?: string
+          github_status?: number | null
+          id?: never
+          issue_id?: string
+          note?: string | null
+          reason?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tape_desk_dispatches_issue_id_fkey"
+            columns: ["issue_id"]
+            isOneToOne: false
+            referencedRelation: "playback_issues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tape_index: {
         Row: {
           duration_s: number | null
@@ -1899,6 +1934,9 @@ export type Database = {
           is_default: boolean
           is_song_default: boolean
           match_score: number | null
+          pin_issue: number | null
+          pin_note: string | null
+          pinned_by: string | null
           servers: string[]
           show_date: string
           song_id: string
@@ -1914,6 +1952,9 @@ export type Database = {
           is_default?: boolean
           is_song_default?: boolean
           match_score?: number | null
+          pin_issue?: number | null
+          pin_note?: string | null
+          pinned_by?: string | null
           servers?: string[]
           show_date: string
           song_id: string
@@ -1929,6 +1970,9 @@ export type Database = {
           is_default?: boolean
           is_song_default?: boolean
           match_score?: number | null
+          pin_issue?: number | null
+          pin_note?: string | null
+          pinned_by?: string | null
           servers?: string[]
           show_date?: string
           song_id?: string
