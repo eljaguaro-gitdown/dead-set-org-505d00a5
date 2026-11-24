@@ -59,9 +59,9 @@ End-to-end checks in production:
 
 **Open risks:**
 
-1. **The lookout dispatches nothing until `TAPE_DESK_GITHUB_TOKEN` exists.** Each report logs "no TAPE_DESK_GITHUB_TOKEN", and the hourly sweep works it.
-2. **The workflow's Claude step stops at "owner action needed"** until `CLAUDE_CODE_OAUTH_TOKEN` exists.
-3. **No held alert was emailed for this run's four tickets.** The reports are on the tickets, and the owner has them in the session. From the next run on, `api.mjs alert` sends them.
+1. ~~The lookout dispatches nothing until `TAPE_DESK_GITHUB_TOKEN` exists.~~ Added 2026-11-24; GitHub accepted the first dispatch at 19:41 (see the end-to-end test below).
+2. ~~The workflow's Claude step stops at "owner action needed" until `CLAUDE_CODE_OAUTH_TOKEN` exists.~~ Added 2026-11-24 19:29; Claude ran on it at 19:50.
+3. **No held alert was emailed for this run's four tickets.** The reports are on the tickets, and the owner has them in the session. A held ticket is not re-dispatched, so nothing would have sent them: since #163 a run on a held ticket sends the alert if no comment records one.
 4. **`/songbook/bird-song` still offers "Play all 3 nights"** with all three marked "No tape of it from this night" (#150, out of scope).
 5. **Charlie's cached prose on `/versions/viola-lee-blues` describes a performance that didn't happen.** It's fan-facing copy, so the desk won't touch it.
 6. **The production-play harness for step 7.2 is not built.** No ticket reached it.
@@ -69,7 +69,7 @@ End-to-end checks in production:
 
 **Decisions that need the owner:**
 
-1. **Create two credentials.**
+1. ~~Create two credentials.~~ Done 2026-11-24, with the Actions setting.
    - `claude setup-token`, then add it as the repository secret `CLAUDE_CODE_OAUTH_TOKEN`.
    - A fine-grained GitHub token, Contents read and write on this repo only, as the Lovable Cloud secret `TAPE_DESK_GITHUB_TOKEN`.
    - In repository Settings → Actions → General, enable "Allow GitHub Actions to create and approve pull requests".
@@ -78,6 +78,24 @@ End-to-end checks in production:
 4. **Whether Charlie's picks are checked against a setlist source** before a guide saves.
 5. ~~Paste the proposed hourly-task prompt.~~ Done 2026-11-24: the session applied it on the owner's yes.
 
+
+## End-to-end test, 2026-11-24 evening (the owner added both tokens)
+
+Each leg was driven in production the way a fan's report drives it. The dispatches went from the production database through `net.http_post`, with the vault key, the function url and the body exactly as the `tape_desk_lookout` trigger posts them. The trigger itself is installed and enabled (`tgenabled = O`). Bird Song 1972-04-08 (#153) was the ticket.
+
+| Leg | Result |
+|---|---|
+| database → `tape-desk` function | 200, service key accepted |
+| function → GitHub `repository_dispatch` (`TAPE_DESK_GITHUB_TOKEN`) | 204 every time, run started within 8 s, on `main` |
+| workflow → OIDC → function (`api.mjs issue`) | synthetic run 45472815317: `{"in_scope":true,"kind":"not_on_tape","status":"open","index_rows":1,"dispatches":2,"waiting":1}` |
+| workflow → Claude on the subscription (`CLAUDE_CODE_OAUTH_TOKEN`) | run 45474220086: the runbook ran, read the report and `tape_index` through OIDC, found #153, and held it as class N |
+| nothing the desk may not touch | row still `open`, no fan email, no push to `main`, no branch |
+
+**What the test found and fixed:**
+
+1. **#161: never push to `main`.** `main` has no branch protection, and the runbook asked for a LOG.md line without saying how a workflow run lands one. A hold has no PR, so the line goes in the ticket report as `Log: …`, and the next desk PR carries it here.
+2. **#162: `ubuntu-latest` is now 26.04, and Playwright 1.58 has no WebKit for it.** The first full run (45473465985) died at Install. `tape-desk.yml` and `tapebench.yml` are pinned to `ubuntu-24.04`. TapeBench had not run since Nov 7, so it would have failed the same way.
+3. **#163: a re-run of a held ticket.** Run 45474220086 judged "nothing new", posted nothing and sent no alert. That is right for a repeat, but it means the four tickets held this morning, before the alert template was deployed, would never be alerted. Every alert is now recorded on its ticket (`Owner alerted <time> (held|ready)`), and a held ticket with no such line gets one.
 
 ## Blast radius, 2026-11-24 (every no_match / no_tape default in tape_index)
 
@@ -97,3 +115,4 @@ The 110 class-N keys: 1966-07-03 Aint It Crazy (The Rub) · 1966-07-03 Caution (
 - 2026-11-24 08:20 · #154 Bird Song 1971-03-24 · not_on_tape · class N · HELD (night data) · probe song_not_on_night, night N (JerryBase no, Relisten 0/4)
 - 2026-11-24 08:20 · #151 Viola Lee Blues 1970-02-14 · no_tape · class N · HELD (catalog date) · probe archive_unreachable (not re-run), night N (JerryBase no, Relisten 0/6)
 - 2026-11-24 08:20 · #149 Ramble On Rose 1980-10-14 · not_on_tape · class N · HELD (a fan's guide) · probe song_not_on_night, night N (JerryBase no, Relisten 0/11)
+- 2026-11-24 19:50 · #153 Bird Song 1972-04-08 · not_on_tape · class N · HELD (night data) · end-to-end test, run 45474220086 on Actions; nothing new, the held report and the `no_match` index row were already in place

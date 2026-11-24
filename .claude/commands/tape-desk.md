@@ -151,6 +151,22 @@ Choose one, in a short paragraph:
 
 The held alert: `api.mjs alert '{"issue_id":…,"issue_number":…,"status":"held","class":…,"cause":…,"pick":…,"reason":…}'`.
 
+**The ticket is the record of every alert.** The desk cannot read the email
+log from Actions, so after each alert it sends (held or ready), it comments one
+line on the ticket: `Owner alerted <UTC time> (<held|ready>)`. That line is how a
+later run knows the owner has been told.
+
+**A re-run of a ticket that is already held** (it has `needs-jay` and a desk
+report, and the row is still `open`):
+
+- Something new since the last desk report (another report, a new build that
+  plays it, a class that no longer holds, a changed pick): post a fresh report.
+- Nothing new: post no second report and write no `Log:` line. A re-run that
+  changes nothing is not a ticket run.
+- Either way, if no comment on the ticket records `Owner alerted … (held)`, send
+  the held alert now and comment that line. Tickets held before the alert
+  template existed (2026-11-24 morning) are owed one.
+
 ### T5. Execute
 
 - Branch `tape-desk/<issue#>-<slug>` from `origin/main`, in its own worktree.
