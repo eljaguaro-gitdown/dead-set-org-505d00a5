@@ -76,7 +76,7 @@ End-to-end checks in production:
    - A fine-grained GitHub token, Contents read and write on this repo only, as the Lovable Cloud secret `TAPE_DESK_GITHUB_TOKEN`.
    - In repository Settings → Actions → General, enable "Allow GitHub Actions to create and approve pull requests".
 2. ~~Apply, or say no to, the four held tickets' repoints.~~ Applied 2026-11-24 evening (see Owner repoints below). Mark fixed on each is still the owner's.
-3. **The class-N pattern fix:** audit `songs.first_played/last_played` against JerryBase. 93 of the 114 no-tape nights are catalog first/last dates. The Songbook issues carry the same error: Bird Song had all three nights wrong, and Viola Lee Blues two of five (both fixed). `/songbook/ramble-on-rose` (setlist `704d459b`) has five of its eight nights in the class-N list below, still unfixed: 1974-05-19, 1975-08-13, 1977-05-08, 1989-10-16 and 1991-06-22.
+3. **The class-N pattern fix:** audit `songs.first_played/last_played` against JerryBase. 93 of the 114 no-tape nights are catalog first/last dates. The Songbook issues carry the same error: Bird Song had all three nights wrong, Viola Lee Blues two of five, and Ramble On Rose five of eight (all fixed, see Owner repoints). The other Songbook issues have not been checked.
 4. **Whether Charlie's picks are checked against a setlist source** before a guide saves. #149's own guide (setlist `5f1089c6`) still has four more class-N nights from the blast-radius run: 1977-05-08, 1977-09-03, 1990-03-24 and 1993-03-27.
 5. ~~Paste the proposed hourly-task prompt.~~ Done 2026-11-24: the session applied it on the owner's yes.
 
@@ -115,6 +115,16 @@ Night data, no PR: each change is live on dead-set.org the moment it is applied.
 | #151 | `/songbook/viola-lee-blues`, position 5 | 1970-02-14 Fillmore East → **1970-10-31 Pritchard Gym, S.U.N.Y.** ("Last time played"). Its paragraph about the Valentine's Day '70 run was removed, not rewritten | as above |
 | no ticket | `/songbook/viola-lee-blues`, position 2 | 1967-03-17 → **1967-03-18**, Winterland Arena. No show exists on 1967-03-17 in JerryBase, Relisten or the Archive. Venue and note unchanged | JerryBase played; 4 of 4 sources carry it; `tape_index` playable (13:50) |
 | #149 | Ramble On Rose listening guide `5f1089c6`, position 5 | 1980-10-14 → **1980-10-11 Warfield Theatre**. The note under it still describes the original pick | JerryBase played; 8 of 11 sources carry it; `tape_index` playable (7:10) |
+
+**Then `/songbook/ramble-on-rose`** (setlist `704d459b`), on the owner's "fix the five too". All five were nights the song wasn't played, from the class-N list below. Each moved to the nearest night Relisten lists with Ramble On Rose (318 nights), on the same tour where one exists. Each note's paragraph described a performance on a night the song wasn't played, for example "Coming from the legendary 'One from the Vault' show", so it was removed and the night keeps a date-and-venue label. One `update`, each row guarded to its old date; five rows changed. The live page lists all eight nights with no "no tape" mark.
+
+| Position | Before → after | The new night |
+|---|---|---|
+| 3 | 1977-05-08 Barton Hall (Cornell) → **1977-05-11 St. Paul Civic Center** | JerryBase played; 7 of 7 sources carry it |
+| 4 | 1989-10-16 Brendan Byrne Arena → **1989-10-22 Charlotte Coliseum** | JerryBase played; 14 of 14 sources; `tape_index` playable (8:07) |
+| 5 | 1975-08-13 Great American Music Hall → **1974-10-17 Winterland Arena**. The band never played the song in 1975; this is the nearest night, from the October 1974 retirement run | JerryBase played; 7 of 8 sources |
+| 6 | 1991-06-22 → **1991-06-19 Pine Knob Music Theater** | JerryBase played; 12 of 12 sources |
+| 7 | 1974-05-19 Memorial Coliseum → **1974-05-17 P.N.E. Coliseum** | JerryBase played; 3 of 3 sources |
 
 The four held tickets were repointed by a side session; #150's 1995 night and the two Viola Lee Songbook nights by this one. Mark fixed on #149–#154 is the owner's, and the fix note for each card was drafted for the owner to paste.
 
