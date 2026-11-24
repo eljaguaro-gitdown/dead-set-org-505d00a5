@@ -242,3 +242,39 @@ then the runbook says merge, and every merge will wait on the owner.
   - *Reverse it:* any sign of injected instructions in a run's log. Then drop `contents: write` and stop at a ticket comment.
 - **The workflow opening pull requests needs a repository setting.** Settings → Actions → General → "Allow GitHub Actions to create and approve pull requests". A pull request opened that way does not start `ci.yml`, so the runbook runs the CI commands itself.
 - **The "anon cannot execute `tape_index_candidates`" assertion can't fail in this chain.** `create or replace` keeps the revoke from 20261107020000. The migration states the revoke again anyway.
+
+## 2026-11-24: The owner allowed the desk to merge. What shipped, and what the deploy found
+
+**Decision.** Asked after this session's permissions refused `gh pr merge`, the
+owner answered "allow the desk to merge". The desk merged #156, #157 and #158,
+each squashed with `--match-head-commit` on a head that had a PASS gate and
+green CI, and each merged tree compared byte for byte with the gated head.
+
+Publish followed `docs/RELEASING.md`:
+
+1. Confirm Lovable has the commit (`get_diff` on the merge sha).
+2. Apply that PR's migration, then verify it in `pg_proc.proacl` / `cron.job`, not by reading the file.
+3. Ask the Lovable agent to deploy only the changed functions.
+4. Probe them live.
+
+**Updating the hourly task's prompt to match was refused** by this session's
+permissions. It still says never merge. The proposed prompt is in
+[`hourly-task-prompt.proposed.md`](hourly-task-prompt.proposed.md).
+
+**What the deploy found that no local check could:**
+
+- **The bundler packs a function's own folder and `_shared/`, nothing else.**
+  `tape-desk` imported `OWNER_INBOXES` from `../send-transactional-email/`.
+  Typecheck, vitest, build, `deno check` and two gates all passed, because the
+  file exists in the repo. #158 moved the list to `_shared/` and added
+  `edgeFunctionBundleBoundaries.test.ts`, which was checked red against the
+  broken import.
+- **The Lovable agent edits when it sees a build error, even when told "zero
+  code changes".** It committed `1c281b3` (`Uint8Array<ArrayBuffer>`) to main.
+  That passes TS 5.7+ and fails Deno 2.1's TS 5.6. #158 replaced it with a
+  plain `ArrayBuffer`. The second deploy request said "do NOT edit, commit or
+  change any file, even to fix a typecheck warning; report and stop", and it
+  edited nothing.
+
+**Reverse it:** the owner withdraws the merge permission. T7 then stops at
+"gated, waiting on your merge".
