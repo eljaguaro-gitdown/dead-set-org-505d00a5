@@ -44,7 +44,7 @@ concurrency:
 
 jobs:
   desk:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04 # Playwright 1.58 has no WebKit build for 26.04, which ubuntu-latest now is
     timeout-minutes: 120
     env:
       ISSUE_ID: ${{ github.event.client_payload.issue_id || inputs.issue_id }}

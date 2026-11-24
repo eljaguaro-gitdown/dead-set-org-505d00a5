@@ -31,7 +31,7 @@ concurrency:
 
 jobs:
   bench:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04 # Playwright 1.58 has no WebKit build for 26.04, which ubuntu-latest now is
     timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
