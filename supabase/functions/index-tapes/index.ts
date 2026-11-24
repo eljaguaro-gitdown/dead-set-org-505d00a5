@@ -7,13 +7,15 @@
 //   last 6 hours is not asked again, so a loop of calls costs one lookup.
 // POST { mode: "refresh", limit }               hourly cron, internal only
 //   Walks tape_index_candidates(): every night the product can offer that
-//   is missing or older than 7 days. Requires x-dead-set-internal, a hash of
-//   the service key (internalSend.ts explains why not the bearer).
+//   is missing or older than 7 days. Service role only: x-dead-set-internal
+//   (a hash of this function's own key), or a bearer Supabase confirms as the
+//   service role, which is what the cron can actually send (refreshAuth.ts, #155).
 //
 // verify_jwt = false (config.toml): on-demand calls come from anonymous fans.
 // Writes go through the service role; the table refuses anon writes.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { resolveNight, resolveSong, type TapeIndexRow } from "../_shared/tapeIndexResolve.ts";
+import { refreshAuthorized } from "./refreshAuth.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -64,9 +66,25 @@ Deno.serve(async (req) => {
   }
 
   if (body.mode === "refresh") {
-    const presented = req.headers.get("x-dead-set-internal") ?? "";
-    if (!presented || presented !== (await internalToken(serviceKey))) {
-      console.warn("index-tapes refresh refused: internal header", presented ? "did not match" : "absent");
+    // The cron sends the vault's service key as the bearer, which is not this
+    // function's own key, so the header alone refused every refresh (#155).
+    const auth = await refreshAuthorized(
+      { internal: req.headers.get("x-dead-set-internal"), authorization: req.headers.get("authorization") },
+      {
+        serviceRoleKey: serviceKey,
+        expectedInternal: await internalToken(serviceKey),
+        isServiceRoleToken: async (token) => {
+          const probe = createClient(Deno.env.get("SUPABASE_URL")!, token, {
+            auth: { autoRefreshToken: false, persistSession: false },
+          });
+          const { error } = await probe.auth.admin.listUsers({ page: 1, perPage: 1 });
+          return !error;
+        },
+      },
+    );
+    if (!auth.ok) {
+      // What kind of credential, never the credential.
+      console.warn("index-tapes refresh refused:", auth.why);
       return json({ error: "internal only" }, 401);
     }
     const limit = Math.min(Math.max(Number(body.limit) || 40, 1), 200);
