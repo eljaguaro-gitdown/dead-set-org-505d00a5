@@ -155,7 +155,9 @@ The held alert: `api.mjs alert '{"issue_id":…,"issue_number":…,"status":"hel
   refuses a file the player would not play. A data fix needs no PR. Record the
   pin in the report. On the desktop there is no OIDC token, and the desk never
   writes `tape_index` with `query_database`, so hand the ticket to the workflow
-  instead (`gh workflow run tape-desk.yml -f issue_id=<id> -f reason=sweep`).
+  instead (`gh workflow run tape-desk.yml -f issue_id=<id> -f reason=sweep -f
+  key=<song_id>-<show_date>`). Always pass `key`. Without it the run joins a
+  per-ticket concurrency group, not the per-night one.
 - **Code fix (M, C)**: a regression test that fails before and passes after,
   with the reported key as the fixture. Commit first, then mutation-test on the
   committed tree (CLAUDE.md).

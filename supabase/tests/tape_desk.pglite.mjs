@@ -198,8 +198,20 @@ ok((await cand()).includes("1971-02-19"), "a stale unpinned night is queued for 
 await db.exec(`update public.tape_index set pinned_by = 'tape_desk', pin_issue = 153, pin_note = 'source choice' where song_id = '${BIRD}' and show_date = '1971-02-19'`);
 ok(!(await cand()).includes("1971-02-19"), "a pinned night is never queued for the refresh");
 ok((await cand()).includes("1995-06-30"), "the rest of the song's nights still are");
-await db.exec(`update public.tape_index set pinned_by = null, pin_issue = null, pin_note = 'unpinned by #153' where song_id = '${BIRD}'`);
-ok((await cand()).includes("1971-02-19"), "unpinned, it is queued again");
+// Re-pinning a pinned night: tape-desk clears the old default and its pin in
+// one update. Clearing is_default alone is refused by the pin CHECK.
+await rejects(`update public.tape_index set is_default = false where song_id = '${BIRD}' and show_date = '1971-02-19' and is_default`,
+  "clearing a pinned default without its pin is refused (why the function clears both)");
+await db.exec(`update public.tape_index set is_default = false, pinned_by = null, pin_issue = null where song_id = '${BIRD}' and show_date = '1971-02-19' and is_default`);
+await db.exec(`insert into public.tape_index (song_id, show_date, identifier, status, is_default, track_url, pinned_by, pin_issue)
+  values ('${BIRD}', '1971-02-19', 'gd71-02-19.matrix.chappell.31210.sbeok.flacf', 'playable', true,
+          '${T("gd71-02-19.matrix.chappell.31210.sbeok.flacf", "gd71-02-19t05.mp3")}', 'tape_desk', 160)`);
+eq((await one(`select identifier, pin_issue from public.tape_index where song_id = '${BIRD}' and show_date = '1971-02-19' and is_default`)),
+  { identifier: "gd71-02-19.matrix.chappell.31210.sbeok.flacf", pin_issue: 160 }, "the clear-both update lets a pinned night be re-pinned");
+// The re-pinned row was verified just now, so age it before asking whether
+// the refresh would queue the night again.
+await db.exec(`update public.tape_index set pinned_by = null, pin_issue = null, pin_note = 'unpinned by #160', verified_at = now() - interval '30 days' where song_id = '${BIRD}'`);
+ok((await cand()).includes("1971-02-19"), "unpinned and stale, it is queued again");
 
 // Replay with data in place changes nothing.
 const rowsBefore = (await one(`select count(*)::int as c from public.playback_issues`)).c;

@@ -279,6 +279,16 @@ describe("tape-desk/index.ts: who is checked, before what", () => {
     );
     expect(pin.match(/\.upsert\(/g)).toHaveLength(1);
   });
+
+  it("clears the old default's pin with its default, so a pinned night can be re-pinned", () => {
+    // The pin CHECK requires a pinned row to be the default; clearing
+    // is_default alone failed on a pinned night (gate note on a9ae79c).
+    // supabase/tests/tape_desk.pglite.mjs proves both halves against Postgres.
+    const pin = src.slice(src.indexOf("const parsed = parsePin(body);"));
+    const clear = pin.indexOf('update({ is_default: false, pinned_by: null, pin_issue: null })');
+    expect(clear).toBeGreaterThan(-1);
+    expect(pin.indexOf(".upsert(")).toBeGreaterThan(clear);
+  });
 });
 
 describe("index-tapes leaves a pinned night alone", () => {

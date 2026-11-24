@@ -194,7 +194,10 @@ Deno.serve(async (req) => {
     if (!item.meta) return json({ error: item.unreachable ? "archive unreachable" : "no such item" }, item.unreachable ? 503 : 404);
     const built = playableRow(row.song_id, row.show_date, item.id, item.meta, song.title, true, parsed.pin.file_name);
     if (!built) return json({ error: "that file is not this song by the player's own rules" }, 422);
-    const { error: clearErr } = await db.from("tape_index").update({ is_default: false })
+    // The old default loses its pin in the same update: tape_index_pin_shape
+    // requires a pinned row to be the default, so clearing is_default alone
+    // refused a re-pin of a pinned night (gate note on a9ae79c).
+    const { error: clearErr } = await db.from("tape_index").update({ is_default: false, pinned_by: null, pin_issue: null })
       .eq("song_id", row.song_id).eq("show_date", row.show_date).eq("is_default", true);
     if (clearErr) return json({ error: clearErr.message }, 500);
     const { error: putErr } = await db.from("tape_index").upsert(
