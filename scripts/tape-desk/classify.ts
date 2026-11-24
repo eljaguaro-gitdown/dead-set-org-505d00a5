@@ -44,7 +44,15 @@ export interface TapeEvidence {
   /** The by-night leg (findRecordingForDate), when the report names a night. */
   night?: {
     unreachable: boolean;
+    /** findRecordingForDate answered with a recording of the night. It may still lack the song. */
     recordingFound: boolean;
+    /**
+     * That answer carried a track of the song (`directTrackUrl` set). When the
+     * resolver has read every candidate and none has the song, it falls back
+     * to the night's top recording with no track, so `recordingFound` alone
+     * called a night with nothing to play "found" (#144).
+     */
+    trackFound: boolean;
     /** How many Grateful Dead recordings of that date the Archive lists; null if the count failed. */
     recordingsThatNight: number | null;
   };
@@ -93,14 +101,17 @@ export function classify(e: TapeEvidence): Verdict {
     if (typeof e.resolverTrack === "string") return "resolver_found_tape";
     // The named recording lacks the song. Whether another tape of the night
     // carries it decides between a catalog repoint and a night with no such song.
-    if (e.night?.recordingFound) return "song_on_other_tape"; // found implies the lookup answered
+    if (e.night?.trackFound) return "song_on_other_tape"; // found implies the lookup answered
     if (e.night?.unreachable) return "archive_unreachable";
+    // Every tape of the night was read and none has the song: the night is the question, not this tape.
+    if (e.night?.recordingFound) return "song_not_on_night";
     return "song_not_on_tape";
   }
 
   if (e.night) {
     if (e.night.unreachable) return "archive_unreachable";
-    if (e.night.recordingFound) return "resolver_found_tape";
+    if (e.night.trackFound) return "resolver_found_tape";
+    if (e.night.recordingFound) return "song_not_on_night";
     if (e.night.recordingsThatNight === 0) return "no_tape_of_night";
     if (e.night.recordingsThatNight !== null && e.night.recordingsThatNight > 0) return "song_not_on_night";
   }
