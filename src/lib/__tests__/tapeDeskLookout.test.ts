@@ -271,8 +271,13 @@ describe("tape-desk/index.ts: who is checked, before what", () => {
     const pin = src.slice(src.indexOf("const parsed = parsePin(body);"));
     expect(pin).toMatch(/const item = await readItem\(fetch, parsed\.pin\.identifier, \{ n: 0 \}\);/);
     expect(pin).toMatch(/playableRow\(row\.song_id, row\.show_date, item\.id, item\.meta, song\.title, true, parsed\.pin\.file_name\)/);
-    expect(pin).toMatch(/pinned_by: "tape_desk", pin_issue: parsed\.pin\.issue_number/);
-    expect(pin).not.toMatch(/track_url: body\.|track_url: parsed/);
+    // The whole written row, exactly: the builder's fields plus provenance and
+    // nothing else. A grep for one bad spelling ("track_url: body.") let
+    // `track_url: String(body.track_url)` through on the first mutation run.
+    expect(pin).toMatch(
+      /\.upsert\(\s*\{ \.\.\.built, verified_at: new Date\(\)\.toISOString\(\), pinned_by: "tape_desk", pin_issue: parsed\.pin\.issue_number, pin_note: parsed\.pin\.note \},\s*\{ onConflict: "song_id,show_date,identifier" \},\s*\)/,
+    );
+    expect(pin.match(/\.upsert\(/g)).toHaveLength(1);
   });
 });
 
