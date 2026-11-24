@@ -264,7 +264,9 @@ describe("tape-desk/index.ts: who is checked, before what", () => {
     expect(alert).toMatch(/recipientEmail: to,/);
     expect(alert).toMatch(/templateName: "tape-desk-alert"/);
     expect(alert).toMatch(/headers: \{ \[INTERNAL_SEND_HEADER\]: token \}/);
-    expect(src).toMatch(/import \{ OWNER_INBOXES \} from "\.\.\/send-transactional-email\/authorize\.ts";/);
+    // From _shared: the bundler packs only a function's own folder and _shared/
+    // (edgeFunctionBundleBoundaries.test.ts).
+    expect(src).toMatch(/import \{ OWNER_INBOXES \} from "\.\.\/_shared\/ownerInboxes\.ts";/);
   });
 
   it("a pin is built from the Archive by the indexer's own builder, limited to the named file", () => {

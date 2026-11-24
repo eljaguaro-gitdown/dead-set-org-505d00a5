@@ -22,7 +22,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 import { checkAdmin, describeBearer } from "../_shared/requireAdmin.ts";
 import { INTERNAL_SEND_HEADER, internalSendToken } from "../_shared/internalSend.ts";
 import { playableRow, readItem } from "../_shared/tapeIndexResolve.ts";
-import { OWNER_INBOXES } from "../send-transactional-email/authorize.ts";
+import { OWNER_INBOXES } from "../_shared/ownerInboxes.ts";
 import {
   DISPATCH_REASONS,
   REPO,

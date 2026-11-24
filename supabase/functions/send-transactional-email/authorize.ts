@@ -25,6 +25,7 @@
  */
 import { checkAdmin } from "../_shared/requireAdmin.ts";
 import { internalSendToken } from "../_shared/internalSend.ts";
+import { OWNER_INBOXES } from "../_shared/ownerInboxes.ts";
 
 export type SendAuthorization =
   | { ok: true; as: "service" | "admin" | "self" }
@@ -50,7 +51,7 @@ export interface SendRequest {
 }
 
 /** Where the sign-up alert may go: the same two inboxes `useAuth.ts` names. */
-export const OWNER_INBOXES = ["grateful_jaguaro@dead-set.org", "eljaguaro@gmail.com"];
+export { OWNER_INBOXES };
 
 const FORBIDDEN = { ok: false, status: 403, error: "Forbidden" } as const;
 const same = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
