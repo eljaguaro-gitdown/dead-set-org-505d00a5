@@ -5,12 +5,28 @@ know plays, and files a row in `playback_issues`. Signed-in fans are told
 "we'll let you know as soon as it's fixed". The tape desk is what makes that
 promise true without waiting for someone to notice the admin card.
 
-Every hour, while the Claude desktop app is open, a scheduled task runs
-[`/tape-desk`](../.claude/commands/tape-desk.md). It picks up new reports, works
-out what went wrong, decides what the fan should get, opens a fix PR when the
-cause is code, and has that PR gated. It stops where the owner's judgement
-starts: merging, publishing, applying data fixes, and pressing the buttons on
-the admin card that email fans.
+There are two ways in.
+
+- **The lookout (since 2026-11-24).** A report that the song is not on the tape
+  (`not_on_tape`, `no_tape`) fires the `tape_desk_lookout` trigger. It posts to
+  the `tape-desk` edge function, which starts the
+  [Tape desk workflow](../.github/workflows/tape-desk.yml) on that one ticket.
+  The workflow runs [`/tape-desk issue=<id>`](../.claude/commands/tape-desk.md):
+  scan, cause, options, pick, fix, verify, publish, verify on production. Then
+  it hands the ticket to the owner, whose **Mark fixed** is the only thing that
+  emails the fans waiting. The decisions behind it are in
+  [`tape-desk/DECISIONS.md`](tape-desk/DECISIONS.md), and the running log is
+  [`tape-desk/LOG.md`](tape-desk/LOG.md).
+- **The hourly sweep.** While the Claude desktop app is open, a scheduled task
+  runs plain `/tape-desk`. It works whatever the lookout missed, publishes what
+  the workflow couldn't (it has no Lovable), finishes tickets the owner has
+  closed, and triages the other kinds (`wont_play`, `none_in_setlist`) the old
+  way.
+
+The desk stops where the owner's judgement starts. It never presses the admin
+card's buttons. It never edits night data (setlists, guides, `songs`'
+first/last played). It holds anything that would change fan-facing copy or give
+the fan something other than the song and night they tapped.
 
 ## Roles
 
@@ -18,9 +34,9 @@ the admin card that email fans.
 |---|---|---|---|
 | **QA (triage)** | [`tape-triage`](../.claude/agents/tape-triage.md) subagent, read-only | Reproduces the report against the Archive with [`scripts/tape-desk/probe.ts`](../scripts/tape-desk/probe.ts), reads the fan's own error from PostHog, returns a verdict with evidence | Edits code, writes to the database, opens tickets |
 | **Product** | the `/tape-desk` run | Maps the verdict to a disposition (table below), writes what the fan should hear after the fix, drafts the internal fix note | Promises a fix that has not shipped |
-| **Engineering** | the `/tape-desk` run, in its own worktree | For code dispositions: one PR per *cause*, verified the way CLAUDE.md requires, mutation-tested on a committed tree | Merges, publishes, applies SQL to production |
-| **QA (gate)** | `qa-release` subagent | Gates the fix PR's head before the owner merges | Edits code |
-| **Owner** | Jay | Merges, publishes (RELEASING.md), applies data fixes, presses Mark fixed / Verified / No tape exists | |
+| **Engineering** | the `/tape-desk` run, in its own worktree | One PR per *cause*, verified the way CLAUDE.md requires, mutation-tested on a committed tree. For an in-scope ticket with a PASS gate: merges and publishes, as the owner's brief of 2026-11-24 asks (see DECISIONS.md on this machine refusing the first merge). Writes `tape_index` pins with provenance through the `tape-desk` function | Presses the admin card's buttons, edits night data, emails a fan, applies SQL by hand |
+| **QA (gate)** | `qa-release` subagent | Gates the fix PR's head before it merges | Edits code |
+| **Owner** | Jay | Presses Mark fixed / Verified / No tape exists, decides every held ticket, edits night data, owns the credentials the lookout runs on | |
 
 Separation of duties holds as everywhere else in this repo: the build step never
 grades its own work.
@@ -45,6 +61,19 @@ State lives in one label beside `tape`:
 | `tape:fixing` | Engineering is under way. Another run leaves it alone for 6 hours. |
 | `tape:owner` | Waiting on the owner: a PR to merge, a publish, a data fix, or a button on the admin card. |
 | `tape:watching` | Nothing to build. Waiting for the Archive to recover, or for a play to verify it. |
+
+In-scope tickets (`not_on_tape`, `no_tape`) end in one of three labels in place
+of `tape:owner`:
+
+| Label | Meaning |
+|---|---|
+| `needs-jay` | Held after step 4: class N, a fix that changes what the fan hears or reads, a repeat failure, or the kill switch off. The report names the reason. |
+| `ready-to-close` | The exact song from the exact night plays on dead-set.org, and the owner was alerted. Waiting on Mark fixed. |
+| `verified` | The owner pressed Mark fixed and the desk closed the ticket. |
+
+The kill switch is the repository variable `TAPE_DESK_AUTOFIX` (`gh variable
+set TAPE_DESK_AUTOFIX --body off`). Off, the desk still scans, classifies and
+reports, and changes nothing.
 
 The ticket closes when its row reaches `verified` or `wont_fix`. Never before:
 the fan was promised a word when it is fixed, and the row is what sends it.
@@ -130,6 +159,18 @@ The scheduled task `tape-desk-hourly` lives in the Claude desktop app, not in
 this repo. It runs while the app is open, catches up when the app next opens,
 and works from its own long-lived worktree at `C:\Dev\dead-set-tape-desk`. That
 worktree is reset to `origin/main` at the start of every run and has its own
-`node_modules`. If report volume ever outgrows an hourly poll, the same command
-can run from GitHub Actions. That needs an Anthropic key, plus a token the
-database can use to call GitHub.
+`node_modules`.
+
+The lookout runs in GitHub Actions (`.github/workflows/tape-desk.yml`), on the
+owner's Claude subscription, not a billed API key. It needs two credentials only
+the owner can create:
+
+- `CLAUDE_CODE_OAUTH_TOKEN`: a repository secret, from `claude setup-token`.
+- `TAPE_DESK_GITHUB_TOKEN`: a Lovable Cloud secret, a fine-grained token with
+  Contents read and write on this repository only, so the `tape-desk` function
+  can send `repository_dispatch`.
+
+Without either one nothing is lost: `tape_desk_dispatches` records why a ticket
+was not sent, and the hourly sweep works it. The workflow reaches the database
+through the `tape-desk` function with its own GitHub OIDC token, so no database
+key is stored in GitHub.

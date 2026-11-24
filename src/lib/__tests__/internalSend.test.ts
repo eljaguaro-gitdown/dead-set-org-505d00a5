@@ -119,11 +119,17 @@ describe("describeBearer names the kind of credential and never the credential",
 const source = (p: string) =>
   readSource(p).replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:])\/\/[^\n]*/g, "$1");
 
-/** The full `functions.invoke('send-transactional-email', …)` call, counted by parentheses. */
+/**
+ * The full `functions.invoke('send-transactional-email', …)` call, counted by
+ * parentheses, in any quote style. It matched single quotes only until
+ * 2026-11-24, when tape-desk's double-quoted call was the first one it could
+ * not see: a caller this sweep misses is a caller whose header nobody checks.
+ */
 const invokeCalls = (src: string) => {
   const calls: string[] = [];
-  const marker = "functions.invoke('send-transactional-email'";
-  for (let at = src.indexOf(marker); at !== -1; at = src.indexOf(marker, at + 1)) {
+  const marker = /functions\.invoke\(\s*(['"`])send-transactional-email\1/g;
+  for (const m of src.matchAll(marker)) {
+    const at = m.index!;
     let depth = 0;
     let end = at + "functions.invoke".length;
     for (; end < src.length; end++) {
@@ -142,10 +148,26 @@ describe("every function that invokes send-transactional-email sends the header"
     .map((f) => ({ name: f, src: source(`supabase/functions/${f}/index.ts`) }))
     .filter((f) => invokeCalls(f.src).length > 0);
 
-  it("finds the four callers there are today", () => {
+  it("finds the five callers there are today", () => {
     expect(callers.map((c) => c.name).sort()).toEqual(
-      ["daily-user-report", "notify-comment", "notify-dm", "weekly-insights-report"],
+      ["daily-user-report", "notify-comment", "notify-dm", "tape-desk", "weekly-insights-report"],
     );
+  });
+
+  it("tape-desk puts the token on every send", () => {
+    const src = source("supabase/functions/tape-desk/index.ts");
+    expect(src).toMatch(/import \{ INTERNAL_SEND_HEADER, internalSendToken \} from "\.\.\/_shared\/internalSend\.ts";/);
+    expect(src).toMatch(/const token = await internalSendToken\(serviceKey\);/);
+    expect(src).toMatch(/const serviceKey = Deno\.env\.get\("SUPABASE_SERVICE_ROLE_KEY"\)!;/);
+    const calls = invokeCalls(src);
+    expect(calls.length).toBeGreaterThan(0);
+    for (const c of calls) expect(c).toMatch(/headers: \{ \[INTERNAL_SEND_HEADER\]: token \},/);
+  });
+
+  it("sees a send written in either quote style", () => {
+    expect(invokeCalls(`x.functions.invoke("send-transactional-email", { a: (1) })`)).toHaveLength(1);
+    expect(invokeCalls(`x.functions.invoke('send-transactional-email', {})`)).toHaveLength(1);
+    expect(invokeCalls("x.functions.invoke(`send-transactional-email`, {})")).toHaveLength(1);
   });
 
   for (const name of ["daily-user-report", "notify-comment", "notify-dm", "weekly-insights-report"]) {

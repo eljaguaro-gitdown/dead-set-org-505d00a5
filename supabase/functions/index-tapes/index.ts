@@ -38,6 +38,13 @@ async function internalToken(key: string): Promise<string> {
 // deno-lint-ignore no-explicit-any
 async function store(db: any, songId: string, day: string, rows: TapeIndexRow[]) {
   if (rows.length === 0) return null;
+  // A night the tape desk pinned is the desk's to re-verify, not the
+  // refresh's: rewriting its default would undo a fix a fan was promised
+  // (supabase/functions/tape-desk, migration 20261124020000).
+  const { data: pinned, error: pinErr } = await db.from("tape_index").select("identifier")
+    .eq("song_id", songId).eq("show_date", day).not("pinned_by", "is", null).limit(1);
+  if (pinErr) return pinErr.message;
+  if (pinned?.length) return null;
   const now = new Date().toISOString();
   if (rows.some((r) => r.is_song_default)) {
     const { error } = await db.from("tape_index").update({ is_song_default: false }).eq("song_id", songId).eq("is_song_default", true);
