@@ -159,7 +159,7 @@ Both curated issues and the three issues fixed earlier are clean. The 15 are all
 
 **Two things this run got wrong, to bank:**
 
-1. **Eyes of the World is another member's issue, not the owner's.** Its page names the member and says "These are the ones they picked", and three of those seven nights are now nights this session chose. The proposal listed the issue without saying whose it was. Before changing a Songbook issue, check the setlist's `creator_id` against `user_roles`. A member's issue needs the owner to decide knowing that, and probably the member to be told.
+1. **Eyes of the World is another member's issue, not the owner's.** Its page names the member and says "These are the ones they picked", and three of those seven nights are now nights this session chose. The proposal listed the issue without saying whose it was. Before changing a Songbook issue, check the setlist's `creator_id` against `user_roles`. A member's issue needs the owner to decide knowing that, and probably the member to be told. Once told, the owner kept the three fixes and is telling the member.
 2. **The 14 removed paragraphs were not saved.** The `update` returned only the new label, and the earlier read had cut each paragraph to 110 characters, so their full text is gone from everything this session can reach. The Viola Lee and Ramble On Rose paragraphs removed earlier were read in full first. Return `old_notes` from any `update` that drops text.
 
 The four held tickets were repointed by a side session; #150's 1995 night and the two Viola Lee Songbook nights by this one. Mark fixed on #149–#154 is the owner's, and the fix note for each card was drafted for the owner to paste.
