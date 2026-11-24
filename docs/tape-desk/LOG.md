@@ -61,7 +61,7 @@ End-to-end checks in production:
 
 1. ~~The lookout dispatches nothing until `TAPE_DESK_GITHUB_TOKEN` exists.~~ Added 2026-11-24; GitHub accepted the first dispatch at 19:41 (see the end-to-end test below).
 2. ~~The workflow's Claude step stops at "owner action needed" until `CLAUDE_CODE_OAUTH_TOKEN` exists.~~ Added 2026-11-24 19:29; Claude ran on it at 19:50.
-3. **No held alert was emailed for this run's four tickets.** The reports are on the tickets, and the owner has them in the session. A held ticket is not re-dispatched, so nothing would have sent them: since #163 a run on a held ticket sends the alert if no comment records one.
+3. **No held alert was emailed for this run's four tickets.** The reports are on the tickets, and the owner has them in the session. A held ticket is not re-dispatched, so nothing would have sent them: since #163 a run on a held ticket sends the alert if no comment records one. #153 got its alert at 19:57. #154, #151 and #149 still owe one, sent the next time each is dispatched.
 4. **`/songbook/bird-song` still offers "Play all 3 nights"** with all three marked "No tape of it from this night" (#150, out of scope).
 5. **Charlie's cached prose on `/versions/viola-lee-blues` describes a performance that didn't happen.** It's fan-facing copy, so the desk won't touch it.
 6. **The production-play harness for step 7.2 is not built.** No ticket reached it.
@@ -89,7 +89,10 @@ Each leg was driven in production the way a fan's report drives it. The dispatch
 | function → GitHub `repository_dispatch` (`TAPE_DESK_GITHUB_TOKEN`) | 204 every time, run started within 8 s, on `main` |
 | workflow → OIDC → function (`api.mjs issue`) | synthetic run 45472815317: `{"in_scope":true,"kind":"not_on_tape","status":"open","index_rows":1,"dispatches":2,"waiting":1}` |
 | workflow → Claude on the subscription (`CLAUDE_CODE_OAUTH_TOKEN`) | run 45474220086: the runbook ran, read the report and `tape_index` through OIDC, found #153, and held it as class N |
-| nothing the desk may not touch | row still `open`, no fan email, no push to `main`, no branch |
+| workflow → owner alert (`api.mjs alert` → `send-transactional-email`, template `tape-desk-alert`) | run 45475377388, after #163: two sends at 19:57, one per owner inbox, both `sent`, no error. The run commented `Owner alerted 2026-11-24 19:57 UTC (held)` on #153 as `github-actions` |
+| nothing the desk may not touch | after all three runs: row still `open`, no `playback-fixed` email, no push to `main`, no branch |
+
+**Not yet driven live:** the production trigger firing on a real report (only its exact request was replayed), opening a new ticket, a pin, and a PR through merge and publish. They need a new in-scope report from a fan.
 
 **What the test found and fixed:**
 
@@ -116,3 +119,4 @@ The 110 class-N keys: 1966-07-03 Aint It Crazy (The Rub) · 1966-07-03 Caution (
 - 2026-11-24 08:20 · #151 Viola Lee Blues 1970-02-14 · no_tape · class N · HELD (catalog date) · probe archive_unreachable (not re-run), night N (JerryBase no, Relisten 0/6)
 - 2026-11-24 08:20 · #149 Ramble On Rose 1980-10-14 · not_on_tape · class N · HELD (a fan's guide) · probe song_not_on_night, night N (JerryBase no, Relisten 0/11)
 - 2026-11-24 19:50 · #153 Bird Song 1972-04-08 · not_on_tape · class N · HELD (night data) · end-to-end test, run 45474220086 on Actions; nothing new, the held report and the `no_match` index row were already in place
+- 2026-11-24 19:57 · #153 Bird Song 1972-04-08 · not_on_tape · class N · HELD (night data) · end-to-end test, run 45475377388; nothing new, the owed held alert sent and recorded on the ticket
