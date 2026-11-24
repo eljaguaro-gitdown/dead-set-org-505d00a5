@@ -76,7 +76,7 @@ End-to-end checks in production:
    - A fine-grained GitHub token, Contents read and write on this repo only, as the Lovable Cloud secret `TAPE_DESK_GITHUB_TOKEN`.
    - In repository Settings → Actions → General, enable "Allow GitHub Actions to create and approve pull requests".
 2. ~~Apply, or say no to, the four held tickets' repoints.~~ Applied 2026-11-24 evening (see Owner repoints below). Mark fixed on each is still the owner's.
-3. **The class-N pattern fix:** audit `songs.first_played/last_played` against JerryBase. 93 of the 114 no-tape nights are catalog first/last dates. The Songbook issues carry the same error: Bird Song had all three nights wrong, Viola Lee Blues two of five, and Ramble On Rose five of eight (all fixed, see Owner repoints). The other Songbook issues have not been checked.
+3. **The class-N pattern fix:** audit `songs.first_played/last_played` against JerryBase. 93 of the 114 no-tape nights are catalog first/last dates. The Songbook issues carry the same error: Bird Song had all three nights wrong, Viola Lee Blues two of five, and Ramble On Rose five of eight (all fixed, see Owner repoints). All ten issues have now been checked (Songbook audit below); 14 more nights are fixed, and Ripple's "Last time played" night waits on this decision.
 4. **Whether Charlie's picks are checked against a setlist source** before a guide saves. #149's own guide (setlist `5f1089c6`) still has four more class-N nights from the blast-radius run: 1977-05-08, 1977-09-03, 1990-03-24 and 1993-03-27.
 5. ~~Paste the proposed hourly-task prompt.~~ Done 2026-11-24: the session applied it on the owner's yes.
 
@@ -125,6 +125,42 @@ Night data, no PR: each change is live on dead-set.org the moment it is applied.
 | 5 | 1975-08-13 Great American Music Hall → **1974-10-17 Winterland Arena**. The band never played the song in 1975; this is the nearest night, from the October 1974 retirement run | JerryBase played; 7 of 8 sources |
 | 6 | 1991-06-22 → **1991-06-19 Pine Knob Music Theater** | JerryBase played; 12 of 12 sources |
 | 7 | 1974-05-19 Memorial Coliseum → **1974-05-17 P.N.E. Coliseum** | JerryBase played; 3 of 3 sources |
+
+## Songbook audit, 2026-11-24 night
+
+`night.ts --keys` over every night in all ten Songbook issues: 82 nights in the eight community issues and the two curated ones (Shakedown Street and Crazy Fingers, whose nights are their `notable_versions` plus the first and last played).
+
+| Result | Nights |
+|---|---|
+| JerryBase played, on tape | 63 |
+| Not in JerryBase, but tapes of the night carry the song (left alone): Slipknot! 1974-06-20 (the early jam), Althea and Shakedown Street 1981-03-28, Ramble On Rose 1971-10-19 | 4 |
+| Class N: not in JerryBase's setlist, and no tape of the night has it | 15 |
+
+Both curated issues and the three issues fixed earlier are clean. The 15 are all in community issues. 14 were repointed on the owner's "yes, repoint them", each to the nearest night Relisten lists with the song, checked with `night.ts` (JerryBase played, the song on tape). One `update` guarded each row to its old date; 14 rows changed. Every night's paragraph described a performance on a night the song wasn't played (for example "This version features Branford Marsalis on saxophone" on an Althea from a night with no Althea), so each was replaced by a date-and-venue label, and the stored recording url, a tape of the wrong night, was cleared so the player resolves the new night. The four live pages list the new nights with no "no tape" mark.
+
+| Issue | Before → after | Tapes carrying the song |
+|---|---|---|
+| Althea | 1982-04-06 → **1982-04-05** The Spectrum | 7 of 7 |
+| Althea | 1991-09-10 → **1991-09-13** Madison Square Garden | 15 of 15 |
+| Eyes of the World | 1978-11-24 → **1978-11-21** Community War Memorial Auditorium | 4 of 5 |
+| Eyes of the World | 1991-03-17 → **1991-03-20** Capital Centre | 12 of 13 |
+| Eyes of the World | 1993-06-15 → **1993-06-11** Buckeye Lake Music Center | 10 of 11 |
+| Slipknot! | 1976-06-09 → **1976-06-10** Boston Music Hall | 12 of 12 |
+| Slipknot! | 1977-04-27 → **1977-04-29** The Palladium | 1 of 1 |
+| Slipknot! | 1983-10-06 (no show that date) → **1983-10-12** Madison Square Garden | 24 of 24 |
+| Slipknot! | 1990-03-22 → **1990-03-24** Knickerbocker Arena | 21 of 21 |
+| Slipknot! | 1991-09-06 → **1991-09-10** Madison Square Garden | 25 of 25 |
+| Stella Blue | 1974-07-19 → **1974-07-25** International Amphitheatre | 3 of 3 |
+| Stella Blue | 1976-06-18 → **1976-06-15** Beacon Theatre | 8 of 8 |
+| Stella Blue | 1988-09-03 → **1988-09-02** Capital Centre | 11 of 11 |
+| Stella Blue | 1994-10-14 → **1994-10-10** USAir Arena | 10 of 10 |
+
+**Left for the owner: Ripple's "Last time played • 1990-07-14".** Ripple wasn't played that night. The catalog says 1989-09-27 (Warfield): one tape of the night has a track titled Ripple, but JerryBase and Relisten's setlist don't list it. Relisten's last Ripple is 1988-09-03, which is already in the issue. Settle the real last date first (decision 3).
+
+**Two things this run got wrong, to bank:**
+
+1. **Eyes of the World is another member's issue, not the owner's.** Its page names the member and says "These are the ones they picked", and three of those seven nights are now nights this session chose. The proposal listed the issue without saying whose it was. Before changing a Songbook issue, check the setlist's `creator_id` against `user_roles`. A member's issue needs the owner to decide knowing that, and probably the member to be told.
+2. **The 14 removed paragraphs were not saved.** The `update` returned only the new label, and the earlier read had cut each paragraph to 110 characters, so their full text is gone from everything this session can reach. The Viola Lee and Ramble On Rose paragraphs removed earlier were read in full first. Return `old_notes` from any `update` that drops text.
 
 The four held tickets were repointed by a side session; #150's 1995 night and the two Viola Lee Songbook nights by this one. Mark fixed on #149–#154 is the owner's, and the fix note for each card was drafted for the owner to paste.
 
