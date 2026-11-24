@@ -219,3 +219,26 @@ around the refusal.
 **Owner decision needed:** either allow `gh pr merge` (and `deploy_project`)
 for the desk, or change T7 to stop at "gated, waiting on your merge". Until
 then the runbook says merge, and every merge will wait on the owner.
+
+## 2026-11-24: Gate notes on the lookout (#157, PASS WITH NOTES on a9ae79c)
+
+**Fixed in b893d0d:**
+
+- A pinned night can be re-pinned. Clearing `is_default` alone tripped the pin CHECK and returned 500.
+- The desktop hand-off passes `key`, so it joins the per-night concurrency group.
+
+**Accepted, with reasons:**
+
+- **A pin is two writes, not one transaction.** The old default is cleared, then the new row is upserted. If the upsert fails, the night has no default until the next refresh resolves it. That is a slower tap, never a wrong one.
+  - *Reverse it:* do the pin in one `security definer` SQL function.
+- **GitHub keeps one pending run per concurrency group.** A newer pending run replaces an older one. For one night, the newer run works the same ticket. A replaced `owner_closed` is picked up by the sweep, which compares row status with ticket labels every hour.
+- **Prompt injection.** The headless run reads report text a fan's client sent (the song title), and holds contents and pull-request write plus Bash.
+  - What bounds it:
+    - Song titles in reports come through `report_playback_issue()`, capped at 200 characters.
+    - The runbook reads the catalog's title through `songs`.
+    - The OIDC gate limits the database to read, pin and owner alert.
+    - Merges need a PASS gate.
+  - The kill switch is `TAPE_DESK_AUTOFIX=off`.
+  - *Reverse it:* any sign of injected instructions in a run's log. Then drop `contents: write` and stop at a ticket comment.
+- **The workflow opening pull requests needs a repository setting.** Settings → Actions → General → "Allow GitHub Actions to create and approve pull requests". A pull request opened that way does not start `ci.yml`, so the runbook runs the CI commands itself.
+- **The "anon cannot execute `tape_index_candidates`" assertion can't fail in this chain.** `create or replace` keeps the revoke from 20261107020000. The migration states the revoke again anyway.

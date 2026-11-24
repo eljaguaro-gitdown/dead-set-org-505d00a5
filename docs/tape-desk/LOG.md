@@ -29,7 +29,7 @@ carries on from there.
 
 - Every hourly `tape-index-refresh` since deploy was refused with 401.
 - The index has held the 2026-11-07 seed (700 rows) plus 6 rows from fans' taps; 500+ keys are waiting.
-- #156 passed the gate and CI.
+- #156 passed the gate and CI. #157 (the lookout) passed the gate with notes on `a9ae79c`, and the notes are fixed in `b893d0d`.
 
 **Tickets ready to close:** none.
 
@@ -58,6 +58,7 @@ Out of scope and left as they were: #143 Help on the Way (`wont_play`) and #150 
 2. **Create two credentials.**
    - `claude setup-token`, then add it as the repository secret `CLAUDE_CODE_OAUTH_TOKEN`.
    - A fine-grained GitHub token, Contents read and write on this repo only, as the Lovable Cloud secret `TAPE_DESK_GITHUB_TOKEN`.
+   - In repository Settings → Actions → General, "Allow GitHub Actions to create and approve pull requests", so the workflow can open a fix PR.
 3. **The four held tickets:** apply the repoints, or say no.
 4. **The pattern fix for class N:** audit `songs.first_played/last_played` against JerryBase. 93 of the 114 no-tape nights are catalog first/last dates.
 5. **Whether Charlie's picks are checked against a setlist source** before a guide saves.
