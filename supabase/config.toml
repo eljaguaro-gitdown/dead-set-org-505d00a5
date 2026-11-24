@@ -37,3 +37,6 @@ project_id = "dplrumaqrdnzwzqmatqr"
     verify_jwt = true
   [functions.index-tapes]
     verify_jwt = false
+  # Checks its own callers: the database by service role, the Tape desk workflow by GitHub OIDC.
+  [functions.tape-desk]
+    verify_jwt = false

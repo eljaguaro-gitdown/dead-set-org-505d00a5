@@ -1,0 +1,110 @@
+# The Tape desk, one ticket at a time (docs/tape-desk.md).
+#
+# Started by the tape-desk edge function (repository_dispatch, event type
+# tape_desk) the moment a fan's "not on the tape" report is filed, reopened or
+# closed by the owner, and by the hourly pass (workflow_dispatch) for anything
+# that was missed. Runs Claude Code headless on the runbook in
+# .claude/commands/tape-desk.md, on the owner's Claude subscription
+# (CLAUDE_CODE_OAUTH_TOKEN from `claude setup-token`), not a billed API key.
+#
+# Reports for the same song on the same night share a concurrency group, so
+# two reports never produce two fixes. The kill switch is the repository
+# variable TAPE_DESK_AUTOFIX: "off" runs the scan, cause and options and posts
+# the report, but changes nothing.
+#
+# reason "synthetic" proves the pipe without Claude: it reads the report
+# through the tape-desk function with this run's OIDC token and stops.
+name: Tape desk
+
+on:
+  repository_dispatch:
+    types: [tape_desk]
+  workflow_dispatch:
+    inputs:
+      issue_id:
+        description: "playback_issues.id"
+        required: true
+      reason:
+        description: "reported | reopened | owner_closed | sweep | synthetic"
+        required: true
+        default: sweep
+      key:
+        description: "<song_id>-<show_date>, for the concurrency group"
+        required: false
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+  id-token: write
+
+concurrency:
+  group: tape-desk-${{ github.event.client_payload.key || inputs.key || github.event.client_payload.issue_id || inputs.issue_id }}
+  cancel-in-progress: false
+
+jobs:
+  desk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      ISSUE_ID: ${{ github.event.client_payload.issue_id || inputs.issue_id }}
+      REASON: ${{ github.event.client_payload.reason || inputs.reason }}
+      TAPE_DESK_AUTOFIX: ${{ vars.TAPE_DESK_AUTOFIX || 'on' }}
+    steps:
+      - name: Check the request
+        run: |
+          if ! [[ "$ISSUE_ID" =~ ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$ ]]; then
+            echo "::error::issue_id is not a uuid"; exit 1
+          fi
+          case "$REASON" in reported|reopened|owner_closed|sweep|synthetic) ;; *) echo "::error::unknown reason"; exit 1 ;; esac
+          case "$TAPE_DESK_AUTOFIX" in on|off) ;; *) echo "::error::TAPE_DESK_AUTOFIX must be on or off"; exit 1 ;; esac
+          echo "Ticket $ISSUE_ID, reason $REASON, autofix $TAPE_DESK_AUTOFIX" >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: "Synthetic run: read the report through the lookout and stop"
+        if: env.REASON == 'synthetic'
+        run: |
+          node scripts/tape-desk/api.mjs issue "{\"issue_id\":\"$ISSUE_ID\"}" > answer.json
+          node -e 'const a=require("./answer.json"); console.log(JSON.stringify({in_scope:a.in_scope, kind:a.issue?.kind, status:a.issue?.status, index_rows:(a.index||[]).length, dispatches:(a.dispatches||[]).length, waiting:a.waiting}))' | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Owner action needed if the Claude token is missing
+        if: env.REASON != 'synthetic'
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+        run: |
+          if [ -z "$CLAUDE_CODE_OAUTH_TOKEN" ]; then
+            msg="CLAUDE_CODE_OAUTH_TOKEN is not set. Run 'claude setup-token' and add it as a repository secret. The hourly pass on the desktop still works this ticket."
+            echo "::error::$msg"; echo "$msg" >> "$GITHUB_STEP_SUMMARY"; exit 1
+          fi
+
+      - name: Install
+        if: env.REASON != 'synthetic'
+        run: |
+          npm ci --no-audit --no-fund
+          npx playwright install --with-deps webkit chromium
+          npm install -g @anthropic-ai/claude-code@2.1.322
+
+      - name: Work the ticket
+        if: env.REASON != 'synthetic'
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
+          TAPE_DESK_ENV: actions
+        run: |
+          set -o pipefail
+          git config user.name "tape-desk"
+          git config user.email "tape-desk@users.noreply.github.com"
+          claude -p "/tape-desk issue=$ISSUE_ID reason=$REASON autofix=$TAPE_DESK_AUTOFIX" \
+            --allowedTools "Bash,Read,Edit,Write,Glob,Grep,Task,WebFetch" \
+            --max-turns 300 \
+            --output-format text | tee desk.log
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          tail -n 40 desk.log >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"

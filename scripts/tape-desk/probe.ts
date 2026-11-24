@@ -93,19 +93,34 @@ async function main() {
   const filePath = track ? decodeURIComponent((track.match(/archive\.org\/download\/[^/]+\/(.+)$/)?.[1] ?? "").split("?")[0]) : null;
 
   // 1. The item, fetched directly: does it exist, is it dark, which servers hold it.
+  // The player also tries the identifier without a `.flacNN` suffix
+  // (fetchMetadataWithFallback in archiveOrg.ts), so the probe does too.
+  // Otherwise it reports "no such item" about one the player can open (#153).
   let metadata: TapeEvidence["metadata"] = "ok";
   let meta: Record<string, unknown> | null = null;
+  let resolvedIdentifier: string | null = identifier;
   if (identifier) {
-    try {
-      const res = await timedFetch(`https://archive.org/metadata/${identifier}`);
-      if (!res.ok) metadata = "unreachable";
-      else {
-        meta = (await res.json()) as Record<string, unknown>;
-        if (!meta || Object.keys(meta).length === 0 || !meta.files) metadata = "missing";
-        else if (meta.is_dark) metadata = "dark";
+    const variants = [identifier, ...(/\.flac\d*$/i.test(identifier) ? [identifier.replace(/\.flac\d*$/i, "")] : [])];
+    for (const id of variants) {
+      try {
+        const res = await timedFetch(`https://archive.org/metadata/${id}`);
+        if (!res.ok) {
+          metadata = "unreachable";
+          break;
+        }
+        const m = (await res.json()) as Record<string, unknown>;
+        if (!m || Object.keys(m).length === 0 || !m.files) {
+          metadata = "missing";
+          continue;
+        }
+        meta = m;
+        metadata = m.is_dark ? "dark" : "ok";
+        resolvedIdentifier = id;
+        break;
+      } catch {
+        metadata = "unreachable";
+        break;
       }
-    } catch {
-      metadata = "unreachable";
     }
   }
   const files = ((meta?.files as Array<Record<string, unknown>>) ?? []);
@@ -123,9 +138,12 @@ async function main() {
   if (date) {
     let unreachable = false;
     let recordingFound = false;
+    let trackFound = false;
     try {
-      nightRecording = await findRecordingForDate(song, date);
-      recordingFound = nightRecording !== null;
+      const r = await findRecordingForDate(song, date);
+      nightRecording = r;
+      recordingFound = r !== null;
+      trackFound = Boolean(r?.directTrackUrl);
     } catch {
       unreachable = true;
     }
@@ -137,7 +155,7 @@ async function main() {
     } catch {
       /* the count is context, not a verdict input on its own */
     }
-    night = { unreachable, recordingFound, recordingsThatNight };
+    night = { unreachable, recordingFound, trackFound, recordingsThatNight };
   }
 
   // 3. Delivery: where the Archive routes the file, and the item's own servers.
@@ -194,6 +212,7 @@ async function main() {
         item: identifier
           ? {
               identifier,
+              resolvedIdentifier: metadata === "missing" ? null : resolvedIdentifier,
               metadata,
               file: file ? { name: file.name, title: file.title ?? null, format: file.format, size } : null,
               workableServers: meta?.workable_servers ?? null,

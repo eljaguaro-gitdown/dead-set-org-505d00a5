@@ -127,22 +127,31 @@ describe("classify: a report that names a recording but no track", () => {
   });
 
   it("not on this tape, but another tape of the night has it → song_on_other_tape", () => {
-    const e = recordingReport({ night: { unreachable: false, recordingFound: true, recordingsThatNight: 2 } });
+    const e = recordingReport({ night: { unreachable: false, recordingFound: true, trackFound: true, recordingsThatNight: 2 } });
     expect(classify(e)).toBe("song_on_other_tape");
   });
 
   it("not on this tape, and the night could not be asked → archive_unreachable", () => {
-    const e = recordingReport({ night: { unreachable: true, recordingFound: false, recordingsThatNight: null } });
+    const e = recordingReport({ night: { unreachable: true, recordingFound: false, trackFound: false, recordingsThatNight: null } });
     expect(classify(e)).toBe("archive_unreachable");
   });
 
   it("not on this tape, and no tape of the night has it → song_not_on_tape", () => {
-    const e = recordingReport({ night: { unreachable: false, recordingFound: false, recordingsThatNight: 2 } });
+    const e = recordingReport({ night: { unreachable: false, recordingFound: false, trackFound: false, recordingsThatNight: 2 } });
     expect(classify(e)).toBe("song_not_on_tape");
   });
 
   it("not on this tape, and no night was named → song_not_on_tape", () => {
     expect(classify(recordingReport())).toBe("song_not_on_tape");
+  });
+
+  // #144: the by-night resolver falls back to the night's top recording with
+  // no track when none of the night's tapes has the song. Bird Song 1971-03-24
+  // and 1972-04-08 (#153, #154) and Ramble On Rose 1980-10-14 (#149) were all
+  // this shape, and the probe read it as another tape having the song.
+  it("not on this tape, and the night's fallback recording has no track either → song_not_on_night (#144)", () => {
+    const e = recordingReport({ night: { unreachable: false, recordingFound: true, trackFound: false, recordingsThatNight: 4 } });
+    expect(classify(e)).toBe("song_not_on_night");
   });
 
   it("the recording's item is gone → track_missing", () => {
@@ -166,23 +175,28 @@ describe("classify: a report that names only a night", () => {
   });
 
   it("the resolver finds a tape of that night with the song today → resolver_found_tape", () => {
-    expect(classify(nightReport({ unreachable: false, recordingFound: true, recordingsThatNight: 3 }))).toBe("resolver_found_tape");
+    expect(classify(nightReport({ unreachable: false, recordingFound: true, trackFound: true, recordingsThatNight: 3 }))).toBe("resolver_found_tape");
+  });
+
+  it("the resolver's answer for the night carries no track → song_not_on_night, not resolver_found_tape (#144)", () => {
+    // Viola Lee Blues 1970-02-14 (#151): six tapes, none has the song.
+    expect(classify(nightReport({ unreachable: false, recordingFound: true, trackFound: false, recordingsThatNight: 6 }))).toBe("song_not_on_night");
   });
 
   it("the Archive lists no recording of that date → no_tape_of_night", () => {
-    expect(classify(nightReport({ unreachable: false, recordingFound: false, recordingsThatNight: 0 }))).toBe("no_tape_of_night");
+    expect(classify(nightReport({ unreachable: false, recordingFound: false, trackFound: false, recordingsThatNight: 0 }))).toBe("no_tape_of_night");
   });
 
   it("recordings of that date exist but none carries the song → song_not_on_night", () => {
-    expect(classify(nightReport({ unreachable: false, recordingFound: false, recordingsThatNight: 10 }))).toBe("song_not_on_night");
+    expect(classify(nightReport({ unreachable: false, recordingFound: false, trackFound: false, recordingsThatNight: 10 }))).toBe("song_not_on_night");
   });
 
   it("the night could not be asked → archive_unreachable, never no_tape_of_night", () => {
-    expect(classify(nightReport({ unreachable: true, recordingFound: false, recordingsThatNight: 0 }))).toBe("archive_unreachable");
+    expect(classify(nightReport({ unreachable: true, recordingFound: false, trackFound: false, recordingsThatNight: 0 }))).toBe("archive_unreachable");
   });
 
   it("the count failed and no tape was found → needs_human, not a guess", () => {
-    expect(classify(nightReport({ unreachable: false, recordingFound: false, recordingsThatNight: null }))).toBe("needs_human");
+    expect(classify(nightReport({ unreachable: false, recordingFound: false, trackFound: false, recordingsThatNight: null }))).toBe("needs_human");
   });
 
   it("nothing to go on → needs_human", () => {

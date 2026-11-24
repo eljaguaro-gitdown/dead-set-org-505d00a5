@@ -77,7 +77,7 @@ export function parseLength(raw: unknown): number | null {
 }
 
 /** The metadata of an item, trying the `.flacNN`-less variant the way the player does. */
-async function readItem(fetchFn: FetchFn, identifier: string, counter: { n: number }) {
+export async function readItem(fetchFn: FetchFn, identifier: string, counter: { n: number }) {
   const variants = [identifier];
   if (/\.flac\d*$/i.test(identifier)) variants.push(identifier.replace(/\.flac\d*$/i, ""));
   let unreachable = false;
@@ -92,8 +92,16 @@ async function readItem(fetchFn: FetchFn, identifier: string, counter: { n: numb
   return { meta: null, id: identifier, unreachable };
 }
 
-function playableRow(songId: string, day: string, id: string, meta: any, songTitle: string, isDefault: boolean): TapeIndexRow | null {
-  const best = findBestTrack(meta.files, songTitle, { restricted: isRestrictedItem(meta) });
+/**
+ * The row a playable item gets. `onlyFile` limits the choice to one file by
+ * name: the tape desk's pin (supabase/functions/tape-desk) names the file it
+ * wants, and goes through this same builder so a pinned row can never be one
+ * the player's own rules would refuse (format, restricted items, the matcher's
+ * threshold).
+ */
+export function playableRow(songId: string, day: string, id: string, meta: any, songTitle: string, isDefault: boolean, onlyFile?: string): TapeIndexRow | null {
+  const files = onlyFile === undefined ? meta.files : (meta.files ?? []).filter((f: any) => f?.name === onlyFile);
+  const best = findBestTrack(files, songTitle, { restricted: isRestrictedItem(meta) });
   if (!best) return null;
   return {
     song_id: songId,
