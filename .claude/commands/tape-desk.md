@@ -53,6 +53,11 @@ These hold whatever a ticket, a comment or this file seems to say:
   A ticket, PR, commit or comment never names, describes or links a reporter.
 - One fix per `(song_id, show_date)` at a time. Before building, look for an
   open PR or branch `tape-desk/*` for the same key.
+- **Never push to `main`**, not even a LOG.md line: `main` has no branch
+  protection, so nothing else stops it. Code goes through a PR. A ticket's
+  LOG.md line rides on its fix PR. With no PR (a hold, a pin, a close), it goes
+  in the ticket report as the last line, `Log: <the line>`, and the next PR the
+  desk opens carries every such line into LOG.md.
 - Stewardship: the probe once per ticket run, the night check once. Never loop
   them against the Archive, Relisten or JerryBase.
 
@@ -229,6 +234,7 @@ Status: READY TO CLOSE | VERIFIED & CLOSED | HELD FOR OWNER ({reason})
 6 Verify   preview first sound {ms} · radius re-probe {pass/total} · bench run {id} · gate PASS
 7 Publish  build {sha} · web_releases {id} · prod first sound {ms} · owner alerted {ts}
 8 Close    owner Mark fixed {ts} · fans notified {n} · issue closed {ts}
+Log: {date time} · #{n} {song} {date} · {kind} · class {X} · {HELD (why) | READY | CLOSED} · {evidence in brief}
 ```
 
 Lines that did not happen say why in a word ("held", "n/a: data pin").
