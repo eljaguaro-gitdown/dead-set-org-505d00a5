@@ -22,12 +22,16 @@ export interface Jwk {
   alg?: string;
 }
 
-const b64urlToBytes = (s: string): Uint8Array<ArrayBuffer> => {
+// A plain ArrayBuffer: WebCrypto and TextDecoder both take one, and it types
+// the same under every TypeScript. `Uint8Array<ArrayBuffer>` is what TS 5.7+
+// wants for BufferSource, and older TS (Deno 2.1's) rejects it as "not generic".
+const b64urlToBytes = (s: string): ArrayBuffer => {
   const b64 = s.replace(/-/g, "+").replace(/_/g, "/") + "=".repeat((4 - (s.length % 4)) % 4);
   const bin = atob(b64);
-  const out = new Uint8Array(bin.length);
+  const buf = new ArrayBuffer(bin.length);
+  const out = new Uint8Array(buf);
   for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
-  return out;
+  return buf;
 };
 const b64urlJson = (s: string) => JSON.parse(new TextDecoder().decode(b64urlToBytes(s)));
 
