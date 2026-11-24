@@ -104,3 +104,26 @@ describe("the cron sends a bearer index-tapes can prove", () => {
     expect(sql).toMatch(/'authorization', 'Bearer ' \|\| \(select decrypted_secret from vault\.decrypted_secrets where name = 'email_queue_service_role_key'\)/);
   });
 });
+
+describe("the live service-role probe in index-tapes (gate note on 0fe684a)", () => {
+  // The unit tests above inject isServiceRoleToken, so the real one had no
+  // test: `return true` in its place survived every test, and would let any
+  // bearer that merely claims service_role run the refresh.
+  const src = readSource("supabase/functions/index-tapes/index.ts")
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(/(^|[^:])\/\/[^\n]*/g, "$1");
+  const probe = src.slice(src.indexOf("isServiceRoleToken: async (token) => {"), src.indexOf("if (!auth.ok)"));
+
+  it("builds a client from the presented token, not from the function's own key", () => {
+    expect(probe).toMatch(/createClient\(Deno\.env\.get\("SUPABASE_URL"\)!, token,/);
+  });
+
+  it("asks Supabase for something only the service role may do", () => {
+    expect(probe).toMatch(/const \{ error \} = await probe\.auth\.admin\.listUsers\(\{ page: 1, perPage: 1 \}\);/);
+  });
+
+  it("answers yes only when that call did not fail", () => {
+    expect(probe).toMatch(/return !error;/);
+    expect(probe).not.toMatch(/return true;/);
+  });
+});
