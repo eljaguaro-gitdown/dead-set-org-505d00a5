@@ -257,9 +257,9 @@ Publish followed `docs/RELEASING.md`:
 3. Ask the Lovable agent to deploy only the changed functions.
 4. Probe them live.
 
-**Updating the hourly task's prompt to match was refused** by this session's
-permissions. It still says never merge. The proposed prompt is in
-[`hourly-task-prompt.proposed.md`](hourly-task-prompt.proposed.md).
+**The hourly task's prompt now matches.** The first attempt to update it was
+refused by the session's permissions; the owner said yes and it was applied on
+2026-11-24. The text is in [`hourly-task-prompt.md`](hourly-task-prompt.md).
 
 **What the deploy found that no local check could:**
 
