@@ -44,24 +44,40 @@ carries on from there.
 
 Out of scope and left as they were: #143 Help on the Way (`wont_play`) and #150 Bird Song Play all (`none_in_setlist`).
 
+## Shipped and verified, 2026-11-24 (the owner said "allow the desk to merge")
+
+| What | Merged | Live, and how it was checked |
+|---|---|---|
+| #156 refresh auth | `d67bc86` | Migration `20261124010000` applied (`cron.job` sends the bearer). `index-tapes` deployed. The job's own request answered `200 {"picked":40,"stored":40,"unreachable":0,"errors":0}`, and 66 rows were written. A no-credential refresh still gets 401. #155 closed. |
+| #157 the lookout | `96c494e` | Migration `20261124020000` applied. Checked by `proacl`: only postgres and service_role execute the trigger and the candidates function; anon can't read the log; authenticated can't write it. `send-transactional-email` deployed. `tape-desk` **failed to bundle**: a cross-function import. |
+| #158 bundle fix | `2e16b18` | `tape-desk` and `send-transactional-email` deployed. Live probes: every OIDC action returns `401 tape desk workflow only`, and dispatch with a bogus bearer returns `401 service role only`. |
+
+End-to-end checks in production:
+
+- **The workflow on main, `reason=synthetic`** (run 45359052992). It got a real GitHub OIDC token, the live function verified it against GitHub's keys, and it read the seed report: `{"in_scope":true,"kind":"not_on_tape","status":"open","index_rows":1,"dispatches":0,"waiting":1}`.
+- **Database to function to GitHub**, exactly as the trigger posts. The function accepted the vault key and logged `no TAPE_DESK_GITHUB_TOKEN`, so it didn't dispatch. That is the one missing link, and it needs the owner's token.
+
 **Open risks:**
 
-1. **Nothing is deployed.** This session's permissions refused `gh pr merge` on #156. Until the owner merges, the refresh stays broken and the lookout doesn't exist in production.
-2. **No held alert was emailed.** The template and the function that send it ship with the lookout PR. The four reports are on the tickets.
-3. **The page still offers "Play all 3 nights" on `/songbook/bird-song`,** where all three nights are marked "No tape of it from this night". That is what produces `none_in_setlist` reports (#150). Out of scope here.
-4. **Charlie's cached prose on `/versions/viola-lee-blues` describes a performance that didn't happen:** it calls Feb 14, 1970 "part of the legendary Dick's Picks Vol. 4 show". It's fan-facing copy, so the desk won't touch it.
-5. **A production-play harness is not built.** Step 7.2 (first sound on dead-set.org) needs a Playwright script that taps the real row. No ticket reached step 7, so it was not built against a real fix. The first S/M/C ticket will need it.
+1. **The lookout dispatches nothing until `TAPE_DESK_GITHUB_TOKEN` exists.** Each report logs "no TAPE_DESK_GITHUB_TOKEN", and the hourly sweep works it.
+2. **The workflow's Claude step stops at "owner action needed"** until `CLAUDE_CODE_OAUTH_TOKEN` exists.
+3. **No held alert was emailed for this run's four tickets.** The reports are on the tickets, and the owner has them in the session. From the next run on, `api.mjs alert` sends them.
+4. **`/songbook/bird-song` still offers "Play all 3 nights"** with all three marked "No tape of it from this night" (#150, out of scope).
+5. **Charlie's cached prose on `/versions/viola-lee-blues` describes a performance that didn't happen.** It's fan-facing copy, so the desk won't touch it.
+6. **The production-play harness for step 7.2 is not built.** No ticket reached it.
+7. **The hourly task's own prompt still says never merge.** Updating it was refused by this session's permissions. The proposed text is in [`hourly-task-prompt.proposed.md`](hourly-task-prompt.proposed.md).
 
 **Decisions that need the owner:**
 
-1. **Merge #156**, then deploy `index-tapes` and apply `20261124010000`. Or allow the desk to merge and publish, which the brief says was decided on Nov 6. This machine's settings refused it.
-2. **Create two credentials.**
+1. **Create two credentials.**
    - `claude setup-token`, then add it as the repository secret `CLAUDE_CODE_OAUTH_TOKEN`.
    - A fine-grained GitHub token, Contents read and write on this repo only, as the Lovable Cloud secret `TAPE_DESK_GITHUB_TOKEN`.
-   - In repository Settings → Actions → General, "Allow GitHub Actions to create and approve pull requests", so the workflow can open a fix PR.
-3. **The four held tickets:** apply the repoints, or say no.
-4. **The pattern fix for class N:** audit `songs.first_played/last_played` against JerryBase. 93 of the 114 no-tape nights are catalog first/last dates.
-5. **Whether Charlie's picks are checked against a setlist source** before a guide saves.
+   - In repository Settings → Actions → General, enable "Allow GitHub Actions to create and approve pull requests".
+2. **Apply, or say no to, the four held tickets' repoints.**
+3. **The class-N pattern fix:** audit `songs.first_played/last_played` against JerryBase. 93 of the 114 no-tape nights are catalog first/last dates.
+4. **Whether Charlie's picks are checked against a setlist source** before a guide saves.
+5. **Paste the proposed hourly-task prompt**, or allow the session to apply it.
+
 
 ## Blast radius, 2026-11-24 (every no_match / no_tape default in tape_index)
 
