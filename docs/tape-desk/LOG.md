@@ -44,6 +44,8 @@ carries on from there.
 
 Out of scope and left as they were: #143 Help on the Way (`wont_play`) and #150 Bird Song Play all (`none_in_setlist`).
 
+**Applied the same evening, on the owner's instruction:** all four repoints (the owner picked 1972-08-27 for #153 and a repoint over No tape exists for #149), plus #150's 1995 night and two nights in the Viola Lee Blues Songbook issue. See [Owner repoints](#owner-repoints-2026-11-24-evening). All five tickets now wait on a tap and Mark fixed.
+
 ## Shipped and verified, 2026-11-24 (the owner said "allow the desk to merge")
 
 | What | Merged | Live, and how it was checked |
@@ -62,7 +64,7 @@ End-to-end checks in production:
 1. ~~The lookout dispatches nothing until `TAPE_DESK_GITHUB_TOKEN` exists.~~ Added 2026-11-24; GitHub accepted the first dispatch at 19:41 (see the end-to-end test below).
 2. ~~The workflow's Claude step stops at "owner action needed" until `CLAUDE_CODE_OAUTH_TOKEN` exists.~~ Added 2026-11-24 19:29; Claude ran on it at 19:50.
 3. ~~No held alert was emailed for this run's four tickets.~~ #153 got its alert at 19:57. The 20:18 hourly sweep dispatched the other three, and each run sent its alert and recorded it on the ticket: #151 and #154 at 20:21, #149 at 20:23. Two sends each, all `sent`.
-4. **`/songbook/bird-song` still offers "Play all 3 nights"** with all three marked "No tape of it from this night" (#150, out of scope).
+4. ~~`/songbook/bird-song` still offers "Play all 3 nights" with all three marked "No tape of it from this night".~~ All three nights repointed 2026-11-24 evening; the live page shows none marked.
 5. **Charlie's cached prose on `/versions/viola-lee-blues` describes a performance that didn't happen.** It's fan-facing copy, so the desk won't touch it.
 6. **The production-play harness for step 7.2 is not built.** No ticket reached it.
 7. ~~The hourly task's own prompt still says never merge.~~ Applied on 2026-11-24 after the owner's yes; the text is in [`hourly-task-prompt.md`](hourly-task-prompt.md).
@@ -73,9 +75,9 @@ End-to-end checks in production:
    - `claude setup-token`, then add it as the repository secret `CLAUDE_CODE_OAUTH_TOKEN`.
    - A fine-grained GitHub token, Contents read and write on this repo only, as the Lovable Cloud secret `TAPE_DESK_GITHUB_TOKEN`.
    - In repository Settings → Actions → General, enable "Allow GitHub Actions to create and approve pull requests".
-2. **Apply, or say no to, the four held tickets' repoints.**
-3. **The class-N pattern fix:** audit `songs.first_played/last_played` against JerryBase. 93 of the 114 no-tape nights are catalog first/last dates.
-4. **Whether Charlie's picks are checked against a setlist source** before a guide saves.
+2. ~~Apply, or say no to, the four held tickets' repoints.~~ Applied 2026-11-24 evening (see Owner repoints below). Mark fixed on each is still the owner's.
+3. **The class-N pattern fix:** audit `songs.first_played/last_played` against JerryBase. 93 of the 114 no-tape nights are catalog first/last dates. The Songbook issues carry the same error: Bird Song had all three nights wrong, and Viola Lee Blues two of five (both fixed). `/songbook/ramble-on-rose` (setlist `704d459b`) has five of its eight nights in the class-N list below, still unfixed: 1974-05-19, 1975-08-13, 1977-05-08, 1989-10-16 and 1991-06-22.
+4. **Whether Charlie's picks are checked against a setlist source** before a guide saves. #149's own guide (setlist `5f1089c6`) still has four more class-N nights from the blast-radius run: 1977-05-08, 1977-09-03, 1990-03-24 and 1993-03-27.
 5. ~~Paste the proposed hourly-task prompt.~~ Done 2026-11-24: the session applied it on the owner's yes.
 
 
@@ -100,6 +102,22 @@ Each leg was driven in production the way a fan's report drives it. The dispatch
 2. **#162: `ubuntu-latest` is now 26.04, and Playwright 1.58 has no WebKit for it.** The first full run (45473465985) died at Install. `tape-desk.yml` and `tapebench.yml` are pinned to `ubuntu-24.04`. TapeBench had not run since Nov 7, so it would have failed the same way.
 3. **#163: a re-run of a held ticket.** Run 45474220086 judged "nothing new", posted nothing and sent no alert. That is right for a repeat, but it means the four tickets held this morning, before the alert template was deployed, would never be alerted. Every alert is now recorded on its ticket (`Owner alerted <time> (held|ready)`), and a held ticket with no such line gets one.
 
+## Owner repoints, 2026-11-24 evening
+
+Night data, no PR: each change is live on dead-set.org the moment it is applied. Every `update` was guarded to the row that still held the old night, and each changed exactly one row. Each new night was checked with `night.ts` (JerryBase and Relisten, the player's own matcher) before or after it was applied, and each live page was read on dead-set.org afterwards. Nobody has tapped them on the live site yet. Each ticket carries the full record and a "Check it" link.
+
+| Ticket | Where | Before → after | The new night |
+|---|---|---|---|
+| #154 | `/songbook/bird-song`, position 1 | 1971-03-24 Winterland Arena → **1971-02-19 Capitol Theatre** ("First time played") | JerryBase played; 4 tapes carry it; `tape_index` playable (8:37); 3 verified plays |
+| #153 | `/songbook/bird-song`, position 2 | 1972-04-08 Wembley Empire Pool → **1972-08-27 Old Renaissance Faire Grounds, Veneta** | JerryBase played; 7 of 7 sources carry it (12:33); not yet in `tape_index` |
+| #150 | `/songbook/bird-song`, position 3 | 1995-07-09 Soldier Field → **1995-06-30 Three Rivers Stadium** ("Last time played"). #150's second `update`, with the venue filled from Relisten | JerryBase played; 8 of 8 sources carry it; `tape_index` playable (12:14) |
+| #151 | `songs.last_played` (`/versions/viola-lee-blues`) | 1970-02-14 → **1970-10-31** | JerryBase played (both shows); 7 tapes carry it; `tape_index` playable (9:46) |
+| #151 | `/songbook/viola-lee-blues`, position 5 | 1970-02-14 Fillmore East → **1970-10-31 Pritchard Gym, S.U.N.Y.** ("Last time played"). Its paragraph about the Valentine's Day '70 run was removed, not rewritten | as above |
+| no ticket | `/songbook/viola-lee-blues`, position 2 | 1967-03-17 → **1967-03-18**, Winterland Arena. No show exists on 1967-03-17 in JerryBase, Relisten or the Archive. Venue and note unchanged | JerryBase played; 4 of 4 sources carry it; `tape_index` playable (13:50) |
+| #149 | Ramble On Rose listening guide `5f1089c6`, position 5 | 1980-10-14 → **1980-10-11 Warfield Theatre**. The note under it still describes the original pick | JerryBase played; 8 of 11 sources carry it; `tape_index` playable (7:10) |
+
+The four held tickets were repointed by a side session; #150's 1995 night and the two Viola Lee Songbook nights by this one. Mark fixed on #149–#154 is the owner's, and the fix note for each card was drafted for the owner to paste.
+
 ## Blast radius, 2026-11-24 (every no_match / no_tape default in tape_index)
 
 `night.ts --keys` over 114 keys:
@@ -123,3 +141,8 @@ The 110 class-N keys: 1966-07-03 Aint It Crazy (The Rub) · 1966-07-03 Caution (
 - 2026-11-24 20:21 · #151 Viola Lee Blues 1970-02-14 · no_tape · class N · HELD (catalog date) · hourly sweep, run 45479656318; nothing new, the owed held alert sent and recorded on the ticket
 - 2026-11-24 20:21 · #154 Bird Song 1971-03-24 · not_on_tape · class N · HELD (night data) · hourly sweep, run 45479661830; nothing new, the owed held alert sent and recorded on the ticket
 - 2026-11-24 20:23 · #149 Ramble On Rose 1980-10-14 · not_on_tape · class N · HELD (a fan's guide) · hourly sweep, run 45479650449; nothing new, the owed held alert sent and recorded on the ticket
+- 2026-11-24 22:25 · #154 Bird Song 1971-03-24 · not_on_tape · class N · HELD (repointed, waiting on Mark fixed) · slot 1 → 1971-02-19 Capitol Theatre; night played, tape_index playable, 3 verified plays
+- 2026-11-24 22:25 · #153 Bird Song 1972-04-08 · not_on_tape · class N · HELD (repointed, waiting on Mark fixed) · slot 2 → 1972-08-27 Veneta; night played, 7/7 sources carry it, not yet indexed
+- 2026-11-24 22:25 · #150 Bird Song (Play all) · none_in_setlist · class N · HELD (repointed, waiting on Mark fixed) · all 3 nights on catalog/owner dates; 1995-06-30 played, 8/8 sources, tape_index playable
+- 2026-11-24 22:25 · #151 Viola Lee Blues 1970-02-14 · no_tape · class N · HELD (repointed, waiting on Mark fixed) · last_played and Songbook pos 5 → 1970-10-31 (7 tapes, indexed); Songbook pos 2 1967-03-17 → 1967-03-18 (no show on the 17th)
+- 2026-11-24 22:25 · #149 Ramble On Rose 1980-10-14 · not_on_tape · class N · HELD (repointed, waiting on Mark fixed) · pos 5 → 1980-10-11 Warfield; night played, 8/11 sources, tape_index playable
