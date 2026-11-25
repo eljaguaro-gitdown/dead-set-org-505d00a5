@@ -1,6 +1,6 @@
 # Catalog first/last-played audit, 2026-11-25
 
-Decision 3 in [LOG.md](LOG.md): check `songs.first_played` / `songs.last_played` against the setlists, because most of the "no tape" nights the desk found were catalog first/last dates that were never performances. Read-only so far: **nothing in the catalog has been changed by this audit.** (Ripple was changed the day before, on the owner's instruction, and now agrees with both sources.)
+Decision 3 in [LOG.md](LOG.md): check `songs.first_played` / `songs.last_played` against the setlists, because most of the "no tape" nights the desk found were catalog first/last dates that were never performances. The audit itself was read-only. **Sets A and C1 were applied the same day, on the owner's instruction, except Katie Mae and Little Star.** See "Catalog fixes applied, 2026-11-25" in LOG.md. The tables below show the catalog as it was before that. (Ripple was changed the day before and agrees with both sources.)
 
 ## What was checked
 
