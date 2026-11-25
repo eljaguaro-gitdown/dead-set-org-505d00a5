@@ -51,6 +51,62 @@ function tokens(s: string): string[] {
 }
 
 /**
+ * The words a title is identified by: its tokens, less stop words, with every
+ * word kept as often as it occurs, and a run of single letters kept as one
+ * initialism ("u s" → "us", "c c" → "cc", "l a" → "la").
+ *
+ * This used to be a Set with single letters dropped, and that threw away the
+ * very part some titles are known by. "U.S. Blues" came out as just {blues},
+ * so every "... Blues" track carried "every significant word of the song":
+ * Cumberland, Mexicali, Minglewood, Big Railroad, Viola Lee. "C.C. Rider"
+ * came out as {rider}, so it took "I Know You Rider". "Around and Around"
+ * came out as {around}, so it took "I've Been All Around This World". Each
+ * of those let the player play another song under the song's name.
+ */
+function significant(s: string): string[] {
+  const out: string[] = [];
+  let letters = "";
+  for (const t of tokens(s)) {
+    if (t.length === 1) { letters += t; continue; }
+    if (letters.length > 1) out.push(letters);
+    letters = "";
+    out.push(t);
+  }
+  if (letters.length > 1) out.push(letters);
+  return out.filter((t) => !STOP_WORDS.has(t));
+}
+
+/** How many of `a`'s words `b` also has, each word of `b` used at most once. */
+function sharedCount(a: string[], b: string[]): number {
+  const left = new Map<string, number>();
+  for (const t of b) left.set(t, (left.get(t) ?? 0) + 1);
+  let n = 0;
+  for (const t of a) {
+    const k = left.get(t) ?? 0;
+    if (k > 0) { n++; left.set(t, k - 1); }
+  }
+  return n;
+}
+
+/**
+ * Songs whose whole title is one word that other songs' titles also use.
+ * The band covered the Beatles' "Rain" from 1992 to 1995, and "rain" is also
+ * a word of Box of Rain, Cold Rain and Snow, Looks Like Rain, Mission in the
+ * Rain and Samba in the Rain (and sits inside "Train"). For these titles the
+ * word alone is not evidence of either song:
+ *   - a track titled with the bare word is that song, never a short form of a
+ *     longer title ("Rain" on 1995-06-30 is the Beatles song, not Mission in
+ *     the Rain);
+ *   - the song is found only where the track begins with the word or is it
+ *     ("Rain >", "E: Rain"), never inside a longer title ("Box of Rain").
+ * Tapers do shorten a song to one word of its own ("Stranger", "Bucket",
+ * "Roses", "Rooster", "China > Rider", "Lovelight"), and those still match:
+ * nothing about the title alone tells "Roses" from "Rain", which is why this
+ * is a list and not a rule.
+ */
+const BARE_WORD_SONGS = new Set(["rain"]);
+
+/**
  * Score one title against one song, with no medley handling — see matchScore.
  *
  * Strict by design: short substring overlaps that previously caused
@@ -64,24 +120,31 @@ function scoreTitlePair(trackTitle: string, songTitle: string): number {
 
   // Whole-string matches (ignoring spacing/punctuation).
   if (ct === cs) return 100;
-  if (cs.length >= 4 && ct.includes(cs)) return 90;
-  if (ct.length >= 4 && cs.includes(ct)) return 85;
+  const bareSong = BARE_WORD_SONGS.has(cs);
+  if (bareSong) {
+    // The first real word, past taper furniture: "E:", "Encore:",
+    // "GD1995-03-18 17.", "Disc03,Track05". "Rain (Beatles)" opens with the
+    // song; "Box of Rain" and "Mystery Train" do not.
+    const words = normalize(trackTitle)
+      .split(" ")
+      .filter((w) => w.length > 1 && !/\d/.test(w) && w !== "encore");
+    if (words[0] === cs) return 90;
+  } else if (cs.length >= 4 && ct.includes(cs)) return 90;
+  if (ct.length >= 4 && cs.includes(ct) && !BARE_WORD_SONGS.has(ct)) return 85;
 
   // Significant-word overlap with strict equality (no substring fuzz).
-  const trackTok = tokens(trackTitle).filter((t) => t.length > 1);
-  const songTok = tokens(songTitle).filter((t) => t.length > 1);
-  const trackSig = new Set(trackTok.filter((t) => !STOP_WORDS.has(t)));
-  const songSig = new Set(songTok.filter((t) => !STOP_WORDS.has(t)));
-  if (trackSig.size === 0 || songSig.size === 0) return 0;
+  const trackSig = significant(trackTitle);
+  const songSig = significant(songTitle);
+  if (trackSig.length === 0 || songSig.length === 0) return 0;
 
-  const overlap = [...songSig].filter((t) => trackSig.has(t)).length;
+  const overlap = sharedCount(songSig, trackSig);
 
-  // Same significant-word set — different ordering / fillers.
-  if (overlap === songSig.size && overlap === trackSig.size) return 95;
+  // Same significant words — different ordering / fillers.
+  if (overlap === songSig.length && overlap === trackSig.length) return 95;
   // Track contains every significant word of the song (song is a prefix/short form).
-  if (overlap === songSig.size) return 80;
+  if (overlap === songSig.length && !bareSong) return 80;
   // Song contains every significant word of the track (e.g. archive used short title).
-  if (overlap === trackSig.size && overlap >= 2) return 70;
+  if (overlap === trackSig.length && overlap >= 2) return 70;
 
   return 0;
 }
