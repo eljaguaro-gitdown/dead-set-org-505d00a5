@@ -76,7 +76,7 @@ End-to-end checks in production:
    - A fine-grained GitHub token, Contents read and write on this repo only, as the Lovable Cloud secret `TAPE_DESK_GITHUB_TOKEN`.
    - In repository Settings → Actions → General, enable "Allow GitHub Actions to create and approve pull requests".
 2. ~~Apply, or say no to, the four held tickets' repoints.~~ Applied 2026-11-24 evening (see Owner repoints below). Mark fixed on each is still the owner's.
-3. **The class-N pattern fix:** audit `songs.first_played/last_played` against JerryBase. 93 of the 114 no-tape nights are catalog first/last dates. The Songbook issues carry the same error: Bird Song had all three nights wrong, Viola Lee Blues two of five, and Ramble On Rose five of eight (all fixed, see Owner repoints). All ten issues have now been checked (Songbook audit below); 14 more nights are fixed, and Ripple's "Last time played" night waits on this decision.
+3. **The class-N pattern fix:** audit `songs.first_played/last_played` against JerryBase. 93 of the 114 no-tape nights are catalog first/last dates. The Songbook issues carry the same error: Bird Song had all three nights wrong, Viola Lee Blues two of five, and Ramble On Rose five of eight (all fixed, see Owner repoints). All ten issues have now been checked (Songbook audit below); 14 more nights are fixed. Ripple's guide now ends on 1988-09-03 (the owner removes its 1990-07-14 row), but the song's catalog `last_played` still says 1989-09-27 and waits on this audit.
 4. **Whether Charlie's picks are checked against a setlist source** before a guide saves. #149's own guide (setlist `5f1089c6`) still has four more class-N nights from the blast-radius run: 1977-05-08, 1977-09-03, 1990-03-24 and 1993-03-27.
 5. ~~Paste the proposed hourly-task prompt.~~ Done 2026-11-24: the session applied it on the owner's yes.
 
@@ -155,7 +155,13 @@ Both curated issues and the three issues fixed earlier are clean. The 15 are all
 | Stella Blue | 1988-09-03 → **1988-09-02** Capital Centre | 11 of 11 |
 | Stella Blue | 1994-10-14 → **1994-10-10** USAir Arena | 10 of 10 |
 
-**Left for the owner: Ripple's "Last time played • 1990-07-14".** Ripple wasn't played that night. The catalog says 1989-09-27 (Warfield): one tape of the night has a track titled Ripple, but JerryBase and Relisten's setlist don't list it. Relisten's last Ripple is 1988-09-03, which is already in the issue. Settle the real last date first (decision 3).
+~~**Left for the owner: Ripple's "Last time played • 1990-07-14".**~~ Ripple wasn't played that night. The catalog says 1989-09-27 (Warfield): one tape of the night has a track titled Ripple, but JerryBase and Relisten's setlist don't list it. Relisten's last Ripple is 1988-09-03, which is already in the issue.
+
+**Settled 2026-11-25 (UTC):** the owner chose 1988-09-03 as the guide's last night. That night was already no. 5 of setlist `3c056ed0`, so moving no. 6 there would have listed it twice. Instead, on the owner's instruction:
+
+- **No. 5** (slot `1f7e77b5`) is now labelled "Last time played • 1988-09-03 — Capital Centre", and its note is unchanged. Its stored tape `gd1988-09-03.sbd.walker-scotton.81661.sbeok.flac16` doesn't exist on the Archive (the metadata call returns `{}`), so it now points at `gd88-09-03.sbd.miller.27749.sbeok.flacf`, which `tape_index` has as playable (`gd88-09-03d2t12.mp3`, 5:13). The update was guarded to the old url and label, returned `old_notes`, and changed one row. Night check (`night.ts`, 2026-11-25 01:28 UTC): JerryBase played (`19880903-01`), Relisten's venue is Capital Centre, and 17 tapes of the night carry the song.
+- **No. 6** (slot `0278c921`, 1990-07-14 Foxboro) is the owner's to remove in the builder, because the desk doesn't delete rows. Until then the live page shows two "Last time played" nights, and the lifespan line still reads "Fillmore West to Foxboro Stadium". The desk didn't touch the row, so its note is still in the database and goes when the row does. The note is Charlie's farewell paragraph for a night Ripple wasn't played.
+- The page's "Last played (LTP) Sep 27, 1989" comes from `songs.last_played`, not from the guide, so it still says 1989-09-27. That is the catalog audit (decision 3).
 
 **Two things this run got wrong, to bank:**
 
