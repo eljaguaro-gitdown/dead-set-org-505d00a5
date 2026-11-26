@@ -83,3 +83,30 @@ describe("a community entry is reachable as an issue", () => {
     expect(article).toMatch(/dead-set\.org\/songbook\/\$\{issue\.slug\}/);
   });
 });
+
+describe("whose words a community night's note is", () => {
+  it("credits Charlie with the blob's note, and the row's author with the free text", async () => {
+    const { nightFromSlot } = await import("@/lib/communityIssue");
+    const { decodeArchiveNotes } = await import("@/hooks/useSetlist");
+    const blob = (note?: string) =>
+      JSON.stringify({ __archive: true, show_date: "1977-05-11", venue: "St. Paul Civic Center", archive_org_url: null, rating: null, note });
+
+    const fromBlob = nightFromSlot(1, decodeArchiveNotes("a", "s", `${blob("Patient and sure.")}\n`), "member");
+    expect(fromBlob.noteBy).toBe("charlie");
+
+    const charlieText = nightFromSlot(2, decodeArchiveNotes("b", "s", `${blob()}\n1977-05-11 — St. Paul Civic Center • Patient and sure.`), "charlie");
+    expect(charlieText.noteBy).toBe("charlie");
+
+    const member = nightFromSlot(3, decodeArchiveNotes("c", "s", `${blob()}\nMy first show.`), "member");
+    expect(member.noteBy).toBe("member");
+
+    const legacy = nightFromSlot(4, decodeArchiveNotes("d", "s", `${blob()}\nSomething.`));
+    expect(legacy.noteBy).toBeNull();
+
+    // A note that is only a restatement of its own night strips to nothing,
+    // and nothing has no author.
+    const bare = nightFromSlot(5, decodeArchiveNotes("e", "s", `${blob()}\nFirst time played: 1977-05-11 — St. Paul Civic Center`), "charlie");
+    expect(bare.note).toBe("");
+    expect(bare.noteBy).toBeNull();
+  });
+});

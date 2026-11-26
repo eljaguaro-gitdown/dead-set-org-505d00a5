@@ -18,6 +18,7 @@ import {
   communityShareText,
   type CommunityIssue,
 } from "@/lib/communityIssue";
+import CharlieCredit from "@/components/CharlieCredit";
 
 /**
  * A Songbook issue the community wrote, presented as the editorial issues are.
@@ -380,6 +381,7 @@ const CommunityIssueArticle = ({ issue }: { issue: CommunityIssue }) => {
                 {night.note && (
                   <p className="font-body text-[15px] leading-[1.7] text-card-foreground/85 mt-1 ml-[38px] max-w-[66ch]">
                     {night.note}
+                    {night.noteBy === "charlie" && <CharlieCredit />}
                   </p>
                 )}
               </li>

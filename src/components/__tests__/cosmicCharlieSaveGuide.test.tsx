@@ -16,6 +16,8 @@ import { render, screen, fireEvent, waitFor, act } from "@testing-library/react"
 import { createElement, forwardRef, Fragment, type ReactNode } from "react";
 
 const deferreds: Array<(v: unknown) => void> = [];
+/** What check-nights answers. Empty: no verdicts, every pick stays. */
+let checkNightsResults: Array<{ date: string; verdict: string }> = [];
 const findRecordingForDate = vi.fn(
   () => new Promise((resolve) => { deferreds.push(resolve); }),
 );
@@ -55,7 +57,12 @@ vi.mock("@/integrations/supabase/client", () => ({
         order: async () => ({ data: table === "songs" ? [SONG] : [], error: null }),
       }),
     }),
-    functions: { invoke: async () => ({ data: EXPLORE_RESULT, error: null }) },
+    functions: {
+      invoke: async (name: string) =>
+        name === "check-nights"
+          ? { data: { results: checkNightsResults }, error: null }
+          : { data: EXPLORE_RESULT, error: null },
+    },
   },
 }));
 
@@ -113,6 +120,7 @@ describe("Save as Listening Guide", () => {
   beforeEach(() => {
     deferreds.length = 0;
     findRecordingForDate.mockClear();
+    checkNightsResults = [];
   });
 
   it("is disabled while the first/last-played lookups are still running", async () => {
@@ -133,11 +141,37 @@ describe("Save as Listening Guide", () => {
     await waitFor(() => expect(save).toBeEnabled());
 
     fireEvent.click(save);
-    expect(onCreate).toHaveBeenCalledTimes(1);
+    // The save waits on the setlist check now (src/lib/checkNights.ts).
+    await waitFor(() => expect(onCreate).toHaveBeenCalledTimes(1));
     const songs = onCreate.mock.calls[0][0].sets[0].songs;
     // FTP + Charlie's two nights + LTP. Saved during the lookup, this was 2.
     expect(songs).toHaveLength(4);
     expect(songs[0].notes).toContain("First time played");
     expect(songs[3].notes).toContain("Last time played");
+    // Whose words each row is: the bookends are the site's labels, the picks
+    // are Charlie's reasons and carry his credit.
+    expect(songs.map((s: { notesBy: string }) => s.notesBy)).toEqual(["dead_set", "charlie", "charlie", "dead_set"]);
+  });
+
+  it("leaves out a pick both setlist records rule out", async () => {
+    // Ramble On Rose wasn't played at Cornell (the desk's #149 class N).
+    checkNightsResults = [
+      { date: "1972-05-26", verdict: "played" },
+      { date: "1977-05-08", verdict: "not_played" },
+    ];
+    const onCreate = vi.fn();
+    const save = await openExplorerResult(onCreate);
+    await waitFor(() => expect(deferreds).toHaveLength(2));
+    await act(async () => {
+      deferreds.forEach((resolve) => resolve(null));
+    });
+    await waitFor(() => expect(save).toBeEnabled());
+
+    fireEvent.click(save);
+    await waitFor(() => expect(onCreate).toHaveBeenCalledTimes(1));
+    const songs = onCreate.mock.calls[0][0].sets[0].songs;
+    expect(songs).toHaveLength(3);
+    expect(songs.some((s: { notes: string }) => s.notes.includes("1977-05-08"))).toBe(false);
+    expect(songs.some((s: { notes: string }) => s.notes.includes("1972-05-26"))).toBe(true);
   });
 });

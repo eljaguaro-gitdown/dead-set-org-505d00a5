@@ -11,6 +11,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import { descriptionBy } from "@/lib/charlieCredit";
 
 interface ShareDialogProps {
   open: boolean;
@@ -63,6 +64,7 @@ const ShareDialog = ({ open, onOpenChange, shareLink, creatorName, setlistTitle,
     url: shareLink,
     senderName: creatorName,
     oneLiner: getOneLiner(),
+    oneLinerBy: descriptionBy(description),
   });
 
   const handleShare = async () => {

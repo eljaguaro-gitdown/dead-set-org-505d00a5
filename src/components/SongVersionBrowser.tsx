@@ -35,6 +35,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { SYNTHETIC_VERSION_DEFAULTS } from "@/lib/syntheticVersion";
+import CharlieCredit from "@/components/CharlieCredit";
 
 type Song = Database["public"]["Tables"]["songs"]["Row"];
 type NotableVersion = Database["public"]["Tables"]["notable_versions"]["Row"];
@@ -606,7 +607,7 @@ function CuratedVersionCard({
       </div>
       <p className="text-xs text-foreground/75 font-body mt-0.5">{v.venue}{v.city ? `, ${v.city}` : ""}</p>
       {v.description && (
-        <p className="text-xs text-foreground/60 font-body mt-0.5 italic">{v.description}</p>
+        <p className="text-xs text-foreground/60 font-body mt-0.5 italic">{v.description}<CharlieCredit insideButton /></p>
       )}
     </button>
   );
@@ -707,7 +708,7 @@ function ArchiveVersionCard({
         <p className="text-xs text-card-foreground font-body mt-0.5">{gemReason}</p>
       )}
       {description && (
-        <p className="text-xs text-accent-foreground font-body mt-1 italic">"{description}"</p>
+        <p className="text-xs text-accent-foreground font-body mt-1 italic">"{description}"<CharlieCredit insideButton /></p>
       )}
     </button>
   );

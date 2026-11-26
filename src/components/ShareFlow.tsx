@@ -9,6 +9,7 @@ import { shareSetlistCopy } from "@/lib/shareCopy";
 import { shareToInstagram } from "@/lib/instagramShare";
 import SendToFriendDialog from "./SendToFriendDialog";
 import { useAuth } from "@/hooks/useAuth";
+import { descriptionBy } from "@/lib/charlieCredit";
 
 interface ShareFlowProps {
   open: boolean;
@@ -55,6 +56,7 @@ const ShareFlow = ({
     url: shareUrl,
     songCount,
     oneLiner,
+    oneLinerBy: descriptionBy(description),
   });
 
   const handleImageReady = useCallback((dataUrl: string) => {

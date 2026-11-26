@@ -4,6 +4,9 @@ import {
   normalizeWindow,
   windowLabel,
 } from "../../../supabase/functions/describe-versions/prompt";
+import { CHARLIE_NO_INVENTION } from "../../../supabase/functions/_shared/charlieRules";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 
 /**
  * The prompt is the only part of the edge function reachable from this suite,
@@ -109,5 +112,25 @@ describe("buildDescribePrompt", () => {
     const prompt = buildDescribePrompt("Crazy Fingers", [{ date: "1974-06-18" }], null);
 
     expect(prompt).toContain("1. 1974-06-18 — Unknown venue (rating: N/A)");
+  });
+});
+
+describe("the notes stick to the record", () => {
+  it("no longer tells Charlie to fill a gap by inference", () => {
+    const prompt = buildDescribePrompt("Ramble On Rose", VERSIONS, null);
+    expect(prompt).not.toMatch(/infer from the era and venue/i);
+  });
+
+  it("carries the no-invention rule every Charlie prompt shares", () => {
+    const prompt = buildDescribePrompt("Ramble On Rose", VERSIONS, { start: 1974, end: 1976 });
+    expect(prompt).toContain(CHARLIE_NO_INVENTION);
+  });
+
+  it("the other two prompts carry it too", () => {
+    for (const f of ["generate-setlist-description/index.ts", "ai-deadhead/index.ts"]) {
+      const src = readFileSync(join(__dirname, "../../../supabase/functions", f), "utf8");
+      expect(src, f).toContain('from "../_shared/charlieRules.ts"');
+      expect(src, f).toContain("${CHARLIE_NO_INVENTION}");
+    }
   });
 });

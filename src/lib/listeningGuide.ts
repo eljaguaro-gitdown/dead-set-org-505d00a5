@@ -3,9 +3,11 @@ import { SYNTHETIC_VERSION_DEFAULTS } from "@/lib/syntheticVersion";
 import type { Database } from "@/integrations/supabase/types";
 import {
   MILESTONE_LABEL,
+  findMilestoneInList,
   milestoneNote,
   type MilestoneEntry,
 } from "@/lib/firstLastPlayed";
+import type { NotesBy } from "@/lib/charlieCredit";
 
 type Song = Database["public"]["Tables"]["songs"]["Row"];
 
@@ -37,6 +39,8 @@ export interface GuideSong {
   matched: boolean;
   segueToNext: boolean;
   notes: string;
+  /** Whose words the slot's prose is (src/lib/charlieCredit.ts). */
+  notesBy: NotesBy | null;
   position: number;
 }
 
@@ -91,6 +95,8 @@ const milestoneGuideSong = (m: MilestoneEntry, songId: string, songTitle: string
   matched: true,
   segueToNext: false,
   notes: guideNotes(m.date, m.venue, m.archiveUrl, null, milestoneNote(m)),
+  // "First time played: 1971-02-19 — Capitol Theatre" is the site's label.
+  notesBy: "dead_set",
   position: 0,
 });
 
@@ -99,12 +105,17 @@ const milestoneGuideSong = (m: MilestoneEntry, songId: string, songTitle: string
  * Charlie's picks run through the middle, the night it was retired closes it.
  * A milestone Charlie already picked stays where he put it and is labelled
  * there rather than printed twice.
+ *
+ * `reasonsBy` is whose words each pick's `whyThisVersion` is: Charlie's by
+ * default, the site's when the version picker saves a voted song, whose
+ * reasons are the curated blurbs.
  */
 export const buildGuideSongs = (
   songId: string,
   songTitle: string,
   versions: GuideVersion[],
   milestones: MilestoneEntry[],
+  reasonsBy: NotesBy = "charlie",
 ): GuideSong[] => {
   const standalone = milestones.filter((m) => m.listIndex === null);
   const ftp = standalone.find((m) => m.kind === "ftp");
@@ -126,6 +137,7 @@ export const buildGuideSongs = (
       matched: true,
       segueToNext: false,
       notes: guideNotes(v.showDate, v.venue, v.archiveUrl, v.rating, prose),
+      notesBy: v.whyThisVersion ? reasonsBy : "dead_set",
       position: 0,
     };
   });
@@ -136,3 +148,24 @@ export const buildGuideSongs = (
     ...(ltp ? [milestoneGuideSong(ltp, songId, songTitle)] : []),
   ].map((song, i) => ({ ...song, position: i + 1 }));
 };
+
+/**
+ * Re-point milestones at a shortened pick list.
+ *
+ * A milestone's `listIndex` is a position in the list it was built against.
+ * When picks are dropped before saving (checkNights), positions shift, and
+ * buildGuideSongs would print "First time played" on whichever pick slid into
+ * the old slot. Matching by date again keeps the label on its own night; a
+ * milestone whose night was dropped becomes a standalone row.
+ */
+export const reindexMilestones = (
+  milestones: MilestoneEntry[],
+  versions: { showDate: string }[],
+): MilestoneEntry[] =>
+  milestones.map((m) => {
+    if (m.listIndex === null) return m;
+    const listIndex = findMilestoneInList(m.date, versions);
+    return listIndex === null
+      ? { ...m, listIndex: null, source: m.tapeFound ? "archive" : "none" }
+      : { ...m, listIndex };
+  });

@@ -28,6 +28,9 @@ import { findNight } from "@/lib/tapeIndex";
 import type { Database } from "@/integrations/supabase/types";
 import { SYNTHETIC_VERSION_DEFAULTS } from "@/lib/syntheticVersion";
 
+import { descriptionBy, type NotesBy } from "@/lib/charlieCredit";
+import CharlieCredit from "@/components/CharlieCredit";
+
 type Song = Database["public"]["Tables"]["songs"]["Row"];
 
 /**
@@ -65,6 +68,11 @@ export interface SetlistSlotData {
   position: number;
   segueToNext: boolean;
   notes: string;
+  /**
+   * Whose words are in `notes` (src/lib/charlieCredit.ts). Charlie's get his
+   * credit; a member's edit makes them the member's. Absent means unknown.
+   */
+  notesBy?: NotesBy | null;
 }
 
 interface SetlistDisplayProps {
@@ -332,9 +340,18 @@ const SortableSlotItem = ({
                 title="Why this version"
               >
                 {slot.version.description}
+                <CharlieCredit />
               </p>
             )}
             <SlotNotes value={slot.notes} onChange={(notes) => onUpdateNotes(slot.id, notes)} />
+            {slot.notesBy === "charlie" && slot.notes.trim() && (
+              <p
+                className="mt-0.5 text-right text-muted-foreground"
+                title="Charlie wrote this note. Edit it and it's yours."
+              >
+                <CharlieCredit />
+              </p>
+            )}
           </div>
         </div>
       </div>
@@ -424,6 +441,7 @@ const SetSection = ({
 /* ── Collapsible description ── */
 const DescriptionCollapsible = ({ description, defaultOpen = true }: { description: string; defaultOpen?: boolean }) => {
   const [open, setOpen] = useState(defaultOpen);
+  const byCharlie = descriptionBy(description) === "charlie";
   return (
     <div>
       <button
@@ -431,7 +449,7 @@ const DescriptionCollapsible = ({ description, defaultOpen = true }: { descripti
         className="flex items-center gap-1.5 text-xs font-body text-dead-gold hover:text-dead-gold/80 transition-colors py-1"
       >
         <Sparkles className="w-3 h-3" />
-        <span>Charlie's Liner Notes</span>
+        <span>{byCharlie ? "Charlie's Liner Notes" : "Liner Notes"}</span>
         <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
       </button>
       <motion.div
@@ -442,6 +460,7 @@ const DescriptionCollapsible = ({ description, defaultOpen = true }: { descripti
       >
         <p className="text-sm font-body text-foreground/75 italic leading-relaxed px-1 py-2 border-l-2 border-primary/40 pl-3">
           {description}
+          {byCharlie && <CharlieCredit />}
         </p>
       </motion.div>
     </div>

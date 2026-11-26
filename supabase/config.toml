@@ -5,6 +5,8 @@ project_id = "dplrumaqrdnzwzqmatqr"
     verify_jwt = false
   [functions.ai-deadhead]
     verify_jwt = false
+  [functions.check-nights]
+    verify_jwt = false
   [functions.auth-email-hook]
     verify_jwt = false
   [functions.process-email-queue]

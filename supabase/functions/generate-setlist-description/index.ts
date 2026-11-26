@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import { CHARLIE_NO_INVENTION } from "../_shared/charlieRules.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -123,7 +124,11 @@ Consider:
 - Any surprising or unconventional picks
 
 DO NOT use clichés like "long strange trip" or "what a long strange trip." Be fresh. Be specific to THIS setlist.
-KEEP IT TO 1-2 SENTENCES MAX. Punchy and evocative.`;
+KEEP IT TO 1-2 SENTENCES MAX. Punchy and evocative.
+
+This is a setlist a fan built, not a night the band played, unless its title names a real show. Don't claim it was played, and don't give it a date, a venue or a story it doesn't have.
+
+${CHARLIE_NO_INVENTION}`;
 
     const userPrompt = `Here's the setlist:
 Title: "${setlist.title}"

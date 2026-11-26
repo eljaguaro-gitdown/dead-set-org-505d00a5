@@ -31,7 +31,8 @@ import { useAuth } from "@/hooks/useAuth";
 // used to keep its own copy, and when the slot-notes blob gained Charlie's
 // per-version note the copy was not updated — so a guest who picked a version
 // and then signed in saved the slot without its note.
-import { decodeArchiveNotes, encodeArchiveNotes, useSetlist } from "@/hooks/useSetlist";
+import { decodeArchiveNotes, encodeArchiveNotes, readNotesBy, slotNotesBy, slotNotesColumns, useSetlist } from "@/hooks/useSetlist";
+import { suggestedNotesBy, type NotesBy } from "@/lib/charlieCredit";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 import { emitCommunityFeedOptimisticInsert } from "@/lib/communityFeedEvents";
@@ -323,6 +324,7 @@ const Builder = () => {
               position: s.position,
               segueToNext: s.segueToNext || false,
               notes,
+              notesBy: readNotesBy(s.notesBy),
             };
           })
           .filter(Boolean) as SetlistSlotData[];
@@ -349,6 +351,7 @@ const Builder = () => {
         // Encoded, not s.notes: plain prose would drop the slot's recording
         // across the OAuth redirect. Both restore sites decode it.
         notes: encodeArchiveNotes(s),
+        notesBy: slotNotesBy(s),
       })),
     };
     sessionStorage.setItem("deadset-guest-cache", JSON.stringify(payload));
@@ -486,7 +489,7 @@ const Builder = () => {
   const handleUpdateNotes = useCallback((id: string, notes: string) => {
     if (isGuestMode) {
       setGuestSlots((prev) =>
-        prev.map((s) => (s.id === id ? { ...s, notes } : s))
+        prev.map((s) => (s.id === id ? { ...s, notes, notesBy: "member" } : s))
       );
     } else {
       updateSlot(id, { notes });
@@ -582,6 +585,7 @@ const Builder = () => {
                 position: s.position,
                 segueToNext: s.segueToNext || false,
                 notes,
+                notesBy: readNotesBy(s.notesBy),
               };
             })
             .filter(Boolean) as SetlistSlotData[];
@@ -628,7 +632,7 @@ const Builder = () => {
         song_id: slot.song.id,
         notable_version_id: slot.version?.id?.startsWith("archive-") ? null : slot.version?.id || null,
         added_by_user_id: user.id,
-        notes: encodeArchiveNotes(slot),
+        ...slotNotesColumns(slot),
         segue_to_next: slot.segueToNext,
       }));
 
@@ -657,7 +661,7 @@ const Builder = () => {
   }, [user, navigate, songs]);
 
   const handleApplySuggestion = useCallback(
-    async (suggestion: { setlist_name?: string; explanation: string; sets: { setNumber: number; songs: { songId: string; title: string; segueToNext: boolean; notes: string; position: number }[] }[] }) => {
+    async (suggestion: { setlist_name?: string; explanation: string; sets: { setNumber: number; songs: { songId: string; title: string; segueToNext: boolean; notes: string; notesBy?: NotesBy | null; position: number }[] }[] }) => {
       const newTitle = suggestion.setlist_name?.trim() || title;
       setTitle(newTitle);
       if (suggestion.explanation) setDescription(suggestion.explanation);
@@ -676,6 +680,7 @@ const Builder = () => {
               position: suggestedSong.position,
               segueToNext: suggestedSong.segueToNext,
               notes: suggestedSong.notes || "",
+              notesBy: suggestedNotesBy(suggestedSong),
             });
           }
         }
@@ -701,7 +706,7 @@ const Builder = () => {
   );
 
   const handleCreateNewFromCharlie = useCallback(
-    async (suggestion: { setlist_name?: string; explanation: string; sets: { setNumber: number; songs: { songId: string; title: string; segueToNext: boolean; notes: string; position: number }[] }[] }, customTitle?: string, songbookSongId?: string) => {
+    async (suggestion: { setlist_name?: string; explanation: string; sets: { setNumber: number; songs: { songId: string; title: string; segueToNext: boolean; notes: string; notesBy?: NotesBy | null; position: number }[] }[] }, customTitle?: string, songbookSongId?: string) => {
       // Build the slot list ONCE so guest + auth flows share the same data and we
       // can hydrate local state immediately (avoids the post-navigate empty-render bug).
       const builtSlots: SetlistSlotData[] = [];
@@ -729,6 +734,7 @@ const Builder = () => {
             position: suggestedSong.position,
             segueToNext: suggestedSong.segueToNext,
             notes: decoded.notes,
+            notesBy: suggestedNotesBy(suggestedSong),
           });
         }
       }
@@ -809,7 +815,7 @@ const Builder = () => {
   );
 
   const addSongsToCurrentSetlist = useCallback(
-    async (suggestion: { sets: { setNumber: number; songs: { songId: string; title: string; segueToNext: boolean; notes: string; position: number }[] }[] }, targetSetlistId?: string) => {
+    async (suggestion: { sets: { setNumber: number; songs: { songId: string; title: string; segueToNext: boolean; notes: string; notesBy?: NotesBy | null; position: number }[] }[] }, targetSetlistId?: string) => {
       for (const set of suggestion.sets) {
         for (const suggestedSong of set.songs) {
           const song = songs.find((s) => s.id === suggestedSong.songId);
@@ -822,6 +828,7 @@ const Builder = () => {
             position: suggestedSong.position,
             segueToNext: suggestedSong.segueToNext,
             notes: suggestedSong.notes || "",
+            notesBy: suggestedNotesBy(suggestedSong),
           };
           await addSlot(newSlot, targetSetlistId);
         }
@@ -831,7 +838,7 @@ const Builder = () => {
   );
 
   const addSongsToSetlist = useCallback(
-    async (suggestion: { sets: { setNumber: number; songs: { songId: string; title: string; segueToNext: boolean; notes: string; position: number }[] }[] }, targetSetlistId: string) => {
+    async (suggestion: { sets: { setNumber: number; songs: { songId: string; title: string; segueToNext: boolean; notes: string; notesBy?: NotesBy | null; position: number }[] }[] }, targetSetlistId: string) => {
       for (const set of suggestion.sets) {
         for (const suggestedSong of set.songs) {
           const song = songs.find((s) => s.id === suggestedSong.songId);
@@ -844,6 +851,7 @@ const Builder = () => {
             song_id: song.id,
             added_by_user_id: user.id,
             notes: suggestedSong.notes || "",
+            notes_by: suggestedNotesBy(suggestedSong),
             segue_to_next: suggestedSong.segueToNext,
           });
         }
@@ -882,6 +890,7 @@ const Builder = () => {
           position: s.position,
           segueToNext: s.segueToNext,
           notes: s.sourceDate ? `From ${s.sourceDate}${s.sourceVenue ? ` · ${s.sourceVenue}` : ""}` : "",
+          notesBy: s.sourceDate ? "dead_set" : null,
         };
       });
 
@@ -921,7 +930,7 @@ const Builder = () => {
           song_id: slot.song.id,
           notable_version_id: null,
           added_by_user_id: user.id,
-          notes: encodeArchiveNotes(slot),
+          ...slotNotesColumns(slot),
           segue_to_next: slot.segueToNext,
         }));
         if (rows.length > 0) {
@@ -948,7 +957,7 @@ const Builder = () => {
           song_id: slot.song.id,
           notable_version_id: null,
           added_by_user_id: user.id,
-          notes: encodeArchiveNotes(slot),
+          ...slotNotesColumns(slot),
           segue_to_next: slot.segueToNext,
         }));
         if (rows.length > 0) {
@@ -1024,7 +1033,7 @@ const Builder = () => {
 
   // Handle AI welcome overlay generation
   const handleWelcomeGenerated = useCallback(
-    async (suggestion: { setlist_name?: string; explanation: string; sets: { setNumber: number; songs: { songId: string; title: string; segueToNext: boolean; notes: string; position: number }[] }[] }, eraId: string | null) => {
+    async (suggestion: { setlist_name?: string; explanation: string; sets: { setNumber: number; songs: { songId: string; title: string; segueToNext: boolean; notes: string; notesBy?: NotesBy | null; position: number }[] }[] }, eraId: string | null) => {
       if (eraId) setSelectedEra(eraId);
       const newTitle = suggestion.setlist_name?.trim() || "Untitled Setlist";
       setTitle(newTitle);
@@ -1043,6 +1052,7 @@ const Builder = () => {
             position: suggestedSong.position,
             segueToNext: suggestedSong.segueToNext,
             notes: suggestedSong.notes || "",
+            notesBy: suggestedNotesBy(suggestedSong),
           });
         }
       }
@@ -1065,7 +1075,7 @@ const Builder = () => {
               song_id: slot.song.id,
               notable_version_id: slot.version?.id || null,
               added_by_user_id: user!.id,
-              notes: slot.notes,
+              ...slotNotesColumns(slot),
               segue_to_next: slot.segueToNext,
             });
           }

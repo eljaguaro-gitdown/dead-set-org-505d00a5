@@ -25,6 +25,8 @@ import { useFavoriteSongs } from "@/hooks/useFavoriteSongs";
 import type { Database } from "@/integrations/supabase/types";
 import { trackCtaClick } from "@/lib/trackCtaClick";
 import { SYNTHETIC_VERSION_DEFAULTS } from "@/lib/syntheticVersion";
+import { descriptionBy } from "@/lib/charlieCredit";
+import CharlieCredit from "@/components/CharlieCredit";
 
 type Setlist = Omit<Database["public"]["Tables"]["setlists"]["Row"], "share_token">;
 type SetlistSlot = Database["public"]["Tables"]["setlist_slots"]["Row"];
@@ -176,6 +178,8 @@ const SetlistPoster = () => {
                 rating: null,
               })}\nFrom ${t.sourceDate}${t.sourceVenue ? ` · ${t.sourceVenue}` : ""}`
             : "",
+          // "From 1977-05-08 · Barton Hall" is the site's label, not Charlie's.
+          notes_by: t.sourceDate ? "dead_set" : null,
           segue_to_next: t.segueToNext,
         });
       }
@@ -722,6 +726,7 @@ const SetlistPoster = () => {
               url: shareUrl,
               songCount: slots.length,
               oneLiner: setlist?.description,
+              oneLinerBy: descriptionBy(setlist?.description),
             })}
           />
         </div>
@@ -1002,6 +1007,7 @@ const SetlistPoster = () => {
                                     style={{ color: "hsl(28 20% 39%)" }}
                                   >
                                     {slot.version.description}
+                                    <CharlieCredit />
                                   </span>
                                 )}
                               </div>
@@ -1084,6 +1090,7 @@ const SetlistPoster = () => {
                                         style={{ color: "hsl(28 20% 35%)" }}
                                       >
                                         "{slot.notes}"
+                                        {slot.notes_by === "charlie" && <CharlieCredit />}
                                       </p>
                                     )}
                                     {!slot.notes && !(slot.version?.show_date || playingSlot?.version?.show_date) && (
@@ -1122,6 +1129,7 @@ const SetlistPoster = () => {
                       style={{ color: "hsl(28 15% 18%)" }}
                     >
                       {setlist.description}
+                      {descriptionBy(setlist.description) === "charlie" && <CharlieCredit />}
                     </p>
                   </div>
                 </div>

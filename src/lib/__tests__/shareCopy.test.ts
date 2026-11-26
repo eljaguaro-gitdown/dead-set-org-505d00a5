@@ -80,3 +80,19 @@ describe("the voice", () => {
     }
   });
 });
+
+describe("Charlie's liner notes in a share carry his credit", () => {
+  it("credits him when the one-liner is his", async () => {
+    const { shareSetlistCopy, shareCollabCopy } = await import("@/lib/shareCopy");
+    const s = shareSetlistCopy({ setlistName: "Spring Run", url: "https://dead-set.org/setlist/x", oneLiner: "Opens hot.", oneLinerBy: "charlie" });
+    expect(s.body).toContain("Opens hot.* *Cosmic Charlie");
+    const c = shareCollabCopy({ setlistName: "Spring Run", url: "https://dead-set.org/join/x", oneLiner: "Opens hot.", oneLinerBy: "charlie" });
+    expect(c.body).toContain("*Cosmic Charlie");
+  });
+
+  it("doesn't put his name on the site's own lines", async () => {
+    const { shareSetlistCopy } = await import("@/lib/shareCopy");
+    const s = shareSetlistCopy({ setlistName: "Bird Song — Listening Guide", url: "u", oneLiner: "Ranked on fan votes.", oneLinerBy: "dead_set" });
+    expect(s.body).not.toContain("Cosmic Charlie");
+  });
+});
