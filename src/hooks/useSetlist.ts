@@ -8,6 +8,7 @@ import type { User } from "@supabase/supabase-js";
 import { SYNTHETIC_VERSION_DEFAULTS } from "@/lib/syntheticVersion";
 import { isObjectionable } from "@/lib/contentFilter";
 import { captureEvent } from "@/lib/posthog";
+import type { NotesBy } from "@/lib/charlieCredit";
 
 type SetlistRow = Database["public"]["Tables"]["setlists"]["Row"];
 type Song = Database["public"]["Tables"]["songs"]["Row"];
@@ -64,6 +65,30 @@ export const encodeArchiveNotes = (slot: SetlistSlotData) => {
   });
   return archiveMeta + (userNotes ? `\n${userNotes}` : "");
 };
+
+/**
+ * Who wrote a slot's notes, as the row should record it.
+ *
+ * Empty notes have no author. Otherwise the slot's own `notesBy` stands, and
+ * null means unknown, which gets no credit (src/lib/charlieCredit.ts).
+ */
+export const slotNotesBy = (slot: Pick<SetlistSlotData, "notes" | "notesBy">): NotesBy | null =>
+  slot.notes?.trim() ? slot.notesBy ?? null : null;
+
+/**
+ * The two columns every slot write sets together: the notes, through the one
+ * encoder, and whose words they are. A write that sets `notes` without
+ * `notes_by` leaves a stale author on the row, so callers spread this instead
+ * of writing either column by hand. `slotNotesWriters.test.ts` checks that.
+ */
+export const slotNotesColumns = (slot: SetlistSlotData) => ({
+  notes: encodeArchiveNotes(slot),
+  notes_by: slotNotesBy(slot),
+});
+
+/** A row's `notes_by`, narrowed to the values the credit rule knows. */
+export const readNotesBy = (raw: string | null | undefined): NotesBy | null =>
+  raw === "charlie" || raw === "member" || raw === "dead_set" ? raw : null;
 
 interface CollaboratorInfo {
   userId: string;
@@ -168,6 +193,7 @@ export const useSetlist = (user: User | null, setlistId?: string | null) => {
             position: slot.position,
             segueToNext: slot.segue_to_next || false,
             notes: decoded.notes,
+            notesBy: readNotesBy(slot.notes_by),
           };
         })
         .filter(Boolean) as SetlistSlotData[];
@@ -226,8 +252,6 @@ export const useSetlist = (user: User | null, setlistId?: string | null) => {
     const isSyntheticVersion = slot.version?.id?.startsWith("archive-");
     const notableVersionId = isSyntheticVersion ? null : (slot.version?.id || null);
 
-    const notes = encodeArchiveNotes(slot);
-
     const { error } = await supabase.from("setlist_slots").upsert({
       id: slot.id,
       setlist_id: setlistId,
@@ -236,7 +260,7 @@ export const useSetlist = (user: User | null, setlistId?: string | null) => {
       song_id: slot.song.id,
       notable_version_id: notableVersionId,
       added_by_user_id: user.id,
-      notes,
+      ...slotNotesColumns(slot),
       segue_to_next: slot.segueToNext,
     });
     if (error) {
@@ -268,7 +292,13 @@ export const useSetlist = (user: User | null, setlistId?: string | null) => {
     }
   }, [setlist]);
 
-  const updateSlot = useCallback(async (id: string, updates: Partial<SetlistSlotData>) => {
+  const updateSlot = useCallback(async (id: string, rawUpdates: Partial<SetlistSlotData>) => {
+    // Typing in a slot's notes makes them the member's words, including a
+    // rewrite of Charlie's: his credit comes off (src/lib/charlieCredit.ts).
+    const updates: Partial<SetlistSlotData> =
+      "notes" in rawUpdates && !("notesBy" in rawUpdates)
+        ? { ...rawUpdates, notesBy: "member" }
+        : rawUpdates;
     setSlots((prev) => prev.map((s) => (s.id === id ? { ...s, ...updates } : s)));
     if (setlist) {
       if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
@@ -283,7 +313,7 @@ export const useSetlist = (user: User | null, setlistId?: string | null) => {
         const notesOk = passesContentFilter(merged.notes);
 
         await supabase.from("setlist_slots").update({
-          ...(notesOk ? { notes: encodeArchiveNotes(merged) } : {}),
+          ...(notesOk ? slotNotesColumns(merged) : {}),
           segue_to_next: merged.segueToNext,
           position: merged.position,
           set_number: merged.setNumber,
@@ -365,6 +395,7 @@ export const useSetlist = (user: User | null, setlistId?: string | null) => {
                         position: newRow.position,
                         segueToNext: newRow.segue_to_next || false,
                         notes: decoded.notes,
+                        notesBy: readNotesBy(newRow.notes_by),
                       }];
                     });
                   });
@@ -382,6 +413,7 @@ export const useSetlist = (user: User | null, setlistId?: string | null) => {
               position: newRow.position,
               segueToNext: newRow.segue_to_next || false,
               notes: decoded.notes,
+              notesBy: readNotesBy(newRow.notes_by),
             }];
           });
         }
@@ -417,6 +449,7 @@ export const useSetlist = (user: User | null, setlistId?: string | null) => {
                     ...s,
                     version: decoded.version || s.version,
                     notes: decoded.notes,
+                    notesBy: readNotesBy(updated.notes_by),
                     segueToNext: updated.segue_to_next || false,
                     position: updated.position,
                     setNumber: updated.set_number,

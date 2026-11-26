@@ -1,7 +1,8 @@
 import { songbookDb } from "@/lib/songbookDb";
 import { supabase } from "@/integrations/supabase/client";
 import { songSlug } from "@/lib/songSlug";
-import { decodeArchiveNotes } from "@/hooks/useSetlist";
+import { decodeArchiveNotes, readNotesBy } from "@/hooks/useSetlist";
+import type { NotesBy } from "@/lib/charlieCredit";
 import { SYNTHETIC_VERSION_DEFAULTS } from "@/lib/syntheticVersion";
 import type { PlayableSlot } from "@/contexts/AudioPlayerContext";
 
@@ -33,6 +34,12 @@ export interface CommunityNight {
   archiveUrl: string | null;
   /** What the author said about this night, with the archive blob stripped. */
   note: string;
+  /**
+   * Whose words `note` is (src/lib/charlieCredit.ts). A guide's reasons are
+   * usually Charlie's, and the page credits him; a member's own words carry
+   * no credit beyond the issue's "mapped by".
+   */
+  noteBy?: NotesBy | null;
 }
 
 export interface CommunityIssue {
@@ -138,20 +145,27 @@ export const venueForDate = (
 export const nightFromSlot = (
   position: number,
   decoded: ReturnType<typeof decodeArchiveNotes>,
-): CommunityNight => ({
-  position,
-  showDate: decoded.version?.show_date ?? null,
-  venue: decoded.version?.venue ?? null,
-  archiveUrl: decoded.version?.archive_org_url ?? null,
+  /** The row's `notes_by`: whose words the free text is. */
+  notesBy: NotesBy | null = null,
+): CommunityNight => {
   // The note lives in `description` when the blob carries a `note` key, and
   // otherwise in the free text trailing the newline (`decoded.notes`) — which
   // is how all six community issues are actually written. Reading only the
   // first renders every night blank.
-  note: stripNightPreamble(
-    (decoded.version?.description ?? "").trim() || (decoded.notes ?? "").trim(),
-    decoded.version?.show_date,
-  ),
-});
+  const blobNote = (decoded.version?.description ?? "").trim();
+  const note = stripNightPreamble(blobNote || (decoded.notes ?? "").trim(), decoded.version?.show_date);
+  return {
+    position,
+    showDate: decoded.version?.show_date ?? null,
+    venue: decoded.version?.venue ?? null,
+    archiveUrl: decoded.version?.archive_org_url ?? null,
+    note,
+    // The blob's note is always Charlie's (written when he picked the tape).
+    // The free text is whoever the row says. A note stripped to nothing has
+    // no author to credit.
+    noteBy: !note ? null : blobNote ? "charlie" : notesBy,
+  };
+};
 
 export const loadCommunityIssue = async (
   slug: string,
@@ -181,7 +195,7 @@ export const loadCommunityIssue = async (
 
     const { data: slots } = await supabase
       .from("setlist_slots")
-      .select("id, position, notes")
+      .select("id, position, notes, notes_by")
       .eq("setlist_id", entry.setlist_id)
       .order("position", { ascending: true });
 
@@ -195,7 +209,7 @@ export const loadCommunityIssue = async (
       .maybeSingle();
 
     const nights: CommunityNight[] = (slots ?? []).map((slot) =>
-      nightFromSlot(slot.position, decodeArchiveNotes(slot.id, song.id, slot.notes)),
+      nightFromSlot(slot.position, decodeArchiveNotes(slot.id, song.id, slot.notes), readNotesBy(slot.notes_by)),
     );
 
     return {

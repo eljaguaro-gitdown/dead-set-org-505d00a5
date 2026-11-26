@@ -26,6 +26,8 @@
  * card needs crawler-visible meta per route, which is a separate job.
  */
 
+import { withCharlieCredit, type NotesBy } from "@/lib/charlieCredit";
+
 const ROSE = "🌹";
 const BOLT = "⚡";
 
@@ -176,11 +178,19 @@ export const shareSetlistCopy = (args: {
   url: string;
   senderName?: string | null;
   songCount?: number | null;
-  /** The setlist's own description, when its builder wrote one. */
+  /** The setlist's description (usually Charlie's liner notes), cut to one line. */
   oneLiner?: string | null;
+  /**
+   * Whose words the one-liner is. Charlie's carry his credit in the text
+   * (src/lib/charlieCredit.ts): a share is one of the places his notes go.
+   */
+  oneLinerBy?: NotesBy | null;
 }): SharePayload => {
   const count = args.songCount && args.songCount > 0 ? args.songCount : null;
-  const own = args.oneLiner?.trim();
+  const line = args.oneLiner?.trim();
+  const own = line && line !== args.setlistName && args.oneLinerBy === "charlie"
+    ? withCharlieCredit(line)
+    : line;
   return payload({
     title: `${args.setlistName} — a setlist on Dead-Set.Org`,
     lead: `${fromLine(args.senderName)}${args.setlistName}`,
@@ -268,10 +278,18 @@ export const shareCollabCopy = (args: {
   setlistName: string;
   url: string;
   senderName?: string | null;
-  /** The setlist's own description, when its builder wrote one. */
+  /** The setlist's description (usually Charlie's liner notes), cut to one line. */
   oneLiner?: string | null;
+  /**
+   * Whose words the one-liner is. Charlie's carry his credit in the text
+   * (src/lib/charlieCredit.ts): a share is one of the places his notes go.
+   */
+  oneLinerBy?: NotesBy | null;
 }): SharePayload => {
-  const own = args.oneLiner?.trim();
+  const line = args.oneLiner?.trim();
+  const own = line && line !== args.setlistName && args.oneLinerBy === "charlie"
+    ? withCharlieCredit(line)
+    : line;
   const who = args.senderName?.trim();
   return payload({
     title: `${args.setlistName} — build it with me on Dead-Set.Org`,

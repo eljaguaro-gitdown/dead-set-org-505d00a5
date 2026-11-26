@@ -51,12 +51,14 @@ import {
   type MilestoneEntry,
   type MilestoneTape,
 } from "@/lib/firstLastPlayed";
-import { buildGuideSongs } from "@/lib/listeningGuide";
+import { buildGuideSongs, reindexMilestones } from "@/lib/listeningGuide";
+import { checkNights, droppedPicksMessage, splitByVerdict } from "@/lib/checkNights";
 import TapeHunt from "@/components/TapeHunt";
 import { captureEvent } from "@/lib/posthog";
 import { findNight, prefetchNights } from "@/lib/tapeIndex";
 import NoTapeNote from "@/components/NoTapeNote";
 import { beginTap } from "@/lib/player/tapTelemetry";
+import CharlieCredit from "@/components/CharlieCredit";
 
 /** Which control started the audio — one per play path on this page. */
 type PlayOrigin =
@@ -737,18 +739,39 @@ const VersionPicker = () => {
     }
     setSaving(true);
     try {
+      let picks = shown.map((v) => ({
+        showDate: v.show_date ?? "",
+        venue: v.venue,
+        archiveUrl: v.archive_org_url,
+        rating: null,
+        whyThisVersion: v.blurb ?? "",
+      }));
+      let guideMilestones = milestones;
+      // Charlie's picks (the catalog had nothing) are checked against the
+      // setlist records before they are saved; a ranked list is curated and
+      // was checked when it was written. See src/lib/checkNights.ts.
+      if (charlie) {
+        const verdicts = await checkNights(song.title, picks.map((p) => p.showDate));
+        const { kept, dropped } = splitByVerdict(picks, verdicts);
+        if (dropped.length > 0) toast.info(droppedPicksMessage(song.title, dropped));
+        picks = kept;
+        guideMilestones = milestones.filter((m) => verdicts.get(m.date.slice(0, 10)) !== "not_played");
+      }
       const guideSongs = buildGuideSongs(
         song.id,
         song.title,
-        shown.map((v) => ({
-          showDate: v.show_date ?? "",
-          venue: v.venue,
-          archiveUrl: v.archive_org_url,
-          rating: null,
-          whyThisVersion: v.blurb ?? "",
-        })),
-        milestones,
+        picks,
+        // Milestones were placed against the full list; the saved list may be
+        // the sleepers or have lost a pick, so place them again by date.
+        reindexMilestones(guideMilestones, picks),
+        // Where the catalog had nothing, these are Charlie's picks and his
+        // reasons. Otherwise the reasons are the curated blurbs.
+        charlie ? "charlie" : "dead_set",
       );
+      if (guideSongs.length === 0) {
+        toast.error("None of these nights hold up. Try again in a moment.");
+        return;
+      }
 
       const shareToken = crypto.randomUUID();
       const { data: created, error } = await supabase
@@ -776,6 +799,7 @@ const VersionPicker = () => {
           song_id: g.songId,
           added_by_user_id: user.id,
           notes: g.notes,
+          notes_by: g.notesBy,
           segue_to_next: false,
         })),
       );
@@ -1153,6 +1177,7 @@ const VersionPicker = () => {
             </p>
             <p className="font-body text-sm leading-relaxed text-card-foreground/85 max-w-[62ch] whitespace-pre-line">
               {charlie.linerNotes}
+              <CharlieCredit />
             </p>
           </section>
         )}
@@ -1357,6 +1382,9 @@ const VersionPicker = () => {
                   {v.blurb && (
                     <p className="font-body text-[15px] leading-relaxed text-card-foreground/85 mt-3 max-w-[62ch]">
                       {v.blurb}
+                      {/* Charlie's picks (the fallback above) carry his reasons;
+                          a ranked version's blurb is the curated one. */}
+                      {v.id.startsWith("charlie-") && <CharlieCredit />}
                     </p>
                   )}
 

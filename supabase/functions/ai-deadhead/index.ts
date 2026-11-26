@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import { CHARLIE_NO_INVENTION } from "../_shared/charlieRules.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -444,6 +445,9 @@ CRITICAL VOICE GUIDELINES:
 - Reference real Deadhead community consensus where appropriate.
 - Don't just describe the music — tell the STORY of why this version matters.
 
+${CHARLIE_NO_INVENTION}
+- Only pick a night you are sure the band played this song on. Every pick is checked against two setlist records before a listening guide is saved, and a night that fails is dropped from the guide.
+
 ${versionsContext.length > 0 ? `ALREADY CATALOGED (${(versions || []).length} version${(versions || []).length === 1 ? "" : "s"}):\n${versionsContext}\n\nThese are a STARTING POINT, NOT A LIMIT. Include them, then add the other versions you know of until you have 5-8 in total. A song played hundreds of times has more than ${(versions || []).length} performances worth hearing, and returning only what is listed above makes the page look empty.` : `Nothing is cataloged for this song yet, so every pick is yours. Still return 5-8.`}
 
 SONG INFO:
@@ -739,6 +743,7 @@ SONG CATALOG (windowed selection of the catalog, biased toward songs this user h
 ${songCatalog}${versionInfo}
 
 CRITICAL RULES:
+- ${CHARLIE_NO_INVENTION}
 - You MUST respond using the suggest_setlist tool.
 - ONLY use songs from the SONG CATALOG section above. Use EXACT song titles.
 - Mark segues accurately with the segueToNext field.
@@ -776,6 +781,7 @@ SONG CATALOG (windowed):
 ${songCatalog}${versionInfo}${currentSetInfo}
 
 CRITICAL RULES:
+- ${CHARLIE_NO_INVENTION}
 - You MUST respond using the suggest_setlist tool.
 - ONLY use songs from the catalog above. Use EXACT song titles.
 - For EVERY song, include a "notes" field.

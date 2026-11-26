@@ -1499,6 +1499,7 @@ export type Database = {
           id: string
           notable_version_id: string | null
           notes: string | null
+          notes_by: string | null
           position: number
           segue_to_next: boolean | null
           set_number: number
@@ -1511,6 +1512,7 @@ export type Database = {
           id?: string
           notable_version_id?: string | null
           notes?: string | null
+          notes_by?: string | null
           position: number
           segue_to_next?: boolean | null
           set_number: number
@@ -1523,6 +1525,7 @@ export type Database = {
           id?: string
           notable_version_id?: string | null
           notes?: string | null
+          notes_by?: string | null
           position?: number
           segue_to_next?: boolean | null
           set_number?: number

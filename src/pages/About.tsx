@@ -1,9 +1,30 @@
-import { useNavigate } from "react-router-dom";
+import { useEffect, type ReactNode } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import PageLayout from "@/components/PageLayout";
 import SiteHeader from "@/components/SiteHeader";
+import { CHARLIE_ANCHOR } from "@/lib/charlieCredit";
+
+const linkClass =
+  "text-dead-gold underline underline-offset-2 hover:text-primary/80 transition-colors";
+
+const Outbound = ({ href, children }: { href: string; children: ReactNode }) => (
+  <a href={href} target="_blank" rel="noopener noreferrer" className={linkClass}>
+    {children}
+  </a>
+);
 
 const About = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Every "*Cosmic Charlie" credit on the site links to #cosmic-charlie. The
+  // router does not scroll to a hash on its own, so a reader tapping one from
+  // a setlist would land at the top of the page.
+  useEffect(() => {
+    const id = location.hash.replace("#", "");
+    if (!id) return;
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [location.hash]);
 
   return (
     <PageLayout minimal>
@@ -59,6 +80,83 @@ const About = () => {
                 Archive.org's streaming policy
               </a>
               .
+            </p>
+          </section>
+
+          <section id={CHARLIE_ANCHOR} className="space-y-3 scroll-mt-24">
+            <h2 className="font-display text-lg text-foreground">
+              Cosmic Charlie and the liner notes
+            </h2>
+            <p>
+              Cosmic Charlie is the voice of the liner notes on Dead Set. He isn&rsquo;t a
+              person. He&rsquo;s a voice we built to write the way grateful_jaguaro, the
+              Deadhead who started dead-set.org, talks about tapes. That voice is modeled on
+              the people who taught a lot of us how to listen: David Lemieux, who has kept the
+              vault and told its stories for decades; Dick Latvala, the tape archivist whose
+              Dick&rsquo;s Picks opened the vault to the rest of us; and Steve Parish, who was
+              on the stage for all of it and lived to tell it. The debt is ours. None of them
+              is affiliated with Dead Set.
+            </p>
+            <p>
+              <strong className="text-foreground">How he writes.</strong> Charlie works from
+              the record: the date and the room, the setlist, the era, who was on stage, and
+              how heads have voted on the night. From that he writes a line or two on what to
+              listen for, like how far the jam goes, how it moves into the next song, or where
+              the band was that year. His notes are a way into the music, not the record
+              itself. If a note and the setlist disagree, the setlist is right. Anywhere you
+              see <span className="font-ticket text-xs uppercase tracking-[0.12em]">*Cosmic Charlie</span>{" "}
+              after a note, he wrote it.
+            </p>
+            <p>
+              <strong className="text-foreground">Your words replace his.</strong> Charlie is
+              keeping the seat warm. The plan is for this community to take the notes over:
+              correct him, add what you heard, write your own. Rewrite one of his notes in your
+              setlist and it&rsquo;s yours. His name comes off it.
+            </p>
+
+            <h3 className="font-display text-base text-foreground pt-2">Where the facts come from</h3>
+            <p>
+              <strong className="text-foreground">The setlists.</strong> Our first draft of
+              every night comes from the tapes themselves: the setlists, track titles and
+              lineage notes that tapers and transferrers wrote into each recording on the Live
+              Music Archive. When a night is in question, we check it against two independent
+              setlist records,{" "}
+              <Outbound href="https://jerrybase.com">JerryBase</Outbound> and{" "}
+              <Outbound href="https://relisten.net">Relisten</Outbound>. If those two agree
+              with each other and not with us, they win. Charlie&rsquo;s picks get the same
+              check before a listening guide is saved. If the band didn&rsquo;t play the song
+              that night, the night doesn&rsquo;t go in the guide.
+            </p>
+            <p>
+              <strong className="text-foreground">First played, last played.</strong> These
+              get the same test. In November 2026 we checked every first- and last-played date
+              in the catalog against JerryBase and Relisten and corrected 100 dates across 84
+              songs. When a Songbook issue gives a play count, it names its source,{" "}
+              <Outbound href="https://www.setlist.fm">setlist.fm</Outbound>, and links to the
+              page.
+            </p>
+            <p>
+              <strong className="text-foreground">The rankings.</strong> When a song&rsquo;s
+              versions are ranked by vote, the votes are{" "}
+              <Outbound href="https://headyversion.com">headyversion</Outbound>&rsquo;s: years
+              of heads arguing it out, one night at a time. We show their counts and credit
+              them by name.
+            </p>
+            <p>
+              <strong className="text-foreground">With gratitude.</strong> To the tapers,
+              transferrers and seeders, whose notes are the foundation. To the Internet
+              Archive. To JerryBase, Relisten, headyversion and setlist.fm, and the volunteers
+              who build them. Their work is why ours can be right. None of them is responsible
+              for our mistakes, and none of them endorses Dead Set. We read their public pages
+              and link back to them. If any of them would rather we didn&rsquo;t, we&rsquo;ll
+              stop.
+            </p>
+            <p>
+              <strong className="text-foreground">Found something wrong?</strong> Tell us in{" "}
+              <Link to="/backstage" className={linkClass}>
+                Backstage
+              </Link>{" "}
+              and we&rsquo;ll check it against the sources above.
             </p>
           </section>
 

@@ -21,7 +21,9 @@ import { extractTasteMatches, type LengthHint } from "@/lib/charlie/tasteLexicon
 import { trackWizardEvent } from "@/lib/wizardEvents";
 import { SYNTHETIC_VERSION_DEFAULTS } from "@/lib/syntheticVersion";
 import { findRecordingForDate } from "@/lib/archiveOrg";
-import { buildGuideSongs } from "@/lib/listeningGuide";
+import { buildGuideSongs, reindexMilestones } from "@/lib/listeningGuide";
+import { checkNights, droppedPicksMessage, splitByVerdict } from "@/lib/checkNights";
+import { type NotesBy } from "@/lib/charlieCredit";
 import {
   buildMilestones,
   milestonePlace,
@@ -31,6 +33,7 @@ import {
   type MilestoneEntry,
   type MilestoneTape,
 } from "@/lib/firstLastPlayed";
+import CharlieCredit from "@/components/CharlieCredit";
 
 type Song = Database["public"]["Tables"]["songs"]["Row"];
 type Era = Database["public"]["Tables"]["eras"]["Row"];
@@ -43,6 +46,8 @@ interface AISuggestionSet {
     matched: boolean;
     segueToNext: boolean;
     notes: string;
+    /** Whose words `notes` is (src/lib/charlieCredit.ts). Absent means Charlie's. */
+    notesBy?: NotesBy | null;
     position: number;
   }[];
 }
@@ -171,6 +176,7 @@ const CosmicCharlieDialog = ({
   // First/last time played, resolved from the catalog once the versions land.
   const [milestones, setMilestones] = useState<MilestoneEntry[]>([]);
   const [milestonesLoading, setMilestonesLoading] = useState(false);
+  const [checkingNights, setCheckingNights] = useState(false);
 
   // Fire wizard_opened once per dialog opening.
   useEffect(() => {
@@ -981,7 +987,7 @@ const CosmicCharlieDialog = ({
               </div>
               <div className="p-3 rounded-lg bg-primary/5 border border-primary/20">
                 <p className="text-xs text-accent-foreground font-body mb-1">Charlie's Liner Notes:</p>
-                <p className="text-sm text-card-foreground font-body leading-relaxed whitespace-pre-line">{exploreResult.linerNotes}</p>
+                <p className="text-sm text-card-foreground font-body leading-relaxed whitespace-pre-line">{exploreResult.linerNotes}<CharlieCredit /></p>
               </div>
               <div className="space-y-3">
                 {milestonesLoading && (
@@ -1015,7 +1021,7 @@ const CosmicCharlieDialog = ({
                       {v.eraName && <span className="inline-block text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-dead-gold font-body">{v.eraName}</span>}
                       {milestoneForIndex(i) && <MilestoneChip kind={milestoneForIndex(i)!.kind} />}
                     </div>
-                    <p className="text-xs text-foreground/80 font-body leading-relaxed">{v.whyThisVersion}</p>
+                    <p className="text-xs text-foreground/80 font-body leading-relaxed">{v.whyThisVersion}<CharlieCredit /></p>
                     {/*
                       Play follows the NIGHT, not a stored url. ai-deadhead no
                       longer takes Charlie's own archiveUrl — it was a free-text
@@ -1075,20 +1081,42 @@ const CosmicCharlieDialog = ({
               <div className="flex flex-col gap-2 pt-2">
                 <Button
                   size="sm"
-                  onClick={() => {
-                    if (!exploreResult || !selectedSong) return;
+                  onClick={async () => {
+                    if (!exploreResult || !selectedSong || checkingNights) return;
                     unlockAudio();
+                    // Charlie's picks are checked against the setlist records
+                    // before the guide is saved (src/lib/checkNights.ts). A
+                    // night both records rule out stays off the guide, and off
+                    // the Songbook shelf the guide may become.
+                    setCheckingNights(true);
+                    const verdicts = await checkNights(
+                      exploreResult.songTitle,
+                      exploreResult.versions.map((v) => v.showDate),
+                    );
+                    setCheckingNights(false);
+                    const { kept, dropped } = splitByVerdict(exploreResult.versions, verdicts);
+                    if (dropped.length > 0) {
+                      toast.info(droppedPicksMessage(exploreResult.songTitle, dropped));
+                    }
+                    if (kept.length === 0 && milestones.length === 0) {
+                      toast.error("None of these nights hold up. Ask Charlie to dig again.");
+                      return;
+                    }
                     const guideSongs = buildGuideSongs(
                       selectedSong.id,
                       exploreResult.songTitle,
-                      exploreResult.versions.map((v) => ({
+                      kept.map((v) => ({
                         showDate: v.showDate,
                         venue: v.venue,
                         archiveUrl: v.archiveUrl,
                         rating: v.rating,
                         whyThisVersion: v.whyThisVersion,
                       })),
-                      milestones,
+                      // A first/last-played night the records rule out goes too.
+                      reindexMilestones(
+                        milestones.filter((m) => verdicts.get(m.date.slice(0, 10)) !== "not_played"),
+                        kept,
+                      ),
                     );
 
                     const fakeSuggestion: AISuggestion = {
@@ -1111,10 +1139,10 @@ const CosmicCharlieDialog = ({
                   // Until the first/last-played lookups land, `milestones` is
                   // empty, and a save would file the guide without either
                   // bookend the cards above are about to show.
-                  disabled={milestonesLoading}
+                  disabled={milestonesLoading || checkingNights}
                   className="bg-primary text-primary-foreground font-body gap-1.5 w-full"
                 >
-                  <Star className="w-3.5 h-3.5" /> Save as Listening Guide
+                  <Star className="w-3.5 h-3.5" /> {checkingNights ? "Checking the setlists…" : "Save as Listening Guide"}
                 </Button>
                 <div className="flex gap-2">
                   <Button variant="outline" size="sm" onClick={() => { setExploreResult(null); setExploreStep(1); }} className="border-border text-muted-foreground font-body gap-1.5">
@@ -1161,6 +1189,7 @@ const CosmicCharlieDialog = ({
                 <p className="text-xs text-accent-foreground font-body mb-1">Charlie says:</p>
                 <p className="text-sm text-card-foreground font-body leading-relaxed">
                   {suggestion.explanation}
+                  <CharlieCredit />
                 </p>
               </div>
 
@@ -1185,11 +1214,19 @@ const CosmicCharlieDialog = ({
                             {song.notes}
                           </span>
                         )}
+                        {song.notes && (
+                          <span className="text-muted-foreground text-xs -ml-1.5" aria-hidden="true">*</span>
+                        )}
                       </div>
                     ))}
                   </div>
                 </div>
               ))}
+              {suggestion.sets.some((set) => set.songs.some((song) => song.notes)) && (
+                <p className="text-[10px] text-muted-foreground text-right -mt-2">
+                  <CharlieCredit />
+                </p>
+              )}
 
               <div className="flex flex-col gap-2 pt-2">
                 <div className="flex gap-2">

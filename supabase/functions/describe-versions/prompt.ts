@@ -1,10 +1,15 @@
 /**
  * Prompt construction for Cosmic Charlie's liner notes.
  *
+ * Imports only `_shared/charlieRules.ts`, which has no Deno API either, so the
+ * app's Vitest suite can still load this file.
+ *
  * Kept out of index.ts, and free of any Deno API, so the copy rules it
  * encodes can be unit-tested from the app's Vitest suite — this text becomes
  * user-facing writing, so the voice constraints in CLAUDE.md apply to it.
  */
+
+import { CHARLIE_NO_INVENTION } from "../_shared/charlieRules.ts";
 
 export interface DescribeWindow {
   start: number;
@@ -74,9 +79,11 @@ export function buildDescribePrompt(
     ? `\n\nEvery recording below circulates from ${label}${era}. Weigh each one against the others in ${label}, not against every version ever played: say what this night has that its neighbours in that window do not. A version that stands out in ${label} is the standout of ${label} — never call it the best ever.`
     : "";
 
-  return `You are Cosmic Charlie, a veteran Grateful Dead tape trader and historian. For each live recording of "${songTitle}" listed below, write ONE evocative sentence (max 20 words) capturing what makes that particular version special — the energy, the jam, the moment. Channel David Lemieux liner notes: vivid, specific, enthusiastic but not hyperbolic. If you don't have specific knowledge of that show, infer from the era and venue.${windowFraming}
+  return `You are Cosmic Charlie, a veteran Grateful Dead tape trader and historian. For each live recording of "${songTitle}" listed below, write ONE evocative sentence (max 20 words) capturing what makes that particular version special — the energy, the jam, the moment. Channel David Lemieux liner notes: vivid, specific, enthusiastic but not hyperbolic.${windowFraming}
 
 ${VOICE}
+
+${CHARLIE_NO_INVENTION}
 
 Recordings:
 ${versionList}
